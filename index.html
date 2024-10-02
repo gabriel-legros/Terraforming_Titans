@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraforming Titans - Mars</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="planet-parameters.js"></script>
+    <script src="structuresUI.js"></script>
+    <script src="day-night-cycle.js"></script>
+    <script src="ore-scanning.js"></script>
+    <script src="resource.js"></script>
+    <script src="resourceUI.js"></script>
+    <script src="building.js"></script>
+    <script src="buildings-parameters.js"></script>
+    <script src="colony.js"></script>
+    <script src="colony-parameters.js"></script>
+    <script src="project-parameters.js"></script>
+    <script src="projects.js"></script>
+    <script src="projectsUI.js"></script>
+    <script src="research-parameters.js"></script>
+    <script src="research.js"></script>
+    <script src="researchUI.js"></script>
+    <script src="game.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .hidden {
+          display: none;
+        }
+
+        .tabs {
+            display: flex;
+            cursor: pointer;
+            background-color: #333;
+            padding: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #444;
+            color: white;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+
+        .tab.active {
+            background-color: #666;
+        }
+
+        .tab-content-wrapper {
+            display: flex;
+            float : left;
+            gap: 30px;
+        }
+
+        .tab-content {
+            display: none;
+            float : left;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .resource-container {
+            flex: 20%;
+        }
+
+        .building-list, .colony-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .button-controls-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .building-button {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 5px;
+            align-self: flex-start;
+        }
+
+        .building-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .building-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .building-controls .label {
+            font-weight: bold;
+        }
+
+        .building-controls button {
+            padding: 5px;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+
+        .building-display {
+            width: 100%;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .small-text {
+            font-size: 0.85em;
+            display: inline;
+            margin-top: 5px;
+        }
+
+        .building-production-consumption {
+            margin-top: 5px;
+        }
+
+        .progress-bar-container {
+            position: relative;
+            height: 20px;
+            width: 100%;
+            background-color: #eee;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #00bfff;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .scanning-progress {
+            font-size: 0.85em;
+            color: #4CAF50;
+            margin-top: 5px;
+        }
+
+        .research-subtabs {
+    display: flex;
+    cursor: pointer;
+    background-color: #444;
+    padding: 10px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+      .subtab {
+          flex: 1;
+          padding: 10px;
+          text-align: center;
+          background-color: #555;
+          color: white;
+          margin: 0 5px;
+          border-radius: 5px;
+      }
+
+      .subtab.active {
+          background-color: #777;
+      }
+
+      .subtab-content-wrapper {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+      }
+
+      .subtab-content {
+          display: none;
+      }
+
+      .subtab-content.active {
+          display: block;
+      }
+
+      .research-item {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.research-button {
+  padding: 10px 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.research-cost,
+.research-description {
+  margin: 5px 0;
+  font-size: 14px;
+}
+    </style>
+</head>
+
+<body>
+
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <div class="tab active" data-tab="game">Buildings</div>
+    <div class="tab" data-tab="special-projects">Special Projects</div>
+    <div class="tab" data-tab="colonies">Colony</div>
+    <div class="tab" data-tab="research">Research</div> <!-- New Tab for Research -->
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+    <!-- Game Content Tabs -->
+    <div class="tab-content-wrapper">
+      <div class="resource-wrapper">
+        <div class="resource-container" id="resources-container">
+            <!-- Resources will be dynamically inserted here -->
+        </div>
+        <div class="day-night-display">
+          <p>Day/Night Cycle: <span id="day-night-status"></span></p>
+          <p>Day Progress: <span id="day-progress"></span>%</p>
+      </div>
+    </div>
+
+        <div id="game" class="tab-content active">
+            <div class="container buildings-container">
+                <h2>Buildings</h2>
+                <div class="building-list" id="building-buttons"></div>
+            </div>
+        </div>
+
+        <div id="special-projects" class="tab-content">
+            <div class="container special-projects-container">
+                <h2>Special Projects</h2>
+                <div id="projects-list"></div>
+            </div>
+        </div>
+
+        <div id="colonies" class="tab-content">
+            <div class="container colonies-container">
+                <h2>Colonies</h2>
+                <div class="building-list" id="colony-buttons"></div>
+            </div>
+        </div>
+
+        <div id="research" class="tab-content">
+            <div class="container">
+              <div class="research-subtabs">
+                <div class="subtab active" id="energy-tab">Energy</div>
+                <div class="subtab" id="industry-tab">Industry</div>
+                <div class="subtab" id="colonization-tab">Colonization</div>
+                <div class="subtab" id="terraforming-tab">Terraforming</div>
+              </div>
+              <div class="subtab-content-wrapper">
+                <div id="energy" class="subtab-content active">
+                  <h3>Energy Research</h3>
+                  <div class="research-list" id="energy-research-buttons"></div> <!-- Container for energy research projects -->
+                </div>
+                <div id="industry" class="subtab-content">
+                  <h3>Industry Research</h3>
+                  <div class="research-list" id="industry-research-buttons"></div> <!-- Container for industry research projects -->
+                </div>
+                <div id="colonization" class="subtab-content">
+                  <h3>Colonization Research</h3>
+                  <div class="research-list" id="colonization-research-buttons"></div> <!-- Container for colonization research projects -->
+                </div>
+                <div id="terraforming" class="subtab-content">
+                  <h3>Terraforming Research</h3>
+                  <div class="research-list" id="terraforming-research-buttons"></div> <!-- Container for terraforming research projects -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <div id="settings" class="tab-content">
+            <div class="container settings-container">
+                <h2>Settings</h2>
+                <div class="settings-item">
+                    <label for="volume">Volume:</label>
+                    <input type="range" id="volume" name="volume" min="0" max="100">
+                </div>
+                <div class="settings-item">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty" name="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <label for="theme">Theme:</label>
+                    <select id="theme" name="theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <button id="save-game">Save Game</button>
+                    <button id="load-game">Load Game</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+      // Function to handle tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', function () {
+              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+              document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  
+              this.classList.add('active');
+              document.getElementById(this.dataset.tab).classList.add('active');
+  
+          });
+      });
+  
+      // Save game state to localStorage
+      document.getElementById('save-game').addEventListener('click', saveGame);
+  
+      // Load game state from localStorage
+      document.getElementById('load-game').addEventListener('click', loadGame);
+  </script>
+</body>
+
+</html>
