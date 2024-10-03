@@ -1,7 +1,7 @@
 // projects.js
 
 class Project {
-  constructor(name, displayName, cost, production, duration, description, attributes = {}, repeatable = false, maxRepeatCount = Infinity) {
+  constructor(name, displayName, cost, production, duration, description, attributes, repeatable = false, maxRepeatCount = Infinity) {
     this.name = name;
     this.displayName = displayName;
     this.cost = cost;
@@ -15,9 +15,12 @@ class Project {
     this.repeatable = repeatable;  // Flag indicating if the project can be repeated
     this.maxRepeatCount = maxRepeatCount;  // Maximum times the project can be repeated
     this.repeatCount = 0;  // Track the current number of times the project has been repeated
+
+    console.log(this.attributes);
   }
 
   canStart(resources) {
+    // Check if all resources required to start the project are available
     for (const resourceCategory in this.cost) {
       for (const resource in this.cost[resourceCategory]) {
         if (resources[resourceCategory][resource].value < this.cost[resourceCategory][resource]) {
@@ -25,17 +28,43 @@ class Project {
         }
       }
     }
+
+    // Check if there is enough funding if there is a resource choice gain cost
+    if (this.attributes && this.attributes.resourceChoiceGainCost) {
+      const selectedResource = this.attributes.resourceChoiceGainCost.selectedResource;
+      const quantity = this.attributes.resourceChoiceGainCost.quantity;
+      const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[selectedResource];
+      const totalCost = pricePerUnit * quantity;
+
+      if (resources.colony.funding.value < totalCost) {
+        return false;  // Not enough funding
+      }
+    }
+
     return true;  // All resources are available
   }
 
   deductResources(resources) {
+    // Deduct the resources required to start the project
     for (const resourceCategory in this.cost) {
       for (const resource in this.cost[resourceCategory]) {
         resources[resourceCategory][resource].decrease(this.cost[resourceCategory][resource]);
       }
     }
-  }
 
+    // Deduct the funding for resource choice gain, if applicable
+    if (this.attributes && this.attributes.resourceChoiceGainCost) {
+      console.log("Reducing funding");
+      const selectedResource = this.selectedResource;
+      const quantity = this.selectedQuantity;
+      const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[selectedResource];
+      const totalCost = pricePerUnit * quantity;
+
+      resources.colony.funding.decrease(totalCost);
+      // Store the pending resource gain for use when the project completes
+      this.pendingResourceGain = { resource: selectedResource, quantity };
+    }
+  }
   start(resources) {
     if (this.canStart(resources)) {
       this.deductResources(resources);
@@ -71,6 +100,11 @@ class Project {
       this.applyScannerEffect();
     }
 
+    // Apply resource choice gain effect if applicable
+    if (this.pendingResourceGain) {
+      this.applyResourceChoiceGain(this.pendingResourceGain.resource, this.pendingResourceGain.quantity);
+    }
+
     if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
       this.repeatCount++;
       this.resetProject();
@@ -78,13 +112,10 @@ class Project {
     }
   }
 
-  applyResourceGain() {
-    for (const resourceCategory in this.attributes.resourceGain) {
-      for (const resource in this.attributes.resourceGain[resourceCategory]) {
-        resources[resourceCategory][resource].increase(this.attributes.resourceGain[resourceCategory][resource]);
-        console.log(`Increased ${resource} by ${this.attributes.resourceGain[resourceCategory][resource]} in category ${resourceCategory}.`);
-      }
-    }
+  applyResourceChoiceGain(selectedResource, quantity) {
+    // Apply resource gain based on the selected resource and quantity
+    resources.colony[selectedResource].increase(quantity);
+    console.log(`Increased ${selectedResource} by ${quantity}`);
   }
 
   applyScannerEffect() {
@@ -150,19 +181,7 @@ function updateProjects(deltaTime) {
 }
 
 function getProjectStatuses() {
-  const projectStatuses = [];
-  for (const projectName in projects) {
-    const project = projects[projectName];
-    projectStatuses.push({
-      name: project.name,
-      description: project.description,
-      cost: project.cost,
-      progress: project.getProgress(),
-      isActive: project.isActive,
-      isCompleted: project.isCompleted
-    });
-  }
-  return projectStatuses;
+  return Object.values(projects);
 }
 
 function projectCanStart(projectCost) {

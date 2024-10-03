@@ -3,6 +3,7 @@ const planetParameters = {
     name: 'Mars',
     resources: {
       colony: {
+        funding: {name : 'Funding', initialValue : 1000},
         colonists: { name: 'Colonists', initialValue: 0, hasCap: true },
         metal: { name: 'Metal', initialValue: 100, hasCap: true },
         water: { name: 'Water', initialValue: 0 },
