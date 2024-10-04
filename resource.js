@@ -1,19 +1,21 @@
 // Resource Class and Core Logic
 class Resource {
-  constructor(name, displayName, initialValue, reserved = 0, hasCap = false) {
+  constructor({ name, displayName, initialValue, reserved = 0, hasCap = false }) {
     this.name = name;
     this.displayName = displayName;
     this.value = initialValue;
     this.hasCap = hasCap;
     this.cap = hasCap ? 0 : Infinity;
-
     this.baseProductionRate = 0;
-
+    this.productionRate = 0; // Rate of production per second
+    this.consumptionRate = 0; // Rate of consumption per second
     this.reserved = reserved;
   }
 
   increase(amount) {
-    this.value = Math.min(this.value + amount, this.cap);
+    if(amount > 0){
+      this.value = Math.min(this.value + amount, this.cap);
+    }
   }
 
   decrease(amount) {
@@ -59,11 +61,13 @@ function createResources(resourcesData) {
     resources[category] = {};
     for (const resourceName in resourcesData[category]) {
       const resourceData = resourcesData[category][resourceName];
-      const displayName = resourceData.name || resourceName;
-      const initialValue = resourceData.initialValue;
-      const hasCap = resourceData.hasCap || false;
-      const reserved = resourceData.reserved || 0;
-      resources[category][resourceName] = new Resource(resourceName, displayName, initialValue, reserved, hasCap);
+      resources[category][resourceName] = new Resource({
+        name: resourceName,
+        displayName: resourceData.name || resourceName,
+        initialValue: resourceData.initialValue,
+        hasCap: resourceData.hasCap || false,
+        reserved: resourceData.reserved || 0
+      });
     }
   }
   return resources;
@@ -105,6 +109,12 @@ function calculateProductionRates(deltaTime, buildings) {
         resources['colony'][resource].consumptionRate = (resources['colony'][resource].consumptionRate || 0) + actualMaintenance;
       }
     }
+  }
+
+  // Add funding rate to the production of funding resource
+  if (fundingModule) {
+    const fundingIncreaseRate = fundingModule.fundingRate; // Get funding rate from funding module
+    resources.colony.funding.productionRate = fundingIncreaseRate; // Update funding production rate
   }
 }
 

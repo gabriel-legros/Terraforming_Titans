@@ -51,6 +51,13 @@ function create() {
   researchManager = new ResearchManager(researchParameters);
   initializeResearch();
 
+  //Initialize funding
+  const fundingRate = currentPlanetParameters.fundingRate || 0;
+  fundingModule = new FundingModule(resources, fundingRate);
+
+  //initialize population module
+  populationModule = new PopulationModule(resources);
+
   initializeGameState();  // Handle initial game state (building counts, etc.)
 }
 
@@ -75,10 +82,15 @@ function updateLogic(delta) {
   dayNightCycle.update(delta);
 
   const allStructures = {...buildings, ...colonies};
+  // Update funding
+  fundingModule.update(delta);
   produceResources(delta, allStructures, resources);
+
+  populationModule.updatePopulation(delta);
 
   updateProjects(delta);  // Update project progress (handled in projects.js)
   oreScanner.updateScan(delta);  // Update ore scanning progress
+  
 }
 
 function updateRender() {
@@ -88,71 +100,10 @@ function updateRender() {
   updateBuildingDisplay(buildings);  // Render building information
   updateColonyDisplay(colonies);     // Render colony information
   renderProjects();                  // Render project information (handled in projects.js)
+  updateAllResearchButtons(researchManager.researches); // Update research buttons display
 }
 
 function update(time, delta) {
   updateLogic(delta);   // Update game state
   updateRender();       // Render updated game state
-}
-
-// Save game state to localStorage
-function saveGame() {
-  const gameState = {
-    resources: resources,
-    buildings: {},
-    dayNightCycle: dayNightCycle.getDayProgress(),
-    projects: getProjectStatuses()  // Save the project status from projects.js
-  };
-
-  // Save building states (count and active buildings)
-  for (const buildingName in buildings) {
-    const building = buildings[buildingName];
-    gameState.buildings[buildingName] = {
-      count: building.count,
-      active: building.active,
-      productivity: building.productivity,
-    };
-  }
-
-  // Store game state in localStorage
-  localStorage.setItem('gameState', JSON.stringify(gameState));
-  console.log('Game saved successfully.');
-}
-
-// Load game state from localStorage
-function loadGame() {
-  const savedState = localStorage.getItem('gameState');
-  if (savedState) {
-    const gameState = JSON.parse(savedState);
-
-    // Restore resources
-    resources = gameState.resources;
-    updateResourceDisplay(resources);
-
-    // Restore buildings
-    for (const buildingName in gameState.buildings) {
-      const buildingState = gameState.buildings[buildingName];
-      const building = buildings[buildingName];
-
-      if (building) {
-        building.count = buildingState.count;
-        building.active = buildingState.active;
-        building.productivity = buildingState.productivity;
-      }
-    }
-    updateBuildingDisplay(buildings);
-
-    // Restore day/night cycle progress
-    dayNightCycle.setDayProgress(gameState.dayNightCycle);
-    updateDayNightDisplay();
-
-    // Restore project progress
-    if (gameState.projects) {
-      restoreProjects(gameState.projects);  // Use the restoreProjects function from projects.js
-    }
-
-    console.log('Game loaded successfully.');
-  } else {
-    console.log('No saved game found.');
-  }
 }

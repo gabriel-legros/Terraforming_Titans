@@ -25,7 +25,21 @@ class DayNightCycle {
     setDayProgress(dayProgress) {
       this.dayProgress = dayProgress;
     }
-  }
+
+    // Method to get the current state of DayNightCycle for saving
+    saveState() {
+      return {
+        dayProgress: this.dayProgress,
+        elapsedTime: this.elapsedTime,
+      };
+    }
+
+    // Method to load the state into DayNightCycle
+    loadState(state) {
+      this.dayProgress = state.dayProgress || 0;
+      this.elapsedTime = state.elapsedTime || 0;
+    }
+}
 
   
 

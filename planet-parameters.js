@@ -9,7 +9,7 @@ const planetParameters = {
         water: { name: 'Water', initialValue: 0 },
         food: { name: 'Food', initialValue: 0 },
         energy: { name: 'Energy', initialValue: 0, hasCap: true },
-        research: { name: 'Research Points', initialValue: 0 }
+        research: { name: 'Research Points', initialValue: 500 }
       },
       surface: {
         ice: { name: 'Ice', initialValue: 100000 }
@@ -36,7 +36,8 @@ const planetParameters = {
     },
     buildingParameters: {
       maintenanceFraction: 0.001 // 0.1% of the building's cost as maintenance
-    }
+    },
+    fundingRate: 5, // Rate at which funding increases over time
   },
   // Additional planets can be added here in the future
 };

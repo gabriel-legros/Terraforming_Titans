@@ -36,16 +36,17 @@ function updateAllResearchButtons(researchData) {
 function updateResearchButtonText(button, researchItem) {
     let buttonText = `${researchItem.name}`;
 
-    // Check if the research can be afforded
-    if (!canAffordResearch(researchItem)) {
-        button.style.color = 'red';
-    } else {
-        button.style.color = 'inherit';
-    }
-
+    // Check if the research is already done
     if (researchItem.isResearched) {
         buttonText += ' - Researched';
         button.disabled = true; // Disable the button if the research is already done
+        button.style.color = 'grey'; // Set the text color to grey when research is completed
+    } else if (!canAffordResearch(researchItem)) {
+        // If research can't be afforded, set color to red
+        button.style.color = 'red';
+    } else {
+        // Otherwise, set to default color
+        button.style.color = 'inherit';
     }
 
     button.textContent = buttonText;

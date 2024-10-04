@@ -1,22 +1,21 @@
 // projects.js
 
-class Project {
-  constructor(name, displayName, cost, production, duration, description, attributes, repeatable = false, maxRepeatCount = Infinity) {
-    this.name = name;
-    this.displayName = displayName;
-    this.cost = cost;
-    this.production = production;
-    this.duration = duration;
-    this.description = description;
-    this.attributes = attributes;  // Load attributes, e.g., scanner-related details
-    this.remainingTime = duration;  // Time left to complete the project
-    this.isActive = false;  // Whether the project is currently active
-    this.isCompleted = false;  // Whether the project has been completed
-    this.repeatable = repeatable;  // Flag indicating if the project can be repeated
-    this.maxRepeatCount = maxRepeatCount;  // Maximum times the project can be repeated
-    this.repeatCount = 0;  // Track the current number of times the project has been repeated
-
-    console.log(this.attributes);
+class Project extends EffectableEntity {
+  constructor(config, name) {
+    super(config); // Call the base class constructor
+    this.name = config.projectName;
+    this.displayName = config.name;
+    this.cost = config.cost;
+    this.production = config.production;
+    this.duration = config.duration;
+    this.description = config.description;
+    this.attributes = config.attributes || {}; // Load attributes, e.g., scanner-related details
+    this.remainingTime = config.duration; // Time left to complete the project
+    this.isActive = false; // Whether the project is currently active
+    this.isCompleted = false; // Whether the project has been completed
+    this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
+    this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
+    this.repeatCount = 0; // Track the current number of times the project has been repeated
   }
 
   canStart(resources) {
@@ -112,6 +111,38 @@ class Project {
     }
   }
 
+  applyResourceGain() {
+    // Get the effective resource gain, considering all active effects
+    const effectiveResourceGain = this.getEffectiveResourceGain();
+    
+    // Apply the effective resource gain to the resources
+    for (const resourceCategory in effectiveResourceGain) {
+      for (const resource in effectiveResourceGain[resourceCategory]) {
+        const amount = effectiveResourceGain[resourceCategory][resource];
+        resources[resourceCategory][resource].increase(amount);
+        console.log(`Increased ${resource} by ${amount} in category ${resourceCategory}`);
+      }
+    }
+  }
+
+  getEffectiveResourceGain() {
+    // Start with the base resource gain values
+    const baseResourceGain = this.attributes.resourceGain || {};
+    const effectiveResourceGain = JSON.parse(JSON.stringify(baseResourceGain));
+
+    // Apply active effects to modify resource gain
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'increaseResourceGain') {
+        const { resourceCategory, resourceId, value } = effect;
+        if (effectiveResourceGain[resourceCategory] && effectiveResourceGain[resourceCategory][resourceId] !== undefined) {
+          effectiveResourceGain[resourceCategory][resourceId] += value;
+        }
+      }
+    });
+
+    return effectiveResourceGain;
+  }
+
   applyResourceChoiceGain(selectedResource, quantity) {
     // Apply resource gain based on the selected resource and quantity
     resources.colony[selectedResource].increase(quantity);
@@ -144,20 +175,17 @@ class Project {
 
 const projects = {};
 
+
 function initializeProjects() {
   for (const projectName in projectParameters) {
     const projectData = projectParameters[projectName];
-    projects[projectName] = new Project(
-      projectName,
-      projectData.name,
-      projectData.cost,
-      projectData.production,
-      projectData.duration,
-      projectData.description,
-      projectData.attributes,
-      projectData.repeatable || false,
-      projectData.maxRepeatCount || Infinity
-    );
+    // Add projectName to the config object
+    console.log(projectName);
+    const projectConfig = {
+      ...projectData,
+      projectName: projectName
+    };
+    projects[projectName] = new Project(projectConfig);
   }
 }
 

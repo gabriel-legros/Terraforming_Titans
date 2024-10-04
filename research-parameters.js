@@ -10,7 +10,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'solarPanel',
-            effectType: 'productionMultiplier',
+            type: 'productionMultiplier',
             value: 1.2, // Increases solar panel production by 20%
           },
         ],
@@ -25,7 +25,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'geothermalGenerator',
-            effectType: 'enableBuilding',
+            type: 'enableBuilding',
           },
         ],
       },
@@ -39,7 +39,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'battery',
-            effectType: 'storageMultiplier',
+            type: 'storageMultiplier',
             value: 1.5, // Increases battery storage capacity by 50%
           },
         ],
@@ -56,7 +56,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'oreMine',
-            effectType: 'productionMultiplier',
+            type: 'productionMultiplier',
             value: 1.3, // Increases ore production by 30%
           },
         ],
@@ -71,12 +71,29 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'factory',
-            effectType: 'enableBuilding',
+            type: 'enableBuilding',
           },
         ],
       },
     ],
     colonization: [
+      {
+        id: 'enhanced_colonist_import',
+        name: 'Enhanced Colonist Importation',
+        description: 'Increase the capacity of each colonist import by 10 using optimized spacecraft and improved logistics.',
+        cost: { research: 150 },  // Adjust the cost to make it suitable for the impact of the research
+        prerequisites: [],  // Requires the initial colonist import project to be available first
+        effects: [
+          {
+            target: 'project',
+            targetId: 'import_colonists_1',
+            type: 'increaseResourceGain',
+            resourceCategory: 'colony',
+            resourceId: 'colonists',
+            value: 10  // Increase the number of colonists imported by 10
+          },
+        ],
+      },
       {
         id: 'greenhouses',
         name: 'Greenhouse Farming',
@@ -87,7 +104,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'greenhouse',
-            effectType: 'enableBuilding',
+            type: 'enableBuilding',
           },
         ],
       },
@@ -101,7 +118,7 @@ const researchParameters = {
           {
             target: 'colony',
             targetId: 'colonists',
-            effectType: 'productivityMultiplier',
+            type: 'productivityMultiplier',
             value: 1.1, // Increases colonist productivity by 10%
           },
         ],
@@ -118,7 +135,7 @@ const researchParameters = {
           {
             target: 'resource',
             targetId: 'atmosphericPressure',
-            effectType: 'increment',
+            type: 'increment',
             value: 1000, // Increases atmospheric pressure by 1000 units
           },
         ],
@@ -133,7 +150,7 @@ const researchParameters = {
           {
             target: 'resource',
             targetId: 'oxygen',
-            effectType: 'incrementPerTick',
+            type: 'incrementPerTick',
             value: 1, // Slowly increases oxygen levels by 1 unit per tick
           },
         ],

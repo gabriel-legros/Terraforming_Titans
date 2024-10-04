@@ -33,6 +33,29 @@ class Research {
         );
       }
     }
+
+    saveState() {
+      const researchState = {};
+      for (const category in this.researches) {
+        researchState[category] = this.researches[category].map((research) => ({
+          id: research.id,
+          isResearched: research.isResearched,
+        }));
+      }
+      return researchState;
+    }
+  
+    loadState(researchState) {
+      for (const category in researchState) {
+        const savedResearches = researchState[category];
+        savedResearches.forEach((savedResearch) => {
+          const research = this.getResearchById(savedResearch.id);
+          if (research) {
+            research.isResearched = savedResearch.isResearched;
+          }
+        });
+      }
+    }
   
     // Get a specific research by its ID
     getResearchById(id) {
@@ -75,23 +98,31 @@ class Research {
     }
   }
 
-  // Apply the effects of a completed research
+  // Apply research effects to the target
   applyResearchEffects(research) {
     research.effects.forEach((effect) => {
       if (effect.target === 'building') {
         const building = buildings[effect.targetId];
         if (building) {
-          switch (effect.effectType) {
-            case 'productionMultiplier':
-              building.applyProductionMultiplier(effect.value);
-              break;
-            case 'enableBuilding':
-            building.enable(); // Unlock the building
-            break;
-            // Other effect types can be handled here
-            default:
-              console.log(`Effect type "${effect.effectType}" is not supported.`);
-          }
+          building.addEffect({ ...effect, sourceId: research.id });
+        }
+      } else if (effect.target === 'project') {
+        const project = projects[effect.targetId];
+        if (project) {
+          console.log(effect);
+          project.addEffect({ ...effect, sourceId: research.id });
+        }
+      }
+    });
+  }
+
+  // Remove research effects from the target
+  removeResearchEffects(research) {
+    research.effects.forEach((effect) => {
+      if (effect.target === 'building') {
+        const building = buildings[effect.targetId];
+        if (building) {
+          building.removeEffect(research.id);
         }
       }
       // Other target types (e.g., resources, colonies) can be handled here

@@ -1,8 +1,23 @@
 // Building Class (Core Game Logic)
-class Building {
-  constructor(name, description, cost, consumption, production, storage, dayNightActivity, canBeToggled, maintenanceFraction, maintenanceFactor, requiresMaintenance, requiresDeposit, unlocked) {
-    this.name = name;
-    this.description = description;
+class Building extends EffectableEntity {
+  constructor(config) {
+    super(config); // Call the base class constructor
+
+    // Destructure configuration object to set properties specific to Building
+    const {
+      cost,
+      consumption,
+      production,
+      storage,
+      dayNightActivity,
+      canBeToggled,
+      maintenanceFraction,
+      maintenanceFactor,
+      requiresMaintenance,
+      requiresDeposit,
+      unlocked,
+    } = config;
+
     this.cost = cost;
     this.consumption = consumption;
     this.production = production;
@@ -10,10 +25,10 @@ class Building {
     this.dayNightActivity = dayNightActivity;
     this.canBeToggled = canBeToggled;
     this.requiresMaintenance = requiresMaintenance;
-    this.maintenanceFraction = maintenanceFraction; // Fraction of the original cost used for maintenance
-    this.maintenanceFactor = maintenanceFactor; // Additional factor applied to the maintenance
+    this.maintenanceFraction = maintenanceFraction;
+    this.maintenanceFactor = maintenanceFactor;
     this.requiresDeposit = requiresDeposit;
-    this.unlocked = unlocked; // New property to track building availability
+    this.unlocked = unlocked;
     this.count = 0;
     this.active = 0;
     this.productivity = 0;
@@ -21,9 +36,18 @@ class Building {
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
     this.currentConsumption = {};
-    this.currentMaintenance = {}; // Track current maintenance cost
+    this.currentMaintenance = {};
+  }
 
-    this.productionMultiplier = 1; // Default production multiplier is 1
+  // Method to get the effective production multiplier
+  getEffectiveProductionMultiplier() {
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'productionMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
   }
 
   calculateMaintenanceCost() {
@@ -97,23 +121,25 @@ class Building {
     this.productivity = Math.max(0, Math.min(1, minRatio));
   }
 
+  // Update production multiplier usage to dynamically calculate it
   produce(resources, deltaTime) {
-    this.currentProduction = {}; // Reset current production
+    const effectiveMultiplier = this.getEffectiveProductionMultiplier();
 
+    // Rest of production logic using effectiveMultiplier instead of a static value
     for (const category in this.production) {
       if (!this.currentProduction[category]) {
         this.currentProduction[category] = {};
       }
 
       for (const resource in this.production[category]) {
-        const baseProduction = this.active * this.production[category][resource] * this.productionMultiplier;
+        const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier;
         const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
         const remainingCapacity = resources[category][resource].cap - resources[category][resource].value;
-        const actualProduction = Math.min(scaledProduction, remainingCapacity);
-        
+        const actualProduction = Math.max(Math.min(scaledProduction, remainingCapacity),0);
+
         // Track actual production
         this.currentProduction[category][resource] = actualProduction;
-        
+
         // Increase resource value
         resources[category][resource].increase(actualProduction);
       }
@@ -139,12 +165,6 @@ class Building {
         resources[category][resource].decrease(scaledConsumption);
       }
     }
-  }
-
-  // Method to apply a production multiplier from research effects
-  applyProductionMultiplier(multiplier) {
-    this.productionMultiplier *= multiplier;
-    console.log(`Applied production multiplier of ${multiplier} to ${this.name}. New multiplier: ${this.productionMultiplier}`);
   }
 
   applyMaintenance(resources, deltaTime) {
@@ -190,21 +210,14 @@ function initializeBuildings(buildingsParameters, maintenanceFraction) {
   const buildings = {};
   for (const buildingName in buildingsParameters) {
     const buildingData = buildingsParameters[buildingName];
-    buildings[buildingName] = new Building(
-      buildingData.name,
-      buildingData.description,
-      buildingData.cost,
-      buildingData.consumption,
-      buildingData.production,
-      buildingData.storage,
-      buildingData.dayNightActivity,
-      buildingData.canBeToggled,
-      maintenanceFraction,
-      buildingData.maintenanceFactor,
-      buildingData.requiresMaintenance,
-      buildingData.requiresDeposit,
-      buildingData.unlocked // New property to track if building is unlocked from the start
-    );
+
+    // Add maintenanceFraction to the building configuration
+    const buildingConfig = {
+      ...buildingData,
+      maintenanceFraction: maintenanceFraction
+    };
+
+    buildings[buildingName] = new Building(buildingConfig);
   }
   return buildings;
 }

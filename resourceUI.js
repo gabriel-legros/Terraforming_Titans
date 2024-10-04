@@ -31,8 +31,16 @@ function createResourceContainers(resourcesData) {
           const resourceElement = document.createElement('div');
           resourceElement.classList.add('resource-item');
   
-          // Different display for deposits
-          if (category === 'underground') {
+          if (resourceName === 'colonists') {
+            // Special display for population (colonists) as an integer
+            resourceElement.innerHTML = `
+              <strong>${resourceObj.displayName}:</strong>
+              <span id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</span>
+              ${resourceObj.hasCap ? `/ <span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span>` : ''}
+              <span class="pps" id="${resourceName}-pps-resources-container" style="float: right;">+0/s</span>
+            `;
+          } else if (category === 'underground') {
+            // Display for deposits
             resourceElement.innerHTML = `
               <strong>${resourceObj.displayName}:</strong>
               <span id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</span> /
@@ -75,13 +83,23 @@ function createResourceContainers(resourcesData) {
     }
   }
 
-// Function to update resource display
-function updateResourceDisplay(resources) {
+  function updateResourceDisplay(resources) {
     for (const category in resources) {
       for (const resourceName in resources[category]) {
         const resourceObj = resources[category][resourceName];
   
-        if (category === 'underground') {
+        if (resourceName === 'colonists') {
+          // Update population as an integer
+          const resourceElement = document.getElementById(`${resourceName}-resources-container`);
+          if (resourceElement) {
+            resourceElement.textContent = Math.floor(resourceObj.value);
+          }
+  
+          const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
+          if (capElement) {
+            capElement.textContent = Math.floor(resourceObj.cap);
+          }
+        } else if (category === 'underground') {
           // Update underground resources
           const availableElement = document.getElementById(`${resourceName}-available-resources-container`);
           const totalElement = document.getElementById(`${resourceName}-total-resources-container`);
@@ -117,13 +135,18 @@ function updateResourceDisplay(resources) {
   
           const ppsElement = document.getElementById(`${resourceName}-pps-resources-container`);
           if (ppsElement) {
-            // Use the previous base production rate for display if the current one is reset
-            const productionRateToDisplay = resourceObj.baseProductionRate !== 0 ? resourceObj.baseProductionRate : resourceObj.previousBaseProductionRate;
-            const baseProductionRate = isNaN(productionRateToDisplay) ? 0 : productionRateToDisplay.toFixed(2);
-            ppsElement.textContent = `(${baseProductionRate >= 0 ? '+' : ''}${baseProductionRate}/s)`;
+            const netRate = resourceObj.productionRate - resourceObj.consumptionRate;
+            ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${netRate.toFixed(2)}/s`;
           }
         }
       }
+    }
+  }
+
+  function updateResourceUI(resources) {
+    for (const resource of resources) {
+      const resourceData = resource.getResourceData();
+      // Update DOM elements using `resourceData`
     }
   }
 
@@ -136,9 +159,3 @@ function updateResourceDisplay(resources) {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
-  function updateResourceUI(resources) {
-    for (const resource of resources) {
-      const resourceData = resource.getResourceData();
-      // Update DOM elements using `resourceData`
-    }
-  }

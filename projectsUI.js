@@ -14,10 +14,12 @@ function createProjectItem(project) {
   const projectItem = document.createElement('div');
   projectItem.classList.add('special-projects-item');
 
+  // Project Description
   const descriptionElement = document.createElement('p');
   descriptionElement.textContent = project.description;
   projectItem.appendChild(descriptionElement);
 
+  // Project Cost
   const costElement = document.createElement('p');
   let costText = 'Cost: ';
   for (const category in project.cost) {
@@ -30,12 +32,29 @@ function createProjectItem(project) {
   costElement.innerHTML = costText;
   projectItem.appendChild(costElement);
 
+  // Resource Gain Information
+  if (project.attributes && project.attributes.resourceGain) {
+    const resourceGainElement = document.createElement('p');
+    const updatedResourceGain = project.getEffectiveResourceGain();
+    let resourceGainText = 'Resource Gain: ';
+    for (const category in updatedResourceGain) {
+      for (const resource in updatedResourceGain[category]) {
+        resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${updatedResourceGain[category][resource]}, `;
+      }
+    }
+    resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
+    resourceGainElement.innerHTML = resourceGainText;
+    resourceGainElement.id = `${project.name}-resource-gain`;
+    projectItem.appendChild(resourceGainElement);
+  }
+
   // Create a resource selection UI for projects with resource choice
   if (project.attributes && project.attributes.resourceChoiceGainCost) {
     const resourceSelectionUI = createResourceSelectionUI(project);
     projectItem.appendChild(resourceSelectionUI);
   }
 
+  // Progress Bar
   const progressBarContainer = document.createElement('div');
   progressBarContainer.classList.add('progress-bar-container');
   const progressBar = document.createElement('div');
@@ -44,15 +63,17 @@ function createProjectItem(project) {
   progressBarContainer.appendChild(progressBar);
   projectItem.appendChild(progressBarContainer);
 
+  // Project Button
   const projectButton = document.createElement('button');
   projectButton.textContent = `Start ${project.displayName}`;
-  projectButton.setAttribute('data-project-name', project.name);
+  projectButton.setAttribute('data-project-name', project.displayName);
   projectItem.appendChild(projectButton);
 
+  // Store elements for later updates
   projectElements[project.name] = {
     button: projectButton,
     progressBar: progressBar,
-    costElement: costElement
+    costElement: costElement,
   };
 
   document.getElementById('projects-list').appendChild(projectItem);
@@ -66,11 +87,11 @@ function createProjectItem(project) {
       const quantity = project.attributes?.resourceChoiceGainCost
         ? parseInt(document.getElementById(`${project.name}-resource-quantity`).value, 10)
         : null;
-      
+
       if (project.attributes?.resourceChoiceGainCost) {
         const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[selectedResource];
         const totalCost = quantity * pricePerUnit;
-        
+
         if (resources.colony.funding.value >= totalCost) {
           project.selectedResource = selectedResource;
           project.selectedQuantity = quantity;
@@ -91,6 +112,11 @@ function createProjectItem(project) {
   hrElement.style.border = '1px solid #ccc'; // Set border for the line
   hrElement.style.margin = '10px 0'; // Add margin to separate it from other elements
   projectItem.appendChild(hrElement);
+}
+
+function getUpdatedResourceGain(project) {
+  const updatedResourceGain = JSON.parse(JSON.stringify(project.attributes.resourceGain || {}));
+  return updatedResourceGain;
 }
 
 function createResourceSelectionUI(project) {
@@ -145,6 +171,22 @@ function updateProjectUI(projectName) {
   if (!elements) {
     console.error(`UI elements for project "${projectName}" are undefined.`);
     return;
+  }
+
+  // Update Resource Gain Information if applicable
+  if (project.attributes && project.attributes.resourceGain) {
+    const updatedResourceGain = project.getEffectiveResourceGain();
+    const resourceGainElement = document.getElementById(`${project.name}-resource-gain`);
+    if (resourceGainElement) {
+      let resourceGainText = 'Resource Gain: ';
+      for (const category in updatedResourceGain) {
+        for (const resource in updatedResourceGain[category]) {
+          resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${updatedResourceGain[category][resource]}, `;
+        }
+      }
+      resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
+      resourceGainElement.innerHTML = resourceGainText;
+    }
   }
 
   // Check if the project can be afforded (including any resource choice costs)

@@ -93,40 +93,17 @@ function createBuildingButtons(buildings) {
   
       const productionConsumptionDetails = document.createElement('div');
       productionConsumptionDetails.classList.add('building-production-consumption');
+      productionConsumptionDetails.id = `${structureName}-production-consumption`;
   
-      let detailsText = '';
-      const productionText = formatResourceDetails(structure.production);
-      if (productionText) {
-        detailsText += `<strong>Production:</strong> ${productionText}`;
-      }
+      updateProductionConsumptionDetails(structure, productionConsumptionDetails);
   
-      const consumptionText = formatResourceDetails(structure.consumption);
-      if (consumptionText) {
-        if (detailsText) {
-          detailsText += ', ';
-        }
-        detailsText += `<strong>Consumption:</strong> ${consumptionText}`;
-      }
-  
-      // Calculate maintenance cost per second and add to details only if there is a maintenance cost
-      if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
-        const maintenanceText = formatMaintenanceDetails(structure.maintenanceCost);
-        if (maintenanceText) {
-          if (detailsText) {
-            detailsText += ', ';
-          }
-          detailsText += `<strong>Maintenance:</strong> ${maintenanceText} per second`;
-        }
-      }
-  
-      if (detailsText) {
-        productionConsumptionDetails.innerHTML = detailsText;
+      if (productionConsumptionDetails.innerHTML) {
         productionConsumptionDetails.classList.add('small-text');
         structureRow.appendChild(productionConsumptionDetails);
       }
   
       buttonsContainer.appendChild(structureRow);
-
+  
       // Add <hr> element between building buttons
       const hrElement = document.createElement('hr');
       hrElement.style.border = '1px solid #ccc'; // Set border for the line
@@ -159,7 +136,7 @@ function createBuildingButtons(buildings) {
     let costDetails = '';
     for (const category in structure.cost) {
       for (const resource in structure.cost[category]) {
-        costDetails += `<div><strong>${capitalizeFirstLetter(resource)}:</strong> ${structure.cost[category][resource]}</div>`;
+        costDetails += `<div>Cost - ${capitalizeFirstLetter(resource)}: ${structure.cost[category][resource]}</div>`;
       }
     }
     costElement.innerHTML = costDetails;
@@ -201,21 +178,61 @@ function createBuildingButtons(buildings) {
       if (button) {
         updateStructureButtonText(button, structure);
       }
-    }
-  }
   
-  // Helper function to format production and consumption details
-  function formatResourceDetails(resourceObject) {
-    let details = '';
-    for (const category in resourceObject) {
-      for (const resource in resourceObject[category]) {
-        if (resourceObject[category][resource] > 0) {
-          details += `${resourceObject[category][resource]} ${resource}, `;
-        }
+      // Update the production and consumption details
+      const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
+      if (productionConsumptionDetails) {
+        updateProductionConsumptionDetails(structure, productionConsumptionDetails);
       }
     }
-    return details.slice(0, -2); // Remove the trailing comma and space
   }
+
+  function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
+    let detailsText = '';
+    const effectiveMultiplier = structure.getEffectiveProductionMultiplier();
+  
+    // Update production details with technology multiplier applied
+    const productionText = formatResourceDetails(structure.production, effectiveMultiplier);
+    if (productionText) {
+      detailsText += `<strong>Production:</strong> ${productionText}`;
+    }
+  
+    // Update consumption details
+    const consumptionText = formatResourceDetails(structure.consumption);
+    if (consumptionText) {
+      if (detailsText) {
+        detailsText += ', ';
+      }
+      detailsText += `<strong>Consumption:</strong> ${consumptionText}`;
+    }
+  
+    // Update maintenance details
+    if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
+      const maintenanceText = formatMaintenanceDetails(structure.maintenanceCost);
+      if (maintenanceText) {
+        if (detailsText) {
+          detailsText += ', ';
+        }
+        detailsText += `<strong>Maintenance:</strong> ${maintenanceText} per second`;
+      }
+    }
+  
+    productionConsumptionElement.innerHTML = detailsText;
+  }
+  
+// Helper function to format production and consumption details with a multiplier
+function formatResourceDetails(resourceObject, multiplier = 1) {
+  let details = '';
+  for (const category in resourceObject) {
+    for (const resource in resourceObject[category]) {
+      const adjustedValue = resourceObject[category][resource] * multiplier;
+      if (adjustedValue > 0) {
+        details += `${adjustedValue.toFixed(2)} ${resource}, `;
+      }
+    }
+  }
+  return details.slice(0, -2); // Remove the trailing comma and space
+}
 
 // Helper function to format maintenance details
 function formatMaintenanceDetails(maintenanceCost) {

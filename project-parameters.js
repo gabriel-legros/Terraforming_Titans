@@ -47,8 +47,8 @@ const projectParameters = {
         energy: 50
       }
     },
-    duration: 180000,  // Duration of the project in milliseconds
-    description: "Use chemical rockets to import a small group of 10 scientists from Earth",
+    duration: 1800,  // Duration of the project in milliseconds
+    description: "Use chemical rockets to import colonists from Earth",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
     attributes: {
@@ -63,11 +63,9 @@ const projectParameters = {
     name: "Cargo Rocket",
     cost: {
       colony: {
-        metal: 10,
-        energy: 10
       }
     },
-    duration: 18000,  // Duration of the project in milliseconds (e.g., 3 minutes)
+    duration: 1800,  // Duration of the project in milliseconds (e.g., 3 minutes)
     description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Infinite repeats allowed

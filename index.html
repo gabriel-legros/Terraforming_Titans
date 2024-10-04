@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terraforming Titans - Mars</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="save.js"></script>
     <script src="planet-parameters.js"></script>
+    <script src="effectable-entity.js"></script>
     <script src="structuresUI.js"></script>
     <script src="day-night-cycle.js"></script>
     <script src="ore-scanning.js"></script>
@@ -22,6 +24,8 @@
     <script src="research-parameters.js"></script>
     <script src="research.js"></script>
     <script src="researchUI.js"></script>
+    <script src="funding.js"></script>
+    <script src="population.js"></script>
     <script src="game.js"></script>
     <style>
         body {
@@ -87,7 +91,6 @@
 
         .building-button {
             width: auto;
-            padding: 10px 20px;
             margin-bottom: 5px;
             align-self: flex-start;
         }
@@ -110,7 +113,6 @@
         }
 
         .building-controls button {
-            padding: 5px;
             font-size: 14px;
             margin-left: 5px;
         }
