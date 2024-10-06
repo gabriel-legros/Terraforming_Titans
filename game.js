@@ -23,6 +23,7 @@ let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenance
 let dayNightCycle;
 let buildings = {};
 let oreScanner = new OreScanning(currentPlanetParameters);
+let projectManager;  // Use ProjectManager instead of individual projects
 
 function preload() {
   // Load assets (images, sounds, etc.) here
@@ -38,13 +39,14 @@ function create() {
   createResourceDisplay(resources);
 
   // Initialize buildings
-  buildings = initializeBuildings(buildingsParameters, maintenanceFraction);
+  buildings = initializeBuildings(buildingsParameters);
   createBuildingButtons(buildings);
 
-  // Initialize projects
-  initializeProjects();
+  // Initialize projects using the ProjectManager
+  projectManager = new ProjectManager();
+  projectManager.initializeProjects(projectParameters);
 
-  colonies = initializeColonies(colonyParameters, maintenanceFraction);
+  colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
 
   // Initialize research
@@ -88,7 +90,7 @@ function updateLogic(delta) {
 
   populationModule.updatePopulation(delta);
 
-  updateProjects(delta);  // Update project progress (handled in projects.js)
+  projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
   
 }

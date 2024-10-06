@@ -54,36 +54,27 @@ function updateResearchButtonText(button, researchItem) {
 
 function initializeResearchTabs() {
     // Set up event listeners for research sub-tabs
-    document.getElementById('energy-tab').addEventListener('click', () => {
-        activateSubtab('energy');
-        loadResearchCategory('energy');
-    });
-    document.getElementById('industry-tab').addEventListener('click', () => {
-        activateSubtab('industry');
-        loadResearchCategory('industry');
-    });
-    document.getElementById('colonization-tab').addEventListener('click', () => {
-        activateSubtab('colonization');
-        loadResearchCategory('colonization');
-    });
-    document.getElementById('terraforming-tab').addEventListener('click', () => {
-        activateSubtab('terraforming');
-        loadResearchCategory('terraforming');
+    document.querySelectorAll('.research-subtab').forEach(subtab => {
+        subtab.addEventListener('click', () => {
+            const subtabContentId = subtab.dataset.subtab;
+            activateResearchSubtab(subtabContentId);
+            loadResearchCategory(subtabContentId.replace('-research', ''));
+        });
     });
 
     // Initial load of research categories
-    activateSubtab('energy');
+    activateResearchSubtab('energy-research');
     loadResearchCategory('energy');
 }
 
-function activateSubtab(subtab) {
+function activateResearchSubtab(subtabId) {
     // Remove active class from all subtabs and subtab-contents
-    document.querySelectorAll('.subtab').forEach((t) => t.classList.remove('active'));
-    document.querySelectorAll('.subtab-content').forEach((tc) => tc.classList.remove('active'));
-
+    document.querySelectorAll('.research-subtab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.research-subtab-content').forEach((t) => t.classList.remove('active'));
+    
     // Add active class to the clicked subtab and corresponding content
-    document.getElementById(`${subtab}-tab`).classList.add('active');
-    document.getElementById(subtab).classList.add('active');
+    document.querySelector(`[data-subtab="${subtabId}"]`).classList.add('active');
+    document.getElementById(subtabId).classList.add('active');
 }
 
 function loadResearchCategory(category) {

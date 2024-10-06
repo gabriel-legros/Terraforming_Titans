@@ -95,6 +95,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'launch_pads',
+        name: 'Launch Pads',
+        description: 'Allows automation of special projects.',
+        cost: { research: 100 },
+        prerequisites: [],
+        effects: [
+          {
+            type: 'booleanFlag',
+            target: 'projectManager',
+            targetId: 'automatesSpecialProjects',
+            value: true
+          },
+        ],
+      },
+      {
         id: 'greenhouses',
         name: 'Greenhouse Farming',
         description: 'Enables greenhouses for growing food on Mars.',

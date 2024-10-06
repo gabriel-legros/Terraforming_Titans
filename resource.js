@@ -1,15 +1,16 @@
 // Resource Class and Core Logic
 class Resource {
-  constructor({ name, displayName, initialValue, reserved = 0, hasCap = false }) {
-    this.name = name;
-    this.displayName = displayName;
-    this.value = initialValue;
-    this.hasCap = hasCap;
-    this.cap = hasCap ? 0 : Infinity;
+  constructor(resourceData) {
+    this.name = resourceData.name || '';
+    this.displayName = resourceData.displayName || resourceData.name || '';
+    this.value = resourceData.initialValue || 0;
+    this.hasCap = resourceData.hasCap || false;
+    this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
+    this.cap = this.hasCap ? this.baseCap : Infinity; // Set the initial cap
     this.baseProductionRate = 0;
     this.productionRate = 0; // Rate of production per second
     this.consumptionRate = 0; // Rate of consumption per second
-    this.reserved = reserved;
+    this.reserved = resourceData.reserved || 0;
   }
 
   increase(amount) {
@@ -45,6 +46,21 @@ class Resource {
   resetBaseProductionRate() {
     this.baseProductionRate = 0;
   }
+
+  // Method to update the storage cap based on active buildings
+  updateStorageCap(buildings) {
+    let newCap = this.baseCap; // Start with the base capacity
+    for (const buildingName in buildings) {
+      const building = buildings[buildingName];
+      if (building.storage && building.active > 0) {
+        if (building.storage.colony && building.storage.colony[this.name]) {
+          newCap += building.active * building.storage.colony[this.name];
+        }
+      }
+    }
+
+    this.cap = this.hasCap ? newCap : Infinity;
+  }
 }
 
 function checkResourceAvailability(category, resource, requiredAmount) {
@@ -61,13 +77,8 @@ function createResources(resourcesData) {
     resources[category] = {};
     for (const resourceName in resourcesData[category]) {
       const resourceData = resourcesData[category][resourceName];
-      resources[category][resourceName] = new Resource({
-        name: resourceName,
-        displayName: resourceData.name || resourceName,
-        initialValue: resourceData.initialValue,
-        hasCap: resourceData.hasCap || false,
-        reserved: resourceData.reserved || 0
-      });
+      resourceData.name = resourceName; // Assign resource name to the resourceData object
+      resources[category][resourceName] = new Resource(resourceData);
     }
   }
   return resources;

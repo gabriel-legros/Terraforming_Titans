@@ -52,6 +52,9 @@ class Research {
           const research = this.getResearchById(savedResearch.id);
           if (research) {
             research.isResearched = savedResearch.isResearched;
+            if (research.isResearched) {
+              this.applyResearchEffects(research); // Reapply effects if research is completed
+            }
           }
         });
       }
@@ -85,18 +88,18 @@ class Research {
       });
     }
   
-  // Mark a research as completed
-  completeResearch(id) {
-    const research = this.getResearchById(id);
-    if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
-      research.isResearched = true;
-      resources.colony.research.value -= research.cost; // Deduct the research cost
-      console.log(`Research "${research.name}" has been completed.`);
-      this.applyResearchEffects(research); // Apply the effects of the research
-    } else {
-      console.log(`Research "${id}" cannot be completed yet.`);
+    // Mark a research as completed
+    completeResearch(id) {
+      const research = this.getResearchById(id);
+      if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
+        research.isResearched = true;
+        resources.colony.research.value -= research.cost; // Deduct the research cost
+        console.log(`Research "${research.name}" has been completed.`);
+        this.applyResearchEffects(research); // Apply the effects of the research
+      } else {
+        console.log(`Research "${id}" cannot be completed yet.`);
+      }
     }
-  }
 
   // Apply research effects to the target
   applyResearchEffects(research) {
@@ -109,9 +112,12 @@ class Research {
       } else if (effect.target === 'project') {
         const project = projects[effect.targetId];
         if (project) {
-          console.log(effect);
           project.addEffect({ ...effect, sourceId: research.id });
         }
+      } else if (effect.target === 'projectManager') {
+        // Apply effect to the project manager
+        projectManager.addEffect({ ...effect, sourceId: research.id });
+        console.log(`Applied effect to ProjectManager: ${effect.type} with value ${effect.value}`);
       }
     });
   }
@@ -124,13 +130,16 @@ class Research {
         if (building) {
           building.removeEffect(research.id);
         }
+      } else if (effect.target === 'projectManager') {
+        // Remove effect from the project manager
+        projectManager.removeEffect(research.id);
+        console.log(`Removed effect from ProjectManager with source ID: ${research.id}`);
       }
       // Other target types (e.g., resources, colonies) can be handled here
     });
   }
 }
 
-  
   // Helper Functions
   function canAffordResearch(researchItem) {
     return resources.colony.research.value >= researchItem.cost;

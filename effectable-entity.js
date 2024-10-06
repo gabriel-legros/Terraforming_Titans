@@ -1,8 +1,8 @@
 class EffectableEntity {
     constructor(config) {
-      this.name = config.name;
       this.description = config.description;
       this.activeEffects = []; // Array to store active effects
+      this.booleanFlags = new Set(); // Set to store boolean flags
     }
   
     // Method to add an effect to the entity
@@ -27,6 +27,7 @@ class EffectableEntity {
   
   // Method to apply a specific effect
   applyEffect(effect) {
+    console.log(effect.type);
     switch (effect.type) {
       case 'increaseResourceGain':
         this.applyIncreaseResourceGain(effect);
@@ -37,6 +38,9 @@ class EffectableEntity {
       case 'enableBuilding':
         this.applyEnableBuilding(effect);
         break;
+      case 'booleanFlag':  // New effect type to handle boolean flags
+        this.applyBooleanFlag(effect);
+      break;
       // Add other effect types here as needed
       default:
         console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -63,5 +67,17 @@ class EffectableEntity {
   
     applyProductionMultiplier(value) {
         // No logic needed for now. Placeholder method.
+    }
+
+    // Method to apply a boolean flag effect
+    applyBooleanFlag(effect) {
+      const { targetId, value } = effect;
+      if (value) {
+        this.booleanFlags.add(targetId); // Add the flag to the Set
+        console.log(`Boolean flag "${targetId}" set to true for ${this.name}.`);
+      } else {
+        this.booleanFlags.delete(targetId); // Remove the flag from the Set
+        console.log(`Boolean flag "${targetId}" set to false for ${this.name}.`);
+      }
     }
 }

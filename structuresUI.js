@@ -1,114 +1,141 @@
 // structures-ui.js
 
-function createBuildingButtons(buildings) {
-    createStructureButtons(
-      buildings,
-      'building-buttons',
-      (buildingName) => buildings[buildingName].buildStructure(resources),
-      adjustStructureActivation
-    );
+// Create buttons for the buildings based on their categories
+function createBuildingButtons() {
+  const categorizedBuildings = {
+    storage: [],
+    production: [],
+    energy: []
+  };
+
+  // Categorize buildings
+  for (const buildingName in buildings) {
+    const building = buildings[buildingName];
+    if (categorizedBuildings[building.category]) {
+      categorizedBuildings[building.category].push(building);
+    }
   }
+
+  // Create buttons for each category
+  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+}
   
-  function createStructureButtons(structures, containerId, buildCallback, toggleCallback) {
+function createStructureButtons(structures, containerId, buildCallback, toggleCallback) {
     const buttonsContainer = document.getElementById(containerId);
     buttonsContainer.innerHTML = '';
   
+    // Group buildings by category
+    const buildingsByCategory = {};
     for (const structureName in structures) {
       const structure = structures[structureName];
-  
-      // Create a container for the structure
-      const structureRow = document.createElement('div');
-      structureRow.classList.add('building-row');
-  
-      // Add the hidden class if the building is not unlocked
-      if (!structure.unlocked) {
-        structureRow.classList.add('hidden'); // Hide the building initially using the CSS class
+      if (!buildingsByCategory[structure.category]) {
+        buildingsByCategory[structure.category] = [];
       }
+      buildingsByCategory[structure.category].push(structure);
+    }
   
-      const buttonAndControlsContainer = document.createElement('div');
-      buttonAndControlsContainer.classList.add('button-controls-container');
+    // Create UI for each category and its buildings
+    for (const category in buildingsByCategory) {
   
-      // Create the structure button
-      const button = document.createElement('button');
-      button.id = `build-${structureName}`;
-      button.classList.add('building-button');
-      button.textContent = `Build ${structure.name}`;
+      // Add buildings under this category
+      const categoryBuildings = buildingsByCategory[category];
+      categoryBuildings.forEach((structure) => {
+        // Create a container for the structure
+        const structureRow = document.createElement('div');
+        structureRow.classList.add('building-row');
   
-      button.addEventListener('click', function () {
-        buildCallback(structureName);
-        updateStructureButtonText(button, structure);
+        // Add the hidden class if the building is not unlocked
+        if (!structure.unlocked) {
+          structureRow.classList.add('hidden'); // Hide the building initially using the CSS class
+        }
+  
+        const buttonAndControlsContainer = document.createElement('div');
+        buttonAndControlsContainer.classList.add('button-controls-container');
+  
+        // Create the structure button
+        const button = document.createElement('button');
+        button.id = `build-${structure.name}`;
+        button.classList.add('building-button');
+        button.textContent = `Build ${structure.displayName}`;
+  
+        button.addEventListener('click', function () {
+          buildCallback(structure.name);
+          updateStructureButtonText(button, structure);
+          updateStructureCostDisplay(costElement, structure);
+        });
+  
+        const structureControls = document.createElement('div');
+        structureControls.classList.add('building-controls');
+  
+        if (structure.canBeToggled) {
+          structureControls.innerHTML = `
+            <span class="label">Constructed: </span>
+            <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>
+            <span class="label">Productivity: </span>
+            <span id="${structure.name}-productivity">0%</span>
+          `;
+  
+          const increaseButton = document.createElement('button');
+          increaseButton.id = `${structure.name}-increase`;
+          increaseButton.textContent = '+';
+          const decreaseButton = document.createElement('button');
+          decreaseButton.id = `${structure.name}-decrease`;
+          decreaseButton.textContent = '-';
+  
+          increaseButton.addEventListener('click', function () {
+            toggleCallback(structure.name, 1, structures);
+          });
+          decreaseButton.addEventListener('click', function () {
+            toggleCallback(structure.name, -1, structures);
+          });
+  
+          structureControls.appendChild(increaseButton);
+          structureControls.appendChild(decreaseButton);
+        } else {
+          structureControls.innerHTML = `
+            <span class="label">Constructed: </span>
+            <span id="${structure.name}-count">${structure.count}</span>
+            <span class="label">Productivity: </span>
+            <span id="${structure.name}-productivity">0%</span>
+          `;
+        }
+  
+        buttonAndControlsContainer.appendChild(button);
+        buttonAndControlsContainer.appendChild(structureControls);
+  
+        const costElement = document.createElement('div');
+        costElement.classList.add('structure-cost');
         updateStructureCostDisplay(costElement, structure);
+  
+        const description = document.createElement('p');
+        description.classList.add('building-description');
+        description.textContent = structure.description;
+  
+        structureRow.appendChild(buttonAndControlsContainer);
+        structureRow.appendChild(costElement);
+        structureRow.appendChild(description);
+  
+        const productionConsumptionDetails = document.createElement('div');
+        productionConsumptionDetails.classList.add('building-production-consumption');
+        productionConsumptionDetails.id = `${structure.name}-production-consumption`;
+  
+        updateProductionConsumptionDetails(structure, productionConsumptionDetails);
+  
+        if (productionConsumptionDetails.innerHTML) {
+          productionConsumptionDetails.classList.add('small-text');
+          structureRow.appendChild(productionConsumptionDetails);
+        }
+  
+        buttonsContainer.appendChild(structureRow);
+  
+        // Add <hr> element between building buttons
+        const hrElement = document.createElement('hr');
+        hrElement.style.border = '1px solid #ccc'; // Set border for the line
+        hrElement.style.margin = '10px 0'; // Add margin to separate it from other elements
+        structureRow.appendChild(hrElement);
       });
-  
-      const structureControls = document.createElement('div');
-      structureControls.classList.add('building-controls');
-  
-      if (structure.canBeToggled) {
-        structureControls.innerHTML = `
-          <span class="label">Constructed: </span>
-          <span id="${structureName}-count-active">${structure.active}/${structure.count}</span>
-          <span class="label">Productivity: </span>
-          <span id="${structureName}-productivity">0%</span>
-        `;
-  
-        const increaseButton = document.createElement('button');
-        increaseButton.id = `${structureName}-increase`;
-        increaseButton.textContent = '+';
-        const decreaseButton = document.createElement('button');
-        decreaseButton.id = `${structureName}-decrease`;
-        decreaseButton.textContent = '-';
-  
-        increaseButton.addEventListener('click', function () {
-          toggleCallback(structureName, 1, structures);
-        });
-        decreaseButton.addEventListener('click', function () {
-          toggleCallback(structureName, -1, structures);
-        });
-  
-        structureControls.appendChild(increaseButton);
-        structureControls.appendChild(decreaseButton);
-      } else {
-        structureControls.innerHTML = `
-          <span class="label">Constructed: </span>
-          <span id="${structureName}-count">${structure.count}</span>
-          <span class="label">Productivity: </span>
-          <span id="${structureName}-productivity">0%</span>
-        `;
-      }
-  
-      buttonAndControlsContainer.appendChild(button);
-      buttonAndControlsContainer.appendChild(structureControls);
-  
-      const costElement = document.createElement('div');
-      costElement.classList.add('structure-cost');
-      updateStructureCostDisplay(costElement, structure);
-  
-      const description = document.createElement('p');
-      description.classList.add('building-description');
-      description.textContent = structure.description;
-  
-      structureRow.appendChild(buttonAndControlsContainer);
-      structureRow.appendChild(costElement);
-      structureRow.appendChild(description);
-  
-      const productionConsumptionDetails = document.createElement('div');
-      productionConsumptionDetails.classList.add('building-production-consumption');
-      productionConsumptionDetails.id = `${structureName}-production-consumption`;
-  
-      updateProductionConsumptionDetails(structure, productionConsumptionDetails);
-  
-      if (productionConsumptionDetails.innerHTML) {
-        productionConsumptionDetails.classList.add('small-text');
-        structureRow.appendChild(productionConsumptionDetails);
-      }
-  
-      buttonsContainer.appendChild(structureRow);
-  
-      // Add <hr> element between building buttons
-      const hrElement = document.createElement('hr');
-      hrElement.style.border = '1px solid #ccc'; // Set border for the line
-      hrElement.style.margin = '10px 0'; // Add margin to separate it from other elements
-      structureRow.appendChild(hrElement);
     }
   }
   
@@ -117,7 +144,7 @@ function createBuildingButtons(buildings) {
   }
   
   function updateStructureButtonText(button, structure) {
-    let buttonText = `Build ${structure.name}`;
+    let buttonText = `Build ${structure.displayName}`;
     let canAfford = true;
   
     for (const category in structure.cost) {
@@ -133,13 +160,17 @@ function createBuildingButtons(buildings) {
   }
   
   function updateStructureCostDisplay(costElement, structure) {
-    let costDetails = '';
+    let costDetails = 'Cost - ';
+    const costArray = [];
+    
     for (const category in structure.cost) {
       for (const resource in structure.cost[category]) {
-        costDetails += `<div>Cost - ${capitalizeFirstLetter(resource)}: ${structure.cost[category][resource]}</div>`;
+        costArray.push(`${capitalizeFirstLetter(resource)}: ${structure.cost[category][resource]}`);
       }
     }
-    costElement.innerHTML = costDetails;
+    
+    costDetails += costArray.join(', ');
+    costElement.innerHTML = `<div>${costDetails}</div>`;
   }
   
   function adjustStructureActivation(structureName, change, structures) {
@@ -213,7 +244,7 @@ function createBuildingButtons(buildings) {
         if (detailsText) {
           detailsText += ', ';
         }
-        detailsText += `<strong>Maintenance:</strong> ${maintenanceText} per second`;
+        detailsText += `<strong>Maintenance:</strong> ${maintenanceText}`;
       }
     }
   

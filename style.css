@@ -1,0 +1,178 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.hidden {
+    display: none;
+}
+
+.tabs,
+.buildings-subtabs,
+.research-subtabs {
+    display: flex;
+    cursor: pointer;
+    background-color: #333;
+    padding: 10px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tab,
+.building-subtab,
+.research-subtab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background-color: #444;
+    color: white;
+    margin: 0 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for color changes */
+    white-space: nowrap; /* Prevent tab button text from wrapping */
+    overflow: hidden; /* Hide overflow to maintain button size */
+    text-overflow: ellipsis; /* Show ellipsis (...) if the text overflows */
+    min-width: 150px; /* Set a minimum width for the tab buttons */
+}
+
+.tab.active,
+.building-subtab.active,
+.research-subtab.active {
+    background-color: #666;
+    color: #fff; /* Consistent text color for active state */
+}
+
+.tab-content-wrapper {
+    display: flex;
+    gap: 30px;
+}
+
+.tab-content {
+    display: none;
+    min-width: 60%;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.resource-container {
+    flex: 20%;
+}
+
+.building-list, 
+.colony-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.button-controls-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap; /* Allows controls to wrap without stretching button */
+}
+
+.building-button {
+    max-width: 200px; /* Set a maximum width for the buttons */
+    width: 100%; /* Make the button take up the available width within the container */
+    margin-bottom: 5px;
+    text-align: center; /* Center the text */
+    white-space: nowrap; /* Prevent button text from wrapping */
+    overflow: hidden; /* Hide overflow if the text is too long */
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+    align-self: flex-start; /* Prevent stretching */
+}
+
+.building-row hr {
+    border: 1px solid #ccc; /* Set border for the line */
+    margin: 10px 0; /* Add margin to separate it from other elements */
+    min-width: 80%; /* Set a minimum width in percentage */
+    width: 100%; /* Make sure the width is responsive */
+}
+
+.building-description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    max-width: 100%; /* Allow the description to take the full width */
+    word-wrap: break-word; /* Allow the text to break onto a new line */
+}
+
+.building-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.building-controls .label {
+    font-weight: bold;
+}
+
+.building-controls button {
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.building-display {
+    width: 100%;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.small-text {
+    font-size: 0.85em;
+    display: inline;
+    margin-top: 5px;
+}
+
+.building-production-consumption {
+    margin-top: 5px;
+}
+
+.scanning-progress {
+    font-size: 0.85em;
+    color: #4CAF50;
+    margin-top: 5px;
+}
+
+.building-subtab-content,
+.research-subtab-content {
+    display: none;
+}
+
+.building-subtab-content.active,
+.research-subtab-content.active {
+    display: block;
+}
+
+.subtab-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.research-item {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.research-button {
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.research-cost,
+.research-description {
+    margin: 5px 0;
+    font-size: 14px;
+}
+

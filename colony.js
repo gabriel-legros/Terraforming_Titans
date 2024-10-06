@@ -1,9 +1,9 @@
 // Assuming Building class is defined globally (from building.js)
 
 class Colony extends Building {
-  constructor(config) {
+  constructor(config, colonyName) {
     // Call the Building constructor to initialize common properties using the config object
-    super(config);
+    super(config, colonyName);
 
     // Add unique properties for the Colony class
     this.uniqueAttributes = config.uniqueAttributes || {};  // Attributes specific to colonies (e.g., population)
@@ -73,18 +73,17 @@ class Colony extends Building {
   }
 }
 
-function initializeColonies(coloniesParameters, maintenanceFraction) {
+function initializeColonies(coloniesParameters) {
   const colonies = {};
   for (const colonyName in coloniesParameters) {
     const colonyData = coloniesParameters[colonyName];
 
     // Add maintenanceFraction to the colony configuration
     const colonyConfig = {
-      ...colonyData,
-      maintenanceFraction: maintenanceFraction,
+      ...colonyData
     };
 
-    colonies[colonyName] = new Colony(colonyConfig);
+    colonies[colonyName] = new Colony(colonyConfig, colonyName);
   }
   return colonies;
 }

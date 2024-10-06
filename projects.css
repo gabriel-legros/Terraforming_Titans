@@ -1,0 +1,74 @@
+.resource-selection-container input[type="number"] {
+    width: 60px; /* Make the text box smaller */
+    padding: 5px; /* Padding to make it consistent */
+    margin-left: 10px; /* Add some spacing to align with the label */
+    box-sizing: border-box; /* Ensure consistent sizing with padding */
+    text-align: center; /* Center the text inside the input */
+}
+
+.resource-selection-container label {
+    margin-bottom: 5px;
+    display: inline-block;
+    width: 80px; /* Set a fixed width to align all labels */
+    text-align: right; /* Align the text to the right for better spacing */
+    padding-right: 10px; /* Add some padding to separate label from the input */
+}
+
+.resource-selection-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.resource-label {
+    flex: 1; /* Give labels consistent width */
+    min-width: 100px; /* Ensure all labels have a minimum width */
+  }
+  
+  .resource-selection-input {
+    width: 60px;
+    text-align: center;
+  }
+
+.progress-bar-container {
+    position: relative;
+    height: 20px;
+    width: 100%;
+    background-color: #eee;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #00bfff;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.buttons-container {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.increment-button {
+    padding: 2px 5px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .price-per-unit {
+    flex: 1;
+    width: 80px;
+    font-size: 12px;
+    color: #555;
+    word-wrap: break-word; /* Allow the text to break onto a new line */
+  }
+
+  .resource-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }

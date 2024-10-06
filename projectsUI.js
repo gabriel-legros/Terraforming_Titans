@@ -1,7 +1,7 @@
 const projectElements = {};
 
 function renderProjects() {
-  const projectsArray = getProjectStatuses(); // Now returns an array of full Project objects
+  const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
   projectsArray.forEach(project => {
     if (!projectElements[project.name]) {
       createProjectItem(project);
@@ -80,28 +80,17 @@ function createProjectItem(project) {
 
   // Button click event to start project
   projectButton.addEventListener('click', function () {
-    if (projectCanStart(project.cost)) {
-      const selectedResource = project.attributes?.resourceChoiceGainCost
-        ? document.getElementById(`${project.name}-resource-select`).value
-        : null;
-      const quantity = project.attributes?.resourceChoiceGainCost
-        ? parseInt(document.getElementById(`${project.name}-resource-quantity`).value, 10)
-        : null;
-
-      if (project.attributes?.resourceChoiceGainCost) {
-        const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[selectedResource];
-        const totalCost = quantity * pricePerUnit;
-
-        if (resources.colony.funding.value >= totalCost) {
-          project.selectedResource = selectedResource;
-          project.selectedQuantity = quantity;
-          startProject(project.name);
-        } else {
-          console.log('Not enough funding to start the project.');
+    if (project.canStart()) {
+      const selectedResources = [];
+      document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {
+        const resource = element.dataset.resource;
+        const quantity = parseInt(element.value, 10);
+        if (quantity > 0) {
+          selectedResources.push({ resource, quantity });
         }
-      } else {
-        startProject(project.name);
-      }
+      });
+      project.selectedResources = selectedResources;
+      projectManager.startProject(project.name);
     } else {
       console.log(`Failed to start project: ${project.name}`);
     }
@@ -120,52 +109,98 @@ function getUpdatedResourceGain(project) {
 }
 
 function createResourceSelectionUI(project) {
-  // Container for the selection UI
   const selectionContainer = document.createElement('div');
   selectionContainer.classList.add('resource-selection-container');
 
-  // Dropdown for resource selection
-  const resourceSelect = document.createElement('select');
-  resourceSelect.id = `${project.name}-resource-select`;
-
-  // Populate dropdown with available resources
   for (const resource in project.attributes.resourceChoiceGainCost.colony) {
-    const option = document.createElement('option');
-    option.value = resource;
-    option.textContent = `${resource.charAt(0).toUpperCase() + resource.slice(1)}`;
-    resourceSelect.appendChild(option);
+    // Container for each resource row
+    const resourceRow = document.createElement('div');
+    resourceRow.classList.add('resource-row');
+
+    // Label for the resource
+    const label = document.createElement('label');
+    label.textContent = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: `;
+    label.classList.add('resource-label');
+
+    // Input field for quantity
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'number';
+    quantityInput.min = 0;
+    quantityInput.value = 0;
+    quantityInput.classList.add('resource-selection-input', `resource-selection-${project.name}`);
+    quantityInput.dataset.resource = resource;
+
+    // Cost per unit display
+    const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[resource];
+    const pricePerUnitDisplay = document.createElement('span');
+    pricePerUnitDisplay.classList.add('price-per-unit');
+    pricePerUnitDisplay.textContent = `Price per unit: ${pricePerUnit} Funding`;
+
+    // Create buttons for incrementing/decrementing quantity
+    const buttonValues = [-100, -10, -1, +1, +10, +100];
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('buttons-container');
+
+    buttonValues.forEach((value) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.classList.add('increment-button');
+      button.textContent = value > 0 ? `+${value}` : `${value}`;
+
+      // Add event listener to change the value in the input field
+      button.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value, 10);
+        const newValue = Math.max(0, currentValue + value); // Prevent negative values
+        quantityInput.value = newValue;
+
+        // Update the total cost display whenever the value changes
+        updateTotalCostDisplay(project);
+      });
+
+      buttonsContainer.appendChild(button);
+    });
+
+    // Append label, input, cost per unit, and buttons to the resource row
+    resourceRow.appendChild(label);
+    resourceRow.appendChild(quantityInput);
+    resourceRow.appendChild(pricePerUnitDisplay);
+    resourceRow.appendChild(buttonsContainer);
+
+    // Append resource row to the main selection container
+    selectionContainer.appendChild(resourceRow);
   }
-  selectionContainer.appendChild(resourceSelect);
 
-  // Input field for quantity
-  const quantityInput = document.createElement('input');
-  quantityInput.type = 'number';
-  quantityInput.min = 1;
-  quantityInput.value = 1;
-  quantityInput.id = `${project.name}-resource-quantity`;
-  selectionContainer.appendChild(quantityInput);
-
-  // Display price per unit
-  let selectedResource = resourceSelect.value;
-  let pricePerUnit = project.attributes.resourceChoiceGainCost.colony[selectedResource];
-  const priceDisplay = document.createElement('p');
-  priceDisplay.classList.add('price-display');
-  priceDisplay.id = `${project.name}-price-display`;
-  priceDisplay.textContent = `Price per unit: ${pricePerUnit} Funding`;
-  selectionContainer.appendChild(priceDisplay);
-
-  // Update price per unit dynamically when the selected resource changes
-  resourceSelect.addEventListener('change', function () {
-    selectedResource = resourceSelect.value;
-    pricePerUnit = project.attributes.resourceChoiceGainCost.colony[selectedResource];
-    priceDisplay.textContent = `Price per unit: ${pricePerUnit} Funding`;
-  });
+  // Add a container to display the total funding cost
+  const totalCostDisplay = document.createElement('p');
+  totalCostDisplay.classList.add('total-cost-display');
+  totalCostDisplay.id = `${project.name}-total-cost-display`;
+  totalCostDisplay.textContent = 'Total Funding Cost: 0 Funding';
+  selectionContainer.appendChild(totalCostDisplay);
 
   return selectionContainer;
 }
 
+function updateTotalCostDisplay(project) {
+  let totalCost = 0;
+
+  // Iterate through each resource input to calculate the total funding cost
+  const quantityInputs = document.querySelectorAll(`.resource-selection-${project.name}`);
+  quantityInputs.forEach((input) => {
+    const resource = input.dataset.resource;
+    const quantity = parseInt(input.value, 10);
+    const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[resource];
+    totalCost += quantity * pricePerUnit;
+  });
+
+  // Update the total cost display element
+  const totalCostDisplay = document.getElementById(`${project.name}-total-cost-display`);
+  if (totalCostDisplay) {
+    totalCostDisplay.textContent = `Total Funding Cost: ${totalCost} Funding`;
+  }
+}
+
 function updateProjectUI(projectName) {
-  const project = projects[projectName];
+  const project = projectManager.projects[projectName]; // Use projectManager to get project
   const elements = projectElements[projectName];
 
   if (!elements) {
@@ -190,26 +225,24 @@ function updateProjectUI(projectName) {
   }
 
   // Check if the project can be afforded (including any resource choice costs)
-  let canAfford = projectCanStart(project.cost);
-  
+  let canAfford = project.canStart();
+
+  // If the project has resource choice gain cost, calculate total cost and update display
   if (project.attributes?.resourceChoiceGainCost) {
-    const quantityInput = document.getElementById(`${project.name}-resource-quantity`);
-    const resourceSelect = document.getElementById(`${project.name}-resource-select`);
-    if (quantityInput && resourceSelect) {
-      const selectedResource = resourceSelect.value;
-      const quantity = parseInt(quantityInput.value, 10);
-      const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[selectedResource];
-      const totalCost = quantity * pricePerUnit;
+    // Update the total cost display for selected resources
+    updateTotalCostDisplay(project);
 
-      // Update canAfford to include the funding requirement
-      canAfford = canAfford && resources.colony.funding.value >= totalCost;
+    // Calculate the total cost for all selected resources
+    let totalCost = 0;
+    document.querySelectorAll(`.resource-selection-${project.name}`).forEach((input) => {
+      const resource = input.dataset.resource;
+      const quantity = parseInt(input.value, 10) || 0; // Default to 0 if invalid
+      const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[resource];
+      totalCost += quantity * pricePerUnit;
+    });
 
-      // Update the price display
-      const priceDisplay = document.getElementById(`${project.name}-price-display`);
-      if (priceDisplay) {
-        priceDisplay.textContent = `Price per unit: ${pricePerUnit} Funding, Total: ${totalCost} Funding`;
-      }
-    }
+    // Check if there is enough funding to afford the selected resources
+    canAfford = canAfford && resources.colony.funding.value >= totalCost;
   }
 
   // Update the button text and state
@@ -225,9 +258,11 @@ function updateProjectUI(projectName) {
   elements.progressBar.style.width = `${project.getProgress()}%`;
 
   // Update the cost text
+  let hasCost = false;
   let costText = 'Cost: ';
   for (const category in project.cost) {
     for (const resource in project.cost[category]) {
+      hasCost = true;
       const resourceCost = project.cost[category][resource];
       const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${resourceCost}`;
       const enoughResources = resources[category][resource].value >= resourceCost;
@@ -235,7 +270,13 @@ function updateProjectUI(projectName) {
       costText += ', ';
     }
   }
-  costText = costText.slice(0, -2); // Remove trailing comma and space
-  costText += `, Duration: ${project.duration / 1000} seconds`;
-  elements.costElement.innerHTML = costText;
+
+  if (hasCost) {
+    costText = costText.slice(0, -2); // Remove trailing comma and space
+    costText += `, Duration: ${project.duration / 1000} seconds`;
+    elements.costElement.innerHTML = costText;
+    elements.costElement.style.display = 'block'; // Show cost if there is any
+  } else {
+    elements.costElement.style.display = 'none'; // Hide cost if there is none
+  }
 }

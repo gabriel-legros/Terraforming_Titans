@@ -1,6 +1,7 @@
 const colonyParameters = {
     t1_colony: {
       name: 'Scientist outpost',
+      category : 'Colony',
       description: 'Supports a small crew for early colonization.  Produces research.',
       cost: { colony: { metal: 50, water : 50 } },
       consumption: {colony : {energy : 10}},

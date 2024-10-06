@@ -3,19 +3,24 @@ const planetParameters = {
     name: 'Mars',
     resources: {
       colony: {
-        funding: {name : 'Funding', initialValue : 1000},
-        colonists: { name: 'Colonists', initialValue: 0, hasCap: true },
-        metal: { name: 'Metal', initialValue: 100, hasCap: true },
-        water: { name: 'Water', initialValue: 0 },
-        food: { name: 'Food', initialValue: 0 },
-        energy: { name: 'Energy', initialValue: 0, hasCap: true },
-        research: { name: 'Research Points', initialValue: 500 }
+        funding: { name: 'Funding', initialValue: 1000 },
+        colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0 }, // No cap initially
+        energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 1000 }, // Base cap from one Battery
+        metal: { name: 'Metal', initialValue: 100, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
+        silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
+        glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
+        water: { name: 'Water', initialValue: 0, hasCap: true}, // Base cap from one Storage Depot
+        food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
+        research: { name: 'Research Points', initialValue: 500, hasCap: false },
+        components: { name: 'Components', initialValue: 100, hasCap: true, baseCap: 500 }, // Base cap from one Storage Depot
+        plastic: { name: 'Plastic', initialValue: 100, hasCap: true, baseCap: 500 }, // Base cap from one Storage Depot
+        electronics: { name: 'Electronics', initialValue: 100, hasCap: true, baseCap: 200 }, // Base cap from one Storage Depot
       },
       surface: {
         ice: { name: 'Ice', initialValue: 100000 }
       },
       underground: {
-        ore: { name: 'Free ore deposits', initialValue: 1, reserved: 1, maxDeposits: 100, areaTotal: 144000 },
+        ore: { name: 'Free ore deposits', initialValue: 1, maxDeposits: 100, areaTotal: 144000 },
         geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 10, areaTotal: 144000 }
       },
       atmospheric: {
@@ -28,14 +33,14 @@ const planetParameters = {
     },
     initialGameState: {
       buildings: {
-        battery: 1,
-        solarPanel: 1,
-        oreMine: 1,
         storageDepot: 1
       }
     },
     buildingParameters: {
       maintenanceFraction: 0.001 // 0.1% of the building's cost as maintenance
+    },
+    populationParameters: {
+      workerRatio: 0.6 // 60% of colonists are considered workers
     },
     fundingRate: 5, // Rate at which funding increases over time
   },

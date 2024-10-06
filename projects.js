@@ -3,22 +3,30 @@
 class Project extends EffectableEntity {
   constructor(config, name) {
     super(config); // Call the base class constructor
-    this.name = config.projectName;
+
+    this.initializeFromConfig(config, name);
+
+    this.remainingTime = config.duration; // Time left to complete the project
+    this.isActive = false; // Whether the project is currently active
+    this.isCompleted = false; // Whether the project has been completed
+    this.repeatCount = 0; // Track the current number of times the project has been repeated
+  }
+
+  initializeFromConfig(config, name) {
+    // Reinitialize properties from configuration
+    this.name = name;
     this.displayName = config.name;
     this.cost = config.cost;
     this.production = config.production;
     this.duration = config.duration;
     this.description = config.description;
     this.attributes = config.attributes || {}; // Load attributes, e.g., scanner-related details
-    this.remainingTime = config.duration; // Time left to complete the project
-    this.isActive = false; // Whether the project is currently active
-    this.isCompleted = false; // Whether the project has been completed
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
-    this.repeatCount = 0; // Track the current number of times the project has been repeated
+    // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
-  canStart(resources) {
+  canStart() {
     // Check if all resources required to start the project are available
     for (const resourceCategory in this.cost) {
       for (const resource in this.cost[resourceCategory]) {
@@ -28,15 +36,16 @@ class Project extends EffectableEntity {
       }
     }
 
-    // Check if there is enough funding if there is a resource choice gain cost
-    if (this.attributes && this.attributes.resourceChoiceGainCost) {
-      const selectedResource = this.attributes.resourceChoiceGainCost.selectedResource;
-      const quantity = this.attributes.resourceChoiceGainCost.quantity;
-      const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[selectedResource];
-      const totalCost = pricePerUnit * quantity;
+    // Check if there is enough funding for all selected resources
+    if (this.selectedResources && this.selectedResources.length > 0) {
+      let totalCost = 0;
+      this.selectedResources.forEach(({ resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
+        totalCost += pricePerUnit * quantity;
+      });
 
       if (resources.colony.funding.value < totalCost) {
-        return false;  // Not enough funding
+        return false; // Not enough funding
       }
     }
 
@@ -52,18 +61,19 @@ class Project extends EffectableEntity {
     }
 
     // Deduct the funding for resource choice gain, if applicable
-    if (this.attributes && this.attributes.resourceChoiceGainCost) {
-      console.log("Reducing funding");
-      const selectedResource = this.selectedResource;
-      const quantity = this.selectedQuantity;
-      const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[selectedResource];
-      const totalCost = pricePerUnit * quantity;
+    if (this.selectedResources.length > 0) {
+      let totalCost = 0;
+      this.selectedResources.forEach(({ resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
+        totalCost += pricePerUnit * quantity;
+      });
 
       resources.colony.funding.decrease(totalCost);
-      // Store the pending resource gain for use when the project completes
-      this.pendingResourceGain = { resource: selectedResource, quantity };
+      // Store the pending resource gains for use when the project completes
+      this.pendingResourceGains = [...this.selectedResources];
     }
   }
+
   start(resources) {
     if (this.canStart(resources)) {
       this.deductResources(resources);
@@ -100,8 +110,8 @@ class Project extends EffectableEntity {
     }
 
     // Apply resource choice gain effect if applicable
-    if (this.pendingResourceGain) {
-      this.applyResourceChoiceGain(this.pendingResourceGain.resource, this.pendingResourceGain.quantity);
+    if (this.pendingResourceGains) {
+      this.applyResourceChoiceGain();
     }
 
     if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
@@ -143,10 +153,12 @@ class Project extends EffectableEntity {
     return effectiveResourceGain;
   }
 
-  applyResourceChoiceGain(selectedResource, quantity) {
-    // Apply resource gain based on the selected resource and quantity
-    resources.colony[selectedResource].increase(quantity);
-    console.log(`Increased ${selectedResource} by ${quantity}`);
+  applyResourceChoiceGain() {
+    // Apply resource gain based on the selected resources and their quantities
+    this.pendingResourceGains.forEach(({ resource, quantity }) => {
+      resources.colony[resource].increase(quantity);
+      console.log(`Increased ${resource} by ${quantity}`);
+    });
   }
 
   applyScannerEffect() {
@@ -173,54 +185,80 @@ class Project extends EffectableEntity {
   }
 }
 
-const projects = {};
+class ProjectManager extends EffectableEntity {
+  constructor() {
+    super({description: 'Manages all special projects'});
 
-
-function initializeProjects() {
-  for (const projectName in projectParameters) {
-    const projectData = projectParameters[projectName];
-    // Add projectName to the config object
-    console.log(projectName);
-    const projectConfig = {
-      ...projectData,
-      projectName: projectName
-    };
-    projects[projectName] = new Project(projectConfig);
+    this.projects = {};
   }
-}
 
-function startProject(projectName) {
-  const project = projects[projectName];
-  if (project && project.start(resources)) {
-    console.log(`Started project: ${projectName}`);
-    updateProjectUI(projectName);  // Update the UI after starting the project
-  } else {
-    console.log(`Failed to start project: ${projectName}`);
+  // New method to activate automation
+  activateSpecialProjectsAutomation() {
+    this.automateSpecialProjects = true;
+    console.log("Special projects automation activated.");
   }
-}
 
-function updateProjects(deltaTime) {
-  for (const projectName in projects) {
-    const project = projects[projectName];
-    if (project.isActive) {
-      project.update(deltaTime);
+  initializeProjects(projectParameters) {
+    for (const projectName in projectParameters) {
+      const projectData = projectParameters[projectName];
+      this.projects[projectName] = new Project(projectData, projectName);
     }
   }
-}
 
-function getProjectStatuses() {
-  return Object.values(projects);
-}
+  startProject(projectName) {
+    const project = this.projects[projectName];
+    if (project && project.start(resources)) {
+      console.log(`Started project: ${projectName}`);
+      updateProjectUI(projectName);
+    } else {
+      console.log(`Failed to start project: ${projectName}`);
+    }
+  }
 
-function projectCanStart(projectCost) {
-  for (const category in projectCost) {
-    const categoryCost = projectCost[category];
-    for (const resource in categoryCost) {
-      const requiredAmount = categoryCost[resource];
-      if (resources[category][resource].value < requiredAmount) {
-        return false;  // Not enough resources
+  updateProjects(deltaTime) {
+    for (const projectName in this.projects) {
+      const project = this.projects[projectName];
+      if (project.isActive) {
+        project.update(deltaTime);
       }
     }
   }
-  return true;  // All resources are available
+
+  getProjectStatuses() {
+    return Object.values(this.projects);
+  }
+
+  // Save the state of all projects
+  saveState() {
+    const projectState = {};
+    for (const projectName in this.projects) {
+      const project = this.projects[projectName];
+      projectState[projectName] = {
+        isActive: project.isActive,
+        isCompleted: project.isCompleted,
+        remainingTime: project.remainingTime,
+        repeatCount: project.repeatCount,
+        selectedResources: project.selectedResources || [],
+      };
+    }
+    return projectState;
+  }
+
+  // Load a previously saved state into the projects
+  loadState(projectState) {
+    for (const projectName in projectState) {
+      const savedProject = projectState[projectName];
+      const project = this.projects[projectName];
+
+      if (project) {
+        project.isActive = savedProject.isActive;
+        project.isCompleted = savedProject.isCompleted;
+        project.remainingTime = savedProject.remainingTime;
+        project.repeatCount = savedProject.repeatCount;
+        project.selectedResources = savedProject.selectedResources;
+
+        project.effects = [];
+      }
+    }
+  }
 }

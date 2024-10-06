@@ -1,34 +1,14 @@
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
-  constructor(config) {
+  constructor(config, buildingName) {
     super(config); // Call the base class constructor
 
     // Destructure configuration object to set properties specific to Building
-    const {
-      cost,
-      consumption,
-      production,
-      storage,
-      dayNightActivity,
-      canBeToggled,
-      maintenanceFraction,
-      maintenanceFactor,
-      requiresMaintenance,
-      requiresDeposit,
-      unlocked,
-    } = config;
+    this.initializeFromConfig(config, buildingName);
 
-    this.cost = cost;
-    this.consumption = consumption;
-    this.production = production;
-    this.storage = storage;
-    this.dayNightActivity = dayNightActivity;
-    this.canBeToggled = canBeToggled;
-    this.requiresMaintenance = requiresMaintenance;
-    this.maintenanceFraction = maintenanceFraction;
-    this.maintenanceFactor = maintenanceFactor;
-    this.requiresDeposit = requiresDeposit;
-    this.unlocked = unlocked;
+    //Everything above can change
+
+    this.unlocked = config.unlocked;
     this.count = 0;
     this.active = 0;
     this.productivity = 0;
@@ -38,6 +18,36 @@ class Building extends EffectableEntity {
     this.currentConsumption = {};
     this.currentMaintenance = {};
   }
+
+    // Method to initialize configurable properties
+    initializeFromConfig(config, buildingName) {
+      const {
+        name,
+        category,
+        cost,
+        consumption,
+        production,
+        storage,
+        dayNightActivity,
+        canBeToggled,
+        maintenanceFactor,
+        requiresMaintenance,
+        requiresDeposit,
+      } = config;
+  
+      this.name = buildingName;
+      this.displayName = name;
+      this.category = category;
+      this.cost = cost;
+      this.consumption = consumption;
+      this.production = production;
+      this.storage = storage;
+      this.dayNightActivity = dayNightActivity;
+      this.canBeToggled = canBeToggled;
+      this.requiresMaintenance = requiresMaintenance;
+      this.maintenanceFactor = requiresMaintenance ? maintenanceFactor : 0;
+      this.requiresDeposit = requiresDeposit;
+    }
 
   // Method to get the effective production multiplier
   getEffectiveProductionMultiplier() {
@@ -54,7 +64,7 @@ class Building extends EffectableEntity {
     const maintenanceCost = {};
     for (const resource in this.cost['colony']) {
       const resourceCost = this.cost['colony'][resource];
-      maintenanceCost[resource] = resourceCost * this.maintenanceFraction * this.maintenanceFactor;
+      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor;
     }
     return maintenanceCost;
   }
@@ -193,9 +203,18 @@ class Building extends EffectableEntity {
     }
   }
 
+  // Method to update storage capacity in resources after building changes
+  updateResourceStorage(resources) {
+    for (const category in this.storage) {
+      for (const resource in this.storage[category]) {
+        resources[category][resource].updateStorageCap(buildings);
+      }
+    }
+  }
+
   buildStructure(resources) {
     if (this.build(resources)) {
-      this.setStorage(resources);
+      this.updateResourceStorage(resources);
     } else {
       console.log(`Insufficient resources to build ${this.name}`);
     }
@@ -206,18 +225,18 @@ class Building extends EffectableEntity {
   }
 }
 
-function initializeBuildings(buildingsParameters, maintenanceFraction) {
+function initializeBuildings(buildingsParameters) {
   const buildings = {};
   for (const buildingName in buildingsParameters) {
     const buildingData = buildingsParameters[buildingName];
 
     // Add maintenanceFraction to the building configuration
     const buildingConfig = {
-      ...buildingData,
-      maintenanceFraction: maintenanceFraction
+      ...buildingData
     };
 
-    buildings[buildingName] = new Building(buildingConfig);
+    buildings[buildingName] = new Building(buildingConfig, buildingName);
   }
+  initializeBuildingTabs();
   return buildings;
 }
