@@ -77,7 +77,8 @@ function createResources(resourcesData) {
     resources[category] = {};
     for (const resourceName in resourcesData[category]) {
       const resourceData = resourcesData[category][resourceName];
-      resourceData.name = resourceName; // Assign resource name to the resourceData object
+      resourceData.displayName = resourceData.name; // Assign resource name to the resourceData object
+      resourceData.name = resourceName;
       resources[category][resourceName] = new Resource(resourceData);
     }
   }
