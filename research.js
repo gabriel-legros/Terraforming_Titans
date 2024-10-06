@@ -110,7 +110,7 @@ class Research {
           building.addEffect({ ...effect, sourceId: research.id });
         }
       } else if (effect.target === 'project') {
-        const project = projects[effect.targetId];
+        const project = projectManager.projects[effect.targetId];
         if (project) {
           project.addEffect({ ...effect, sourceId: research.id });
         }
