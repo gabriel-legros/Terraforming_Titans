@@ -12,7 +12,7 @@ const planetParameters = {
         glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
         water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
         food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000 }, // Base cap from one Storage Depot
-        research: { name: 'Research Points', initialValue: 10000000, hasCap: false },
+        research: { name: 'Research Points', initialValue: 0, hasCap: false },
         components: { name: 'Components', initialValue: 100, hasCap: true, baseCap: 500 }, // Base cap from one Storage Depot
         electronics: { name: 'Electronics', initialValue: 100, hasCap: true, baseCap: 200 }, // Base cap from one Storage Depot
       },
