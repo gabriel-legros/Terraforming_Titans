@@ -47,14 +47,14 @@ class Resource {
     this.baseProductionRate = 0;
   }
 
-  // Method to update the storage cap based on active buildings
-  updateStorageCap(buildings) {
+  // Method to update the storage cap based on active structures
+  updateStorageCap() {
     let newCap = this.baseCap; // Start with the base capacity
-    for (const buildingName in buildings) {
-      const building = buildings[buildingName];
-      if (building.storage && building.active > 0) {
-        if (building.storage.colony && building.storage.colony[this.name]) {
-          newCap += building.active * building.storage.colony[this.name];
+    for (const structureName in structures) {
+      const structure = structures[structureName];
+      if (structure.storage && structure.active > 0) {
+        if (structure.storage.colony && structure.storage.colony[this.name]) {
+          newCap += structure.active * structure.storage.colony[this.name];
         }
       }
     }

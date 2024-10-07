@@ -3,7 +3,7 @@ const colonyParameters = {
       name: 'Scientist outpost',
       category : 'Colony',
       description: 'Supports a small crew for early colonization.  Produces research.',
-      cost: { colony: { metal: 50, water : 50 } },
+      cost: { colony: { metal: 50, water : 50, glass : 50 } },
       consumption: {colony : {energy : 10}},
       production: {colony : {research : 1}},
       storage: { colony: { colonists: 10} },
@@ -12,5 +12,19 @@ const colonyParameters = {
       requiresMaintenance: true,
       maintenanceFactor: 1, // Default maintenance factor
       unlocked: true
+    },
+    t2_colony: {
+      name: 'Small outpost',
+      category : 'Colony',
+      description: 'Larger and more efficient outpost which can support many more people.',
+      cost: { colony: { metal: 250, water : 250, glass : 100 } },
+      consumption: {colony : {energy : 50}},
+      production: {colony : {research : 10}},
+      storage: { colony: { colonists: 100} },
+      dayNightActivity: false, // Not affected by day/night
+      canBeToggled: true, // No manual toggle needed
+      requiresMaintenance: true,
+      maintenanceFactor: 1, // Default maintenance factor
+      unlocked: false
     }
 }

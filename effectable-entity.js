@@ -49,15 +49,7 @@ class EffectableEntity {
 
   // Method to apply enableBuilding effect
   applyEnableBuilding(effect) {
-    const { targetId } = effect;
-    const building = buildings[targetId];
-
-    if (building) {
-      building.enable(); // Assuming Building class has an enable() method to unlock it
-      console.log(`Building "${building.name}" enabled by effect from ${this.name}.`);
-    } else {
-      console.log(`Building with ID "${targetId}" not found for enabling.`);
-    }
+    this.enable();
   }
   
     // Placeholder for potential future use
@@ -79,5 +71,10 @@ class EffectableEntity {
         this.booleanFlags.delete(targetId); // Remove the flag from the Set
         console.log(`Boolean flag "${targetId}" set to false for ${this.name}.`);
       }
+    }
+
+    // Method to check if a boolean flag is set
+    isBooleanFlagSet(flag) {
+      return this.booleanFlags.has(flag);
     }
 }

@@ -3,6 +3,7 @@
 // Create buttons for the buildings based on their categories
 function createBuildingButtons() {
   const categorizedBuildings = {
+    resource: [],
     storage: [],
     production: [],
     energy: []
@@ -19,6 +20,7 @@ function createBuildingButtons() {
   // Create buttons for each category
   createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
   createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
   createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
 }
   
@@ -85,10 +87,10 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
           decreaseButton.textContent = '-';
   
           increaseButton.addEventListener('click', function () {
-            toggleCallback(structure.name, 1, structures);
+            toggleCallback(structure, 1);
           });
           decreaseButton.addEventListener('click', function () {
-            toggleCallback(structure.name, -1, structures);
+            toggleCallback(structure, -1);
           });
   
           structureControls.appendChild(increaseButton);
@@ -145,15 +147,7 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
   
   function updateStructureButtonText(button, structure) {
     let buttonText = `Build ${structure.displayName}`;
-    let canAfford = true;
-  
-    for (const category in structure.cost) {
-      for (const resource in structure.cost[category]) {
-        if (resources[category][resource].value < structure.cost[category][resource]) {
-          canAfford = false;
-        }
-      }
-    }
+    let canAfford = structure.canAfford();
   
     button.textContent = buttonText;
     button.style.color = canAfford ? 'inherit' : 'red';
@@ -162,22 +156,47 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
   function updateStructureCostDisplay(costElement, structure) {
     let costDetails = 'Cost - ';
     const costArray = [];
-    
+  
+    // Include resource costs
     for (const category in structure.cost) {
       for (const resource in structure.cost[category]) {
-        costArray.push(`${capitalizeFirstLetter(resource)}: ${structure.cost[category][resource]}`);
+        const requiredAmount = structure.cost[category][resource];
+        const availableAmount = resources[category][resource]?.value || 0;
+  
+        // Check if the player has enough of this resource
+        const resourceText = `${capitalizeFirstLetter(resource)}: ${requiredAmount}`;
+        const formattedResourceText = availableAmount >= requiredAmount
+          ? resourceText
+          : `<span style="color: red;">${resourceText}</span>`;
+        costArray.push(formattedResourceText);
       }
     }
-    
+  
+    // Include worker cost if applicable
+    if (structure.requiresWorker > 0) {
+      const availableWorkers = resources.colony.workers?.value || 0;
+  
+      // Check if there are enough workers available
+      const workerText = `Workers: ${structure.requiresWorker}`;
+      let formattedWorkerText;
+  
+      if (availableWorkers >= structure.requiresWorker) {
+        formattedWorkerText = workerText;
+      } else {
+        // Use yellow color if not enough workers are available
+        formattedWorkerText = `<span style="color: orange;">${workerText}</span>`;
+      }
+  
+      costArray.push(formattedWorkerText);
+    }
+  
     costDetails += costArray.join(', ');
     costElement.innerHTML = `<div>${costDetails}</div>`;
   }
   
-  function adjustStructureActivation(structureName, change, structures) {
-    const structure = structures[structureName];
+  function adjustStructureActivation(structure, change) {
     structure.active = Math.max(0, Math.min(structure.active + change, structure.count));
-    structure.setStorage(resources);
-    updateStructureDisplay(structures);
+    structure.updateResourceStorage(resources);
   }
   
   function updateStructureDisplay(structures) {
@@ -214,6 +233,12 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
       const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
       if (productionConsumptionDetails) {
         updateProductionConsumptionDetails(structure, productionConsumptionDetails);
+      }
+
+      // Update the cost display
+      const costElement = structureRow.querySelector('.structure-cost');
+      if (costElement) {
+        updateStructureCostDisplay(costElement, structure);
       }
     }
   }

@@ -22,6 +22,9 @@ let resources = {};
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
 let dayNightCycle;
 let buildings = {};
+let colonies = {};
+let structures = {};
+let populationModule;
 let oreScanner = new OreScanning(currentPlanetParameters);
 let projectManager;  // Use ProjectManager instead of individual projects
 
@@ -49,6 +52,9 @@ function create() {
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
 
+  // Combine buildings and colonies into the structures object
+  structures = { ...buildings, ...colonies };
+
   // Initialize research
   researchManager = new ResearchManager(researchParameters);
   initializeResearch();
@@ -58,7 +64,7 @@ function create() {
   fundingModule = new FundingModule(resources, fundingRate);
 
   //initialize population module
-  populationModule = new PopulationModule(resources);
+  populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
   initializeGameState();  // Handle initial game state (building counts, etc.)
 }

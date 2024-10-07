@@ -22,28 +22,48 @@ function createProjectItem(project) {
   // Project Cost
   const costElement = document.createElement('p');
   let costText = 'Cost: ';
+  const costArray = [];
+
   for (const category in project.cost) {
     for (const resource in project.cost[category]) {
-      costText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${project.cost[category][resource]}, `;
+      const requiredAmount = project.cost[category][resource];
+      const availableAmount = resources[category]?.[resource]?.value || 0;
+
+      // Format resource text based on availability
+      const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
+      const formattedResourceText = availableAmount >= requiredAmount
+        ? resourceText
+        : `<span style="color: red;">${resourceText}</span>`;
+      
+      costArray.push(formattedResourceText);
     }
   }
-  costText = costText.slice(0, -2); // Remove trailing comma and space
-  costText += `, Duration: ${project.duration / 1000} seconds`;
+
+  costText += costArray.join(', ');
   costElement.innerHTML = costText;
   projectItem.appendChild(costElement);
 
+  // Repeat Count Display (if project is repeatable and not infinitely repeatable)
+  if (project.repeatable && project.maxRepeatCount !== Infinity) {
+    repeatCountElement = document.createElement('p');
+    repeatCountElement.id = `${project.name}-repeat-count`;
+    repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+    projectItem.appendChild(repeatCountElement);
+  }
+
   // Resource Gain Information
-  if (project.attributes && project.attributes.resourceGain) {
+  if (project.attributes?.resourceGain) {
     const resourceGainElement = document.createElement('p');
     const updatedResourceGain = project.getEffectiveResourceGain();
-    let resourceGainText = 'Resource Gain: ';
-    for (const category in updatedResourceGain) {
-      for (const resource in updatedResourceGain[category]) {
-        resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${updatedResourceGain[category][resource]}, `;
+
+    let resourceGainEntries = [];
+    for (const [category, resources] of Object.entries(updatedResourceGain)) {
+      for (const [resource, value] of Object.entries(resources)) {
+        resourceGainEntries.push(`${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${value}`);
       }
     }
-    resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
-    resourceGainElement.innerHTML = resourceGainText;
+
+    resourceGainElement.textContent = `Resource Gain: ${resourceGainEntries.join(', ')}`;
     resourceGainElement.id = `${project.name}-resource-gain`;
     projectItem.appendChild(resourceGainElement);
   }
@@ -54,46 +74,47 @@ function createProjectItem(project) {
     projectItem.appendChild(resourceSelectionUI);
   }
 
-  // Progress Bar
-  const progressBarContainer = document.createElement('div');
-  progressBarContainer.classList.add('progress-bar-container');
-  const progressBar = document.createElement('div');
-  progressBar.classList.add('progress-bar');
-  progressBar.style.width = '0%';
-  progressBarContainer.appendChild(progressBar);
-  projectItem.appendChild(progressBarContainer);
+  // Unified Progress Button
+  const progressButtonContainer = document.createElement('div');
+  progressButtonContainer.classList.add('progress-button-container');
+  const progressButton = document.createElement('button');
+  progressButton.classList.add('progress-button');
+  progressButton.style.width = '100%';
+  progressButton.textContent = `Start ${project.displayName}`; // Default button text
+  progressButton.disabled = false; // Enable or disable based on project state
+  progressButtonContainer.appendChild(progressButton);
+  projectItem.appendChild(progressButtonContainer);
 
-  // Project Button
-  const projectButton = document.createElement('button');
-  projectButton.textContent = `Start ${project.displayName}`;
-  projectButton.setAttribute('data-project-name', project.displayName);
-  projectItem.appendChild(projectButton);
+  // Auto Start Checkbox (Initially hidden)
+  const autoStartCheckboxContainer = document.createElement('div');
+  autoStartCheckboxContainer.classList.add('auto-start-container', 'hidden');
+  const autoStartCheckbox = document.createElement('input');
+  autoStartCheckbox.type = 'checkbox';
+  autoStartCheckbox.id = `${project.name}-auto-start`;
+  autoStartCheckbox.classList.add('auto-start-checkbox');
+  autoStartCheckboxContainer.appendChild(autoStartCheckbox);
+
+  const autoStartLabel = document.createElement('label');
+  autoStartLabel.htmlFor = `${project.name}-auto-start`;
+  autoStartLabel.textContent = 'Auto start project';
+  autoStartCheckboxContainer.appendChild(autoStartLabel);
+
+  projectItem.appendChild(autoStartCheckboxContainer);
 
   // Store elements for later updates
   projectElements[project.name] = {
-    button: projectButton,
-    progressBar: progressBar,
+    progressButton: progressButton,
     costElement: costElement,
+    repeatCountElement: project.repeatable && project.maxRepeatCount !== Infinity ? repeatCountElement : null,
+    autoStartCheckboxContainer: autoStartCheckboxContainer,
+    autoStartCheckbox: autoStartCheckbox,
   };
 
   document.getElementById('projects-list').appendChild(projectItem);
 
   // Button click event to start project
-  projectButton.addEventListener('click', function () {
-    if (project.canStart()) {
-      const selectedResources = [];
-      document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {
-        const resource = element.dataset.resource;
-        const quantity = parseInt(element.value, 10);
-        if (quantity > 0) {
-          selectedResources.push({ resource, quantity });
-        }
-      });
-      project.selectedResources = selectedResources;
-      projectManager.startProject(project.name);
-    } else {
-      console.log(`Failed to start project: ${project.name}`);
-    }
+  progressButton.addEventListener('click', function () {
+    startProjectWithSelectedResources(project);
   });
 
   // Add <hr> element between projects for better separation
@@ -103,8 +124,10 @@ function createProjectItem(project) {
   projectItem.appendChild(hrElement);
 }
 
+
+
 function getUpdatedResourceGain(project) {
-  const updatedResourceGain = JSON.parse(JSON.stringify(project.attributes.resourceGain || {}));
+  const updatedResourceGain = project.getEffectiveResourceGain;
   return updatedResourceGain;
 }
 
@@ -208,6 +231,11 @@ function updateProjectUI(projectName) {
     return;
   }
 
+  // Update Repeat Count if applicable
+  if (elements.repeatCountElement) {
+    elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+  }
+
   // Update Resource Gain Information if applicable
   if (project.attributes && project.attributes.resourceGain) {
     const updatedResourceGain = project.getEffectiveResourceGain();
@@ -224,59 +252,105 @@ function updateProjectUI(projectName) {
     }
   }
 
-  // Check if the project can be afforded (including any resource choice costs)
-  let canAfford = project.canStart();
+  // Update the cost display, highlighting missing resources in red
+  if (elements.costElement) {
+    let costText = 'Cost: ';
+    const costArray = [];
+    for (const category in project.cost) {
+      for (const resource in project.cost[category]) {
+        const requiredAmount = project.cost[category][resource];
+        const availableAmount = resources[category]?.[resource]?.value || 0;
 
-  // If the project has resource choice gain cost, calculate total cost and update display
-  if (project.attributes?.resourceChoiceGainCost) {
-    // Update the total cost display for selected resources
-    updateTotalCostDisplay(project);
+        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
+        const formattedResourceText = availableAmount >= requiredAmount
+          ? resourceText
+          : `<span style="color: red;">${resourceText}</span>`;
 
-    // Calculate the total cost for all selected resources
-    let totalCost = 0;
-    document.querySelectorAll(`.resource-selection-${project.name}`).forEach((input) => {
-      const resource = input.dataset.resource;
-      const quantity = parseInt(input.value, 10) || 0; // Default to 0 if invalid
-      const pricePerUnit = project.attributes.resourceChoiceGainCost.colony[resource];
-      totalCost += quantity * pricePerUnit;
-    });
-
-    // Check if there is enough funding to afford the selected resources
-    canAfford = canAfford && resources.colony.funding.value >= totalCost;
+        costArray.push(formattedResourceText);
+      }
+    }
+    costText += costArray.join(', ');
+    elements.costElement.innerHTML = costText;
   }
 
-  // Update the button text and state
-  elements.button.textContent = project.isCompleted
-    ? `Completed: ${project.displayName}`
-    : project.isActive
-      ? `In Progress: ${project.displayName}`
-      : `Start ${project.displayName}`;
+  // Check if the project has reached its maximum repeat count or is completed and not repeatable
+  const isMaxRepeatReached = project.repeatable && project.repeatCount >= project.maxRepeatCount;
+  const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
 
-  elements.button.disabled = project.isActive || (project.isCompleted && !project.repeatable) || !canAfford;
+  if (isMaxRepeatReached || isCompletedAndNotRepeatable) {
+    // Hide cost and progress button if the project can't be repeated anymore
+    if (elements.costElement) {
+      elements.costElement.style.display = 'none';
+    }
+    if (elements.progressButton) {
+      elements.progressButton.style.display = 'none';
+    }
+  } else {
+    // If the project can still be repeated or started, show the relevant UI elements
+    if (elements.costElement) {
+      elements.costElement.style.display = 'block';
+    }
+    if (elements.progressButton) {
+      elements.progressButton.style.display = 'block';
 
-  // Update the progress bar
-  elements.progressBar.style.width = `${project.getProgress()}%`;
+      // Update the button text and state
+      if (project.isActive) {
+        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+        elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${project.getProgress()}%)`;
+        elements.progressButton.disabled = true; // Disable while in progress
+        elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${project.getProgress()}%, #ccc ${project.getProgress()}%)`;
+      } else if (project.isCompleted) {
+        elements.progressButton.textContent = `Completed: ${project.displayName}`;
+        elements.progressButton.disabled = true; // Disable when completed
+        elements.progressButton.style.background = '#4caf50'; // Completed background color
+      } else {
+        // Display the start text with the duration
+        elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${project.duration / 1000} seconds)`;
+        elements.progressButton.disabled = !project.canStart(); // Enable only if the project can be started
 
-  // Update the cost text
-  let hasCost = false;
-  let costText = 'Cost: ';
-  for (const category in project.cost) {
-    for (const resource in project.cost[category]) {
-      hasCost = true;
-      const resourceCost = project.cost[category][resource];
-      const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${resourceCost}`;
-      const enoughResources = resources[category][resource].value >= resourceCost;
-      costText += enoughResources ? resourceText : `<span style="color: red;">${resourceText}</span>`;
-      costText += ', ';
+        // Set background color based on whether the project can start
+        if (project.canStart()) {
+          elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+        } else {
+          elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+        }
+      }
     }
   }
 
-  if (hasCost) {
-    costText = costText.slice(0, -2); // Remove trailing comma and space
-    costText += `, Duration: ${project.duration / 1000} seconds`;
-    elements.costElement.innerHTML = costText;
-    elements.costElement.style.display = 'block'; // Show cost if there is any
+  // Show or hide the auto start checkbox based on automation flag in projectManager
+  if (projectManager.isBooleanFlagSet('automateSpecialProjects')) {
+    elements.autoStartCheckboxContainer.classList.remove('hidden');
   } else {
-    elements.costElement.style.display = 'none'; // Hide cost if there is none
+    elements.autoStartCheckboxContainer.classList.add('hidden');
+  }
+
+  // Check if the auto-start checkbox is checked and attempt to start the project automatically
+  if (elements.autoStartCheckbox?.checked && !project.isActive && !project.isCompleted && project.canStart()) {
+    checkAndStartProjectAutomatically(project);
+  }
+}
+
+
+function startProjectWithSelectedResources(project) {
+  if (project.canStart()) {
+    const selectedResources = [];
+    document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {
+      const resource = element.dataset.resource;
+      const quantity = parseInt(element.value, 10);
+      if (quantity > 0) {
+        selectedResources.push({ resource, quantity });
+      }
+    });
+    project.selectedResources = selectedResources;
+    projectManager.startProject(project.name);
+  } else {
+    console.log(`Failed to start project: ${project.name}`);
+  }
+}
+
+function checkAndStartProjectAutomatically(project) {
+  if (project.canStart()) {
+    startProjectWithSelectedResources(project);
   }
 }

@@ -18,6 +18,32 @@ class OreScanning {
       }
     }
 
+    // Method to save the current state of ore scanning
+    saveState() {
+      const savedState = {};
+      for (const depositType in this.scanData) {
+        const scanData = this.scanData[depositType];
+        savedState[depositType] = {
+          D_max: scanData.D_max,
+          A_total: scanData.A_total,
+          D_current: scanData.D_current,
+          currentScanProgress: scanData.currentScanProgress,
+          currentScanningStrength: scanData.currentScanningStrength,
+          remainingTime: scanData.remainingTime
+        };
+      }
+      return savedState;
+    }
+
+    // Method to load the saved state of ore scanning
+    loadState(savedState) {
+      for (const depositType in savedState) {
+        if (this.scanData[depositType]) {
+          Object.assign(this.scanData[depositType], savedState[depositType]);
+        }
+      }
+    }
+
     // Method to calculate the expected time or effort to find the next deposit, scaling with scanning strength
     calculateExpectedTime(depositType, scanningStrength = 1) {
       const scanData = this.scanData[depositType];

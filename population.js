@@ -1,7 +1,10 @@
 class PopulationModule {
-    constructor(resources) {
+    constructor(resources, populationParameters) {
       this.populationResource = resources.colony.colonists; // Reference to the population resource
+      this.workerResource = resources.colony.workers; // Reference to the worker resource
+      this.workerRatio = populationParameters.workerRatio; // Ratio of colonists that become workers
       this.growthRate = 0; // Population growth rate, e.g., 0.01 for 1% per second
+      this.totalWorkersRequired = 0;
     }
   
     setGrowthRate(growthRate) {
@@ -24,7 +27,7 @@ class PopulationModule {
         // Decay even if population is above the cap
         const decayRate = this.growthRate * currentPopulation;
         populationChange = decayRate * (deltaTime / 1000);
-      } else if (populationCap === 0 && currentPopulation > 0) {
+      } else if (currentPopulation > populationCap && currentPopulation > 0) {
         // Decay when cap is 0
         const decayRate = -0.1 * currentPopulation;
         populationChange = decayRate * (deltaTime / 1000);
@@ -45,5 +48,46 @@ class PopulationModule {
       {
         this.populationResource.value = 0;
       }
-    }
+    // Update worker requirements based on active buildings
+    this.updateWorkerRequirements();
+
+    // Update worker cap based on current population and worker ratio
+    this.updateWorkerCap();
+
+    this.workerResource.value = Math.max(0, this.workerResource.cap - this.totalWorkersRequired);
   }
+
+  updateWorkerCap() {
+    // Set the worker cap based on the current population and worker ratio
+    const workerCap = Math.floor(this.workerRatio * this.populationResource.value);
+    this.workerResource.cap = workerCap;
+
+    // Adjust the worker value if it exceeds the cap
+    if (this.workerResource.value > workerCap) {
+      this.workerResource.value = workerCap;
+    }
+
+  }
+
+  updateWorkerRequirements() {
+    let totalWorkersRequired = 0;
+
+    // Calculate total workers required based on active buildings
+    for (const buildingName in buildings) {
+      const building = buildings[buildingName];
+      if (building.active > 0 && building.requiresWorker > 0) {
+        totalWorkersRequired += building.active * building.requiresWorker;
+      }
+    }
+
+    this.totalWorkersRequired = totalWorkersRequired; // Store the total workers required
+  }
+
+  // Method to return the ratio of available workers to required workers
+  getWorkerAvailabilityRatio() {
+    if (this.totalWorkersRequired === 0) {
+      return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
+    }
+    return this.workerResource.cap / this.totalWorkersRequired;
+  }
+}

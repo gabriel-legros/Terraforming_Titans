@@ -32,8 +32,11 @@ function activateBuildingSubtab(subtabId) {
 
 function initializeBuildingTabs() {
     // Set the default active subtab for buildings
-    activateBuildingSubtab('storage-buildings'); // Make 'storage' tab active by default
+    activateBuildingSubtab('resource-buildings'); // Make 'production' tab active by default
 
+    document.getElementById('resource-buildings-tab').addEventListener('click', () => {
+        activateBuildingSubtab('resource-buildings');
+    });
     // Add event listeners to each subtab for switching
     document.getElementById('storage-buildings-tab').addEventListener('click', () => {
         activateBuildingSubtab('storage-buildings');

@@ -10,7 +10,7 @@ const projectParameters = {
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
     description: "Launch a satellite to enhance mineral extraction from Martian soil.  Satellites scan for new ore veins.  More satellites improve scanning speed.  Veins become harder to find the more they are found.",
     repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: Infinity,  // Infinite repeats allowed
+    maxRepeatCount: 10,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for ore deposits
@@ -30,7 +30,7 @@ const projectParameters = {
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
     description: "Launch a sensitive satellite to scan for geothermal energy.  Satellite scan for suitable geothermal vents.",
     repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: Infinity,  // Infinite repeats allowed
+    maxRepeatCount: 10,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for geothermal deposits
@@ -43,11 +43,9 @@ const projectParameters = {
     name: "Import colonists",
     cost: {
       colony: {
-        metal: 50,
-        energy: 50
       }
     },
-    duration: 1800,  // Duration of the project in milliseconds
+    duration: 180000,  // Duration of the project in milliseconds
     description: "Use chemical rockets to import colonists from Earth",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
@@ -65,7 +63,7 @@ const projectParameters = {
       colony: {
       }
     },
-    duration: 1800,  // Duration of the project in milliseconds (e.g., 3 minutes)
+    duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
     description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Infinite repeats allowed
@@ -76,9 +74,8 @@ const projectParameters = {
           glass: 5,
           water : 1,
           food : 1,
-          components: 50,
-          plastic: 50,
-          electronics: 100
+          components: 10,
+          electronics: 10
         }
       }
     }

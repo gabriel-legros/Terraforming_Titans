@@ -114,7 +114,13 @@ class Research {
         if (project) {
           project.addEffect({ ...effect, sourceId: research.id });
         }
-      } else if (effect.target === 'projectManager') {
+      }  else if (effect.target === 'colony') {
+        const colony = colonies[effect.targetId];
+        if (colony) {
+          colony.addEffect({ ...effect, sourceId: research.id });
+        }
+      }
+      else if (effect.target === 'projectManager') {
         // Apply effect to the project manager
         projectManager.addEffect({ ...effect, sourceId: research.id });
         console.log(`Applied effect to ProjectManager: ${effect.type} with value ${effect.value}`);

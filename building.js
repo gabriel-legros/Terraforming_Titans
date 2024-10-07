@@ -33,6 +33,7 @@ class Building extends EffectableEntity {
         maintenanceFactor,
         requiresMaintenance,
         requiresDeposit,
+        requiresWorker, // Added requiresWorker to the destructured properties
       } = config;
   
       this.name = buildingName;
@@ -47,6 +48,7 @@ class Building extends EffectableEntity {
       this.requiresMaintenance = requiresMaintenance;
       this.maintenanceFactor = requiresMaintenance ? maintenanceFactor : 0;
       this.requiresDeposit = requiresDeposit;
+      this.requiresWorker = requiresWorker || 0; // Set default to 0 if not provided
     }
 
   // Method to get the effective production multiplier
@@ -69,7 +71,7 @@ class Building extends EffectableEntity {
     return maintenanceCost;
   }
 
-  canAfford(resources) {
+  canAfford() {
     for (const category in this.cost) {
       for (const resource in this.cost[category]) {
         if (resources[category][resource].value < this.cost[category][resource]) {
@@ -101,6 +103,7 @@ class Building extends EffectableEntity {
       }
       this.count++;
       this.active++;
+      this.updateResourceStorage();
       return true;
     }
     return false;
@@ -128,6 +131,13 @@ class Building extends EffectableEntity {
         }
       }
     }
+
+    if(this.requiresWorker){
+    // Get worker ratio from populationModule
+    const workerRatio = populationModule.getWorkerAvailabilityRatio();
+    minRatio = Math.min(minRatio, workerRatio);
+    }
+
     this.productivity = Math.max(0, Math.min(1, minRatio));
   }
 
@@ -195,16 +205,8 @@ class Building extends EffectableEntity {
     }
   }
 
-  setStorage(resources) {
-    for (const category in this.storage) {
-      for (const resource in this.storage[category]) {
-        resources[category][resource].cap = this.active * this.storage[category][resource];
-      }
-    }
-  }
-
   // Method to update storage capacity in resources after building changes
-  updateResourceStorage(resources) {
+  updateResourceStorage() {
     for (const category in this.storage) {
       for (const resource in this.storage[category]) {
         resources[category][resource].updateStorageCap(buildings);
