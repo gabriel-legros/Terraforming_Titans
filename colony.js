@@ -19,8 +19,9 @@ class Colony extends Building {
 
     minRatio = Math.min(minRatio, populationRatio);
 
-    const dampingFactor = 0.1; // Adjust the damping factor as needed
-    const targetProductivity = Math.max(0, Math.min(1, minRatio));
+    const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+    const difference = Math.abs(targetProductivity - this.productivity);
+    const dampingFactor = difference < 0.05 ? 0.01 : 1; // Use smaller damping if close to target
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
   

@@ -148,7 +148,7 @@ const buildingsParameters = {
     canBeToggled: true,
     requiresMaintenance: true,
     requiresWorker: 0,
-    maintenanceFactor: 0,
+    maintenanceFactor: 1,
     unlocked: false
   },
   battery: {
