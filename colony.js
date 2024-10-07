@@ -10,33 +10,18 @@ class Colony extends Building {
   }
 
   updateProductivity(resources, deltaTime) {
-    let minRatio = Infinity;
-    for (const category in this.consumption) {
-      for (const resource in this.consumption[category]) {
-        const requiredAmount = this.consumption[category][resource] * this.active * (deltaTime / 1000);
-        if (requiredAmount === 0) continue;
-        const availableAmount = resources[category][resource].value;
-        if (availableAmount < requiredAmount) {
-          minRatio = Math.min(minRatio, availableAmount / requiredAmount);
-        } else {
-          minRatio = Math.min(minRatio, 1);
-        }
-      }
-    }
+    let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
 
-    if(this.requiresWorker){
-    // Get worker ratio from populationModule
-    const workerRatio = populationModule.getWorkerAvailabilityRatio();
-    minRatio = Math.min(minRatio, workerRatio);
-    }
-
+    // Calculate minRatio based on colonist availability
     const colonists = resources.colony.colonists.value;
     const colonistsCapacity = resources.colony.colonists.cap;
     const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
 
     minRatio = Math.min(minRatio, populationRatio);
 
-    this.productivity = Math.max(0, Math.min(1, minRatio));
+    const dampingFactor = 0.1; // Adjust the damping factor as needed
+    const targetProductivity = Math.max(0, Math.min(1, minRatio));
+    this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
   
     // Override canAfford if colonies have unique costs or conditions

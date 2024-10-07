@@ -117,8 +117,11 @@ class Building extends EffectableEntity {
     }
   }
 
-  updateProductivity(resources, deltaTime) {
+  // Method to calculate the base minRatio based on resource consumption and worker availability
+  calculateBaseMinRatio(resources, deltaTime) {
     let minRatio = Infinity;
+
+    // Calculate minRatio based on resource consumption
     for (const category in this.consumption) {
       for (const resource in this.consumption[category]) {
         const requiredAmount = this.consumption[category][resource] * this.active * (deltaTime / 1000);
@@ -132,13 +135,20 @@ class Building extends EffectableEntity {
       }
     }
 
-    if(this.requiresWorker){
-    // Get worker ratio from populationModule
-    const workerRatio = populationModule.getWorkerAvailabilityRatio();
-    minRatio = Math.min(minRatio, workerRatio);
+    // Calculate minRatio based on worker availability if applicable
+    if (this.requiresWorker) {
+      const workerRatio = populationModule.getWorkerAvailabilityRatio();
+      minRatio = Math.min(minRatio, workerRatio);
     }
 
-    this.productivity = Math.max(0, Math.min(1, minRatio));
+    return minRatio;
+  }
+
+  // Update productivity with damping factor
+  updateProductivity(resources, deltaTime) {
+    const dampingFactor = 0.1; // Adjust the damping factor as needed
+    const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+    this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
 
 // Updated produce function to track production rates
