@@ -154,7 +154,7 @@ const researchParameters = {
         id: 'enhanced_colonist_import_2',
         name: 'Bigger rockets',
         description: 'Further increase the capacity of each colonist import by 20 using bigger rockets.',
-        cost: { research: 500 },  // Adjust the cost to make it suitable for the impact of the research
+        cost: { research: 5000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
           {
