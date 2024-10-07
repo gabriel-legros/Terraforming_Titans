@@ -133,6 +133,26 @@ function calculateProductionRates(deltaTime, buildings) {
 function produceResources(deltaTime, buildings, resources) {
   const isDay = dayNightCycle.isDay();
 
+  // Reset production and consumption rates for all resources
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      resource.productionRate = 0;
+      resource.consumptionRate = 0;
+    }
+  }
+
+  // Temporary object to store changes
+  const accumulatedChanges = {};
+
+  // Initialize accumulated changes
+  for (const category in resources) {
+    accumulatedChanges[category] = {};
+    for (const resourceName in resources[category]) {
+      accumulatedChanges[category][resourceName] = 0;
+    }
+  }
+
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
 
@@ -144,12 +164,34 @@ function produceResources(deltaTime, buildings, resources) {
       building.updateProductivity(resources, deltaTime);
     }
 
-    // Always call these methods to track the production/consumption rates even if productivity is 0
-    building.produce(resources, deltaTime);
-    building.consume(resources, deltaTime);
-    building.applyMaintenance(resources, deltaTime);
+    // Accumulate production, consumption, and maintenance changes
+    building.produce(accumulatedChanges, deltaTime);
+    building.consume(accumulatedChanges, deltaTime);
+    building.applyMaintenance(accumulatedChanges, deltaTime);
   }
 
-  // Calculate production and consumption rates from buildings
-  calculateProductionRates(deltaTime, buildings);
+  // Apply funding rate to the accumulated changes
+  if (fundingModule) {
+    const fundingIncreaseRate = fundingModule.fundingRate; // Get funding rate from funding module
+    accumulatedChanges.colony.funding += fundingIncreaseRate * (deltaTime / 1000);
+
+    // Update production rate for funding resource
+    resources.colony.funding.productionRate = fundingIncreaseRate;
+  }
+
+  // Apply accumulated changes to resources
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      resource.value += accumulatedChanges[category][resourceName];
+
+      // Enforce the cap after applying all changes
+      if (resource.hasCap) {
+        resource.value = Math.min(resource.value, resource.cap);
+      }
+
+      // Ensure the resource value doesn't drop below zero
+      resource.value = Math.max(resource.value, 0);
+    }
+  }
 }

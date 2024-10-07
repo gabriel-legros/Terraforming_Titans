@@ -8,47 +8,36 @@ class Colony extends Building {
     // Add unique properties for the Colony class
     this.uniqueAttributes = config.uniqueAttributes || {};  // Attributes specific to colonies (e.g., population)
   }
-  
-    produce(resources, deltaTime) {
-      // Ensure the production data structure is properly initialized
-      for (const category in this.production) {
-        if (!this.currentProduction[category]) {
-          this.currentProduction[category] = {};
-        }
-      }
-    
-      // Use effective multiplier from active effects
-      const effectiveMultiplier = this.getEffectiveProductionMultiplier();
-    
-      for (const category in this.production) {
-        for (const resource in this.production[category]) {
-          // Determine base production rate for this resource
-          let baseProduction = this.production[category][resource];
-          let productionModifier = 1;
-    
-          // Adjust production based on colonists and storage capacity for colonies
-          if (resource === 'research') {
-            const colonists = resources.colony.colonists.value;
-            const colonistsCapacity = resources.colony.colonists.cap;
-            const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
-            productionModifier = populationRatio;
-          }
-    
-          // Calculate total production scaled with deltaTime and effective multiplier
-          const scaledProduction = this.active * baseProduction * this.productivity * productionModifier * (deltaTime / 1000) * effectiveMultiplier;
-    
-          // Ensure we don't exceed the remaining capacity of the resource
-          const remainingCapacity = resources[category][resource].cap - resources[category][resource].value;
-          const actualProduction = Math.min(scaledProduction, remainingCapacity);
-    
-          // Increase resource value
-          resources[category][resource].increase(actualProduction);
-    
-          // Track actual production
-          this.currentProduction[category][resource] = actualProduction;
+
+  updateProductivity(resources, deltaTime) {
+    let minRatio = Infinity;
+    for (const category in this.consumption) {
+      for (const resource in this.consumption[category]) {
+        const requiredAmount = this.consumption[category][resource] * this.active * (deltaTime / 1000);
+        if (requiredAmount === 0) continue;
+        const availableAmount = resources[category][resource].value;
+        if (availableAmount < requiredAmount) {
+          minRatio = Math.min(minRatio, availableAmount / requiredAmount);
+        } else {
+          minRatio = Math.min(minRatio, 1);
         }
       }
     }
+
+    if(this.requiresWorker){
+    // Get worker ratio from populationModule
+    const workerRatio = populationModule.getWorkerAvailabilityRatio();
+    minRatio = Math.min(minRatio, workerRatio);
+    }
+
+    const colonists = resources.colony.colonists.value;
+    const colonistsCapacity = resources.colony.colonists.cap;
+    const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
+
+    minRatio = Math.min(minRatio, populationRatio);
+
+    this.productivity = Math.max(0, Math.min(1, minRatio));
+  }
   
     // Override canAfford if colonies have unique costs or conditions
     canAfford(resources) {
