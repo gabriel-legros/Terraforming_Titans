@@ -183,11 +183,18 @@ function produceResources(deltaTime, buildings, resources) {
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
+      const previousValue = resource.value; // Track the previous value before changes
+
+      // Apply the accumulated changes
       resource.value += accumulatedChanges[category][resourceName];
 
-      // Enforce the cap after applying all changes
+      // If the resource was at the cap, flatten back to cap but allow temporary excess
       if (resource.hasCap) {
-        resource.value = Math.min(resource.value, resource.cap);
+        if (previousValue >= resource.cap) {
+          resource.value = Math.min(resource.value, previousValue); // Flatten back to previous capped value
+        } else {
+          resource.value = Math.min(resource.value, resource.cap); // Otherwise, just apply the cap normally
+        }
       }
 
       // Ensure the resource value doesn't drop below zero

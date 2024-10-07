@@ -7,6 +7,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 10}},
       production: {colony : {research : 1}},
       storage: { colony: { colonists: 10} },
+      baseComfort : 0,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
       requiresMaintenance: true,
@@ -21,6 +22,7 @@ const colonyParameters = {
       consumption: {colony : {energy : 50}},
       production: {colony : {research : 10}},
       storage: { colony: { colonists: 100} },
+      baseComfort : 0.2,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
       requiresMaintenance: true,

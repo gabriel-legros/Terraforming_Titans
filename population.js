@@ -7,8 +7,30 @@ class PopulationModule {
       this.totalWorkersRequired = 0;
     }
   
-    setGrowthRate(growthRate) {
-      this.growthRate = growthRate;
+    calculateGrowthRate() {
+      let totalWeightedHappiness = 0;
+      let totalCapacity = 0;
+      let growthRateDivider = 200;
+    
+      // Iterate through all colonies and sum their weighted happiness based on capacity
+      for (const colonyName in colonies) {
+        const colony = colonies[colonyName];
+        const capacity = colony.active*colony.storage.colony.colonists; // Use capacity as weight
+    
+        // Only consider colonies with a valid capacity
+        if (capacity > 0) {
+          totalWeightedHappiness += colony.happiness * capacity;
+          totalCapacity += capacity;
+        }
+      }
+    
+      // Calculate the weighted average happiness
+      const weightedAverageHappiness = totalCapacity > 0 ? totalWeightedHappiness / totalCapacity : 0;
+    
+      // Calculate growth rate by subtracting 0.5 from the weighted average happiness
+      const growthRate = (weightedAverageHappiness - 0.5) / growthRateDivider;
+    
+      return growthRate;
     }
   
     updatePopulation(deltaTime) {
@@ -16,6 +38,8 @@ class PopulationModule {
       const currentPopulation = this.populationResource.value;
       const populationCap = this.populationResource.cap;
   
+      this.growthRate = this.calculateGrowthRate();
+
       // Calculate logistic growth/decay
       let populationChange = 0;
   

@@ -94,6 +94,12 @@ function updateLogic(delta) {
   fundingModule.update(delta);
   produceResources(delta, allStructures, resources);
 
+  // Update happiness for each colony
+  for (const colonyName in colonies) {
+    const colony = colonies[colonyName];
+    colony.updateHappiness(delta);
+  }
+
   populationModule.updatePopulation(delta);
 
   projectManager.updateProjects(delta); 
