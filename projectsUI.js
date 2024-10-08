@@ -319,7 +319,7 @@ function updateProjectUI(projectName) {
   }
 
   // If the project has resource choice gain cost, calculate total cost and update display
-  if (project.attributes?.resourceChoiceGainCost) {
+  if (project.attributes?.resourceChoiceGainCost && !project.pendingResourceGains) {
     // Update the total cost display for selected resources
     const selectedResources = [];
     document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {

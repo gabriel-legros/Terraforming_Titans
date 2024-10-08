@@ -159,6 +159,7 @@ class Project extends EffectableEntity {
       resources.colony[resource].increase(quantity);
       console.log(`Increased ${resource} by ${quantity}`);
     });
+    this.pendingResourceGains = false;
   }
 
   applyScannerEffect() {
@@ -239,6 +240,7 @@ class ProjectManager extends EffectableEntity {
         remainingTime: project.remainingTime,
         repeatCount: project.repeatCount,
         selectedResources: project.selectedResources || [],
+        pendingResourceGains: project.pendingResourceGains || [],
       };
     }
     return projectState;
@@ -256,7 +258,7 @@ class ProjectManager extends EffectableEntity {
         project.remainingTime = savedProject.remainingTime;
         project.repeatCount = savedProject.repeatCount;
         project.selectedResources = savedProject.selectedResources;
-
+        project.pendingResourceGains = savedProject.pendingResourceGains;
         project.effects = [];
       }
     }

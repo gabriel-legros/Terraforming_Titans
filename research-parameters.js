@@ -91,20 +91,6 @@ const researchParameters = {
     ],
     colonization: [
       {
-        id: 'greenhouses',
-        name: 'Greenhouse Farming',
-        description: 'Enables greenhouses for growing food on Mars.',
-        cost: { research: 100 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'greenhouse',
-            type: 'enableBuilding',
-          },
-        ],
-      },
-      {
         id: 'enhanced_colonist_import_1',
         name: 'Enhanced Colonist Importation',
         description: 'Increase the capacity of each colonist import by 10 using optimized spacecraft and improved logistics.',
