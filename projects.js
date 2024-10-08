@@ -23,6 +23,7 @@ class Project extends EffectableEntity {
     this.attributes = config.attributes || {}; // Load attributes, e.g., scanner-related details
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
+    this.unlocked = config.unlocked;
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
@@ -183,6 +184,10 @@ class Project extends EffectableEntity {
   getProgress() {
     if (!this.isActive) return 0;
     return Math.max(0, ((this.duration - this.remainingTime) / this.duration) * 100).toFixed(2);
+  }
+
+  enable() {
+    this.unlocked = true;
   }
 }
 

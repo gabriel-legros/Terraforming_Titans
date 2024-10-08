@@ -25,8 +25,13 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'geothermalGenerator',
-            type: 'enableBuilding',
+            type: 'enable',
           },
+          {
+            target: 'project',
+            targetId : 'geo_satellite',
+            type: 'enable'
+          }
         ],
       },
       {
@@ -39,7 +44,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'nuclearPowerPlant',
-            type: 'enableBuilding',
+            type: 'enable',
           },
         ],
       }
@@ -70,7 +75,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'componentFactory',
-            type: 'enableBuilding',
+            type: 'enable',
           },
         ],
       },
@@ -84,7 +89,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'electronicsFactory',
-            type: 'enableBuilding',
+            type: 'enable',
           },
         ],
       },
@@ -117,7 +122,7 @@ const researchParameters = {
           {
             target: 'colony',
             targetId: 't2_colony',
-            type: 'enableBuilding',
+            type: 'enable',
           },
         ],
       },
@@ -165,7 +170,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'hydroponicFarm',
-            type: 'enableBuilding'
+            type: 'enable'
           },
         ],
       }

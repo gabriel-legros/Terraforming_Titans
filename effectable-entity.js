@@ -35,8 +35,8 @@ class EffectableEntity {
       case 'productionMultiplier':
         this.applyProductionMultiplier(effect.value);
         break;
-      case 'enableBuilding':
-        this.applyEnableBuilding(effect);
+      case 'enable':
+        this.enable();
         break;
       case 'booleanFlag':  // New effect type to handle boolean flags
         this.applyBooleanFlag(effect);
@@ -45,11 +45,6 @@ class EffectableEntity {
       default:
         console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
     }
-  }
-
-  // Method to apply enableBuilding effect
-  applyEnableBuilding(effect) {
-    this.enable();
   }
   
     // Placeholder for potential future use

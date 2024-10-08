@@ -3,6 +3,10 @@ const projectElements = {};
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
   projectsArray.forEach(project => {
+    if (!project.unlocked) {
+      return; // Skip projects that are not unlocked
+    }
+    
     if (!projectElements[project.name]) {
       createProjectItem(project);
     }

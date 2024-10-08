@@ -1,4 +1,47 @@
 const projectParameters = {
+  cargo_rocket: {
+    name: "Cargo Rocket",
+    cost: {
+      colony: {
+      }
+    },
+    duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
+    description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
+    repeatable: true,  // Flag indicating if the project is repeatable
+    maxRepeatCount: Infinity,  // Infinite repeats allowed
+    unlocked: true,
+    attributes: {
+      resourceChoiceGainCost: {
+        colony: {
+          metal : 5,
+          glass: 5,
+          water : 1,
+          food : 1,
+          components: 10,
+          electronics: 10
+        }
+      }
+    }
+  },
+  import_colonists_1: {
+    name: "Import colonists",
+    cost: {
+      colony: {
+      }
+    },
+    duration: 180000,  // Duration of the project in milliseconds
+    description: "Use chemical rockets to import colonists from Earth",
+    repeatable: true,  // Flag indicating if the project is repeatable
+    maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
+    unlocked: true,
+    attributes: {
+      resourceGain: {
+        colony: {
+          colonists: 10
+        }
+      }
+    }
+  },
   satellite: {
     name: "Ore satellite",
     cost: {
@@ -11,6 +54,7 @@ const projectParameters = {
     description: "Launch a satellite to enhance mineral extraction from Martian soil.  Satellites scan for new ore veins.  More satellites improve scanning speed.  Veins become harder to find the more they are found.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 10,
+    unlocked: true,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for ore deposits
@@ -31,52 +75,12 @@ const projectParameters = {
     description: "Launch a sensitive satellite to scan for geothermal energy.  Satellite scan for suitable geothermal vents.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 10,
+    unlocked: false,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for geothermal deposits
         searchValue: 0.01,  // Search value indicating effectiveness in finding geothermal deposits
         depositType: "geothermal"  // Specify which type of deposit the scanner searches for
-      }
-    }
-  },
-  import_colonists_1: {
-    name: "Import colonists",
-    cost: {
-      colony: {
-      }
-    },
-    duration: 180000,  // Duration of the project in milliseconds
-    description: "Use chemical rockets to import colonists from Earth",
-    repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
-    attributes: {
-      resourceGain: {
-        colony: {
-          colonists: 10
-        }
-      }
-    }
-  },
-  cargo_rocket: {
-    name: "Cargo Rocket",
-    cost: {
-      colony: {
-      }
-    },
-    duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
-    description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
-    repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: Infinity,  // Infinite repeats allowed
-    attributes: {
-      resourceChoiceGainCost: {
-        colony: {
-          metal : 5,
-          glass: 5,
-          water : 1,
-          food : 1,
-          components: 10,
-          electronics: 10
-        }
       }
     }
   }

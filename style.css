@@ -55,7 +55,6 @@ body {
 .tab-content {
     flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
-    min-width: 60%;
 }
 
 .tab-content.active {

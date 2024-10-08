@@ -6,9 +6,8 @@ class Building extends EffectableEntity {
     // Destructure configuration object to set properties specific to Building
     this.initializeFromConfig(config, buildingName);
 
-    //Everything above can change
+    //Everything above can change through updates
 
-    this.unlocked = config.unlocked;
     this.count = 0;
     this.active = 0;
     this.productivity = 1;
@@ -34,6 +33,7 @@ class Building extends EffectableEntity {
         requiresMaintenance,
         requiresDeposit,
         requiresWorker, // Added requiresWorker to the destructured properties
+        unlocked
       } = config;
   
       this.name = buildingName;
@@ -49,6 +49,7 @@ class Building extends EffectableEntity {
       this.maintenanceFactor = requiresMaintenance ? maintenanceFactor : 0;
       this.requiresDeposit = requiresDeposit;
       this.requiresWorker = requiresWorker || 0; // Set default to 0 if not provided
+      this.unlocked = unlocked;
     }
 
   // Method to get the effective production multiplier
