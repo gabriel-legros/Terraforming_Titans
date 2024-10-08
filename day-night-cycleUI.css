@@ -1,0 +1,36 @@
+/* Container for the progress bar */
+.day-night-progress-bar-container {
+    width: 100%;
+    height: 20px;
+    background-color: #ddd;
+    position: relative; /* Allows the growing bar and text to be layered correctly */
+    margin-bottom: 10px; /* Optional: Adds space around the bar if needed */
+}
+
+/* The actual growing progress bar */
+.day-night-progress-bar {
+    width: 0;
+    height: 100%;
+    background-color: yellow; /* Starting color for day */
+    position: absolute; /* Ensures it grows within the container */
+    top: 0;
+    left: 0;
+    transition: width 0.5s ease, background-color 2s ease; /* Smooth color transition */
+}
+
+/* Text inside the progress bar container */
+.progress-text {
+    position: relative;
+    z-index: 1; /* Ensures the text appears above the growing bar */
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    display: block; /* Centers the text horizontally inside the container */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* To make the text stand out */
+}
+
+/* Color for night */
+.day-night-progress-bar.night {
+    background-color: darkblue; /* Transition to dark blue for night */
+}

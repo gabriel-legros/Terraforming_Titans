@@ -9,11 +9,12 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
+    <link rel="stylesheet" href="day-night-cycleUI.css">
     <script src="save.js"></script>
     <script src="planet-parameters.js"></script>
     <script src="effectable-entity.js"></script>
     <script src="structuresUI.js"></script>
-    <script src="day-night-cycle.js"></script>
+    <script src="day-night-cycle.js"></script>    
     <script src="ore-scanning.js"></script>
     <script src="resource.js"></script>
     <script src="resourceUI.js"></script>
@@ -45,16 +46,18 @@
     <div class="tab" data-tab="settings">Settings</div>
   </div>
 
+  <div class="day-night-progress-bar-container">
+    <span id="progress-text" class="progress-text">Day Progress</span>
+    <div id="day-night-progress-bar" class="day-night-progress-bar"></div>
+</div>
+
     <!-- Game Content Tabs -->
     <div class="tab-content-wrapper">
+
       <div class="resource-wrapper">
         <div class="resource-container" id="resources-container">
             <!-- Resources will be dynamically inserted here -->
         </div>
-        <div class="day-night-display">
-          <p>Day/Night Cycle: <span id="day-night-status"></span></p>
-          <p>Day Progress: <span id="day-progress"></span>%</p>
-      </div>
     </div>
 
     <!-- Buildings Tab Content -->

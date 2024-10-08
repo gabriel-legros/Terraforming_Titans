@@ -43,10 +43,24 @@ class DayNightCycle {
 
   
 
-  function updateDayNightDisplay() {
-    const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
-    const dayProgress = Math.floor(dayNightCycle.getDayProgress() * 100);
-  
-    document.getElementById('day-night-status').textContent = dayNightStatus;
-    document.getElementById('day-progress').textContent = dayProgress;
+function updateDayNightDisplay() {
+  const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
+  const dayProgress = dayNightCycle.getDayProgress() * 100;  
+
+  const progressBar = document.getElementById('day-night-progress-bar');
+  const progressText = document.getElementById('progress-text');
+
+  progressBar.style.width = dayProgress + '%';
+
+  // Update text, optionally round to 2 decimal places for display
+  progressText.textContent = `Day Progress: ${dayProgress.toFixed(1)}%`;
+
+    // Change color gradually between yellow (day) and dark blue (night)
+    if (dayNightStatus === 'Day') {
+      progressBar.style.backgroundColor = `rgb(${255 - dayProgress * 1.55}, ${255 - dayProgress}, 0)`; // Transitions from yellow to dark yellow as the day progresses
+      progressBar.classList.remove('night');
+  } else {
+      progressBar.style.backgroundColor = `rgb(0, 0, ${dayProgress * 2.55})`; // Transitions from dark blue to lighter blue as night progresses
+      progressBar.classList.add('night');
   }
+}
