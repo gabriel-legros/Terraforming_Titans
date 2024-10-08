@@ -27,7 +27,6 @@ class EffectableEntity {
   
   // Method to apply a specific effect
   applyEffect(effect) {
-    console.log(effect.type);
     switch (effect.type) {
       case 'increaseResourceGain':
         this.applyIncreaseResourceGain(effect);

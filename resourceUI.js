@@ -21,6 +21,61 @@ function createResourceContainers(resourcesData) {
   }
 }
 
+// Helper function to create the resource DOM element
+function createResourceElement(category, resourceObj, resourceName) {
+  const resourceElement = document.createElement('div');
+  resourceElement.classList.add('resource-item');
+
+  if (resourceName === 'colonists') {
+    // Special display for population (colonists) as an integer
+    resourceElement.innerHTML = `
+      <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
+        ${resourceObj.hasCap ? `
+          <div class="resource-slash">/</div>
+          <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
+        ` : ''}
+        <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+      </div>
+    `;
+  } else if (category === 'underground') {
+    // Display for deposits
+    resourceElement.innerHTML = `
+      <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
+        ${resourceObj.hasCap ? `
+          <div class="resource-slash">/</div>
+          <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
+        ` : ''}
+        <div class="resource-pps"></div>
+      </div>
+    `;
+
+    // Add scanning progress below deposits
+    const scanningProgressElement = document.createElement('div');
+    scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
+    scanningProgressElement.classList.add('scanning-progress');
+    scanningProgressElement.style.display = 'none'; // Initially hidden
+    resourceElement.appendChild(scanningProgressElement);
+  } else {
+    resourceElement.innerHTML = `
+      <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
+        ${resourceObj.hasCap ? `
+          <div class="resource-slash">/</div>
+          <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
+        ` : ''}
+        <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+      </div>
+    `;
+  }
+
+  return resourceElement;
+}
+
 function populateResourceElements(resources) {
   for (const category in resources) {
     const containerId = `${category}-resources-resources-container`;
@@ -28,58 +83,30 @@ function populateResourceElements(resources) {
     if (container) {
       for (const resourceName in resources[category]) {
         const resourceObj = resources[category][resourceName];
-        const resourceElement = document.createElement('div');
-        resourceElement.classList.add('resource-item');
-  
-        if (resourceName === 'colonists') {
-          // Special display for population (colonists) as an integer
-          resourceElement.innerHTML = `
-            <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-              <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
-              <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
-              ${resourceObj.hasCap ? `
-                <div class="resource-slash">/</div>
-                <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
-              ` : ''}
-              <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
-            </div>
-          `;
-        } else if (category === 'underground') {
-          // Display for deposits
-          resourceElement.innerHTML = `
-            <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-              <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
-              <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
-              ${resourceObj.hasCap ? `
-                <div class="resource-slash">/</div>
-                <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
-              ` : ''}
-              <div class="resource-pps"></div>
-            </div>
-          `;
-  
-          // Add scanning progress below deposits
-          const scanningProgressElement = document.createElement('div');
-          scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
-          scanningProgressElement.classList.add('scanning-progress');
-          scanningProgressElement.style.display = 'none'; // Initially hidden
-          resourceElement.appendChild(scanningProgressElement);
-        } else {
-          resourceElement.innerHTML = `
-            <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-              <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
-              <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
-              ${resourceObj.hasCap ? `
-                <div class="resource-slash">/</div>
-                <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
-              ` : ''}
-              <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
-            </div>
-          `;
+
+        // Only render resources that are unlocked
+        if (!resourceObj.unlocked) {
+          continue; // Skip the resource if it is not unlocked
         }
-  
+
+        // Use helper function to create the resource element
+        const resourceElement = createResourceElement(category, resourceObj, resourceName);
         container.appendChild(resourceElement);
       }
+    }
+  }
+}
+
+function unlockResource(resource) {
+  // Only proceed if the resource is unlocked and doesn't already exist in the DOM
+  if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`)) {
+    const containerId = `${resource.category}-resources-resources-container`;
+    const container = document.getElementById(containerId);
+
+    if (container) {
+      // Use helper function to create the resource element
+      const resourceElement = createResourceElement(resource.category, resource, resource.name);
+      container.appendChild(resourceElement);
     }
   }
 }

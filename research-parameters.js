@@ -31,6 +31,12 @@ const researchParameters = {
             target: 'project',
             targetId : 'geo_satellite',
             type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'underground',
+            targetId : 'geothermal',
+            type: 'enable'
           }
         ],
       },

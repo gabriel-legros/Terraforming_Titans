@@ -1,7 +1,10 @@
 // Resource Class and Core Logic
-class Resource {
+class Resource extends EffectableEntity {
   constructor(resourceData) {
+    super(resourceData);
+
     this.name = resourceData.name || '';
+    this.category = resourceData.category;
     this.displayName = resourceData.displayName || resourceData.name || '';
     this.value = resourceData.initialValue || 0;
     this.hasCap = resourceData.hasCap || false;
@@ -11,6 +14,7 @@ class Resource {
     this.productionRate = 0; // Rate of production per second
     this.consumptionRate = 0; // Rate of consumption per second
     this.reserved = resourceData.reserved || 0;
+    this.unlocked = resourceData.unlocked;
   }
 
   increase(amount) {
@@ -61,6 +65,11 @@ class Resource {
 
     this.cap = this.hasCap ? newCap : Infinity;
   }
+
+  enable() {
+    this.unlocked = true;
+    unlockResource(this);
+  }
 }
 
 function checkResourceAvailability(category, resource, requiredAmount) {
@@ -79,6 +88,7 @@ function createResources(resourcesData) {
       const resourceData = resourcesData[category][resourceName];
       resourceData.displayName = resourceData.name; // Assign resource name to the resourceData object
       resourceData.name = resourceName;
+      resourceData.category = category;
       resources[category][resourceName] = new Resource(resourceData);
     }
   }
