@@ -116,7 +116,7 @@ consume(accumulatedChanges, deltaTime) {
   updateHappiness(deltaTime) {
 
     // Calculate the weighted average of the needs
-    const happinessFactor = Math.min(this.filledNeeds.energy, this.filledNeeds.food, this.filledNeeds.water);
+    const happinessFactor = Math.min(this.filledNeeds.energy, this.filledNeeds.food);
 
     // Target happiness is the baseComfort multiplied by the weighted average of needs
     const targetHappiness = happinessFactor*(0.5+this.baseComfort/2);
