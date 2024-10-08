@@ -25,48 +25,79 @@ function createResourceContainers(resourcesData) {
     for (const category in resources) {
       const containerId = `${category}-resources-resources-container`;
       const container = document.getElementById(containerId);
+  
       if (container) {
+        const table = document.createElement('table');
+        table.classList.add('resource-table');
+  
         for (const resourceName in resources[category]) {
           const resourceObj = resources[category][resourceName];
-          const resourceElement = document.createElement('div');
-          resourceElement.classList.add('resource-item');
   
-          if (resourceName === 'colonists') {
-            // Special display for population (colonists) as an integer
-            resourceElement.innerHTML = `
-              <strong>${resourceObj.displayName}:</strong>
-              <span id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</span>
-              ${resourceObj.hasCap ? `/ <span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span>` : ''}
-              <span class="pps" id="${resourceName}-pps-resources-container" style="float: right;">+0/s</span>
-            `;
-          } else if (category === 'underground') {
-            // Display for deposits
-            resourceElement.innerHTML = `
-              <strong>${resourceObj.displayName}:</strong>
-              <span id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</span> /
-              <span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span>
-            `;
+          const row = document.createElement('tr');
+          row.classList.add('resource-row');
   
-            // Add scanning progress below deposits if there is scanning strength
+          // Resource name (with fixed width)
+          const nameCell = document.createElement('td');
+          nameCell.classList.add('resource-name');
+          nameCell.innerHTML = `<strong>${resourceObj.displayName}:</strong>`;
+          row.appendChild(nameCell);
+  
+          // Resource value
+          const valueCell = document.createElement('td');
+          valueCell.id = `${resourceName}-resources-container`;
+          valueCell.textContent = Math.floor(resourceObj.value);
+          row.appendChild(valueCell);
+  
+          // Cap value (only if the resource has a cap)
+          if (resourceObj.hasCap) {
+            const capCell = document.createElement('td');
+            capCell.id = `${resourceName}-cap-resources-container`;
+            capCell.textContent = `${Math.floor(resourceObj.cap)}`;
+            row.appendChild(capCell);
+          } else {
+            const emptyCell1 = document.createElement('td');
+            emptyCell1.colSpan = 1;
+            row.appendChild(emptyCell1);
+          }
+  
+          // PPS (Production per second) value, aligned to the right
+          const ppsCell = document.createElement('td');
+          ppsCell.classList.add('pps');
+          ppsCell.id = `${resourceName}-pps-resources-container`;
+          ppsCell.textContent = '+0/s';
+          ppsCell.style.textAlign = 'right'; // Force right alignment for PPS
+          row.appendChild(ppsCell);
+  
+          // Special handling for underground (deposit) resources to show scanning progress
+          if (category === 'underground') {
+            const scanningRow = document.createElement('tr');
+            const scanningProgressCell = document.createElement('td');
+            scanningProgressCell.colSpan = 5; // Adjust to span all columns for full-width scanning progress
+            
             const scanningProgressElement = document.createElement('div');
             scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
             scanningProgressElement.classList.add('scanning-progress');
             scanningProgressElement.style.display = 'none'; // Initially hidden
-            resourceElement.appendChild(scanningProgressElement);
-          } else {
-            resourceElement.innerHTML = `
-              <strong>${resourceObj.displayName}:</strong>
-              <span id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</span>
-              ${resourceObj.hasCap ? `/ <span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span>` : ''}
-              <span class="pps" id="${resourceName}-pps-resources-container" style="float: right;">+0/s</span>
-            `;
-          }
+            scanningProgressElement.innerHTML = `<span>Scanning Progress: <span id="${resourceName}-scanning-progress-text">0%</span></span>`;
   
-          container.appendChild(resourceElement);
+            scanningProgressCell.appendChild(scanningProgressElement);
+            scanningRow.appendChild(scanningProgressCell);
+            
+            table.appendChild(row);
+            table.appendChild(scanningRow);
+          } else {
+            // Regular resources (non-deposit resources)
+            table.appendChild(row);
+          }
         }
+  
+        // Append the table to the container
+        container.appendChild(table);
       }
     }
   }
+  
+  
 
   function updateResourceRatesDisplay(resources) {
     for (const category in resources) {
@@ -97,7 +128,7 @@ function createResourceContainers(resourcesData) {
   
           const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
           if (capElement) {
-            capElement.textContent = Math.floor(resourceObj.cap);
+            capElement.textContent = `/ ${Math.floor(resourceObj.cap)}`;
           }
         } else if (category === 'underground') {
           // Update underground resources
@@ -125,12 +156,12 @@ function createResourceContainers(resourcesData) {
           // Update other resources
           const resourceElement = document.getElementById(`${resourceName}-resources-container`);
           if (resourceElement) {
-            resourceElement.textContent = resourceObj.value.toFixed(2);
+            resourceElement.textContent = Math.round(resourceObj.value);
           }
   
           const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
           if (capElement) {
-            capElement.textContent = resourceObj.cap.toFixed(2);
+            capElement.textContent = `/ ${Math.floor(resourceObj.cap)}`;
           }
   
           const ppsElement = document.getElementById(`${resourceName}-pps-resources-container`);
