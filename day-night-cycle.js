@@ -56,11 +56,12 @@ function updateDayNightDisplay() {
   progressText.textContent = `Day Progress: ${dayProgress.toFixed(1)}%`;
 
     // Change color gradually between yellow (day) and dark blue (night)
-    if (dayNightStatus === 'Day') {
-      progressBar.style.backgroundColor = `rgb(${255 - dayProgress * 1.55}, ${255 - dayProgress}, 0)`; // Transitions from yellow to dark yellow as the day progresses
-      progressBar.classList.remove('night');
+  if (dayNightStatus === 'Day') {
+    // Transition from yellow (255, 255, 0) to orange (255, 165, 0)
+    progressBar.style.backgroundColor = `rgb(255, ${255 - dayProgress * 0.9}, 0)`; // Transitions from yellow to orange
+    progressBar.classList.remove('night');
   } else {
-      progressBar.style.backgroundColor = `rgb(0, 0, ${dayProgress * 2.55})`; // Transitions from dark blue to lighter blue as night progresses
-      progressBar.classList.add('night');
+    progressBar.style.backgroundColor = `rgb(0, 0, ${dayProgress * 2.55})`; // Transitions from dark blue to lighter blue as night progresses
+    progressBar.classList.add('night');
   }
 }
