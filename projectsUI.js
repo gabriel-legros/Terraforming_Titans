@@ -17,6 +17,7 @@ function createProjectItem(project) {
   // Project Description
   const descriptionElement = document.createElement('p');
   descriptionElement.textContent = project.description;
+  descriptionElement.classList.add('project-description');
   projectItem.appendChild(descriptionElement);
 
   // Project Cost

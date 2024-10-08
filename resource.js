@@ -40,7 +40,7 @@ class Resource {
   }
 
   addDeposit(amount = 1) {
-    this.increase(amount);
+    this.value += amount;
   }
 
   resetBaseProductionRate() {
