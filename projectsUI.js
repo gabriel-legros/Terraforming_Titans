@@ -318,6 +318,20 @@ function updateProjectUI(projectName) {
     }
   }
 
+  // If the project has resource choice gain cost, calculate total cost and update display
+  if (project.attributes?.resourceChoiceGainCost) {
+    // Update the total cost display for selected resources
+    const selectedResources = [];
+    document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {
+      const resource = element.dataset.resource;
+      const quantity = parseInt(element.value, 10);
+      if (quantity > 0) {
+        selectedResources.push({ resource, quantity });
+      }
+    });
+    project.selectedResources = selectedResources;
+  }
+
   // Show or hide the auto start checkbox based on automation flag in projectManager
   if (projectManager.isBooleanFlagSet('automateSpecialProjects')) {
     elements.autoStartCheckboxContainer.classList.remove('hidden');

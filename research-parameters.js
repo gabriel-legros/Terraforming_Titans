@@ -170,17 +170,16 @@ const researchParameters = {
     ],
     terraforming: [
       {
-        id: 'atmospheric_venting',
-        name: 'TBA',
-        description: 'TBA.',
-        cost: { research: 200 },
+        id: 'hydroponic_farm',
+        name: 'Hydroponic Farm',
+        description: 'Produces food to feed colonists.',
+        cost: { research: 500 },
         prerequisites: [],
         effects: [
           {
-            target: 'resource',
-            targetId: 'atmosphericPressure',
-            type: 'increment',
-            value: 1000, // Increases atmospheric pressure by 1000 units
+            target: 'building',
+            targetId: 'hydroponicFarm',
+            type: 'enableBuilding'
           },
         ],
       }

@@ -8,8 +8,8 @@ class Colony extends Building {
     // Set baseComfort for the colony
     this.baseComfort = config.baseComfort || 0;  // Default to 0 if not provided in the config
 
-    this.filledNeeds = {energy : 1, food : 1, water : 1};
-    this.happiness = 0;
+    this.filledNeeds = {energy : 1, food : 1};
+    this.happiness = 0.5;
   }
 
   updateProductivity(resources, deltaTime) {
@@ -42,6 +42,10 @@ class Colony extends Building {
 
 // Extend the consume function in Colony to manage filledNeeds
 consume(accumulatedChanges, deltaTime) {
+  const colonists = resources.colony.colonists.value;
+  const colonistsCapacity = resources.colony.colonists.cap;
+  const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
+
   this.currentConsumption = {}; // Reset current consumption
   const needResources = ['energy', 'food', 'water']; // List of resources tied to filledNeeds
 
@@ -53,7 +57,7 @@ consume(accumulatedChanges, deltaTime) {
 
     for (const resource in this.consumption[category]) {
       const baseConsumption = this.active * this.consumption[category][resource];
-      const scaledConsumption = baseConsumption * (deltaTime / 1000);
+      const scaledConsumption = baseConsumption * populationRatio * (deltaTime / 1000);
 
       // Check how much of the resource is available to consume
       const availableAmount = resources[category][resource].value;

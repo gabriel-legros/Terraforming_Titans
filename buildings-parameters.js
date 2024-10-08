@@ -60,6 +60,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: true
   },
+  hydroponicFarm: {
+    name: 'Hydroponic Farm',
+    category: 'production',
+    description: 'Botanists work hard to grow potatoes using martian soil.',
+    cost: { colony: { glass: 100} },
+    consumption: { colony: { energy: 5} },
+    production: { colony: { food: 10 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 10,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   componentFactory: {
     name: 'Component factory',
     category: 'production',

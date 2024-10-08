@@ -105,13 +105,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const comfortBox = createNeedBox('Comfort', structure.baseComfort, `${structure.name}-comfort`);
     const energyBox = createNeedBox('Energy', structure.filledNeeds.energy, `${structure.name}-energy`);
     const foodBox = createNeedBox('Food', structure.filledNeeds.food, `${structure.name}-food`);
-    const waterBox = createNeedBox('Water', structure.filledNeeds.water, `${structure.name}-water`);
     const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`);
 
     colonyDetails.appendChild(comfortBox);
     colonyDetails.appendChild(energyBox);
     colonyDetails.appendChild(foodBox);
-    colonyDetails.appendChild(waterBox);
     colonyDetails.appendChild(happinessBox);
 
     structureRow.appendChild(colonyDetails);
@@ -291,7 +289,6 @@ function createColonyButtons(colonies) {
       updateNeedBox(structureRow, `${structure.name}-comfort`, 'Comfort', structure.baseComfort);
       updateNeedBox(structureRow, `${structure.name}-energy`, 'Energy', structure.filledNeeds.energy);
       updateNeedBox(structureRow, `${structure.name}-food`, 'Food', structure.filledNeeds.food);
-      updateNeedBox(structureRow, `${structure.name}-water`, 'Water', structure.filledNeeds.water);
       updateNeedBox(structureRow, `${structure.name}-happiness`, 'Happiness', structure.happiness);
     }
     }
