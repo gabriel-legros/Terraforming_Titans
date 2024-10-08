@@ -11,7 +11,8 @@ const config = {
   fps: {
     target: 20,  // The game will run at 20 updates per second
     forceSetTimeOut: true  // Ensure that the tick rate is strictly followed
-  }
+  },
+  autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
 
 const game = new Phaser.Game(config);
