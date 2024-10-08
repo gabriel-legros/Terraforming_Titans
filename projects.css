@@ -67,6 +67,12 @@
     word-wrap: break-word; /* Allow the text to break onto a new line */
   }
 
+  .project-resource-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   .resource-row {
     display: flex;
     align-items: center;

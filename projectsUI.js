@@ -138,7 +138,7 @@ function createResourceSelectionUI(project) {
   for (const resource in project.attributes.resourceChoiceGainCost.colony) {
     // Container for each resource row
     const resourceRow = document.createElement('div');
-    resourceRow.classList.add('resource-row');
+    resourceRow.classList.add('project-resource-row');
 
     // Label for the resource
     const label = document.createElement('label');
