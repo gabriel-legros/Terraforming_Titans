@@ -41,22 +41,25 @@ body {
     color: #fff; /* Consistent text color for active state */
 }
 
+/* Adjusts the resource container width */
+.resource-container {
+    flex: 0 0 20%; /* Takes up 20% of the space */
+}
+
 .tab-content-wrapper {
     display: flex;
     gap: 30px;
 }
 
+/* Adjusts the main content area (tab-content) to take all remaining space */
 .tab-content {
+    flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
     min-width: 60%;
 }
 
 .tab-content.active {
     display: block;
-}
-
-.resource-container {
-    flex: 20%;
 }
 
 .building-list, 
@@ -174,4 +177,27 @@ body {
 .research-description {
     margin: 5px 0;
     font-size: 14px;
+}
+
+/* Journal container on the right side of the screen */
+.journal {
+    position: relative;
+    flex: 0 0 300px; /* Fixed width of 300px */
+    height: calc(100vh - 100px); /* Full height minus the top offset */
+    background-color: #f4f4f4;
+    border-left: 2px solid #ccc;
+    padding: 15px; /* Adds padding to the journal text */
+    box-sizing: border-box; /* Ensures padding is inside the element width */
+    overflow-y: auto; /* Allows scrolling if content exceeds height */
+}
+
+/* Journal entries */
+#journal-entries {
+    margin-top: 10px;
+}
+
+#journal-entries p {
+    margin: 5px 0; /* Adds a small margin between each journal entry */
+    font-size: 14px;
+    color: #333;
 }
