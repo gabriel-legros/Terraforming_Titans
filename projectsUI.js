@@ -18,35 +18,49 @@ function createProjectItem(project) {
   const projectItem = document.createElement('div');
   projectItem.classList.add('special-projects-item');
 
+  // Project Name
+  const nameElement = document.createElement('h3'); // Use h3 or other heading tag to display the name
+  nameElement.textContent = project.displayName || project.name; // Use displayName or fallback to name
+  nameElement.classList.add('project-name');
+  projectItem.appendChild(nameElement); // Append project name before description
+
   // Project Description
   const descriptionElement = document.createElement('p');
   descriptionElement.textContent = project.description;
   descriptionElement.classList.add('project-description');
   projectItem.appendChild(descriptionElement);
 
-  // Project Cost
-  const costElement = document.createElement('p');
-  let costText = 'Cost: ';
-  const costArray = [];
+  // Check if the project has any cost before creating the cost element
+  if (project.cost && Object.keys(project.cost).length > 0) {
+    const costElement = document.createElement('p');
+    let costText = 'Cost: ';
+    const costArray = [];
 
-  for (const category in project.cost) {
-    for (const resource in project.cost[category]) {
-      const requiredAmount = project.cost[category][resource];
-      const availableAmount = resources[category]?.[resource]?.value || 0;
+    for (const category in project.cost) {
+      for (const resource in project.cost[category]) {
+        const requiredAmount = project.cost[category][resource];
+        const availableAmount = resources[category]?.[resource]?.value || 0;
 
-      // Format resource text based on availability
-      const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
-      const formattedResourceText = availableAmount >= requiredAmount
-        ? resourceText
-        : `<span style="color: red;">${resourceText}</span>`;
-      
-      costArray.push(formattedResourceText);
+        // Format resource text based on availability
+        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
+        const formattedResourceText = availableAmount >= requiredAmount
+          ? resourceText
+          : `<span style="color: red;">${resourceText}</span>`;
+        
+        costArray.push(formattedResourceText);
+      }
     }
-  }
 
-  costText += costArray.join(', ');
-  costElement.innerHTML = costText;
-  projectItem.appendChild(costElement);
+    costText += costArray.join(', ');
+    costElement.innerHTML = costText;
+    projectItem.appendChild(costElement);
+
+    // Store the cost element for future updates
+    projectElements[project.name] = {
+      ...projectElements[project.name], // Preserve existing properties
+      costElement: costElement,
+    };
+  }
 
   // Repeat Count Display (if project is repeatable and not infinitely repeatable)
   if (project.repeatable && project.maxRepeatCount !== Infinity) {
@@ -54,6 +68,13 @@ function createProjectItem(project) {
     repeatCountElement.id = `${project.name}-repeat-count`;
     repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
     projectItem.appendChild(repeatCountElement);
+
+  
+    // Store repeat count element
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      repeatCountElement: repeatCountElement,
+    };
   }
 
   // Resource Gain Information
@@ -106,11 +127,10 @@ function createProjectItem(project) {
 
   projectItem.appendChild(autoStartCheckboxContainer);
 
-  // Store elements for later updates
+  // Store the progress button for later updates
   projectElements[project.name] = {
+    ...projectElements[project.name], // Merge with existing properties
     progressButton: progressButton,
-    costElement: costElement,
-    repeatCountElement: project.repeatable && project.maxRepeatCount !== Infinity ? repeatCountElement : null,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
     autoStartCheckbox: autoStartCheckbox,
   };

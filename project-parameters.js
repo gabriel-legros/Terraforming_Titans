@@ -2,8 +2,6 @@ const projectParameters = {
   cargo_rocket: {
     name: "Cargo Rocket",
     cost: {
-      colony: {
-      }
     },
     duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
     description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
@@ -26,8 +24,6 @@ const projectParameters = {
   import_colonists_1: {
     name: "Import colonists",
     cost: {
-      colony: {
-      }
     },
     duration: 180000,  // Duration of the project in milliseconds
     description: "Use chemical rockets to import colonists from Earth",
@@ -51,7 +47,7 @@ const projectParameters = {
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
-    description: "Launch a satellite to enhance mineral extraction from Martian soil.  Satellites scan for new ore veins.  More satellites improve scanning speed.  Veins become harder to find the more they are found.",
+    description: "Deploy a satellite to enhance the discovery of valuable ore deposits. The satellite scans the surface for untapped ore veins, accelerating resource extraction. Each additional satellite increases scanning efficiency, but locating new veins becomes progressively more challenging as deposits are exhausted.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 10,
     unlocked: true,
@@ -72,7 +68,7 @@ const projectParameters = {
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
-    description: "Launch a sensitive satellite to scan for geothermal energy.  Satellite scan for suitable geothermal vents.",
+    description: "Deploy a highly sensitive satellite to scan for geothermal energy. The satellite identifies suitable geothermal vents for energy extraction.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 10,
     unlocked: false,
