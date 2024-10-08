@@ -1,0 +1,46 @@
+.resource-item {
+    margin: 10px 0;
+    width: 100%;
+  }
+  
+  .resource-row {
+    display: grid;
+    grid-template-columns: 25% 20% 3% 20% 25%; /* Default layout with cap */
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .resource-row.no-cap {
+    grid-template-columns: 25% 50% 25%; /* When there's no cap, value takes more space */
+  }
+  
+  .resource-name {
+    text-align: left; /* Left-align names */
+  }
+  
+  .resource-value {
+    text-align: right; /* Right-align values */
+  }
+
+  .resource-row.no-cap .resource-value {
+    text-align: center; /* Center the value when there's no cap */
+  }
+  
+  .resource-slash {
+    text-align: center; /* Center the slash */
+  }
+  
+  .resource-cap {
+    text-align: left; /* Left-align caps */
+  }
+  
+  .resource-pps {
+    text-align: left; /* Right-align pps */
+  }
+  
+  .scanning-progress {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: gray;
+  }

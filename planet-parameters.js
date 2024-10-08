@@ -20,8 +20,8 @@ const planetParameters = {
         ice: { name: 'Ice', initialValue: 100000 }
       },
       underground: {
-        ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, areaTotal: 144000 },
-        geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 10, areaTotal: 144000 }
+        ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, hasCap: true, areaTotal: 144000 },
+        geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 10, hasCap: true, areaTotal: 144000 }
       },
       atmospheric: {
         carbonDioxide: { name: 'Carbon Dioxide', initialValue: 950000 },

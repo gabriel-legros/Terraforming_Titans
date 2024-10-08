@@ -25,80 +25,64 @@ function createResourceContainers(resourcesData) {
     for (const category in resources) {
       const containerId = `${category}-resources-resources-container`;
       const container = document.getElementById(containerId);
-  
       if (container) {
-        const table = document.createElement('table');
-        table.classList.add('resource-table');
-  
         for (const resourceName in resources[category]) {
           const resourceObj = resources[category][resourceName];
-  
-          const row = document.createElement('tr');
-          row.classList.add('resource-row');
-  
-          // Resource name
-          const nameCell = document.createElement('td');
-          nameCell.innerHTML = `<strong>${resourceObj.displayName}:</strong>`;
-          row.appendChild(nameCell);
-  
-          // Resource value
-          const valueCell = document.createElement('td');
-          valueCell.id = `${resourceName}-resources-container`;
-          valueCell.textContent = Math.floor(resourceObj.value);
-          row.appendChild(valueCell);
-  
-          // Cap value (only if the resource has a cap)
-          if (resourceObj.hasCap) {
-            const slashCell = document.createElement('td');
-            slashCell.classList.add('slash');
-            slashCell.textContent = '/';
-            row.appendChild(slashCell);
-  
-            const capCell = document.createElement('td');
-            capCell.id = `${resourceName}-cap-resources-container`;
-            capCell.textContent = Math.floor(resourceObj.cap);
-            row.appendChild(capCell);
+          const resourceElement = document.createElement('div');
+          resourceElement.classList.add('resource-item');
+    
+          if (resourceName === 'colonists') {
+            // Special display for population (colonists) as an integer
+            resourceElement.innerHTML = `
+              <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+                <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+                <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
+                ${resourceObj.hasCap ? `
+                  <div class="resource-slash">/</div>
+                  <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
+                ` : ''}
+                <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+              </div>
+            `;
+          } else if (category === 'underground') {
+            // Display for deposits
+            resourceElement.innerHTML = `
+              <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+                <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+                <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
+                ${resourceObj.hasCap ? `
+                  <div class="resource-slash">/</div>
+                  <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
+                ` : ''}
+                <div class="resource-pps"></div>
+              </div>
+            `;
+    
+            // Add scanning progress below deposits
+            const scanningProgressElement = document.createElement('div');
+            scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
+            scanningProgressElement.classList.add('scanning-progress');
+            scanningProgressElement.style.display = 'none'; // Initially hidden
+            resourceElement.appendChild(scanningProgressElement);
+          } else {
+            resourceElement.innerHTML = `
+              <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+                <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+                <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
+                ${resourceObj.hasCap ? `
+                  <div class="resource-slash">/</div>
+                  <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
+                ` : ''}
+                <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+              </div>
+            `;
           }
-  
-          // PPS (Production per second) value, aligned to the right
-          const ppsCell = document.createElement('td');
-          ppsCell.classList.add('pps');
-          ppsCell.id = `${resourceName}-pps-resources-container`;
-          ppsCell.textContent = '+0/s';
-          row.appendChild(ppsCell);
-  
-          table.appendChild(row);
-
-        // Special handling for underground (deposit) resources to show scanning progress
-        if (category === 'underground') {
-          const scanningRow = document.createElement('tr');
-          const scanningProgressCell = document.createElement('td');
-          scanningProgressCell.colSpan = 4; // Span across all columns for full-width scanning progress
-          
-          const scanningProgressElement = document.createElement('div');
-          scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
-          scanningProgressElement.classList.add('scanning-progress');
-          scanningProgressElement.style.display = 'none'; // Initially hidden
-          scanningProgressElement.innerHTML = `<span>Scanning Progress: <span id="${resourceName}-scanning-progress-text">0%</span></span>`;
-
-          scanningProgressCell.appendChild(scanningProgressElement);
-          scanningRow.appendChild(scanningProgressCell);
-          
-          table.appendChild(row);
-          table.appendChild(scanningRow);
-        } else {
-          // Regular resources (non-deposit resources)
-          table.appendChild(row);
+    
+          container.appendChild(resourceElement);
         }
-
-        }
-  
-        // Append the table to the container
-        container.appendChild(table);
       }
     }
   }
-  
 
   function updateResourceRatesDisplay(resources) {
     for (const category in resources) {
@@ -124,12 +108,12 @@ function createResourceContainers(resourcesData) {
           // Update population as an integer
           const resourceElement = document.getElementById(`${resourceName}-resources-container`);
           if (resourceElement) {
-            resourceElement.textContent = Math.floor(resourceObj.value);
+            resourceElement.textContent = formatNumber(Math.floor(resourceObj.value));
           }
   
           const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
           if (capElement) {
-            capElement.textContent = Math.floor(resourceObj.cap);
+            capElement.textContent = formatNumber(Math.floor(resourceObj.cap));
           }
         } else if (category === 'underground') {
           // Update underground resources
@@ -138,11 +122,11 @@ function createResourceContainers(resourcesData) {
           const scanningProgressElement = document.getElementById(`${resourceName}-scanning-progress-resources-container`);
   
           if (availableElement) {
-            availableElement.textContent = Math.floor(resourceObj.value - resourceObj.reserved);
+            availableElement.textContent = formatNumber(Math.floor(resourceObj.value - resourceObj.reserved));
           }
   
           if (totalElement) {
-            totalElement.textContent = Math.floor(resourceObj.value);
+            totalElement.textContent = formatNumber(Math.floor(resourceObj.value));
           }
   
           // Update scanning progress if there is scanning strength
@@ -157,12 +141,12 @@ function createResourceContainers(resourcesData) {
           // Update other resources
           const resourceElement = document.getElementById(`${resourceName}-resources-container`);
           if (resourceElement) {
-            resourceElement.textContent = Math.round(resourceObj.value);
+            resourceElement.textContent = formatNumber(resourceObj.value);
           }
   
           const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
           if (capElement) {
-            capElement.textContent = Math.round(resourceObj.cap);
+            capElement.textContent = formatNumber(resourceObj.cap);
           }
   
           const ppsElement = document.getElementById(`${resourceName}-pps-resources-container`);
@@ -191,3 +175,11 @@ function createResourceContainers(resourcesData) {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
+  function formatNumber(value) {
+    if (value >= 1e7) {
+      return (value / 1e6).toFixed(1) + 'm'; // For numbers >= 1 million
+    } else if (value >= 1e4) {
+      return (value / 1e3).toFixed(1) + 'k'; // For numbers >= 1 thousand
+    }
+    return value.toFixed(0); // For numbers < 1000, return the full number
+  }
