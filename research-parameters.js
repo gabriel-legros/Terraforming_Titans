@@ -72,6 +72,20 @@ const researchParameters = {
         ],
       },
       {
+        id: 'ore_scanning',
+        name: 'Ore Scanning Satellite',
+        description: 'Enables a project at launch satellites for scanning the surface for new ore veins.',
+        cost: { research: 500 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'satellite',
+            type: 'enable',
+          },
+        ],
+      },
+      {
         id: 'components_factory',
         name: 'Components factories',
         description: 'Allows production of components using human workers.',

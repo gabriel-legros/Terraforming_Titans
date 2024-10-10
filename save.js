@@ -7,7 +7,9 @@ function saveGame() {
         colonies: colonies, // Use colonies object as is
         projects: projectManager.saveState(), // Save the projects state using projectManager
         research: researchManager.saveState(), // Save the research state from researchManager
-        oreScanning: oreScanner.saveState() // Save the ore scanning state from oreScanner
+        oreScanning: oreScanner.saveState(), // Save the ore scanning state from oreScanner
+        story: storyManager.saveState(), // Save story state
+        journalEntries: journalEntriesData // Save the journal entries data
       };
 
   // Store game state in localStorage
@@ -95,8 +97,22 @@ function loadGame() {
         oreScanner.loadState(gameState.oreScanning);
       }
 
+      // Load story progress
+      if (gameState.story) {
+        storyManager.loadState(gameState.story);
+    }
+
+    if (gameState.journalEntries) {
+      loadJournalEntries(gameState.journalEntries); // Restore journal entries
+    }
+
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } else {
       console.log('No saved game found.');
   }
+}
+
+function deleteSaveFile() {
+  localStorage.removeItem('gameState'); // Remove the saved game data from localStorage
+  console.log('Save file deleted successfully.');
 }

@@ -44,6 +44,7 @@ body {
 /* Adjusts the resource container width */
 .resource-container {
     flex: 0 0 20%; /* Takes up 20% of the space */
+    min-width: 20%;
 }
 
 .tab-content-wrapper {

@@ -29,7 +29,7 @@ const projectParameters = {
     description: "Use chemical rockets to import colonists from Earth",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
-    unlocked: true,
+    unlocked: false,
     attributes: {
       resourceGain: {
         colony: {
@@ -50,7 +50,7 @@ const projectParameters = {
     description: "Deploy a satellite to enhance the discovery of valuable ore deposits. The satellite scans the surface for untapped ore veins, accelerating resource extraction. Each additional satellite increases scanning efficiency, but locating new veins becomes progressively more challenging as deposits are exhausted.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 10,
-    unlocked: true,
+    unlocked: false,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for ore deposits

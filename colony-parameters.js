@@ -12,7 +12,7 @@ const colonyParameters = {
       canBeToggled: true, // No manual toggle needed
       requiresMaintenance: true,
       maintenanceFactor: 1, // Default maintenance factor
-      unlocked: true
+      unlocked: false
     },
     t2_colony: {
       name: 'Small outpost',

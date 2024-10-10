@@ -21,7 +21,7 @@ class EffectableEntity {
     }
   
     // Method to apply all active effects
-    applyActiveEffects() {
+    applyActiveEffects(firstTime = true) {
       this.activeEffects.forEach((effect) => this.applyEffect(effect));
     }
   
@@ -35,16 +35,25 @@ class EffectableEntity {
         this.applyProductionMultiplier(effect.value);
         break;
       case 'enable':
-        this.enable();
+        this.enable(effect.targetId);
+        break;
+      case 'enableContent':
+        this.enableContent(effect.targetId);
         break;
       case 'booleanFlag':  // New effect type to handle boolean flags
         this.applyBooleanFlag(effect);
+      case 'oneTimeStart':
+        this.applyOneTimeStart(effect);
       break;
       // Add other effect types here as needed
       default:
         console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
     }
   }
+
+    applyOneTimeStart(effect) {
+      //No logic needed for now
+    }
   
     // Placeholder for potential future use
     applyIncreaseResourceGain(effect) {
@@ -71,4 +80,35 @@ class EffectableEntity {
     isBooleanFlagSet(flag) {
       return this.booleanFlags.has(flag);
     }
+}
+
+function addEffect(effect){
+  if (effect.target === 'building') {
+    const building = buildings[effect.targetId];
+    if (building) {
+      building.addEffect(effect);
+    }
+  } else if (effect.target === 'project') {
+    const project = projectManager.projects[effect.targetId];
+    if (project) {
+      project.addEffect(effect);
+    }
+  }  else if (effect.target === 'colony') {
+    const colony = colonies[effect.targetId];
+    if (colony) {
+      colony.addEffect(effect);
+    }
+  } else if (effect.target === 'resource') {
+    const resourceType = effect.resourceType;
+    const resource = resources[resourceType][effect.targetId];
+    if (resource){
+      resource.addEffect(effect);
+    }
+  } else if (effect.target === 'projectManager') {
+    // Apply effect to the project manager
+    projectManager.addEffect(effect);
+  } else if (effect.target === 'tab' || effect.target === 'tabContent') {
+    // Apply effect to the tab manager
+    tabManager.addEffect(effect);
+  }
 }

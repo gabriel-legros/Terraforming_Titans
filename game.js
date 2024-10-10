@@ -4,6 +4,7 @@ const config = {
   height: 0,
   parent: 'container',
   scene: {
+    key: 'mainScene',  // Add a key for the scene
     preload: preload,
     create: create,
     update: update
@@ -18,6 +19,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 let defaultPlanet = 'mars';
+let tabManager;
 let currentPlanetParameters = planetParameters[defaultPlanet];
 let resources = {};
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
@@ -28,12 +30,18 @@ let structures = {};
 let populationModule;
 let oreScanner = new OreScanning(currentPlanetParameters);
 let projectManager;  // Use ProjectManager instead of individual projects
+let storyStarted = false;  // Track if the story has been triggered
 
 function preload() {
   // Load assets (images, sounds, etc.) here
 }
 
 function create() {
+  // Instantiate the TabManager and load tabs from the constant
+  tabManager = new TabManager({
+    description: 'Manages game tabs and unlocks them based on effects.',
+  }, tabParameters);
+
   // Set up the game scene, objects, and initial state
   dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
   updateDayNightDisplay();
@@ -67,7 +75,11 @@ function create() {
   //initialize population module
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
+  // Initialize StoryManager
+  storyManager = new StoryManager(progressData);  // Pass the progressData object
+
   initializeGameState();  // Handle initial game state (building counts, etc.)
+  loadGame();
 }
 
 function initializeGameState() {
@@ -105,7 +117,6 @@ function updateLogic(delta) {
 
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
-  
 }
 
 function updateRender() {
@@ -119,6 +130,19 @@ function updateRender() {
 }
 
 function update(time, delta) {
+
+  // Check and trigger story progression after objectives are completed
+  if (storyStarted && storyManager.checkObjectives({ resources })) {
+    storyManager.advanceToNextChapter();  // Move to the next chapter
+    storyManager.triggerCurrentChapter(); // Trigger the next chapter
+  }
+
+  // Trigger the first chapter of the story, but only once
+  if (!storyStarted) {
+    storyManager.triggerCurrentChapter();  // Trigger the first chapter
+    storyStarted = true;                   // Set flag to ensure it doesn't retrigger
+  }
+
   updateLogic(delta);   // Update game state
   updateRender();       // Render updated game state
 }

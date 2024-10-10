@@ -79,34 +79,50 @@ function createResourceElement(category, resourceObj, resourceName) {
 function populateResourceElements(resources) {
   for (const category in resources) {
     const containerId = `${category}-resources-resources-container`;
+    const categoryContainer = document.getElementById(containerId).parentElement; // Get the full container, not just the list
     const container = document.getElementById(containerId);
+
     if (container) {
+      let hasUnlockedResources = false;
+
       for (const resourceName in resources[category]) {
         const resourceObj = resources[category][resourceName];
 
         // Only render resources that are unlocked
-        if (!resourceObj.unlocked) {
-          continue; // Skip the resource if it is not unlocked
-        }
+        if (resourceObj.unlocked) {
+          hasUnlockedResources = true;
 
-        // Use helper function to create the resource element
-        const resourceElement = createResourceElement(category, resourceObj, resourceName);
-        container.appendChild(resourceElement);
+          // Use helper function to create the resource element if it doesn't already exist
+          if (!document.getElementById(`${resourceName}-resources-container`)) {
+            const resourceElement = createResourceElement(category, resourceObj, resourceName);
+            container.appendChild(resourceElement);
+          }
+        }
+      }
+
+      // Hide the entire category container if no resources are unlocked
+      if (!hasUnlockedResources) {
+        categoryContainer.style.display = 'none';
+      } else {
+        categoryContainer.style.display = 'block'; // Show the category if resources are unlocked
       }
     }
   }
 }
 
 function unlockResource(resource) {
-  // Only proceed if the resource is unlocked and doesn't already exist in the DOM
   if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`)) {
     const containerId = `${resource.category}-resources-resources-container`;
+    const categoryContainer = document.getElementById(containerId).parentElement;
     const container = document.getElementById(containerId);
 
     if (container) {
       // Use helper function to create the resource element
       const resourceElement = createResourceElement(resource.category, resource, resource.name);
       container.appendChild(resourceElement);
+
+      // Ensure the category container is visible
+      categoryContainer.style.display = 'block';
     }
   }
 }

@@ -189,6 +189,13 @@ class Project extends EffectableEntity {
   enable() {
     this.unlocked = true;
   }
+
+  applyOneTimeStart(effect){  //Only used at the beginning of the game
+    console.log('Getting one time cargo rocket');
+    this.pendingResourceGains = effect.pendingResourceGains;
+    this.isActive = true;
+    this.remainingTime = 30000;
+  }
 }
 
 class ProjectManager extends EffectableEntity {

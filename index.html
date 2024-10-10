@@ -7,12 +7,14 @@
     <title>Terraforming Titans - Mars</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pop-up.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
     <link rel="stylesheet" href="day-night-cycleUI.css">
+    <script src="effectable-entity.js"></script>
+    <script src="tab.js"></script>
     <script src="save.js"></script>
     <script src="planet-parameters.js"></script>
-    <script src="effectable-entity.js"></script>
     <script src="structuresUI.js"></script>
     <script src="day-night-cycle.js"></script>    
     <script src="ore-scanning.js"></script>
@@ -32,6 +34,10 @@
     <script src="researchUI.js"></script>
     <script src="funding.js"></script>
     <script src="population.js"></script>
+    <script src="pop-up.js"></script>
+    <script src="journal.js"></script>
+    <script src="progress.js"></script>   
+    <script src="progress-data.js"></script>   
     <script src="game.js"></script>
 </head>
 
@@ -39,12 +45,12 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <div class="tab active" data-tab="buildings">Buildings</div>
-    <div class="tab" data-tab="special-projects">Special Projects</div>
-    <div class="tab" data-tab="colonies">Colony</div>
-    <div class="tab" data-tab="research">Research</div>
-    <div class="tab hidden" data-tab="terraforming">Terraforming</div>
-    <div class="tab" data-tab="settings">Settings</div>
+    <div class="tab active" id="buildings-tab" data-tab="buildings">Buildings</div>
+    <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects</div>
+    <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
+    <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
+    <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming</div>
+    <div class="tab" id="settings-tab" data-tab="settings">Settings</div>
   </div>
 
   <div class="day-night-progress-bar-container">
@@ -63,7 +69,7 @@
 
     <!-- Buildings Tab Content -->
     <div id="buildings" class="tab-content active">
-        <div class="container">
+        <div class="container hidden" id="building-container">
             <div class="buildings-subtabs">
                 <div id="resource-buildings-tab" class="building-subtab active" data-subtab="resource-buildings">Resources</div>
                 <div id="production-buildings-tab" class="building-subtab active" data-subtab="production-buildings">Production</div>
@@ -135,15 +141,16 @@
         </div>
     </div>
 
-        <div id="settings" class="tab-content">
-            <div class="container settings-container">
-                <h2>Settings</h2>
-                <div class="settings-item">
-                    <button id="save-game">Save Game</button>
-                    <button id="load-game">Load Game</button>
-                </div>
+    <div id="settings" class="tab-content">
+        <div class="container settings-container">
+            <h2>Settings</h2>
+            <div class="settings-item">
+                <button id="save-game">Save Game</button>
+                <button id="load-game">Load Game</button>
+                <button id="delete-save">Delete Save</button> <!-- New Delete Save Button -->
             </div>
         </div>
+    </div>
 
     <!-- Journal Section (New) -->
     <div id="journal" class="journal">
@@ -172,6 +179,12 @@
   
       // Load game state from localStorage
       document.getElementById('load-game').addEventListener('click', loadGame);
+
+      document.getElementById('delete-save').addEventListener('click', function() {
+  if (confirm('Are you sure you want to delete your save file? This action cannot be undone.')) {
+    deleteSaveFile();
+  }
+});
   </script>
 </body>
 

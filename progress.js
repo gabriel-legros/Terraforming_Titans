@@ -1,0 +1,193 @@
+class StoryEvent {
+    constructor(config) {
+      this.id = config.id;
+      this.type = config.type;
+      this.parameters = config.parameters || {};
+      this.title = config.title || '';
+      this.narrative = config.narrative || '';
+      this.objectives = config.objectives || [];
+      this.nextChapter = config.nextChapter || null;
+      this.reward = config.reward || [];
+      this.rewardDelay = config.rewardDelay || 0;  // Add rewardDelay with a default of 0
+    }
+
+  
+    // Handle different types of events (pop-up, journal, etc.)
+    trigger() {
+      switch (this.type) {
+        case "pop-up":
+          createPopup(
+            this.parameters.title, 
+            this.parameters.text, 
+            this.parameters.buttonText
+          );
+          break;
+        case "journal":
+          addJournalEntry(`${this.title}: ${this.narrative}`);
+          break;
+        default:
+          console.error(`Unknown event type: ${this.type}`);
+      }
+    }
+  }
+  
+  class StoryManager {
+    constructor(progressData) {
+        this.chapters = this.loadChapters(progressData);
+        this.currentChapter = this.chapters[0];  // Start with the first chapter
+        this.objectivesComplete = false; // Track if objectives are complete
+        this.appliedEffects = []; // Store applied effects
+      }
+  
+    // Load the chapters from the progressData object
+    loadChapters(progressData) {
+      return progressData.chapters.map(chapterConfig => new StoryEvent(chapterConfig));
+    }
+  
+    // Trigger the current chapter and advance to the next
+    triggerCurrentChapter() {
+        if (this.currentChapter) {
+            if (this.currentChapter.type === 'pop-up') {
+              this.currentChapter.trigger();
+              this.waitForPopupButtonPress();
+            } else if (this.currentChapter.type === 'journal') {
+              addJournalEntry(this.currentChapter.narrative);
+              this.waitForJournalEntryCompletion();
+            }
+          }
+    }
+
+    // Handle objective completion for pop-up button press
+    waitForPopupButtonPress() {
+        const closeButton = document.querySelector('.popup-close-button');
+        if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            this.objectivesComplete = true; // Mark objective as complete when the button is pressed
+        });
+        }
+    }
+
+    // Wait for the journal entry to finish typing
+    waitForJournalEntryCompletion() {
+        const journalEntries = document.getElementById('journal-entries');
+        
+        // Listen for the event when the journal entry is fully typed
+        journalEntries.addEventListener('journalTypedComplete', () => {
+            this.objectivesComplete = true; // Mark the objective as complete
+        });
+    }
+  
+    // Move to the next chapter based on the current chapter's nextChapter property
+    advanceToNextChapter() {
+        this.objectivesComplete = false;
+        const nextChapterId = this.currentChapter.nextChapter;
+        if (nextChapterId) {
+            const nextChapter = this.chapters.find(chapter => chapter.id === nextChapterId);
+            if (nextChapter) {
+            this.currentChapter = nextChapter;
+            console.log(`Advanced to: ${this.currentChapter.id}`);
+            } else {
+            console.error(`Next chapter with ID ${nextChapterId} not found.`);
+            }
+        } else {
+            console.log("No more chapters to advance to.");
+        } 
+    }
+  
+    // Check if all objectives for the current chapter are complete
+    checkObjectives() {
+        // If the objective is related to a pop-up button press, return the objectivesComplete flag
+        if (this.currentChapter.type === 'pop-up' && this.currentChapter.objectives.length === 0) {
+            this.applyRewards();
+            return this.objectivesComplete;
+        } else {
+            // For regular objectives, check each objective type
+            const objectivesMet = this.currentChapter.objectives.every(objective => {
+                return this.isObjectiveComplete(objective); // Check each objective using the helper function
+            });
+
+            if (this.currentChapter.type === 'journal') {
+                if (objectivesMet && this.objectivesComplete) {
+                    this.applyRewards();
+                    return true;
+                }
+            } else {
+                if (objectivesMet) {
+                    this.objectivesComplete = true;
+                    this.applyRewards();  // Apply rewards when objectives are met
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    // Helper function to check if a specific objective is complete
+    isObjectiveComplete(objective) {
+        switch (objective.type) {
+        case 'collection':
+            // Check if the player has collected enough of the target resource
+            return resources[objective.resourceType][objective.resource].value >= objective.quantity;
+        case 'building':
+            // Check if the player has built enough of the target building
+            const building = buildings[objective.buildingName];
+            if (building) {
+                return building.count >= objective.quantity;
+            } else {
+                console.error(`Building ${objective.buildingName} not found.`);
+                return false;
+            }
+        default:
+            console.error(`Unknown objective type: ${objective.type}`);
+            return false;
+        }
+    }
+
+    applyRewards() {
+        if (this.currentChapter.reward) {
+            const delay = this.currentChapter.rewardDelay || 0; // Get the delay for the current chapter
+        
+            // Apply rewards with a delay in between each one
+            this.currentChapter.reward.forEach((effect, index) => {
+            setTimeout(() => {
+                // Skip effects with the oneTimeFlag for tracking
+                if (!effect.oneTimeFlag) {
+                    this.appliedEffects.push(effect); // Track effect
+                }
+                addEffect(effect); // Apply the effect
+                console.log(`Applied reward: ${effect.type} to ${effect.targetId}`);
+            }, index * delay);  // Multiply the index by the delay to stagger the rewards
+            });
+        }
+    }
+
+    // Save the current state of the story (chapter ID, objectives completed, and applied effects)
+    saveState() {
+        return {
+        currentChapterId: this.currentChapter.id,
+        objectivesComplete: this.objectivesComplete,
+        appliedEffects: this.appliedEffects // Save the applied effects
+        };
+    }
+
+    // Load the saved state into the story manager
+    loadState(savedState) {
+        const { currentChapterId, objectivesComplete, appliedEffects } = savedState;
+
+        // Find and set the current chapter based on the saved state
+        this.currentChapter = this.chapters.find(chapter => chapter.id === currentChapterId) || this.chapters[0];
+        this.objectivesComplete = objectivesComplete || false;
+
+        // Reapply all saved effects
+        if (appliedEffects) {
+        this.appliedEffects = appliedEffects; // Set the saved effects
+        this.appliedEffects.forEach(effect => {
+            addEffect(effect); // Reapply the effect
+            console.log(`Reapplied reward: ${effect.type} to ${effect.targetId}`);
+        });
+        }
+
+        console.log(`Loaded story at chapter: ${this.currentChapter.id}, objectives complete: ${this.objectivesComplete}`);
+    }
+}

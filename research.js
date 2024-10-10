@@ -104,33 +104,7 @@ class Research {
   // Apply research effects to the target
   applyResearchEffects(research) {
     research.effects.forEach((effect) => {
-      if (effect.target === 'building') {
-        const building = buildings[effect.targetId];
-        if (building) {
-          building.addEffect({ ...effect, sourceId: research.id });
-        }
-      } else if (effect.target === 'project') {
-        const project = projectManager.projects[effect.targetId];
-        if (project) {
-          project.addEffect({ ...effect, sourceId: research.id });
-        }
-      }  else if (effect.target === 'colony') {
-        const colony = colonies[effect.targetId];
-        if (colony) {
-          colony.addEffect({ ...effect, sourceId: research.id });
-        }
-      } else if (effect.target === 'resource') {
-        const resourceType = effect.resourceType;
-        const resource = resources[resourceType][effect.targetId];
-        if (resource){
-          resource.addEffect({ ...effect, sourceId: research.id });
-        }
-
-      } else if (effect.target === 'projectManager') {
-        // Apply effect to the project manager
-        projectManager.addEffect({ ...effect, sourceId: research.id });
-        console.log(`Applied effect to ProjectManager: ${effect.type} with value ${effect.value}`);
-      }
+      addEffect({...effect, sourceId: research})
     });
   }
 

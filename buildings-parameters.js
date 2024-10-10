@@ -13,7 +13,7 @@ const buildingsParameters = {
     requiresDeposit: { underground: { ore: 1 } },
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   sandQuarry: {
     name: 'Sand Quarry',
@@ -28,7 +28,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   iceHarvester: {
     name: 'Ice Harvesters',
@@ -43,7 +43,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 5,
-    unlocked: true
+    unlocked: false
   },
   glassSmelter: {
     name: 'Glass Smelter',
@@ -58,7 +58,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   hydroponicFarm: {
     name: 'Hydroponic Farm',
@@ -118,7 +118,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   windTurbine: {
     name: 'Wind Turbine',
@@ -133,7 +133,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   geothermalGenerator: {
     name: 'Geothermal Generator',
@@ -179,7 +179,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   },
   storageDepot: {
     name: 'Storage Depot',
@@ -204,6 +204,6 @@ const buildingsParameters = {
     requiresMaintenance: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: true
+    unlocked: false
   }
 };
