@@ -42,7 +42,7 @@ const planetParameters = {
     },
     fundingRate: 5, // Rate at which funding increases over time
     celestialParameters : {
-    distanceFromSun: 227.9, // Average distance from the Sun in million kilometers
+    distanceFromSun: 1.52, // Average distance from the Sun in AU
     gravity: 3.711, // Surface gravity in m/s^2
     radius: 3389.5, // Mean radius in kilometers
     albedo: 0.25, // Starting albedo value

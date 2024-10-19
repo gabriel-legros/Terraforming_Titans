@@ -41,11 +41,14 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>°C</p>
-      <p>Target: <span id="temperature-target">${terraforming.temperature.target}</span>°C</p>
+      <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
+      <p>Target: <span id="temperature-target">${terraforming.temperature.target}</span>K</p>
       <p>Base Albedo: <span id="base-albedo">${terraforming.celestialParameters.albedo}</span></p>
       <p>Ocean Albedo: <span id="ocean-albedo">0.06</span></p>
       <p>Effective Albedo: <span id="effective-albedo">${terraforming.calculateEffectiveAlbedo().toFixed(2)}</span></p>
+      <p>Solar Flux: <span id="solar-flux">${terraforming.temperature.solarFlux.toFixed(2)}</span> W/m²</p>
+      <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
+      <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
     `;
     row.appendChild(temperatureBox);
   }
@@ -54,8 +57,17 @@ function createTemperatureBox(row) {
     const temperatureCurrent = document.getElementById('temperature-current');
     temperatureCurrent.textContent = terraforming.temperature.value.toFixed(2);
   
+    const solarFlux = document.getElementById('solar-flux');
+    solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(2);
+
     const effectiveAlbedo = document.getElementById('effective-albedo');
     effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(2);
+
+    const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
+    effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2);
+  
+    const emissivity = document.getElementById('emissivity');
+    emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
   }
 
   function createAtmosphereBox(row) {

@@ -123,7 +123,7 @@ function updateLogic(delta) {
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
 
-  terraforming.update();
+  terraforming.update(delta);
 }
 
 function updateRender() {

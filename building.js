@@ -158,80 +158,88 @@ class Building extends EffectableEntity {
     }
   }
 
-// Updated produce function to track production rates
-produce(accumulatedChanges, deltaTime) {
-  const effectiveMultiplier = this.getEffectiveProductionMultiplier();
+  // Updated produce function to track production rates
+  produce(accumulatedChanges, deltaTime) {
+    const effectiveMultiplier = this.getEffectiveProductionMultiplier();
 
-  // Calculate production using effectiveMultiplier and accumulate changes
-  for (const category in this.production) {
-    if (!this.currentProduction[category]) {
-      this.currentProduction[category] = {};
-    }
+    // Calculate production using effectiveMultiplier and accumulate changes
+    for (const category in this.production) {
+      if (!this.currentProduction[category]) {
+        this.currentProduction[category] = {};
+      }
 
-    for (const resource in this.production[category]) {
-      const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier;
-      const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
+      for (const resource in this.production[category]) {
+        const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier;
+        const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
 
-      // Track actual production in the building
-      this.currentProduction[category][resource] = scaledProduction;
+        // Track actual production in the building
+        this.currentProduction[category][resource] = scaledProduction;
 
-      // Accumulate production changes
-      accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) + scaledProduction;
+        // Accumulate production changes
+        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) + scaledProduction;
 
-      // Update production rate for the resource
-      resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + (scaledProduction * (1000 / deltaTime));
-    }
-  }
-}
-
-// Updated consume function to track consumption rates
-consume(accumulatedChanges, deltaTime) {
-  this.currentConsumption = {}; // Reset current consumption
-
-  // Calculate consumption and accumulate changes
-  for (const category in this.consumption) {
-    if (!this.currentConsumption[category]) {
-      this.currentConsumption[category] = {};
-    }
-
-    for (const resource in this.consumption[category]) {
-      const baseConsumption = this.active * this.consumption[category][resource];
-      const scaledConsumption = baseConsumption * this.productivity * (deltaTime / 1000);
-
-      // Track actual consumption in the building
-      this.currentConsumption[category][resource] = scaledConsumption;
-
-      // Accumulate consumption changes (as negative values)
-      accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
-
-      // Update consumption rate for the resource
-      resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (scaledConsumption * (1000 / deltaTime));
+        // Update production rate for the resource
+        resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + (scaledProduction * (1000 / deltaTime));
+      }
     }
   }
-}
 
-// Updated applyMaintenance function to track maintenance costs
-applyMaintenance(accumulatedChanges, deltaTime) {
-  this.maintenanceCost = this.calculateMaintenanceCost();
-  this.currentMaintenance = {}; // Reset current maintenance
+  // Updated consume function to track consumption rates
+  consume(accumulatedChanges, deltaTime) {
+    this.currentConsumption = {}; // Reset current consumption
 
-  // Calculate maintenance and accumulate changes
-  for (const resource in this.maintenanceCost) {
-    if (resources.colony[resource]) {
-      const baseMaintenanceCost = this.maintenanceCost[resource] * this.active;
-      const maintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * this.productivity;
+    // Calculate consumption and accumulate changes
+    for (const category in this.consumption) {
+      if (!this.currentConsumption[category]) {
+        this.currentConsumption[category] = {};
+      }
 
-      // Track current maintenance in the building
-      this.currentMaintenance[resource] = maintenanceCost;
+      for (const resource in this.consumption[category]) {
+        const baseConsumption = this.active * this.consumption[category][resource];
+        const scaledConsumption = baseConsumption * this.productivity * (deltaTime / 1000);
 
-      // Accumulate maintenance changes (as negative values)
-      accumulatedChanges['colony'][resource] = (accumulatedChanges['colony'][resource] || 0) - maintenanceCost;
+        // Track actual consumption in the building
+        this.currentConsumption[category][resource] = scaledConsumption;
 
-      // Update consumption rate for maintenance costs
-      resources['colony'][resource].consumptionRate = (resources['colony'][resource].consumptionRate || 0) + (maintenanceCost * (1000 / deltaTime));
+        // Accumulate consumption changes (as negative values)
+        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
+
+        // Update consumption rate for the resource
+        resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (scaledConsumption * (1000 / deltaTime));
+      }
     }
   }
-}
+
+  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
+    this.maintenanceCost = this.calculateMaintenanceCost();
+    this.currentMaintenance = {}; // Reset current maintenance
+
+    // Calculate maintenance and accumulate changes
+    for (const resource in this.maintenanceCost) {
+      if (resources.colony[resource]) {
+        const baseMaintenanceCost = this.maintenanceCost[resource] * this.active;
+        const maintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * this.productivity;
+
+        // Track current maintenance in the building
+        this.currentMaintenance[resource] = maintenanceCost;
+
+        // Accumulate maintenance changes (as negative values)
+        accumulatedChanges['colony'][resource] = (accumulatedChanges['colony'][resource] || 0) - maintenanceCost;
+
+        // Update consumption rate for maintenance costs
+        resources['colony'][resource].consumptionRate = (resources['colony'][resource].consumptionRate || 0) + (maintenanceCost * (1000 / deltaTime));
+
+        // Accumulate maintenance costs in the accumulatedMaintenance object
+        accumulatedMaintenance[resource] = (accumulatedMaintenance[resource] || 0) + maintenanceCost;
+
+        // If the resource is water, also add the maintenance cost to the atmospheric water resource
+        if (resource === 'water') {
+          accumulatedChanges['atmospheric']['atmosphericWater'] = (accumulatedChanges['atmospheric']['atmosphericWater'] || 0) + maintenanceCost;
+          resources['atmospheric']['atmosphericWater'].productionRate = (resources['atmospheric']['atmosphericWater'].productionRate || 0) + (maintenanceCost * (1000 / deltaTime));
+        }
+      }
+    }
+  }
 
   // Method to update storage capacity in resources after building changes
   updateResourceStorage() {

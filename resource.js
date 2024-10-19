@@ -154,12 +154,18 @@ function produceResources(deltaTime, buildings, resources) {
 
   // Temporary object to store changes
   const accumulatedChanges = {};
+  const accumulatedMaintenance = {}; // Object to store accumulated maintenance costs
+  
 
-  // Initialize accumulated changes
+  // Initialize accumulated changes and maintenance
   for (const category in resources) {
     accumulatedChanges[category] = {};
     for (const resourceName in resources[category]) {
       accumulatedChanges[category][resourceName] = 0;
+      
+      if (category === 'colony') {
+        accumulatedMaintenance[resourceName] = 0; // Initialize accumulated maintenance costs for colony resources
+      }
     }
   }
 
@@ -177,7 +183,7 @@ function produceResources(deltaTime, buildings, resources) {
     // Accumulate production, consumption, and maintenance changes
     building.produce(accumulatedChanges, deltaTime);
     building.consume(accumulatedChanges, deltaTime);
-    building.applyMaintenance(accumulatedChanges, deltaTime);
+    building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
   }
 
   // Apply funding rate to the accumulated changes

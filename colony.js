@@ -33,12 +33,6 @@ class Colony extends Building {
     // Add unique colony-specific conditions
     return super.canAfford(resources);
   }
-    
-  // Override applyMaintenance for unique maintenance behavior if required
-  applyMaintenance(resources, deltaTime) {
-    super.applyMaintenance(resources, deltaTime);
-    // Colony-specific maintenance logic, if any
-  }
 
 // Extend the consume function in Colony to manage filledNeeds
 consume(accumulatedChanges, deltaTime) {
