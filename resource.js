@@ -140,7 +140,7 @@ function calculateProductionRates(deltaTime, buildings) {
   }
 }
 
-function produceResources(deltaTime, buildings, resources) {
+function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
 
   // Reset production and consumption rates for all resources
@@ -193,6 +193,10 @@ function produceResources(deltaTime, buildings, resources) {
 
     // Update production rate for funding resource
     resources.colony.funding.productionRate = fundingIncreaseRate;
+  }
+
+  if(terraforming) {
+    terraforming.updateResources(accumulatedChanges, deltaTime);
   }
 
   // Apply accumulated changes to resources

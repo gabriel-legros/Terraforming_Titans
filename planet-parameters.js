@@ -17,7 +17,8 @@ const planetParameters = {
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
-        ice: { name: 'Ice', initialValue: 1e16, unlocked:false }
+        ice: { name: 'Ice', initialValue: 1e16, unlocked:false },
+        liquidWater: { name: 'Water', initialValue: 0, unlocked:true }
       },
       underground: {
         ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, hasCap: true, areaTotal: 144000, unlocked:false },

@@ -123,15 +123,15 @@ function createTemperatureBox(row) {
     waterBox.id = 'water-box';
     waterBox.innerHTML = `
       <h3>${terraforming.water.name}</h3>
-      <p>Current: <span id="water-current">${terraforming.water.value}</span>%</p>
-      <p>Target: <span id="water-target">${terraforming.water.target}</span>%</p>
+      <p>Planet coverage : <span id="water-current">${(terraforming.water.value * 100).toFixed(2)}</span>%</p>
+      <p>Target: <span id="water-target">${(terraforming.water.target * 100).toFixed(2)}</span>%</p>
     `;
     row.appendChild(waterBox);
   }
   
   function updateWaterBox() {
     const waterCurrent = document.getElementById('water-current');
-    waterCurrent.textContent = terraforming.water.value.toFixed(2);
+    waterCurrent.textContent = (terraforming.water.value * 100).toFixed(2);
   }
 
   function createLifeBox(row) {

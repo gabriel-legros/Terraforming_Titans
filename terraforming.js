@@ -5,7 +5,7 @@ class Terraforming {
       this.water = {
         name: 'Water',
         value: 0,
-        target: 70,
+        target: 0.70,
         unlocked: false,
         humidity: 0
       };
@@ -44,6 +44,10 @@ class Terraforming {
       };
 
       this.updateSurfaceTemperature();
+    }
+
+    updateResources(accumulatedChanges, deltaTime){
+      this.applyEvaporationAndSublimation(accumulatedChanges, deltaTime);
     }
 
     updateSurfaceTemperature() {
@@ -104,8 +108,8 @@ class Terraforming {
         // Update atmospheric pressure
         this.atmosphere.value = this.calculateTotalPressure();
     
-        // Update other aspects similarly based on your game's mechanics
-        // ...
+        // Update water level
+        this.calculateWaterCoverage();
       }
   
     unlock(aspect) {
@@ -132,6 +136,32 @@ class Terraforming {
     calculateHumidity() {
       const satVapPress = saturationVaporPressureBuck(this.temperature.value - 273.15);
       return calculateGasPressure('atmosphericWater')/satVapPress;
+    }
+
+    calculateWaterCoverage() {
+      const surfaceArea = 4*Math.PI*Math.pow(this.celestialParameters.radius*1000,2);
+      const waterAmount = resources['surface']['liquidWater'].value;
+      const waterRatio = 0.0001 * waterAmount / surfaceArea;
+      if(waterRatio <= 0.001){
+        this.water.value = 10*waterRatio;
+      }
+      else if(waterRatio > 0.001 && waterRatio < 1){
+        this.water.value = 0.143317*Math.log(waterRatio)+1;
+      }
+      else if (waterRatio >= 1){
+        this.water.value = 1;
+      }
+      else{
+        this.water.value = 0;
+      }
+    }
+
+    applyEvaporationAndSublimation(accumulatedChanges, deltaTime){
+      const timeMultiplier = 86400*(deltaTime/1000);
+
+      const evpRate = evaporationRate(this.temperature.value, this.temperature.solarFlux, this.atmosphere.value);
+      const sublRate = sublimationRate(this.temperature.value, this.temperature.solarFlux, this.atmosphere.value);
+
     }
   }
 
@@ -296,7 +326,7 @@ function evaporationRate(T, solarFlux, atmPressure){
 
 function sublimationRate(T, solarFlux, atmPressure){
   T = T - 273.15;
-  const albedo = 0.35;
+  const albedo = 0.7;
   const Lv = (2.501 - 0.002361*T)*1e6;
   const drvBuck = derivativeSaturationVaporPressureBuck(T);
   const rad = (1 - albedo)*solarFlux;

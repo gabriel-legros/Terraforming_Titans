@@ -110,7 +110,7 @@ function updateLogic(delta) {
   const allStructures = {...buildings, ...colonies};
   // Update funding
   fundingModule.update(delta);
-  produceResources(delta, allStructures, resources);
+  produceResources(delta, allStructures);
 
   // Update happiness for each colony
   for (const colonyName in colonies) {
