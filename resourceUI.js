@@ -219,10 +219,18 @@ function capitalizeFirstLetter(string) {
 }
 
 function formatNumber(value) {
-  if (value >= 1e7) {
-    return (value / 1e6).toFixed(1) + 'm'; // For numbers >= 1 million
-  } else if (value >= 1e4) {
-    return (value / 1e3).toFixed(1) + 'k'; // For numbers >= 1 thousand
+  if (value >= 1e18) {
+    return (value / 1e18).toFixed(1) + 'Qn'; // Quintillions
+  } else if (value >= 1e15) {
+    return (value / 1e15).toFixed(1) + 'Q'; // Quadrillions
+  } else if (value >= 1e12) {
+    return (value / 1e12).toFixed(1) + 'T'; // Trillions
+  } else if (value >= 1e9) {
+    return (value / 1e9).toFixed(1) + 'B'; // Billions
+  } else if (value >= 1e6) {
+    return (value / 1e6).toFixed(1) + 'M'; // Millions
+  } else if (value >= 1e3) {
+    return (value / 1e3).toFixed(1) + 'k'; // Thousands
   }
   return value.toFixed(0); // For numbers < 1000, return the full number
 }

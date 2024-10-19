@@ -1,0 +1,38 @@
+.terraforming-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .terraforming-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .terraforming-box {
+    flex: 0 0 30%;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .terraforming-box h3 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .terraforming-box p {
+    margin: 10px 0;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .terraforming-box span {
+    font-weight: bold;
+  }

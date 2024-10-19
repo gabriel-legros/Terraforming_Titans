@@ -17,18 +17,17 @@ const planetParameters = {
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
-        ice: { name: 'Ice', initialValue: 100000, unlocked:false }
+        ice: { name: 'Ice', initialValue: 1e16, unlocked:false }
       },
       underground: {
         ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, hasCap: true, areaTotal: 144000, unlocked:false },
         geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 10, hasCap: true, areaTotal: 144000, unlocked: false }
       },
       atmospheric: {
-        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 950000, unlocked:false },
-        inertGas: { name: 'Inert Gas', initialValue: 35000, unlocked:false },
-        oxygen: { name: 'Oxygen', initialValue: 1500, unlocked:false },
-        atmosphericWater: { name: 'Atmospheric Water', initialValue: 210, unlocked:false },
-        atmosphericPressure: { name: 'Atmospheric Pressure', initialValue: 0, unlocked:false }
+        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
+        inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
+        oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
+        atmosphericWater: { name: 'Atmospheric Water', initialValue: 0, unlocked:false }
       }
     },
     initialGameState: {
@@ -42,6 +41,12 @@ const planetParameters = {
       workerRatio: 0.5 // 60% of colonists are considered workers
     },
     fundingRate: 5, // Rate at which funding increases over time
+    celestialParameters : {
+    distanceFromSun: 227.9, // Average distance from the Sun in million kilometers
+    gravity: 3.711, // Surface gravity in m/s^2
+    radius: 3389.5, // Mean radius in kilometers
+    albedo: 0.25, // Starting albedo value
+    }
   },
   // Additional planets can be added here in the future
 };

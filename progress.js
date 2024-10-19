@@ -37,6 +37,8 @@ class StoryEvent {
         this.currentChapter = this.chapters[0];  // Start with the first chapter
         this.objectivesComplete = false; // Track if objectives are complete
         this.appliedEffects = []; // Store applied effects
+        this.effectsApplied = false; // Track if all effects have been applied
+        this.applyingEffect = false;
       }
   
     // Load the chapters from the progressData object
@@ -79,19 +81,23 @@ class StoryEvent {
   
     // Move to the next chapter based on the current chapter's nextChapter property
     advanceToNextChapter() {
-        this.objectivesComplete = false;
-        const nextChapterId = this.currentChapter.nextChapter;
-        if (nextChapterId) {
-            const nextChapter = this.chapters.find(chapter => chapter.id === nextChapterId);
-            if (nextChapter) {
-            this.currentChapter = nextChapter;
-            console.log(`Advanced to: ${this.currentChapter.id}`);
+        if (this.effectsApplied) {
+            this.objectivesComplete = false;
+            this.effectsApplied = false; // Reset effectsApplied flag for the next chapter
+            const nextChapterId = this.currentChapter.nextChapter;
+            if (nextChapterId) {
+                const nextChapter = this.chapters.find(chapter => chapter.id === nextChapterId);
+                if (nextChapter) {
+                    this.currentChapter = nextChapter;
+                    console.log(`Advanced to: ${this.currentChapter.id}`);
+                } else {
+                    console.error(`Next chapter with ID ${nextChapterId} not found.`);
+                }
             } else {
-            console.error(`Next chapter with ID ${nextChapterId} not found.`);
+                console.log("No more chapters to advance to.");
             }
-        } else {
-            console.log("No more chapters to advance to.");
-        } 
+        }
+        this.triggerCurrentChapter();
     }
   
     // Check if all objectives for the current chapter are complete
@@ -114,7 +120,7 @@ class StoryEvent {
             } else {
                 if (objectivesMet) {
                     this.objectivesComplete = true;
-                    this.applyRewards();  // Apply rewards when objectives are met
+                    this.applyRewards();
                     return true;
                 }
             }
@@ -145,20 +151,35 @@ class StoryEvent {
     }
 
     applyRewards() {
-        if (this.currentChapter.reward) {
+        if (this.currentChapter.reward && this.currentChapter.reward.length > 0 && !this.applyingEffect) {
             const delay = this.currentChapter.rewardDelay || 0; // Get the delay for the current chapter
-        
+            let appliedCount = 0;
+
+            this.applyingEffect = true;
+
             // Apply rewards with a delay in between each one
             this.currentChapter.reward.forEach((effect, index) => {
-            setTimeout(() => {
-                // Skip effects with the oneTimeFlag for tracking
-                if (!effect.oneTimeFlag) {
-                    this.appliedEffects.push(effect); // Track effect
-                }
-                addEffect(effect); // Apply the effect
-                console.log(`Applied reward: ${effect.type} to ${effect.targetId}`);
-            }, index * delay);  // Multiply the index by the delay to stagger the rewards
+                setTimeout(() => {
+                    // Skip effects with the oneTimeFlag for tracking
+                    if (!effect.oneTimeFlag) {
+                        this.appliedEffects.push(effect); // Track effect
+                    }
+                    addEffect(effect); // Apply the effect
+                    console.log(`Applied reward: ${effect.type} to ${effect.targetId}`);
+
+                    appliedCount++;
+                    if (appliedCount === this.currentChapter.reward.length) {
+                        this.effectsApplied = true; // Mark all effects as applied
+                        this.applyingEffect = false;
+                        this.advanceToNextChapter();  // Move to the next chapter
+                    }
+                }, index * delay);  // Multiply the index by the delay to stagger the rewards
             });
+        } else {
+            this.effectsApplied = true; // Mark all effects as applied if there are no rewards
+            if(!this.applyingEffect){
+                this.advanceToNextChapter();  // Move to the next chapter
+            }
         }
     }
 

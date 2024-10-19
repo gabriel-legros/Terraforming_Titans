@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="pop-up.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
+    <link rel="stylesheet" href="terraforming.css">
     <link rel="stylesheet" href="day-night-cycleUI.css">
     <script src="effectable-entity.js"></script>
     <script src="tab.js"></script>
@@ -38,6 +39,8 @@
     <script src="journal.js"></script>
     <script src="progress.js"></script>   
     <script src="progress-data.js"></script>   
+    <script src="terraforming.js"></script>   
+    <script src="terraformingUI.js"></script>   
     <script src="game.js"></script>
 </head>
 
@@ -45,12 +48,12 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <div class="tab active" id="buildings-tab" data-tab="buildings">Buildings</div>
+    <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings</div>
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects</div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
     <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming</div>
-    <div class="tab" id="settings-tab" data-tab="settings">Settings</div>
+    <div class="tab active" id="settings-tab" data-tab="settings">Settings</div>
   </div>
 
   <div class="day-night-progress-bar-container">
@@ -68,20 +71,20 @@
     </div>
 
     <!-- Buildings Tab Content -->
-    <div id="buildings" class="tab-content active">
+    <div id="buildings" class="tab-content">
         <div class="container hidden" id="building-container">
             <div class="buildings-subtabs">
-                <div id="resource-buildings-tab" class="building-subtab active" data-subtab="resource-buildings">Resources</div>
-                <div id="production-buildings-tab" class="building-subtab active" data-subtab="production-buildings">Production</div>
+                <div id="resource-buildings-tab" class="building-subtab" data-subtab="resource-buildings">Resources</div>
+                <div id="production-buildings-tab" class="building-subtab" data-subtab="production-buildings">Production</div>
                 <div id="energy-buildings-tab" class="building-subtab" data-subtab="energy-buildings">Energy</div>
                 <div id="storage-buildings-tab" class="building-subtab" data-subtab="storage-buildings">Storage</div>
             </div>
             <div class="building-subtab-content-wrapper">
-                <div id="resource-buildings" class="building-subtab-content active">
+                <div id="resource-buildings" class="building-subtab-content">
                     <h3>Resource Buildings</h3>
                     <div class="building-list" id="resource-buildings-buttons"></div> <!-- Container for production buildings -->
                 </div>
-                <div id="production-buildings" class="building-subtab-content active">
+                <div id="production-buildings" class="building-subtab-content">
                     <h3>Production Buildings</h3>
                     <div class="building-list" id="production-buildings-buttons"></div> <!-- Container for production buildings -->
                 </div>
@@ -141,7 +144,13 @@
         </div>
     </div>
 
-    <div id="settings" class="tab-content">
+    <div id="terraforming" class="tab-content">
+        <div class="container terraforming-container">
+            <h2>Terraforming</h2>
+        </div>
+    </div>
+
+    <div id="settings" class="tab-content active">
         <div class="container settings-container">
             <h2>Settings</h2>
             <div class="settings-item">

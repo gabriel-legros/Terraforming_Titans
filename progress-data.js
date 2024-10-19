@@ -146,12 +146,40 @@ progressData = {
             type: 'enable'
           }
         ],
-        nextChapter: "chapter1.4"
+        nextChapter: "chapter1.3b"
       },
+      {
+        id: "chapter1.3b",
+        type: "journal",
+        narrative: "Awaiting resources from Earth...",
+        objectives: [{
+            type: 'collection',
+            resourceType: 'colony',
+            resource: 'metal',
+            quantity: 200
+        }
+        ],
+        reward: [
+        ],
+        nextChapter: "chapter1.3c"
+      }, 
+      {
+        id: "chapter1.3c",
+        type: "journal",
+        narrative: "Loading buildings interface...",
+        objectives: [
+        ],
+        reward: [     {
+          target: 'tab',
+          targetId: 'buildings-tab',
+          type: 'enable'
+        }],
+        nextChapter: "chapter1.4"
+      }, 
       {
         id: "chapter1.4",
         type: "journal",
-        narrative: "Loading buildings interface...",
+        narrative: "Unpacking building categories...",
         objectives: [
         ],
         reward: [ {
@@ -225,21 +253,6 @@ progressData = {
             targetId: 'storageDepot',
             type: 'enable'
         }
-        ],
-        nextChapter: "chapter1.10"
-      }, 
-      {
-        id: "chapter1.10",
-        type: "journal",
-        narrative: "Awaiting resources from Earth...",
-        objectives: [{
-            type: 'collection',
-            resourceType: 'colony',
-            resource: 'metal',
-            quantity: 200
-        }
-        ],
-        reward: [
         ],
         nextChapter: "chapter1.11"
       }, 
@@ -323,7 +336,7 @@ progressData = {
       {
         id: "chapter1.17",
         type: "journal",
-        narrative: "Solar panels are cheaper and require fewer maintenance.  Build a solar panel to continue.",
+        narrative: "Solar panels are cheaper and require less maintenance.  Build a solar panel to continue.",
         objectives: [{
             type: 'building',
             buildingName: 'solarPanel',
@@ -400,8 +413,7 @@ progressData = {
         type: "journal",
         narrative: "",
         objectives: [],
-        reward: [],
-        nextChapter: "chapter1.22"
+        reward: []
       }, 
     ]
   };

@@ -73,6 +73,7 @@ const tabParameters = {
     enable(tabId) {
       if (this.tabs[tabId]) {
         this.tabs[tabId].classList.remove('hidden');
+        this.activateTab(extractTabId(tabId));
         console.log(`Tab "${tabId}" unlocked.`);
       } else {
         console.error(`Tab "${tabId}" not managed by TabManager.`);
@@ -95,9 +96,26 @@ const tabParameters = {
   
     // Activate a tab
     activateTab(tabId) {
-      if (this.tabs[tabId]) {
+      const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
+      const tabContentElement = document.getElementById(tabId);
+
+      if (tabElement && tabContentElement) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        this.tabs[tabId].classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+        tabElement.classList.add('active');
+        tabContentElement.classList.add('active');
       }
     }
   }
+
+function extractTabId(tabString) {
+  const tabSuffix = '-tab';
+  const suffixIndex = tabString.indexOf(tabSuffix);
+  
+  if (suffixIndex !== -1) {
+    return tabString.substring(0, suffixIndex);
+  }
+  
+  return tabString;
+}

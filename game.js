@@ -31,6 +31,7 @@ let populationModule;
 let oreScanner = new OreScanning(currentPlanetParameters);
 let projectManager;  // Use ProjectManager instead of individual projects
 let storyStarted = false;  // Track if the story has been triggered
+let terraforming;
 
 function preload() {
   // Load assets (images, sounds, etc.) here
@@ -78,6 +79,10 @@ function create() {
   // Initialize StoryManager
   storyManager = new StoryManager(progressData);  // Pass the progressData object
 
+  celestialParameters = currentPlanetParameters.celestialParameters;
+  terraforming = new Terraforming(resources, celestialParameters);
+  terraforming.initializeTerraforming();
+
   initializeGameState();  // Handle initial game state (building counts, etc.)
   loadGame();
 }
@@ -117,6 +122,8 @@ function updateLogic(delta) {
 
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
+
+  terraforming.update();
 }
 
 function updateRender() {
@@ -127,20 +134,17 @@ function updateRender() {
   updateColonyDisplay(colonies);     // Render colony information
   renderProjects();                  // Render project information (handled in projects.js)
   updateAllResearchButtons(researchManager.researches); // Update research buttons display
+  updateTerraformingUI();
 }
 
 function update(time, delta) {
-
-  // Check and trigger story progression after objectives are completed
-  if (storyStarted && storyManager.checkObjectives({ resources })) {
-    storyManager.advanceToNextChapter();  // Move to the next chapter
-    storyManager.triggerCurrentChapter(); // Trigger the next chapter
-  }
 
   // Trigger the first chapter of the story, but only once
   if (!storyStarted) {
     storyManager.triggerCurrentChapter();  // Trigger the first chapter
     storyStarted = true;                   // Set flag to ensure it doesn't retrigger
+  } else{
+    storyManager.checkObjectives({ resources});
   }
 
   updateLogic(delta);   // Update game state

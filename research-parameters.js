@@ -193,7 +193,45 @@ const researchParameters = {
             type: 'enable'
           },
         ],
-      }
+      },
+      {
+        id: 'terraforming_sensor',
+        name: 'Terraforming measurements',
+        description: 'Unlocks the terraforming tab, which allows monitoring of terraforming parameters.',
+        cost: { research: 1000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'tab',
+            targetId: 'terraforming-tab',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'carbonDioxide',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'inertGas',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'oxygen',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'atmosphericWater',
+            type: 'enable'
+          }
+        ],
+      },
     ],
   };
   
