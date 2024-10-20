@@ -72,17 +72,17 @@ class Building extends EffectableEntity {
     return maintenanceCost;
   }
 
-  canAfford() {
+  canAfford(buildCount = 1) {
     for (const category in this.cost) {
       for (const resource in this.cost[category]) {
-        if (resources[category][resource].value < this.cost[category][resource]) {
+        if (resources[category][resource].value < this.cost[category][resource] * buildCount) {
           return false;
         }
       }
     }
     if (this.requiresDeposit) {
       for (const deposit in this.requiresDeposit.underground) {
-        if (!resources.underground[deposit] || resources.underground[deposit].value - resources.underground[deposit].reserved < this.requiresDeposit.underground[deposit]) {
+        if (!resources.underground[deposit] || resources.underground[deposit].value - resources.underground[deposit].reserved < this.requiresDeposit.underground[deposit] * buildCount) {
           return false;
         }
       }
@@ -90,30 +90,38 @@ class Building extends EffectableEntity {
     return true;
   }
 
-  build(resources) {
-    if (this.canAfford(resources)) {
+  build(resources, buildCount = 1) {
+    if (this.canAfford(resources, buildCount)) {
       for (const category in this.cost) {
         for (const resource in this.cost[category]) {
-          resources[category][resource].decrease(this.cost[category][resource]);
+          resources[category][resource].decrease(this.cost[category][resource] * buildCount);
         }
       }
       if (this.requiresDeposit) {
         for (const deposit in this.requiresDeposit.underground) {
-          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]);
+          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit] * buildCount);
         }
       }
-      this.count++;
-      this.active++;
+      this.count += buildCount;
+      this.active += buildCount;
       this.updateResourceStorage();
       return true;
     }
     return false;
   }
 
-  releaseDeposit(resources) {
+  buildStructure(resources, buildCount = 1) {
+    if (this.build(resources, buildCount)) {
+      this.updateResourceStorage(resources);
+    } else {
+      console.log(`Insufficient resources to build ${buildCount} ${this.name}(s)`);
+    }
+  }
+
+  releaseDeposit(resources, releaseCount = 1) {
     if (this.requiresDeposit) {
       for (const deposit in this.requiresDeposit.underground) {
-        resources.underground[deposit].release(this.requiresDeposit.underground[deposit]);
+        resources.underground[deposit].release(this.requiresDeposit.underground[deposit] * releaseCount);
       }
     }
   }
@@ -247,14 +255,6 @@ class Building extends EffectableEntity {
       for (const resource in this.storage[category]) {
         resources[category][resource].updateStorageCap(buildings);
       }
-    }
-  }
-
-  buildStructure(resources) {
-    if (this.build(resources)) {
-      this.updateResourceStorage(resources);
-    } else {
-      console.log(`Insufficient resources to build ${this.name}`);
     }
   }
 

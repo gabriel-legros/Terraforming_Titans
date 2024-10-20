@@ -49,25 +49,56 @@ function createTemperatureBox(row) {
       <p>Solar Flux: <span id="solar-flux">${terraforming.temperature.solarFlux.toFixed(2)}</span> W/m²</p>
       <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
       <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Zone</th>
+            <th>Temperature (K)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tropical</td>
+            <td><span id="tropical-temp">${terraforming.temperature.zones.tropical.value.toFixed(2)}</span></td>
+          </tr>
+          <tr>
+            <td>Temperate</td>
+            <td><span id="temperate-temp">${terraforming.temperature.zones.temperate.value.toFixed(2)}</span></td>
+          </tr>
+          <tr>
+            <td>Polar</td>
+            <td><span id="polar-temp">${terraforming.temperature.zones.polar.value.toFixed(2)}</span></td>
+          </tr>
+        </tbody>
+      </table>
     `;
     row.appendChild(temperatureBox);
   }
   
   function updateTemperatureBox() {
     const temperatureCurrent = document.getElementById('temperature-current');
-    temperatureCurrent.textContent = terraforming.temperature.value.toFixed(2);
+    temperatureCurrent.textContent = terraforming.temperature.value.toFixed(1);
   
     const solarFlux = document.getElementById('solar-flux');
-    solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(2);
+    solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(1);
 
     const effectiveAlbedo = document.getElementById('effective-albedo');
-    effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(2);
+    effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(1);
 
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
-    effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2);
+    effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(1);
   
     const emissivity = document.getElementById('emissivity');
-    emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
+    emissivity.textContent = terraforming.temperature.emissivity.toFixed(1);
+
+    const tropicalTemp = document.getElementById('tropical-temp');
+    tropicalTemp.textContent = terraforming.temperature.zones.tropical.value.toFixed(1);
+  
+    const temperateTemp = document.getElementById('temperate-temp');
+    temperateTemp.textContent = terraforming.temperature.zones.temperate.value.toFixed(1);
+  
+    const polarTemp = document.getElementById('polar-temp');
+    polarTemp.textContent = terraforming.temperature.zones.polar.value.toFixed(1);
   }
 
   function createAtmosphereBox(row) {
@@ -123,8 +154,34 @@ function createTemperatureBox(row) {
     waterBox.id = 'water-box';
     waterBox.innerHTML = `
       <h3>${terraforming.water.name}</h3>
-      <p>Planet coverage : <span id="water-current">${(terraforming.water.value * 100).toFixed(2)}</span>%</p>
-      <p>Target: <span id="water-target">${(terraforming.water.target * 100).toFixed(2)}</span>%</p>
+      <p>Water coverage: <span id="water-current">${(terraforming.water.value * 100).toFixed(2)}</span>%</p>
+      <p>Ice coverage: <span id="ice-current">${(terraforming.water.iceValue * 100).toFixed(2)}</span>%</p>
+      <table>
+        <tr>
+          <td>Evaporation rate:</td>
+          <td><span id="evaporation-rate">${formatNumber(terraforming.water.evaporationRate)}</span> /s</td>
+        </tr>
+        <tr>
+          <td>Sublimation rate:</td>
+          <td><span id="sublimation-rate">${formatNumber(terraforming.water.sublimationRate)}</span> /s</td>
+        </tr>
+        <tr>
+          <td>Rainfall rate:</td>
+          <td><span id="rainfall-rate">${formatNumber(terraforming.water.rainfallRate)}</span> /s</td>
+        </tr>
+        <tr>
+          <td>Snowfall rate:</td>
+          <td><span id="snowfall-rate">${formatNumber(terraforming.water.snowfallRate)}</span> /s</td>
+        </tr>
+        <tr>
+          <td>Melting rate:</td>
+          <td><span id="melting-rate">${formatNumber(terraforming.water.meltingRate)}</span> /s</td>
+        </tr>
+        <tr>
+          <td>Freezing rate:</td>
+          <td><span id="freezing-rate">${formatNumber(terraforming.water.freezingRate)}</span> /s</td>
+        </tr>
+      </table>
     `;
     row.appendChild(waterBox);
   }
@@ -132,6 +189,27 @@ function createTemperatureBox(row) {
   function updateWaterBox() {
     const waterCurrent = document.getElementById('water-current');
     waterCurrent.textContent = (terraforming.water.value * 100).toFixed(2);
+  
+    const iceCurrent = document.getElementById('ice-current');
+    iceCurrent.textContent = (terraforming.water.iceValue * 100).toFixed(2);
+  
+    const evaporationRate = document.getElementById('evaporation-rate');
+    evaporationRate.textContent = formatNumber(terraforming.water.evaporationRate);
+  
+    const sublimationRate = document.getElementById('sublimation-rate');
+    sublimationRate.textContent = formatNumber(terraforming.water.sublimationRate);
+  
+    const rainfallRate = document.getElementById('rainfall-rate');
+    rainfallRate.textContent = formatNumber(terraforming.water.rainfallRate);
+  
+    const snowfallRate = document.getElementById('snowfall-rate');
+    snowfallRate.textContent = formatNumber(terraforming.water.snowfallRate);
+  
+    const meltingRate = document.getElementById('melting-rate');
+    meltingRate.textContent = formatNumber(terraforming.water.meltingRate);
+  
+    const freezingRate = document.getElementById('freezing-rate');
+    freezingRate.textContent = formatNumber(terraforming.water.freezingRate);
   }
 
   function createLifeBox(row) {

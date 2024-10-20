@@ -35,7 +35,7 @@
   }
   
   .resource-pps {
-    text-align: left; /* Right-align pps */
+    text-align: right; /* Right-align pps */
   }
   
   .scanning-progress {

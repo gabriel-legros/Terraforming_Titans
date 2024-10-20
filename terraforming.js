@@ -1,53 +1,92 @@
-class Terraforming {
-    constructor(resources, celestialParameters) {
-      this.resources = resources;
-      this.celestialParameters = celestialParameters;
-      this.water = {
-        name: 'Water',
-        value: 0,
-        target: 0.70,
-        unlocked: false,
-        humidity: 0
-      };
-      this.atmosphere = {
-        name: 'Atmosphere',
-        value: 0,
-        target: 101.325,
-        unlocked: false
-      };
-      this.temperature = {
-        name: 'Temperature',
-        value: 0,
-        target: 288.15, // 15°C in Kelvin
-        solarFlux: 0,
-        effectiveTempNoAtmosphere: 0,
-        emissivity: 0,
-        unlocked: false
-      };
-      this.life = {
-        name: 'Life',
-        value: 0,
-        target: 50,
-        unlocked: false
-      };
-      this.magnetosphere = {
-        name: 'Magnetosphere',
-        value: 0,
-        target: 100,
-        unlocked: false
-      };
-      this.toxicity = {
-        name: 'Toxicity',
-        value: 100,
-        target: 0,
-        unlocked: false
-      };
+let solarLuminosity = 3.828e26; // Solar luminosity (W)
+const R_AIR = 287; // J/kg·K (specific gas constant for dry air)
+const C_P_AIR = 1004; // J/kg·K
+const EPSILON = 0.622; // Molecular weight ratio
 
-      this.updateSurfaceTemperature();
-    }
+class Terraforming {
+  constructor(resources, celestialParameters) {
+    this.resources = resources;
+    this.celestialParameters = celestialParameters;
+    this.water = {
+      name: 'Water',
+      value: 0,
+      iceValue: 0,
+      target: 0.70,
+      unlocked: false,
+      humidity: 0,
+      evaporationRate:0,
+      sublimationRate:0,
+      rainfallRate:0,
+      snowfallRate:0,
+      meltingRate:0,
+      freezingRate:0
+    };
+    this.atmosphere = {
+      name: 'Atmosphere',
+      value: 0,
+      target: 101.325,
+      unlocked: false
+    };
+    this.temperature = {
+      name: 'Temperature',
+      value: 0,
+      target: 288.15, // 15°C in Kelvin
+      solarFlux: 0,
+      effectiveTempNoAtmosphere: 0,
+      emissivity: 0,
+      unlocked: false,
+      zones: {
+        tropical: {
+          value: 0
+        },
+        temperate: {
+          value: 0
+        },
+        polar: {
+          value: 0
+        }
+      }
+    };
+    this.life = {
+      name: 'Life',
+      value: 0,
+      target: 50,
+      unlocked: false,
+      zones: {
+        tropical: {
+          value: 0
+        },
+        temperate: {
+          value: 0
+        },
+        polar: {
+          value: 0
+        }
+      },
+      dryIceCoverage: 0
+    };
+    this.magnetosphere = {
+      name: 'Magnetosphere',
+      value: 0,
+      target: 100,
+      unlocked: false
+    };
+    this.toxicity = {
+      name: 'Toxicity',
+      value: 100,
+      target: 0,
+      unlocked: false
+    };
+
+    this.updateSurfaceTemperature();
+  }
 
     updateResources(accumulatedChanges, deltaTime){
       this.applyEvaporationAndSublimation(accumulatedChanges, deltaTime);
+      this.applyRainfallAndSnow(accumulatedChanges, deltaTime);
+      this.applyMeltingAndFreezing(accumulatedChanges, deltaTime);
+
+      this.condenseCO2(accumulatedChanges, deltaTime);
     }
 
     updateSurfaceTemperature() {
@@ -66,51 +105,37 @@ class Terraforming {
         }
       }
   
-      const {
-        solarFlux,
-        effectiveTempNoAtmosphere,
-        emissivity,
-        surfaceTemperature
-      } = calculateEffectiveTemperature(
-        distanceFromSunInMeters,
-        radiusInMeters,
-        albedo,
-        inertMass,
-        greenhouseGasMass
-      );
-  
-      this.temperature.value = surfaceTemperature;
-      this.temperature.solarFlux = solarFlux;
-      this.temperature.effectiveTempNoAtmosphere = effectiveTempNoAtmosphere;
-      this.temperature.emissivity = emissivity;
+      this.temperature.emissivity = calculateEmissivity(radiusInMeters, inertMass, greenhouseGasMass);
+      this.temperature.solarFlux = calculateSolarFlux(distanceFromSunInMeters);
+      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(distanceFromSunInMeters, albedo, 0.25);
+      this.temperature.value = calculateEffectiveTemperature(distanceFromSunInMeters, albedo, this.temperature.emissivity, 0.25);
+
+      for (const zone in this.temperature.zones) {
+        this.temperature.zones[zone].value = calculateEffectiveTemperature(distanceFromSunInMeters, albedo, this.temperature.emissivity, getZoneRatio(zone));
+      }
     }
 
-      calculateEffectiveAlbedo() {
-        const baseAlbedo = this.celestialParameters.albedo;
-        const oceanAlbedo = 0.06;
-        const waterRatio = this.water.value / 100;
-    
-        const effectiveAlbedo = baseAlbedo * (1 - waterRatio) + oceanAlbedo * waterRatio;
-        return effectiveAlbedo;
-      }
-    
-      calculateSolarEnergy() {
-        // Calculate the solar energy received based on celestial parameters
-        const solarConstant = 1361; // Solar constant in W/m^2
-        const distanceFactor = Math.pow(149.6 / this.celestialParameters.distanceFromSun, 2); // Inverse square law
-        return solarConstant * distanceFactor;
-      }
+    calculateEffectiveAlbedo() {
+      const baseAlbedo = this.celestialParameters.albedo;
+      const oceanAlbedo = 0.06;
+      const waterRatio = this.water.value / 100;
   
-      update(deltaTime) {
-        // Update temperature based on the new calculateSurfaceTemperature function
-        this.updateSurfaceTemperature();
-    
-        // Update atmospheric pressure
-        this.atmosphere.value = this.calculateTotalPressure();
-    
-        // Update water level
-        this.calculateWaterCoverage();
-      }
+      const effectiveAlbedo = baseAlbedo * (1 - waterRatio) + oceanAlbedo * waterRatio;
+      return effectiveAlbedo;
+    }
+  
+    update(deltaTime) {
+      // Update temperature based on the new calculateSurfaceTemperature function
+      this.updateSurfaceTemperature();
+  
+      // Update atmospheric pressure
+      this.atmosphere.value = this.calculateTotalPressure();
+  
+      // Update water level
+      this.calculateCoverage('liquidWater');
+      this.calculateCoverage('ice');
+      this.calculateCoverage('dryIce');
+    }
   
     unlock(aspect) {
       if (this[aspect]) {
@@ -138,29 +163,214 @@ class Terraforming {
       return calculateGasPressure('atmosphericWater')/satVapPress;
     }
 
-    calculateWaterCoverage() {
-      const surfaceArea = 4*Math.PI*Math.pow(this.celestialParameters.radius*1000,2);
-      const waterAmount = resources['surface']['liquidWater'].value;
-      const waterRatio = 0.0001 * waterAmount / surfaceArea;
-      if(waterRatio <= 0.001){
-        this.water.value = 10*waterRatio;
+    calculateCoverage(resourceType) {
+      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+      const resourceAmount = resources['surface'][resourceType].value;
+      let resourceRatio = 0.0001 * resourceAmount / surfaceArea;
+      if(resourceType === 'dryIce'){
+        resourceRatio = 100 * resourceRatio;
       }
-      else if(waterRatio > 0.001 && waterRatio < 1){
-        this.water.value = 0.143317*Math.log(waterRatio)+1;
+    
+      let coverage;
+    
+      if (resourceRatio <= 0.001) {
+        coverage = 10 * resourceRatio;
+      } else if (resourceRatio > 0.001 && resourceRatio < 1) {
+        coverage = 0.143317 * Math.log(resourceRatio) + 1;
+      } else if (resourceRatio >= 1) {
+        coverage = 1;
+      } else {
+        coverage = 0;
       }
-      else if (waterRatio >= 1){
-        this.water.value = 1;
-      }
-      else{
-        this.water.value = 0;
+    
+      if (resourceType === 'liquidWater') {
+        this.water.value = coverage;
+      } else if (resourceType === 'ice') {
+        this.water.iceValue = coverage;
+      } else if (resourceType === 'dryIce') {
+        this.life.dryIceCoverage = coverage;
       }
     }
 
     applyEvaporationAndSublimation(accumulatedChanges, deltaTime){
-      const timeMultiplier = 86400*(deltaTime/1000);
+      // deltaTime: Time step in milliseconds
+      const secondsInDay = 86400;
+      const timeMultiplier = secondsInDay * (deltaTime / 1000); // Convert deltaTime to seconds
 
-      const evpRate = evaporationRate(this.temperature.value, this.temperature.solarFlux, this.atmosphere.value);
-      const sublRate = sublimationRate(this.temperature.value, this.temperature.solarFlux, this.atmosphere.value);
+      const waterGasPressure = calculateGasPressure('atmosphericWater');
+      const co2GasPressure = calculateGasPressure('carbonDioxide');
+
+      // Calculate Evaporation Rate for Liquid Water
+      const evpRate = evaporationRateWater(
+        this.temperature.value,       // T: Temperature in Kelvin (K)
+        this.temperature.solarFlux,   // solarFlux: Incoming solar radiation (W/m²)
+        this.atmosphere.value,        // atmPressure: Atmospheric pressure (Pa)
+        waterGasPressure,    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
+        100                            // r_a: Aerodynamic resistance (s/m); adjust based on wind conditions
+    ); // kg/m²/s
+    
+      // Calculate Sublimation Rate for Water Ice
+      const sublRate = sublimationRateWater(
+          this.temperature.value,       // T: Temperature in Kelvin (K)
+          this.temperature.solarFlux,   // solarFlux: Incoming solar radiation (W/m²)
+          this.atmosphere.value,        // atmPressure: Atmospheric pressure (Pa)
+          waterGasPressure,    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
+          100                            // r_a: Aerodynamic resistance (s/m); adjust based on wind conditions
+      ); // kg/m²/s
+
+      const sublRateCO2 = sublimationRateCO2(
+          this.temperature.value,
+          this.temperature.solarFlux,
+          this.atmosphere.value,
+          co2GasPressure,
+          100
+      )
+
+      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+      const waterSurface = surfaceArea*this.water.value;
+      const iceSurface = surfaceArea*this.water.iceValue;
+      const dryIceSurface = surfaceArea*this.life.dryIceCoverage;
+
+      const evaporationAmount = evpRate * waterSurface * timeMultiplier / 1000; //Divide by 1000 to go from kg to tons
+      const sublimationAmount = sublRate * iceSurface * timeMultiplier / 1000;
+      const sublimationCo2Amount = sublRateCO2 * dryIceSurface * timeMultiplier / 1000;
+
+      // Save evaporation and sublimation rates
+      this.water.evaporationRate = evaporationAmount / deltaTime;
+      this.water.sublimationRate = sublimationAmount / deltaTime;
+      this.life.co2sublimationRate = sublimationCo2Amount / deltaTime;
+
+      // Apply evaporation
+      accumulatedChanges['surface']['liquidWater'] -= evaporationAmount;
+      accumulatedChanges['atmospheric']['atmosphericWater'] += evaporationAmount;
+
+      // Apply sublimation
+      accumulatedChanges['surface']['ice'] -= sublimationAmount;
+      accumulatedChanges['atmospheric']['atmosphericWater'] += sublimationAmount;
+
+      // Apply sublimation of CO2
+      accumulatedChanges['surface']['dryIce'] -= sublimationCo2Amount;
+      accumulatedChanges['atmospheric']['carbonDioxide'] += sublimationCo2Amount;
+    }
+
+    applyRainfallAndSnow(accumulatedChanges, deltaTime) {
+      const timeMultiplier = 86400 * (deltaTime / 1000);
+      const precipitationMultiplier = 0.0001;
+      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+    
+      const waterGasPressure = calculateGasPressure('atmosphericWater');
+    
+      let totalRainfall = 0;
+      let totalSnowfall = 0;
+
+      const planetaryTemperature = this.temperature.value;
+      const planetarySaturationPressure = saturationVaporPressureBuck(planetaryTemperature);
+
+      if(waterGasPressure > planetarySaturationPressure){
+
+        for (const zone in this.temperature.zones) {
+          const zonePercentage = getZonePercentage(zone);
+          const zoneTemperature = this.temperature.zones[zone].value;
+
+          const precipitationAmount = precipitationMultiplier*(waterGasPressure - planetarySaturationPressure) * surfaceArea * zonePercentage * timeMultiplier / 1000; // Divide by 1000 to go from kg to tons
+    
+          if (zoneTemperature > 273.15) {
+            // Rain
+            accumulatedChanges['surface']['liquidWater'] += precipitationAmount;
+            totalRainfall += precipitationAmount;
+          } else {
+            // Snow
+            accumulatedChanges['surface']['ice'] += precipitationAmount;
+            totalSnowfall += precipitationAmount;
+          }
+    
+          accumulatedChanges['atmospheric']['atmosphericWater'] -= precipitationAmount;
+        }
+     }
+
+      // Save rainfall and snowfall rates
+      this.water.rainfallRate = totalRainfall / deltaTime;
+      this.water.snowfallRate = totalSnowfall / deltaTime;
+    }
+
+    applyMeltingAndFreezing(accumulatedChanges, deltaTime) {
+      const timeMultiplier = 86400 * (deltaTime / 1000);
+      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+    
+      const tropicalPercentage = getZonePercentage('tropical');
+      const temperatePercentage = getZonePercentage('temperate');
+      const polarPercentage = getZonePercentage('polar');
+    
+      const tropicalTemperature = this.temperature.zones.tropical.value;
+      const temperateTemperature = this.temperature.zones.temperate.value;
+      const polarTemperature = this.temperature.zones.polar.value;
+    
+      const freezingPoint = 273.15;
+    
+      const waterCoverage = this.water.value;
+      const iceCoverage = this.water.iceValue;
+
+      const meltingRateMultiplier = 0.0001; // Adjust this value to control the melting rate
+      const freezingRateMultiplier = 0.0001; // Adjust this value to control the freezing rate
+    
+      let meltingRate = 0;
+      let freezingRate = 0;
+    
+      if (tropicalTemperature < freezingPoint && temperateTemperature < freezingPoint && polarTemperature < freezingPoint) {
+        // All zones below freezing point, freeze water based on the freezing rate multiplier
+        const temperatureDifference = freezingPoint - polarTemperature;
+        const waterToFreeze = waterCoverage * freezingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
+        freezingRate = waterToFreeze / deltaTime;
+        accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
+        accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
+      } else if (tropicalTemperature >= freezingPoint && temperateTemperature >= freezingPoint && polarTemperature >= freezingPoint) {
+        // All zones above freezing point, melt ice based on the melting rate multiplier
+        const temperatureDifference = tropicalTemperature - freezingPoint;
+        const iceToMelt = iceCoverage * meltingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
+        meltingRate = iceToMelt / deltaTime;
+        accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
+        accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
+      } else if (tropicalTemperature >= freezingPoint && polarTemperature < freezingPoint) {
+        // Tropical zone above freezing point, temperate or polar below freezing point
+        const targetIceCoverage = Math.min(iceCoverage, polarPercentage);
+        const targetWaterCoverage = Math.min(waterCoverage, tropicalPercentage);
+    
+        const meltingTemperatureDifference = tropicalTemperature - freezingPoint;
+        const freezingTemperatureDifference = freezingPoint - polarTemperature;
+    
+        const iceToMelt = (iceCoverage - targetIceCoverage) * meltingRateMultiplier * meltingTemperatureDifference * timeMultiplier / 1000;
+        const waterToFreeze = (waterCoverage - targetWaterCoverage) * freezingRateMultiplier * freezingTemperatureDifference * timeMultiplier / 1000;
+    
+        meltingRate = iceToMelt / deltaTime;
+        freezingRate = waterToFreeze / deltaTime;
+    
+        accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
+        accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
+        accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
+        accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
+      }
+    
+      this.water.meltingRate = meltingRate * surfaceArea;
+      this.water.freezingRate = freezingRate * surfaceArea;
+    }
+
+    condenseCO2(accumulatedChanges, deltaTime){
+      const timeMultiplier = 86400 * (deltaTime / 1000);
+      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+      const polarCoverage = getZonePercentage('polar');
+      const condensationTemperature = 170;
+      const condensationParameter = 1.77e-7;
+      const co2GasPressure = calculateGasPressure('carbonDioxide');
+
+      const polarTemperature = this.temperature.zones.polar.value;
+
+      if(polarTemperature < condensationTemperature){
+        const tempDifference = condensationTemperature - polarTemperature;
+        const co2change = condensationParameter * tempDifference * surfaceArea * polarCoverage * timeMultiplier * co2GasPressure / 1000;
+        // Apply condensation of CO2
+        accumulatedChanges['surface']['dryIce'] += co2change;
+        accumulatedChanges['atmospheric']['carbonDioxide'] -= co2change;
+      }
 
     }
   }
@@ -195,27 +405,9 @@ class Terraforming {
     return pressure;
 }
 
-function calculateEffectiveTemperature(
-  distanceFromSun,
-  radius,
-  albedo,
-  inertMass,
-  greenhouseGasMass
-) {
-  // Constants
-  const solarLuminosity = 3.828e26; // Solar luminosity (W)
-  const stefanBoltzmann = 5.670374419e-8; // Stefan-Boltzmann constant (W·m⁻²·K⁻⁴)
+function calculateEmissivity(radius, inertMass, greenhouseGasMass){
   const absorptionCoefficient = 0.0013; // Mean infrared absorption coefficient (m²/kg)
   const inertFactor = 0.1;
-  // Calculate the solar flux at the planet's orbit (S)
-  const solarFlux =
-    solarLuminosity / (4 * Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
-
-  // Calculate the effective temperature without atmosphere (Teff)
-  const effectiveTempNoAtmosphere = Math.pow(
-    (solarFlux * (1 - albedo)) / (4 * stefanBoltzmann),
-    0.25
-  );
 
   // Calculate the planet's surface area (A)
   const surfaceArea = 4 * Math.PI * Math.pow(radius, 2); // m²
@@ -227,110 +419,48 @@ function calculateEffectiveTemperature(
   // Calculate the atmospheric emissivity (epsilon)
   const emissivity = 1 - Math.exp(-absorptionCoefficient*(ghgColumnMass + inertFactor*inertColumnMass));
 
+  return emissivity;
+}
+
+function calculateSolarFlux(distanceFromSun){
+  return solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
+}
+
+function calculateEffectiveTemperatureNoAtm(distanceFromSun, albedo, zoneRatio){
+  // Constants
+  const stefanBoltzmann = 5.670374419e-8; // Stefan-Boltzmann constant (W·m⁻²·K⁻⁴)
+
+  // Calculate the solar flux at the planet's orbit (S)
+  const solarFlux =
+    solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
+
+  // Calculate the effective temperature without atmosphere (Teff)
+  const effectiveTempNoAtmosphere = Math.pow(
+    (zoneRatio*solarFlux * (1 - albedo)) / (stefanBoltzmann),
+    0.25
+  );
+  
+  return effectiveTempNoAtmosphere;
+}
+
+function calculateEffectiveTemperature(
+  distanceFromSun,
+  albedo,
+  emissivity,
+  zoneRatio
+) {
+  const effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(distanceFromSun, albedo, zoneRatio);
+
   // Calculate the surface temperature with greenhouse effect (Tsurface)
   const multiplier = Math.pow(1 / (1 - emissivity / 2), 0.25);
   const surfaceTemperature = effectiveTempNoAtmosphere * multiplier;
 
-  return {
-    solarFlux,
-    effectiveTempNoAtmosphere,
-    emissivity,
-    surfaceTemperature
-  };
+  return surfaceTemperature
 }
 
-function saturationVaporPressureBuck(T) {
-  // Calculates the saturation vapor pressure (in Pa) as a function of temperature (in °C)
-  // using the Buck equation over ice for T < 0°C and over liquid water for T ≥ 0°C.
-
-  let e_s; // Saturation vapor pressure in kilopascals (kPa)
-
-  if (T < 0) {
-    // Buck equation over ice
-    e_s =
-      0.61115 *
-      Math.exp(
-        ((23.036 - T / 333.7) * T) / (279.82 + T)
-      );
-  } else {
-    // Buck equation over liquid water
-    e_s =
-      0.61121 *
-      Math.exp(
-        ((18.678 - T / 234.5) * T) / (257.14 + T)
-      );
-  }
-
-  // Convert saturation vapor pressure from kPa to Pa
-  const e_s_Pa = e_s * 1000;
-
-  return e_s_Pa; // Partial pressure in Pa
-}
-
-function derivativeSaturationVaporPressureBuck(T) {  //Temperature must be in Celsius
-  let des_dT;
-
-  if (T < 0) {
-    // Buck equation derivative over ice
-    const A = 0.61115;
-    const C1 = 23.036;
-    const C2 = 333.7;
-    const C3 = 279.82;
-
-    function f_ice(T) {
-      return (C1 - T / C2) * (T / (C3 + T));
-    }
-
-    function df_ice(T) {
-      const term1 = (C1 - T / C2) * (C3 / Math.pow(C3 + T, 2));
-      const term2 = (-1 / C2) * (T / (C3 + T));
-      return term1 + term2;
-    }
-
-    const es_ice = A * Math.exp(f_ice(T));
-    des_dT = es_ice * df_ice(T);
-  } else {
-    // Buck equation derivative over water
-    const A = 0.61121;
-    const C1 = 18.678;
-    const C2 = 234.5;
-    const C3 = 257.14;
-
-    function f_water(T) {
-      return (C1 - T / C2) * (T / (C3 + T));
-    }
-
-    function df_water(T) {
-      const term1 = (C1 - T / C2) * (C3 / Math.pow(C3 + T, 2));
-      const term2 = (-1 / C2) * (T / (C3 + T));
-      return term1 + term2;
-    }
-
-    const es_water = A * Math.exp(f_water(T));
-    des_dT = es_water * df_water(T);
-  }
-
-  return des_dT * 1000; // Return the derivative in Pa/°C
-}
-
-function evaporationRate(T, solarFlux, atmPressure){
-  T = T - 273.15;
-  const albedo = 0.06;
-  const Lv = (2.501 - 0.002361*T)*1e6;
-  const drvBuck = derivativeSaturationVaporPressureBuck(T);
-  const rad = (1 - albedo)*solarFlux;
-  gamma = 1004*atmPressure/(0.622*Lv)         //c_p could be dynamic
-
-  return drvBuck*rad/((drvBuck + gamma)* Lv);
-}
-
-function sublimationRate(T, solarFlux, atmPressure){
-  T = T - 273.15;
-  const albedo = 0.7;
-  const Lv = (2.501 - 0.002361*T)*1e6;
-  const drvBuck = derivativeSaturationVaporPressureBuck(T);
-  const rad = (1 - albedo)*solarFlux;
-  gamma = 1004*atmPressure/(0.622*Lv)         //c_p could be dynamic
-
-  return drvBuck*rad/((drvBuck + gamma)* Lv);
+// Function to calculate air density (rho_a)
+function airDensity(atmPressure, T) {
+    // atmPressure: Atmospheric pressure in Pa
+    // T: Temperature in Kelvin (K)
+    return atmPressure / (R_AIR * T); // kg/m³
 }

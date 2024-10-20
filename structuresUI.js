@@ -1,5 +1,8 @@
 // structures-ui.js
 
+// Create an object to store the selected build count for each structure
+const selectedBuildCounts = {};
+
 // Create buttons for the buildings based on their categories
 function createBuildingButtons() {
   const categorizedBuildings = {
@@ -60,15 +63,43 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.id = `build-${structure.name}`;
   button.classList.add('building-button');
   button.textContent = `Build ${structure.displayName}`;
+
+  let selectedBuildCount = 1;
+
   button.addEventListener('click', function () {
-    buildCallback(structure.name);
-    updateStructureButtonText(button, structure);
-    updateStructureCostDisplay(costElement, structure);
+    buildCallback(structure.name, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
+    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
   });
 
   buttonAndControlsContainer.appendChild(button);
 
-  const structureControls = createStructureControls(structure, toggleCallback, isColony);
+  // Create build count input and buttons
+
+  const buildCountButtons = document.createElement('div');
+  buildCountButtons.classList.add('build-count-buttons');
+
+  
+  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+
+  const buildCounts = [1, 10, 100, 1000, 10000];
+  buildCounts.forEach((count) => {
+    const countButton = document.createElement('button');
+    countButton.textContent = count;
+    countButton.addEventListener('click', function () {
+      selectedBuildCounts[structure.name] = count;
+      updateStructureButtonText(button, structure, selectedBuildCount);
+      updateStructureCostDisplay(costElement, structure, selectedBuildCount);
+      if (structure.canBeToggled) {
+        updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+        updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+      }
+    });
+    buildCountButtons.appendChild(countButton);
+  });
+
+  buttonAndControlsContainer.appendChild(buildCountButtons);
+
   buttonAndControlsContainer.appendChild(structureControls);
 
   const costElement = document.createElement('div');
@@ -119,9 +150,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 }
 
 // Create structure controls for buildings and colonies
-function createStructureControls(structure, toggleCallback, isColony) {
+function createStructureControls(structure, toggleCallback) {
   const structureControls = document.createElement('div');
   structureControls.classList.add('building-controls');
+
+  let increaseButton = null;
+  let decreaseButton = null;
 
   if (structure.canBeToggled) {
     structureControls.innerHTML = `
@@ -131,16 +165,18 @@ function createStructureControls(structure, toggleCallback, isColony) {
       <span id="${structure.name}-productivity">0%</span>
     `;
 
-    const increaseButton = document.createElement('button');
-    increaseButton.textContent = '+';
+    increaseButton = document.createElement('button');
+    increaseButton.textContent = '+1';
     increaseButton.addEventListener('click', function () {
-      toggleCallback(structure, 1);
+      toggleCallback(structure, selectedBuildCounts[structure.name]);
+      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
     });
 
-    const decreaseButton = document.createElement('button');
-    decreaseButton.textContent = '-';
+    decreaseButton = document.createElement('button');
+    decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', function () {
-      toggleCallback(structure, -1);
+      toggleCallback(structure, -selectedBuildCounts[structure.name]);
+      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
     });
 
     structureControls.appendChild(increaseButton);
@@ -154,7 +190,17 @@ function createStructureControls(structure, toggleCallback, isColony) {
     `;
   }
 
-  return structureControls;
+  return { structureControls, increaseButton, decreaseButton };
+}
+
+// Update the text of the increase button based on the selected build count
+function updateIncreaseButtonText(button, buildCount) {
+  button.textContent = `+${buildCount}`;
+}
+
+// Update the text of the decrease button based on the selected build count
+function updateDecreaseButtonText(button, buildCount) {
+  button.textContent = `-${buildCount}`;
 }
 
 // Handle the creation of buttons for buildings and colonies
@@ -173,10 +219,10 @@ function createBuildingButtons() {
     }
   }
 
-  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
 }
 
 function createColonyButtons(colonies) {
@@ -188,22 +234,22 @@ function createColonyButtons(colonies) {
     updateStructureDisplay(buildings);
   }
   
-  function updateStructureButtonText(button, structure) {
-    let buttonText = `Build ${structure.displayName}`;
-    let canAfford = structure.canAfford();
+  function updateStructureButtonText(button, structure, buildCount = 1) {
+    let buttonText = `Build ${buildCount} ${structure.displayName}`;
+    let canAfford = structure.canAfford(buildCount);
   
     button.textContent = buttonText;
     button.style.color = canAfford ? 'inherit' : 'red';
   }
   
-  function updateStructureCostDisplay(costElement, structure) {
+  function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
     let costDetails = 'Cost - ';
     const costArray = [];
   
     // Include resource costs
     for (const category in structure.cost) {
       for (const resource in structure.cost[category]) {
-        const requiredAmount = structure.cost[category][resource];
+        const requiredAmount = structure.cost[category][resource] * buildCount;
         const availableAmount = resources[category][resource]?.value || 0;
   
         // Check if the player has enough of this resource
@@ -217,10 +263,11 @@ function createColonyButtons(colonies) {
   
     // Include worker cost if applicable
     if (structure.requiresWorker > 0) {
+      const requiredWorkers = structure.requiresWorker * buildCount;
       const availableWorkers = resources.colony.workers?.value || 0;
   
       // Check if there are enough workers available
-      const workerText = `Workers: ${structure.requiresWorker}`;
+      const workerText = `Workers: ${requiredWorkers}`;
       let formattedWorkerText;
   
       if (availableWorkers >= structure.requiresWorker) {
@@ -269,7 +316,7 @@ function createColonyButtons(colonies) {
   
       const button = document.getElementById(`build-${structureName}`);
       if (button) {
-        updateStructureButtonText(button, structure);
+        updateStructureButtonText(button, structure, selectedBuildCounts[structureName]);
       }
   
       // Update the production and consumption details
@@ -281,7 +328,7 @@ function createColonyButtons(colonies) {
       // Update the cost display
       const costElement = structureRow.querySelector('.structure-cost');
       if (costElement) {
-        updateStructureCostDisplay(costElement, structure);
+        updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structureName]);
       }
 
     // Update colony-specific needs display (comfort, energy, food, water)

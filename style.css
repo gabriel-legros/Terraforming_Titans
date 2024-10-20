@@ -42,9 +42,9 @@ body {
 }
 
 /* Adjusts the resource container width */
-.resource-container {
-    flex: 0 0 20%; /* Takes up 20% of the space */
-    min-width: 20%;
+.resource-wrapper {
+    flex: 0 0 18%; /* Takes up 20% of the space */
+    min-width: 18%;
 }
 
 .tab-content-wrapper {

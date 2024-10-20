@@ -118,16 +118,6 @@ consume(accumulatedChanges, deltaTime) {
     // Adjust the happiness towards the target value using the adjustNeedRatio logic
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness, deltaTime);
   }
-
-  buildStructure(resources) {
-    if (this.build(resources)) {
-      this.setStorage(resources);
-      updateResourceDisplay(resources);  // Resource updates now handled in resource.js
-      updateColonyDisplay(colonies);  // Updated to pass buildings
-    } else {
-      console.log(`Insufficient resources to build ${this.name}`);
-    }
-  }
 }
 
 function initializeColonies(coloniesParameters) {
