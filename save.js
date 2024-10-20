@@ -106,6 +106,8 @@ function loadGame() {
       loadJournalEntries(gameState.journalEntries); // Restore journal entries
     }
 
+    tabManager.activateTab('buildings');
+
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } else {
       console.log('No saved game found.');

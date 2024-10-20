@@ -32,7 +32,7 @@ function activateBuildingSubtab(subtabId) {
 
 function initializeBuildingTabs() {
     // Set the default active subtab for buildings
-    activateBuildingSubtab('resource-buildings'); // Make 'production' tab active by default
+    activateBuildingSubtab('resource-buildings'); // Make 'resource' tab active by default
 
     document.getElementById('resource-buildings-tab').addEventListener('click', () => {
         activateBuildingSubtab('resource-buildings');
@@ -46,5 +46,8 @@ function initializeBuildingTabs() {
     });
     document.getElementById('energy-buildings-tab').addEventListener('click', () => {
         activateBuildingSubtab('energy-buildings');
+    });
+    document.getElementById('terraforming-buildings-tab').addEventListener('click', () => {
+        activateBuildingSubtab('terraforming-buildings');
     });
 }

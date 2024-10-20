@@ -9,7 +9,8 @@ function createBuildingButtons() {
     resource: [],
     storage: [],
     production: [],
-    energy: []
+    energy: [],
+    terraforming: []
   };
 
   // Categorize buildings
@@ -21,10 +22,16 @@ function createBuildingButtons() {
   }
 
   // Create buttons for each category
-  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.terraforming, 'terraforming-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+}
+
+function createColonyButtons(colonies) {
+  const colonyArray = Object.values(colonies); // Convert dictionary to array
+  createStructureButtons(colonyArray, 'colony-buildings-buttons', (colonyName) => colonies[colonyName].buildStructure(resources), adjustStructureActivation, true);
 }
 
 // Create buttons for buildings and colonies
@@ -56,8 +63,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structureRow.classList.add('hidden'); // Hide the building initially
   }
 
-  const buttonAndControlsContainer = document.createElement('div');
-  buttonAndControlsContainer.classList.add('button-controls-container');
+  const buttonContainer = document.createElement('div');
+  buttonContainer.classList.add('button-container');
 
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
@@ -72,15 +79,15 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
   });
 
-  buttonAndControlsContainer.appendChild(button);
+  buttonContainer.appendChild(button);
 
   // Create build count input and buttons
-
   const buildCountButtons = document.createElement('div');
   buildCountButtons.classList.add('build-count-buttons');
 
-  
-  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+  const buildCountLabel = document.createElement('span');
+  buildCountLabel.textContent = 'Amount: ';
+  buildCountButtons.appendChild(buildCountLabel);
 
   const buildCounts = [1, 10, 100, 1000, 10000];
   buildCounts.forEach((count) => {
@@ -98,27 +105,52 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     buildCountButtons.appendChild(countButton);
   });
 
-  buttonAndControlsContainer.appendChild(buildCountButtons);
-
-  buttonAndControlsContainer.appendChild(structureControls);
+  buttonContainer.appendChild(buildCountButtons);
+  structureRow.appendChild(buttonContainer);
 
   const costElement = document.createElement('div');
   costElement.classList.add('structure-cost');
+  costElement.classList.add('small-text'); // Add the 'small-text' class
   updateStructureCostDisplay(costElement, structure);
-
-  structureRow.appendChild(buttonAndControlsContainer);
   structureRow.appendChild(costElement);
 
   const productionConsumptionDetails = document.createElement('div');
   productionConsumptionDetails.classList.add('building-production-consumption');
+  productionConsumptionDetails.classList.add('small-text'); // Add the 'small-text' class
   productionConsumptionDetails.id = `${structure.name}-production-consumption`;
-
   updateProductionConsumptionDetails(structure, productionConsumptionDetails);
+  structureRow.appendChild(productionConsumptionDetails);
 
-  if (productionConsumptionDetails.innerHTML) {
-    productionConsumptionDetails.classList.add('small-text');
-    structureRow.appendChild(productionConsumptionDetails);
+  const constructedCountContainer = document.createElement('div');
+  constructedCountContainer.classList.add('constructed-count-container');
+
+  // Create a new element for displaying the number of constructed buildings and productivity
+  const constructedCountElement = document.createElement('div');
+  constructedCountElement.classList.add('constructed-count');
+  constructedCountElement.classList.add('small-text'); // Add the 'small-text' class
+
+  if (structure.canBeToggled) {
+    constructedCountElement.innerHTML = `
+      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>,
+      <strong>Productivity:</strong> <span id="${structure.name}-productivity">0%</span>
+    `;
+  } else {
+    constructedCountElement.innerHTML = `
+      <strong>Constructed:</strong> <span id="${structure.name}-count">${structure.count}</span>
+    `;
   }
+
+  constructedCountContainer.appendChild(constructedCountElement);
+
+  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+  constructedCountContainer.appendChild(structureControls);
+
+  const toggleLabel = document.createElement('span');
+  toggleLabel.textContent = 'Toggle: ';
+  constructedCountContainer.appendChild(toggleLabel);
+  constructedCountContainer.appendChild(structureControls);
+
+  structureRow.appendChild(constructedCountContainer);
 
   const description = document.createElement('p');
   description.classList.add('building-description');
@@ -158,13 +190,6 @@ function createStructureControls(structure, toggleCallback) {
   let decreaseButton = null;
 
   if (structure.canBeToggled) {
-    structureControls.innerHTML = `
-      <span class="label">Constructed: </span>
-      <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>
-      <span class="label">Productivity: </span>
-      <span id="${structure.name}-productivity">0%</span>
-    `;
-
     increaseButton = document.createElement('button');
     increaseButton.textContent = '+1';
     increaseButton.addEventListener('click', function () {
@@ -181,13 +206,6 @@ function createStructureControls(structure, toggleCallback) {
 
     structureControls.appendChild(increaseButton);
     structureControls.appendChild(decreaseButton);
-  } else {
-    structureControls.innerHTML = `
-      <span class="label">Constructed: </span>
-      <span id="${structure.name}-count">${structure.count}</span>
-      <span class="label">Productivity: </span>
-      <span id="${structure.name}-productivity">0%</span>
-    `;
   }
 
   return { structureControls, increaseButton, decreaseButton };
@@ -201,33 +219,6 @@ function updateIncreaseButtonText(button, buildCount) {
 // Update the text of the decrease button based on the selected build count
 function updateDecreaseButtonText(button, buildCount) {
   button.textContent = `-${buildCount}`;
-}
-
-// Handle the creation of buttons for buildings and colonies
-function createBuildingButtons() {
-  const categorizedBuildings = {
-    resource: [],
-    storage: [],
-    production: [],
-    energy: []
-  };
-
-  for (const buildingName in buildings) {
-    const building = buildings[buildingName];
-    if (categorizedBuildings[building.category]) {
-      categorizedBuildings[building.category].push(building);
-    }
-  }
-
-  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-}
-
-function createColonyButtons(colonies) {
-  const colonyArray = Object.values(colonies); // Convert dictionary to array
-  createStructureButtons(colonyArray, 'colony-buildings-buttons', (colonyName) => colonies[colonyName].buildStructure(resources), adjustStructureActivation, true);
 }
   
   function updateBuildingDisplay(buildings) {
@@ -280,8 +271,8 @@ function createColonyButtons(colonies) {
       costArray.push(formattedWorkerText);
     }
   
-    costDetails += costArray.join(', ');
-    costElement.innerHTML = `<div>${costDetails}</div>`;
+    costDetails = costArray.join(', ');
+    costElement.innerHTML = `<strong>Cost:</strong> ${costDetails}`;
   }
   
   function adjustStructureActivation(structure, change) {

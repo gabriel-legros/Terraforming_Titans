@@ -205,5 +205,20 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false
-  }
+  },  
+    dustGrinder: {
+    name: 'Dust grinder',
+    category: 'terraforming',
+    description: 'Grinds regolith to a lower albedo.  Very slow and uses a lot of energy in large amount.',
+    cost: { colony: { metal: 100, components: 10 } },
+    consumption: { colony: { energy: 10 } },
+    production: { special: { albedoUpgrades: 10 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
 };

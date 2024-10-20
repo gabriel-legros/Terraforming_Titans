@@ -7,6 +7,7 @@ class Terraforming {
   constructor(resources, celestialParameters) {
     this.resources = resources;
     this.celestialParameters = celestialParameters;
+    this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
     this.water = {
       name: 'Water',
       value: 0,
@@ -118,9 +119,14 @@ class Terraforming {
     calculateEffectiveAlbedo() {
       const baseAlbedo = this.celestialParameters.albedo;
       const oceanAlbedo = 0.06;
+      const upgradeAlbedo = 0.05;
       const waterRatio = this.water.value / 100;
+
+      const albedoUpgrades = resources.special.albedoUpgrades.value;
+      const albedoUpgradeRatio = Math.min(albedoUpgrades / this.celestialParameters.surfaceArea, 1 - waterRatio);
+      const untouchedRatio = Math.max(1 - waterRatio - albedoUpgradeRatio, 0);
   
-      const effectiveAlbedo = baseAlbedo * (1 - waterRatio) + oceanAlbedo * waterRatio;
+      const effectiveAlbedo = oceanAlbedo * waterRatio + upgradeAlbedo * albedoUpgradeRatio + untouchedRatio * baseAlbedo;
       return effectiveAlbedo;
     }
   
@@ -164,7 +170,7 @@ class Terraforming {
     }
 
     calculateCoverage(resourceType) {
-      const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+      const surfaceArea = this.celestialParameters.surfaceArea;
       const resourceAmount = resources['surface'][resourceType].value;
       let resourceRatio = 0.0001 * resourceAmount / surfaceArea;
       if(resourceType === 'dryIce'){

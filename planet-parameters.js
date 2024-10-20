@@ -18,8 +18,8 @@ const planetParameters = {
       },
       surface: {
         ice: { name: 'Ice', initialValue: 1e16, unlocked:false },
-        liquidWater: { name: 'Water', initialValue: 0, unlocked:true },
-        dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: true}
+        liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
+        dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: false}
       },
       underground: {
         ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, hasCap: true, areaTotal: 144000, unlocked:false },
@@ -29,7 +29,10 @@ const planetParameters = {
         carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
         inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
         oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
-        atmosphericWater: { name: 'Atmospheric Water', initialValue: 0, unlocked:false }
+        atmosphericWater: { name: 'Water', initialValue: 0, unlocked:false }
+      },
+      special: {
+        albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000,initialValue: 0, unlocked: false}
       }
     },
     initialGameState: {

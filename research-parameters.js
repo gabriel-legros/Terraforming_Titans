@@ -181,6 +181,26 @@ const researchParameters = {
     ],
     terraforming: [
       {
+        id: 'dust_grinder',
+        name: 'Dust grinding',
+        description: 'Unlocks a blueprint for dust grinding, which can over a very long time significantly reduce the albedo of the ground to 0.05.',
+        cost: { research: 100 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'dustGrinder',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId : 'albedoUpgrades',
+            type: 'enable'
+          }
+        ],
+      },
+      {
         id: 'hydroponic_farm',
         name: 'Hydroponic Farm',
         description: 'Produces food to feed colonists.',
@@ -204,6 +224,18 @@ const researchParameters = {
           {
             target: 'tab',
             targetId: 'terraforming-tab',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId : 'liquidWater',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId : 'dryIce',
             type: 'enable'
           },
           {

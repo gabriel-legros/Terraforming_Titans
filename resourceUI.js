@@ -7,7 +7,7 @@ function createResourceContainers(resourcesData) {
     categoryContainer.classList.add('resource-display');
 
     // Create and append the header for the category
-    const header = document.createElement('h2');
+    const header = document.createElement('h3');
     header.textContent = `${capitalizeFirstLetter(category)} Resources`;
     categoryContainer.appendChild(header);
 

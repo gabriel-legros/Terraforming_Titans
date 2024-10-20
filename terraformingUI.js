@@ -83,7 +83,7 @@ function createTemperatureBox(row) {
     solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(1);
 
     const effectiveAlbedo = document.getElementById('effective-albedo');
-    effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(1);
+    effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(2);
 
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
     effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(1);

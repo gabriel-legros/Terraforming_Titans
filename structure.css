@@ -1,0 +1,92 @@
+.button-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap; /* Allows controls to wrap without stretching button */
+}
+
+.building-button {
+    max-width: 200px; /* Set a maximum width for the buttons */
+    width: 100%; /* Make the button take up the available width within the container */
+    text-align: center; /* Center the text */
+    white-space: nowrap; /* Prevent button text from wrapping */
+    overflow: hidden; /* Hide overflow if the text is too long */
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+    align-self: flex-start; /* Prevent stretching */
+}
+
+.building-row hr {
+    border: 1px solid #ccc; /* Set border for the line */
+    margin: 10px 0; /* Add margin to separate it from other elements */
+    min-width: 80%; /* Set a minimum width in percentage */
+    width: 100%; /* Make sure the width is responsive */
+}
+
+.building-description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    max-width: 100%; /* Allow the description to take the full width */
+    word-wrap: break-word; /* Allow the text to break onto a new line */
+}
+
+.building-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.building-controls .label {
+    font-weight: bold;
+}
+
+.building-controls button {
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.building-display {
+    width: 100%;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.small-text {
+    font-size: 0.85em;
+    display: block;
+}
+
+.building-production-consumption {
+    margin-top: 5px;
+}
+
+.structure-cost {
+    margin-top: 5px;
+}
+
+.constructed-count-container {
+    display: flex;
+    align-items: center;
+}
+
+.constructed-count {
+    margin-right: 10px;
+}
+
+.build-count-buttons,
+.constructed-count-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.build-count-buttons span,
+.constructed-count-container span {
+    font-size: 0.85em;
+}
+
+.building-controls .label {
+    font-size: 0.85em;
+}
