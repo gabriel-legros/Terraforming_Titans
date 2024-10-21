@@ -40,6 +40,54 @@ function createNeedBox(needName, value, id) {
     return needBox;
   }
 
+// Create the colony-specific details display
+function createColonyDetails(structure) {
+  const colonyDetails = document.createElement('div');
+  colonyDetails.classList.add('colony-details');
+  colonyDetails.style.display = 'flex'; // Flexbox to display items side by side
+  colonyDetails.style.gap = '10px'; // Add some space between the boxes
+
+  // Add comfort and happiness boxes
+  const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`);
+  const comfortBox = createNeedBox('Comfort', structure.baseComfort, `${structure.name}-comfort`);
+
+  colonyDetails.appendChild(happinessBox);
+  colonyDetails.appendChild(comfortBox);
+
+  // Add need boxes dynamically based on structure.filledNeeds
+  for (const need in structure.filledNeeds) {
+    const needBox = createNeedBox(need, structure.filledNeeds[need], `${structure.name}-${need}`);
+    colonyDetails.appendChild(needBox);
+  }
+
+  return colonyDetails;
+}
+
+// Update the colony-specific needs display
+function updateColonyDetailsDisplay(structureRow, structure) {
+  // Update comfort and happiness boxes
+  updateNeedBox(structureRow, `${structure.name}-happiness`, 'Happiness', structure.happiness);
+  updateNeedBox(structureRow, `${structure.name}-comfort`, 'Comfort', structure.baseComfort);
+
+  // Update need boxes dynamically based on structure.filledNeeds
+  for (const need in structure.filledNeeds) {
+    updateNeedBox(structureRow, `${structure.name}-${need}`, resources.colony[need].displayName, structure.filledNeeds[need]);
+  }
+}
+
+// Helper function to update need boxes dynamically
+function updateNeedBox(structureRow, elementId, needName, value) {
+  const needBox = structureRow.querySelector(`#${elementId}`);
+  if (needBox) {
+    // Update the text inside the box and the fill
+    const fillElement = needBox.querySelector('.need-fill');
+    const textContainer = needBox.querySelector('span');
+    fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
+    fillElement.style.backgroundColor = getNeedColor(value);
+    textContainer.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
+  }
+}
+
 // Helper function to determine the color based on the value
 function getNeedColor(value) {
     if (value === 1) {

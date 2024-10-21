@@ -178,6 +178,20 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 't3_colony',
+        name: 'Large outpost',
+        description: 'Enables a very large outpost, suitable for long-term colonization.',
+        cost: { research: 10000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't3_colony',
+            type: 'enable',
+          },
+        ],
+      },
     ],
     terraforming: [
       {

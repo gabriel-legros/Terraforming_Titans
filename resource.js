@@ -17,6 +17,16 @@ class Resource extends EffectableEntity {
     this.unlocked = resourceData.unlocked;
   }
 
+    // Method to initialize configurable properties
+  initializeFromConfig(config) {
+    this.name = config.name;
+    this.displayName = config.displayName;
+    this.category = config.category;
+    this.hasCap = config.hasCap || 0;
+    this.baseCap = config.baseCap || 0;
+    this.unlocked = config.unlocked;
+  } 
+
   increase(amount) {
     if(amount > 0){
       this.value = Math.min(this.value + amount, this.cap);

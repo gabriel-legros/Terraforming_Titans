@@ -159,22 +159,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   // Custom colony display (e.g., baseComfort, energy, food, water) if the structure is a colony
   if (isColony) {
-    const colonyDetails = document.createElement('div');
-    colonyDetails.classList.add('colony-details');
-    colonyDetails.style.display = 'flex'; // Flexbox to display items side by side
-    colonyDetails.style.gap = '10px'; // Add some space between the boxes
-
-    // Add comfort, energy, food, water boxes
-    const comfortBox = createNeedBox('Comfort', structure.baseComfort, `${structure.name}-comfort`);
-    const energyBox = createNeedBox('Energy', structure.filledNeeds.energy, `${structure.name}-energy`);
-    const foodBox = createNeedBox('Food', structure.filledNeeds.food, `${structure.name}-food`);
-    const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`);
-
-    colonyDetails.appendChild(comfortBox);
-    colonyDetails.appendChild(energyBox);
-    colonyDetails.appendChild(foodBox);
-    colonyDetails.appendChild(happinessBox);
-
+    const colonyDetails = createColonyDetails(structure);
     structureRow.appendChild(colonyDetails);
   }
 
@@ -322,28 +307,12 @@ function updateDecreaseButtonText(button, buildCount) {
         updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structureName]);
       }
 
-    // Update colony-specific needs display (comfort, energy, food, water)
-    if (structure instanceof Colony) {
-      updateNeedBox(structureRow, `${structure.name}-comfort`, 'Comfort', structure.baseComfort);
-      updateNeedBox(structureRow, `${structure.name}-energy`, 'Energy', structure.filledNeeds.energy);
-      updateNeedBox(structureRow, `${structure.name}-food`, 'Food', structure.filledNeeds.food);
-      updateNeedBox(structureRow, `${structure.name}-happiness`, 'Happiness', structure.happiness);
-    }
+      // Update colony-specific needs display (comfort, energy, food, water)
+      if (structure instanceof Colony) {
+        updateColonyDetailsDisplay(structureRow, structure);
+      }
     }
   }
-
-// Helper function to update need boxes dynamically
-function updateNeedBox(structureRow, elementId, needName, value) {
-  const needBox = structureRow.querySelector(`#${elementId}`);
-  if (needBox) {
-    // Update the text inside the box and the fill
-    const fillElement = needBox.querySelector('.need-fill');
-    const textContainer = needBox.querySelector('span');
-    fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
-    fillElement.style.backgroundColor = getNeedColor(value);
-    textContainer.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
-  }
-}
 
   function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
     let detailsText = '';

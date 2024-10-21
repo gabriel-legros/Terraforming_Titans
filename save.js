@@ -42,6 +42,8 @@ function loadGame() {
                 if (!resources[category][resourceName].hasCap) {
                   resources[category][resourceName].cap = Infinity;
                 }
+                const newConfig = currentPlanetParameters.resources[category][resourceName];
+                resources[category][resourceName].initializeFromConfig(newConfig);
               }
             }
           }

@@ -7,8 +7,14 @@ class Colony extends Building {
 
     // Set baseComfort for the colony
     this.baseComfort = config.baseComfort || 0;  // Default to 0 if not provided in the config
+    this.filledNeeds = {};
 
-    this.filledNeeds = {energy : 1, food : 1};
+    // Initialize filledNeeds based on the consumption defined in the config
+    for (const category in this.consumption) {
+      for (const resource in this.consumption[category]) {
+        this.filledNeeds[resource] = 1;
+      }
+    }
     this.happiness = 0.5;
   }
 
@@ -40,10 +46,8 @@ consume(accumulatedChanges, deltaTime) {
   const colonistsCapacity = resources.colony.colonists.cap;
   const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
 
-  this.currentConsumption = {}; // Reset current consumption
-  const needResources = ['energy', 'food', 'water']; // List of resources tied to filledNeeds
+  this.currentConsumption = {};
 
-  // Process consumption and adjust filledNeeds
   for (const category in this.consumption) {
     if (!this.currentConsumption[category]) {
       this.currentConsumption[category] = {};
@@ -53,47 +57,33 @@ consume(accumulatedChanges, deltaTime) {
       const baseConsumption = this.active * this.consumption[category][resource];
       const scaledConsumption = baseConsumption * populationRatio * (deltaTime / 1000);
 
-      // Check how much of the resource is available to consume
       const availableAmount = resources[category][resource].value;
 
       let actualConsumption = scaledConsumption;
       let consumptionRatio = 1;
 
       if (availableAmount < scaledConsumption) {
-        actualConsumption = availableAmount; // Consume as much as available
-        consumptionRatio = availableAmount / scaledConsumption; // Ratio of available to required
+        actualConsumption = availableAmount;
+        consumptionRatio = availableAmount / scaledConsumption;
       }
 
-      // Track actual consumption in the colony
       this.currentConsumption[category][resource] = actualConsumption;
-
-      // Accumulate consumption changes (as negative values)
       accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - actualConsumption;
-
-      // Update consumption rate for the resource
       resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (actualConsumption * (1000 / deltaTime));
 
-      // Adjust filledNeeds if this resource is energy, food, or water
-      if (needResources.includes(resource)) {
-        this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
-      }
+      // Adjust filledNeeds for the consumed resource
+      this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
     }
   }
 }
 
-  // Helper method to adjust filledNeeds over time
   adjustNeedRatio(resource, ratio, deltaTime) {
     const adjustmentSpeed = 0.1; // Rate of change per second
     const maxChange = adjustmentSpeed * (deltaTime / 1000); // Max change based on deltaTime
     const targetRatio = Math.min(Math.max(ratio, 0), 1); // Ensure targetRatio is between 0 and 1
 
-    if (resource === 'energy') {
-      this.filledNeeds.energy = this.adjustToTarget(this.filledNeeds.energy, targetRatio, maxChange);
-    } else if (resource === 'food') {
-      this.filledNeeds.food = this.adjustToTarget(this.filledNeeds.food, targetRatio, maxChange);
-    } else if (resource === 'water') {
-      this.filledNeeds.water = this.adjustToTarget(this.filledNeeds.water, targetRatio, maxChange);
-    }
+    // Adjust the filledNeeds for the specific resource
+    this.filledNeeds[resource] = this.adjustToTarget(this.filledNeeds[resource], targetRatio, maxChange);
   }
 
   // Helper function to adjust value toward the target at a constant rate
@@ -106,14 +96,14 @@ consume(accumulatedChanges, deltaTime) {
     return currentValue; // No change if already at the target
   }
 
-  // Method to calculate and update happiness
+
   updateHappiness(deltaTime) {
+    // Calculate the average of all filledNeeds values
+    const needsValues = Object.values(this.filledNeeds);
+    const averageNeeds = needsValues.reduce((sum, value) => sum + value, 0) / needsValues.length;
 
-    // Calculate the weighted average of the needs
-    const happinessFactor = Math.min(this.filledNeeds.energy, this.filledNeeds.food);
-
-    // Target happiness is the baseComfort multiplied by the weighted average of needs
-    const targetHappiness = happinessFactor*(0.5+this.baseComfort/2);
+    // Target happiness is the baseComfort multiplied by the average of needs
+    const targetHappiness = averageNeeds * (0.5 + this.baseComfort / 2);
 
     // Adjust the happiness towards the target value using the adjustNeedRatio logic
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness, deltaTime);

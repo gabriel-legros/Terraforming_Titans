@@ -50,6 +50,8 @@ class Building extends EffectableEntity {
       this.requiresDeposit = requiresDeposit;
       this.requiresWorker = requiresWorker || 0; // Set default to 0 if not provided
       this.unlocked = unlocked;
+
+      this.updateResourceStorage();
     }
 
   // Method to get the effective production multiplier

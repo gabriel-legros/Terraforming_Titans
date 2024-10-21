@@ -6,7 +6,7 @@ const planetParameters = {
         funding: { name: 'Funding', initialValue: 1000, unlocked: false },
         colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false }, // No cap initially
         workers: { name: 'Workers', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false }, // No cap initially
-        energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 1000, unlocked:false }, // Base cap from one Battery
+        energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Battery
         metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
         silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
         glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
@@ -32,7 +32,7 @@ const planetParameters = {
         atmosphericWater: { name: 'Water', initialValue: 0, unlocked:false }
       },
       special: {
-        albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000,initialValue: 0, unlocked: false}
+        albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}
       }
     },
     initialGameState: {
