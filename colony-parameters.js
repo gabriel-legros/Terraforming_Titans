@@ -45,4 +45,20 @@ const colonyParameters = {
       maintenanceFactor: 1, // Default maintenance factor
       unlocked: false
     }
+    ,
+    t4_colony: {
+      name: 'Dome town',
+      category: 'Colony',
+      description: 'A fully insulated self-sufficient capable of supporting a large population.',
+      cost: { colony: { metal: 5000, water : 5000, glass : 5000 } },
+      consumption: {colony : {energy : 2500, food : 1000, electronics: 10}},
+      production: {colony : {research : 1000}},
+      storage: { colony: { colonists: 10000} },
+      baseComfort : 0.6,
+      dayNightActivity: false, // Not affected by day/night
+      canBeToggled: true, // No manual toggle needed
+      requiresMaintenance: true,
+      maintenanceFactor: 1, // Default maintenance factor
+      unlocked: false
+    }
 }

@@ -2,6 +2,7 @@ let solarLuminosity = 3.828e26; // Solar luminosity (W)
 const R_AIR = 287; // J/kg·K (specific gas constant for dry air)
 const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
+const AU_METER = 149597870700;
 
 class Terraforming {
   constructor(resources, celestialParameters) {
@@ -33,6 +34,7 @@ class Terraforming {
       value: 0,
       target: 288.15, // 15°C in Kelvin
       solarFlux: 0,
+      modifiedSolarFlux: 0,
       effectiveTempNoAtmosphere: 0,
       emissivity: 0,
       unlocked: false,
@@ -91,28 +93,32 @@ class Terraforming {
     }
 
     updateSurfaceTemperature() {
-      const distanceFromSunInMeters = this.celestialParameters.distanceFromSun * 149597870700; // Convert AU to meters
+      const distanceFromSunInMeters = this.celestialParameters.distanceFromSun * AU_METER; // Convert AU to meters
       const radiusInMeters = this.celestialParameters.radius * 1000; // Convert km to meters
       const albedo = this.calculateEffectiveAlbedo();
   
+      let co2WaterMass = 0;
       let greenhouseGasMass = 0;
       let inertMass = 0;
   
       for (const gas in this.resources.atmospheric) {
         if (gas === 'carbonDioxide' || gas === 'atmosphericWater') {
+          co2WaterMass += 1e3*this.resources.atmospheric[gas].value;
+        } else if(gas === 'greenhouseGas') {
           greenhouseGasMass += 1e3*this.resources.atmospheric[gas].value;
         } else {
           inertMass += 1e3*this.resources.atmospheric[gas].value;
         }
       }
   
-      this.temperature.emissivity = calculateEmissivity(radiusInMeters, inertMass, greenhouseGasMass);
+      this.temperature.emissivity = calculateEmissivity(radiusInMeters, inertMass, co2WaterMass, greenhouseGasMass);
       this.temperature.solarFlux = calculateSolarFlux(distanceFromSunInMeters);
-      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(distanceFromSunInMeters, albedo, 0.25);
-      this.temperature.value = calculateEffectiveTemperature(distanceFromSunInMeters, albedo, this.temperature.emissivity, 0.25);
+      this.temperature.modifiedSolarFlux = this.calculateModifiedSolarFlux(distanceFromSunInMeters);
+      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(this.temperature.modifiedSolarFlux, albedo, 0.25);
+      this.temperature.value = calculateEffectiveTemperature(this.temperature.modifiedSolarFlux, albedo, this.temperature.emissivity, 0.25);
 
       for (const zone in this.temperature.zones) {
-        this.temperature.zones[zone].value = calculateEffectiveTemperature(distanceFromSunInMeters, albedo, this.temperature.emissivity, getZoneRatio(zone));
+        this.temperature.zones[zone].value = calculateEffectiveTemperature(this.temperature.modifiedSolarFlux, albedo, this.temperature.emissivity, getZoneRatio(zone));
       }
     }
 
@@ -379,6 +385,31 @@ class Terraforming {
       }
 
     }
+
+    // Mirror Effect Calculation
+    calculateMirrorEffect() {
+      // Solar flux hitting the mirror (same as base flux at mirror's position)
+      const solarFluxAtMirror = calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      const mirrorSurfaceArea = buildings['spaceMirror'].surfaceArea; // m^2
+      
+      // The total power intercepted by the mirror
+      const interceptedPower = solarFluxAtMirror * mirrorSurfaceArea; // W
+      // Intercepted power per unit surface area of the planet
+      const powerPerUnitArea = interceptedPower / this.celestialParameters.surfaceArea; // W/m²
+      
+      // Return both the total intercepted power and power per unit area
+      return {
+        interceptedPower: interceptedPower,
+        powerPerUnitArea: powerPerUnitArea
+      };
+    }
+
+    calculateModifiedSolarFlux(distanceFromSunInMeters){
+      const baseFlux = calculateSolarFlux(distanceFromSunInMeters);
+      const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
+
+      return baseFlux + mirrorFlux;
+    }
   }
 
   function calculateGasPressure(gas) {
@@ -411,19 +442,21 @@ class Terraforming {
     return pressure;
 }
 
-function calculateEmissivity(radius, inertMass, greenhouseGasMass){
+function calculateEmissivity(radius, inertMass, co2WaterMass, greenhouseGasMass){
   const absorptionCoefficient = 0.0013; // Mean infrared absorption coefficient (m²/kg)
   const inertFactor = 0.1;
+  const ghgFactor = 23500;
 
   // Calculate the planet's surface area (A)
   const surfaceArea = 4 * Math.PI * Math.pow(radius, 2); // m²
 
   // Calculate the column mass of greenhouse gases (m)
   const inertColumnMass = inertMass / surfaceArea;
+  const co2WaterColumnMass = co2WaterMass / surfaceArea;
   const ghgColumnMass = greenhouseGasMass / surfaceArea; // kg/m²
 
   // Calculate the atmospheric emissivity (epsilon)
-  const emissivity = 1 - Math.exp(-absorptionCoefficient*(ghgColumnMass + inertFactor*inertColumnMass));
+  const emissivity = 1 - Math.exp(-absorptionCoefficient*(co2WaterColumnMass + ghgFactor*ghgColumnMass + inertFactor*inertColumnMass));
 
   return emissivity;
 }
@@ -432,17 +465,13 @@ function calculateSolarFlux(distanceFromSun){
   return solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
 }
 
-function calculateEffectiveTemperatureNoAtm(distanceFromSun, albedo, zoneRatio){
+function calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio){
   // Constants
   const stefanBoltzmann = 5.670374419e-8; // Stefan-Boltzmann constant (W·m⁻²·K⁻⁴)
 
-  // Calculate the solar flux at the planet's orbit (S)
-  const solarFlux =
-    solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
-
   // Calculate the effective temperature without atmosphere (Teff)
   const effectiveTempNoAtmosphere = Math.pow(
-    (zoneRatio*solarFlux * (1 - albedo)) / (stefanBoltzmann),
+    (zoneRatio*modifiedSolarFlux * (1 - albedo)) / (stefanBoltzmann),
     0.25
   );
   
@@ -450,12 +479,12 @@ function calculateEffectiveTemperatureNoAtm(distanceFromSun, albedo, zoneRatio){
 }
 
 function calculateEffectiveTemperature(
-  distanceFromSun,
+  modifiedSolarFlux,
   albedo,
   emissivity,
   zoneRatio
 ) {
-  const effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(distanceFromSun, albedo, zoneRatio);
+  const effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio);
 
   // Calculate the surface temperature with greenhouse effect (Tsurface)
   const multiplier = Math.pow(1 / (1 - emissivity / 2), 0.25);

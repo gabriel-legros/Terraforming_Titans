@@ -53,8 +53,10 @@ class StoryEvent {
               this.currentChapter.trigger();
               this.waitForPopupButtonPress();
             } else if (this.currentChapter.type === 'journal') {
-              addJournalEntry(this.currentChapter.narrative);
-              this.waitForJournalEntryCompletion();
+                if (!this.objectivesComplete) {
+                    addJournalEntry(this.currentChapter.narrative);
+                    this.waitForJournalEntryCompletion();
+                }
             }
           }
     }
@@ -140,6 +142,15 @@ class StoryEvent {
             const building = buildings[objective.buildingName];
             if (building) {
                 return building.count >= objective.quantity;
+            } else {
+                console.error(`Building ${objective.buildingName} not found.`);
+                return false;
+            }
+        case 'colony':
+            // Check if the player has built enough of the target building
+            const colony = colonies[objective.buildingName];
+            if (colony) {
+                return colony.count >= objective.quantity;
             } else {
                 console.error(`Building ${objective.buildingName} not found.`);
                 return false;

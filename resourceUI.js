@@ -127,17 +127,28 @@ function unlockResource(resource) {
   }
 }
 
-function updateResourceRatesDisplay(resources) {
-  for (const category in resources) {
-    for (const resourceName in resources[category]) {
-      const resource = resources[category][resourceName];
-      const rateElement = document.getElementById(`${resourceName}-pps-resources-container`);
-
-      if (rateElement) {
-        const netRate = resource.productionRate - resource.consumptionRate;
-        // Format the rate display to indicate positive or negative rate
-        rateElement.textContent = `${netRate >= 0 ? '+' : ''}${netRate.toFixed(2)}/s`;
-      }
+function updateResourceRateDisplay(resource){
+  const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
+  if (ppsElement) {
+    const netRate = resource.productionRate - resource.consumptionRate;
+    const formattedNumber = formatNumber(netRate);
+    if(formattedNumber === 0)
+    {
+      ppsElement.textContent = `0/s`;
+    } else {
+      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate)}/s`;
+    }
+    // Apply red color if netRate is negative and the absolute value is greater than the resource value
+    if (netRate < 0 && Math.abs(netRate) > resource.value) {
+      ppsElement.style.color = 'red';
+    } 
+    // Apply orange if netRate is negative but less than or equal to the resource value
+    else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) { //If running out in 2 minutes
+      ppsElement.style.color = 'orange';
+    } 
+    // Reset to default color if the condition is not met
+    else {
+      ppsElement.style.color = '';
     }
   }
 }
@@ -151,13 +162,15 @@ function updateResourceDisplay(resources) {
         // Update population as an integer
         const resourceElement = document.getElementById(`${resourceName}-resources-container`);
         if (resourceElement) {
-          resourceElement.textContent = formatNumber(Math.floor(resourceObj.value));
+          resourceElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
         }
 
         const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
         if (capElement) {
-          capElement.textContent = formatNumber(Math.floor(resourceObj.cap));
+          capElement.textContent = formatNumber(Math.floor(resourceObj.cap), true);
         }
+
+        updateResourceRateDisplay(resourceObj);
       } else if (category === 'underground') {
         // Update underground resources
         const availableElement = document.getElementById(`${resourceName}-available-resources-container`);
@@ -165,11 +178,11 @@ function updateResourceDisplay(resources) {
         const scanningProgressElement = document.getElementById(`${resourceName}-scanning-progress-resources-container`);
 
         if (availableElement) {
-          availableElement.textContent = formatNumber(Math.floor(resourceObj.value - resourceObj.reserved));
+          availableElement.textContent = formatNumber(Math.floor(resourceObj.value - resourceObj.reserved), true);
         }
 
         if (totalElement) {
-          totalElement.textContent = formatNumber(Math.floor(resourceObj.value));
+          totalElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
         }
 
         // Update scanning progress if there is scanning strength
@@ -191,12 +204,7 @@ function updateResourceDisplay(resources) {
         if (capElement) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
-
-        const ppsElement = document.getElementById(`${resourceName}-pps-resources-container`);
-        if (ppsElement) {
-          const netRate = resourceObj.productionRate - resourceObj.consumptionRate;
-          ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${netRate.toFixed(2)}/s`;
-        }
+        updateResourceRateDisplay(resourceObj);
       }
     }
   }
@@ -218,19 +226,40 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function formatNumber(value) {
-  if (value >= 1e18) {
-    return (value / 1e18).toFixed(1) + 'Qn'; // Quintillions
-  } else if (value >= 1e15) {
-    return (value / 1e15).toFixed(1) + 'Q'; // Quadrillions
-  } else if (value >= 1e12) {
-    return (value / 1e12).toFixed(1) + 'T'; // Trillions
-  } else if (value >= 1e9) {
-    return (value / 1e9).toFixed(1) + 'B'; // Billions
-  } else if (value >= 1e6) {
-    return (value / 1e6).toFixed(1) + 'M'; // Millions
-  } else if (value >= 1e3) {
-    return (value / 1e3).toFixed(1) + 'k'; // Thousands
+function formatNumber(value, integer = false) {
+  // Handling large positive or negative values with suffixes
+  const absValue = Math.abs(value);
+  let formatted;
+
+  if (absValue >= 1e18) {
+    formatted = (absValue / 1e18).toFixed(1) + 'Qn'; // Quintillions
+  } else if (absValue >= 1e15) {
+    formatted = (absValue / 1e15).toFixed(1) + 'Q'; // Quadrillions
+  } else if (absValue >= 1e12) {
+    formatted = (absValue / 1e12).toFixed(1) + 'T'; // Trillions
+  } else if (absValue >= 1e9) {
+    formatted = (absValue / 1e9).toFixed(1) + 'B'; // Billions
+  } else if (absValue >= 1e6) {
+    formatted = (absValue / 1e6).toFixed(1) + 'M'; // Millions
+  } else if (absValue >= 1e3) {
+    formatted = (absValue / 1e3).toFixed(1) + 'k'; // Thousands
+  } else if (absValue >= 1e-2) {
+    // Show integers for numbers between 1 and 1000
+    formatted = (absValue).toFixed(integer ? 0 : 1);
+  } else if (absValue >= 1e-3) {
+    formatted = (absValue / 1e-3).toFixed(1) + 'm'; // Milli
+  } else if (absValue >= 1e-6) {
+    formatted = (absValue / 1e-6).toFixed(1) + 'µ'; // Micro
+  } else if (absValue >= 1e-9) {
+    formatted = (absValue / 1e-9).toFixed(1) + 'n'; // Nano
+  } else if (absValue <= 1e-12) {
+    formatted = 0;
+    value = 0;
+  } else {
+    // For values smaller than nano, use scientific notation with 1 decimal
+    formatted = absValue.toExponential(1);
   }
-  return value.toFixed(0); // For numbers < 1000, return the full number
+
+  // Apply negative sign back if the original value was negative
+  return value < 0 ? '-' + formatted : formatted;
 }

@@ -68,7 +68,7 @@ class Resource extends EffectableEntity {
       const structure = structures[structureName];
       if (structure.storage && structure.active > 0) {
         if (structure.storage.colony && structure.storage.colony[this.name]) {
-          newCap += structure.active * structure.storage.colony[this.name];
+          newCap += structure.active * structure.storage.colony[this.name] * structure.getEffectiveStorageMultiplier();
         }
       }
     }
@@ -121,7 +121,7 @@ function calculateProductionRates(deltaTime, buildings) {
     // Calculate scaled production rates
     for (const category in building.production) {
       for (const resource in building.production[category]) {
-        const actualProduction = (building.currentProduction[category][resource] || 0) * (1000 / deltaTime);
+        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
         resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + actualProduction;
       }
     }
@@ -129,16 +129,8 @@ function calculateProductionRates(deltaTime, buildings) {
     // Calculate scaled consumption rates
     for (const category in building.consumption) {
       for (const resource in building.consumption[category]) {
-        const actualConsumption = (building.currentConsumption[category][resource] || 0) * (1000 / deltaTime);
+        const actualConsumption = (building.consumption[category][resource] || 0) * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
         resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + actualConsumption;
-      }
-    }
-
-    // Calculate scaled maintenance rates and add to consumption
-    if (building.requiresMaintenance) {
-      for (const resource in building.currentMaintenance) {
-        const actualMaintenance = (building.currentMaintenance[resource] || 0) * (1000 / deltaTime);
-        resources['colony'][resource].consumptionRate = (resources['colony'][resource].consumptionRate || 0) + actualMaintenance;
       }
     }
   }
@@ -153,12 +145,15 @@ function calculateProductionRates(deltaTime, buildings) {
 function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
 
+  calculateProductionRates(deltaTime, buildings);
+
   // Reset production and consumption rates for all resources
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
-      resource.productionRate = 0;
-      resource.consumptionRate = 0;
+      if(resource.name != 'workers'){
+        resource.updateStorageCap();
+      }
     }
   }
 
@@ -188,8 +183,26 @@ function produceResources(deltaTime, buildings) {
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);
+      if(building.filledNeeds){
+        building.updateNeedsRatio(resources, deltaTime);
+      }
     }
+  }
 
+  // Reset production and consumption rates for all resources
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      resource.productionRate = 0;
+      resource.consumptionRate = 0;
+      if(resource.name != 'workers'){
+        resource.updateStorageCap();
+      }
+    }
+  }
+
+  for(const buildingName in buildings){
+    const building = buildings[buildingName];
     // Accumulate production, consumption, and maintenance changes
     building.produce(accumulatedChanges, deltaTime);
     building.consume(accumulatedChanges, deltaTime);

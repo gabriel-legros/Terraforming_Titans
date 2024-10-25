@@ -114,7 +114,7 @@ function loadResearchCategory(category) {
 
         const researchCost = document.createElement('p');
         researchCost.classList.add('research-cost');
-        researchCost.textContent = `Cost: ${research.cost} Research Points`;
+        researchCost.textContent = `Cost: ${formatNumber(research.cost, true)} Research Points`;
 
         // Append button, cost, and description to the research container
         researchContainer.appendChild(researchButton);

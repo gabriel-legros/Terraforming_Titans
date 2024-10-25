@@ -43,18 +43,19 @@ const projectParameters = {
     cost: {
       colony: {
         metal: 50,
+        electronics: 10,
         energy: 50
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
     description: "Deploy a satellite to enhance the discovery of valuable ore deposits. The satellite scans the surface for untapped ore veins, accelerating resource extraction. Each additional satellite increases scanning efficiency, but locating new veins becomes progressively more challenging as deposits are exhausted.",
     repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: 10,
+    maxRepeatCount: 100,
     unlocked: false,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for ore deposits
-        searchValue: 0.01,  // Search value indicating effectiveness in finding ore deposits
+        searchValue: 0.0001,  // Search value indicating effectiveness in finding ore deposits
         depositType: "ore"  // Specify which type of deposit the scanner searches for
       }
     }
@@ -64,20 +65,45 @@ const projectParameters = {
     cost: {
       colony: {
         metal: 50,
+        electronics: 10,
         energy: 50
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
     description: "Deploy a highly sensitive satellite to scan for geothermal energy. The satellite identifies suitable geothermal vents for energy extraction.",
     repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: 10,
+    maxRepeatCount: 100,
     unlocked: false,
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for geothermal deposits
-        searchValue: 0.01,  // Search value indicating effectiveness in finding geothermal deposits
+        searchValue: 0.0001,  // Search value indicating effectiveness in finding geothermal deposits
         depositType: "geothermal"  // Specify which type of deposit the scanner searches for
       }
+    }
+  },
+  spaceMirrorFacility: {
+    name: "Space mirror facility",
+    cost: {
+      colony: {
+        metal: 10000,
+        electronics: 1000,
+        components: 1000
+      }
+    },
+    duration: 180000,
+    description: "Built at a Lagrangian point, this facility will allow the construction of space mirrors from the buildings terraforming tab.",
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      spaceMirrorFacility: true,
+      completionEffect: [
+        {
+          target: 'building',
+          targetId: 'spaceMirror',
+          type: 'enable'
+        }
+      ]
     }
   }
 };

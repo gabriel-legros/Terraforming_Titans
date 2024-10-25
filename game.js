@@ -129,7 +129,6 @@ function updateLogic(delta) {
 function updateRender() {
   updateDayNightDisplay();           // Update day/night display (handled in dayNightCycle)
   updateResourceDisplay(resources);
-  updateResourceRatesDisplay(resources);
   updateBuildingDisplay(buildings);  // Render building information
   updateColonyDisplay(colonies);     // Render colony information
   renderProjects();                  // Render project information (handled in projects.js)

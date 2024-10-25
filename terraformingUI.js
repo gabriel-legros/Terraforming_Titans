@@ -42,13 +42,12 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
-      <p>Target: <span id="temperature-target">${terraforming.temperature.target}</span>K</p>
       <p>Base Albedo: <span id="base-albedo">${terraforming.celestialParameters.albedo}</span></p>
       <p>Ocean Albedo: <span id="ocean-albedo">0.06</span></p>
       <p>Effective Albedo: <span id="effective-albedo">${terraforming.calculateEffectiveAlbedo().toFixed(2)}</span></p>
-      <p>Solar Flux: <span id="solar-flux">${terraforming.temperature.solarFlux.toFixed(2)}</span> W/m²</p>
+      <p>Solar Flux: <span id="solar-flux">${terraforming.temperature.solarFlux.toFixed(1)}</span> W/m²</p>
+      <p>Modified Solar Flux: <span id="modified-solar-flux">${terraforming.temperature.modifiedSolarFlux.toFixed(1)}</span> W/m²</p>
       <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
-      <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
       <table>
         <thead>
           <tr>
@@ -82,14 +81,14 @@ function createTemperatureBox(row) {
     const solarFlux = document.getElementById('solar-flux');
     solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(1);
 
+    const modifiedSolarFlux = document.getElementById('modified-solar-flux');
+    modifiedSolarFlux.textContent = terraforming.temperature.modifiedSolarFlux.toFixed(1);
+
     const effectiveAlbedo = document.getElementById('effective-albedo');
     effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(2);
 
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
     effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(1);
-  
-    const emissivity = document.getElementById('emissivity');
-    emissivity.textContent = terraforming.temperature.emissivity.toFixed(1);
 
     const tropicalTemp = document.getElementById('tropical-temp');
     tropicalTemp.textContent = terraforming.temperature.zones.tropical.value.toFixed(1);
@@ -110,6 +109,7 @@ function createTemperatureBox(row) {
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current">${terraforming.atmosphere.value.toFixed(2)}</span> kPa</p>
       <p>Target: <span id="atmosphere-target">${terraforming.atmosphere.target}</span> kPa</p>
+      <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
       <table>
         <thead>
           <tr>
@@ -141,6 +141,9 @@ function createTemperatureBox(row) {
   function updateAtmosphereBox() {
     const atmosphereCurrent = document.getElementById('atmosphere-current');
     atmosphereCurrent.textContent = terraforming.atmosphere.value.toFixed(2);
+
+    const emissivity = document.getElementById('emissivity');
+    emissivity.textContent = terraforming.temperature.emissivity.toFixed(1);
   
     for (const gas in terraforming.resources.atmospheric) {
       const gasPressure = document.getElementById(`${gas}-pressure`);

@@ -34,6 +34,12 @@ class EffectableEntity {
       case 'productionMultiplier':
         this.applyProductionMultiplier(effect.value);
         break;
+      case 'resourceConsumptionMultiplier':
+        this.applyProductionMultiplier(effect);
+        break;
+      case 'resourceProductionMultiplier':
+        this.applyProductionMultiplier(effect);
+        break;
       case 'enable':
         this.enable(effect.targetId);
         break;
@@ -62,6 +68,10 @@ class EffectableEntity {
   
     applyProductionMultiplier(value) {
         // No logic needed for now. Placeholder method.
+    }
+
+    applyResourceConsumptionMultiplier(effect) {
+      //No logic needed for now
     }
 
     // Method to apply a boolean flag effect

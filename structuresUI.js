@@ -22,16 +22,16 @@ function createBuildingButtons() {
   }
 
   // Create buttons for each category
-  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.terraforming, 'terraforming-buildings-buttons', (buildingName) => buildings[buildingName].buildStructure(resources, buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
+  createStructureButtons(categorizedBuildings.terraforming, 'terraforming-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
 }
 
 function createColonyButtons(colonies) {
   const colonyArray = Object.values(colonies); // Convert dictionary to array
-  createStructureButtons(colonyArray, 'colony-buildings-buttons', (colonyName) => colonies[colonyName].buildStructure(resources), adjustStructureActivation, true);
+  createStructureButtons(colonyArray, 'colony-buildings-buttons', (colonyName, buildCount) => colonies[colonyName].buildStructure(buildCount), adjustStructureActivation, true);
 }
 
 // Create buttons for buildings and colonies
@@ -72,6 +72,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.textContent = `Build ${structure.displayName}`;
 
   let selectedBuildCount = 1;
+  selectedBuildCounts[structure.name] = selectedBuildCount;
 
   button.addEventListener('click', function () {
     buildCallback(structure.name, selectedBuildCounts[structure.name]);
@@ -89,14 +90,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountLabel.textContent = 'Amount: ';
   buildCountButtons.appendChild(buildCountLabel);
 
-  const buildCounts = [1, 10, 100, 1000, 10000];
+  const buildCounts = [1, 10, 100, 1000, 10000, 100000];
   buildCounts.forEach((count) => {
     const countButton = document.createElement('button');
     countButton.textContent = count;
     countButton.addEventListener('click', function () {
       selectedBuildCounts[structure.name] = count;
-      updateStructureButtonText(button, structure, selectedBuildCount);
-      updateStructureCostDisplay(costElement, structure, selectedBuildCount);
+      updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
+      updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
       if (structure.canBeToggled) {
         updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
         updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -239,7 +240,7 @@ function updateDecreaseButtonText(button, buildCount) {
   
     // Include worker cost if applicable
     if (structure.requiresWorker > 0) {
-      const requiredWorkers = structure.requiresWorker * buildCount;
+      const requiredWorkers = structure.requiresWorker * buildCount * structure.getEffectiveWorkerMultiplier();
       const availableWorkers = resources.colony.workers?.value || 0;
   
       // Check if there are enough workers available
@@ -287,7 +288,17 @@ function updateDecreaseButtonText(button, buildCount) {
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
-        productivityElement.style.color = productivityValue < 100 ? 'red' : 'inherit';
+  
+        if (structure.dayNightActivity && dayNightCycle.isNight()) {
+          // Building is inactive at night
+          productivityElement.style.color = 'darkblue';
+        } else if (productivityValue < 100) {
+          // Building has low productivity
+          productivityElement.style.color = 'red';
+        } else {
+          // Building has normal productivity
+          productivityElement.style.color = 'inherit';
+        }
       }
   
       const button = document.getElementById(`build-${structureName}`);
@@ -354,7 +365,7 @@ function formatResourceDetails(resourceObject, multiplier = 1) {
     for (const resource in resourceObject[category]) {
       const adjustedValue = resourceObject[category][resource] * multiplier;
       if (adjustedValue > 0) {
-        details += `${adjustedValue.toFixed(2)} ${resource}, `;
+        details += `${adjustedValue.toFixed(2)} ${resources[category][resource].displayName}, `;
       }
     }
   }
@@ -366,7 +377,7 @@ function formatMaintenanceDetails(maintenanceCost) {
     let details = '';
     for (const resource in maintenanceCost) {
       if (maintenanceCost[resource] > 0) {
-        details += `${maintenanceCost[resource]} ${resource}, `;
+        details += `${maintenanceCost[resource]} ${resources['colony'][resource].displayName}, `;
       }
     }
     return details.slice(0, -2); // Remove the trailing comma and space

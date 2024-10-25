@@ -1,5 +1,7 @@
 // projects.js
 
+let projectElements = {};
+
 class Project extends EffectableEntity {
   constructor(config, name) {
     super(config); // Call the base class constructor
@@ -24,6 +26,7 @@ class Project extends EffectableEntity {
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
     this.unlocked = config.unlocked;
+    
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
@@ -115,6 +118,11 @@ class Project extends EffectableEntity {
       this.applyResourceChoiceGain();
     }
 
+    // Apply completion effect if applicable
+    if (this.attributes && this.attributes.completionEffect) {
+      this.applyCompletionEffect();
+    }
+
     if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
       this.repeatCount++;
       this.resetProject();
@@ -174,6 +182,12 @@ class Project extends EffectableEntity {
       oreScanner.startScan(depositType);
       console.log(`Scanning for ${depositType} started after applying scanner effect from ${this.name}`);
     }
+  }
+
+  applyCompletionEffect() {
+    this.attributes.completionEffect.forEach((effect) => {
+      addEffect({ ...effect, sourceId: this });
+    });
   }
 
   resetProject() {
@@ -251,7 +265,6 @@ class ProjectManager extends EffectableEntity {
         isCompleted: project.isCompleted,
         remainingTime: project.remainingTime,
         repeatCount: project.repeatCount,
-        selectedResources: project.selectedResources || [],
         pendingResourceGains: project.pendingResourceGains || [],
       };
     }
@@ -269,9 +282,11 @@ class ProjectManager extends EffectableEntity {
         project.isCompleted = savedProject.isCompleted;
         project.remainingTime = savedProject.remainingTime;
         project.repeatCount = savedProject.repeatCount;
-        project.selectedResources = savedProject.selectedResources;
         project.pendingResourceGains = savedProject.pendingResourceGains;
         project.effects = [];
+        if(project.attributes.completionEffect && project.isCompleted){
+          project.applyCompletionEffect();
+        }
       }
     }
   }

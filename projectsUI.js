@@ -1,4 +1,3 @@
-const projectElements = {};
 
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
@@ -29,6 +28,31 @@ function createProjectItem(project) {
   descriptionElement.textContent = project.description;
   descriptionElement.classList.add('project-description');
   projectItem.appendChild(descriptionElement);
+
+  // Mirror-related calculations and text boxes
+  if (project.name === 'spaceMirrorFacility') {
+    const mirrorDetails = document.createElement('div');
+    mirrorDetails.classList.add('mirror-details');
+    mirrorDetails.innerHTML = `
+      <p>Mirrors: <span id="num-mirrors">0</span></p>
+      <p>Power/Mirror: <span id="power-per-mirror">0</span>W | Per m²: <span id="power-per-mirror-area">0</span>W/m²</p>
+      <p>Total Power: <span id="total-power">0</span>W | Per m²: <span id="total-power-area">0</span>W/m²</p>
+    `;
+
+    projectItem.appendChild(mirrorDetails);
+
+    // Store the mirror details element for future updates
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      mirrorDetails: {
+        numMirrors: mirrorDetails.querySelector('#num-mirrors'),
+        powerPerMirror: mirrorDetails.querySelector('#power-per-mirror'),
+        powerPerMirrorArea: mirrorDetails.querySelector('#power-per-mirror-area'),
+        totalPower: mirrorDetails.querySelector('#total-power'),
+        totalPowerArea: mirrorDetails.querySelector('#total-power-area'),
+      },
+    };
+  }
 
   // Check if the project has any cost before creating the cost element
   if (project.cost && Object.keys(project.cost).length > 0) {
@@ -310,6 +334,10 @@ function updateProjectUI(projectName) {
     if (elements.progressButton) {
       elements.progressButton.style.display = 'none';
     }
+    // Hide the auto-start checkbox container if the project can't be repeated anymore
+    if (elements.autoStartCheckboxContainer) {
+      elements.autoStartCheckboxContainer.style.display = 'none';
+    }
   } else {
     // If the project can still be repeated or started, show the relevant UI elements
     if (elements.costElement) {
@@ -340,6 +368,30 @@ function updateProjectUI(projectName) {
           elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
         }
       }
+    }
+    // Show the auto-start checkbox if the project can be repeated
+    if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects')) {
+      elements.autoStartCheckboxContainer.style.display = 'block';
+    }
+  }
+
+  // Update mirror-related calculations and text boxes
+  if (project.name === 'spaceMirrorFacility') {
+    const numMirrors = buildings['spaceMirror'].active;
+
+    const mirrorEffect = terraforming.calculateMirrorEffect();
+    const powerPerMirror = mirrorEffect.interceptedPower;
+    const powerPerMirrorArea = mirrorEffect.powerPerUnitArea;
+    const totalPower = powerPerMirror * numMirrors;
+    const totalPowerArea = powerPerMirrorArea * numMirrors;
+
+    const mirrorDetails = projectElements[project.name].mirrorDetails;
+    if (mirrorDetails) {
+      mirrorDetails.numMirrors.textContent = formatNumber(numMirrors);
+      mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror);
+      mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea);
+      mirrorDetails.totalPower.textContent = formatNumber(totalPower);
+      mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea);
     }
   }
 

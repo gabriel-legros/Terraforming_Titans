@@ -23,6 +23,7 @@ class Building extends EffectableEntity {
       const {
         name,
         category,
+        description,
         cost,
         consumption,
         production,
@@ -33,12 +34,14 @@ class Building extends EffectableEntity {
         requiresMaintenance,
         requiresDeposit,
         requiresWorker, // Added requiresWorker to the destructured properties
-        unlocked
+        unlocked,
+        surfaceArea
       } = config;
   
       this.name = buildingName;
       this.displayName = name;
       this.category = category;
+      this.description = description;
       this.cost = cost;
       this.consumption = consumption;
       this.production = production;
@@ -50,6 +53,7 @@ class Building extends EffectableEntity {
       this.requiresDeposit = requiresDeposit;
       this.requiresWorker = requiresWorker || 0; // Set default to 0 if not provided
       this.unlocked = unlocked;
+      this.surfaceArea = surfaceArea;
 
       this.updateResourceStorage();
     }
@@ -63,6 +67,63 @@ class Building extends EffectableEntity {
       }
     });
     return multiplier;
+  }
+
+  // Method to get the effective production multiplier
+  getEffectiveConsumptionMultiplier() {
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'consumptionMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  // Method to get the effective production multiplier
+  getEffectiveWorkerMultiplier() {
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'workerMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  // Method to get the effective storage multiplier
+  getEffectiveStorageMultiplier() {
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'storageMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  getEffectiveResourceConsumptionMultiplier(category, resource){
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'resourceConsumptionMultiplier' && effect.resourceCategory === category && effect.resourceTarget === resource) {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  getEffectiveResourceProductionMultiplier(category, resource){
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'resourceProductionMultiplier' && effect.resourceCategory === category && effect.resourceTarget === resource) {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  getConsumptionRatio(){
+    return 1;
   }
 
   calculateMaintenanceCost() {
@@ -92,8 +153,8 @@ class Building extends EffectableEntity {
     return true;
   }
 
-  build(resources, buildCount = 1) {
-    if (this.canAfford(resources, buildCount)) {
+  build(buildCount = 1) {
+    if (this.canAfford(buildCount)) {
       for (const category in this.cost) {
         for (const resource in this.cost[category]) {
           resources[category][resource].decrease(this.cost[category][resource] * buildCount);
@@ -112,9 +173,9 @@ class Building extends EffectableEntity {
     return false;
   }
 
-  buildStructure(resources, buildCount = 1) {
-    if (this.build(resources, buildCount)) {
-      this.updateResourceStorage(resources);
+  buildStructure(buildCount = 1) {
+    if (this.build(buildCount)) {
+      this.updateResourceStorage();
     } else {
       console.log(`Insufficient resources to build ${buildCount} ${this.name}(s)`);
     }
@@ -135,11 +196,11 @@ class Building extends EffectableEntity {
     // Calculate minRatio based on resource consumption
     for (const category in this.consumption) {
       for (const resource in this.consumption[category]) {
-        const requiredAmount = this.consumption[category][resource] * this.active * (deltaTime / 1000);
+        const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
         if (requiredAmount === 0) continue;
-        const availableAmount = resources[category][resource].value;
+        const availableAmount = resources[category][resource].value + resources[category][resource].productionRate*(deltaTime / 1000);
         if (availableAmount < requiredAmount) {
-          minRatio = Math.min(minRatio, availableAmount / requiredAmount);
+          minRatio = Math.min(minRatio, Math.max(availableAmount / requiredAmount,0));
         } else {
           minRatio = Math.min(minRatio, 1);
         }
@@ -157,14 +218,13 @@ class Building extends EffectableEntity {
 
   updateProductivity(resources, deltaTime) {
     const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
-    const difference = Math.abs(targetProductivity - this.productivity);
-    const dampingFactor = difference < 0.2 ? 0.01 : 0.1; // Use smaller damping if close to target
-    if(targetProductivity != 0){
-      this.productivity += dampingFactor * (targetProductivity - this.productivity);
+    if(Math.abs(targetProductivity - this.productivity) < 0.001){
+      this.productivity = targetProductivity;
     }
-    else
-    {
-      this.productivity = 0;
+    else {
+      const difference = Math.abs(targetProductivity - this.productivity);
+      const dampingFactor = difference < 0.2 ? 0.01 : 0.1; // Use smaller damping if close to target
+      this.productivity += dampingFactor * (targetProductivity - this.productivity);
     }
   }
 
@@ -179,7 +239,7 @@ class Building extends EffectableEntity {
       }
 
       for (const resource in this.production[category]) {
-        const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier;
+        const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier * this.getEffectiveResourceProductionMultiplier(category, resource);
         const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
 
         // Track actual production in the building
@@ -205,7 +265,7 @@ class Building extends EffectableEntity {
       }
 
       for (const resource in this.consumption[category]) {
-        const baseConsumption = this.active * this.consumption[category][resource];
+        const baseConsumption = this.active * this.consumption[category][resource] * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * this.productivity * (deltaTime / 1000);
 
         // Track actual consumption in the building

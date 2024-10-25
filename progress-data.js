@@ -381,18 +381,30 @@ progressData = {
             targetId: 'colonies-tab',
             type: 'enable'
           },
-          {
+    ],
+        nextChapter: "chapter1.19b"
+      }, 
+      {
+        id: "chapter1.19b",
+        type: "journal",
+        narrative: "Build a scientist outpost to continue.",
+        objectives: [      {
+          type: 'colony',
+          buildingName: "t1_colony",
+          quantity: 1
+        }
+        ],
+        reward: [          {
           target: 'project',
           targetId: 'import_colonists_1',
           type: 'enable'
-          }
-    ],
+          }],
         nextChapter: "chapter1.20"
       }, 
       {
         id: "chapter1.20",
         type: "journal",
-        narrative: "Colonists will help you with the terraforming project.",
+        narrative: "Colonists will help you with the terraforming project.  A new special project to import colonists from Earth is now available.",
         objectives: [{
             type: 'collection',
             resourceType: 'colony',

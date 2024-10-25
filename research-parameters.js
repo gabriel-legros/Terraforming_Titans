@@ -41,6 +41,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'battery_efficiency',
+        name: 'Advanced batteries',
+        description: 'Doubles the storage capacity of batteries.',
+        cost: { research: 5000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'battery',
+            type: 'storageMultiplier',
+            value: 2, // Increases solar panel production by 20%
+          },
+        ],
+      },
+      {
         id: 'fission_plant1',
         name: 'Nuclear Power Plant',
         description: 'Unlocks nuclear power plants, which produce vast amount of energy at great upfront cost.',
@@ -53,13 +68,52 @@ const researchParameters = {
             type: 'enable',
           },
         ],
-      }
+      },
+      {
+        id: 'fission_plant1_upgrade',
+        name: 'Closed loop water cycle',
+        description: 'Reduces the water consumption of nuclear reactors by 80%.',
+        cost: { research: 50000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceConsumptionMultiplier',
+            resourceCategory: 'colony',
+            resourceTarget : 'water',
+            value : 0.2
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceProductionMultiplier',
+            resourceCategory: 'atmospheric',
+            resourceTarget : 'atmosphericWater',
+            value : 0.2
+          },
+        ],
+      },
+      {
+        id: 'fusion_1',
+        name: 'Fusion reactor MkI',
+        description: 'Enables a version of an old design from Earth.  Will require superconductors to build.',
+        cost: { research: 1000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'fusionPowerPlant1',
+            type: 'enable',
+          },
+        ],
+      },
     ],
     industry: [
       {
         id: 'ore_processing',
         name: 'Efficient Ore Processing',
-        description: 'Increases the ore output from mining.',
+        description: 'Increases the ore output from mining by 50%.',
         cost: { research: 200 },
         prerequisites: [],
         effects: [
@@ -67,7 +121,7 @@ const researchParameters = {
             target: 'building',
             targetId: 'oreMine',
             type: 'productionMultiplier',
-            value: 1.3, // Increases ore production by 30%
+            value: 1.5, // Increases ore production by 30%
           },
         ],
       },
@@ -100,6 +154,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'robotics_1',
+        name: 'Farming robotics assistance',
+        description: 'Integrates robots within hydroponics farm to reduce worker requirements by 20%.',
+        cost: { research: 5000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'hydroponicFarm',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+        ],
+      },
+      {
         id: 'electronics_factory',
         name: 'Electronics factories',
         description: 'Allows production of electronics using human workers.',
@@ -113,13 +182,63 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 'robotics_2',
+        name: 'Assembly Lines',
+        description: 'Integrates robots within components and electronics factory to reduce worker requirements by 20%.',
+        cost: { research: 50000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'componentFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+          {
+            target: 'building',
+            targetId: 'electronicsFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+        ],
+      },
+      {
+        id: 'deep_mine',
+        name: 'Deep ore mines',
+        description: 'Doubles ore output from mining.',
+        cost: { research: 100000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'oreMine',
+            type: 'productionMultiplier',
+            value: 2, // Increases ore production by 30%
+          },
+        ],
+      },
+      {
+        id: 'superconductor_factory',
+        name: 'Superconductor Factory',
+        description: 'Enables the fabrication of superconductors locally.',
+        cost: { research: 1000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superconductorFactory',
+            type: 'enable'
+          },
+        ],
+      },
     ],
     colonization: [
       {
         id: 'enhanced_colonist_import_1',
         name: 'Enhanced Colonist Importation',
         description: 'Increase the capacity of each colonist import by 10 using optimized spacecraft and improved logistics.',
-        cost: { research: 500 },  // Adjust the cost to make it suitable for the impact of the research
+        cost: { research: 100 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
           {
@@ -129,6 +248,21 @@ const researchParameters = {
             resourceCategory: 'colony',
             resourceId: 'colonists',
             value: 10  // Increase the number of colonists imported by 30
+          },
+        ],
+      },
+      {
+        id: 'launch_pads',
+        name: 'Launch Pads',
+        description: 'Allows automation of special projects.',
+        cost: { research: 500 },
+        prerequisites: [],
+        effects: [
+          {
+            type: 'booleanFlag',
+            target: 'projectManager',
+            targetId: 'automateSpecialProjects',
+            value: true
           },
         ],
       },
@@ -143,21 +277,6 @@ const researchParameters = {
             target: 'colony',
             targetId: 't2_colony',
             type: 'enable',
-          },
-        ],
-      },
-      {
-        id: 'launch_pads',
-        name: 'Launch Pads',
-        description: 'Allows automation of special projects.',
-        cost: { research: 1000 },
-        prerequisites: [],
-        effects: [
-          {
-            type: 'booleanFlag',
-            target: 'projectManager',
-            targetId: 'automateSpecialProjects',
-            value: true
           },
         ],
       },
@@ -192,18 +311,32 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 't4_colony',
+        name: 'Dome town',
+        description: 'The first dome design.',
+        cost: { research: 100000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't4_colony',
+            type: 'enable',
+          },
+        ],
+      },
     ],
     terraforming: [
       {
-        id: 'dust_grinder',
-        name: 'Dust grinding',
-        description: 'Unlocks a blueprint for dust grinding, which can over a very long time significantly reduce the albedo of the ground to 0.05.',
+        id: 'dust_factory',
+        name: 'Black Dust production',
+        description: 'Unlocks a blueprint for black dust production, which can over a very long time significantly reduce the albedo of the ground to 0.05.',
         cost: { research: 100 },
         prerequisites: [],
         effects: [
           {
             target: 'building',
-            targetId: 'dustGrinder',
+            targetId: 'dustFactory',
             type: 'enable'
           },
           {
@@ -274,6 +407,55 @@ const researchParameters = {
             target: 'resource',
             resourceType: 'atmospheric',
             targetId : 'atmosphericWater',
+            type: 'enable'
+          }
+        ],
+      },
+      {
+        id: 'dust_efficiency',
+        name: 'Adapted black dust production',
+        description: 'Doubles the efficiency of dust factories.',
+        cost: { research: 5000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'dustFactory',
+            type: 'productionMultiplier',
+            value: 2,
+          },
+        ],
+      },
+      {
+        id: 'space_mirror',
+        name: 'Space mirrors',
+        description: 'Unlocks a special project to launch the space mirror facility, which allows the deployment of space mirrors to increase the effective solar luminosity.',
+        cost: { research: 10000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
+            type: 'enable'
+          }
+        ],
+      },
+      {
+        id: 'ghg_factory',
+        name: 'Greenhouse Gas Factories',
+        description: 'Allows the construction of greenhouse gas factories to produce SF6 which is stable, non-toxic and 23500 times more potent than CO2.',
+        cost: { research: 100000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'greenhouseGas',
             type: 'enable'
           }
         ],

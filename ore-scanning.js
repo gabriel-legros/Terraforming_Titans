@@ -1,21 +1,20 @@
 class OreScanning {
-    constructor(marsParameters) {
+    constructor(planetParameters) {
+      this.underground = planetParameters.resources.underground;
       // Extract all deposit parameters from marsParameters
-      this.underground = marsParameters.resources.underground;
-
       // Track progress and scanning strength for each deposit type
       this.scanData = {};
       for (const depositType in this.underground) {
         const depositParams = this.underground[depositType];
         this.scanData[depositType] = {
-          D_max: depositParams.maxDeposits,
-          A_total: depositParams.areaTotal,
           D_current: depositParams.initialValue,
           currentScanProgress: 0,
           currentScanningStrength: 0,
           remainingTime: 0
         };
       }
+  
+      this.loadFromConfig(planetParameters);
     }
 
     // Method to save the current state of ore scanning
@@ -40,6 +39,22 @@ class OreScanning {
       for (const depositType in savedState) {
         if (this.scanData[depositType]) {
           Object.assign(this.scanData[depositType], savedState[depositType]);
+        }
+      }
+      this.loadFromConfig(currentPlanetParameters);
+    }
+
+    loadFromConfig(planetParameters){
+      const newUnderground = planetParameters.resources.underground;
+
+      // Track progress and scanning strength for each deposit type
+      for (const depositType in newUnderground) {
+        const depositParams = newUnderground[depositType];
+        const old_max = this.scanData[depositType].D_max;
+        this.scanData[depositType].D_max = depositParams.maxDeposits;
+        this.scanData[depositType].A_total = depositParams.areaTotal;
+        if(old_max < this.scanData[depositType].D_max){
+          this.startScan(depositType);
         }
       }
     }
@@ -131,14 +146,11 @@ class OreScanning {
         return;
       }
 
-      // Calculate the time used so far
-      const timeUsed = scanData.currentScanProgress * scanData.remainingTime;
-
       // Calculate the new expected time with the updated strength
       const newExpectedTime = this.calculateExpectedTime(depositType, newScanningStrength);
 
       // Adjust the remaining time based on progress and update scanning progress proportionally
-      scanData.remainingTime = newExpectedTime - timeUsed;
+      scanData.remainingTime = newExpectedTime;
       console.log(`Scanning strength for ${depositType} adjusted to ${newScanningStrength}. New remaining time: ${scanData.remainingTime}`);
     }
 

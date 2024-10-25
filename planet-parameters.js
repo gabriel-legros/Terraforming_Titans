@@ -14,6 +14,7 @@ const planetParameters = {
         food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
         components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false }, // Base cap from one Storage Depot
         electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false }, // Base cap from one Storage Depot
+        superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false }, // Base cap from one Storage Depot
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
@@ -22,17 +23,18 @@ const planetParameters = {
         dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: false}
       },
       underground: {
-        ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 100, hasCap: true, areaTotal: 144000, unlocked:false },
-        geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 10, hasCap: true, areaTotal: 144000, unlocked: false }
+        ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },
+        geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
       },
       atmospheric: {
         carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
         inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
         oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
-        atmosphericWater: { name: 'Water', initialValue: 0, unlocked:false }
+        atmosphericWater: { name: 'Water', initialValue: 0, unlocked:false },
+        greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}
       },
       special: {
-        albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}
+        albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false},
       }
     },
     initialGameState: {

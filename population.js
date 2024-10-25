@@ -100,7 +100,7 @@ class PopulationModule {
     for (const buildingName in buildings) {
       const building = buildings[buildingName];
       if (building.active > 0 && building.requiresWorker > 0) {
-        totalWorkersRequired += building.active * building.requiresWorker;
+        totalWorkersRequired += building.active * building.requiresWorker * building.getEffectiveWorkerMultiplier();
       }
     }
 

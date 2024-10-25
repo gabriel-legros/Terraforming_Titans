@@ -18,13 +18,18 @@ class Colony extends Building {
     this.happiness = 0.5;
   }
 
-  updateProductivity(resources, deltaTime) {
-    let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
-
+  getConsumptionRatio(){
     // Calculate minRatio based on colonist availability
     const colonists = resources.colony.colonists.value;
     const colonistsCapacity = resources.colony.colonists.cap;
     const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
+
+    return populationRatio;
+  }
+
+  updateProductivity(resources, deltaTime) {
+    let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
+    const populationRatio = this.getConsumptionRatio();
 
     minRatio = Math.min(minRatio, populationRatio);
 
@@ -33,49 +38,41 @@ class Colony extends Building {
     const dampingFactor = difference < 0.05 ? 0.01 : 1; // Use smaller damping if close to target
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
+
+  updateNeedsRatio(resources, deltaTime) {
+    const populationRatio = this.getConsumptionRatio();
+
+    for (const category in this.consumption) {
+      if (!this.currentConsumption[category]) {
+        this.currentConsumption[category] = {};
+      }
+  
+      for (const resource in this.consumption[category]) {
+        const baseConsumption = this.active * this.consumption[category][resource] * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const scaledConsumption = baseConsumption * populationRatio * (deltaTime / 1000);
+
+        const availableAmount = resources[category][resource].value + resources[category][resource].productionRate*(deltaTime / 1000);
+        const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
+
+        let actualConsumption = scaledConsumption;
+
+        let consumptionRatio = 1;
+        if (availableAmount < requiredAmount) {
+          actualConsumption = availableAmount;
+          consumptionRatio = Math.max(availableAmount / requiredAmount,0);
+        }
+
+        // Adjust filledNeeds for the consumed resource
+        this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
+      }
+    }
+  }
   
   // Override canAfford if colonies have unique costs or conditions
   canAfford(resources) {
     // Add unique colony-specific conditions
     return super.canAfford(resources);
   }
-
-// Extend the consume function in Colony to manage filledNeeds
-consume(accumulatedChanges, deltaTime) {
-  const colonists = resources.colony.colonists.value;
-  const colonistsCapacity = resources.colony.colonists.cap;
-  const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
-
-  this.currentConsumption = {};
-
-  for (const category in this.consumption) {
-    if (!this.currentConsumption[category]) {
-      this.currentConsumption[category] = {};
-    }
-
-    for (const resource in this.consumption[category]) {
-      const baseConsumption = this.active * this.consumption[category][resource];
-      const scaledConsumption = baseConsumption * populationRatio * (deltaTime / 1000);
-
-      const availableAmount = resources[category][resource].value;
-
-      let actualConsumption = scaledConsumption;
-      let consumptionRatio = 1;
-
-      if (availableAmount < scaledConsumption) {
-        actualConsumption = availableAmount;
-        consumptionRatio = availableAmount / scaledConsumption;
-      }
-
-      this.currentConsumption[category][resource] = actualConsumption;
-      accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - actualConsumption;
-      resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (actualConsumption * (1000 / deltaTime));
-
-      // Adjust filledNeeds for the consumed resource
-      this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
-    }
-  }
-}
 
   adjustNeedRatio(resource, ratio, deltaTime) {
     const adjustmentSpeed = 0.1; // Rate of change per second

@@ -3,7 +3,7 @@
     display: grid;
     grid-template-columns: 35% 21% 3% 21% 25%; /* Default layout with cap */
     align-items: center;
-    font-size: 12px;
+    font-size: 13px;
     column-gap: 0;
   }
   
