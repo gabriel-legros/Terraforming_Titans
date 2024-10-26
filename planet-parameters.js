@@ -7,20 +7,21 @@ const planetParameters = {
         colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false }, // No cap initially
         workers: { name: 'Workers', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false }, // No cap initially
         energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Battery
-        metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
+        metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}}, // Base cap from one Storage Depot
         silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
         glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
-        water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
+        water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}}, // Base cap from one Storage Depot
         food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false }, // Base cap from one Storage Depot
-        components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false }, // Base cap from one Storage Depot
-        electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false }, // Base cap from one Storage Depot
-        superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false }, // Base cap from one Storage Depot
+        components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}  }, // Base cap from one Storage Depot
+        electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, conversionValue : 0.2}, // Base cap from one Storage Depot
+        superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} }, // Base cap from one Storage Depot
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
         ice: { name: 'Ice', initialValue: 1e16, unlocked:false },
         liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
-        dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: false}
+        dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: false},
+        scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false}
       },
       underground: {
         ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },

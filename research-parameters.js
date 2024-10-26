@@ -95,6 +95,20 @@ const researchParameters = {
         ],
       },
       {
+        id: 'hydrogen_battery',
+        name: 'Hydrogen Battery Array',
+        description: 'Stores energy using compressed or liquid hydrogen.',
+        cost: { research: 100000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'hydrogenBattery',
+            type: 'enable',
+          },
+        ],
+      },
+      {
         id: 'fusion_1',
         name: 'Fusion reactor MkI',
         description: 'Enables a version of an old design from Earth.  Will require superconductors to build.',
@@ -106,6 +120,12 @@ const researchParameters = {
             targetId: 'fusionPowerPlant1',
             type: 'enable',
           },
+          {
+            target: 'resource',
+            resourceType: 'colony',
+            targetId : 'superconductors',
+            type : 'enable'
+          }
         ],
       },
     ],
@@ -120,6 +140,7 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'oreMine',
+            effectId : 'ore_processing_research',
             type: 'productionMultiplier',
             value: 1.5, // Increases ore production by 30%
           },
@@ -206,17 +227,37 @@ const researchParameters = {
       {
         id: 'deep_mine',
         name: 'Deep ore mines',
-        description: 'Doubles ore output from mining.',
+        description: 'Unlock a repeatable special project to increase ore output from mining.',
         cost: { research: 100000 },
         prerequisites: [],
         effects: [
           {
-            target: 'building',
-            targetId: 'oreMine',
-            type: 'productionMultiplier',
-            value: 2, // Increases ore production by 30%
+            target: 'project',
+            targetId: 'deeperMining',
+            type: 'enable',
+            value: true,
           },
         ],
+      },
+      {
+        id: 'recycling',
+        name: 'Recycling',
+        description: 'Unlocks the recycling facility, which is capable of recycling all sorts of material lost to maintenance.',
+        cost: {research: 500000},
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'recyclingFacility',
+            type: 'enable',
+          },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'scrapMetal',
+            type: 'enable'
+          }
+        ]
       },
       {
         id: 'superconductor_factory',
@@ -324,6 +365,21 @@ const researchParameters = {
             type: 'enable',
           },
         ],
+      },      
+      {
+        id: 'construction_office',
+        name: 'Construction Office',
+        description: 'Allows automation of building construction.',
+        cost: { research: 500000 },
+        prerequisites: [],
+        effects: [
+          {
+            type: 'booleanFlag',
+            target: 'global',
+            targetId: 'automateConstruction',
+            value: true
+          },
+        ],
       },
     ],
     terraforming: [
@@ -412,15 +468,15 @@ const researchParameters = {
         ],
       },
       {
-        id: 'dust_efficiency',
-        name: 'Adapted black dust production',
-        description: 'Doubles the efficiency of dust factories.',
+        id: 'hydroponics_efficiency',
+        name: 'Adapted crops',
+        description: 'Doubles the performance of our hydroponics farm using genetically modified potatoes.',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
           {
             target: 'building',
-            targetId: 'dustFactory',
+            targetId: 'hydroponicFarm',
             type: 'productionMultiplier',
             value: 2,
           },
@@ -438,6 +494,21 @@ const researchParameters = {
             targetId: 'spaceMirrorFacility',
             type: 'enable'
           }
+        ],
+      },
+      {
+        id: 'dust_efficiency',
+        name: 'Adapted black dust production',
+        description: 'Quadruples the efficiency of dust factories.',
+        cost: { research: 50000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'dustFactory',
+            type: 'productionMultiplier',
+            value: 4,
+          },
         ],
       },
       {

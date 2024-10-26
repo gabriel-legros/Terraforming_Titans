@@ -77,7 +77,7 @@ const projectParameters = {
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for geothermal deposits
-        searchValue: 0.0001,  // Search value indicating effectiveness in finding geothermal deposits
+        searchValue: 0.001,  // Search value indicating effectiveness in finding geothermal deposits
         depositType: "geothermal"  // Specify which type of deposit the scanner searches for
       }
     }
@@ -103,6 +103,34 @@ const projectParameters = {
           targetId: 'spaceMirror',
           type: 'enable'
         }
+      ]
+    }
+  },
+  deeperMining: {
+    name: "Deeper mining",
+    cost: {
+      colony: {
+        metal: 10000,
+        electronics : 1000,
+        components: 1000
+      }
+    },
+    duration: 180000,
+    description: "Deepens all ore mines to improve production.  Each completion improves metal production by an additivite 10%.  This project becomes more expensive each time it is completed.",
+    repeatable: true,
+    maxRepeatCount: 100,
+    unlocked : true,
+    attributes : {
+      costScaling : true,
+      effectScaling : true,
+      completionEffect: [
+        {
+          target: 'building',
+          targetId: 'oreMine',
+          effectId: 'deeper_mining',
+          type: 'productionMultiplier',
+          value: 1.1
+        }      
       ]
     }
   }

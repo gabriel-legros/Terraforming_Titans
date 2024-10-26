@@ -30,17 +30,35 @@ class Project extends EffectableEntity {
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
+  // Method to calculate scaled cost if costScaling is enabled
+  getScaledCost() {
+    if (this.attributes.costScaling) {
+      const multiplier = this.repeatCount + 1;
+      const scaledCost = {};
+
+      for (const resourceCategory in this.cost) {
+        scaledCost[resourceCategory] = {};
+        for (const resource in this.cost[resourceCategory]) {
+          scaledCost[resourceCategory][resource] = this.cost[resourceCategory][resource] * multiplier;
+        }
+      }
+
+      return scaledCost;
+    }
+    return this.cost;
+  }
+
   canStart() {
-    // Check if all resources required to start the project are available
-    for (const resourceCategory in this.cost) {
-      for (const resource in this.cost[resourceCategory]) {
-        if (resources[resourceCategory][resource].value < this.cost[resourceCategory][resource]) {
+    const cost = this.getScaledCost();
+
+    for (const resourceCategory in cost) {
+      for (const resource in cost[resourceCategory]) {
+        if (resources[resourceCategory][resource].value < cost[resourceCategory][resource]) {
           return false;  // Not enough resources
         }
       }
     }
 
-    // Check if there is enough funding for all selected resources
     if (this.selectedResources && this.selectedResources.length > 0) {
       let totalCost = 0;
       this.selectedResources.forEach(({ resource, quantity }) => {
@@ -57,15 +75,15 @@ class Project extends EffectableEntity {
   }
 
   deductResources(resources) {
-    // Deduct the resources required to start the project
-    for (const resourceCategory in this.cost) {
-      for (const resource in this.cost[resourceCategory]) {
-        resources[resourceCategory][resource].decrease(this.cost[resourceCategory][resource]);
+    const cost = this.getScaledCost();
+
+    for (const resourceCategory in cost) {
+      for (const resource in cost[resourceCategory]) {
+        resources[resourceCategory][resource].decrease(cost[resourceCategory][resource]);
       }
     }
 
-    // Deduct the funding for resource choice gain, if applicable
-    if (this.selectedResources.length > 0) {
+    if (this.selectedResources && this.selectedResources.length > 0) {
       let totalCost = 0;
       this.selectedResources.forEach(({ resource, quantity }) => {
         const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
@@ -73,7 +91,6 @@ class Project extends EffectableEntity {
       });
 
       resources.colony.funding.decrease(totalCost);
-      // Store the pending resource gains for use when the project completes
       this.pendingResourceGains = [...this.selectedResources];
     }
   }
@@ -82,6 +99,7 @@ class Project extends EffectableEntity {
     if (this.canStart(resources)) {
       this.deductResources(resources);
       this.isActive = true;
+      this.remainingTime = this.duration;
       console.log(`Project ${this.name} started.`);
       return true;
     } else {
@@ -186,7 +204,20 @@ class Project extends EffectableEntity {
 
   applyCompletionEffect() {
     this.attributes.completionEffect.forEach((effect) => {
-      addEffect({ ...effect, sourceId: this });
+      const scaledEffect = { ...effect };
+
+      // Apply effect scaling if the attribute is enabled
+      if (this.attributes.effectScaling) {
+        const baseValue = effect.value; // Use the base value from the project definition
+        const n = this.repeatCount + 1; // Total completions
+        scaledEffect.value = (baseValue - 1) * n + 1; // Compute scaled value
+
+        // Use addAndReplace to replace any existing effect with the same effectId
+        addEffect({ ...scaledEffect, sourceId: this });
+      } else {
+        // If effectScaling is not enabled, add the effect normally
+        addEffect({ ...effect, sourceId: this });
+      }
     });
   }
 

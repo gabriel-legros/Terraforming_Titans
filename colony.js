@@ -8,6 +8,7 @@ class Colony extends Building {
     // Set baseComfort for the colony
     this.baseComfort = config.baseComfort || 0;  // Default to 0 if not provided in the config
     this.filledNeeds = {};
+    this.obsolete = false;
 
     // Initialize filledNeeds based on the consumption defined in the config
     for (const category in this.consumption) {
@@ -104,6 +105,25 @@ class Colony extends Building {
 
     // Adjust the happiness towards the target value using the adjustNeedRatio logic
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness, deltaTime);
+  }
+
+  enable(tierName){
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony'];
+
+    // Unlock the new tier
+    colonies[tierName].unlocked = true;
+
+    // Find the index of the new tier
+    const newTierIndex = tiers.indexOf(tierName);
+
+    // Set obsolete to true for all previous tiers
+    for (let i = 0; i < newTierIndex; i++) {
+      const obsoleteTierName = tiers[i];
+      colonies[obsoleteTierName].obsolete = true;
+    }
+
+    // Refresh the colony buildings UI
+    createColonyButtons(colonies);
   }
 }
 

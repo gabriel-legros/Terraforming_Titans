@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="structure.css">
+    <link rel="stylesheet" href="colonies.css">
     <link rel="stylesheet" href="pop-up.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
@@ -45,6 +46,8 @@
     <script src="zones.js"></script>   
     <script src="water-cycle.js"></script>   
     <script src="dry-ice-cycle.js"></script>   
+    <script src="globals.js"></script>
+    <script src="autobuild.js"></script>
     <script src="game.js"></script>
 </head>
 
@@ -118,10 +121,15 @@
 
         <div id="colonies" class="tab-content">
             <div class="container colonies-container">
+              <div class="header-container">
                 <h2>Colonies</h2>
-                <div class="building-list" id="colony-buildings-buttons"></div>
+                <div id="unhide-obsolete-container" style="display: none;">
+                  <button id="unhide-obsolete-button">Unhide Obsolete Buildings</button>
+                </div>
+              </div>
+              <div class="building-list" id="colony-buildings-buttons"></div>
             </div>
-        </div>
+          </div>
 
     <!-- Research Tab Content -->
     <div id="research" class="tab-content">

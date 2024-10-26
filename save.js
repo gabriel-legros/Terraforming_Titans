@@ -88,6 +88,15 @@ function loadGame() {
           projectManager.loadState(gameState.projects);
       }
 
+      // Load story progress
+      if (gameState.story) {
+        storyManager.loadState(gameState.story);
+    }
+
+      if (gameState.journalEntries) {
+        loadJournalEntries(gameState.journalEntries); // Restore journal entries
+      }
+
       // Restore research progress
       if (gameState.research) {
           researchManager.loadState(gameState.research);
@@ -98,15 +107,6 @@ function loadGame() {
     if (gameState.oreScanning) {
         oreScanner.loadState(gameState.oreScanning);
       }
-
-      // Load story progress
-      if (gameState.story) {
-        storyManager.loadState(gameState.story);
-    }
-
-    if (gameState.journalEntries) {
-      loadJournalEntries(gameState.journalEntries); // Restore journal entries
-    }
 
     tabManager.activateTab('buildings');
 

@@ -18,7 +18,7 @@ const colonyParameters = {
       name: 'Permanent Outpost',
       category: 'Colony',
       description: 'As the colony expands, this larger outpost offers improved facilities and can house a growing number of colonists.',
-      cost: { colony: { metal: 250, water : 250, glass : 250 } },
+      cost: { colony: { metal: 250, water : 500, glass : 250 } },
       consumption: {colony : {energy : 50, food : 10}},
       production: {colony : {research : 10}},
       storage: { colony: { colonists: 100} },
@@ -34,7 +34,7 @@ const colonyParameters = {
       name: 'Small Settlement',
       category: 'Colony',
       description: 'A well-developed outpost that represents a significant milestone in colonial growth. It provides a comfortable living environment and supports a thriving community of colonists.',
-      cost: { colony: { metal: 1000, water : 1000, glass : 1000 } },
+      cost: { colony: { metal: 1000, water : 5000, glass : 1000 } },
       consumption: {colony : {energy : 250, food : 100, electronics: 1}},
       production: {colony : {research : 100}},
       storage: { colony: { colonists: 1000} },
@@ -47,14 +47,29 @@ const colonyParameters = {
     }
     ,
     t4_colony: {
-      name: 'Dome town',
+      name: 'Dome Town',
       category: 'Colony',
       description: 'A fully insulated self-sufficient capable of supporting a large population.',
-      cost: { colony: { metal: 5000, water : 5000, glass : 5000 } },
+      cost: { colony: { metal: 5000, water : 50000, glass : 5000 } },
       consumption: {colony : {energy : 2500, food : 1000, electronics: 10}},
       production: {colony : {research : 1000}},
       storage: { colony: { colonists: 10000} },
       baseComfort : 0.6,
+      dayNightActivity: false, // Not affected by day/night
+      canBeToggled: true, // No manual toggle needed
+      requiresMaintenance: true,
+      maintenanceFactor: 1, // Default maintenance factor
+      unlocked: false
+    },
+    t5_colony: {
+      name: 'Dome City',
+      category: 'Colony',
+      description: 'Dome City is a large, climate-controlled habitat supporting a thriving population with advanced amenities, sustainable agriculture, and cutting-edge infrastructure—an oasis of comfort and innovation on the frontier.',
+      cost: { colony: { metal: 25000, water : 500000, glass : 25000 } },
+      consumption: {colony : {energy : 25000, food : 10000, electronics: 100}},
+      production: {colony : {research : 10000}},
+      storage: { colony: { colonists: 100000} },
+      baseComfort : 0.8,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
       requiresMaintenance: true,

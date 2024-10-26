@@ -1,3 +1,5 @@
+let showObsoleteBuildings = false;
+
 // Helper function to create a need box with dynamic fill and color
 function createNeedBox(needName, value, id) {
     const needBox = document.createElement('div');
@@ -65,6 +67,10 @@ function createColonyDetails(structure) {
 
 // Update the colony-specific needs display
 function updateColonyDetailsDisplay(structureRow, structure) {
+  // Check if there are hidden obsolete buildings and update the "Unhide" button visibility
+  const hasHiddenObsoleteBuildings = Object.values(colonies).some(colony => colony.isHidden);
+  document.getElementById('unhide-obsolete-container').style.display = hasHiddenObsoleteBuildings ? 'block' : 'none';
+
   // Update comfort and happiness boxes
   updateNeedBox(structureRow, `${structure.name}-happiness`, 'Happiness', structure.happiness);
   updateNeedBox(structureRow, `${structure.name}-comfort`, 'Comfort', structure.baseComfort);
@@ -98,3 +104,14 @@ function getNeedColor(value) {
       return 'red';
     }
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('unhide-obsolete-button').addEventListener('click', () => {
+      // Set the isHidden attribute to true for each obsolete colony
+      Object.values(colonies).forEach(colony => {
+        if (colony.unlocked) {
+          colony.isHidden = false;
+        }
+      });
+    });
+  });

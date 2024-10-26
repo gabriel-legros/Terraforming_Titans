@@ -54,36 +54,15 @@ function createProjectItem(project) {
     };
   }
 
-  // Check if the project has any cost before creating the cost element
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
-    let costText = 'Cost: ';
-    const costArray = [];
-
-    for (const category in project.cost) {
-      for (const resource in project.cost[category]) {
-        const requiredAmount = project.cost[category][resource];
-        const availableAmount = resources[category]?.[resource]?.value || 0;
-
-        // Format resource text based on availability
-        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
-        const formattedResourceText = availableAmount >= requiredAmount
-          ? resourceText
-          : `<span style="color: red;">${resourceText}</span>`;
-        
-        costArray.push(formattedResourceText);
-      }
-    }
-
-    costText += costArray.join(', ');
-    costElement.innerHTML = costText;
+    costElement.classList.add('project-cost');
     projectItem.appendChild(costElement);
-
-    // Store the cost element for future updates
     projectElements[project.name] = {
-      ...projectElements[project.name], // Preserve existing properties
+      ...projectElements[project.name],
       costElement: costElement,
     };
+    updateCostDisplay(project); // Initial call to display the scaled cost
   }
 
   // Repeat Count Display (if project is repeatable and not infinitely repeatable)
@@ -252,6 +231,32 @@ function createResourceSelectionUI(project) {
   return selectionContainer;
 }
 
+function updateCostDisplay(project) {
+  const elements = projectElements[project.name];
+  if (elements && elements.costElement) {
+    const cost = project.getScaledCost(); // Use scaled cost for display
+    let costText = 'Cost: ';
+    const costArray = [];
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const requiredAmount = cost[category][resource];
+        const availableAmount = resources[category]?.[resource]?.value || 0;
+
+        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
+        const formattedResourceText = availableAmount >= requiredAmount
+          ? resourceText
+          : `<span style="color: red;">${resourceText}</span>`;
+        
+        costArray.push(formattedResourceText);
+      }
+    }
+
+    costText += costArray.join(', ');
+    elements.costElement.innerHTML = costText;
+  }
+}
+
 function updateTotalCostDisplay(project) {
   let totalCost = 0;
 
@@ -303,23 +308,7 @@ function updateProjectUI(projectName) {
 
   // Update the cost display, highlighting missing resources in red
   if (elements.costElement) {
-    let costText = 'Cost: ';
-    const costArray = [];
-    for (const category in project.cost) {
-      for (const resource in project.cost[category]) {
-        const requiredAmount = project.cost[category][resource];
-        const availableAmount = resources[category]?.[resource]?.value || 0;
-
-        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
-        const formattedResourceText = availableAmount >= requiredAmount
-          ? resourceText
-          : `<span style="color: red;">${resourceText}</span>`;
-
-        costArray.push(formattedResourceText);
-      }
-    }
-    costText += costArray.join(', ');
-    elements.costElement.innerHTML = costText;
+    updateCostDisplay(project); // Refresh the cost display with scaled cost
   }
 
   // Check if the project has reached its maximum repeat count or is completed and not repeatable
@@ -396,7 +385,7 @@ function updateProjectUI(projectName) {
   }
 
   // If the project has resource choice gain cost, calculate total cost and update display
-  if (project.attributes?.resourceChoiceGainCost && !project.pendingResourceGains) {
+  if (project.attributes.resourceChoiceGainCost && (!project.pendingResourceGains || project.pendingResourceGains.length == 0)) {
     // Update the total cost display for selected resources
     const selectedResources = [];
     document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {

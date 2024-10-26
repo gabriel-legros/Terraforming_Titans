@@ -59,12 +59,22 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const structureRow = document.createElement('div');
   structureRow.classList.add('building-row');
 
-  if (!structure.unlocked) {
-    structureRow.classList.add('hidden'); // Hide the building initially
+  // Hide the structure if it's not unlocked or if it's hidden
+  if (!structure.unlocked || structure.isHidden) {
+    structureRow.classList.add('hidden'); // Hide the building
+  }
+
+  // If the building is obsolete, add a visual indicator
+  if (structure.obsolete) {
+    structureRow.classList.add('obsolete-building');
   }
 
   const buttonContainer = document.createElement('div');
   buttonContainer.classList.add('button-container');
+
+  // Left container for build, build amount, and hide buttons
+  const leftContainer = document.createElement('div');
+  leftContainer.classList.add('left-button-container');
 
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
@@ -80,7 +90,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
   });
 
-  buttonContainer.appendChild(button);
+  leftContainer.appendChild(button);
 
   // Create build count input and buttons
   const buildCountButtons = document.createElement('div');
@@ -90,10 +100,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountLabel.textContent = 'Amount: ';
   buildCountButtons.appendChild(buildCountLabel);
 
-  const buildCounts = [1, 10, 100, 1000, 10000, 100000];
+  const buildCounts = [1, 10, 100, 1000, 10000, 100000, 1000000];
   buildCounts.forEach((count) => {
     const countButton = document.createElement('button');
-    countButton.textContent = count;
+    countButton.textContent = formatNumber(count, true);
     countButton.addEventListener('click', function () {
       selectedBuildCounts[structure.name] = count;
       updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
@@ -106,7 +116,55 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     buildCountButtons.appendChild(countButton);
   });
 
-  buttonContainer.appendChild(buildCountButtons);
+  leftContainer.appendChild(buildCountButtons);
+
+  const hideButton = document.createElement('button');
+  hideButton.classList.add('hide-button');
+  hideButton.textContent = 'Hide';
+  hideButton.addEventListener('click', function () {
+    // Hide this building
+    structure.isHidden = true;
+  });
+
+  leftContainer.appendChild(hideButton);
+  buttonContainer.appendChild(leftContainer);
+
+
+  //Autobuild feature, unlocked by research
+  const autoBuildContainer = document.createElement('div');
+  autoBuildContainer.classList.add('auto-build-container');
+
+  // Checkbox for enabling/disabling auto-build
+  const autoBuildCheckbox = document.createElement('input');
+  autoBuildCheckbox.type = 'checkbox';
+  autoBuildCheckbox.classList.add('auto-build-checkbox');
+
+  autoBuildCheckbox.addEventListener('change', () => {
+    structure.autoBuildEnabled = autoBuildCheckbox.checked;
+    // Additional logic for enabling/disabling auto-build can go here
+  }); 
+  autoBuildContainer.appendChild(autoBuildCheckbox);
+
+  const autoBuildLabel = document.createElement('span');
+  autoBuildLabel.textContent = 'Auto-build % of pop: ';
+  autoBuildContainer.appendChild(autoBuildLabel);
+
+  const autoBuildInput = document.createElement('input');
+  autoBuildInput.type = 'number';
+  autoBuildInput.value = structure.autoBuildPercent; // Default to 0.1
+  autoBuildInput.step = 0.1; // Allow 0.01 steps for finer control
+  autoBuildInput.classList.add('auto-build-input');
+
+  autoBuildInput.addEventListener('input', () => {
+    const autoBuildPercent = parseFloat(autoBuildInput.value);
+    structure.autoBuildPercent = autoBuildPercent;
+    // Additional logic to handle the auto-build percentage can go here
+  });
+
+  autoBuildContainer.appendChild(autoBuildInput);
+  buttonContainer.appendChild(autoBuildContainer);
+
+  //done with first row
   structureRow.appendChild(buttonContainer);
 
   const costElement = document.createElement('div');
@@ -212,7 +270,7 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureButtonText(button, structure, buildCount = 1) {
-    let buttonText = `Build ${buildCount} ${structure.displayName}`;
+    let buttonText = `Build ${formatNumber(buildCount, true)} ${structure.displayName}`;
     let canAfford = structure.canAfford(buildCount);
   
     button.textContent = buttonText;
@@ -230,7 +288,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const availableAmount = resources[category][resource]?.value || 0;
   
         // Check if the player has enough of this resource
-        const resourceText = `${capitalizeFirstLetter(resource)}: ${requiredAmount}`;
+        const resourceText = `${capitalizeFirstLetter(resource)}: ${formatNumber(requiredAmount)}`;
         const formattedResourceText = availableAmount >= requiredAmount
           ? resourceText
           : `<span style="color: red;">${resourceText}</span>`;
@@ -274,14 +332,38 @@ function updateDecreaseButtonText(button, buildCount) {
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
   
       // Update visibility based on unlocked state
-      if (structure.unlocked && structureRow) {
+      if (structure.unlocked && structureRow && !structure.isHidden) {
         structureRow.classList.remove('hidden'); // Show the building when unlocked
+      } else {
+        structureRow.classList.add('hidden');
       }
   
       if (countElement) {
         countElement.textContent = structure.count;
       } else if (countActiveElement) {
         countActiveElement.textContent = `${structure.active}/${structure.count}`;
+      }
+
+      // Toggle visibility of the "Hide" button based on conditions
+      const buttonContainer = structureRow.querySelector('.button-container');
+      const hideButton = buttonContainer.querySelector('.hide-button');
+
+      if (hideButton) {
+        if (structure.obsolete && structure.active === 0 && !structure.isHidden) {
+          hideButton.style.display = 'inline-block'; // Show the button
+        } else {
+          hideButton.style.display = 'none'; // Hide the button
+        }
+      }
+
+      // Toggle visibility of autoBuildContainer based on globalEffects
+      const autoBuildContainer = buttonContainer.querySelector('.auto-build-container');
+      if (autoBuildContainer) {
+        if (globalEffects.isBooleanFlagSet('automateConstruction')) {
+          autoBuildContainer.style.display = 'flex'; // Show the auto-build container
+        } else {
+          autoBuildContainer.style.display = 'none'; // Hide the auto-build container
+        }
       }
   
       const productivityElement = document.getElementById(`${structureName}-productivity`);
@@ -328,19 +410,24 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
     let detailsText = '';
     const effectiveMultiplier = structure.getEffectiveProductionMultiplier();
-  
-    // Update production details with technology multiplier applied
-    const productionText = formatResourceDetails(structure.production, effectiveMultiplier);
-    if (productionText) {
-      detailsText += `<strong>Production:</strong> ${productionText}`;
+
+    // Update storage details if the building provides any
+    const storageText = formatStorageDetails(structure.getModifiedStorage());
+    if (storageText) {
+      detailsText += `<strong>Provides:</strong> ${storageText}`;
     }
   
-    // Update consumption details
-    const consumptionText = formatResourceDetails(structure.consumption);
+    // Update production details with modified values
+    const productionText = formatResourceDetails(structure.getModifiedProduction());
+    if (productionText) {
+      if (detailsText) detailsText += ', ';
+      detailsText += `<strong>Production:</strong> ${productionText}`;
+    }
+
+    // Update consumption details with modified values
+    const consumptionText = formatResourceDetails(structure.getModifiedConsumption());
     if (consumptionText) {
-      if (detailsText) {
-        detailsText += ', ';
-      }
+      if (detailsText) detailsText += ', ';
       detailsText += `<strong>Consumption:</strong> ${consumptionText}`;
     }
   
@@ -358,28 +445,41 @@ function updateDecreaseButtonText(button, buildCount) {
     productionConsumptionElement.innerHTML = detailsText;
   }
   
-// Helper function to format production and consumption details with a multiplier
-function formatResourceDetails(resourceObject, multiplier = 1) {
+// Helper function to format production and consumption details
+function formatResourceDetails(resourceObject) {
   let details = '';
   for (const category in resourceObject) {
     for (const resource in resourceObject[category]) {
-      const adjustedValue = resourceObject[category][resource] * multiplier;
+      const adjustedValue = resourceObject[category][resource];
       if (adjustedValue > 0) {
-        details += `${adjustedValue.toFixed(2)} ${resources[category][resource].displayName}, `;
+        details += `${formatNumber(adjustedValue)} ${resources[category][resource].displayName}, `;
       }
     }
   }
-  return details.slice(0, -2); // Remove the trailing comma and space
+  return details.slice(0, -2); // Remove trailing comma and space
 }
 
 // Helper function to format maintenance details
 function formatMaintenanceDetails(maintenanceCost) {
-    let details = '';
-    for (const resource in maintenanceCost) {
-      if (maintenanceCost[resource] > 0) {
-        details += `${maintenanceCost[resource]} ${resources['colony'][resource].displayName}, `;
+  let details = '';
+  for (const resource in maintenanceCost) {
+    if (maintenanceCost[resource] > 0) {
+      details += `${formatNumber(maintenanceCost[resource])} ${resources['colony'][resource].displayName}, `;
+    }
+  }
+  return details.slice(0, -2); // Remove trailing comma and space
+}
+
+// Helper function to format storage details
+function formatStorageDetails(storageObject) {
+  let storageDetails = '';
+  for (const category in storageObject) {
+    for (const resource in storageObject[category]) {
+      const storageAmount = storageObject[category][resource];
+      if (storageAmount > 0) {
+        storageDetails += `${formatNumber(storageAmount)} ${resources[category][resource].displayName}, `;
       }
     }
-    return details.slice(0, -2); // Remove the trailing comma and space
   }
-  
+  return storageDetails.slice(0, -2); // Remove trailing comma and space
+}

@@ -3,7 +3,25 @@
     align-items: center;
     gap: 20px;
     flex-wrap: wrap; /* Allows controls to wrap without stretching button */
+    justify-content: space-between; /* Aligns the auto-build container to the right */
 }
+
+.left-button-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adds space between the buttons */
+  }
+
+.auto-build-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .auto-build-input {
+    width: 50px;
+    text-align: right;
+  }
 
 .building-button {
     max-width: 200px; /* Set a maximum width for the buttons */

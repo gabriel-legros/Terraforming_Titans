@@ -227,25 +227,23 @@ function capitalizeFirstLetter(string) {
 }
 
 function formatNumber(value, integer = false) {
-  // Handling large positive or negative values with suffixes
   const absValue = Math.abs(value);
   let formatted;
 
   if (absValue >= 1e18) {
-    formatted = (absValue / 1e18).toFixed(1) + 'Qn'; // Quintillions
+    formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(1) + 'Qn';
   } else if (absValue >= 1e15) {
-    formatted = (absValue / 1e15).toFixed(1) + 'Q'; // Quadrillions
+    formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(1) + 'Q';
   } else if (absValue >= 1e12) {
-    formatted = (absValue / 1e12).toFixed(1) + 'T'; // Trillions
+    formatted = integer && absValue % 1e12 === 0 ? (absValue / 1e12) + 'T' : (absValue / 1e12).toFixed(1) + 'T';
   } else if (absValue >= 1e9) {
-    formatted = (absValue / 1e9).toFixed(1) + 'B'; // Billions
+    formatted = integer && absValue % 1e9 === 0 ? (absValue / 1e9) + 'B' : (absValue / 1e9).toFixed(1) + 'B';
   } else if (absValue >= 1e6) {
-    formatted = (absValue / 1e6).toFixed(1) + 'M'; // Millions
+    formatted = integer && absValue % 1e6 === 0 ? (absValue / 1e6) + 'M' : (absValue / 1e6).toFixed(1) + 'M';
   } else if (absValue >= 1e3) {
-    formatted = (absValue / 1e3).toFixed(1) + 'k'; // Thousands
+    formatted = integer && absValue % 1e3 === 0 ? (absValue / 1e3) + 'k' : (absValue / 1e3).toFixed(1) + 'k';
   } else if (absValue >= 1e-2) {
-    // Show integers for numbers between 1 and 1000
-    formatted = (absValue).toFixed(integer ? 0 : 1);
+    formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(2);
   } else if (absValue >= 1e-3) {
     formatted = (absValue / 1e-3).toFixed(1) + 'm'; // Milli
   } else if (absValue >= 1e-6) {
@@ -256,10 +254,8 @@ function formatNumber(value, integer = false) {
     formatted = 0;
     value = 0;
   } else {
-    // For values smaller than nano, use scientific notation with 1 decimal
-    formatted = absValue.toExponential(1);
+    formatted = absValue.toExponential(1); // Scientific notation
   }
 
-  // Apply negative sign back if the original value was negative
   return value < 0 ? '-' + formatted : formatted;
 }

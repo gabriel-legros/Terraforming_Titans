@@ -15,9 +15,11 @@ class Resource extends EffectableEntity {
     this.consumptionRate = 0; // Rate of consumption per second
     this.reserved = resourceData.reserved || 0;
     this.unlocked = resourceData.unlocked;
+    this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
+    this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
   }
 
-    // Method to initialize configurable properties
+  // Method to initialize configurable properties
   initializeFromConfig(config) {
     this.name = config.name;
     this.displayName = config.displayName;
@@ -25,6 +27,8 @@ class Resource extends EffectableEntity {
     this.hasCap = config.hasCap || 0;
     this.baseCap = config.baseCap || 0;
     this.unlocked = config.unlocked;
+    this.maintenanceConversion = config.maintenanceConversion || {};
+    this.conversionValue = config.conversionValue || 1;
   } 
 
   increase(amount) {
@@ -121,7 +125,7 @@ function calculateProductionRates(deltaTime, buildings) {
     // Calculate scaled production rates
     for (const category in building.production) {
       for (const resource in building.production[category]) {
-        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
+        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
         resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + actualProduction;
       }
     }

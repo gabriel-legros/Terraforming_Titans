@@ -12,6 +12,9 @@ class Building extends EffectableEntity {
     this.active = 0;
     this.productivity = 1;
 
+    this.autoBuildEnabled = false;
+    this.autoBuildPercent = 0.1;
+
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
     this.currentConsumption = {};
@@ -122,6 +125,63 @@ class Building extends EffectableEntity {
     return multiplier;
   }
 
+  // Get modified production values based on effective multipliers
+  getModifiedProduction() {
+    const modifiedProduction = {};
+
+    for (const category in this.production) {
+      modifiedProduction[category] = {};
+      for (const resource in this.production[category]) {
+        const baseProduction = this.production[category][resource];
+        const productionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveResourceProductionMultiplier(category, resource);
+        modifiedProduction[category][resource] = baseProduction * productionMultiplier;
+      }
+    }
+
+    return modifiedProduction;
+  }
+
+  // Get modified consumption values based on effective multipliers
+  getModifiedConsumption() {
+    const modifiedConsumption = {};
+
+    for (const category in this.consumption) {
+      modifiedConsumption[category] = {};
+      for (const resource in this.consumption[category]) {
+        const baseConsumption = this.consumption[category][resource];
+        const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        modifiedConsumption[category][resource] = baseConsumption * consumptionMultiplier;
+      }
+    }
+
+    return modifiedConsumption;
+  }
+
+  // Get modified storage values based on effective multipliers
+  getModifiedStorage() {
+    const modifiedStorage = {};
+
+    for (const category in this.storage) {
+      modifiedStorage[category] = {};
+      for (const resource in this.storage[category]) {
+        const baseStorage = this.storage[category][resource];
+        const storageMultiplier = this.getEffectiveStorageMultiplier();
+        modifiedStorage[category][resource] = baseStorage * storageMultiplier;
+      }
+    }
+
+    return modifiedStorage;
+  }
+
+  getProductionRatio(){
+    const isDay = dayNightCycle.isDay();
+    if(this.dayNightActivity && !isDay){
+      return 0;
+    } else{
+      return 1;
+    }
+  }
+
   getConsumptionRatio(){
     return 1;
   }
@@ -223,7 +283,7 @@ class Building extends EffectableEntity {
     }
     else {
       const difference = Math.abs(targetProductivity - this.productivity);
-      const dampingFactor = difference < 0.2 ? 0.01 : 0.1; // Use smaller damping if close to target
+      const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
       this.productivity += dampingFactor * (targetProductivity - this.productivity);
     }
   }
@@ -302,10 +362,25 @@ class Building extends EffectableEntity {
         // Accumulate maintenance costs in the accumulatedMaintenance object
         accumulatedMaintenance[resource] = (accumulatedMaintenance[resource] || 0) + maintenanceCost;
 
-        // If the resource is water, also add the maintenance cost to the atmospheric water resource
-        if (resource === 'water') {
-          accumulatedChanges['atmospheric']['atmosphericWater'] = (accumulatedChanges['atmospheric']['atmosphericWater'] || 0) + maintenanceCost;
-          resources['atmospheric']['atmosphericWater'].productionRate = (resources['atmospheric']['atmosphericWater'].productionRate || 0) + (maintenanceCost * (1000 / deltaTime));
+        // Check for a maintenance conversion for this resource
+        const resourceData = resources.colony[resource];
+        if (resourceData.maintenanceConversion) {
+          for (const targetCategory in resourceData.maintenanceConversion) {
+            const targetResourceName = resourceData.maintenanceConversion[targetCategory];
+            const conversionValue = resourceData.conversionValue || 1;
+
+            // Apply conversion by adding the scaled maintenance cost to the target resource
+            const convertedAmount = maintenanceCost * conversionValue;
+
+            if (resources[targetCategory] && resources[targetCategory][targetResourceName]) {
+              accumulatedChanges[targetCategory][targetResourceName] = 
+                (accumulatedChanges[targetCategory][targetResourceName] || 0) + convertedAmount;
+
+              // Update production rate for the converted resource
+              resources[targetCategory][targetResourceName].productionRate =
+                (resources[targetCategory][targetResourceName].productionRate || 0) + (convertedAmount * (1000 / deltaTime));
+            }
+          }
         }
       }
     }

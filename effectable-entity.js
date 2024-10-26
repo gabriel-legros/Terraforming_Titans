@@ -11,6 +11,21 @@ class EffectableEntity {
       console.log(`Added effect: ${effect.type} with value ${effect.value} to ${this.name}`);
       this.applyEffect(effect);
     }
+
+    // Method to replace an existing effect based on effectId
+    replaceEffect(effect) {
+      const existingEffectIndex = this.activeEffects.findIndex(
+        (activeEffect) => activeEffect.effectId === effect.effectId
+      );
+
+      if (existingEffectIndex !== -1) {
+        this.activeEffects[existingEffectIndex] = effect;
+        console.log(`Replaced effect with effectId "${effect.effectId}" on ${this.name}`);
+        this.applyActiveEffects();
+      } else {
+        console.log(`Effect with effectId "${effect.effectId}" not found, nothing replaced on ${this.name}`);
+      }
+    }
   
     // Method to remove an effect by its source ID
     removeEffect(sourceId) {
@@ -23,6 +38,17 @@ class EffectableEntity {
     // Method to apply all active effects
     applyActiveEffects(firstTime = true) {
       this.activeEffects.forEach((effect) => this.applyEffect(effect));
+    }
+
+    // New method to add or replace an effect
+    addAndReplace(effect) {
+      const existingEffect = this.activeEffects.find((activeEffect) => activeEffect.effectId === effect.effectId);
+
+      if (existingEffect && effect.effectId) {
+        this.replaceEffect(effect);
+      } else {
+        this.addEffect(effect);
+      }
     }
   
   // Method to apply a specific effect
@@ -96,29 +122,32 @@ function addEffect(effect){
   if (effect.target === 'building') {
     const building = buildings[effect.targetId];
     if (building) {
-      building.addEffect(effect);
+      building.addAndReplace(effect);
     }
   } else if (effect.target === 'project') {
     const project = projectManager.projects[effect.targetId];
     if (project) {
-      project.addEffect(effect);
+      project.addAndReplace(effect);
     }
   }  else if (effect.target === 'colony') {
     const colony = colonies[effect.targetId];
     if (colony) {
-      colony.addEffect(effect);
+      colony.addAndReplace(effect);
     }
   } else if (effect.target === 'resource') {
     const resourceType = effect.resourceType;
     const resource = resources[resourceType][effect.targetId];
     if (resource){
-      resource.addEffect(effect);
+      resource.addAndReplace(effect);
     }
   } else if (effect.target === 'projectManager') {
     // Apply effect to the project manager
-    projectManager.addEffect(effect);
+    projectManager.addAndReplace(effect);
   } else if (effect.target === 'tab' || effect.target === 'tabContent') {
     // Apply effect to the tab manager
-    tabManager.addEffect(effect);
+    tabManager.addAndReplace(effect);
+  } else if (effect.target === 'global') {
+  // Apply effect to the tab manager
+  globalEffects.addAndReplace(effect);
   }
 }

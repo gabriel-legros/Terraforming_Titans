@@ -10,7 +10,7 @@ class PopulationModule {
     calculateGrowthRate() {
       let totalWeightedHappiness = 0;
       let totalCapacity = 0;
-      let growthRateDivider = 200;
+      let growthRateDivider = 300;
     
       // Iterate through all colonies and sum their weighted happiness based on capacity
       for (const colonyName in colonies) {

@@ -1,0 +1,20 @@
+/* Make the header and button appear on the same row */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Pushes the button to the right */
+    margin-bottom: 10px; /* Adds some space below the header */
+  }
+  
+  /* Style the button to make it more visually appealing */
+  #unhide-obsolete-button {
+    background-color: #b6bfc2;
+    color: rgb(0, 0, 0);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  #unhide-obsolete-button:hover {
+    background-color: #45a049;
+  }
