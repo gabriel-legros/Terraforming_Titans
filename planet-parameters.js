@@ -15,6 +15,7 @@ const planetParameters = {
         components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}  }, // Base cap from one Storage Depot
         electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, conversionValue : 0.2}, // Base cap from one Storage Depot
         superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} }, // Base cap from one Storage Depot
+        androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 0, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {

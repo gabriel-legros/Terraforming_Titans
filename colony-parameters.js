@@ -49,7 +49,7 @@ const colonyParameters = {
     t4_colony: {
       name: 'Dome Town',
       category: 'Colony',
-      description: 'A fully insulated self-sufficient capable of supporting a large population.',
+      description: 'A self-sufficient, fully insulated habitat designed to support a large population, providing essential amenities and sustainable infrastructure for a thriving community.',
       cost: { colony: { metal: 5000, water : 50000, glass : 5000 } },
       consumption: {colony : {energy : 2500, food : 1000, electronics: 10}},
       production: {colony : {research : 1000}},
@@ -66,10 +66,25 @@ const colonyParameters = {
       category: 'Colony',
       description: 'Dome City is a large, climate-controlled habitat supporting a thriving population with advanced amenities, sustainable agriculture, and cutting-edge infrastructure—an oasis of comfort and innovation on the frontier.',
       cost: { colony: { metal: 25000, water : 500000, glass : 25000 } },
-      consumption: {colony : {energy : 25000, food : 10000, electronics: 100}},
+      consumption: {colony : {energy : 25000, food : 10000, electronics: 100, androids: 1}},
       production: {colony : {research : 10000}},
       storage: { colony: { colonists: 100000} },
       baseComfort : 0.8,
+      dayNightActivity: false, // Not affected by day/night
+      canBeToggled: true, // No manual toggle needed
+      requiresMaintenance: true,
+      maintenanceFactor: 1, // Default maintenance factor
+      unlocked: false
+    },
+    t6_colony: {
+      name: 'Metropolis',
+      category: 'Colony',
+      description: 'A massive arcology structure designed to be a fully autonomous city, supporting a large population with advanced research and production facilities.',
+      cost: { colony: { metal: 100000, water : 5000000, glass : 100000 } },
+      consumption: {colony : {energy : 250000, food : 100000, electronics: 1000, androids: 10}},
+      production: {colony : {research : 100000}},
+      storage: { colony: { colonists: 1000000} },
+      baseComfort : 0.9,
       dayNightActivity: false, // Not affected by day/night
       canBeToggled: true, // No manual toggle needed
       requiresMaintenance: true,

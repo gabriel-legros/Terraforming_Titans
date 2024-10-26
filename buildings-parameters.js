@@ -135,6 +135,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  androidFactory: {
+    name: 'Androids Factory',
+    category: 'production',
+    description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but very rewarding.  ',
+    cost: { colony: { metal: 5000, glass : 2000, components: 1000, electronics: 500} },
+    consumption: { colony: { energy: 10000, metal: 1, electronics: 1} },
+    production: { colony: { androids: 1 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 1000,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   solarPanel: {
     name: 'Solar Panel Array',
     category: 'energy',
@@ -222,8 +237,9 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
+    requiresProductivity: false,
     requiresWorker: 0,
-    maintenanceFactor: 0.25,
+    maintenanceFactor: 0.5,
     unlocked: false
   },
   storageDepot: {
@@ -248,6 +264,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
+    requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false
@@ -263,10 +280,26 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
+    requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false
   },
+  androidHousing: {
+    name: 'Android Housing',
+    category: 'storage',
+    description: 'Recharges and stores androids.',
+    cost: { colony: { metal: 100, components : 1} },
+    consumption: {colony : {energy : 100}},
+    production: {},
+    storage: { colony: { androids: 1000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },  
     dustFactory: {
     name: 'Black Dust Factory',
     category: 'terraforming',

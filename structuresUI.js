@@ -188,10 +188,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   constructedCountElement.classList.add('constructed-count');
   constructedCountElement.classList.add('small-text'); // Add the 'small-text' class
 
+
   if (structure.canBeToggled) {
     constructedCountElement.innerHTML = `
-      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>,
-      <strong>Productivity:</strong> <span id="${structure.name}-productivity">0%</span>
+      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>
     `;
   } else {
     constructedCountElement.innerHTML = `
@@ -200,6 +200,23 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   }
 
   constructedCountContainer.appendChild(constructedCountElement);
+
+  // Conditionally display productivity if requiresProductivity is true
+  if (structure.requiresProductivity) {
+    const productivityContainer = document.createElement('div');
+    productivityContainer.classList.add('productivity-container');
+
+    const productivityLabel = document.createElement('span');
+    productivityLabel.innerHTML = `<strong>Productivity:</strong> `;
+    productivityContainer.appendChild(productivityLabel);
+
+    const productivityValue = document.createElement('span');
+    productivityValue.id = `${structure.name}-productivity`;
+    productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
+    productivityContainer.appendChild(productivityValue);
+
+    constructedCountContainer.appendChild(productivityContainer);
+  }
 
   const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
   constructedCountContainer.appendChild(structureControls);
@@ -288,7 +305,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const availableAmount = resources[category][resource]?.value || 0;
   
         // Check if the player has enough of this resource
-        const resourceText = `${capitalizeFirstLetter(resource)}: ${formatNumber(requiredAmount)}`;
+        const resourceText = `${capitalizeFirstLetter(resource)}: ${formatNumber(requiredAmount, true)}`;
         const formattedResourceText = availableAmount >= requiredAmount
           ? resourceText
           : `<span style="color: red;">${resourceText}</span>`;
@@ -370,15 +387,12 @@ function updateDecreaseButtonText(button, buildCount) {
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
-  
+      
         if (structure.dayNightActivity && dayNightCycle.isNight()) {
-          // Building is inactive at night
           productivityElement.style.color = 'darkblue';
         } else if (productivityValue < 100) {
-          // Building has low productivity
           productivityElement.style.color = 'red';
         } else {
-          // Building has normal productivity
           productivityElement.style.color = 'inherit';
         }
       }
@@ -452,7 +466,7 @@ function formatResourceDetails(resourceObject) {
     for (const resource in resourceObject[category]) {
       const adjustedValue = resourceObject[category][resource];
       if (adjustedValue > 0) {
-        details += `${formatNumber(adjustedValue)} ${resources[category][resource].displayName}, `;
+        details += `${formatNumber(adjustedValue, true)} ${resources[category][resource].displayName}, `;
       }
     }
   }
@@ -464,7 +478,7 @@ function formatMaintenanceDetails(maintenanceCost) {
   let details = '';
   for (const resource in maintenanceCost) {
     if (maintenanceCost[resource] > 0) {
-      details += `${formatNumber(maintenanceCost[resource])} ${resources['colony'][resource].displayName}, `;
+      details += `${formatNumber(maintenanceCost[resource], true, 2)} ${resources['colony'][resource].displayName}, `;
     }
   }
   return details.slice(0, -2); // Remove trailing comma and space
@@ -477,7 +491,7 @@ function formatStorageDetails(storageObject) {
     for (const resource in storageObject[category]) {
       const storageAmount = storageObject[category][resource];
       if (storageAmount > 0) {
-        storageDetails += `${formatNumber(storageAmount)} ${resources[category][resource].displayName}, `;
+        storageDetails += `${formatNumber(storageAmount, true)} ${resources[category][resource].displayName}, `;
       }
     }
   }

@@ -136,7 +136,7 @@ function updateResourceRateDisplay(resource){
     {
       ppsElement.textContent = `0/s`;
     } else {
-      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate)}/s`;
+      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
     }
     // Apply red color if netRate is negative and the absolute value is greater than the resource value
     if (netRate < 0 && Math.abs(netRate) > resource.value) {
@@ -226,30 +226,30 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function formatNumber(value, integer = false) {
+function formatNumber(value, integer = false, precision = 1) {
   const absValue = Math.abs(value);
   let formatted;
 
   if (absValue >= 1e18) {
-    formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(1) + 'Qn';
+    formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(precision) + 'Qn';
   } else if (absValue >= 1e15) {
-    formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(1) + 'Q';
+    formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(precision) + 'Q';
   } else if (absValue >= 1e12) {
-    formatted = integer && absValue % 1e12 === 0 ? (absValue / 1e12) + 'T' : (absValue / 1e12).toFixed(1) + 'T';
+    formatted = integer && absValue % 1e12 === 0 ? (absValue / 1e12) + 'T' : (absValue / 1e12).toFixed(precision) + 'T';
   } else if (absValue >= 1e9) {
-    formatted = integer && absValue % 1e9 === 0 ? (absValue / 1e9) + 'B' : (absValue / 1e9).toFixed(1) + 'B';
+    formatted = integer && absValue % 1e9 === 0 ? (absValue / 1e9) + 'B' : (absValue / 1e9).toFixed(precision) + 'B';
   } else if (absValue >= 1e6) {
-    formatted = integer && absValue % 1e6 === 0 ? (absValue / 1e6) + 'M' : (absValue / 1e6).toFixed(1) + 'M';
+    formatted = integer && absValue % 1e6 === 0 ? (absValue / 1e6) + 'M' : (absValue / 1e6).toFixed(precision) + 'M';
   } else if (absValue >= 1e3) {
-    formatted = integer && absValue % 1e3 === 0 ? (absValue / 1e3) + 'k' : (absValue / 1e3).toFixed(1) + 'k';
+    formatted = integer && absValue % 1e3 === 0 ? (absValue / 1e3) + 'k' : (absValue / 1e3).toFixed(precision) + 'k';
   } else if (absValue >= 1e-2) {
-    formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(2);
+    formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(precision);
   } else if (absValue >= 1e-3) {
-    formatted = (absValue / 1e-3).toFixed(1) + 'm'; // Milli
+    formatted = (absValue / 1e-3).toFixed(precision) + 'm'; // Milli
   } else if (absValue >= 1e-6) {
-    formatted = (absValue / 1e-6).toFixed(1) + 'µ'; // Micro
+    formatted = (absValue / 1e-6).toFixed(precision) + 'µ'; // Micro
   } else if (absValue >= 1e-9) {
-    formatted = (absValue / 1e-9).toFixed(1) + 'n'; // Nano
+    formatted = (absValue / 1e-9).toFixed(precision) + 'n'; // Nano
   } else if (absValue <= 1e-12) {
     formatted = 0;
     value = 0;

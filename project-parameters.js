@@ -119,7 +119,7 @@ const projectParameters = {
     description: "Deepens all ore mines to improve production.  Each completion improves metal production by an additivite 10%.  This project becomes more expensive each time it is completed.",
     repeatable: true,
     maxRepeatCount: 100,
-    unlocked : true,
+    unlocked : false,
     attributes : {
       costScaling : true,
       effectScaling : true,

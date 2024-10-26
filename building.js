@@ -10,7 +10,7 @@ class Building extends EffectableEntity {
 
     this.count = 0;
     this.active = 0;
-    this.productivity = 1;
+    this.productivity = 0;
 
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;
@@ -38,7 +38,8 @@ class Building extends EffectableEntity {
         requiresDeposit,
         requiresWorker, // Added requiresWorker to the destructured properties
         unlocked,
-        surfaceArea
+        surfaceArea,
+        requiresProductivity
       } = config;
   
       this.name = buildingName;
@@ -57,6 +58,7 @@ class Building extends EffectableEntity {
       this.requiresWorker = requiresWorker || 0; // Set default to 0 if not provided
       this.unlocked = unlocked;
       this.surfaceArea = surfaceArea;
+      this.requiresProductivity = typeof requiresProductivity !== 'undefined' ? requiresProductivity : true;
 
       this.updateResourceStorage();
     }
@@ -277,14 +279,18 @@ class Building extends EffectableEntity {
   }
 
   updateProductivity(resources, deltaTime) {
-    const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
-    if(Math.abs(targetProductivity - this.productivity) < 0.001){
-      this.productivity = targetProductivity;
-    }
-    else {
-      const difference = Math.abs(targetProductivity - this.productivity);
-      const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
-      this.productivity += dampingFactor * (targetProductivity - this.productivity);
+    if(this.active === 0){
+      this.productivity = 0;
+    } else{
+      const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+      if(Math.abs(targetProductivity - this.productivity) < 0.001){
+        this.productivity = targetProductivity;
+      }
+      else {
+        const difference = Math.abs(targetProductivity - this.productivity);
+        const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
+        this.productivity += dampingFactor * (targetProductivity - this.productivity);
+      }
     }
   }
 

@@ -14,7 +14,7 @@ function addJournalEntry(text) {
       entry.textContent += text[index]; // Add the current letter
       index++;
 
-      let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 50 : 50;
+      let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 250 : 50;
       setTimeout(typeLetter, delay);
     } else {
       journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry

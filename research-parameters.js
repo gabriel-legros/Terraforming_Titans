@@ -273,6 +273,31 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 'android_factory',
+        name: 'Android Manufacturing',
+        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'androidFactory',
+            type: 'enable'
+          },
+          {
+            target: 'building',
+            targetId: 'androidHousing',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType : 'colony',
+            targetId: 'androids',
+            type: 'enable'
+          },
+        ],
+      },
     ],
     colonization: [
       {
@@ -351,26 +376,12 @@ const researchParameters = {
             type: 'enable',
           },
         ],
-      },
-      {
-        id: 't4_colony',
-        name: 'Dome town',
-        description: 'The first dome design.',
-        cost: { research: 100000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'colony',
-            targetId: 't4_colony',
-            type: 'enable',
-          },
-        ],
-      },      
+      },     
       {
         id: 'construction_office',
         name: 'Construction Office',
         description: 'Allows automation of building construction.',
-        cost: { research: 500000 },
+        cost: { research: 100000 },
         prerequisites: [],
         effects: [
           {
@@ -381,6 +392,48 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 't4_colony',
+        name: 'Dome town',
+        description: 'The first dome design.',
+        cost: { research: 500000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't4_colony',
+            type: 'enable',
+          },
+        ],
+      }, 
+      {
+        id: 't5_colony',
+        name: 'Dome City',
+        description: 'A larger dome design.',
+        cost: { research: 5000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't5_colony',
+            type: 'enable',
+          },
+        ],
+      },   
+      {
+        id: 't6_colony',
+        name: 'Metropolis',
+        description: 'Too big to be a dome, rather a collection of interlocked domes.',
+        cost: { research: 100000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't6_colony',
+            type: 'enable',
+          },
+        ],
+      },   
     ],
     terraforming: [
       {

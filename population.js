@@ -83,7 +83,7 @@ class PopulationModule {
 
   updateWorkerCap() {
     // Set the worker cap based on the current population and worker ratio
-    const workerCap = Math.floor(this.workerRatio * this.populationResource.value);
+    const workerCap = Math.floor(this.workerRatio * this.populationResource.value) + resources.colony.androids.value;
     this.workerResource.cap = workerCap;
 
     // Adjust the worker value if it exceeds the cap

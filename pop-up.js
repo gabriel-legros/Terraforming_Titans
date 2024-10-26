@@ -62,7 +62,7 @@ function createPopup(title, text, buttonText) {
       }
       
       // Check if the current character is a period or a line break for extra delay
-      let delay = (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>') ? 0 : 0; // 500 ms for periods and line breaks, 50 ms for other characters
+      let delay = (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>') ? 500 : 50; // 500 ms for periods and line breaks, 50 ms for other characters
       setTimeout(typeLetter, delay);
     } else {
       // Show the close button after the text is fully displayed

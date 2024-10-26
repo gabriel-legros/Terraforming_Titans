@@ -99,11 +99,15 @@ class Colony extends Building {
     // Calculate the average of all filledNeeds values
     const needsValues = Object.values(this.filledNeeds);
     const averageNeeds = needsValues.reduce((sum, value) => sum + value, 0) / needsValues.length;
-
-    // Target happiness is the baseComfort multiplied by the average of needs
-    const targetHappiness = averageNeeds * (0.5 + this.baseComfort / 2);
-
-    // Adjust the happiness towards the target value using the adjustNeedRatio logic
+  
+    // Get specific values for food and energy needs, defaulting to 1 if not defined
+    const foodNeed = this.filledNeeds.food || 1;
+    const energyNeed = this.filledNeeds.energy || 1;
+  
+    // Target happiness is the minimum of averageNeeds, foodNeed, and energyNeed, scaled by baseComfort
+    const targetHappiness = Math.min(averageNeeds, foodNeed, energyNeed) * (0.5 + this.baseComfort / 2);
+  
+    // Adjust the happiness towards the target value
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness, deltaTime);
   }
 
