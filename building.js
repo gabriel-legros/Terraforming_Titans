@@ -175,6 +175,31 @@ class Building extends EffectableEntity {
     return modifiedStorage;
   }
 
+  // Calculates the effective cost for building, factoring in all active cost multipliers
+  getEffectiveCost(buildCount = 1) {
+    const effectiveCost = {};
+
+    for (const category in this.cost) {
+      effectiveCost[category] = {};
+      for (const resource in this.cost[category]) {
+        const baseCost = this.cost[category][resource];
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        const finalCost = baseCost * multiplier * buildCount;
+
+        if (finalCost > 0) { // Only include costs greater than 0
+          effectiveCost[category][resource] = finalCost;
+        }
+      }
+
+      // Remove the category if it has no resources with non-zero cost
+      if (Object.keys(effectiveCost[category]).length === 0) {
+        delete effectiveCost[category];
+      }
+    }
+
+    return effectiveCost;
+  }
+
   getProductionRatio(){
     const isDay = dayNightCycle.isDay();
     if(this.dayNightActivity && !isDay){
@@ -190,21 +215,26 @@ class Building extends EffectableEntity {
 
   calculateMaintenanceCost() {
     const maintenanceCost = {};
-    for (const resource in this.cost['colony']) {
-      const resourceCost = this.cost['colony'][resource];
+    const effectiveCost = this.getEffectiveCost();
+    for (const resource in effectiveCost.colony) {
+      const resourceCost = effectiveCost.colony[resource];
       maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor;
     }
     return maintenanceCost;
   }
 
+  // Adjusted canAfford method to use effective cost
   canAfford(buildCount = 1) {
-    for (const category in this.cost) {
-      for (const resource in this.cost[category]) {
-        if (resources[category][resource].value < this.cost[category][resource] * buildCount) {
+    const effectiveCost = this.getEffectiveCost(buildCount);
+
+    for (const category in effectiveCost) {
+      for (const resource in effectiveCost[category]) {
+        if (resources[category][resource].value < effectiveCost[category][resource]) {
           return false;
         }
       }
     }
+
     if (this.requiresDeposit) {
       for (const deposit in this.requiresDeposit.underground) {
         if (!resources.underground[deposit] || resources.underground[deposit].value - resources.underground[deposit].reserved < this.requiresDeposit.underground[deposit] * buildCount) {
@@ -212,19 +242,21 @@ class Building extends EffectableEntity {
         }
       }
     }
+
     return true;
   }
 
   build(buildCount = 1) {
     if (this.canAfford(buildCount)) {
-      for (const category in this.cost) {
-        for (const resource in this.cost[category]) {
-          resources[category][resource].decrease(this.cost[category][resource] * buildCount);
+      const effectiveCost = this.getEffectiveCost(buildCount);
+      for (const category in effectiveCost) {
+        for (const resource in effectiveCost[category]) {
+          resources[category][resource].decrease(effectiveCost[category][resource]);
         }
       }
       if (this.requiresDeposit) {
         for (const deposit in this.requiresDeposit.underground) {
-          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit] * buildCount);
+          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]);
         }
       }
       this.count += buildCount;

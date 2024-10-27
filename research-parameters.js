@@ -128,6 +128,35 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'fusion_2',
+        name: 'Fusion reactor MkII',
+        description: 'Enables construction of the latest fusion reactor design.',
+        cost: { research: 100000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'fusionPowerPlant2',
+            type: 'enable',
+          }
+        ],
+      },
+      {
+        id: 'improved_fussion_1',
+        name: 'Improved fusion reactor',
+        description: 'Doubles the production of modern fusion reactors.',
+        cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'fusionPowerPlant2',
+            type: 'productionMultiplier',
+            value: 2
+          }
+        ],
+      },
     ],
     industry: [
       {
@@ -271,13 +300,19 @@ const researchParameters = {
             targetId: 'superconductorFactory',
             type: 'enable'
           },
+          {
+            target: 'resource',
+            resourceType: 'colony',
+            targetId: 'superconductors',
+            type: 'enable'
+          },
         ],
       },
       {
         id: 'android_factory',
         name: 'Android Manufacturing',
         description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.',
-        cost: { research: 10000000 },
+        cost: { research: 5000000 },
         prerequisites: [],
         effects: [
           {
@@ -298,6 +333,81 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 'shipyard',
+        name: 'Shipbuilding',
+        description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'shipyard',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId: 'spaceships',
+            type: 'enable'
+          },
+          {target : 'project',
+            targetId : 'oreSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },      
+      {
+        id: 'advanced_alloy',
+        name: 'Advanced Alloys',
+        description: 'Doubles metal output.',
+        cost: { research: 50000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'oreMine',
+            effectId : 'advanced_alloy_research',
+            type: 'productionMultiplier',
+            value: 2, // Increases ore production by 30%
+          },
+        ],
+      },
+      {
+        id: 'robotics_3',
+        name: 'Precision Assembly Lines',
+        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+        cost: { research: 500000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superconductorFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+          {
+            target: 'building',
+            targetId: 'androidFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+        ],
+      },
+      {
+        id: 'space_elevator',
+        name: 'Space Elevator',
+        description: 'Enables a special project for the space elevator, which eliminates the metal cost of many space activities.',
+        cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target : 'project',
+            targetId : 'spaceElevator',
+            type: 'enable'
+          }
+        ],
+      },   
     ],
     colonization: [
       {
@@ -423,7 +533,7 @@ const researchParameters = {
       {
         id: 't6_colony',
         name: 'Metropolis',
-        description: 'Too big to be a dome, rather a collection of interlocked domes.',
+        description: 'Too big to be a dome, rather a collection of interlocked domes.  Requires androids as consumer goods.',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [
@@ -584,6 +694,32 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'carbonImport',
+        name: 'Carbon Importation',
+        description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'carbonSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },   
+      {
+        id: 'nitrogenImport',
+        name: 'Nitrogen Importation',
+        description: 'Import nitrogen to fill up the atmosphere with a neutral gas.',
+        cost: { research: 10000000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'nitrogenSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },  
     ],
   };
   

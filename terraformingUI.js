@@ -14,9 +14,9 @@ function createTerraformingUI() {
     createTemperatureBox(row1);
     createAtmosphereBox(row1);
     createWaterBox(row1);
+    createLuminosityBox(row2);
     createMagnetosphereBox(row2);
     createLifeBox(row2);
-    createToxicityBox(row2);
   
     // Append the rows to the terraforming container
     terraformingContainer.appendChild(row1);
@@ -28,9 +28,9 @@ function updateTerraformingUI() {
     updateTemperatureBox();
     updateAtmosphereBox();
     updateWaterBox();
+    updateLuminosityBox();
     updateLifeBox();
     updateMagnetosphereBox();
-    updateToxicityBox();
   }
 
 // Functions to create and update each terraforming aspect box
@@ -124,7 +124,7 @@ function createTemperatureBox(row) {
       innerHTML += `
         <tr>
           <td>${terraforming.resources.atmospheric[gas].displayName}</td>
-          <td><span id="${gas}-pressure">${formatNumber(calculateGasPressure(gas))}</span></td>
+          <td><span id="${gas}-pressure">${formatNumber(calculateGasPressure(gas), false, 2)}</span></td>
         </tr>
       `;
     }
@@ -143,11 +143,11 @@ function createTemperatureBox(row) {
     atmosphereCurrent.textContent = terraforming.atmosphere.value.toFixed(2);
 
     const emissivity = document.getElementById('emissivity');
-    emissivity.textContent = terraforming.temperature.emissivity.toFixed(1);
+    emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
   
     for (const gas in terraforming.resources.atmospheric) {
       const gasPressure = document.getElementById(`${gas}-pressure`);
-      gasPressure.textContent = formatNumber(calculateGasPressure(gas));
+      gasPressure.textContent = formatNumber(calculateGasPressure(gas), false, 2);
     }
   }
   
@@ -253,19 +253,19 @@ function createTemperatureBox(row) {
   
   // Functions to create and update the toxicity box
   
-  function createToxicityBox(row) {
-    const toxicityBox = document.createElement('div');
-    toxicityBox.classList.add('terraforming-box');
-    toxicityBox.id = 'toxicity-box';
-    toxicityBox.innerHTML = `
-      <h3>${terraforming.toxicity.name}</h3>
-      <p>Current: <span id="toxicity-current">${terraforming.toxicity.value}</span>%</p>
-      <p>Target: <span id="toxicity-target">${terraforming.toxicity.target}</span>%</p>
+  function createLuminosityBox(row) {
+    const luminosityBox = document.createElement('div');
+    luminosityBox.classList.add('terraforming-box');
+    luminosityBox.id = 'luminosity-box';
+    luminosityBox.innerHTML = `
+      <h3>${terraforming.luminosity.name}</h3>
+      <p>Current: <span id="luminosity-current">${terraforming.luminosity.value}</span>%</p>
+      <p>Target: <span id="luminosity-target">${terraforming.luminosity.target}</span>%</p>
     `;
-    row.appendChild(toxicityBox);
+    row.appendChild(luminosityBox);
   }
   
-  function updateToxicityBox() {
-    const toxicityCurrent = document.getElementById('toxicity-current');
-    toxicityCurrent.textContent = terraforming.toxicity.value.toFixed(2);
+  function updateLuminosityBox() {
+    const luminosityCurrent = document.getElementById('luminosity-current');
+    luminosityCurrent.textContent = terraforming.luminosity.value.toFixed(2);
   }

@@ -50,6 +50,12 @@ class Terraforming {
         }
       }
     };
+    this.luminosity = {
+      name: 'Luminosity',
+      value: 100,
+      target: 0,
+      unlocked: false
+    };
     this.life = {
       name: 'Life',
       value: 0,
@@ -72,12 +78,6 @@ class Terraforming {
       name: 'Magnetosphere',
       value: 0,
       target: 100,
-      unlocked: false
-    };
-    this.toxicity = {
-      name: 'Toxicity',
-      value: 100,
-      target: 0,
       unlocked: false
     };
 
@@ -248,21 +248,27 @@ class Terraforming {
       const sublimationCo2Amount = sublRateCO2 * dryIceSurface * timeMultiplier / 1000;
 
       // Save evaporation and sublimation rates
-      this.water.evaporationRate = evaporationAmount / deltaTime;
-      this.water.sublimationRate = sublimationAmount / deltaTime;
-      this.life.co2sublimationRate = sublimationCo2Amount / deltaTime;
+      this.water.evaporationRate = evaporationAmount * (1000 / deltaTime);
+      this.water.sublimationRate = sublimationAmount * (1000 / deltaTime);
+      this.life.co2sublimationRate = sublimationCo2Amount * (1000 / deltaTime);
 
       // Apply evaporation
       accumulatedChanges['surface']['liquidWater'] -= evaporationAmount;
+      resources['surface']['liquidWater'].consumptionRate += evaporationAmount * (1000 / deltaTime);
       accumulatedChanges['atmospheric']['atmosphericWater'] += evaporationAmount;
+      resources['atmospheric']['atmosphericWater'].productionRate += evaporationAmount * (1000 / deltaTime);
 
       // Apply sublimation
       accumulatedChanges['surface']['ice'] -= sublimationAmount;
+      resources['surface']['ice'].consumptionRate += sublimationAmount * (1000 / deltaTime);
       accumulatedChanges['atmospheric']['atmosphericWater'] += sublimationAmount;
+      resources['atmospheric']['atmosphericWater'].productionRate += sublimationAmount * (1000 / deltaTime);
 
       // Apply sublimation of CO2
       accumulatedChanges['surface']['dryIce'] -= sublimationCo2Amount;
+      resources['surface']['dryIce'].consumptionRate += sublimationCo2Amount * (1000 / deltaTime);
       accumulatedChanges['atmospheric']['carbonDioxide'] += sublimationCo2Amount;
+      resources['atmospheric']['carbonDioxide'].productionRate += sublimationCo2Amount * (1000 / deltaTime);
     }
 
     applyRainfallAndSnow(accumulatedChanges, deltaTime) {
@@ -289,20 +295,23 @@ class Terraforming {
           if (zoneTemperature > 273.15) {
             // Rain
             accumulatedChanges['surface']['liquidWater'] += precipitationAmount;
+            resources['surface']['liquidWater'].productionRate += precipitationAmount * (1000 / deltaTime);
             totalRainfall += precipitationAmount;
           } else {
             // Snow
             accumulatedChanges['surface']['ice'] += precipitationAmount;
+            resources['surface']['ice'].productionRate += precipitationAmount * (1000 / deltaTime);
             totalSnowfall += precipitationAmount;
           }
     
           accumulatedChanges['atmospheric']['atmosphericWater'] -= precipitationAmount;
+          resources['atmospheric']['atmosphericWater'].consumptionRate += precipitationAmount * (1000 / deltaTime);
         }
      }
 
       // Save rainfall and snowfall rates
-      this.water.rainfallRate = totalRainfall / deltaTime;
-      this.water.snowfallRate = totalSnowfall / deltaTime;
+      this.water.rainfallRate = totalRainfall  * (1000 / deltaTime);
+      this.water.snowfallRate = totalSnowfall  * (1000 / deltaTime);
     }
 
     applyMeltingAndFreezing(accumulatedChanges, deltaTime) {
@@ -334,14 +343,18 @@ class Terraforming {
         const waterToFreeze = waterCoverage * freezingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
         freezingRate = waterToFreeze / deltaTime;
         accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
+        resources['surface']['liquidWater'].consumptionRate += waterToFreeze * (1000 / deltaTime);
         accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
+        resources['surface']['ice'].productionRate += waterToFreeze * (1000 / deltaTime);
       } else if (tropicalTemperature >= freezingPoint && temperateTemperature >= freezingPoint && polarTemperature >= freezingPoint) {
         // All zones above freezing point, melt ice based on the melting rate multiplier
         const temperatureDifference = tropicalTemperature - freezingPoint;
         const iceToMelt = iceCoverage * meltingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
         meltingRate = iceToMelt / deltaTime;
         accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
+        resources['surface']['ice'].consumptionRate += iceToMelt * (1000 / deltaTime);
         accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
+        resources['surface']['liquidWater'].productionRate += iceToMelt * (1000 / deltaTime);
       } else if (tropicalTemperature >= freezingPoint && polarTemperature < freezingPoint) {
         // Tropical zone above freezing point, temperate or polar below freezing point
         const targetIceCoverage = Math.min(iceCoverage, polarPercentage);
@@ -357,13 +370,17 @@ class Terraforming {
         freezingRate = waterToFreeze / deltaTime;
     
         accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
+        resources['surface']['ice'].consumptionRate += iceToMelt * (1000 / deltaTime);
         accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
+        resources['surface']['liquidWater'].productionRate += iceToMelt * (1000 / deltaTime);
         accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
+        resources['surface']['liquidWater'].consumptionRate += waterToFreeze * (1000 / deltaTime);
         accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
+        resources['surface']['ice'].productionRate += waterToFreeze * (1000 / deltaTime);
       }
     
-      this.water.meltingRate = meltingRate * surfaceArea;
-      this.water.freezingRate = freezingRate * surfaceArea;
+      this.water.meltingRate = meltingRate * surfaceArea  * (1000 / deltaTime);
+      this.water.freezingRate = freezingRate * surfaceArea  * (1000 / deltaTime);
     }
 
     condenseCO2(accumulatedChanges, deltaTime){
@@ -381,7 +398,9 @@ class Terraforming {
         const co2change = condensationParameter * tempDifference * surfaceArea * polarCoverage * timeMultiplier * co2GasPressure / 1000;
         // Apply condensation of CO2
         accumulatedChanges['surface']['dryIce'] += co2change;
+        resources['surface']['dryIce'].productionRate += co2change * (1000 / deltaTime);        
         accumulatedChanges['atmospheric']['carbonDioxide'] -= co2change;
+        resources['atmospheric']['carbonDioxide'].consumptionRate += co2change * (1000 / deltaTime);    
       }
 
     }
@@ -408,7 +427,7 @@ class Terraforming {
       const baseFlux = calculateSolarFlux(distanceFromSunInMeters);
       const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
 
-      return baseFlux + mirrorFlux;
+      return baseFlux + mirrorFlux*buildings['spaceMirror'].active;
     }
   }
 

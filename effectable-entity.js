@@ -66,6 +66,9 @@ class EffectableEntity {
       case 'resourceProductionMultiplier':
         this.applyProductionMultiplier(effect);
         break;
+      case 'resourceCostMultiplier':
+        this.applyResourceCostMultiplier(effect);
+        break;
       case 'enable':
         this.enable(effect.targetId);
         break;
@@ -100,6 +103,10 @@ class EffectableEntity {
       //No logic needed for now
     }
 
+    applyResourceCostMultiplier(effect) {
+
+    }
+
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
       const { targetId, value } = effect;
@@ -115,6 +122,26 @@ class EffectableEntity {
     // Method to check if a boolean flag is set
     isBooleanFlagSet(flag) {
       return this.booleanFlags.has(flag);
+    }
+
+    // Retrieves the effective cost multiplier for a specific resource based on active effects
+    getEffectiveCostMultiplier(resourceCategory, resourceId) {
+      // Default multiplier is 1 (no change to cost)
+      let multiplier = 1;
+
+      // Check all active effects to see if any modify the cost for the given resource
+      this.activeEffects.forEach((effect) => {
+        if (
+          effect.type === 'resourceCostMultiplier' &&
+          effect.resourceCategory === resourceCategory &&
+          effect.resourceId === resourceId
+        ) {
+          // Apply the effect multiplier
+          multiplier *= effect.value;
+        }
+      });
+
+      return multiplier;
     }
 }
 

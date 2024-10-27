@@ -347,7 +347,13 @@ progressData = {
             target: 'building',
             targetId: 'iceHarvester',
             type: 'enable'
-        }],
+        },
+        {
+          target: 'building',
+          targetId: 'waterPump',
+          type: 'enable'
+      }
+      ],
         nextChapter: "chapter1.18"
       }, 
       {

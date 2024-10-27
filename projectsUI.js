@@ -29,6 +29,103 @@ function createProjectItem(project) {
   descriptionElement.classList.add('project-description');
   projectItem.appendChild(descriptionElement);
 
+  // Spaceship Assignment Section
+  if (project.attributes.spaceMining) {
+    const spaceshipAssignmentContainer = document.createElement('div');
+    spaceshipAssignmentContainer.classList.add('spaceship-assignment-container');
+
+    // Spaceship Assigned Display
+    const assignedSpaceshipsDisplay = document.createElement('p');
+    assignedSpaceshipsDisplay.id = `${project.name}-assigned-spaceships`;
+    assignedSpaceshipsDisplay.classList.add('assigned-spaceships-display');
+    assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: 0`;
+    spaceshipAssignmentContainer.appendChild(assignedSpaceshipsDisplay);
+
+    // Available Spaceships Display
+    const availableSpaceshipsDisplay = document.createElement('span');
+    availableSpaceshipsDisplay.id = `${project.name}-available-spaceships`;
+    availableSpaceshipsDisplay.classList.add('available-spaceships-display');
+    availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
+
+    // Sorted button values for assigning spaceships
+    const buildCounts = [-100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, +10000, +100000];
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('buttons-container');
+
+    buildCounts.forEach((count) => {
+      const button = document.createElement('button');
+      button.textContent = count > 0 ? `+${formatNumber(count, true)}` : `${formatNumber(count,true)}`;
+      button.addEventListener('click', () => assignSpaceshipsToProject(project, count, assignedSpaceshipsDisplay));
+      buttonsContainer.appendChild(button);
+    });
+
+    // Append buttons and available spaceships display on the same row
+    spaceshipAssignmentContainer.appendChild(availableSpaceshipsDisplay);
+    spaceshipAssignmentContainer.appendChild(buttonsContainer);
+    projectItem.appendChild(spaceshipAssignmentContainer);
+
+    // Store the elements for later updates
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      assignedSpaceshipsDisplay: assignedSpaceshipsDisplay,
+      availableSpaceshipsDisplay: availableSpaceshipsDisplay,
+    };
+  }
+
+  // Cost Per Ship and Total Cost Display
+  if (project.attributes.costPerShip) {
+    const costPerShipElement = document.createElement('p');
+    costPerShipElement.id = `${project.name}-cost-per-ship`;
+    costPerShipElement.classList.add('project-cost-per-ship');
+    costPerShipElement.textContent = `Cost per Ship: ...`;
+
+    const totalCostElement = document.createElement('span');
+    totalCostElement.id = `${project.name}-total-cost`;
+    totalCostElement.classList.add('project-total-cost');
+    totalCostElement.textContent = `Total Cost: ...`;
+
+    // Add both on the same row
+    const costContainer = document.createElement('div');
+    costContainer.classList.add('cost-container');
+    costContainer.appendChild(costPerShipElement);
+    costContainer.appendChild(totalCostElement);
+
+    projectItem.appendChild(costContainer);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      costPerShipElement,
+      totalCostElement,
+    };
+  }
+
+  // Resource Gain Per Ship and Total Gain Display
+  if (project.attributes.resourceGainPerShip) {
+    const resourceGainPerShipElement = document.createElement('p');
+    resourceGainPerShipElement.id = `${project.name}-resource-gain-per-ship`;
+    resourceGainPerShipElement.classList.add('project-resource-gain-per-ship');
+    resourceGainPerShipElement.textContent = `Gain per Ship: ...`; // Initial text
+
+    const totalGainElement = document.createElement('span');
+    totalGainElement.id = `${project.name}-total-resource-gain`;
+    totalGainElement.classList.add('project-total-resource-gain');
+    totalGainElement.textContent = formatTotalResourceGainDisplay(project.calculateSpaceshipTotalResourceGain());
+
+    // Add both on the same row
+    const gainContainer = document.createElement('div');
+    gainContainer.classList.add('gain-container');
+    gainContainer.appendChild(resourceGainPerShipElement);
+    gainContainer.appendChild(totalGainElement);
+
+    projectItem.appendChild(gainContainer);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      resourceGainPerShipElement,
+      totalGainElement,
+    };
+  }
+
   // Mirror-related calculations and text boxes
   if (project.name === 'spaceMirrorFacility') {
     const mirrorDetails = document.createElement('div');
@@ -243,7 +340,7 @@ function updateCostDisplay(project) {
         const requiredAmount = cost[category][resource];
         const availableAmount = resources[category]?.[resource]?.value || 0;
 
-        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${requiredAmount}`;
+        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${formatNumber(requiredAmount, true)}`;
         const formattedResourceText = availableAmount >= requiredAmount
           ? resourceText
           : `<span style="color: red;">${resourceText}</span>`;
@@ -285,6 +382,18 @@ function updateProjectUI(projectName) {
     return;
   }
 
+  // Update Spaceships Assigned display if applicable
+  if (elements?.assignedSpaceshipsDisplay && project.assignedSpaceships != null) {
+    elements.assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: ${project.assignedSpaceships}`;
+  }
+
+  // Update Available Spaceships display if applicable
+  if (elements?.availableSpaceshipsDisplay) {
+    elements.availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
+  }
+
+  updateSpaceshipProjectCostAndGains(project, elements); // Helper function for cost and gain
+
   // Update Repeat Count if applicable
   if (elements.repeatCountElement) {
     elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
@@ -298,7 +407,7 @@ function updateProjectUI(projectName) {
       let resourceGainText = 'Resource Gain: ';
       for (const category in updatedResourceGain) {
         for (const resource in updatedResourceGain[category]) {
-          resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${updatedResourceGain[category][resource]}, `;
+          resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
         }
       }
       resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
@@ -335,20 +444,23 @@ function updateProjectUI(projectName) {
     if (elements.progressButton) {
       elements.progressButton.style.display = 'block';
 
-      // Update the button text and state
-      if (project.isActive) {
-        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-        elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${project.getProgress()}%)`;
-        elements.progressButton.disabled = true; // Disable while in progress
-        elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${project.getProgress()}%, #ccc ${project.getProgress()}%)`;
-      } else if (project.isCompleted) {
-        elements.progressButton.textContent = `Completed: ${project.displayName}`;
-        elements.progressButton.disabled = true; // Disable when completed
-        elements.progressButton.style.background = '#4caf50'; // Completed background color
-      } else {
-        // Display the start text with the duration
-        elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${project.duration / 1000} seconds)`;
-        elements.progressButton.disabled = !project.canStart(); // Enable only if the project can be started
+      // Update the duration in the progress bar display
+      if (elements.progressButton) {
+        if (project.isActive) {
+          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+          const progressPercent = project.getProgress();
+          elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
+          elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+        } else if (project.isCompleted) {
+          elements.progressButton.textContent = `Completed: ${project.displayName}`;
+          elements.progressButton.style.background = '#4caf50';
+        } else {
+          // Update dynamic duration for spaceMining projects
+          let duration = project.duration;
+          if (project.attributes.spaceMining) {
+            duration = project.calculateSpaceshipAdjustedDuration();
+          }
+          elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
 
         // Set background color based on whether the project can start
         if (project.canStart()) {
@@ -363,6 +475,7 @@ function updateProjectUI(projectName) {
       elements.autoStartCheckboxContainer.style.display = 'block';
     }
   }
+}
 
   // Update mirror-related calculations and text boxes
   if (project.name === 'spaceMirrorFacility') {
@@ -376,11 +489,11 @@ function updateProjectUI(projectName) {
 
     const mirrorDetails = projectElements[project.name].mirrorDetails;
     if (mirrorDetails) {
-      mirrorDetails.numMirrors.textContent = formatNumber(numMirrors);
-      mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror);
-      mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea);
-      mirrorDetails.totalPower.textContent = formatNumber(totalPower);
-      mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea);
+      mirrorDetails.numMirrors.textContent = formatNumber(numMirrors, false, 2);
+      mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror, false, 2);
+      mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea, false, 2);
+      mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
+      mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea, false, 2);
     }
   }
 
@@ -411,6 +524,58 @@ function updateProjectUI(projectName) {
   }
 }
 
+// Helper function to update cost and gain displays
+function updateSpaceshipProjectCostAndGains(project, elements) {
+  // Update Cost per Ship display
+  if (elements.costPerShipElement && project.attributes.costPerShip) {
+    const costPerShip = project.calculateSpaceshipCost();
+    const costPerShipText = Object.entries(costPerShip)
+      .flatMap(([category, resourcesList]) =>
+        Object.entries(resourcesList)
+          .filter(([, adjustedCost]) => adjustedCost > 0) // Only include non-zero costs
+          .map(([resource, adjustedCost]) => {
+            const resourceDisplayName = resources[category][resource].displayName || 
+              resource.charAt(0).toUpperCase() + resource.slice(1);
+            const costText = adjustedCost;
+            return `${resourceDisplayName}: ${formatNumber(costText, true)}`;
+          })
+      )
+      .join(', ');
+
+    elements.costPerShipElement.textContent = `Cost per Ship: ${costPerShipText}`;
+  }
+
+  // Update Total Cost display
+  if (elements.totalCostElement && project.assignedSpaceships != null) {
+    const totalCost = project.calculateSpaceshipTotalCost();
+    elements.totalCostElement.textContent = formatTotalCostDisplay(totalCost);
+  }
+
+  // Update Resource Gain per Ship display
+  if (elements.resourceGainPerShipElement && project.attributes.resourceGainPerShip) {
+    const gainPerShipText = Object.entries(project.attributes.resourceGainPerShip)
+      .flatMap(([category, resourcesList]) => 
+        Object.entries(resourcesList)
+          .filter(([, amount]) => amount > 0) // Only include non-zero gains
+          .map(([resource, amount]) => {
+            const resourceDisplayName = resources[category][resource].displayName || 
+              resource.charAt(0).toUpperCase() + resource.slice(1);
+            return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+          })
+      ).join(', ');
+    
+    elements.resourceGainPerShipElement.textContent = `Gain per Ship: ${gainPerShipText}`;
+  }
+
+  // Update Total Resource Gain display
+  if (elements.totalGainElement && project.assignedSpaceships != null) {
+    const totalGain = project.calculateSpaceshipTotalResourceGain();
+    elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain);
+  }
+}
+
+
+
 
 function startProjectWithSelectedResources(project) {
   if (project.canStart()) {
@@ -433,4 +598,28 @@ function checkAndStartProjectAutomatically(project) {
   if (project.canStart()) {
     startProjectWithSelectedResources(project);
   }
+}
+
+function formatTotalCostDisplay(totalCost) {
+  const costArray = [];
+  for (const category in totalCost) {
+    for (const resource in totalCost[category]) {
+      const resourceDisplayName = resources[category][resource].displayName || 
+        resource.charAt(0).toUpperCase() + resource.slice(1);
+      costArray.push(`${resourceDisplayName}: ${formatNumber(totalCost[category][resource], true)}`);
+    }
+  }
+  return `Total Cost: ${costArray.join(', ')}`;
+}
+
+function formatTotalResourceGainDisplay(totalResourceGain) {
+  const gainArray = [];
+  for (const category in totalResourceGain) {
+    for (const resource in totalResourceGain[category]) {
+      const resourceDisplayName = resources[category][resource].displayName || 
+        resource.charAt(0).toUpperCase() + resource.slice(1);
+      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}`);
+    }
+  }
+  return `Total Gain: ${gainArray.join(', ')}`;
 }

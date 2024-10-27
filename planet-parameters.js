@@ -37,6 +37,7 @@ const planetParameters = {
       },
       special: {
         albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false},
+        spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false}
       }
     },
     initialGameState: {

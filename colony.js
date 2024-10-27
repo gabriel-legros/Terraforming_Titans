@@ -112,7 +112,7 @@ class Colony extends Building {
   }
 
   enable(tierName){
-    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony'];
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
     // Unlock the new tier
     colonies[tierName].unlocked = true;

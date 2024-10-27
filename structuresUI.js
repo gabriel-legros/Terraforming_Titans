@@ -100,7 +100,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountLabel.textContent = 'Amount: ';
   buildCountButtons.appendChild(buildCountLabel);
 
-  const buildCounts = [1, 10, 100, 1000, 10000, 100000, 1000000];
+  const buildCounts = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000];
   buildCounts.forEach((count) => {
     const countButton = document.createElement('button');
     countButton.textContent = formatNumber(count, true);
@@ -152,7 +152,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const autoBuildInput = document.createElement('input');
   autoBuildInput.type = 'number';
   autoBuildInput.value = structure.autoBuildPercent; // Default to 0.1
-  autoBuildInput.step = 0.1; // Allow 0.01 steps for finer control
+  autoBuildInput.step = 0.01; // Allow 0.01 steps for finer control
   autoBuildInput.classList.add('auto-build-input');
 
   autoBuildInput.addEventListener('input', () => {
@@ -299,9 +299,10 @@ function updateDecreaseButtonText(button, buildCount) {
     const costArray = [];
   
     // Include resource costs
-    for (const category in structure.cost) {
-      for (const resource in structure.cost[category]) {
-        const requiredAmount = structure.cost[category][resource] * buildCount;
+    const effectiveCost = structure.getEffectiveCost();
+    for (const category in effectiveCost) {
+      for (const resource in effectiveCost[category]) {
+        const requiredAmount = effectiveCost[category][resource] * buildCount;
         const availableAmount = resources[category][resource]?.value || 0;
   
         // Check if the player has enough of this resource
@@ -376,10 +377,12 @@ function updateDecreaseButtonText(button, buildCount) {
       // Toggle visibility of autoBuildContainer based on globalEffects
       const autoBuildContainer = buttonContainer.querySelector('.auto-build-container');
       if (autoBuildContainer) {
-        if (globalEffects.isBooleanFlagSet('automateConstruction')) {
-          autoBuildContainer.style.display = 'flex'; // Show the auto-build container
-        } else {
-          autoBuildContainer.style.display = 'none'; // Hide the auto-build container
+        autoBuildContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
+        
+        // Set auto-build checkbox based on autoBuildEnabled
+        const autoBuildCheckbox = autoBuildContainer.querySelector('.auto-build-checkbox');
+        if (autoBuildCheckbox) {
+          autoBuildCheckbox.checked = structure.autoBuildEnabled;
         }
       }
   

@@ -12,6 +12,7 @@ class Project extends EffectableEntity {
     this.isActive = false; // Whether the project is currently active
     this.isCompleted = false; // Whether the project has been completed
     this.repeatCount = 0; // Track the current number of times the project has been repeated
+    this.assignedSpaceships = 0;
   }
 
   initializeFromConfig(config, name) {
@@ -26,80 +27,154 @@ class Project extends EffectableEntity {
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
     this.unlocked = config.unlocked;
-    
+
+  
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
+  }
+
+  // Calculates the effective cost for building, factoring in all active cost multipliers
+  getEffectiveCost(buildCount = 1) {
+    const effectiveCost = {};
+
+    for (const category in this.cost) {
+      effectiveCost[category] = {};
+      for (const resource in this.cost[category]) {
+        const baseCost = this.cost[category][resource];
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        const finalCost = baseCost * multiplier * buildCount;
+
+        if (finalCost > 0) { // Only include costs greater than 0
+          effectiveCost[category][resource] = finalCost;
+        }
+      }
+
+      // Remove the category if it has no resources with non-zero cost
+      if (Object.keys(effectiveCost[category]).length === 0) {
+        delete effectiveCost[category];
+      }
+    }
+
+    return effectiveCost;
   }
 
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
+    const cost = this.getEffectiveCost();
     if (this.attributes.costScaling) {
       const multiplier = this.repeatCount + 1;
       const scaledCost = {};
 
-      for (const resourceCategory in this.cost) {
+      for (const resourceCategory in cost) {
         scaledCost[resourceCategory] = {};
-        for (const resource in this.cost[resourceCategory]) {
-          scaledCost[resourceCategory][resource] = this.cost[resourceCategory][resource] * multiplier;
+        for (const resource in cost[resourceCategory]) {
+          scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
         }
       }
 
       return scaledCost;
     }
-    return this.cost;
+    return cost;
   }
 
   canStart() {
+    // Check the standard scaled cost
     const cost = this.getScaledCost();
-
     for (const resourceCategory in cost) {
       for (const resource in cost[resourceCategory]) {
         if (resources[resourceCategory][resource].value < cost[resourceCategory][resource]) {
-          return false;  // Not enough resources
+          return false;  // Not enough resources for basic costs
         }
       }
     }
-
-    if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalCost = 0;
-      this.selectedResources.forEach(({ resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
-        totalCost += pricePerUnit * quantity;
-      });
-
-      if (resources.colony.funding.value < totalCost) {
-        return false; // Not enough funding
+  
+    // Calculate the total cost for spaceships if applicable
+    if (this.attributes.spaceMining) {
+      if(this.assignedSpaceships === 0){
+        return false;
+      }
+      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
+      for (const category in totalSpaceshipCost) {
+        for (const resource in totalSpaceshipCost[category]) {
+          if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
+            return false; // Not enough resources for spaceship costs
+          }
+        }
       }
     }
-
+  
+    // Check funding for resource choice if applicable
+    if (this.selectedResources && this.selectedResources.length > 0) {
+      let totalFundingCost = 0;
+      this.selectedResources.forEach(({ resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
+        totalFundingCost += pricePerUnit * quantity;
+      });
+  
+      if (resources.colony.funding.value < totalFundingCost) {
+        return false; // Not enough funding for selected resources
+      }
+    }
+  
     return true;  // All resources are available
   }
 
   deductResources(resources) {
     const cost = this.getScaledCost();
-
+  
+    // Deduct the base scaled costs
     for (const resourceCategory in cost) {
       for (const resource in cost[resourceCategory]) {
         resources[resourceCategory][resource].decrease(cost[resourceCategory][resource]);
       }
     }
-
+  
+    // Deduct spaceship costs if applicable
+    if (this.attributes.spaceMining) {
+      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
+      for (const category in totalSpaceshipCost) {
+        for (const resource in totalSpaceshipCost[category]) {
+          resources[category][resource].decrease(totalSpaceshipCost[category][resource]);
+        }
+      }
+    }
+  
+    // Deduct funding for selected resources if applicable
     if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalCost = 0;
+      let totalFundingCost = 0;
+      this.pendingResourceGains = [];  // Track resources that will be gained later
       this.selectedResources.forEach(({ resource, quantity }) => {
         const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
-        totalCost += pricePerUnit * quantity;
+        totalFundingCost += pricePerUnit * quantity;
+        this.pendingResourceGains.push({ resource, quantity });
       });
-
-      resources.colony.funding.decrease(totalCost);
-      this.pendingResourceGains = [...this.selectedResources];
+  
+      resources.colony.funding.decrease(totalFundingCost);
     }
   }
 
   start(resources) {
     if (this.canStart(resources)) {
+      // Deduct the required resources
       this.deductResources(resources);
+      
+      // Set the project as active and reset the remaining time
       this.isActive = true;
       this.remainingTime = this.duration;
+  
+      // If the project involves space mining, calculate spaceship resource gains
+      if (this.attributes.spaceMining) {
+        this.remainingTime = this.calculateSpaceshipAdjustedDuration(); // Set dynamic duration
+        const spaceshipResourceGain = this.calculateSpaceshipTotalResourceGain();
+        this.pendingResourceGains = this.pendingResourceGains || []; // Initialize if undefined
+        
+        for (const category in spaceshipResourceGain) {
+          for (const resource in spaceshipResourceGain[category]) {
+            const quantity = spaceshipResourceGain[category][resource];
+            this.pendingResourceGains.push({ category, resource, quantity });
+          }
+        }
+      }
+  
       console.log(`Project ${this.name} started.`);
       return true;
     } else {
@@ -123,6 +198,12 @@ class Project extends EffectableEntity {
     this.isActive = false;
     console.log(`Project ${this.name} completed! Production effect initiated.`);
 
+    if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
+      this.repeatCount++;
+      this.resetProject();
+      console.log(`Project ${this.name} is repeatable and will restart. Repeat count: ${this.repeatCount}`);
+    }
+
     if (this.attributes && this.attributes.resourceGain) {
       this.applyResourceGain();
     }
@@ -131,8 +212,13 @@ class Project extends EffectableEntity {
       this.applyScannerEffect();
     }
 
+    // Apply spaceship resource gains
+    if (this.pendingResourceGains && this.attributes.spaceMining) {
+      this.applySpaceshipResourceGain();
+    }
+
     // Apply resource choice gain effect if applicable
-    if (this.pendingResourceGains) {
+    if (this.pendingResourceGains && this.attributes.resourceCategory) {
       this.applyResourceChoiceGain();
     }
 
@@ -141,11 +227,6 @@ class Project extends EffectableEntity {
       this.applyCompletionEffect();
     }
 
-    if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
-      this.repeatCount++;
-      this.resetProject();
-      console.log(`Project ${this.name} is repeatable and will restart. Repeat count: ${this.repeatCount}`);
-    }
   }
 
   applyResourceGain() {
@@ -189,6 +270,17 @@ class Project extends EffectableEntity {
     this.pendingResourceGains = false;
   }
 
+  // New method to handle spaceship resource gain application
+  applySpaceshipResourceGain() {
+    this.pendingResourceGains.forEach(({ category, resource, quantity }) => {
+      if (resources[category] && resources[category][resource]) {
+        resources[category][resource].increase(quantity);
+        console.log(`Gained ${quantity} ${resource} in category ${category} from spaceship assignments.`);
+      }
+    });
+    this.pendingResourceGains = []; // Clear pending gains after applying them
+  }
+
   applyScannerEffect() {
     if (this.attributes.scanner && this.attributes.scanner.searchValue && this.attributes.scanner.depositType) {
       const depositType = this.attributes.scanner.depositType;
@@ -209,7 +301,7 @@ class Project extends EffectableEntity {
       // Apply effect scaling if the attribute is enabled
       if (this.attributes.effectScaling) {
         const baseValue = effect.value; // Use the base value from the project definition
-        const n = this.repeatCount + 1; // Total completions
+        const n = this.repeatCount; // Total completions
         scaledEffect.value = (baseValue - 1) * n + 1; // Compute scaled value
 
         // Use addAndReplace to replace any existing effect with the same effectId
@@ -240,6 +332,74 @@ class Project extends EffectableEntity {
     this.pendingResourceGains = effect.pendingResourceGains;
     this.isActive = true;
     this.remainingTime = 30000;
+  }
+
+  calculateSpaceshipCost() {
+    const costPerShip = this.attributes.costPerShip;
+    const totalCost = {};
+    for (const category in costPerShip) {
+      totalCost[category] = {};
+      for (const resource in costPerShip[category]) {
+        const baseCost = costPerShip[category][resource];
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        const adjustedCost = baseCost * multiplier;
+
+        if (adjustedCost > 0) { // Only include resources with a non-zero adjusted cost
+          totalCost[category][resource] = adjustedCost;
+        }
+      }
+
+      // Remove the category if it has no resources with non-zero cost
+      if (Object.keys(totalCost[category]).length === 0) {
+        delete totalCost[category];
+      }
+    }
+
+    return totalCost;
+  }
+
+    // Calculates adjusted total cost based on assigned spaceships, scaling if assignedSpaceships > 100
+    calculateSpaceshipTotalCost() {
+    const totalCost = {};
+    const costPerShip = this.calculateSpaceshipCost();
+    const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+
+    for (const category in costPerShip) {
+      totalCost[category] = {};
+      for (const resource in costPerShip[category]) {
+        totalCost[category][resource] = costPerShip[category][resource] * scalingFactor;
+      }
+    }
+
+    return totalCost;
+  }
+
+  // Calculates adjusted resource gain per ship, scaling if assignedSpaceships > 100
+  calculateSpaceshipTotalResourceGain() {
+    const totalResourceGain = {};
+    const resourceGainPerShip = this.attributes.resourceGainPerShip;
+    const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+
+    for (const category in resourceGainPerShip) {
+      totalResourceGain[category] = {};
+      for (const resource in resourceGainPerShip[category]) {
+        totalResourceGain[category][resource] = resourceGainPerShip[category][resource] * scalingFactor;
+      }
+    }
+
+    return totalResourceGain;
+  }
+
+  // Calculates adjusted duration based on the number of assigned spaceships
+  calculateSpaceshipAdjustedDuration() {
+    if (!this.attributes.spaceMining) return this.duration;
+
+    const maxShipsForDurationReduction = 100;
+    const duration = this.duration;
+
+    const assignedShips = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction); // Clamp between 1 and 100
+
+    return duration / assignedShips;
   }
 }
 
@@ -297,6 +457,7 @@ class ProjectManager extends EffectableEntity {
         remainingTime: project.remainingTime,
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
+        assignedSpaceships: project.assignedSpaceships
       };
     }
     return projectState;
@@ -315,10 +476,30 @@ class ProjectManager extends EffectableEntity {
         project.repeatCount = savedProject.repeatCount;
         project.pendingResourceGains = savedProject.pendingResourceGains;
         project.effects = [];
-        if(project.attributes.completionEffect && project.isCompleted){
+        project.assignedSpaceships = savedProject.assignedSpaceships;
+        if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();
         }
       }
     }
+  }
+}
+
+function assignSpaceshipsToProject(project, count, assignedSpaceshipsDisplay) {
+  const availableSpaceships = Math.floor(resources.special.spaceships.value); // Round down to ensure whole values
+  project.assignedSpaceships = project.assignedSpaceships || 0;
+
+  // Calculate the new spaceship assignment, keeping it within valid bounds
+  const adjustedCount = Math.max(-project.assignedSpaceships, Math.min(count, availableSpaceships));
+  project.assignedSpaceships += adjustedCount;
+
+  // Update resources and the UI
+  resources.special.spaceships.value -= adjustedCount;
+  assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: ${project.assignedSpaceships}`;
+  
+  // Update the available spaceships display as well
+  const availableSpaceshipsDisplay = document.getElementById(`${project.name}-available-spaceships`);
+  if (availableSpaceshipsDisplay) {
+    availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
   }
 }

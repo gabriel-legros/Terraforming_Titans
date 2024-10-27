@@ -50,7 +50,6 @@
 .buttons-container {
   display: flex;
   gap: 5px;
-  margin-top: 5px;
 }
 
 .increment-button {
@@ -77,4 +76,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.spaceship-assignment-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between items */
+}
+
+.available-spaceships-display {
+  margin-left: 10px; /* Small space between buttons and text */
 }
