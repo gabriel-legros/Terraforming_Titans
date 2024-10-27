@@ -13,6 +13,7 @@ class Project extends EffectableEntity {
     this.isCompleted = false; // Whether the project has been completed
     this.repeatCount = 0; // Track the current number of times the project has been repeated
     this.assignedSpaceships = 0;
+    this.autoStart = false;
   }
 
   initializeFromConfig(config, name) {
@@ -457,7 +458,8 @@ class ProjectManager extends EffectableEntity {
         remainingTime: project.remainingTime,
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
-        assignedSpaceships: project.assignedSpaceships
+        assignedSpaceships: project.assignedSpaceships,
+        autoStart : project.autoStart
       };
     }
     return projectState;
@@ -477,6 +479,7 @@ class ProjectManager extends EffectableEntity {
         project.pendingResourceGains = savedProject.pendingResourceGains;
         project.effects = [];
         project.assignedSpaceships = savedProject.assignedSpaceships;
+        project.autoStart = savedProject.autoStart;
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();
         }

@@ -143,10 +143,25 @@ const researchParameters = {
         ],
       },
       {
-        id: 'improved_fussion_1',
+        id: 'improved_fusion_1',
         name: 'Improved fusion reactor',
         description: 'Doubles the production of modern fusion reactors.',
         cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'fusionPowerPlant2',
+            type: 'productionMultiplier',
+            value: 2
+          }
+        ],
+      },
+      {
+        id: 'improved_fusion_2',
+        name: 'State of the art fusion reactor',
+        description: 'The best design that can be made.  Provides another 2x multiplier.',
+        cost: { research: 1000000000000 },
         prerequisites: [],
         effects: [
           {

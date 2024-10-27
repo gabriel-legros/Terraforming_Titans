@@ -95,6 +95,8 @@ function updateLogic(delta) {
   const allStructures = {...buildings, ...colonies};
   // Update funding
   fundingModule.update(delta);
+  terraforming.update(delta);
+  
   produceResources(delta, allStructures);
 
   // Update happiness for each colony
@@ -109,8 +111,6 @@ function updateLogic(delta) {
 
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
-
-  terraforming.update(delta);
 }
 
 function updateRender() {

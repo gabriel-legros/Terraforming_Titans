@@ -143,7 +143,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 5000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
       resourceGainPerShip : {colony: {metal : 1000000}}
     }
   },
@@ -207,7 +207,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 5000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
     }
   },
@@ -221,7 +221,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 5000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
       resourceGainPerShip : {atmospheric: {inertGas : 1000000}}
     }
   },

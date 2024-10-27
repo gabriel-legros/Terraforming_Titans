@@ -48,7 +48,7 @@ function createProjectItem(project) {
     availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
 
     // Sorted button values for assigning spaceships
-    const buildCounts = [-100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, +10000, +100000];
+    const buildCounts = [-1000000, -100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000, 100000, 1000000];
     const buttonsContainer = document.createElement('div');
     buttonsContainer.classList.add('buttons-container');
 
@@ -211,28 +211,39 @@ function createProjectItem(project) {
   progressButtonContainer.appendChild(progressButton);
   projectItem.appendChild(progressButtonContainer);
 
-  // Auto Start Checkbox (Initially hidden)
+  // Auto Start Checkbox
   const autoStartCheckboxContainer = document.createElement('div');
-  autoStartCheckboxContainer.classList.add('auto-start-container', 'hidden');
+  autoStartCheckboxContainer.classList.add('auto-start-container');
+  
   const autoStartCheckbox = document.createElement('input');
   autoStartCheckbox.type = 'checkbox';
+  autoStartCheckbox.checked = project.autoStart || false; // Set checkbox based on project state
   autoStartCheckbox.id = `${project.name}-auto-start`;
   autoStartCheckbox.classList.add('auto-start-checkbox');
-  autoStartCheckboxContainer.appendChild(autoStartCheckbox);
+
+  autoStartCheckbox.addEventListener('change', (event) => {
+    project.autoStart = event.target.checked; // Save the state in the project object
+  });
 
   const autoStartLabel = document.createElement('label');
   autoStartLabel.htmlFor = `${project.name}-auto-start`;
   autoStartLabel.textContent = 'Auto start project';
+  
+  autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
-
   projectItem.appendChild(autoStartCheckboxContainer);
+
+  // Store UI elements for updating later
+  projectElements[project.name] = {
+    ...projectElements[project.name],
+    autoStartCheckbox: autoStartCheckbox,
+    autoStartCheckboxContainer: autoStartCheckboxContainer
+  };
 
   // Store the progress button for later updates
   projectElements[project.name] = {
     ...projectElements[project.name], // Merge with existing properties
     progressButton: progressButton,
-    autoStartCheckboxContainer: autoStartCheckboxContainer,
-    autoStartCheckbox: autoStartCheckbox,
   };
 
   document.getElementById('projects-list').appendChild(projectItem);
@@ -397,6 +408,11 @@ function updateProjectUI(projectName) {
   // Update Repeat Count if applicable
   if (elements.repeatCountElement) {
     elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+  }
+
+  // Set the auto-start checkbox state based on the project data
+  if (elements.autoStartCheckbox) {
+    elements.autoStartCheckbox.checked = project.autoStart || false;
   }
 
   // Update Resource Gain Information if applicable

@@ -187,6 +187,7 @@ class Terraforming {
     
       if (resourceRatio <= 0.001) {
         coverage = 10 * resourceRatio;
+        coverage = Math.max(coverage, 0.00001);
       } else if (resourceRatio > 0.001 && resourceRatio < 1) {
         coverage = 0.143317 * Math.log(resourceRatio) + 1;
       } else if (resourceRatio >= 1) {
@@ -243,9 +244,9 @@ class Terraforming {
       const iceSurface = surfaceArea*this.water.iceValue;
       const dryIceSurface = surfaceArea*this.life.dryIceCoverage;
 
-      const evaporationAmount = evpRate * waterSurface * timeMultiplier / 1000; //Divide by 1000 to go from kg to tons
-      const sublimationAmount = sublRate * iceSurface * timeMultiplier / 1000;
-      const sublimationCo2Amount = sublRateCO2 * dryIceSurface * timeMultiplier / 1000;
+      const evaporationAmount = Math.min(evpRate * waterSurface * timeMultiplier / 1000, resources['surface']['liquidWater'].value); //Divide by 1000 to go from kg to tons
+      const sublimationAmount = Math.min(sublRate * iceSurface * timeMultiplier / 1000, resources['surface']['ice'].value);
+      const sublimationCo2Amount = Math.min(sublRateCO2 * dryIceSurface * timeMultiplier / 1000, resources['surface']['dryIce'].value);
 
       // Save evaporation and sublimation rates
       this.water.evaporationRate = evaporationAmount * (1000 / deltaTime);
