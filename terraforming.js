@@ -4,8 +4,10 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
-class Terraforming {
+class Terraforming extends EffectableEntity{
   constructor(resources, celestialParameters) {
+    super({description : 'This module manages all terraforming compononents'});
+
     this.resources = resources;
     this.celestialParameters = celestialParameters;
     this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
@@ -33,8 +35,6 @@ class Terraforming {
       name: 'Temperature',
       value: 0,
       target: 288.15, // 15°C in Kelvin
-      solarFlux: 0,
-      modifiedSolarFlux: 0,
       effectiveTempNoAtmosphere: 0,
       emissivity: 0,
       unlocked: false,
@@ -54,7 +54,11 @@ class Terraforming {
       name: 'Luminosity',
       value: 100,
       target: 0,
-      unlocked: false
+      unlocked: false,
+      albedo: 0.25,
+      solarFlux: 0,
+      modifiedSolarFlux: 0,
+      surfaceTemperature: 0
     };
     this.life = {
       name: 'Life',
@@ -81,6 +85,7 @@ class Terraforming {
       unlocked: false
     };
 
+    this.updateLuminosity();
     this.updateSurfaceTemperature();
   }
 
@@ -92,11 +97,18 @@ class Terraforming {
       this.condenseCO2(accumulatedChanges, deltaTime);
     }
 
+    // Function to update luminosity properties
+    updateLuminosity() {
+      this.luminosity.albedo = this.calculateEffectiveAlbedo();
+      this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      this.luminosity.modifiedSolarFlux = this.calculateModifiedSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+    }
+
     updateSurfaceTemperature() {
-      const distanceFromSunInMeters = this.celestialParameters.distanceFromSun * AU_METER; // Convert AU to meters
-      const radiusInMeters = this.celestialParameters.radius * 1000; // Convert km to meters
-      const albedo = this.calculateEffectiveAlbedo();
-  
+      const albedo = this.luminosity.albedo;
+      const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
+      const radiusInMeters = this.celestialParameters.radius * 1000; // 
+
       let co2WaterMass = 0;
       let greenhouseGasMass = 0;
       let inertMass = 0;
@@ -110,15 +122,15 @@ class Terraforming {
           inertMass += 1e3*this.resources.atmospheric[gas].value;
         }
       }
-  
-      this.temperature.emissivity = calculateEmissivity(radiusInMeters, inertMass, co2WaterMass, greenhouseGasMass);
-      this.temperature.solarFlux = calculateSolarFlux(distanceFromSunInMeters);
-      this.temperature.modifiedSolarFlux = this.calculateModifiedSolarFlux(distanceFromSunInMeters);
-      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(this.temperature.modifiedSolarFlux, albedo, 0.25);
-      this.temperature.value = calculateEffectiveTemperature(this.temperature.modifiedSolarFlux, albedo, this.temperature.emissivity, 0.25);
+
+      const emissivity = calculateEmissivity(radiusInMeters, inertMass, co2WaterMass, greenhouseGasMass);
+
+      this.temperature.emissivity = emissivity;
+      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, 0.25);
+      this.temperature.value = calculateEffectiveTemperature(modifiedSolarFlux, albedo, emissivity, 0.25);
 
       for (const zone in this.temperature.zones) {
-        this.temperature.zones[zone].value = calculateEffectiveTemperature(this.temperature.modifiedSolarFlux, albedo, this.temperature.emissivity, getZoneRatio(zone));
+        this.temperature.zones[zone].value = calculateEffectiveTemperature(modifiedSolarFlux, albedo, emissivity, getZoneRatio(zone));
       }
     }
 
@@ -137,6 +149,9 @@ class Terraforming {
     }
   
     update(deltaTime) {
+      //First update luminosity
+      this.updateLuminosity();
+
       // Update temperature based on the new calculateSurfaceTemperature function
       this.updateSurfaceTemperature();
   
@@ -216,7 +231,7 @@ class Terraforming {
       // Calculate Evaporation Rate for Liquid Water
       const evpRate = evaporationRateWater(
         this.temperature.value,       // T: Temperature in Kelvin (K)
-        this.temperature.solarFlux,   // solarFlux: Incoming solar radiation (W/m²)
+        this.luminosity.modifiedSolarFlux,   // solarFlux: Incoming solar radiation (W/m²)
         this.atmosphere.value,        // atmPressure: Atmospheric pressure (Pa)
         waterGasPressure,    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
         100                            // r_a: Aerodynamic resistance (s/m); adjust based on wind conditions
@@ -225,7 +240,7 @@ class Terraforming {
       // Calculate Sublimation Rate for Water Ice
       const sublRate = sublimationRateWater(
           this.temperature.value,       // T: Temperature in Kelvin (K)
-          this.temperature.solarFlux,   // solarFlux: Incoming solar radiation (W/m²)
+          this.luminosity.modifiedSolarFlux,   // solarFlux: Incoming solar radiation (W/m²)
           this.atmosphere.value,        // atmPressure: Atmospheric pressure (Pa)
           waterGasPressure,    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
           100                            // r_a: Aerodynamic resistance (s/m); adjust based on wind conditions
@@ -233,7 +248,7 @@ class Terraforming {
 
       const sublRateCO2 = sublimationRateCO2(
           this.temperature.value,
-          this.temperature.solarFlux,
+          this.luminosity.modifiedSolarFlux,
           this.atmosphere.value,
           co2GasPressure,
           100
@@ -409,7 +424,7 @@ class Terraforming {
     // Mirror Effect Calculation
     calculateMirrorEffect() {
       // Solar flux hitting the mirror (same as base flux at mirror's position)
-      const solarFluxAtMirror = calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      const solarFluxAtMirror = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
       const mirrorSurfaceArea = buildings['spaceMirror'].surfaceArea; // m^2
       
       // The total power intercepted by the mirror
@@ -424,8 +439,12 @@ class Terraforming {
       };
     }
 
+    calculateSolarFlux(distanceFromSun){
+      return solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
+    }    
+
     calculateModifiedSolarFlux(distanceFromSunInMeters){
-      const baseFlux = calculateSolarFlux(distanceFromSunInMeters);
+      const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
       const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
 
       return baseFlux + mirrorFlux*buildings['spaceMirror'].active;
@@ -479,10 +498,6 @@ function calculateEmissivity(radius, inertMass, co2WaterMass, greenhouseGasMass)
   const emissivity = 1 - Math.exp(-absorptionCoefficient*(co2WaterColumnMass + ghgFactor*ghgColumnMass + inertFactor*inertColumnMass));
 
   return emissivity;
-}
-
-function calculateSolarFlux(distanceFromSun){
-  return solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
 }
 
 function calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio){

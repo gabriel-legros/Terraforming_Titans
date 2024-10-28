@@ -147,6 +147,34 @@ const projectParameters = {
       resourceGainPerShip : {colony: {metal : 1000000}}
     }
   },
+    carbonSpaceMining: {
+    name: "Carbon Asteroid Mining",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceMining : true,
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
+    }
+  },
+  nitrogenSpaceMining: {
+    name: "Nitrogen harvesting",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to recover nitrogen from the outer solar system. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceMining : true,
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      resourceGainPerShip : {atmospheric: {inertGas : 1000000}}
+    }
+  },
   spaceElevator: {
     name: "Space Elevator",
     cost: {
@@ -197,34 +225,28 @@ const projectParameters = {
       ]
     }
   },  
-    carbonSpaceMining: {
-    name: "Carbon Asteroid Mining",
-    cost: {},
-    duration: 100000,
-    description: "Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
-    repeatable: true,
-    maxRepeatCount: Infinity,
-    unlocked: false,
-    attributes: {
-      spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
-      resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
+  magneticShield : {
+    name : 'Magnetic Shield',
+    cost: {
+      colony: {
+        superconductors : 1000000000
+      }
+    },
+    duration: 36,
+    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.",
+    repeatable: false,
+    unlocked : false,
+    attributes : {
+      completionEffect: [
+        {
+          type: 'booleanFlag',
+          target: 'terraforming',
+          targetId: 'magneticShield',
+          value: true
+        },
+      ]
     }
-  },
-  nitrogenSpaceMining: {
-    name: "Nitrogen harvesting",
-    cost: {},
-    duration: 100000,
-    description: "Use your spaceships to recover nitrogen from the outer solar system. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
-    repeatable: true,
-    maxRepeatCount: Infinity,
-    unlocked: false,
-    attributes: {
-      spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
-      resourceGainPerShip : {atmospheric: {inertGas : 1000000}}
-    }
-  },
+  }
 };
 
 

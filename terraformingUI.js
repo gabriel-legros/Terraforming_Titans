@@ -15,8 +15,8 @@ function createTerraformingUI() {
     createAtmosphereBox(row1);
     createWaterBox(row1);
     createLuminosityBox(row2);
-    createMagnetosphereBox(row2);
     createLifeBox(row2);
+    createMagnetosphereBox(row2);
   
     // Append the rows to the terraforming container
     terraformingContainer.appendChild(row1);
@@ -42,11 +42,7 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
-      <p>Base Albedo: <span id="base-albedo">${terraforming.celestialParameters.albedo}</span></p>
-      <p>Ocean Albedo: <span id="ocean-albedo">0.06</span></p>
-      <p>Effective Albedo: <span id="effective-albedo">${terraforming.calculateEffectiveAlbedo().toFixed(2)}</span></p>
-      <p>Solar Flux: <span id="solar-flux">${terraforming.temperature.solarFlux.toFixed(1)}</span> W/m²</p>
-      <p>Modified Solar Flux: <span id="modified-solar-flux">${terraforming.temperature.modifiedSolarFlux.toFixed(1)}</span> W/m²</p>
+      <p>Target: <span id="atmosphere-target">${terraforming.temperature.target}</span> K</p>
       <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
       <table>
         <thead>
@@ -78,15 +74,6 @@ function createTemperatureBox(row) {
     const temperatureCurrent = document.getElementById('temperature-current');
     temperatureCurrent.textContent = terraforming.temperature.value.toFixed(1);
   
-    const solarFlux = document.getElementById('solar-flux');
-    solarFlux.textContent = terraforming.temperature.solarFlux.toFixed(1);
-
-    const modifiedSolarFlux = document.getElementById('modified-solar-flux');
-    modifiedSolarFlux.textContent = terraforming.temperature.modifiedSolarFlux.toFixed(1);
-
-    const effectiveAlbedo = document.getElementById('effective-albedo');
-    effectiveAlbedo.textContent = terraforming.calculateEffectiveAlbedo().toFixed(2);
-
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
     effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(1);
 
@@ -232,40 +219,60 @@ function createTemperatureBox(row) {
     lifeCurrent.textContent = terraforming.life.value.toFixed(2);
   }
   
-  // Functions to create and update the magnetosphere box
-  
+  // Function to create the magnetosphere box, with conditional text based on boolean flag
   function createMagnetosphereBox(row) {
     const magnetosphereBox = document.createElement('div');
     magnetosphereBox.classList.add('terraforming-box');
     magnetosphereBox.id = 'magnetosphere-box';
+
+    const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield') 
+      ? 'The planet is sufficiently protected' 
+      : 'No magnetosphere';
+
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
-      <p>Current: <span id="magnetosphere-current">${terraforming.magnetosphere.value}</span>%</p>
-      <p>Target: <span id="magnetosphere-target">${terraforming.magnetosphere.target}</span>%</p>
+      <p>Status: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
     `;
+    
     row.appendChild(magnetosphereBox);
   }
-  
+
+  // Function to update the magnetosphere box with the latest values
   function updateMagnetosphereBox() {
-    const magnetosphereCurrent = document.getElementById('magnetosphere-current');
-    magnetosphereCurrent.textContent = terraforming.magnetosphere.value.toFixed(2);
+    const magnetosphereStatus = document.getElementById('magnetosphere-status');
+
+    // Update status based on boolean flag
+    const magnetosphereStatusText = terraforming.isBooleanFlagSet('magneticShield') 
+      ? 'The planet is sufficiently protected' 
+      : 'No magnetosphere';
+
+    magnetosphereStatus.textContent = magnetosphereStatusText;
   }
   
-  // Functions to create and update the toxicity box
-  
+  //Luminosity
   function createLuminosityBox(row) {
     const luminosityBox = document.createElement('div');
     luminosityBox.classList.add('terraforming-box');
     luminosityBox.id = 'luminosity-box';
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
-      <p>Current: <span id="luminosity-current">${terraforming.luminosity.value}</span>%</p>
-      <p>Target: <span id="luminosity-target">${terraforming.luminosity.target}</span>%</p>
+      <p>Base Albedo: <span id="base-albedo">${terraforming.celestialParameters.albedo}</span></p>
+      <p>Ocean Albedo: <span id="ocean-albedo">0.06</span></p>
+      <p>Effective Albedo: <span id="effective-albedo">${terraforming.luminosity.albedo.toFixed(2)}</span></p>
+      <p>Solar Flux: <span id="solar-flux">${terraforming.luminosity.solarFlux.toFixed(1)}</span> W/m²</p>
+      <p>Modified Solar Flux: <span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span> W/m²</p>
     `;
     row.appendChild(luminosityBox);
   }
   
   function updateLuminosityBox() {
-    const luminosityCurrent = document.getElementById('luminosity-current');
-    luminosityCurrent.textContent = terraforming.luminosity.value.toFixed(2);
+
+    const effectiveAlbedo = document.getElementById('effective-albedo');
+    effectiveAlbedo.textContent = terraforming.luminosity.albedo.toFixed(2);
+  
+    const solarFlux = document.getElementById('solar-flux');
+    solarFlux.textContent = terraforming.luminosity.solarFlux.toFixed(1);
+  
+    const modifiedSolarFlux = document.getElementById('modified-solar-flux');
+    modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
   }

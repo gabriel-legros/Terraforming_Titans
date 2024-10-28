@@ -174,7 +174,11 @@ function addEffect(effect){
     // Apply effect to the tab manager
     tabManager.addAndReplace(effect);
   } else if (effect.target === 'global') {
-  // Apply effect to the tab manager
-  globalEffects.addAndReplace(effect);
+    // Apply effect to the tab manager
+    globalEffects.addAndReplace(effect);
+  }
+  else if (effect.target === 'terraforming') {
+    // Apply effect to the tab manager
+    terraforming.addAndReplace(effect);
   }
 }

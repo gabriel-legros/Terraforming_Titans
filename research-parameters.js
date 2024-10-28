@@ -723,6 +723,19 @@ const researchParameters = {
         ],
       },   
       {
+        id: 'magneticShield',
+        name: 'Magnetic Shield',
+        description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
+        cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'magneticShield',
+            type: 'enable'
+          }
+        ],
+      },   
+      {
         id: 'nitrogenImport',
         name: 'Nitrogen Importation',
         description: 'Import nitrogen to fill up the atmosphere with a neutral gas.',
