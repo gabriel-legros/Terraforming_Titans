@@ -710,6 +710,62 @@ const researchParameters = {
         ],
       },
       {
+        id: 'lichen',
+        name: 'Lichen production',
+        description: 'Allows the production and release of lichen from biofactories.  Lichen can survive in extreme conditions but does not grow easily.',
+        cost: { research: 1000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'bioFactory',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId : 'biomass',
+            type: 'enable'
+          },          
+          {
+            type: 'booleanFlag',
+            target: 'terraforming',
+            targetId: 'lichen',
+            value: true
+          },
+        ],
+      },
+      {
+        id: 'grass',
+        name: 'Grass production',
+        description: 'Replaces lichen production with grass production if conditions allow.  Grass grows faster but is more picky about temperature and requires liquid water.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [      
+          {
+            type: 'booleanFlag',
+            target: 'terraforming',
+            targetId: 'grass',
+            value: true
+          },
+        ],
+      },
+      {
+        id: 'trees',
+        name: 'Tree production',
+        description: 'Replaces grass production with tree production if conditions allow.  Trees grow even faster but are also pickier.',
+        cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [      
+          {
+            type: 'booleanFlag',
+            target: 'terraforming',
+            targetId: 'trees',
+            value: true
+          },
+        ],
+      },
+      {
         id: 'carbonImport',
         name: 'Carbon Importation',
         description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
@@ -718,6 +774,19 @@ const researchParameters = {
         effects: [
           {target : 'project',
             targetId : 'carbonSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },   
+      {
+        id: 'waterImport',
+        name: 'Water Importation',
+        description: 'Water is everywhere but more may be needed sometimes.',
+        cost: { research: 100000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'waterSpaceMining',
             type: 'enable'
           }
         ],
@@ -748,6 +817,21 @@ const researchParameters = {
           }
         ],
       },  
+      {
+        id: 'pollinators',
+        name: 'Adapted Pollinators',
+        description: 'Releases insects well-adapted for survival in harsh conditions.  Their pollination will double growth rate of biomass.',
+        cost: { research: 100000000000 },
+        prerequisites: [],
+        effects: [      
+          {
+            type: 'booleanFlag',
+            target: 'terraforming',
+            type: 'lifeGrowthMultiplier',
+            value: 2
+          },
+        ],
+      },
     ],
   };
   

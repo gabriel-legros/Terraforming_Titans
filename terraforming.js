@@ -11,6 +11,9 @@ class Terraforming extends EffectableEntity{
     this.resources = resources;
     this.celestialParameters = celestialParameters;
     this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+
+    this.lifeParameters = lifeParameters; // Load external life parameters
+
     this.water = {
       name: 'Water',
       value: 0,
@@ -62,8 +65,6 @@ class Terraforming extends EffectableEntity{
     };
     this.life = {
       name: 'Life',
-      value: 0,
-      target: 50,
       unlocked: false,
       zones: {
         tropical: {
@@ -95,6 +96,8 @@ class Terraforming extends EffectableEntity{
       this.applyMeltingAndFreezing(accumulatedChanges, deltaTime);
 
       this.condenseCO2(accumulatedChanges, deltaTime);
+
+      this.updateLife(deltaTime);
     }
 
     // Function to update luminosity properties
@@ -449,7 +452,103 @@ class Terraforming extends EffectableEntity{
 
       return baseFlux + mirrorFlux*buildings['spaceMirror'].active;
     }
+
+    getEffectiveLifeGrowthMultiplier(){
+        let multiplier = 1; // Start with default multiplier
+        this.activeEffects.forEach(effect => {
+          if (effect.type === 'lifeGrowthMultiplier') {
+            multiplier *= effect.value;
+          }
+        });
+        return multiplier;
+      }
+
+    // Method to update life growth based on environmental conditions
+    updateLife(deltaTime) {
+      let maxGrowthRate = 0; // Start with a base growth rate multiplier of 1
+      let canGrow = false; // Track if any suitable condition for growth is met
+
+      for (const [lifeType, params] of Object.entries(this.lifeParameters)) {
+        if (this.isBooleanFlagSet(lifeType)) {
+            // Check each zone for suitable conditions
+            for (const zone of Object.values(this.temperature.zones)) {
+                const temperature = zone.value;
+                const rainfall = this.water.rainfallRate;
+
+                // Check if zone meets temperature and rainfall requirements
+                if (temperature >= params.minTemperature && temperature <= params.maxTemperature && rainfall >= params.minRainfall) {
+                    // Update maxGrowthRate if this life type's growth rate is higher
+                    maxGrowthRate = Math.max(maxGrowthRate, params.growthRate);
+                    canGrow = true;
+                    break; // Once we find a valid zone, we don't need to check others for this life type
+                }
+            }
+        }
+    }
+
+    const biomass = this.resources.special.biomass;
+    const co2 = this.resources.atmospheric.carbonDioxide;
+    const water = this.resources.surface.liquidWater;
+    const oxygen = this.resources.atmospheric.oxygen;
+
+    // Define consumption/production ratios
+    const waterRatio = 1;
+    const co2Ratio = 2.44;
+    const biomassRatio = 1.77388;
+    const oxygenRatio = 1.66612;
+
+    // Determine growth or decay factor
+    const factor = canGrow ? maxGrowthRate : 0.999;
+    const biomassChange = biomass.value * factor * deltaTime / 1000;
+    const absoluteChange = Math.abs(biomassChange);
+
+    // Apply resource adjustments based on growth or decay
+    if (canGrow) {
+      const maxPossibleBiomassIncrease = Math.min(
+          biomassChange,
+          (water.value / waterRatio) * biomassRatio,
+          (co2.value / co2Ratio) * biomassRatio
+      ) * this.getEffectiveLifeGrowthMultiplier();
+
+      const adjustedWaterChange = (maxPossibleBiomassIncrease / biomassRatio) * waterRatio;
+      const adjustedCo2Change = (maxPossibleBiomassIncrease / biomassRatio) * co2Ratio;
+      const adjustedOxygenChange = (maxPossibleBiomassIncrease / biomassRatio) * oxygenRatio;
+
+      // Apply growth-related resource adjustments
+      water.value -= adjustedWaterChange;
+      co2.value -= adjustedCo2Change;
+      oxygen.value += adjustedOxygenChange;
+      biomass.value += maxPossibleBiomassIncrease;
+
+      // Update production and consumption rates
+      water.consumptionRate += adjustedWaterChange * (1000 / deltaTime);
+      co2.consumptionRate += adjustedCo2Change * (1000 / deltaTime);
+      oxygen.productionRate += adjustedOxygenChange * (1000 / deltaTime);
+      biomass.productionRate += maxPossibleBiomassIncrease * (1000 / deltaTime);
+    } else if (oxygen.value > 0) {
+      // Apply decay-related resource adjustments only if oxygen is available
+      const tempDecay = Math.min(biomass.value, absoluteChange); // Prevent negative biomass
+      const actualDecay = Math.min(tempDecay, oxygen.value * oxygenRatio / biomassRatio)
+      biomass.value -= actualDecay;
+
+      const adjustedWaterChange = (actualDecay / biomassRatio) * waterRatio;
+      const adjustedCo2Change = (actualDecay / biomassRatio) * co2Ratio;
+      const adjustedOxygenChange = (actualDecay / biomassRatio) * oxygenRatio;
+
+      // Decay-related resource adjustments
+      water.value += adjustedWaterChange;
+      co2.value += adjustedCo2Change;
+      oxygen.value -= adjustedOxygenChange;
+
+      // Update production and consumption rates
+      water.productionRate += adjustedWaterChange * (1000 / deltaTime);
+      co2.productionRate += adjustedCo2Change * (1000 / deltaTime);
+      oxygen.consumptionRate += adjustedOxygenChange * (1000 / deltaTime);
+      biomass.consumptionRate += actualDecay * (1000 / deltaTime);
   }
+
+  }
+}
 
   function calculateGasPressure(gas) {
     const mass = terraforming.resources.atmospheric[gas].value;

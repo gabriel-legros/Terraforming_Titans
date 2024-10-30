@@ -161,6 +161,20 @@ const projectParameters = {
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
     }
   },
+  waterSpaceMining: {
+    name: "Ice and Water importation",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to recover water and ice from all over the place, delivered as ice to the surface. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceMining : true,
+      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      resourceGainPerShip : {surface: {ice : 1000000}}
+    }
+  },
   nitrogenSpaceMining: {
     name: "Nitrogen harvesting",
     cost: {},

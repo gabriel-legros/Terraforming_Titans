@@ -42,7 +42,6 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
-      <p>Target: <span id="atmosphere-target">${terraforming.temperature.target}</span> K</p>
       <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
       <table>
         <thead>
@@ -95,7 +94,6 @@ function createTemperatureBox(row) {
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current">${terraforming.atmosphere.value.toFixed(2)}</span> kPa</p>
-      <p>Target: <span id="atmosphere-target">${terraforming.atmosphere.target}</span> kPa</p>
       <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
       <table>
         <thead>
@@ -207,17 +205,56 @@ function createTemperatureBox(row) {
     lifeBox.classList.add('terraforming-box');
     lifeBox.id = 'life-box';
     lifeBox.innerHTML = `
-      <h3>${terraforming.life.name}</h3>
-      <p>Current: <span id="life-current">${terraforming.life.value}</span>%</p>
-      <p>Target: <span id="life-target">${terraforming.life.target}</span>%</p>
+      <h3>${terraforming.life.name}</h3>`;
+
+    // Create a table for life parameters with headers
+    const lifeTable = document.createElement('table');
+    lifeTable.id = 'life-parameters-table';
+    lifeTable.classList.add('life-parameters-table');
+    lifeTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Life Type</th>
+          <th>Tmin (K)</th>
+          <th>Tmax (K)</th>
+          <th>Rain Req.</th>
+          <th>Growth Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
     `;
+
+    // Append rows for each life type but initially hide them
+    const lifeTableBody = lifeTable.querySelector('tbody');
+    for (const [lifeType, params] of Object.entries(lifeParameters)) {
+        const row = document.createElement('tr');
+        row.id = `${lifeType}-row`; // Unique ID for each life type row
+        row.style.display = 'none'; // Initially hidden
+        row.innerHTML = `
+          <td>${lifeType.charAt(0).toUpperCase() + lifeType.slice(1)}</td>
+          <td>${params.minTemperature}</td>
+          <td>${params.maxTemperature}</td>
+          <td>${formatNumber(params.minRainfall, true)}</td>
+          <td>${params.growthRate.toFixed(4)}</td>
+        `;
+        lifeTableBody.appendChild(row);
+    }
+
+    lifeBox.appendChild(lifeTable);
     row.appendChild(lifeBox);
-  }
-  
-  function updateLifeBox() {
-    const lifeCurrent = document.getElementById('life-current');
-    lifeCurrent.textContent = terraforming.life.value.toFixed(2);
-  }
+}
+
+function updateLifeBox() {
+    // Update visibility of each life type row based on the boolean flag status
+    for (const lifeType in lifeParameters) {
+        const lifeRow = document.getElementById(`${lifeType}-row`);
+        if (lifeRow) {
+            // Toggle visibility based on whether the flag is set
+            lifeRow.style.display = terraforming.isBooleanFlagSet(lifeType) ? 'table-row' : 'none';
+        }
+    }
+}
   
   // Function to create the magnetosphere box, with conditional text based on boolean flag
   function createMagnetosphereBox(row) {

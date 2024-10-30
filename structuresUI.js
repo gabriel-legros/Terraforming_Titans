@@ -469,7 +469,7 @@ function formatResourceDetails(resourceObject) {
     for (const resource in resourceObject[category]) {
       const adjustedValue = resourceObject[category][resource];
       if (adjustedValue > 0) {
-        details += `${formatNumber(adjustedValue, true)} ${resources[category][resource].displayName}, `;
+        details += `${formatNumber(adjustedValue, true, 2)} ${resources[category][resource].displayName}, `;
       }
     }
   }
@@ -494,7 +494,7 @@ function formatStorageDetails(storageObject) {
     for (const resource in storageObject[category]) {
       const storageAmount = storageObject[category][resource];
       if (storageAmount > 0) {
-        storageDetails += `${formatNumber(storageAmount, true)} ${resources[category][resource].displayName}, `;
+        storageDetails += `${formatNumber(storageAmount, true, 2)} ${resources[category][resource].displayName}, `;
       }
     }
   }

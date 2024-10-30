@@ -391,4 +391,19 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  bioFactory:{
+    name: 'Bio Factory',
+    category: 'terraforming',
+    description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.  Only works during the day.',
+    cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
+    consumption: {colony: {energy: 100, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
+    production: {atmospheric: {oxygen : 0.177388}, special: {biomass : 0.166612}},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 100,
+    maintenanceFactor: 1,
+    unlocked: false
+  }
 };

@@ -25,8 +25,8 @@ const planetParameters = {
         scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false}
       },
       underground: {
-        ore: { name: 'Free ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },
-        geothermal: { name: 'Free geothermal vent', initialValue: 0, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
+        ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },
+        geothermal: { name: 'Geothermal vent', initialValue: 0, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
       },
       atmospheric: {
         carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
@@ -37,7 +37,8 @@ const planetParameters = {
       },
       special: {
         albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false},
-        spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false}
+        spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
+        biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false}
       }
     },
     initialGameState: {
