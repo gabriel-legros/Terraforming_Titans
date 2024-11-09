@@ -42,3 +42,12 @@ function loadJournalEntries(entries) {
   journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
   journalEntriesData = entries; // Restore the journalEntriesData array
 }
+
+/**
+ * Clears all entries from the journal display and data array.
+ */
+function clearJournal() {
+  const journalEntries = document.getElementById('journal-entries');
+  journalEntries.innerHTML = ''; // Remove all entries from the display
+  journalEntriesData = []; // Clear the stored data array
+}

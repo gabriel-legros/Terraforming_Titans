@@ -14,6 +14,8 @@ class Project extends EffectableEntity {
     this.repeatCount = 0; // Track the current number of times the project has been repeated
     this.assignedSpaceships = 0;
     this.autoStart = false;
+    this.autoAssignSpaceships = false;
+    this.selectedDisposalResource = null;
   }
 
   initializeFromConfig(config, name) {
@@ -28,6 +30,7 @@ class Project extends EffectableEntity {
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
     this.unlocked = config.unlocked;
+    this.category = config.category;
 
   
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
@@ -88,10 +91,10 @@ class Project extends EffectableEntity {
       }
     }
   
-    // Calculate the total cost for spaceships if applicable
-    if (this.attributes.spaceMining) {
-      if(this.assignedSpaceships === 0){
-        return false;
+    // Check spaceship costs for space mining or export projects
+    if (this.attributes.spaceMining || this.attributes.spaceExport) {
+      if (this.assignedSpaceships === 0) {
+        return false;  // No spaceships assigned
       }
       const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
       for (const category in totalSpaceshipCost) {
@@ -102,6 +105,15 @@ class Project extends EffectableEntity {
         }
       }
     }
+
+    // Check scaled disposal resource availability for export projects
+    if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
+      const { category, resource } = this.selectedDisposalResource;
+      if (resources[category][resource].value < scaledDisposalAmount[category][resource]) {
+          return false; // Not enough of the selected resource to dispose
+      }
+  }
   
     // Check funding for resource choice if applicable
     if (this.selectedResources && this.selectedResources.length > 0) {
@@ -138,6 +150,13 @@ class Project extends EffectableEntity {
         }
       }
     }
+
+    // Deduct scaled disposal resource amount if applicable
+    if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
+      const { category, resource } = this.selectedDisposalResource;
+      resources[category][resource].decrease(scaledDisposalAmount[category][resource]);
+    }
   
     // Deduct funding for selected resources if applicable
     if (this.selectedResources && this.selectedResources.length > 0) {
@@ -157,17 +176,22 @@ class Project extends EffectableEntity {
     if (this.canStart(resources)) {
       // Deduct the required resources
       this.deductResources(resources);
-      
+  
       // Set the project as active and reset the remaining time
       this.isActive = true;
-      this.remainingTime = this.duration;
+  
+      // Calculate dynamic duration based on spaceship assignment for space mining or disposal projects
+      if (this.attributes.spaceMining || this.attributes.spaceExport) {
+        this.remainingTime = this.calculateSpaceshipAdjustedDuration(); // Adjust duration dynamically
+      } else {
+        this.remainingTime = this.duration; // Default duration for other projects
+      }
   
       // If the project involves space mining, calculate spaceship resource gains
       if (this.attributes.spaceMining) {
-        this.remainingTime = this.calculateSpaceshipAdjustedDuration(); // Set dynamic duration
         const spaceshipResourceGain = this.calculateSpaceshipTotalResourceGain();
         this.pendingResourceGains = this.pendingResourceGains || []; // Initialize if undefined
-        
+  
         for (const category in spaceshipResourceGain) {
           for (const resource in spaceshipResourceGain[category]) {
             const quantity = spaceshipResourceGain[category][resource];
@@ -391,15 +415,35 @@ class Project extends EffectableEntity {
     return totalResourceGain;
   }
 
+    // Calculates adjusted disposal amount per ship, scaling if assignedSpaceships > 100
+  calculateSpaceshipTotalDisposal() {
+    const totalDisposal = {};
+    const disposalAmount = this.attributes.disposalAmount;
+    const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+    const scaledDisposalAmount = disposalAmount * scalingFactor;
+
+    if (this.selectedDisposalResource) {
+        const { category, resource } = this.selectedDisposalResource;
+        totalDisposal[category] = {
+            [resource]: scaledDisposalAmount
+        };
+    }
+
+    return totalDisposal;
+  }
+
   // Calculates adjusted duration based on the number of assigned spaceships
   calculateSpaceshipAdjustedDuration() {
-    if (!this.attributes.spaceMining) return this.duration;
+    // Ensure this calculation only applies to projects with space mining or space export
+    if (!this.attributes.spaceMining && !this.attributes.spaceExport) return this.duration;
 
     const maxShipsForDurationReduction = 100;
     const duration = this.duration;
 
-    const assignedShips = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction); // Clamp between 1 and 100
+    // Clamp the number of assigned ships to be between 1 and maxShipsForDurationReduction
+    const assignedShips = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction);
 
+    // Calculate the adjusted duration based on the number of assigned spaceships
     return duration / assignedShips;
   }
 }
@@ -437,6 +481,17 @@ class ProjectManager extends EffectableEntity {
   updateProjects(deltaTime) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
+  
+      // Auto-assign spaceships if the project has autoAssignSpaceships set to true and is a space mining project
+      if ((project.attributes.spaceMining  || project.attributes.spaceExport) && project.autoAssignSpaceships) {
+        const availableSpaceships = Math.floor(resources.special.spaceships.value);
+        if (availableSpaceships > 0) {
+          // Use the existing function to assign all available spaceships to this project
+          assignSpaceshipsToProject(project, availableSpaceships, document.getElementById(`${project.name}-assigned-spaceships`));
+        }
+      }
+  
+      // Update each project if it is active
       if (project.isActive) {
         project.update(deltaTime);
       }
@@ -459,7 +514,9 @@ class ProjectManager extends EffectableEntity {
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
         assignedSpaceships: project.assignedSpaceships,
-        autoStart : project.autoStart
+        autoStart : project.autoStart,
+        autoAssignSpaceships : project.autoAssignSpaceships,
+        selectedDisposalResource : project.selectedDisposalResource
       };
     }
     return projectState;
@@ -480,6 +537,8 @@ class ProjectManager extends EffectableEntity {
         project.effects = [];
         project.assignedSpaceships = savedProject.assignedSpaceships;
         project.autoStart = savedProject.autoStart;
+        project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
+        project.selectedDisposalResource = savedProject.selectedDisposalResource || null; 
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();
         }
@@ -488,7 +547,7 @@ class ProjectManager extends EffectableEntity {
   }
 }
 
-function assignSpaceshipsToProject(project, count, assignedSpaceshipsDisplay) {
+function assignSpaceshipsToProject(project, count) {
   const availableSpaceships = Math.floor(resources.special.spaceships.value); // Round down to ensure whole values
   project.assignedSpaceships = project.assignedSpaceships || 0;
 
@@ -498,11 +557,4 @@ function assignSpaceshipsToProject(project, count, assignedSpaceshipsDisplay) {
 
   // Update resources and the UI
   resources.special.spaceships.value -= adjustedCount;
-  assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: ${project.assignedSpaceships}`;
-  
-  // Update the available spaceships display as well
-  const availableSpaceshipsDisplay = document.getElementById(`${project.name}-available-spaceships`);
-  if (availableSpaceshipsDisplay) {
-    availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
-  }
 }

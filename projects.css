@@ -1,3 +1,8 @@
+/* Tighten up spacing for description text */
+.project-description {
+  margin-bottom: 5px; /* Small margin to reduce space before next element */
+}
+
 .resource-selection-container input[type="number"] {
   width: 60px; /* Make the text box smaller */
   padding: 5px; /* Padding to make it consistent */
@@ -50,6 +55,7 @@
 .buttons-container {
   display: flex;
   gap: 5px;
+  margin-bottom: 10px; /* Add space below the buttons */
 }
 
 .increment-button {
@@ -78,12 +84,93 @@
   gap: 10px;
 }
 
+.assigned-spaceships-display {
+  margin: 0; /* Remove any extra margin */
+  padding: 0; /* Remove any extra padding */
+  font-size: 14px; /* Adjust font size if needed to keep it consistent */
+  line-height: 1.2; /* Slightly tighter line-height to reduce height if needed */
+}
+
+/* Remove extra space around the assignment container */
 .spaceship-assignment-container {
   display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+  margin: 0; /* Remove any extra vertical margin */
+  padding: 0; /* Remove padding if there’s any */
+}
+
+/* Adjust the assigned/available container */
+.spaceship-info-container {
+  display: flex;
   align-items: center;
-  gap: 10px; /* Space between items */
+  gap: 15px;
+  margin: 0; /* Remove any extra vertical margin */
 }
 
 .available-spaceships-display {
   margin-left: 10px; /* Small space between buttons and text */
+  margin: 0; /* Remove any extra margin */
+  padding: 0; /* Remove any extra padding */
+  font-size: 14px; /* Adjust font size if needed to keep it consistent */
+  line-height: 1.2; /* Slightly tighter line-height to reduce height if needed */
+}
+
+.cost-container, .gain-container {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+  align-items: center;
+  margin: 0; /* Remove any extra vertical margin around the container */
+}
+
+.project-cost-per-ship, .project-total-cost,
+.project-resource-gain-per-ship, .project-total-resource-gain {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0; /* Remove any default margins on these elements */
+  padding: 0; /* Remove padding if needed */
+}
+
+.checkbox-row-container {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Adjust spacing between the two checkboxes */
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Adjust spacing between checkbox and label */
+}
+
+/* Reuse gain container styles for disposal container */
+.disposal-container {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+  color: #555;
+  align-items: center;
+  margin: 0;
+}
+
+/* Style for disposal per ship, similar to gain per ship */
+.project-disposal-per-ship {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 0;
+}
+
+/* Style for total disposal, similar to total gain */
+.project-total-disposal {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 0;
 }

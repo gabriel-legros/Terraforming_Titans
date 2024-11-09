@@ -354,6 +354,8 @@ class Building extends EffectableEntity {
 
   // Updated consume function to track consumption rates
   consume(accumulatedChanges, deltaTime) {
+    const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
+
     this.currentConsumption = {}; // Reset current consumption
 
     // Calculate consumption and accumulate changes
@@ -363,7 +365,7 @@ class Building extends EffectableEntity {
       }
 
       for (const resource in this.consumption[category]) {
-        const baseConsumption = this.active * this.consumption[category][resource] * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * this.productivity * (deltaTime / 1000);
 
         // Track actual consumption in the building

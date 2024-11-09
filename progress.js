@@ -9,25 +9,7 @@ class StoryEvent {
       this.nextChapter = config.nextChapter || null;
       this.reward = config.reward || [];
       this.rewardDelay = config.rewardDelay || 0;  // Add rewardDelay with a default of 0
-    }
-
-  
-    // Handle different types of events (pop-up, journal, etc.)
-    trigger() {
-      switch (this.type) {
-        case "pop-up":
-          createPopup(
-            this.parameters.title, 
-            this.parameters.text, 
-            this.parameters.buttonText
-          );
-          break;
-        case "journal":
-          addJournalEntry(`${this.title}: ${this.narrative}`);
-          break;
-        default:
-          console.error(`Unknown event type: ${this.type}`);
-      }
+      this.special = config.special || null; // Add special field for handling flags
     }
   }
   
@@ -54,6 +36,9 @@ class StoryEvent {
               this.waitForPopupButtonPress();
             } else if (this.currentChapter.type === 'journal') {
                 if (!this.objectivesComplete) {
+                    if (this.currentChapter.special === 'clearJournal') {
+                        clearJournal(); // Clear the journal if the special flag is set
+                    }
                     addJournalEntry(this.currentChapter.narrative);
                     this.waitForJournalEntryCompletion();
                 }
@@ -95,8 +80,6 @@ class StoryEvent {
                 } else {
                     console.error(`Next chapter with ID ${nextChapterId} not found.`);
                 }
-            } else {
-                console.log("No more chapters to advance to.");
             }
         }
         this.triggerCurrentChapter();

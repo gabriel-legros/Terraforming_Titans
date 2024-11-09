@@ -429,9 +429,18 @@ progressData = {
       {
         id: "chapter1.21",
         type: "journal",
+        narrative: "Chapter 1 : Beginnings",
+        objectives: [],
+        reward: [],
+        special : 'clearJournal',
+        nextChapter: "chapter1.22"
+      }, 
+      {
+        id: "chapter1.22",
+        type: "journal",
         narrative: "",
         objectives: [],
-        reward: []
+        reward: [],
       }, 
     ]
   };

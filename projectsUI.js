@@ -1,3 +1,26 @@
+document.addEventListener('DOMContentLoaded', () => {
+  // Subtab functionality to show/hide project categories
+  document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
+    tab.addEventListener('click', function () {
+        // Remove the 'active' class from all project subtabs
+        document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(t => t.classList.remove('active'));
+
+        // Add the 'active' class to the clicked subtab
+        this.classList.add('active');
+
+        // Get the corresponding content element ID from the data attribute
+        const category = this.dataset.subtab;
+
+        // Hide all project subtab contents
+        document.querySelectorAll('.projects-subtab-content-wrapper .projects-subtab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // Show the content of the selected subtab
+        document.getElementById(category).classList.add('active');
+    });
+  });
+});
 
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
@@ -30,37 +53,61 @@ function createProjectItem(project) {
   projectItem.appendChild(descriptionElement);
 
   // Spaceship Assignment Section
-  if (project.attributes.spaceMining) {
+  if (project.attributes.spaceMining || project.attributes.spaceExport) {
     const spaceshipAssignmentContainer = document.createElement('div');
     spaceshipAssignmentContainer.classList.add('spaceship-assignment-container');
+
+    // First row: Assigned and Available displays
+    const spaceshipInfoContainer = document.createElement('div');
+    spaceshipInfoContainer.classList.add('spaceship-info-container');
 
     // Spaceship Assigned Display
     const assignedSpaceshipsDisplay = document.createElement('p');
     assignedSpaceshipsDisplay.id = `${project.name}-assigned-spaceships`;
     assignedSpaceshipsDisplay.classList.add('assigned-spaceships-display');
     assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: 0`;
-    spaceshipAssignmentContainer.appendChild(assignedSpaceshipsDisplay);
+    spaceshipInfoContainer.appendChild(assignedSpaceshipsDisplay);
 
     // Available Spaceships Display
     const availableSpaceshipsDisplay = document.createElement('span');
     availableSpaceshipsDisplay.id = `${project.name}-available-spaceships`;
     availableSpaceshipsDisplay.classList.add('available-spaceships-display');
     availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
+    spaceshipInfoContainer.appendChild(availableSpaceshipsDisplay);
 
-    // Sorted button values for assigning spaceships
-    const buildCounts = [-1000000, -100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000, 100000, 1000000];
+    // Append the first row (Assigned and Available displays)
+    spaceshipAssignmentContainer.appendChild(spaceshipInfoContainer);
+
+    // Second row: Control buttons for spaceship assignment
     const buttonsContainer = document.createElement('div');
     buttonsContainer.classList.add('buttons-container');
 
+    const buildCounts = ["-Max", -1000000, -100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000, 100000, 1000000, "+Max"];
     buildCounts.forEach((count) => {
       const button = document.createElement('button');
-      button.textContent = count > 0 ? `+${formatNumber(count, true)}` : `${formatNumber(count,true)}`;
-      button.addEventListener('click', () => assignSpaceshipsToProject(project, count, assignedSpaceshipsDisplay));
+      button.textContent = typeof count === "string" ? count : (count > 0 ? `+${formatNumber(count, true)}` : `${formatNumber(count, true)}`);
+      
+      button.addEventListener('click', () => {
+        let spaceshipCount;
+    
+        if (count === "+Max") {
+          // Assign all available spaceships
+          spaceshipCount = Math.floor(resources.special.spaceships.value);
+        } else if (count === "-Max") {
+          // Unassign all assigned spaceships for the project
+          spaceshipCount = -project.assignedSpaceships;
+        } else {
+          // Assign or unassign a specific count
+          spaceshipCount = count;
+        }
+    
+        assignSpaceshipsToProject(project, spaceshipCount, assignedSpaceshipsDisplay);
+      });
+    
       buttonsContainer.appendChild(button);
     });
 
-    // Append buttons and available spaceships display on the same row
-    spaceshipAssignmentContainer.appendChild(availableSpaceshipsDisplay);
+    // Append the second row (Control buttons) below the spaceship info
     spaceshipAssignmentContainer.appendChild(buttonsContainer);
     projectItem.appendChild(spaceshipAssignmentContainer);
 
@@ -96,6 +143,63 @@ function createProjectItem(project) {
       ...projectElements[project.name],
       costPerShipElement,
       totalCostElement,
+    };
+  }
+
+  // Resource Disposal Dropdown for spaceExport projects
+  if (project.attributes.spaceExport) {
+    const disposalContainer = document.createElement('div');
+    disposalContainer.classList.add('disposal-container');
+
+    // Label for disposal resource selection
+    const disposalLabel = document.createElement('label');
+    disposalLabel.textContent = "Select Resource to Dispose:";
+    disposalContainer.appendChild(disposalLabel);
+
+    // Dropdown for selecting the resource to dispose of
+    const disposalSelect = document.createElement('select');
+    disposalSelect.classList.add('disposal-select');
+    disposalSelect.id = `${project.name}-disposal-select`;
+
+    // Populate dropdown with disposable resources from project attributes
+    for (const [category, resourceList] of Object.entries(project.attributes.disposable)) {
+      resourceList.forEach(resource => {
+        const option = document.createElement('option');
+        option.value = `${category}:${resource}`;
+        option.textContent = resources[category][resource].displayName || resource; // Use global resources for display name
+        disposalSelect.appendChild(option);
+      });
+    }
+
+      // Event listener for dropdown selection
+      disposalSelect.addEventListener('change', (event) => {
+        const [category, resource] = event.target.value.split(':');
+        project.selectedDisposalResource = { category, resource }; // Update selected disposal resource
+    });
+
+    disposalContainer.appendChild(disposalSelect);
+    projectItem.appendChild(disposalContainer);
+
+    // Disposal Amount per Ship
+    const disposalPerShipElement = document.createElement('p');
+    disposalPerShipElement.id = `${project.name}-disposal-per-ship`;
+    disposalPerShipElement.classList.add('project-disposal-per-ship');
+    disposalPerShipElement.textContent = `Disposal per Ship: ${formatNumber(project.attributes.disposalAmount, true)}`;
+    disposalContainer.appendChild(disposalPerShipElement);
+
+    // Total Disposal Amount
+    const totalDisposalElement = document.createElement('span');
+    totalDisposalElement.id = `${project.name}-total-disposal`;
+    totalDisposalElement.classList.add('project-total-disposal');
+    totalDisposalElement.textContent = `Total Disposal: 0`; // Initialize with 0
+    disposalContainer.appendChild(totalDisposalElement);
+
+    // Store UI elements for updating later
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      disposalSelect,
+      disposalPerShipElement,
+      totalDisposalElement,
     };
   }
 
@@ -211,10 +315,14 @@ function createProjectItem(project) {
   progressButtonContainer.appendChild(progressButton);
   projectItem.appendChild(progressButtonContainer);
 
+  // Create a container for both checkboxes on the same row
+  const checkboxRowContainer = document.createElement('div');
+  checkboxRowContainer.classList.add('checkbox-row-container');
+
   // Auto Start Checkbox
   const autoStartCheckboxContainer = document.createElement('div');
-  autoStartCheckboxContainer.classList.add('auto-start-container');
-  
+  autoStartCheckboxContainer.classList.add('checkbox-container');
+
   const autoStartCheckbox = document.createElement('input');
   autoStartCheckbox.type = 'checkbox';
   autoStartCheckbox.checked = project.autoStart || false; // Set checkbox based on project state
@@ -228,17 +336,72 @@ function createProjectItem(project) {
   const autoStartLabel = document.createElement('label');
   autoStartLabel.htmlFor = `${project.name}-auto-start`;
   autoStartLabel.textContent = 'Auto start project';
-  
+
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
-  projectItem.appendChild(autoStartCheckboxContainer);
+  checkboxRowContainer.appendChild(autoStartCheckboxContainer);
+
+  // Auto Assign Spaceships Checkbox (Only for space mining projects)
+  if (project.attributes.spaceMining || project.attributes.spaceExport) {
+    const autoAssignCheckboxContainer = document.createElement('div');
+    autoAssignCheckboxContainer.classList.add('checkbox-container');
+
+    const autoAssignCheckbox = document.createElement('input');
+    autoAssignCheckbox.type = 'checkbox';
+    autoAssignCheckbox.checked = project.autoAssignSpaceships || false; // Set checkbox based on project state
+    autoAssignCheckbox.id = `${project.name}-auto-assign-spaceships`;
+    autoAssignCheckbox.classList.add('auto-assign-checkbox');
+
+    // Attach the listener to handle toggling logic
+    autoAssignCheckbox.addEventListener('change', (event) => {
+      if (event.target.checked) {
+        // Set autoAssignSpaceships flag to true for the current project
+        project.autoAssignSpaceships = true;
+
+        // Turn off the autoAssignSpaceships flag for all other projects
+        Object.keys(projectElements).forEach(otherProjectName => {
+          if (otherProjectName !== project.name && projectElements[otherProjectName].autoAssignCheckbox) {
+            const otherCheckbox = projectElements[otherProjectName].autoAssignCheckbox;
+            if (otherCheckbox.checked) {
+              // Trigger change event to uncheck and turn off autoAssignSpaceships flag
+              otherCheckbox.checked = false;
+              otherCheckbox.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+      } else {
+        // If unchecked, set autoAssignSpaceships flag to false for this project
+        project.autoAssignSpaceships = false;
+      }
+    });
+
+    const autoAssignLabel = document.createElement('label');
+    autoAssignLabel.htmlFor = `${project.name}-auto-assign-spaceships`;
+    autoAssignLabel.textContent = 'Auto assign spaceships';
+
+    autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
+    autoAssignCheckboxContainer.appendChild(autoAssignLabel);
+    checkboxRowContainer.appendChild(autoAssignCheckboxContainer);
+
+    // Store UI elements for updating later
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      autoAssignCheckbox: autoAssignCheckbox,
+      autoAssignCheckboxContainer: autoAssignCheckboxContainer
+    };
+  }
+
+  // Append the combined container to the project item
+  projectItem.appendChild(checkboxRowContainer);
 
   // Store UI elements for updating later
   projectElements[project.name] = {
     ...projectElements[project.name],
     autoStartCheckbox: autoStartCheckbox,
-    autoStartCheckboxContainer: autoStartCheckboxContainer
+    autoStartCheckboxContainer: autoStartCheckboxContainer,
+    checkboxRowContainer: checkboxRowContainer
   };
+
 
   // Store the progress button for later updates
   projectElements[project.name] = {
@@ -246,7 +409,9 @@ function createProjectItem(project) {
     progressButton: progressButton,
   };
 
-  document.getElementById('projects-list').appendChild(projectItem);
+  // Store project item in the category container dynamically
+  const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
+  categoryContainer.appendChild(projectItem);
 
   // Button click event to start project
   progressButton.addEventListener('click', function () {
@@ -260,7 +425,22 @@ function createProjectItem(project) {
   projectItem.appendChild(hrElement);
 }
 
+function getOrCreateCategoryContainer(category) {
+  let categoryContainer = document.getElementById(`${category}-projects-list`);
+  if (!categoryContainer) {
+    const categorySection = document.createElement('div');
+    categorySection.classList.add('projects-subtab-content');
+    categorySection.id = `${category}-projects-list`;
 
+    const categoryHeader = document.createElement('h3');
+    categoryHeader.textContent = `${capitalizeFirstLetter(category)} Projects`;
+    categorySection.appendChild(categoryHeader);
+
+    document.querySelector('.projects-subtab-content-wrapper').appendChild(categorySection);
+    categoryContainer = categorySection;
+  }
+  return categoryContainer;
+}
 
 function getUpdatedResourceGain(project) {
   const updatedResourceGain = project.getEffectiveResourceGain;
@@ -405,6 +585,16 @@ function updateProjectUI(projectName) {
 
   updateSpaceshipProjectCostAndGains(project, elements); // Helper function for cost and gain
 
+  if (project.attributes.spaceExport) {
+    const elements = projectElements[project.name];
+
+    // Calculate the total disposal amount with scaling factor
+    const scalingFactor = project.assignedSpaceships > 100 ? project.assignedSpaceships / 100 : 1;
+    const totalDisposalAmount = project.attributes.disposalAmount * scalingFactor;
+
+    elements.totalDisposalElement.textContent = `Total Disposal: ${formatNumber(totalDisposalAmount, true)}`;
+  }
+
   // Update Repeat Count if applicable
   if (elements.repeatCountElement) {
     elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
@@ -415,6 +605,21 @@ function updateProjectUI(projectName) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
   }
 
+  // Check if the auto-assign spaceships checkbox should be checked
+  if (elements.autoAssignCheckbox) {
+    elements.autoAssignCheckbox.checked = project.autoAssignSpaceships || false;
+  }
+
+    // For spaceExport projects, set the saved disposal resource in the dropdown if it exists
+    if (project.attributes.spaceExport && project.selectedDisposalResource) {
+      const { category, resource } = project.selectedDisposalResource;
+      const disposalSelect = elements.disposalSelect; // Retrieve the stored disposalSelect element
+      
+      if (disposalSelect) {
+          disposalSelect.value = `${category}:${resource}`; // Set the dropdown to saved value
+      }
+  }
+
   // Update Resource Gain Information if applicable
   if (project.attributes && project.attributes.resourceGain) {
     const updatedResourceGain = project.getEffectiveResourceGain();
@@ -423,7 +628,7 @@ function updateProjectUI(projectName) {
       let resourceGainText = 'Resource Gain: ';
       for (const category in updatedResourceGain) {
         for (const resource in updatedResourceGain[category]) {
-          resourceGainText += `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
+          resourceGainText += `${resources[category][resource].displayName + resource.slice(1)}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
         }
       }
       resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
@@ -473,7 +678,7 @@ function updateProjectUI(projectName) {
         } else {
           // Update dynamic duration for spaceMining projects
           let duration = project.duration;
-          if (project.attributes.spaceMining) {
+          if (project.attributes.spaceMining || project.attributes.spaceExport) {
             duration = project.calculateSpaceshipAdjustedDuration();
           }
           elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;

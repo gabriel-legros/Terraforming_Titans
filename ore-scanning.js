@@ -99,7 +99,6 @@ class OreScanning {
         }
 
         if (scanData.D_current >= scanData.D_max) {
-          console.log(`No more ${depositType} deposits available to be found.`);
           continue;
         }
 

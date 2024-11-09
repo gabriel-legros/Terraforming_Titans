@@ -8,7 +8,9 @@ body {
 
 .tabs,
 .buildings-subtabs,
-.research-subtabs {
+.research-subtabs,
+.projects-subtabs
+ {
     display: flex;
     cursor: pointer;
     background-color: #333;
@@ -19,7 +21,8 @@ body {
 
 .tab,
 .building-subtab,
-.research-subtab {
+.research-subtab,
+.projects-subtab { /* Added projects-subtab */
     flex: 1;
     padding: 10px;
     text-align: center;
@@ -36,7 +39,8 @@ body {
 
 .tab.active,
 .building-subtab.active,
-.research-subtab.active {
+.research-subtab.active,
+.projects-subtab.active { /* Added projects-subtab.active */
     background-color: #666;
     color: #fff; /* Consistent text color for active state */
 }
@@ -78,12 +82,14 @@ body {
 }
 
 .building-subtab-content,
-.research-subtab-content {
+.research-subtab-content,
+.projects-subtab-content { /* Added projects-subtab-content */
     display: none;
 }
 
 .building-subtab-content.active,
-.research-subtab-content.active {
+.research-subtab-content.active,
+.projects-subtab-content.active { /* Added projects-subtab-content.active */
     display: block;
 }
 

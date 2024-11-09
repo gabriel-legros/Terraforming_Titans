@@ -115,12 +115,27 @@
         </div>
     </div>
 
-        <div id="special-projects" class="tab-content">
-            <div class="container special-projects-container">
-                <h2>Special Projects</h2>
-                <div id="projects-list"></div>
+    <div id="special-projects" class="tab-content">
+        <div class="container special-projects-container">
+          <h2>Special Projects</h2>
+      
+          <!-- Subtabs for Resources and Infrastructure projects -->
+          <div class="projects-subtabs">
+            <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects">Resources</div>
+            <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects">Infrastructure</div>
+          </div>
+      
+          <!-- Subtab content wrapper for Resources and Infrastructure -->
+          <div class="projects-subtab-content-wrapper">
+            <div id="resources-projects" class="projects-subtab-content active">
+              <div class="projects-list" id="resources-projects-list"></div>
             </div>
+            <div id="infrastructure-projects" class="projects-subtab-content">
+              <div class="projects-list" id="infrastructure-projects-list"></div>
+            </div>
+          </div>
         </div>
+      </div>
 
         <div id="colonies" class="tab-content">
             <div class="container colonies-container">

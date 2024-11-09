@@ -494,8 +494,8 @@ class Terraforming extends EffectableEntity{
     // Define consumption/production ratios
     const waterRatio = 1;
     const co2Ratio = 2.44;
-    const biomassRatio = 1.77388;
-    const oxygenRatio = 1.66612;
+    const biomassRatio = 1.66612;
+    const oxygenRatio = 1.77388
 
     // Determine growth or decay factor
     const factor = canGrow ? maxGrowthRate : 0.999;

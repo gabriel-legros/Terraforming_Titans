@@ -1,6 +1,7 @@
 const projectParameters = {
   cargo_rocket: {
     name: "Cargo Rocket",
+    category :"resources",
     cost: {
     },
     duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
@@ -23,6 +24,7 @@ const projectParameters = {
   },
   import_colonists_1: {
     name: "Import colonists",
+    category :"resources",
     cost: {
     },
     duration: 180000,  // Duration of the project in milliseconds
@@ -40,6 +42,7 @@ const projectParameters = {
   },
   satellite: {
     name: "Ore satellite",
+    category :"infrastructure",
     cost: {
       colony: {
         metal: 50,
@@ -62,6 +65,7 @@ const projectParameters = {
   },
   geo_satellite: {
     name: "Geothermal satellite",
+    category :"infrastructure",
     cost: {
       colony: {
         metal: 50,
@@ -84,6 +88,7 @@ const projectParameters = {
   },
   spaceMirrorFacility: {
     name: "Space mirror facility",
+    category :"infrastructure",
     cost: {
       colony: {
         metal: 10000,
@@ -108,6 +113,7 @@ const projectParameters = {
   },
   deeperMining: {
     name: "Deeper mining",
+    category : "infrastructure",
     cost: {
       colony: {
         electronics : 1000,
@@ -135,6 +141,7 @@ const projectParameters = {
   },
   oreSpaceMining: {
     name: "Metal Asteroid Mining",
+    category :"resources",
     cost: {},
     duration: 100000,
     description: "Use your spaceships to mine asteroids for metal. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
@@ -149,6 +156,7 @@ const projectParameters = {
   },
     carbonSpaceMining: {
     name: "Carbon Asteroid Mining",
+    category :"resources",
     cost: {},
     duration: 100000,
     description: "Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
@@ -163,6 +171,7 @@ const projectParameters = {
   },
   waterSpaceMining: {
     name: "Ice and Water importation",
+    category :"resources",
     cost: {},
     duration: 100000,
     description: "Use your spaceships to recover water and ice from all over the place, delivered as ice to the surface. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
@@ -177,6 +186,7 @@ const projectParameters = {
   },
   nitrogenSpaceMining: {
     name: "Nitrogen harvesting",
+    category :"resources",
     cost: {},
     duration: 100000,
     description: "Use your spaceships to recover nitrogen from the outer solar system. The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
@@ -191,6 +201,7 @@ const projectParameters = {
   },
   spaceElevator: {
     name: "Space Elevator",
+    category :"infrastructure",
     cost: {
       colony: {
         metal : 50000000,
@@ -235,12 +246,29 @@ const projectParameters = {
           resourceCategory : 'colony',
           resourceId : 'metal',
           value : 0
+        },
+        {
+          target : 'project',
+          targetId : 'waterSpaceMining',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        },
+        {
+          target : 'project',
+          targetId : 'exportResources',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
         }   
       ]
     }
   },  
   magneticShield : {
     name : 'Magnetic Shield',
+    category :"infrastructure",
     cost: {
       colony: {
         superconductors : 1000000000
@@ -259,6 +287,22 @@ const projectParameters = {
           value: true
         },
       ]
+    }
+  },
+  exportResources : {
+    name : "Resource Disposal",
+    category : "resources",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to dispose of unwanted resources somewhere.  Cheaper than importing.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceExport : true,
+      costPerShip : {colony : {metal : 100000, energy : 1000000}},
+      disposable : {colony : ['metal'], surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas']},
+      disposalAmount : 1000000
     }
   }
 };

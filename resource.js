@@ -187,9 +187,6 @@ function produceResources(deltaTime, buildings) {
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);
-      if(building.filledNeeds){
-        building.updateNeedsRatio(resources, deltaTime);
-      }
     }
   }
 
@@ -248,4 +245,5 @@ function produceResources(deltaTime, buildings) {
       resource.value = Math.max(resource.value, 0);
     }
   }
+
 }

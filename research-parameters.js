@@ -351,7 +351,7 @@ const researchParameters = {
       {
         id: 'shipyard',
         name: 'Shipbuilding',
-        description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining',
+        description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining and resource disposal.',
         cost: { research: 10000000 },
         prerequisites: [],
         effects: [
@@ -368,6 +368,10 @@ const researchParameters = {
           },
           {target : 'project',
             targetId : 'oreSpaceMining',
+            type: 'enable'
+          },
+          {target : 'project',
+            targetId : 'exportResources',
             type: 'enable'
           }
         ],
