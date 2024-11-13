@@ -464,7 +464,7 @@ progressData = {
       {
         id: "chapter1.24",
         type: "journal",
-        narrative: "Receiving transmission... \n 'Hey Hope.  I see you reached 1000 colonists!  Great work.  As the population increases, you should have more and more people available to help with the terraforming.  Right now the population is still too small to make a difference, but sometimes making small progress can still be better than none.'",
+        narrative: "Receiving transmission... \n 'Hey Hope.  I see you reached 1000 colonists!  Great work.  As the population increases, you should have more and more people available to help with the terraforming.  Right now the population is still too small to make a difference, but sometimes making small progress can still be better than none.  You may have noticed that even a little bit of heat is enough to start sublimating dry ice.'",
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
@@ -473,6 +473,18 @@ progressData = {
       }],
         reward: [],
         nextChapter: "chapter1.25"
+      }, 
+      {
+        id: "chapter1.25",
+        type: "journal",
+        narrative: "GHG factories are the first potentially impactful method of terraforming.  Build a GHG factory to continue.",
+        objectives: [{
+          type: 'building',
+          buildingName: 'ghghFactory',
+          quantity: 1
+      }],
+        reward: [],
+        nextChapter: "chapter2.0"
       }, 
     ]
   };

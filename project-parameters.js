@@ -121,7 +121,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "Deepens all ore mines to improve production.  Each completion improves metal production by an additive 20%.  This project becomes more expensive each time it is completed.",
+    description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  This project becomes more expensive each time it is completed.",
     repeatable: true,
     maxRepeatCount: 1000,
     unlocked : false,
@@ -134,7 +134,7 @@ const projectParameters = {
           targetId: 'oreMine',
           effectId: 'deeper_mining',
           type: 'productionMultiplier',
-          value: 1.2
+          value: 1
         }      
       ]
     }

@@ -697,7 +697,7 @@ const researchParameters = {
         id: 'ghg_factory',
         name: 'Greenhouse Gas Factories',
         description: 'Allows the construction of greenhouse gas factories to produce SF6 which is stable, non-toxic and 23500 times more potent than CO2.',
-        cost: { research: 100000 },
+        cost: { research: 500000 },
         prerequisites: [],
         effects: [
           {

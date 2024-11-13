@@ -6,7 +6,7 @@ function autoBuild(buildings) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled) {
-            const targetCount = Math.floor((building.autoBuildPercent * population) / 100);
+            const targetCount = Math.ceil((building.autoBuildPercent * population) / 100);
             const currentRatio = building.count / targetCount;
             const requiredAmount = targetCount - building.count;
 

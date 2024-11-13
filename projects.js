@@ -318,7 +318,7 @@ class Project extends EffectableEntity {
       if (this.attributes.effectScaling) {
         const baseValue = effect.value; // Use the base value from the project definition
         const n = this.repeatCount; // Total completions
-        scaledEffect.value = (baseValue - 1) * n + 1; // Compute scaled value
+        scaledEffect.value = (baseValue) * n + 1; // Compute scaled value
 
         // Use addAndReplace to replace any existing effect with the same effectId
         addEffect({ ...scaledEffect, sourceId: this });

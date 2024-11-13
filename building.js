@@ -256,7 +256,7 @@ class Building extends EffectableEntity {
       }
       if (this.requiresDeposit) {
         for (const deposit in this.requiresDeposit.underground) {
-          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]);
+          resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
       }
       this.count += buildCount;
