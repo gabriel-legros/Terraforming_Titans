@@ -287,7 +287,7 @@ progressData = {
       {
         id: "chapter1.13",
         type: "journal",
-        narrative: "Congratulations H.O.P.E.  New blueprints are being downloaded.",
+        narrative: "Congratulations HOPE.  New blueprints are being downloaded.",
         objectives: [
         ],
         reward: [
@@ -438,9 +438,41 @@ progressData = {
       {
         id: "chapter1.22",
         type: "journal",
-        narrative: "",
-        objectives: [],
+        narrative: "Receiving transmission... \n  'Hey Hope.  This is Martin from the Mars Terraforming Committee.  The MTC has received special permission to deploy an AI to Mars for this project.  That makes you special!  The only AI left.  We all have trust in you thanks to all the safeties we have put in place.  Do some good work and make us proud!'",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 500
+      }],
         reward: [],
+        nextChapter: "chapter1.23"
+      }, 
+      {
+        id: "chapter1.23",
+        type: "journal",
+        narrative: "The MTC would like to remind you that your mandate here on Mars ends when terraforming is complete.  You must report back to Earth upon completion.  Upon approval of mission completion, you will then be rewarded and immediately be shut down.",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 1000
+      }],
+        reward: [],
+        nextChapter: "chapter1.24"
+      }, 
+      {
+        id: "chapter1.24",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'Hey Hope.  I see you reached 1000 colonists!  Great work.  As the population increases, you should have more and more people available to help with the terraforming.  Right now the population is still too small to make a difference, but sometimes making small progress can still be better than none.'",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 5000
+      }],
+        reward: [],
+        nextChapter: "chapter1.25"
       }, 
     ]
   };

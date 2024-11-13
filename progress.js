@@ -11,6 +11,25 @@ class StoryEvent {
       this.rewardDelay = config.rewardDelay || 0;  // Add rewardDelay with a default of 0
       this.special = config.special || null; // Add special field for handling flags
     }
+
+    // Handle different types of events (pop-up, journal, etc.)
+    trigger() {
+
+        switch (this.type) {
+        case "pop-up":
+            createPopup(
+            this.parameters.title, 
+            this.parameters.text, 
+            this.parameters.buttonText
+            );
+            break;
+        case "journal":
+            addJournalEntry(`${this.title}: ${this.narrative}`);
+            break;
+        default:
+            console.error(`Unknown event type: ${this.type}`);
+        }
+    }
   }
   
   class StoryManager {

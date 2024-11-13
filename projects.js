@@ -105,15 +105,6 @@ class Project extends EffectableEntity {
         }
       }
     }
-
-    // Check scaled disposal resource availability for export projects
-    if (this.attributes.spaceExport && this.selectedDisposalResource) {
-      const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
-      const { category, resource } = this.selectedDisposalResource;
-      if (resources[category][resource].value < scaledDisposalAmount[category][resource]) {
-          return false; // Not enough of the selected resource to dispose
-      }
-  }
   
     // Check funding for resource choice if applicable
     if (this.selectedResources && this.selectedResources.length > 0) {
@@ -142,7 +133,7 @@ class Project extends EffectableEntity {
     }
   
     // Deduct spaceship costs if applicable
-    if (this.attributes.spaceMining) {
+    if (this.attributes.spaceMining || this.attributes.spaceExport) {
       const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
       for (const category in totalSpaceshipCost) {
         for (const resource in totalSpaceshipCost[category]) {
@@ -243,7 +234,7 @@ class Project extends EffectableEntity {
     }
 
     // Apply resource choice gain effect if applicable
-    if (this.pendingResourceGains && this.attributes.resourceCategory) {
+    if (this.pendingResourceGains && this.attributes.resourceChoiceGainCost) {
       this.applyResourceChoiceGain();
     }
 

@@ -132,7 +132,7 @@ function updateResourceRateDisplay(resource){
   if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
     const formattedNumber = formatNumber(netRate);
-    if(formattedNumber === 0)
+    if(Math.abs(netRate) < 1e-3)
     {
       ppsElement.textContent = `0/s`;
     } else {

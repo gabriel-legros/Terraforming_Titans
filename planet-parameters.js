@@ -32,7 +32,7 @@ const planetParameters = {
         carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
         inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
         oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
-        atmosphericWater: { name: 'Water', initialValue: 0, unlocked:false },
+        atmosphericWater: { name: 'Water Vap.', initialValue: 0, unlocked:false },
         greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}
       },
       special: {

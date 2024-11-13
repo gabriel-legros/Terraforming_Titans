@@ -3,7 +3,7 @@ const researchParameters = {
       {
         id: 'solar_efficiency',
         name: 'Improved Solar Efficiency',
-        description: 'Increases the efficiency of solar panels.',
+        description: 'Increases the efficiency of solar panels by 25%.',
         cost: { research: 100 },
         prerequisites: [],
         effects: [
@@ -11,14 +11,14 @@ const researchParameters = {
             target: 'building',
             targetId: 'solarPanel',
             type: 'productionMultiplier',
-            value: 1.25, // Increases solar panel production by 20%
+            value: 1.25, // Increases solar panel production by 25%
           },
         ],
       },
       {
         id: 'geothermal_plant',
         name: 'Geothermal Power Generation',
-        description: 'Unlocks geothermal generators, which require no maintenance.',
+        description: 'Unlocks geothermal generators, which require no maintenance, and a project to scan for suitable vents.',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [
@@ -177,7 +177,7 @@ const researchParameters = {
       {
         id: 'ore_processing',
         name: 'Efficient Ore Processing',
-        description: 'Increases the ore output from mining by 50%.',
+        description: 'Doubles ore output from mines.',
         cost: { research: 200 },
         prerequisites: [],
         effects: [
@@ -186,7 +186,7 @@ const researchParameters = {
             targetId: 'oreMine',
             effectId : 'ore_processing_research',
             type: 'productionMultiplier',
-            value: 1.5, // Increases ore production by 30%
+            value: 2, // Increases ore production by 30%
           },
         ],
       },
@@ -478,7 +478,7 @@ const researchParameters = {
       {
         id: 'enhanced_colonist_import_2',
         name: 'Bigger rockets',
-        description: 'Further increase the capacity of each colonist import by 20 using bigger rockets.',
+        description: 'Further increase the capacity of each colonist import by 30 using bigger rockets.',
         cost: { research: 5000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -488,7 +488,7 @@ const researchParameters = {
             type: 'increaseResourceGain',
             resourceCategory: 'colony',
             resourceId: 'colonists',
-            value: 20  // Increase the number of colonists imported by 30
+            value: 30  // Increase the number of colonists imported by 20
           },
         ],
       },

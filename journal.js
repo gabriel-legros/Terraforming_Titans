@@ -11,7 +11,11 @@ function addJournalEntry(text) {
 
   function typeLetter() {
     if (index < text.length) {
-      entry.textContent += text[index]; // Add the current letter
+      if (text[index] === '\n') {
+        entry.appendChild(document.createElement('br')); // Add a line break element for \n
+      } else {
+        entry.textContent += text[index]; // Add the current letter
+      }
       index++;
 
       let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 250 : 50;
@@ -35,7 +39,13 @@ function loadJournalEntries(entries) {
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
     const entry = document.createElement('p');
-    entry.textContent = entryText; // Directly add the full text (no typing animation on load)
+    const lines = entryText.split('\n'); // Split the text by newlines
+    lines.forEach((line, index) => {
+      entry.appendChild(document.createTextNode(line));
+      if (index < lines.length - 1) {
+        entry.appendChild(document.createElement('br')); // Add a line break for each new line
+      }
+    });
     journalEntries.appendChild(entry);
   });
 

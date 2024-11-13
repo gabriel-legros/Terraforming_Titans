@@ -359,7 +359,7 @@ class Terraforming extends EffectableEntity{
       if (tropicalTemperature < freezingPoint && temperateTemperature < freezingPoint && polarTemperature < freezingPoint) {
         // All zones below freezing point, freeze water based on the freezing rate multiplier
         const temperatureDifference = freezingPoint - polarTemperature;
-        const waterToFreeze = waterCoverage * freezingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
+        const waterToFreeze = Math.min(waterCoverage * freezingRateMultiplier * temperatureDifference * timeMultiplier / 1000, resources['surface']['liquidWater'].value);
         freezingRate = waterToFreeze / deltaTime;
         accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
         resources['surface']['liquidWater'].consumptionRate += waterToFreeze * (1000 / deltaTime);
@@ -368,7 +368,7 @@ class Terraforming extends EffectableEntity{
       } else if (tropicalTemperature >= freezingPoint && temperateTemperature >= freezingPoint && polarTemperature >= freezingPoint) {
         // All zones above freezing point, melt ice based on the melting rate multiplier
         const temperatureDifference = tropicalTemperature - freezingPoint;
-        const iceToMelt = iceCoverage * meltingRateMultiplier * temperatureDifference * timeMultiplier / 1000;
+        const iceToMelt = Math.min(iceCoverage * meltingRateMultiplier * temperatureDifference * timeMultiplier / 1000, resources['surface']['ice']);
         meltingRate = iceToMelt / deltaTime;
         accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
         resources['surface']['ice'].consumptionRate += iceToMelt * (1000 / deltaTime);

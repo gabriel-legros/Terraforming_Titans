@@ -628,7 +628,7 @@ function updateProjectUI(projectName) {
       let resourceGainText = 'Resource Gain: ';
       for (const category in updatedResourceGain) {
         for (const resource in updatedResourceGain[category]) {
-          resourceGainText += `${resources[category][resource].displayName + resource.slice(1)}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
+          resourceGainText += `${resources[category][resource].displayName}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
         }
       }
       resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
@@ -694,6 +694,9 @@ function updateProjectUI(projectName) {
     // Show the auto-start checkbox if the project can be repeated
     if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects')) {
       elements.autoStartCheckboxContainer.style.display = 'block';
+    }
+    else {
+      elements.autoStartCheckboxContainer.style.display = 'none';      
     }
   }
 }
