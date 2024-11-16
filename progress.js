@@ -157,6 +157,44 @@ class StoryEvent {
                 console.error(`Building ${objective.buildingName} not found.`);
                 return false;
             }
+        case 'terraforming':
+            switch(objective.terraformingParameter){
+                case 'tropicalTemperature':
+                    if(terraforming.temperature.zones.tropical.value >= objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'pressure':
+                    if(terraforming.atmosphere.value > objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'oxygenPressure':
+                    if(calculateGasPressure('oxygen') > objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'inertPressure':
+                    if(calculateGasPressure('inertGas') > objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'lowCO2Pressure':
+                    if(calculateGasPressure('carbonDioxide') < objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+            }
         default:
             console.error(`Unknown objective type: ${objective.type}`);
             return false;

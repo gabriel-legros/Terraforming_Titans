@@ -106,7 +106,7 @@ const buildingsParameters = {
     unlocked: false
   },
   componentFactory: {
-    name: 'Component factory',
+    name: 'Component Factory',
     category: 'production',
     description: 'Turns metals into valuable machine components. Requires human workers.',
     cost: { colony: { metal: 1000, components: 100, electronics: 50} },
@@ -121,7 +121,7 @@ const buildingsParameters = {
     unlocked: false
   },
   electronicsFactory: {
-    name: 'Electronics factory',
+    name: 'Electronics Factory',
     category: 'production',
     description: 'Turns metals and silicon into electronics.  Requires human workers.',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
@@ -153,7 +153,7 @@ const buildingsParameters = {
   androidFactory: {
     name: 'Androids Factory',
     category: 'production',
-    description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but very rewarding.  ',
+    description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but can act as a worker and requires little consumer goods.  ',
     cost: { colony: { metal: 500, glass : 200, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000, metal: 0.1, electronics: 0.1} },
     production: { colony: { androids: 0.1 } },
@@ -382,7 +382,7 @@ const buildingsParameters = {
     description: 'Produces very potent, safe greenhouse gases.',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 1000} },
-    production: { atmospheric: { greenhouseGas: 10 } },
+    production: { atmospheric: { greenhouseGas: 25 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
@@ -394,7 +394,7 @@ const buildingsParameters = {
   bioFactory:{
     name: 'Bio Factory',
     category: 'terraforming',
-    description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.  Only works during the day.',
+    description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
     consumption: {colony: {energy: 1000, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
     production: {atmospheric: {oxygen : 0.177388}, special: {biomass : 0.166612}},

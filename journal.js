@@ -14,7 +14,7 @@ function addJournalEntry(text) {
       if (text[index] === '\n') {
         entry.appendChild(document.createElement('br')); // Add a line break element for \n
       } else {
-        entry.textContent += text[index]; // Add the current letter
+        entry.appendChild(document.createTextNode(text[index])); // Add the current letter as a text node
       }
       index++;
 

@@ -284,24 +284,29 @@ const researchParameters = {
         ],
       },
       {
-        id: 'recycling',
-        name: 'Recycling',
-        description: 'Unlocks the recycling facility, which is capable of recycling all sorts of material lost to maintenance.',
-        cost: {research: 500000},
+        id: 'android_factory',
+        name: 'Android Manufacturing',
+        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.',
+        cost: { research: 500000 },
         prerequisites: [],
         effects: [
           {
             target: 'building',
-            targetId: 'recyclingFacility',
-            type: 'enable',
+            targetId: 'androidFactory',
+            type: 'enable'
+          },
+          {
+            target: 'building',
+            targetId: 'androidHousing',
+            type: 'enable'
           },
           {
             target: 'resource',
-            resourceType: 'surface',
-            targetId: 'scrapMetal',
+            resourceType : 'colony',
+            targetId: 'androids',
             type: 'enable'
-          }
-        ]
+          },
+        ],
       },
       {
         id: 'superconductor_factory',
@@ -324,27 +329,59 @@ const researchParameters = {
         ],
       },
       {
-        id: 'android_factory',
-        name: 'Android Manufacturing',
-        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.',
-        cost: { research: 5000000 },
+        id: 'recycling',
+        name: 'Recycling',
+        description: 'Unlocks the recycling facility, which is capable of recycling all sorts of material lost to maintenance.',
+        cost: {research: 5000000},
         prerequisites: [],
         effects: [
           {
             target: 'building',
-            targetId: 'androidFactory',
-            type: 'enable'
-          },
-          {
-            target: 'building',
-            targetId: 'androidHousing',
-            type: 'enable'
+            targetId: 'recyclingFacility',
+            type: 'enable',
           },
           {
             target: 'resource',
-            resourceType : 'colony',
-            targetId: 'androids',
+            resourceType: 'surface',
+            targetId: 'scrapMetal',
             type: 'enable'
+          }
+        ]
+      }, 
+      {
+        id: 'robotics_3',
+        name: 'Precision Assembly Lines',
+        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superconductorFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+          {
+            target: 'building',
+            targetId: 'androidFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+        ],
+      },  
+      {
+        id: 'advanced_alloy',
+        name: 'Advanced Alloys',
+        description: 'Doubles metal output.',
+        cost: { research: 50000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'oreMine',
+            effectId : 'advanced_alloy_research',
+            type: 'productionMultiplier',
+            value: 2
           },
         ],
       },
@@ -352,7 +389,7 @@ const researchParameters = {
         id: 'shipyard',
         name: 'Shipbuilding',
         description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining and resource disposal.',
-        cost: { research: 10000000 },
+        cost: { research: 500000000 },
         prerequisites: [],
         effects: [
           {
@@ -375,44 +412,7 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },      
-      {
-        id: 'advanced_alloy',
-        name: 'Advanced Alloys',
-        description: 'Doubles metal output.',
-        cost: { research: 50000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'oreMine',
-            effectId : 'advanced_alloy_research',
-            type: 'productionMultiplier',
-            value: 2, // Increases ore production by 30%
-          },
-        ],
-      },
-      {
-        id: 'robotics_3',
-        name: 'Precision Assembly Lines',
-        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
-        cost: { research: 500000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'superconductorFactory',
-            type: 'workerMultiplier',
-            value: 0.8
-          },
-          {
-            target: 'building',
-            targetId: 'androidFactory',
-            type: 'workerMultiplier',
-            value: 0.8
-          },
-        ],
-      },
+      },   
       {
         id: 'space_elevator',
         name: 'Space Elevator',
@@ -426,7 +426,40 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },   
+      }, 
+      {
+        id: 'robotics_4',
+        name: 'Direct AI integration.',
+        description: 'Integrates yourself within all factories to reduce all factory worker requirements by 25%.',
+        cost: { research: 1000000000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superconductorFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+          {
+            target: 'building',
+            targetId: 'androidFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+          {
+            target: 'building',
+            targetId: 'componentFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+          {
+            target: 'building',
+            targetId: 'electronicsFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+        ],
+      },  
     ],
     colonization: [
       {
@@ -507,6 +540,23 @@ const researchParameters = {
         ],
       },     
       {
+        id: 'enhanced_colonist_import_3',
+        name: 'Biggest rockets',
+        description: 'Further increase the capacity of each colonist import by 150 using the biggest rockets available.',
+        cost: { research: 50000 },  // Adjust the cost to make it suitable for the impact of the research
+        prerequisites: [],  // Requires the initial colonist import project to be available first
+        effects: [
+          {
+            target: 'project',
+            targetId: 'import_colonists_1',
+            type: 'increaseResourceGain',
+            resourceCategory: 'colony',
+            resourceId: 'colonists',
+            value: 150  // Increase the number of colonists imported by 20
+          },
+        ],
+      },
+      {
         id: 'construction_office',
         name: 'Construction Office',
         description: 'Allows automation of building construction.',
@@ -538,7 +588,7 @@ const researchParameters = {
       {
         id: 't5_colony',
         name: 'Dome City',
-        description: 'A larger dome design.',
+        description: 'A larger dome design.  Requires androids as consumer goods.',
         cost: { research: 5000000 },
         prerequisites: [],
         effects: [
@@ -552,7 +602,7 @@ const researchParameters = {
       {
         id: 't6_colony',
         name: 'Metropolis',
-        description: 'Too big to be a dome, rather a collection of interlocked domes.  Requires androids as consumer goods.',
+        description: 'Too big to be a dome, rather a collection of interlocked domes.',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [
@@ -740,10 +790,66 @@ const researchParameters = {
         ],
       },
       {
+        id: 'ghg_efficiency',
+        name: 'Streamlined Greenhouse Gas Production',
+        description: 'Doubles the efficiency of GHG factories.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'productionMultiplier',
+            value: 2,
+          },
+        ],
+      },
+      {
+        id: 'ghg_efficiency2',
+        name: 'Mass Greenhouse Gas Production',
+        description: 'Doubles the efficiency of GHG factories, again.',
+        cost: { research: 100000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'productionMultiplier',
+            value: 2,
+          },
+        ],
+      },
+      {
+        id: 'carbonImport',
+        name: 'Carbon Importation',
+        description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
+        cost: { research: 500000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'carbonSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },   
+      {
+        id: 'waterImport',
+        name: 'Water Importation',
+        description: 'Water is everywhere but more may be needed sometimes.',
+        cost: { research: 500000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'waterSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },   
+      {
         id: 'grass',
         name: 'Grass production',
         description: 'Replaces lichen production with grass production if conditions allow.  Grass grows faster but is more picky about temperature and requires liquid water.',
-        cost: { research: 10000000 },
+        cost: { research: 500000000 },
         prerequisites: [],
         effects: [      
           {
@@ -758,7 +864,7 @@ const researchParameters = {
         id: 'trees',
         name: 'Tree production',
         description: 'Replaces grass production with tree production if conditions allow.  Trees grow even faster but are also pickier.',
-        cost: { research: 1000000000 },
+        cost: { research: 5000000000 },
         prerequisites: [],
         effects: [      
           {
@@ -769,45 +875,6 @@ const researchParameters = {
           },
         ],
       },
-      {
-        id: 'carbonImport',
-        name: 'Carbon Importation',
-        description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
-        cost: { research: 10000000 },
-        prerequisites: [],
-        effects: [
-          {target : 'project',
-            targetId : 'carbonSpaceMining',
-            type: 'enable'
-          }
-        ],
-      },   
-      {
-        id: 'waterImport',
-        name: 'Water Importation',
-        description: 'Water is everywhere but more may be needed sometimes.',
-        cost: { research: 100000000 },
-        prerequisites: [],
-        effects: [
-          {target : 'project',
-            targetId : 'waterSpaceMining',
-            type: 'enable'
-          }
-        ],
-      },   
-      {
-        id: 'magneticShield',
-        name: 'Magnetic Shield',
-        description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
-        cost: { research: 1000000000 },
-        prerequisites: [],
-        effects: [
-          {target : 'project',
-            targetId : 'magneticShield',
-            type: 'enable'
-          }
-        ],
-      },   
       {
         id: 'nitrogenImport',
         name: 'Nitrogen Importation',
@@ -836,6 +903,19 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 'magneticShield',
+        name: 'Magnetic Shield',
+        description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
+        cost: { research: 1000000000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'magneticShield',
+            type: 'enable'
+          }
+        ],
+      },   
     ],
   };
   

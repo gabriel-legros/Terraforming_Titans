@@ -24,14 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
+
+  // Create all project items initially
   projectsArray.forEach(project => {
-    if (!project.unlocked) {
-      return; // Skip projects that are not unlocked
-    }
-    
     if (!projectElements[project.name]) {
       createProjectItem(project);
     }
+  });
+
+  // Update the UI for each project
+  projectsArray.forEach(project => {
     updateProjectUI(project.name);
   });
 }
@@ -423,6 +425,12 @@ function createProjectItem(project) {
   hrElement.style.border = '1px solid #ccc'; // Set border for the line
   hrElement.style.margin = '10px 0'; // Add margin to separate it from other elements
   projectItem.appendChild(hrElement);
+
+  // Store the project item
+  projectElements[project.name] = {
+    ...projectElements[project.name], // Merge with existing properties
+    projectItem : projectItem
+  };
 }
 
 function getOrCreateCategoryContainer(category) {
@@ -571,6 +579,16 @@ function updateProjectUI(projectName) {
   if (!elements) {
     console.error(`UI elements for project "${projectName}" are undefined.`);
     return;
+  }
+
+  // Update the project item's visibility based on the unlocked state
+  const projectItem = elements.projectItem;
+  if (projectItem) {
+    if (project.unlocked) {
+      projectItem.style.display = 'block';
+    } else {
+      projectItem.style.display = 'none';
+    }
   }
 
   // Update Spaceships Assigned display if applicable

@@ -320,7 +320,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const availableWorkers = resources.colony.workers?.value || 0;
   
       // Check if there are enough workers available
-      const workerText = `Workers: ${requiredWorkers}`;
+      const workerText = `Workers: ${formatNumber(requiredWorkers, true)}`;
       let formattedWorkerText;
   
       if (availableWorkers >= structure.requiresWorker) {

@@ -545,6 +545,10 @@ class Terraforming extends EffectableEntity{
       co2.productionRate += adjustedCo2Change * (1000 / deltaTime);
       oxygen.consumptionRate += adjustedOxygenChange * (1000 / deltaTime);
       biomass.consumptionRate += actualDecay * (1000 / deltaTime);
+
+      if(biomass.value < 1e-2){
+        biomass.value = 0;
+      }
   }
 
   }

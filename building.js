@@ -246,6 +246,40 @@ class Building extends EffectableEntity {
     return true;
   }
 
+  maxBuildable() {
+    let maxByResource = Infinity;
+
+    // Check effective cost resources
+    for (const category in this.getEffectiveCost(1)) {
+        for (const resource in this.getEffectiveCost(1)[category]) {
+            const available = resources[category][resource].value;
+            const costPerUnit = this.getEffectiveCost(1)[category][resource];
+
+            if (costPerUnit > 0) {
+                const possibleCount = Math.floor(available / costPerUnit);
+                maxByResource = Math.min(maxByResource, possibleCount);
+            }
+        }
+    }
+
+    // Check deposit requirements
+    if (this.requiresDeposit) {
+        for (const deposit in this.requiresDeposit.underground) {
+            const availableDeposit = resources.underground[deposit]?.value ?? 0;
+            const reservedDeposit = resources.underground[deposit]?.reserved ?? 0;
+            const depositPerUnit = this.requiresDeposit.underground[deposit];
+
+            const available = availableDeposit - reservedDeposit;
+            if (depositPerUnit > 0) {
+                const possibleCount = Math.floor(available / depositPerUnit);
+                maxByResource = Math.min(maxByResource, possibleCount);
+            }
+        }
+    }
+
+    return Math.max(maxByResource, 0); // Ensure non-negative result
+}
+
   build(buildCount = 1) {
     if (this.canAfford(buildCount)) {
       const effectiveCost = this.getEffectiveCost(buildCount);

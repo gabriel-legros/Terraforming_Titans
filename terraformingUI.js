@@ -71,19 +71,19 @@ function createTemperatureBox(row) {
   
   function updateTemperatureBox() {
     const temperatureCurrent = document.getElementById('temperature-current');
-    temperatureCurrent.textContent = terraforming.temperature.value.toFixed(1);
+    temperatureCurrent.textContent = formatNumber(terraforming.temperature.value, false, 2);
   
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
-    effectiveTempNoAtm.textContent = terraforming.temperature.effectiveTempNoAtmosphere.toFixed(1);
+    effectiveTempNoAtm.textContent = formatNumber(terraforming.temperature.effectiveTempNoAtmosphere, false, 2);
 
     const tropicalTemp = document.getElementById('tropical-temp');
-    tropicalTemp.textContent = terraforming.temperature.zones.tropical.value.toFixed(1);
+    tropicalTemp.textContent = formatNumber(terraforming.temperature.zones.tropical.value, false, 2);
   
     const temperateTemp = document.getElementById('temperate-temp');
-    temperateTemp.textContent = terraforming.temperature.zones.temperate.value.toFixed(1);
+    temperateTemp.textContent = formatNumber(terraforming.temperature.zones.temperate.value, false, 2);
   
     const polarTemp = document.getElementById('polar-temp');
-    polarTemp.textContent = terraforming.temperature.zones.polar.value.toFixed(1);
+    polarTemp.textContent = formatNumber(terraforming.temperature.zones.polar.value, false, 2);
   }
 
   function createAtmosphereBox(row) {
@@ -263,7 +263,7 @@ function updateLifeBox() {
     magnetosphereBox.id = 'magnetosphere-box';
 
     const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield') 
-      ? 'The planet is sufficiently protected' 
+      ? 'The planet is sufficiently protected, providing a 50% boost to life growth' 
       : 'No magnetosphere';
 
     magnetosphereBox.innerHTML = `
@@ -280,7 +280,7 @@ function updateLifeBox() {
 
     // Update status based on boolean flag
     const magnetosphereStatusText = terraforming.isBooleanFlagSet('magneticShield') 
-      ? 'The planet is sufficiently protected' 
+      ? 'The planet is sufficiently protected, providing a 50% boost to life growth' 
       : 'No magnetosphere';
 
     magnetosphereStatus.textContent = magnetosphereStatusText;

@@ -271,11 +271,15 @@ const projectParameters = {
     category :"infrastructure",
     cost: {
       colony: {
-        superconductors : 1000000000
+        metal: 1e12,
+        glass: 1e12,
+        electronics: 1e10,
+        components: 1e11,
+        superconductors : 1e9
       }
     },
     duration: 36,
-    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.",
+    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates provides an effective boost of 50% to life growth.",
     repeatable: false,
     unlocked : false,
     attributes : {
@@ -286,6 +290,12 @@ const projectParameters = {
           targetId: 'magneticShield',
           value: true
         },
+        {
+          type: 'booleanFlag',
+          target: 'terraforming',
+          type: 'lifeGrowthMultiplier',
+          value: 1.5
+        }
       ]
     }
   },

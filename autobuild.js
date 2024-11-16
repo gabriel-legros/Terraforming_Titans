@@ -10,9 +10,17 @@ function autoBuild(buildings) {
             const currentRatio = building.count / targetCount;
             const requiredAmount = targetCount - building.count;
 
-            // Only add buildings with a positive required amount to the buildable list
             if (requiredAmount > 0) {
-                buildableBuildings.push({ building, currentRatio, requiredAmount });
+                // Pre-compute affordability to minimize redundant checks
+                const canBuildFull = building.canAfford(requiredAmount);
+                const maxBuildable = building.maxBuildable(); // Assume this method exists for efficiency
+                buildableBuildings.push({
+                    building,
+                    currentRatio,
+                    requiredAmount,
+                    canBuildFull,
+                    maxBuildable,
+                });
             }
         }
     }
@@ -20,18 +28,13 @@ function autoBuild(buildings) {
     // Step 2: Sort buildable buildings by their current ratio (ascending)
     buildableBuildings.sort((a, b) => a.currentRatio - b.currentRatio);
 
-    // Step 3: Attempt to build each building in the sorted list
-    buildableBuildings.forEach(({ building, requiredAmount }) => {
-        // Check if we can afford the full required amount; if not, build one at a time
-        if (building.canAfford(requiredAmount)) {
+    // Step 3: Efficiently allocate builds
+    buildableBuildings.forEach(({ building, requiredAmount, canBuildFull, maxBuildable }) => {
+        if (canBuildFull) {
             building.build(requiredAmount); // Build all at once if affordable
-        } else {
-            // Build incrementally if resources don't suffice for the total required amount
-            let builtCount = 0;
-            while (builtCount < requiredAmount && building.canAfford(1)) {
-                building.build(1);
-                builtCount++;
-            }
+        } else if (maxBuildable > 0) {
+            building.build(maxBuildable); // Build the maximum number affordable
         }
+        // Skip incremental building as it significantly impacts performance
     });
 }

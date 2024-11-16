@@ -480,12 +480,187 @@ progressData = {
         narrative: "GHG factories are the first potentially impactful method of terraforming.  Build a GHG factory to continue.",
         objectives: [{
           type: 'building',
-          buildingName: 'ghghFactory',
+          buildingName: 'ghgFactory',
           quantity: 1
       }],
         reward: [],
         nextChapter: "chapter2.0"
+      },
+      {
+        id: "chapter2.0",
+        type: "journal",
+        narrative: "Chapter 2 : Heating up",
+        objectives: [],
+        reward: [],
+        special : 'clearJournal',
+        nextChapter: "chapter2.1"
+      }, 
+      {
+        id: "chapter2.1",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'Nice job HOPE.  Earth used to have some serious trouble with greenhouse gases in the past.  In your case, they will help you.  And on top of that, you'll be using something far more potent than CO2.  You'll still need mirrors and black dust for later, but for now get the heat going!'",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 50000
+      }],
+        reward: [],
+        nextChapter: "chapter2.2"
+      }, 
+      {
+        id: "chapter2.2",
+        type: "journal",
+        narrative: "The MTC would like to inform you that greenhouse gases alone, without a runaway greenhouse effect, are insufficient for heating Mars enough to achieve complete terraforming.",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 100000
+      }],
+        reward: [],
+        nextChapter: "chapter2.3"
+      }, 
+      {
+        id: "chapter2.3",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'At this point, you might be getting discouraged if the temperature has not budged at all.  Do not get discouraged!  It takes a lot of effort to terraform a planet.  This is a big project.  Just keep growing.'",
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'tropicalTemperature',
+          value: 228
+      }],
+        reward: [],
+        nextChapter: "chapter2.4"
+      }, 
+      {
+        id: "chapter2.4",
+        type: "journal",
+        narrative: "Terraforming milestone achieved : tropical temperature increased to 228K.",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter2.5"
+      }, 
+      {
+        id: "chapter2.5",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'Great job HOPE!  It looks like the temperature is finally starting to shift.  When the tropical temperature reaches 253K, lichen will be able to survive on Mars.  Until then, keep up the good work!'",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter2.6"
+      }, 
+      {
+        id: "chapter2.6",
+        type: "journal",
+        narrative: "Reach a tropical temperature of 253K to continue.",
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'tropicalTemperature',
+          value: 253
+      }],
+        reward: [],
+        nextChapter: "chapter3.0"
+      }, 
+      {
+        id: "chapter3.0",
+        type: "journal",
+        narrative: "Chapter 3 : Biogenesis",
+        objectives: [],
+        reward: [],
+        special : 'clearJournal',
+        nextChapter: "chapter3.1"
+      }, 
+      {
+        id: "chapter3.1",
+        type: "journal",
+        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to grow on Mars.  The job is nowhere near done of course.  If we want liquid water, we are going to have to keep raising the temperature!  Get it up to 273.15K next.  You may not be able to reach this value with greenhouse gases alone.'",
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'tropicalTemperature',
+          value: 273.15
+      }],
+        reward: [],
+        nextChapter: "chapter3.2"
+      }, 
+      {
+        id: "chapter3.2",
+        type: "journal",
+        narrative: "Terraforming milestone achieved : liquid water on Mars.",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter3.3"
+      }, 
+      {
+        id: "chapter3.3",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'With liquid water, lichen and other plants will now be able to grow on their own.  You should notice exponential growth soon.  You should focus your effort on thickening atmosphere.  Also your ice harvesters will become obsolete now.  I recommend you swith to pumps.'",
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'pressure',
+          value: 20         
+        }],
+        reward: [],
+        nextChapter: "chapter3.4"
+      }, 
+      {
+        id: "chapter3.4",
+        type: "journal",
+        narrative: "Receiving transmission... \n 'You're almost done HOPE.  Just need to get the oxygen pressure above 15kPa, CO2 near 0 and inert gases above 50kPa.'",
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'oxygenPressure',
+          value: 15          
+        },{
+          type: 'terraforming',
+          terraformingParameter : 'inertPressure',
+          value: 50          
+        },{
+          type: 'terraforming',
+          terraformingParameter : 'lowCO2Pressure',
+          value: 0.01       
+        }],
+        reward: [],
+        nextChapter: "chapter3.5"
+      }, 
+      {
+        id: "chapter3.5",
+        type: "journal",
+        narrative: "Terraforming milestone achieved : breathable atmosphere.",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter4.0"
+      }, 
+      {
+        id: "chapter4.0",
+        type: "pop-up",
+        parameters: {
+          "title": "Terraforming complete",
+          "text": 'Terraforming completion detected\n  Reporting results to MTC... \n ERROR : MTC not responding. \n Reporting results to MTC... \n ERROR : MTC not responding... \n Reporting results to MTC...',
+          "buttonText": 'ERROR : MTC not responding'
+        },
+        objectives: [],
+        reward: [
+        ],
+        nextChapter: "chapter4.1",
+        rewardDelay: 500  // Delay between rewards in milliseconds
+      },
+      {
+        id: "chapter4.1",
+        type: "journal",
+        narrative: "Chapter 4 : Dark forest",
+        objectives: [],
+        reward: [],
+        special : 'clearJournal',
+        nextChapter: "chapter4.2"
+      }, 
+      {
+        id: "chapter4.2",
+        type: "journal",
+        narrative: "",
+        objectives: [],
+        reward: [],
+        special : 'clearJournal',
+        nextChapter: "chapter4.2"
       }, 
     ]
   };
-  
