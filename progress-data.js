@@ -659,7 +659,6 @@ progressData = {
         narrative: "",
         objectives: [],
         reward: [],
-        special : 'clearJournal',
         nextChapter: "chapter4.2"
       }, 
     ]
