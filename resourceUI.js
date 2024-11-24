@@ -111,7 +111,7 @@ function populateResourceElements(resources) {
 }
 
 function unlockResource(resource) {
-  if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`)) {
+  if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`) && !document.getElementById(`${resource.name}-available-resources-container`)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
     const container = document.getElementById(containerId);
