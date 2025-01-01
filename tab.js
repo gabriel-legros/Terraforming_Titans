@@ -73,7 +73,6 @@ const tabParameters = {
     enable(tabId) {
       if (this.tabs[tabId]) {
         this.tabs[tabId].classList.remove('hidden');
-        this.activateTab(extractTabId(tabId));
         console.log(`Tab "${tabId}" unlocked.`);
       } else {
         console.error(`Tab "${tabId}" not managed by TabManager.`);

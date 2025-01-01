@@ -1,0 +1,24 @@
+.golden-asteroid {
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+    /* Add any additional styles for size, border, shadow, etc. */
+  }
+
+  .gold-asteroid-countdown {
+    top: 20px;
+    font-size: 15px;
+    color: gold;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px darkgoldenrod;
+  }
+
+  #gold-asteroid-container {
+    height: 20px;
+    min-height: 20px;
+    border-radius: 5px; /* Adds rounded corners */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+  }

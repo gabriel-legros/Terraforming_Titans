@@ -27,12 +27,38 @@ class EffectableEntity {
       }
     }
   
-    // Method to remove an effect by its source ID
     removeEffect(sourceId) {
-      this.activeEffects = this.activeEffects.filter((effect) => effect.sourceId !== sourceId);
-      console.log(`Removed effects from source: ${sourceId} on ${this.name}`);
-      // Optionally, you could reapply all remaining active effects after removing
-      this.applyActiveEffects();
+      if (!sourceId) {
+        console.warn("No sourceId provided to removeEffect");
+        return;
+      }
+    
+      // Identify effects to be removed
+      const effectsToRemove = this.activeEffects.filter(effect => effect.sourceId === sourceId);
+    
+      if (effectsToRemove.length === 0) {
+        console.log(`No effects found for source: ${sourceId}`);
+      } else {
+        console.log(`Removed effects from source: ${sourceId} on ${this.name}`);
+        
+        // Remove boolean flags associated with the effects
+        effectsToRemove.forEach(effect => {
+          if (effect.type === 'booleanFlag') {
+            this.booleanFlags.delete(effect.flagId);
+          }
+        });
+    
+        // Update the active effects array
+        this.activeEffects = this.activeEffects.filter(effect => effect.sourceId !== sourceId);
+      }
+    
+      try {
+        this.applyActiveEffects();
+      } catch (error) {
+        console.error("Error applying active effects:", error);
+      }
+    
+      return this; // Enables chaining
     }
   
     // Method to apply all active effects
@@ -53,36 +79,41 @@ class EffectableEntity {
   
   // Method to apply a specific effect
   applyEffect(effect) {
-    switch (effect.type) {
-      case 'increaseResourceGain':
-        this.applyIncreaseResourceGain(effect);
+    if(!('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave))
+    {
+      switch (effect.type) {
+        case 'increaseResourceGain':
+          this.applyIncreaseResourceGain(effect);
+          break;
+        case 'productionMultiplier':
+          this.applyProductionMultiplier(effect.value);
+          break;
+        case 'resourceConsumptionMultiplier':
+          this.applyProductionMultiplier(effect);
+          break;
+        case 'resourceProductionMultiplier':
+          this.applyProductionMultiplier(effect);
+          break;
+        case 'resourceCostMultiplier':
+          this.applyResourceCostMultiplier(effect);
+          break;
+        case 'enable':
+          this.enable(effect.targetId);
+          break;
+        case 'enableContent':
+          this.enableContent(effect.targetId);
+          break;
+        case 'activateTab':
+          this.activateTab(effect.targetId)
+        case 'booleanFlag':  // New effect type to handle boolean flags
+          this.applyBooleanFlag(effect);
+        case 'oneTimeStart':
+          this.applyOneTimeStart(effect);
         break;
-      case 'productionMultiplier':
-        this.applyProductionMultiplier(effect.value);
-        break;
-      case 'resourceConsumptionMultiplier':
-        this.applyProductionMultiplier(effect);
-        break;
-      case 'resourceProductionMultiplier':
-        this.applyProductionMultiplier(effect);
-        break;
-      case 'resourceCostMultiplier':
-        this.applyResourceCostMultiplier(effect);
-        break;
-      case 'enable':
-        this.enable(effect.targetId);
-        break;
-      case 'enableContent':
-        this.enableContent(effect.targetId);
-        break;
-      case 'booleanFlag':  // New effect type to handle boolean flags
-        this.applyBooleanFlag(effect);
-      case 'oneTimeStart':
-        this.applyOneTimeStart(effect);
-      break;
-      // Add other effect types here as needed
-      default:
-        console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
+        // Add other effect types here as needed
+        default:
+          console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
+      }
     }
   }
 
@@ -109,13 +140,13 @@ class EffectableEntity {
 
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
-      const { targetId, value } = effect;
+      const { flagId, value } = effect;
       if (value) {
-        this.booleanFlags.add(targetId); // Add the flag to the Set
-        console.log(`Boolean flag "${targetId}" set to true for ${this.name}.`);
+        this.booleanFlags.add(flagId); // Add the flag to the Set
+        console.log(`Boolean flag "${flagId}" set to true for ${this.name}.`);
       } else {
-        this.booleanFlags.delete(targetId); // Remove the flag from the Set
-        console.log(`Boolean flag "${targetId}" set to false for ${this.name}.`);
+        this.booleanFlags.delete(flagId); // Remove the flag from the Set
+        console.log(`Boolean flag "${flagId}" set to false for ${this.name}.`);
       }
     }
 
@@ -146,7 +177,10 @@ class EffectableEntity {
 }
 
 function addEffect(effect){
-  if (effect.target === 'building') {
+  if(effect.target === 'funding'){
+    fundingModule.addAndReplace(effect)
+  }
+  else if (effect.target === 'building') {
     const building = buildings[effect.targetId];
     if (building) {
       building.addAndReplace(effect);
@@ -180,5 +214,46 @@ function addEffect(effect){
   else if (effect.target === 'terraforming') {
     // Apply effect to the tab manager
     terraforming.addAndReplace(effect);
+  }
+}
+
+function removeEffect(effect){
+  if(effect.target === 'funding'){
+    fundingModule.removeEffect(effect.sourceId)
+  }
+  else if (effect.target === 'building') {
+    const building = buildings[effect.targetId];
+    if (building) {
+      building.removeEffect(effect.sourceId);
+    }
+  } else if (effect.target === 'project') {
+    const project = projectManager.projects[effect.targetId];
+    if (project) {
+      project.removeEffect(effect.sourceId);
+    }
+  }  else if (effect.target === 'colony') {
+    const colony = colonies[effect.targetId];
+    if (colony) {
+      colony.removeEffect(effect.sourceId);
+    }
+  } else if (effect.target === 'resource') {
+    const resourceType = effect.resourceType;
+    const resource = resources[resourceType][effect.targetId];
+    if (resource){
+      resource.removeEffect(effect.sourceId);
+    }
+  } else if (effect.target === 'projectManager') {
+    // Apply effect to the project manager
+    projectManager.removeEffect(effect.sourceId);
+  } else if (effect.target === 'tab' || effect.target === 'tabContent') {
+    // Apply effect to the tab manager
+    tabManager.removeEffect(effect.sourceId);
+  } else if (effect.target === 'global') {
+    // Apply effect to the tab manager
+    globalEffects.removeEffect(effect.sourceId);
+  }
+  else if (effect.target === 'terraforming') {
+    // Apply effect to the tab manager
+    terraforming.removeEffect(effect.sourceId);
   }
 }

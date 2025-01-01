@@ -381,7 +381,7 @@ class Building extends EffectableEntity {
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) + scaledProduction;
 
         // Update production rate for the resource
-        resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + (scaledProduction * (1000 / deltaTime));
+        resources[category][resource].modifyRate(scaledProduction * (1000 / deltaTime), this.displayName);
       }
     }
   }
@@ -409,7 +409,7 @@ class Building extends EffectableEntity {
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
 
         // Update consumption rate for the resource
-        resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (scaledConsumption * (1000 / deltaTime));
+        resources[category][resource].modifyRate(- scaledConsumption * (1000 / deltaTime), this.displayName);
       }
     }
   }
@@ -431,7 +431,7 @@ class Building extends EffectableEntity {
         accumulatedChanges['colony'][resource] = (accumulatedChanges['colony'][resource] || 0) - maintenanceCost;
 
         // Update consumption rate for maintenance costs
-        resources['colony'][resource].consumptionRate = (resources['colony'][resource].consumptionRate || 0) + (maintenanceCost * (1000 / deltaTime));
+        resources['colony'][resource].modifyRate(-(maintenanceCost * (1000 / deltaTime)), this.displayName);
 
         // Accumulate maintenance costs in the accumulatedMaintenance object
         accumulatedMaintenance[resource] = (accumulatedMaintenance[resource] || 0) + maintenanceCost;
@@ -451,8 +451,7 @@ class Building extends EffectableEntity {
                 (accumulatedChanges[targetCategory][targetResourceName] || 0) + convertedAmount;
 
               // Update production rate for the converted resource
-              resources[targetCategory][targetResourceName].productionRate =
-                (resources[targetCategory][targetResourceName].productionRate || 0) + (convertedAmount * (1000 / deltaTime));
+              resources[targetCategory][targetResourceName].modifyRate(convertedAmount * (1000 / deltaTime), this.displayName);
             }
           }
         }

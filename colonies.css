@@ -18,3 +18,55 @@
   #unhide-obsolete-button:hover {
     background-color: #45a049;
   }
+
+/* Style the need boxes */
+.need-box {
+  width: 150px;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  background-color: transparent;
+}
+
+.need-box .need-fill {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  transition: width 0.3s ease;
+}
+
+.need-box .text-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 14px;
+  flex-grow: 1;
+}
+
+.need-box .checkbox-container {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.need-box input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}

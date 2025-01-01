@@ -7,12 +7,14 @@
     <title>Terraforming Titans - Mars</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="save.css">
     <link rel="stylesheet" href="structure.css">
     <link rel="stylesheet" href="colonies.css">
     <link rel="stylesheet" href="pop-up.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
     <link rel="stylesheet" href="terraforming.css">
+    <link rel="stylesheet" href="gold-asteroid.css">
     <link rel="stylesheet" href="day-night-cycleUI.css">
     <script src="planet-parameters.js"></script>
     <script src="life-parameters.js"></script>
@@ -51,10 +53,13 @@
     <script src="dry-ice-cycle.js"></script>   
     <script src="globals.js"></script>
     <script src="autobuild.js"></script>
+    <script src="gold-asteroid.js"></script>
     <script src="game.js"></script>
 </head>
 
 <body>
+
+<div id="game-container">
 
   <!-- Tab Navigation -->
   <div class="tabs">
@@ -63,7 +68,7 @@
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
     <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming</div>
-    <div class="tab active" id="settings-tab" data-tab="settings">Settings</div>
+    <div class="tab active" id="settings-tab" data-tab="settings">Save and Settings</div>
   </div>
 
   <div class="day-night-progress-bar-container">
@@ -75,6 +80,7 @@
     <div class="tab-content-wrapper">
 
       <div class="resource-wrapper">
+        <div id="gold-asteroid-container"></div>
         <div class="resource-container" id="resources-container">
             <!-- Resources will be dynamically inserted here -->
         </div>
@@ -186,15 +192,82 @@
     </div>
 
     <div id="settings" class="tab-content active">
-        <div class="container settings-container">
-            <h2>Settings</h2>
-            <div class="settings-item">
-                <button id="save-game">Save Game</button>
-                <button id="load-game">Load Game</button>
-                <button id="delete-save">Delete Save</button> <!-- New Delete Save Button -->
-            </div>
-        </div>
-    </div>
+      <div class="container settings-container">
+          <h2>Save</h2>
+          <div class="save-slots">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>Slot</th>
+                          <th>Date</th>
+                          <th>Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                        <td>Autosave</td>
+                        <td id="autosave-date">Empty</td>
+                        <td>
+                            <button class="save-button" data-slot="autosave" disabled>Save</button>
+                            <button class="load-button" data-slot="autosave">Load</button>
+                            <button class="delete-button" data-slot="autosave">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <div id="autosave-text"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Slot 1</td>
+                        <td id="slot1-date">Empty</td>
+                        <td>
+                            <button class="save-button" data-slot="slot1">Save</button>
+                            <button class="load-button" data-slot="slot1">Load</button>
+                            <button class="delete-button" data-slot="slot1">Delete</button>
+                        </td>
+                    </tr>
+                      <tr>
+                          <td>Slot 2</td>
+                          <td id="slot2-date">Empty</td>
+                          <td>
+                              <button class="save-button" data-slot="slot2">Save</button>
+                              <button class="load-button" data-slot="slot2">Load</button>
+                              <button class="delete-button" data-slot="slot2">Delete</button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>Slot 3</td>
+                          <td id="slot3-date">Empty</td>
+                          <td>
+                              <button class="save-button" data-slot="slot3">Save</button>
+                              <button class="load-button" data-slot="slot3">Load</button>
+                              <button class="delete-button" data-slot="slot3">Delete</button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>Slot 4</td>
+                          <td id="slot4-date">Empty</td>
+                          <td>
+                              <button class="save-button" data-slot="slot4">Save</button>
+                              <button class="load-button" data-slot="slot4">Load</button>
+                              <button class="delete-button" data-slot="slot4">Delete</button>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>Slot 5</td>
+                          <td id="slot5-date">Empty</td>
+                          <td>
+                              <button class="save-button" data-slot="slot5">Save</button>
+                              <button class="load-button" data-slot="slot5">Load</button>
+                              <button class="delete-button" data-slot="slot5">Delete</button>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
 
     <!-- Journal Section (New) -->
     <div id="journal" class="journal">
@@ -205,6 +278,8 @@
     </div>
 
     </div>
+
+</div>
 
     <script>
     // Function to handle tab switching
@@ -217,19 +292,7 @@
             document.getElementById(this.dataset.tab).classList.add('active');
         });
     });
-  
-      // Save game state to localStorage
-      document.getElementById('save-game').addEventListener('click', saveGame);
-  
-      // Load game state from localStorage
-      document.getElementById('load-game').addEventListener('click', loadGame);
-
-      document.getElementById('delete-save').addEventListener('click', function() {
-  if (confirm('Are you sure you want to delete your save file? This action cannot be undone.')) {
-    deleteSaveFile();
-  }
-});
-  </script>
+    </script>
 </body>
 
 </html>

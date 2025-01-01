@@ -21,7 +21,7 @@ const planetParameters = {
       surface: {
         ice: { name: 'Ice', initialValue: 1e16, unlocked:false },
         liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
-        dryIce : {name : 'Dry Ice', initialValue: 3e13, unlocked: false},
+        dryIce : {name : 'Dry Ice', initialValue: 3.001e13, unlocked: false},
         scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false}
       },
       underground: {
@@ -29,10 +29,10 @@ const planetParameters = {
         geothermal: { name: 'Geothermal vent', initialValue: 0, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
       },
       atmospheric: {
-        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.416e13, unlocked:false },
+        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.4158e13, unlocked:false },
         inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
         oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
-        atmosphericWater: { name: 'Water Vap.', initialValue: 0, unlocked:false },
+        atmosphericWater: { name: 'Water Vap.', initialValue: 6.76505e10, unlocked:false },
         greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}
       },
       special: {

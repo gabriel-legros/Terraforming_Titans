@@ -15,7 +15,7 @@ progressData = {
                 targetId: 'cargo_rocket',
                 type: 'oneTimeStart',
                 oneTimeFlag: true,
-                pendingResourceGains: [{ resource: 'metal', quantity: 200 }, { resource: 'components', quantity: 100 }, { resource: 'electronics', quantity: 100 }]
+                pendingResourceGains: [{ resource: 'metal', quantity: 200 }, {resource: 'food', quantity : 500}, { resource: 'components', quantity: 100 }, { resource: 'electronics', quantity: 100 }]
             }
         ],
         nextChapter: "chapter1",
@@ -144,6 +144,12 @@ progressData = {
             target: 'tab',
             targetId: 'special-projects-tab',
             type: 'enable'
+          },
+          {
+            target: 'tab',
+            targetId: 'special-projects',
+            type: 'activateTab',
+            onLoad : false
           }
         ],
         nextChapter: "chapter1.3b"
@@ -173,7 +179,8 @@ progressData = {
           target: 'tab',
           targetId: 'buildings-tab',
           type: 'enable'
-        }],
+        }
+      ],
         nextChapter: "chapter1.4"
       }, 
       {
@@ -387,6 +394,12 @@ progressData = {
             targetId: 'colonies-tab',
             type: 'enable'
           },
+          {
+            target: 'tab',
+            targetId: 'colonies',
+            type: 'activateTab',
+            onLoad : false
+          }
     ],
         nextChapter: "chapter1.19b"
       }, 
@@ -422,6 +435,12 @@ progressData = {
             target: 'tab',
             targetId: 'research-tab',
             type: 'enable'
+          },
+          {
+            target: 'tab',
+            targetId: 'research',
+            type: 'activateTab',
+            onLoad : false
           }
     ],
         nextChapter: "chapter1.21"

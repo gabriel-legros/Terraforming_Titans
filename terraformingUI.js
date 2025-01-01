@@ -41,27 +41,31 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p>Current: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
+      <p>Current average: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
       <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
       <table>
         <thead>
           <tr>
             <th>Zone</th>
             <th>Temperature (K)</th>
+            <th>Delta (K)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Tropical</td>
             <td><span id="tropical-temp">${terraforming.temperature.zones.tropical.value.toFixed(2)}</span></td>
+            <td><span id="tropical-delta"></span></td>
           </tr>
           <tr>
             <td>Temperate</td>
             <td><span id="temperate-temp">${terraforming.temperature.zones.temperate.value.toFixed(2)}</span></td>
+            <td><span id="temperate-delta"></span></td>
           </tr>
           <tr>
             <td>Polar</td>
             <td><span id="polar-temp">${terraforming.temperature.zones.polar.value.toFixed(2)}</span></td>
+            <td><span id="polar-delta"></span></td>
           </tr>
         </tbody>
       </table>
@@ -75,15 +79,24 @@ function createTemperatureBox(row) {
   
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
     effectiveTempNoAtm.textContent = formatNumber(terraforming.temperature.effectiveTempNoAtmosphere, false, 2);
-
+  
     const tropicalTemp = document.getElementById('tropical-temp');
     tropicalTemp.textContent = formatNumber(terraforming.temperature.zones.tropical.value, false, 2);
+    const tropicalDelta = document.getElementById('tropical-delta');
+    const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
+    tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
   
     const temperateTemp = document.getElementById('temperate-temp');
     temperateTemp.textContent = formatNumber(terraforming.temperature.zones.temperate.value, false, 2);
+    const temperateDelta = document.getElementById('temperate-delta');
+    const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
+    temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
   
     const polarTemp = document.getElementById('polar-temp');
     polarTemp.textContent = formatNumber(terraforming.temperature.zones.polar.value, false, 2);
+    const polarDelta = document.getElementById('polar-delta');
+    const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
+    polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
   }
 
   function createAtmosphereBox(row) {
@@ -93,13 +106,14 @@ function createTemperatureBox(row) {
   
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
-      <p>Current: <span id="atmosphere-current">${terraforming.atmosphere.value.toFixed(2)}</span> kPa</p>
-      <p>Emissivity: <span id="emissivity">${terraforming.temperature.emissivity.toFixed(2)}</span></p>
+      <p>Current: <span id="atmosphere-current"></span> kPa</p>
+      <p>Emissivity: <span id="emissivity"></span></p>
       <table>
         <thead>
           <tr>
             <th>Gas</th>
             <th>Pressure (Pa)</th>
+            <th>Delta (Pa)</th>
           </tr>
         </thead>
         <tbody>
@@ -110,6 +124,7 @@ function createTemperatureBox(row) {
         <tr>
           <td>${terraforming.resources.atmospheric[gas].displayName}</td>
           <td><span id="${gas}-pressure">${formatNumber(calculateGasPressure(gas), false, 2)}</span></td>
+          <td><span id="${gas}-delta"></span></td>
         </tr>
       `;
     }
@@ -126,13 +141,22 @@ function createTemperatureBox(row) {
   function updateAtmosphereBox() {
     const atmosphereCurrent = document.getElementById('atmosphere-current');
     atmosphereCurrent.textContent = terraforming.atmosphere.value.toFixed(2);
-
+  
     const emissivity = document.getElementById('emissivity');
     emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
   
     for (const gas in terraforming.resources.atmospheric) {
       const gasPressure = document.getElementById(`${gas}-pressure`);
-      gasPressure.textContent = formatNumber(calculateGasPressure(gas), false, 2);
+      const currentPressure = calculateGasPressure(gas);
+      gasPressure.textContent = formatNumber(currentPressure, false, 2);
+  
+      const gasInitial = terraforming.atmosphere.gases[gas].initial;
+      const gasDelta = document.getElementById(`${gas}-delta`);
+      delta = currentPressure - gasInitial;
+      if(Math.abs(delta) < 0.01){
+        delta = 0;
+      }
+      gasDelta.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
     }
   }
   

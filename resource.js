@@ -76,8 +76,27 @@ class Resource extends EffectableEntity {
         }
       }
     }
-
     this.cap = this.hasCap ? newCap : Infinity;
+  }
+
+  modifyRate(value, source) {
+    if(source === undefined){
+      console.log('Undefined source');
+    }
+
+    if (value > 0) {
+      this.productionRate += value;
+      if (!this.productionRateBySource[source]) {
+        this.productionRateBySource[source] = 0;
+      }
+      this.productionRateBySource[source] += value;
+    } else {
+      this.consumptionRate -= value;
+      if (!this.consumptionRateBySource[source]) {
+        this.consumptionRateBySource[source] = 0;
+      }
+      this.consumptionRateBySource[source] -= value;
+    }
   }
 
   enable() {
@@ -110,12 +129,15 @@ function createResources(resourcesData) {
 }
 
 function calculateProductionRates(deltaTime, buildings) {
+  //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
       resource.productionRate = 0;
       resource.consumptionRate = 0;
+      resource.productionRateBySource = {};
+      resource.consumptionRateBySource = {};
     }
   }
 
@@ -126,7 +148,7 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const category in building.production) {
       for (const resource in building.production[category]) {
         const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
-        resources[category][resource].productionRate = (resources[category][resource].productionRate || 0) + actualProduction;
+        resources[category][resource].modifyRate(actualProduction, building.displayName);
       }
     }
 
@@ -134,15 +156,15 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const category in building.consumption) {
       for (const resource in building.consumption[category]) {
         const actualConsumption = (building.consumption[category][resource] || 0) * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
-        resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + actualConsumption;
+        resources[category][resource].modifyRate(-actualConsumption, building.displayName);
       }
     }
   }
 
   // Add funding rate to the production of funding resource
   if (fundingModule) {
-    const fundingIncreaseRate = fundingModule.fundingRate; // Get funding rate from funding module
-    resources.colony.funding.productionRate = fundingIncreaseRate; // Update funding production rate
+    const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
+    resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding'); // Update funding production rate
   }
 }
 
@@ -151,29 +173,12 @@ function produceResources(deltaTime, buildings) {
 
   calculateProductionRates(deltaTime, buildings);
 
-  // Reset production and consumption rates for all resources
+  // Update storage cap for all resources except workers
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
       if(resource.name != 'workers'){
         resource.updateStorageCap();
-      }
-    }
-  }
-
-  // Temporary object to store changes
-  const accumulatedChanges = {};
-  const accumulatedMaintenance = {}; // Object to store accumulated maintenance costs
-  
-
-  // Initialize accumulated changes and maintenance
-  for (const category in resources) {
-    accumulatedChanges[category] = {};
-    for (const resourceName in resources[category]) {
-      accumulatedChanges[category][resourceName] = 0;
-      
-      if (category === 'colony') {
-        accumulatedMaintenance[resourceName] = 0; // Initialize accumulated maintenance costs for colony resources
       }
     }
   }
@@ -190,17 +195,38 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
-  // Reset production and consumption rates for all resources
+  //Productivity has now been calculated and applied
+
+  //Reset production and consumption rates for all resources because we want to display actuals
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
       resource.productionRate = 0;
       resource.consumptionRate = 0;
+      resource.productionRateBySource = {};
+      resource.consumptionRateBySource = {};
       if(resource.name != 'workers'){
         resource.updateStorageCap();
       }
     }
   }
+
+  // Temporary object to store changes
+  const accumulatedChanges = {};
+  const accumulatedMaintenance = {}; // Object to store accumulated maintenance costs
+    // Initialize accumulated changes and maintenance
+  for (const category in resources) {
+    accumulatedChanges[category] = {};
+    for (const resourceName in resources[category]) {
+      accumulatedChanges[category][resourceName] = 0;
+      
+      if (category === 'colony') {
+        accumulatedMaintenance[resourceName] = 0; // Initialize accumulated maintenance costs for colony resources
+      }
+    }
+  }
+
+  //Productivity is now calculated, let's actually produce and consume
 
   for(const buildingName in buildings){
     const building = buildings[buildingName];
@@ -212,7 +238,7 @@ function produceResources(deltaTime, buildings) {
 
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
-    const fundingIncreaseRate = fundingModule.fundingRate; // Get funding rate from funding module
+    const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
     accumulatedChanges.colony.funding += fundingIncreaseRate * (deltaTime / 1000);
 
     // Update production rate for funding resource

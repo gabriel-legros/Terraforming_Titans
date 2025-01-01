@@ -60,12 +60,10 @@ class PopulationModule {
       // Apply the population change and update production/consumption rates
       if (populationChange > 0) {
         this.populationResource.increase(populationChange);
-        this.populationResource.productionRate = populationChange * (1000 / deltaTime);
-        this.populationResource.consumptionRate = 0; // No consumption if increasing
+        this.populationResource.modifyRate(populationChange * (1000 / deltaTime), 'Growth');
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
-        this.populationResource.consumptionRate = -populationChange * (1000 / deltaTime);
-        this.populationResource.productionRate = 0; // No production if decreasing
+        this.populationResource.modifyRate(-populationChange * (1000 / deltaTime), 'Decay');
       }
 
       if(currentPopulation < 1)

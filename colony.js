@@ -1,5 +1,11 @@
 // Assuming Building class is defined globally (from building.js)
 
+// Define the luxuryResources object
+const luxuryResources = {
+  electronics: true,
+  androids: true
+};
+
 class Colony extends Building {
   constructor(config, colonyName) {
     // Call the Building constructor to initialize common properties using the config object
@@ -9,6 +15,12 @@ class Colony extends Building {
     this.baseComfort = config.baseComfort || 0;  // Default to 0 if not provided in the config
     this.filledNeeds = {};
     this.obsolete = false;
+
+    // Initialize luxury resource flags
+    this.luxuryResourcesEnabled = {};
+    for (const resource in luxuryResources) {
+      this.luxuryResourcesEnabled[resource] = true;  // Set the flag to true by default
+    }
 
     // Initialize filledNeeds based on the consumption defined in the config
     for (const category in this.consumption) {
@@ -40,21 +52,31 @@ class Colony extends Building {
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
 
+  javascript
+
   updateNeedsRatio(resources, deltaTime) {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
     const popConsumptionRatio = this.getConsumptionRatio();
-
+  
     for (const category in this.consumption) {
       if (!this.currentConsumption[category]) {
         this.currentConsumption[category] = {};
       }
   
       for (const resource in this.consumption[category]) {
+        const isLuxuryResource = luxuryResources[resource] !== undefined;
+  
+        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+          // If the luxury resource is not enabled, set the filledNeeds value to 0
+          this.filledNeeds[resource] = 0;
+          continue;
+        }
+  
         const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * popConsumptionRatio * (deltaTime / 1000);
-
+  
         const availableAmount = resources[category][resource].value;
-
+  
         let consumptionRatio = 1;
         if (availableAmount < scaledConsumption) {
           const consumptionRate = resources[category][resource].consumptionRate;
@@ -64,38 +86,45 @@ class Colony extends Building {
             consumptionRatio = resources[category][resource].productionRate / consumptionRate;
           }
         }
-
+  
         // Adjust filledNeeds for the consumed resource
         this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
       }
     }
   }
+  
 
-  // Colonies need a special version of consume because their consumption is dependent on the population ratio instead of productivity.
   consume(accumulatedChanges, deltaTime) {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
     const consumptionRatio = this.getConsumptionRatio();
-
+  
     this.currentConsumption = {}; // Reset current consumption
-
+  
     // Calculate consumption and accumulate changes
     for (const category in this.consumption) {
       if (!this.currentConsumption[category]) {
         this.currentConsumption[category] = {};
       }
-
+  
       for (const resource in this.consumption[category]) {
+        const isLuxuryResource = luxuryResources[resource] !== undefined;
+  
+        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+          // If the luxury resource is not enabled, skip consumption
+          continue;
+        }
+  
         const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
-
+  
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = scaledConsumption;
-
+  
         // Accumulate consumption changes (as negative values)
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
-
+  
         // Update consumption rate for the resource
-        resources[category][resource].consumptionRate = (resources[category][resource].consumptionRate || 0) + (scaledConsumption * (1000 / deltaTime));
+        resources[category][resource].modifyRate(- (scaledConsumption * (1000 / deltaTime)), this.displayName);
       }
     }
   }
@@ -128,19 +157,25 @@ class Colony extends Building {
 
   updateHappiness(deltaTime) {
     this.updateNeedsRatio(resources, deltaTime);
-    // Calculate the average of all filledNeeds values
-    const needsValues = Object.values(this.filledNeeds);
-    const averageNeeds = needsValues.reduce((sum, value) => sum + value, 0) / needsValues.length;
   
-    // Get specific values for food and energy needs, defaulting to 1 if not defined
-    const foodNeed = this.filledNeeds.food || 1;
-    const energyNeed = this.filledNeeds.energy || 1;
+    // Calculate happiness from non-luxury goods (food and energy)
+    const foodNeed = this.filledNeeds.food || 0;
+    const energyNeed = this.filledNeeds.energy || 0;
+    const nonLuxuryHappiness = (foodNeed * 25) + (energyNeed * 25);
   
-    // Target happiness is the minimum of averageNeeds, foodNeed, and energyNeed, scaled by baseComfort
-    const targetHappiness = Math.min(averageNeeds, foodNeed, energyNeed) * (0.5 + this.baseComfort / 2);
+    // Calculate happiness from comfort
+    const comfortHappiness = this.baseComfort * 25;
+  
+    // Calculate happiness from luxury goods (electronics and androids)
+    const electronicsNeed = this.filledNeeds.electronics || 0;
+    const androidsNeed = this.filledNeeds.androids || 0;
+    const luxuryHappiness = (electronicsNeed * 10) + (androidsNeed * 10);
+  
+    // Calculate the target happiness
+    const targetHappiness = nonLuxuryHappiness + comfortHappiness + luxuryHappiness;
   
     // Adjust the happiness towards the target value
-    this.happiness = this.adjustToTarget(this.happiness, targetHappiness, deltaTime);
+    this.happiness = this.adjustToTarget(this.happiness, targetHappiness / 100, deltaTime);
   }
 
   enable(tierName){

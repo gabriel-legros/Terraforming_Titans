@@ -1,14 +1,14 @@
   
   .resource-row {
     display: grid;
-    grid-template-columns: 35% 21% 3% 21% 25%; /* Default layout with cap */
+    grid-template-columns: 30% 21% 3% 21% 25%; /* Default layout with cap */
     align-items: center;
     font-size: 13px;
     column-gap: 0;
   }
   
   .resource-row.no-cap {
-    grid-template-columns: 35% 45% 25%; /* When there's no cap, value takes more space */
+    grid-template-columns: 30% 45% 25%; /* When there's no cap, value takes more space */
   }
   
   .resource-name {
@@ -40,4 +40,38 @@
     margin-top: 5px;
     font-size: 11px;
     color: gray;
+  }
+  
+  .resource-item {
+    position: relative;
+  }
+  
+  .resource-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1;
+    width: 200px;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    display: none;
+  }
+  
+  .resource-item:hover .resource-tooltip {
+    display: block;
+  }
+
+  .sparkling-gold {
+    color: gold;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px darkgoldenrod;
+  }
+
+  .resource-wrapper {
+    background-color: #f4f4f4;
+    padding-right: 5px;
   }

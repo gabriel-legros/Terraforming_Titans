@@ -1,27 +1,58 @@
-// Save game state to localStorage (including research)
-function saveGame() {
-    const gameState = {
-        dayNightCycle: dayNightCycle.saveState(), // Save the state from DayNightCycle
-        resources: resources, // Use resources object as is
-        buildings: buildings, // Use buildings object as is
-        colonies: colonies, // Use colonies object as is
-        projects: projectManager.saveState(), // Save the projects state using projectManager
-        research: researchManager.saveState(), // Save the research state from researchManager
-        oreScanning: oreScanner.saveState(), // Save the ore scanning state from oreScanner
-        story: storyManager.saveState(), // Save story state
-        journalEntries: journalEntriesData // Save the journal entries data
-      };
+globalGameIsLoadingFromSave = false;
+
+// Save game state to a specific slot
+function saveGameToSlot(slot) {
+  const gameState = {
+    dayNightCycle: dayNightCycle.saveState(), // Save the state from DayNightCycle
+    resources: resources, // Use resources object as is
+    buildings: buildings, // Use buildings object as is
+    colonies: colonies, // Use colonies object as is
+    projects: projectManager.saveState(), // Save the projects state using projectManager
+    research: researchManager.saveState(), // Save the research state from researchManager
+    oreScanning: oreScanner.saveState(), // Save the ore scanning state from oreScanner
+    terraforming: terraforming.saveState(), //Save terraforming state
+    story: storyManager.saveState(), // Save story state
+    journalEntries: journalEntriesData, // Save the journal entries data,
+    goldenAsteroid: goldenAsteroid.saveState()
+  };
 
   // Store game state in localStorage
-  localStorage.setItem('gameState', JSON.stringify(gameState));
-  console.log('Game saved successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
+  localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
+  console.log(`Game saved successfully to slot ${slot}.`);
+
+  // Get the current date and time
+  const saveDate = new Date();
+
+  // Format the save date using the formatDate function
+  const formattedSaveDate = formatDate(saveDate);
+
+  // Update the save date for the slot
+  document.getElementById(`${slot}-date`).textContent = formattedSaveDate;
+
+  // Save the save slot dates as UNIX timestamps
+  saveSaveSlotDates(slot, saveDate);
 }
 
-// Load game state from localStorage (including research)
-function loadGame() {
 
-  const savedState = localStorage.getItem('gameState');
+// Load game state from a specific slot or custom string
+function loadGame(slotOrCustomString) {
+  if (slotOrCustomString === undefined) {
+    console.log('No slot or custom string provided. Loading aborted.');
+    return;
+  }
+
+  let savedState = '';
+
+  if (slotOrCustomString.startsWith('gameState_')) {
+    // Load from a specific slot
+    savedState = localStorage.getItem(slotOrCustomString);
+  } else {
+    // Load from a custom string
+    savedState = slotOrCustomString;
+  }
   if (savedState) {
+      globalGameIsLoadingFromSave = true;
+
       const gameState = JSON.parse(savedState);
 
       // Restore day/night cycle progress
@@ -44,6 +75,8 @@ function loadGame() {
                 }
                 const newConfig = currentPlanetParameters.resources[category][resourceName];
                 resources[category][resourceName].initializeFromConfig(newConfig);
+                resources[category][resourceName].activeEffects = [];
+                resources[category][resourceName].booleanFlags = new Set();
               }
             }
           }
@@ -93,6 +126,10 @@ function loadGame() {
         storyManager.loadState(gameState.story);
     }
 
+    if(gameState.terraforming){
+      terraforming.loadState(gameState.terraforming);
+    }
+
       if (gameState.journalEntries) {
         loadJournalEntries(gameState.journalEntries); // Restore journal entries
       }
@@ -108,7 +145,13 @@ function loadGame() {
         oreScanner.loadState(gameState.oreScanning);
       }
 
+    if(gameState.goldenAsteroid){
+      goldenAsteroid.loadState(gameState.goldenAsteroid);
+    }
+
     tabManager.activateTab('buildings');
+
+    globalGameIsLoadingFromSave = false;
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } else {
@@ -116,7 +159,124 @@ function loadGame() {
   }
 }
 
-function deleteSaveFile() {
-  localStorage.removeItem('gameState'); // Remove the saved game data from localStorage
-  console.log('Save file deleted successfully.');
+// Delete save file from a specific slot
+function deleteSaveFileFromSlot(slot) {
+  localStorage.removeItem(`gameState_${slot}`);
+  console.log(`Save file deleted successfully from slot ${slot}.`);
+
+  // Clear the save date for the slot
+  document.getElementById(`${slot}-date`).textContent = 'Empty';
+
+  // Delete the save slot date
+  deleteSaveSlotDate(slot);
 }
+
+// Save the save slot dates as UNIX timestamps
+function saveSaveSlotDates(slot, date) {
+  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  saveSlotDates[slot] = new Date(date).getTime();
+  localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+}
+
+// Load the save slot dates and display them in a user-friendly format
+function loadSaveSlotDates() {
+  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  for (const slot in saveSlotDates) {
+    const timestamp = saveSlotDates[slot];
+    const date = new Date(timestamp);
+    const formattedDate = formatDate(date);
+    document.getElementById(`${slot}-date`).textContent = formattedDate;
+  }
+}
+
+// Format the date in a user-friendly way
+function formatDate(date) {
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: true
+  };
+  return date.toLocaleString(undefined, options);
+}
+
+// Delete a save slot date
+function deleteSaveSlotDate(slot) {
+  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  delete saveSlotDates[slot];
+  localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+}
+
+// Add event listeners to save, load, and delete buttons
+function addSaveSlotListeners() {
+  const saveSlots = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+
+  saveSlots.forEach(slot => {
+    const saveButton = document.querySelector(`.save-button[data-slot="${slot}"]`);
+    const loadButton = document.querySelector(`.load-button[data-slot="${slot}"]`);
+    const deleteButton = document.querySelector(`.delete-button[data-slot="${slot}"]`);
+
+    if (saveButton) {
+      saveButton.addEventListener('click', () => saveGameToSlot(slot));
+    }
+
+    loadButton.addEventListener('click', () => loadGame(`gameState_${slot}`));
+
+    deleteButton.addEventListener('click', () => {
+      if (confirm(`Are you sure you want to delete the save file in slot ${slot}? This action cannot be undone.`)) {
+        deleteSaveFileFromSlot(slot);
+      }
+    });
+  });
+}
+
+// Load the most recent save
+function loadMostRecentSave() {
+  loadSaveSlotDates();
+
+  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  let mostRecentSlot = null;
+  let mostRecentTimestamp = null;
+
+  for (const slot in saveSlotDates) {
+    const timestamp = saveSlotDates[slot];
+    if (mostRecentTimestamp === null || timestamp > mostRecentTimestamp) {
+      mostRecentSlot = slot;
+      mostRecentTimestamp = timestamp;
+    }
+  }
+
+  if (mostRecentSlot) {
+    loadGame(`gameState_${mostRecentSlot}`);
+    console.log(`Loaded most recent save from slot ${mostRecentSlot}.`);
+  } else {
+    console.log('No save slots found. Starting a new game.');
+  }
+}
+
+let autosaveInterval = 180; // Autosave interval in seconds
+let autosaveTimer = autosaveInterval;
+
+function autosave(delta) {
+  autosaveTimer -= delta / 1000; // Convert delta from milliseconds to seconds
+
+  if (autosaveTimer <= 0) {
+    saveGameToSlot('autosave');
+    autosaveTimer = autosaveInterval; // Reset the autosave timer
+  }
+
+  updateAutosaveText();
+}
+
+function updateAutosaveText() {
+  const autosaveText = document.getElementById('autosave-text');
+  const minutes = Math.floor(autosaveTimer / 60);
+  const seconds = Math.floor(autosaveTimer % 60);
+  autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
+}
+
+// Call the function to add event listeners when the page loads
+document.addEventListener('DOMContentLoaded', addSaveSlotListeners);

@@ -343,11 +343,22 @@ class Project extends EffectableEntity {
     this.unlocked = true;
   }
 
-  applyOneTimeStart(effect){  //Only used at the beginning of the game
+  applyOneTimeStart(effect) {
     console.log('Getting one time cargo rocket');
     this.pendingResourceGains = effect.pendingResourceGains;
     this.isActive = true;
     this.remainingTime = 30000;
+  
+    // Update the visible entered amount in the resource selection UI
+    this.pendingResourceGains.forEach(({ resource, quantity }) => {
+      const inputElement = document.querySelector(`.resource-selection-${this.name}[data-resource="${resource}"]`);
+      if (inputElement) {
+        inputElement.value = quantity;
+      }
+    });
+  
+    // Update the total cost display
+    updateTotalCostDisplay(this);
   }
 
   calculateSpaceshipCost() {

@@ -489,7 +489,7 @@ const researchParameters = {
           {
             type: 'booleanFlag',
             target: 'projectManager',
-            targetId: 'automateSpecialProjects',
+            flagId: 'automateSpecialProjects',
             value: true
           },
         ],
@@ -566,7 +566,7 @@ const researchParameters = {
           {
             type: 'booleanFlag',
             target: 'global',
-            targetId: 'automateConstruction',
+            flagId: 'automateConstruction',
             value: true
           },
         ],
@@ -660,6 +660,12 @@ const researchParameters = {
             target: 'tab',
             targetId: 'terraforming-tab',
             type: 'enable'
+          },
+          {
+            target: 'tab',
+            targetId: 'terraforming',
+            type: 'activateTab',
+            onLoad : false
           },
           {
             target: 'resource',
@@ -784,7 +790,7 @@ const researchParameters = {
           {
             type: 'booleanFlag',
             target: 'terraforming',
-            targetId: 'lichen',
+            flagId: 'lichen',
             value: true
           },
         ],
@@ -855,7 +861,7 @@ const researchParameters = {
           {
             type: 'booleanFlag',
             target: 'terraforming',
-            targetId: 'grass',
+            flagId: 'grass',
             value: true
           },
         ],
@@ -870,7 +876,7 @@ const researchParameters = {
           {
             type: 'booleanFlag',
             target: 'terraforming',
-            targetId: 'trees',
+            flagId: 'trees',
             value: true
           },
         ],
@@ -896,7 +902,6 @@ const researchParameters = {
         prerequisites: [],
         effects: [      
           {
-            type: 'booleanFlag',
             target: 'terraforming',
             type: 'lifeGrowthMultiplier',
             value: 2

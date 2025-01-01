@@ -1,13 +1,30 @@
 // FundingModule Class
-class FundingModule {
+class FundingModule extends EffectableEntity {
   constructor(resources, fundingRate) {
+    super({config : 'Funding Module'});
+
     this.resources = resources;
     this.fundingRate = fundingRate; // Set the funding rate from planet parameters
   }
 
+  // Method to get the effective production multiplier
+  getEffectiveProductionMultiplier() {
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'productionMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  getEffectiveFunding(){
+    return this.fundingRate * this.getEffectiveProductionMultiplier();
+  }
+
   // Method to update funding over time
   update(deltaTime) {
-    const fundingIncrease = (this.fundingRate * deltaTime) / 1000; // Calculate the increase in funding based on the rate
+    const fundingIncrease = (this.fundingRate * this.getEffectiveProductionMultiplier * deltaTime) / 1000; // Calculate the increase in funding based on the rate
     this.resources.colony.funding.increase(fundingIncrease); // Increase funding in the resources
   }
 }

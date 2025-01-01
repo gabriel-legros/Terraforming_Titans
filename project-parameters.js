@@ -287,11 +287,10 @@ const projectParameters = {
         {
           type: 'booleanFlag',
           target: 'terraforming',
-          targetId: 'magneticShield',
+          flagId: 'magneticShield',
           value: true
         },
         {
-          type: 'booleanFlag',
           target: 'terraforming',
           type: 'lifeGrowthMultiplier',
           value: 1.5

@@ -21,7 +21,6 @@ function createResourceContainers(resourcesData) {
   }
 }
 
-// Helper function to create the resource DOM element
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
@@ -30,7 +29,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -38,12 +37,13 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
       </div>
+      <div class="resource-tooltip" id="${resourceName}-tooltip">Test Tooltip</div>
     `;
   } else if (category === 'underground') {
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
         <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -62,7 +62,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong>${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -70,6 +70,7 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
       </div>
+      <div class="resource-tooltip" id="${resourceName}-tooltip">Test Tooltip</div>
     `;
   }
 
@@ -127,32 +128,6 @@ function unlockResource(resource) {
   }
 }
 
-function updateResourceRateDisplay(resource){
-  const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
-  if (ppsElement) {
-    const netRate = resource.productionRate - resource.consumptionRate;
-    const formattedNumber = formatNumber(netRate);
-    if(Math.abs(netRate) < 1e-3)
-    {
-      ppsElement.textContent = `0/s`;
-    } else {
-      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
-    }
-    // Apply red color if netRate is negative and the absolute value is greater than the resource value
-    if (netRate < 0 && Math.abs(netRate) > resource.value) {
-      ppsElement.style.color = 'red';
-    } 
-    // Apply orange if netRate is negative but less than or equal to the resource value
-    else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) { //If running out in 2 minutes
-      ppsElement.style.color = 'orange';
-    } 
-    // Reset to default color if the condition is not met
-    else {
-      ppsElement.style.color = '';
-    }
-  }
-}
-
 function updateResourceDisplay(resources) {
   for (const category in resources) {
     for (const resourceName in resources[category]) {
@@ -199,14 +174,77 @@ function updateResourceDisplay(resources) {
         if (resourceElement) {
           resourceElement.textContent = formatNumber(resourceObj.value);
         }
-
+      
         const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
         if (capElement) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
+      
+        // Check if the resource has the "golden" flag set
+        const resourceNameElement = document.getElementById(`${resourceName}-name`);
+        if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
+          resourceNameElement.classList.add('sparkling-gold');
+        } else if (resourceNameElement) {
+          resourceNameElement.classList.remove('sparkling-gold');
+        }
+      
         updateResourceRateDisplay(resourceObj);
       }
     }
+  }
+}
+
+function updateResourceRateDisplay(resource){
+  const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
+  if (ppsElement) {
+    const netRate = resource.productionRate - resource.consumptionRate;
+    const formattedNumber = formatNumber(netRate);
+    if(Math.abs(netRate) < 1e-3)
+    {
+      ppsElement.textContent = `0/s`;
+    } else {
+      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
+    }
+    // Apply red color if netRate is negative and the absolute value is greater than the resource value
+    if (netRate < 0 && Math.abs(netRate) > resource.value) {
+      ppsElement.style.color = 'red';
+    } 
+    // Apply orange if netRate is negative but less than or equal to the resource value
+    else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) { //If running out in 2 minutes
+      ppsElement.style.color = 'orange';
+    } 
+    // Reset to default color if the condition is not met
+    else {
+      ppsElement.style.color = '';
+    }
+  }
+
+  // Update the tooltip with production and consumption rates
+  const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
+  if (tooltipElement) {
+    let tooltipContent = '';
+
+    // Generate the production content
+    const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
+    if (productionEntries.length > 0) {
+      tooltipContent += '<strong>Production:</strong><br>';
+      productionEntries.sort((a, b) => b[1] - a[1]); // Sort production entries in descending order
+      productionEntries.forEach(([source, rate]) => {
+        tooltipContent += `${source}: ${formatNumber(rate, false)}/s<br>`;
+      });
+    }
+
+    // Generate the consumption content
+    const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
+    if (consumptionEntries.length > 0) {
+      tooltipContent += '<br><strong>Consumption and Maintenance:</strong><br>';
+      consumptionEntries.sort((a, b) => b[1] - a[1]); // Sort consumption entries in descending order
+      consumptionEntries.forEach(([source, rate]) => {
+        tooltipContent += `${source}: ${formatNumber(rate, false)}/s<br>`;
+      });
+    }
+
+    tooltipElement.innerHTML = tooltipContent;
   }
 }
 

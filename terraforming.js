@@ -14,6 +14,8 @@ class Terraforming extends EffectableEntity{
 
     this.lifeParameters = lifeParameters; // Load external life parameters
 
+    this.initialValuesCalculated = false;
+
     this.water = {
       name: 'Water',
       value: 0,
@@ -30,9 +32,7 @@ class Terraforming extends EffectableEntity{
     };
     this.atmosphere = {
       name: 'Atmosphere',
-      value: 0,
-      target: 101.325,
-      unlocked: false
+      gases : {}
     };
     this.temperature = {
       name: 'Temperature',
@@ -43,12 +43,15 @@ class Terraforming extends EffectableEntity{
       unlocked: false,
       zones: {
         tropical: {
+          initial: 0,
           value: 0
         },
         temperate: {
+          initial: 0,
           value: 0
         },
         polar: {
+          initial: 0,
           value: 0
         }
       }
@@ -88,6 +91,16 @@ class Terraforming extends EffectableEntity{
 
     this.updateLuminosity();
     this.updateSurfaceTemperature();
+  }
+
+  calculateInitialValues(){
+    for (const zone in this.temperature.zones) {
+      this.temperature.zones[zone].initial = this.temperature.zones[zone].value;
+    }
+
+    for (const gas in terraforming.resources.atmospheric) {
+      this.atmosphere.gases[gas] = {initial : calculateGasPressure(gas)};
+    }
   }
 
     updateResources(accumulatedChanges, deltaTime){
@@ -175,6 +188,9 @@ class Terraforming extends EffectableEntity{
 
     initializeTerraforming(){
         createTerraformingUI();
+        if(!this.initialValuesCalculated){
+          this.calculateInitialValues();
+        }
     }
     
     calculateTotalPressure() {
@@ -273,21 +289,21 @@ class Terraforming extends EffectableEntity{
 
       // Apply evaporation
       accumulatedChanges['surface']['liquidWater'] -= evaporationAmount;
-      resources['surface']['liquidWater'].consumptionRate += evaporationAmount * (1000 / deltaTime);
+      resources['surface']['liquidWater'].modifyRate(- (evaporationAmount * (1000 / deltaTime)), 'Evaporation');
       accumulatedChanges['atmospheric']['atmosphericWater'] += evaporationAmount;
-      resources['atmospheric']['atmosphericWater'].productionRate += evaporationAmount * (1000 / deltaTime);
+      resources['atmospheric']['atmosphericWater'].modifyRate(evaporationAmount * (1000 / deltaTime), 'Evaporation');
 
       // Apply sublimation
       accumulatedChanges['surface']['ice'] -= sublimationAmount;
-      resources['surface']['ice'].consumptionRate += sublimationAmount * (1000 / deltaTime);
+      resources['surface']['ice'].modifyRate(- sublimationAmount * (1000 / deltaTime), 'Sublimation');
       accumulatedChanges['atmospheric']['atmosphericWater'] += sublimationAmount;
-      resources['atmospheric']['atmosphericWater'].productionRate += sublimationAmount * (1000 / deltaTime);
+      resources['atmospheric']['atmosphericWater'].modifyRate(sublimationAmount * (1000 / deltaTime), 'Sublimation');
 
       // Apply sublimation of CO2
       accumulatedChanges['surface']['dryIce'] -= sublimationCo2Amount;
-      resources['surface']['dryIce'].consumptionRate += sublimationCo2Amount * (1000 / deltaTime);
+      resources['surface']['dryIce'].modifyRate(- sublimationCo2Amount * (1000 / deltaTime), 'Sublimation');
       accumulatedChanges['atmospheric']['carbonDioxide'] += sublimationCo2Amount;
-      resources['atmospheric']['carbonDioxide'].productionRate += sublimationCo2Amount * (1000 / deltaTime);
+      resources['atmospheric']['carbonDioxide'].modifyRate(sublimationCo2Amount * (1000 / deltaTime), 'Sublimation');
     }
 
     applyRainfallAndSnow(accumulatedChanges, deltaTime) {
@@ -314,17 +330,17 @@ class Terraforming extends EffectableEntity{
           if (zoneTemperature > 273.15) {
             // Rain
             accumulatedChanges['surface']['liquidWater'] += precipitationAmount;
-            resources['surface']['liquidWater'].productionRate += precipitationAmount * (1000 / deltaTime);
+            resources['surface']['liquidWater'].modifyRate(precipitationAmount * (1000 / deltaTime), 'Rain');
             totalRainfall += precipitationAmount;
           } else {
             // Snow
             accumulatedChanges['surface']['ice'] += precipitationAmount;
-            resources['surface']['ice'].productionRate += precipitationAmount * (1000 / deltaTime);
+            resources['surface']['ice'].modifyRate(precipitationAmount * (1000 / deltaTime), 'Condensation');
             totalSnowfall += precipitationAmount;
           }
     
           accumulatedChanges['atmospheric']['atmosphericWater'] -= precipitationAmount;
-          resources['atmospheric']['atmosphericWater'].consumptionRate += precipitationAmount * (1000 / deltaTime);
+          resources['atmospheric']['atmosphericWater'].modifyRate(-precipitationAmount * (1000 / deltaTime), 'Rain or Snow');
         }
      }
 
@@ -362,18 +378,18 @@ class Terraforming extends EffectableEntity{
         const waterToFreeze = Math.min(waterCoverage * freezingRateMultiplier * temperatureDifference * timeMultiplier / 1000, resources['surface']['liquidWater'].value);
         freezingRate = waterToFreeze / deltaTime;
         accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
-        resources['surface']['liquidWater'].consumptionRate += waterToFreeze * (1000 / deltaTime);
+        resources['surface']['liquidWater'].modifyRate(- waterToFreeze * (1000 / deltaTime), 'Freezing');
         accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
-        resources['surface']['ice'].productionRate += waterToFreeze * (1000 / deltaTime);
+        resources['surface']['ice'].modifyRate(waterToFreeze * (1000 / deltaTime), 'Freezing');
       } else if (tropicalTemperature >= freezingPoint && temperateTemperature >= freezingPoint && polarTemperature >= freezingPoint) {
         // All zones above freezing point, melt ice based on the melting rate multiplier
         const temperatureDifference = tropicalTemperature - freezingPoint;
         const iceToMelt = Math.min(iceCoverage * meltingRateMultiplier * temperatureDifference * timeMultiplier / 1000, resources['surface']['ice']);
         meltingRate = iceToMelt / deltaTime;
         accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
-        resources['surface']['ice'].consumptionRate += iceToMelt * (1000 / deltaTime);
+        resources['surface']['ice'].modifyRate(-iceToMelt * (1000 / deltaTime), 'Melting');
         accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
-        resources['surface']['liquidWater'].productionRate += iceToMelt * (1000 / deltaTime);
+        resources['surface']['liquidWater'].modifyRate(iceToMelt * (1000 / deltaTime), 'Melting');
       } else if (tropicalTemperature >= freezingPoint && polarTemperature < freezingPoint) {
         // Tropical zone above freezing point, temperate or polar below freezing point
         const targetIceCoverage = Math.min(iceCoverage, polarPercentage);
@@ -388,14 +404,14 @@ class Terraforming extends EffectableEntity{
         meltingRate = iceToMelt / deltaTime;
         freezingRate = waterToFreeze / deltaTime;
     
-        accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
-        resources['surface']['ice'].consumptionRate += iceToMelt * (1000 / deltaTime);
-        accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
-        resources['surface']['liquidWater'].productionRate += iceToMelt * (1000 / deltaTime);
         accumulatedChanges['surface']['liquidWater'] -= waterToFreeze * surfaceArea;
-        resources['surface']['liquidWater'].consumptionRate += waterToFreeze * (1000 / deltaTime);
+        resources['surface']['liquidWater'].modifyRate(- waterToFreeze * (1000 / deltaTime), 'Freezing');
         accumulatedChanges['surface']['ice'] += waterToFreeze * surfaceArea;
-        resources['surface']['ice'].productionRate += waterToFreeze * (1000 / deltaTime);
+        resources['surface']['ice'].modifyRate(waterToFreeze * (1000 / deltaTime), 'Freezing');
+        accumulatedChanges['surface']['ice'] -= iceToMelt * surfaceArea;
+        resources['surface']['ice'].modifyRate(-iceToMelt * (1000 / deltaTime), 'Melting');
+        accumulatedChanges['surface']['liquidWater'] += iceToMelt * surfaceArea;
+        resources['surface']['liquidWater'].modifyRate(iceToMelt * (1000 / deltaTime), 'Melting');
       }
     
       this.water.meltingRate = meltingRate * surfaceArea  * (1000 / deltaTime);
@@ -407,7 +423,7 @@ class Terraforming extends EffectableEntity{
       const surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
       const polarCoverage = getZonePercentage('polar');
       const condensationTemperature = 170;
-      const condensationParameter = 1.77e-7;
+      const condensationParameter = 1.7699e-7;
       const co2GasPressure = calculateGasPressure('carbonDioxide');
 
       const polarTemperature = this.temperature.zones.polar.value;
@@ -417,9 +433,9 @@ class Terraforming extends EffectableEntity{
         const co2change = condensationParameter * tempDifference * surfaceArea * polarCoverage * timeMultiplier * co2GasPressure / 1000;
         // Apply condensation of CO2
         accumulatedChanges['surface']['dryIce'] += co2change;
-        resources['surface']['dryIce'].productionRate += co2change * (1000 / deltaTime);        
+        resources['surface']['dryIce'].modifyRate(co2change * (1000 / deltaTime), 'Deposition');
         accumulatedChanges['atmospheric']['carbonDioxide'] -= co2change;
-        resources['atmospheric']['carbonDioxide'].consumptionRate += co2change * (1000 / deltaTime);    
+        resources['atmospheric']['carbonDioxide'].modifyRate(-co2change * (1000 / deltaTime), 'Deposition');
       }
 
     }
@@ -521,10 +537,10 @@ class Terraforming extends EffectableEntity{
       biomass.value += maxPossibleBiomassIncrease;
 
       // Update production and consumption rates
-      water.consumptionRate += adjustedWaterChange * (1000 / deltaTime);
-      co2.consumptionRate += adjustedCo2Change * (1000 / deltaTime);
-      oxygen.productionRate += adjustedOxygenChange * (1000 / deltaTime);
-      biomass.productionRate += maxPossibleBiomassIncrease * (1000 / deltaTime);
+      water.modifyRate(- adjustedWaterChange * (1000 / deltaTime), 'Life Growth');
+      co2.modifyRate(- adjustedCo2Change * (1000 / deltaTime), 'Life Growth');
+      oxygen.modifyRate(adjustedOxygenChange * (1000 / deltaTime), 'Life Growth');
+      biomass.modifyRate(maxPossibleBiomassIncrease * (1000 / deltaTime), 'Life Growth');
     } else if (oxygen.value > 0) {
       // Apply decay-related resource adjustments only if oxygen is available
       const tempDecay = Math.min(biomass.value, absoluteChange); // Prevent negative biomass
@@ -541,10 +557,10 @@ class Terraforming extends EffectableEntity{
       oxygen.value -= adjustedOxygenChange;
 
       // Update production and consumption rates
-      water.productionRate += adjustedWaterChange * (1000 / deltaTime);
-      co2.productionRate += adjustedCo2Change * (1000 / deltaTime);
-      oxygen.consumptionRate += adjustedOxygenChange * (1000 / deltaTime);
-      biomass.consumptionRate += actualDecay * (1000 / deltaTime);
+      water.modifyRate(- adjustedWaterChange * (1000 / deltaTime), 'Life Decay');
+      co2.modifyRate(- adjustedCo2Change * (1000 / deltaTime), 'Life Decay');
+      oxygen.modifyRate(adjustedOxygenChange * (1000 / deltaTime), 'Life Decay');
+      biomass.modifyRate(actualDecay * (1000 / deltaTime), 'Life Decay');
 
       if(biomass.value < 1e-2){
         biomass.value = 0;
@@ -552,6 +568,21 @@ class Terraforming extends EffectableEntity{
   }
 
   }
+
+  saveState(){
+    return {
+      initialValuesCalculated: this.initialValuesCalculated,
+      temperature: this.temperature,
+      atmosphere: this.atmosphere,
+      };    
+  }
+
+  loadState(terraformingState){
+    this.initialValuesCalculated = terraformingState.initialValuesCalculated;
+    this.temperature = terraformingState.temperature;
+    this.atmosphere = terraformingState.atmosphere;
+  }
+
 }
 
   function calculateGasPressure(gas) {
@@ -637,3 +668,4 @@ function airDensity(atmPressure, T) {
     // T: Temperature in Kelvin (K)
     return atmPressure / (R_AIR * T); // kg/m³
 }
+

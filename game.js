@@ -68,8 +68,10 @@ function create() {
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
 
+  goldenAsteroid = new GoldenAsteroid();
+
   initializeGameState();  // Handle initial game state (building counts, etc.)
-  loadGame();
+  loadMostRecentSave();
 }
 
 function initializeGameState() {
@@ -111,6 +113,8 @@ function updateLogic(delta) {
 
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
+
+  goldenAsteroid.update(delta);
 }
 
 function updateRender() {
@@ -135,4 +139,6 @@ function update(time, delta) {
 
   updateLogic(delta);   // Update game state
   updateRender();       // Render updated game state
+
+  autosave(delta);      // Call the autosave function
 }
