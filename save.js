@@ -1,38 +1,20 @@
 globalGameIsLoadingFromSave = false;
 
-// Save game state to a specific slot
-function saveGameToSlot(slot) {
-  const gameState = {
-    dayNightCycle: dayNightCycle.saveState(), // Save the state from DayNightCycle
-    resources: resources, // Use resources object as is
-    buildings: buildings, // Use buildings object as is
-    colonies: colonies, // Use colonies object as is
-    projects: projectManager.saveState(), // Save the projects state using projectManager
-    research: researchManager.saveState(), // Save the research state from researchManager
-    oreScanning: oreScanner.saveState(), // Save the ore scanning state from oreScanner
-    terraforming: terraforming.saveState(), //Save terraforming state
-    story: storyManager.saveState(), // Save story state
-    journalEntries: journalEntriesData, // Save the journal entries data,
+function getGameState() {
+  return {
+    dayNightCycle: dayNightCycle.saveState(),
+    resources: resources,
+    buildings: buildings,
+    colonies: colonies,
+    projects: projectManager.saveState(),
+    research: researchManager.saveState(),
+    oreScanning: oreScanner.saveState(),
+    terraforming: terraforming.saveState(),
+    story: storyManager.saveState(),
+    journalEntries: journalEntriesData,
     goldenAsteroid: goldenAsteroid.saveState()
   };
-
-  // Store game state in localStorage
-  localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
-  console.log(`Game saved successfully to slot ${slot}.`);
-
-  // Get the current date and time
-  const saveDate = new Date();
-
-  // Format the save date using the formatDate function
-  const formattedSaveDate = formatDate(saveDate);
-
-  // Update the save date for the slot
-  document.getElementById(`${slot}-date`).textContent = formattedSaveDate;
-
-  // Save the save slot dates as UNIX timestamps
-  saveSaveSlotDates(slot, saveDate);
 }
-
 
 // Load game state from a specific slot or custom string
 function loadGame(slotOrCustomString) {
@@ -156,6 +138,54 @@ function loadGame(slotOrCustomString) {
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } else {
       console.log('No saved game found.');
+  }
+}
+
+function saveGameToSlot(slot) {
+  const gameState = getGameState();
+
+  // Store game state in localStorage
+  localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
+  console.log(`Game saved successfully to slot ${slot}.`);
+
+  // Get the current date and time
+  const saveDate = new Date();
+
+  // Format the save date using the formatDate function
+  const formattedSaveDate = formatDate(saveDate);
+
+  // Update the save date for the slot
+  document.getElementById(`${slot}-date`).textContent = formattedSaveDate;
+
+  // Save the save slot dates as UNIX timestamps
+  saveSaveSlotDates(slot, saveDate);
+}
+
+function saveGameToFile() {
+  const gameState = getGameState();
+
+  const saveData = JSON.stringify(gameState);
+  const blob = new Blob([saveData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'game_save.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// Load game state from a file
+function loadGameFromFile(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const saveData = e.target.result;
+      loadGame(saveData);
+    };
+    reader.readAsText(file);
   }
 }
 

@@ -263,6 +263,13 @@
                               <button class="delete-button" data-slot="slot5">Delete</button>
                           </td>
                       </tr>
+                      <tr>
+                        <td colspan="3">
+                          <button id="save-to-file-button">Save to File</button>
+                          <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
+                          <button id="load-from-file-button">Load from File</button>
+                        </td>
+                      </tr>
                   </tbody>
               </table>
           </div>
@@ -292,6 +299,17 @@
             document.getElementById(this.dataset.tab).classList.add('active');
         });
     });
+
+        // Event listener for the "Save to File" button
+    document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);
+
+    // Event listener for the "Load from File" button
+    document.getElementById('load-from-file-button').addEventListener('click', function() {
+    document.getElementById('load-from-file-input').click();
+    });
+
+    // Event listener for the file input change event
+    document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
     </script>
 </body>
 
