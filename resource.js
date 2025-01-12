@@ -29,6 +29,10 @@ class Resource extends EffectableEntity {
     this.unlocked = config.unlocked;
     this.maintenanceConversion = config.maintenanceConversion || {};
     this.conversionValue = config.conversionValue || 1;
+
+    if(this.name === 'land'){
+      this.value = Math.max(this.value, config.initialValue);
+    }
   } 
 
   increase(amount) {

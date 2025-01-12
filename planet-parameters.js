@@ -19,7 +19,7 @@ const planetParameters = {
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
-        land: {name : 'Land', initialValue : 1440000000, baseCap : 1440000000, hasCap: true, unlocked: false, land:true},
+        land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true},
         ice: { name: 'Ice', initialValue: 10000000003841538, unlocked:false },
         liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
         dryIce : {name : 'Dry Ice', initialValue: 30010420953259, unlocked: false},

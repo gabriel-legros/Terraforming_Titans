@@ -10,7 +10,7 @@ const baseTemperatureRanges = {
 };
 
 const lifeDesignerConfig = {
-  maxPoints : 40
+  maxPoints : 50
 }
 
 class LifeAttribute {
@@ -41,7 +41,7 @@ class LifeAttribute {
             return (2000 / (this.value - 9)).toFixed(2) + 'Pa';
           }
       case 'radiationTolerance':
-        return this.value * 10 + '%';
+        return this.value * 5 + '%';
       case 'toxicityTolerance':
         return this.value * 10 + '%';
       case 'invasiveness':
@@ -69,7 +69,7 @@ class LifeDesign {
     this.maxTemperatureGrowth = new LifeAttribute('maxTemperatureGrowth', maxTemperatureGrowth, 'Maximum Temperature for Growth', 'The maximum temperature at which the life form can grow and thrive during the day.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'The efficiency of the life form in converting light energy into chemical energy through photosynthesis.  Translates to growth rate.', 500);
     this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'The efficiency of the life form in utilizing and retaining moisture.  Reduces water requirement.  Enough investment converts from liquid water to atmospheric water requirement.', 30);
-    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'The ability of the life form to tolerate and withstand radiation.  Especially useful without a magnetosphere.', 10);
+    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'The ability of the life form to tolerate and withstand radiation.  Especially useful without a magnetosphere.', 20);
     this.toxicityTolerance = new LifeAttribute('toxicityTolerance', toxicityTolerance, 'Toxicity Tolerance', 'The ability of the life form to tolerate and survive in the presence of toxic substances.', 10);
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'The potential of the life form to spread and invade existing life.  Reduces deployment time.', 50);  }
 
@@ -97,7 +97,7 @@ class LifeDesign {
   }
 
   getRadiationMitigationRatio() {
-    return this.radiationTolerance.value / 10;
+    return this.radiationTolerance.value / 20;
   }
 
   // Method to copy attributes from another LifeDesign
