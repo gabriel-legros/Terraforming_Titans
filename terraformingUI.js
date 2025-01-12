@@ -384,7 +384,7 @@ function createTemperatureBox(row) {
 
 function updateLifeBox() {
     const lifeBox = document.getElementById('life-box');
-    if(terraforming.getWaterStatus()){
+    if(terraforming.getLifeStatus()){
       lifeBox.style.borderColor = 'green';
     } else {
       lifeBox.style.borderColor = 'red';
