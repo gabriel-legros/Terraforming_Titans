@@ -4,7 +4,7 @@
 }
 
 .resource-selection-container input[type="number"] {
-  width: 60px; /* Make the text box smaller */
+  width: 120px; /* Make the text box smaller */
   padding: 5px; /* Padding to make it consistent */
   margin-left: 10px; /* Add some spacing to align with the label */
   box-sizing: border-box; /* Ensure consistent sizing with padding */
@@ -32,7 +32,7 @@
 }
 
 .resource-selection-input {
-  width: 60px;
+  width: 120px;
   text-align: center;
 }
 

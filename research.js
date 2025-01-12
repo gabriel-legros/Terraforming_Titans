@@ -132,10 +132,7 @@ class Research {
   }
   
 // Initializes the research system
-function initializeResearch() {
-    createResearchButtons(researchManager.researches); // Calls a function from research-ui.js to create buttons
-    updateAllResearchButtons(researchManager.researches); // Updates the initial state of all buttons
-
+function initializeResearchUI() {
     // Initializes the UI tabs for research
     initializeResearchTabs(); // Delegates the sub-tab event listeners and initial UI load to research-ui.js
 }

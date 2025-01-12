@@ -8,6 +8,7 @@ class Project extends EffectableEntity {
 
     this.initializeFromConfig(config, name);
 
+    this.startingDuration = this.duration;
     this.remainingTime = config.duration; // Time left to complete the project
     this.isActive = false; // Whether the project is currently active
     this.isCompleted = false; // Whether the project has been completed
@@ -15,7 +16,7 @@ class Project extends EffectableEntity {
     this.assignedSpaceships = 0;
     this.autoStart = false;
     this.autoAssignSpaceships = false;
-    this.selectedDisposalResource = null;
+    this.selectedDisposalResource = null || this.attributes.defaultDisposal;
   }
 
   initializeFromConfig(config, name) {
@@ -61,6 +62,17 @@ class Project extends EffectableEntity {
     return effectiveCost;
   }
 
+  getEffectiveDuration(){
+    const duration = this.duration;
+    if(this.isBooleanFlagSet('instantDuration')){
+      return 1000;
+    } else if(this.attributes.spaceMining || this.attributes.spaceExport){
+      return this.calculateSpaceshipAdjustedDuration();
+    } else {
+      return duration;
+    }
+  }
+
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
     const cost = this.getEffectiveCost();
@@ -81,6 +93,9 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
+    if(this.isActive){
+      return false;
+    }
     // Check the standard scaled cost
     const cost = this.getScaledCost();
     for (const resourceCategory in cost) {
@@ -109,8 +124,8 @@ class Project extends EffectableEntity {
     // Check funding for resource choice if applicable
     if (this.selectedResources && this.selectedResources.length > 0) {
       let totalFundingCost = 0;
-      this.selectedResources.forEach(({ resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
+      this.selectedResources.forEach(({ category, resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
         totalFundingCost += pricePerUnit * quantity;
       });
   
@@ -146,21 +161,13 @@ class Project extends EffectableEntity {
     if (this.attributes.spaceExport && this.selectedDisposalResource) {
       const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
       const { category, resource } = this.selectedDisposalResource;
+      const actualAmount = Math.min(scaledDisposalAmount[category][resource], resources[category][resource].value);
       resources[category][resource].decrease(scaledDisposalAmount[category][resource]);
+      this.pendingResourceGains = [{category : 'colony', resource : 'funding', quantity : actualAmount * this.attributes.fundingGainAmount}];
     }
   
     // Deduct funding for selected resources if applicable
-    if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalFundingCost = 0;
-      this.pendingResourceGains = [];  // Track resources that will be gained later
-      this.selectedResources.forEach(({ resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost.colony[resource];
-        totalFundingCost += pricePerUnit * quantity;
-        this.pendingResourceGains.push({ resource, quantity });
-      });
-  
-      resources.colony.funding.decrease(totalFundingCost);
-    }
+    resources.colony.funding.decrease(this.getResourceChoiceGainCost());
   }
 
   start(resources) {
@@ -171,12 +178,8 @@ class Project extends EffectableEntity {
       // Set the project as active and reset the remaining time
       this.isActive = true;
   
-      // Calculate dynamic duration based on spaceship assignment for space mining or disposal projects
-      if (this.attributes.spaceMining || this.attributes.spaceExport) {
-        this.remainingTime = this.calculateSpaceshipAdjustedDuration(); // Adjust duration dynamically
-      } else {
-        this.remainingTime = this.duration; // Default duration for other projects
-      }
+      this.remainingTime = this.getEffectiveDuration(); // Default duration for other projects
+      this.startingDuration = this.remainingTime;
   
       // If the project involves space mining, calculate spaceship resource gains
       if (this.attributes.spaceMining) {
@@ -233,6 +236,10 @@ class Project extends EffectableEntity {
       this.applySpaceshipResourceGain();
     }
 
+    if(this.pendingResourceGains && this.attributes.spaceExport){
+      this.applySpaceshipResourceGain();
+    }
+
     // Apply resource choice gain effect if applicable
     if (this.pendingResourceGains && this.attributes.resourceChoiceGainCost) {
       this.applyResourceChoiceGain();
@@ -277,10 +284,25 @@ class Project extends EffectableEntity {
     return effectiveResourceGain;
   }
 
+  getResourceChoiceGainCost() {
+    // Deduct funding for selected resources if applicable
+    if (this.selectedResources && this.selectedResources.length > 0) {
+      let totalFundingCost = 0;
+      this.pendingResourceGains = [];  // Track resources that will be gained later
+      this.selectedResources.forEach(({ category, resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
+        totalFundingCost += pricePerUnit * quantity;
+        this.pendingResourceGains.push({ category, resource, quantity });
+        });
+      return totalFundingCost;
+    }
+      return 0;
+  }
+
   applyResourceChoiceGain() {
     // Apply resource gain based on the selected resources and their quantities
-    this.pendingResourceGains.forEach(({ resource, quantity }) => {
-      resources.colony[resource].increase(quantity);
+    this.pendingResourceGains.forEach(({ category, resource, quantity }) => {
+      resources[category][resource].increase(quantity);
       console.log(`Increased ${resource} by ${quantity}`);
     });
     this.pendingResourceGains = false;
@@ -331,12 +353,12 @@ class Project extends EffectableEntity {
 
   resetProject() {
     this.isCompleted = false;
-    this.remainingTime = this.duration;
+    this.remainingTime = this.getEffectiveDuration();
   }
 
   getProgress() {
     if (!this.isActive) return 0;
-    return Math.max(0, ((this.duration - this.remainingTime) / this.duration) * 100).toFixed(2);
+    return Math.max(0, ((this.startingDuration - this.remainingTime) / this.startingDuration) * 100).toFixed(2);
   }
 
   enable() {
@@ -448,6 +470,44 @@ class Project extends EffectableEntity {
     // Calculate the adjusted duration based on the number of assigned spaceships
     return duration / assignedShips;
   }
+
+  estimateProjectCostAndGain() {
+    if(this.isActive && this.autoStart){
+      if(this.attributes.spaceMining || this.attributes.spaceExport) {
+      const totalCost = this.calculateSpaceshipTotalCost();
+      for (const category in totalCost) {
+        for (const resource in totalCost[category]){
+          resources[category][resource].modifyRate(- 1000*totalCost[category][resource] / this.getEffectiveDuration(), 'Spaceship Cost') / this.getEffectiveDuration();
+        }
+      }
+
+      const totalDisposal = this.calculateSpaceshipTotalDisposal();
+      for (const category in totalDisposal) {
+        for (const resource in totalDisposal[category]){
+          resources[category][resource].modifyRate(- 1000*totalDisposal[category][resource] / this.getEffectiveDuration(), 'Spaceship Export');
+        }
+      }
+
+      const totalGain = this.pendingResourceGains;
+      totalGain.forEach((gain) => {
+            resources[gain.category][gain.resource].modifyRate(gain.quantity, this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export') / this.getEffectiveDuration();
+        });
+      }
+
+      if(this.attributes.resourceChoiceGainCost){
+        const totalGain = this.pendingResourceGains;
+        if(totalGain){
+        totalGain.forEach((gain) => {
+              resources[gain.category][gain.resource].modifyRate(1000*gain.quantity / this.getEffectiveDuration(), 'Cargo Rockets');
+          });
+        }
+
+        const fundingCost = 1000*this.getResourceChoiceGainCost() / this.getEffectiveDuration();
+        resources.colony.funding.modifyRate(-fundingCost, 'Cargo Rockets');
+        }
+    }
+  }
+  
 }
 
 class ProjectManager extends EffectableEntity {
@@ -504,6 +564,15 @@ class ProjectManager extends EffectableEntity {
     return Object.values(this.projects);
   }
 
+  estimateProjects() {
+    for (const projectName in this.projects){
+      const project = this.projects[projectName];
+      if(project.attributes.spaceMining || project.attributes.spaceExport || project.attributes.resourceChoiceGainCost){
+        project.estimateProjectCostAndGain();
+      }
+    }
+  }
+
   // Save the state of all projects
   saveState() {
     const projectState = {};
@@ -513,6 +582,7 @@ class ProjectManager extends EffectableEntity {
         isActive: project.isActive,
         isCompleted: project.isCompleted,
         remainingTime: project.remainingTime,
+        startingDuration: project.startingDuration,
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
         assignedSpaceships: project.assignedSpaceships,
@@ -526,6 +596,9 @@ class ProjectManager extends EffectableEntity {
 
   // Load a previously saved state into the projects
   loadState(projectState) {
+    this.activeEffects = [];
+    this.booleanFlags = new Set();
+
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
       const project = this.projects[projectName];
@@ -534,13 +607,17 @@ class ProjectManager extends EffectableEntity {
         project.isActive = savedProject.isActive;
         project.isCompleted = savedProject.isCompleted;
         project.remainingTime = savedProject.remainingTime;
+        project.startingDuration = savedProject.startingDuration || project.getEffectiveDuration();
         project.repeatCount = savedProject.repeatCount;
         project.pendingResourceGains = savedProject.pendingResourceGains;
+        if(project.pendingResourceGains){
+          project.oneTimeResourceGainsDisplay = project.pendingResourceGains;
+        }
         project.effects = [];
         project.assignedSpaceships = savedProject.assignedSpaceships;
         project.autoStart = savedProject.autoStart;
         project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
-        project.selectedDisposalResource = savedProject.selectedDisposalResource || null; 
+        project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal; 
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();
         }
@@ -549,14 +626,3 @@ class ProjectManager extends EffectableEntity {
   }
 }
 
-function assignSpaceshipsToProject(project, count) {
-  const availableSpaceships = Math.floor(resources.special.spaceships.value); // Round down to ensure whole values
-  project.assignedSpaceships = project.assignedSpaceships || 0;
-
-  // Calculate the new spaceship assignment, keeping it within valid bounds
-  const adjustedCount = Math.max(-project.assignedSpaceships, Math.min(count, availableSpaceships));
-  project.assignedSpaceships += adjustedCount;
-
-  // Update resources and the UI
-  resources.special.spaceships.value -= adjustedCount;
-}

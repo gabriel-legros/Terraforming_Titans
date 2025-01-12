@@ -12,7 +12,9 @@ function getGameState() {
     terraforming: terraforming.saveState(),
     story: storyManager.saveState(),
     journalEntries: journalEntriesData,
-    goldenAsteroid: goldenAsteroid.saveState()
+    goldenAsteroid: goldenAsteroid.saveState(),
+    lifeDesigner: lifeDesigner.saveState(),
+    milestonesManager: milestonesManager.saveState()
   };
 }
 
@@ -79,6 +81,7 @@ function loadGame(slotOrCustomString) {
           }
         }
       }
+      createBuildingButtons(buildings);
   
       // Restore colonies
       if (gameState.colonies) {
@@ -94,10 +97,8 @@ function loadGame(slotOrCustomString) {
           }
         }
       }
-
-
-      createBuildingButtons(buildings);
-
+      createColonyButtons(colonies);
+    
       // Restore projects
       if (gameState.projects) {
           projectManager.loadState(gameState.projects);
@@ -129,6 +130,14 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.goldenAsteroid){
       goldenAsteroid.loadState(gameState.goldenAsteroid);
+    }
+
+    if(gameState.lifeDesigner){
+      lifeDesigner.loadState(gameState.lifeDesigner);
+    }
+
+    if(gameState.milestonesManager){
+      milestonesManager.loadState(gameState.milestonesManager);
     }
 
     tabManager.activateTab('buildings');
@@ -282,8 +291,10 @@ function loadMostRecentSave() {
   if (mostRecentSlot) {
     loadGame(`gameState_${mostRecentSlot}`);
     console.log(`Loaded most recent save from slot ${mostRecentSlot}.`);
+    return true;
   } else {
     console.log('No save slots found. Starting a new game.');
+    return false;
   }
 }
 

@@ -39,7 +39,8 @@ class Building extends EffectableEntity {
         requiresWorker, // Added requiresWorker to the destructured properties
         unlocked,
         surfaceArea,
-        requiresProductivity
+        requiresProductivity,
+        requiresLand
       } = config;
   
       this.name = buildingName;
@@ -59,6 +60,7 @@ class Building extends EffectableEntity {
       this.unlocked = unlocked;
       this.surfaceArea = surfaceArea;
       this.requiresProductivity = typeof requiresProductivity !== 'undefined' ? requiresProductivity : true;
+      this.requiresLand = requiresLand;
 
       this.updateResourceStorage();
     }
@@ -235,15 +237,41 @@ class Building extends EffectableEntity {
       }
     }
 
+    return this.canAffordDeposit(buildCount) && this.canAffordLand(buildCount);
+  }
+
+  canAffordDeposit(amount = 1){
     if (this.requiresDeposit) {
       for (const deposit in this.requiresDeposit.underground) {
-        if (!resources.underground[deposit] || resources.underground[deposit].value - resources.underground[deposit].reserved < this.requiresDeposit.underground[deposit] * buildCount) {
+        if (!resources.underground[deposit] || resources.underground[deposit].value - resources.underground[deposit].reserved < this.requiresDeposit.underground[deposit] * amount) {
           return false;
         }
       }
     }
 
     return true;
+  }
+
+  canAffordLand(amount = 1){
+    if (this.requiresLand) {
+      if(resources.surface.land.value - resources.surface.land.reserved < this.requiresLand * amount){
+        return false;
+      }
+    }
+
+    return true;    
+  }
+
+  landAffordCount(){
+    return Math.floor((resources.surface.land.value - resources.surface.land.reserved) / this.requiresLand);  
+  }
+
+  adjustLand(amount){
+    if(amount > 0){
+      resources.surface.land.reserve(amount * this.requiresLand);
+    } else {
+      resources.surface.land.release(-amount * this.requiresLand);
+    }
   }
 
   maxBuildable() {
@@ -292,6 +320,9 @@ class Building extends EffectableEntity {
         for (const deposit in this.requiresDeposit.underground) {
           resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
+      }
+      if(this.requiresLand){
+        resources.surface.land.reserve(this.requiresLand*buildCount);
       }
       this.count += buildCount;
       this.active += buildCount;

@@ -10,12 +10,10 @@
     font-size: 15px;
     color: gold;
     font-weight: bold;
-    text-shadow: 1px 1px 2px darkgoldenrod;
+    text-shadow: 1px 1px 2px rgb(164, 114, 8);
   }
 
   #gold-asteroid-container {
-    height: 20px;
-    min-height: 20px;
     border-radius: 5px; /* Adds rounded corners */
     display: flex;
     align-items: center;

@@ -9,7 +9,8 @@ body {
 .tabs,
 .buildings-subtabs,
 .research-subtabs,
-.projects-subtabs
+.projects-subtabs,
+.terraforming-subtabs
  {
     display: flex;
     cursor: pointer;
@@ -22,7 +23,8 @@ body {
 .tab,
 .building-subtab,
 .research-subtab,
-.projects-subtab { /* Added projects-subtab */
+.projects-subtab,
+.terraforming-subtab { /* Added projects-subtab */
     flex: 1;
     padding: 10px;
     text-align: center;
@@ -40,15 +42,17 @@ body {
 .tab.active,
 .building-subtab.active,
 .research-subtab.active,
-.projects-subtab.active { /* Added projects-subtab.active */
+.projects-subtab.active,
+.terraforming-subtab.active { /* Added projects-subtab.active */
     background-color: #666;
     color: #fff; /* Consistent text color for active state */
 }
 
 /* Adjusts the resource container width */
 .resource-wrapper {
-    flex: 0 0 15%; /* Takes up 20% of the space */
-    min-width: 15%;
+    flex: 0 0 16%; /* Takes up 20% of the space */
+    min-width: 16%;
+    min-height: 800px;
 }
 
 .tab-content-wrapper {
@@ -83,13 +87,15 @@ body {
 
 .building-subtab-content,
 .research-subtab-content,
-.projects-subtab-content { /* Added projects-subtab-content */
+.projects-subtab-content,
+.terraforming-subtab-content { /* Added projects-subtab-content */
     display: none;
 }
 
 .building-subtab-content.active,
 .research-subtab-content.active,
-.projects-subtab-content.active { /* Added projects-subtab-content.active */
+.projects-subtab-content.active,
+.terraforming-subtab-content.active { /* Added projects-subtab-content.active */
     display: block;
 }
 
@@ -99,31 +105,11 @@ body {
     gap: 20px;
 }
 
-.research-item {
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.research-button {
-    padding: 10px 20px;
-    margin-bottom: 10px;
-    font-size: 16px;
-}
-
-.research-cost,
-.research-description {
-    margin: 5px 0;
-    font-size: 14px;
-}
-
 /* Journal container on the right side of the screen */
 .journal {
     position: relative;
+    min-height: 800;
     flex: 0 0 300px; /* Fixed width of 300px */
-    height: calc(100vh - 100px); /* Full height minus the top offset */
     background-color: #f4f4f4;
     border-left: 2px solid #ccc;
     padding: 15px; /* Adds padding to the journal text */
@@ -140,4 +126,8 @@ body {
     margin: 5px 0; /* Adds a small margin between each journal entry */
     font-size: 14px;
     color: #333;
+}
+
+#special-messages {
+    min-height: 65px;
 }

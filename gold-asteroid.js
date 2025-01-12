@@ -1,6 +1,6 @@
 const goldenEffects = [
     {
-        target: 'funding',
+        target: 'fundingModule',
         type: 'productionMultiplier',
         value : 5
     },
@@ -22,6 +22,11 @@ const goldenEffects = [
         type: 'productionMultiplier',
         value: 5
     },
+    {
+      target: 'population',
+      type: 'growthMultiplier',
+      value: 5
+  },
     {
         type: 'booleanFlag',
         target: 'resource',
@@ -53,7 +58,15 @@ const goldenEffects = [
         targetId: 'electronics',
         flagId: 'golden',
         value: true
-    }
+    },   
+    {
+      type: 'booleanFlag',
+      target: 'resource',
+      resourceType: 'colony',
+      targetId: 'colonists',
+      flagId: 'golden',
+      value: true
+  }
 ]
 
 class GoldenAsteroid {
@@ -86,7 +99,7 @@ class GoldenAsteroid {
     
           const gameContainer = document.getElementById('game-container');
           const x = Math.random() * (gameContainer.clientWidth - this.element.width);
-          const y = Math.random() * (gameContainer.clientHeight - this.element.height);
+          const y = Math.random() * (Math.min(gameContainer.clientHeight, 800) - this.element.height);
           this.element.style.left = `${x}px`;
           this.element.style.top = `${y}px`;
     
@@ -104,13 +117,15 @@ class GoldenAsteroid {
     }
 
     startCountdown(duration) {
-        this.countdownRemainingTime = duration;
+      this.countdownRemainingTime = duration;
+      if(!this.countdownActive){
         this.countdownActive = true;
     
         this.countdownElement = document.createElement('div');
         this.countdownElement.className = 'gold-asteroid-countdown';
         document.getElementById('gold-asteroid-container').appendChild(this.countdownElement);
       }
+    }
   
     despawn() {
       this.active = false;
@@ -161,13 +176,13 @@ class GoldenAsteroid {
 
     addEffects(){
         goldenEffects.forEach((effect) => {
-            addEffect({...effect, sourceId: goldenAsteroid})
+            addEffect({...effect, sourceId: 'goldenAsteroid'})
           });
     }
 
     removeEffects(){
         goldenEffects.forEach((effect) => {
-            removeEffect({...effect, sourceId: goldenAsteroid})
+            removeEffect({...effect, sourceId: 'goldenAsteroid'})
           });
     }
   
@@ -182,17 +197,24 @@ class GoldenAsteroid {
       }
     
     loadState(data) {
-    this.active = data.active;
-    this.duration = data.duration;
-    this.spawnTime = data.spawnTime;
-    this.countdownActive = data.countdownActive;
-    this.countdownRemainingTime = data.countdownRemainingTime;
-    this.lastSpawnTime = 0;
-    this.generateNextSpawnTime();
+      this.despawn();
+      this.removeEffects();
+      if (this.countdownElement) {
+        this.countdownElement.remove();
+        this.countdownElement = null;
+      }
 
-        if (this.countdownActive) {
-            this.addEffects();
-            this.startCountdown(this.countdownRemainingTime);
-        }
+      this.active = data.active;
+      this.duration = data.duration;
+      this.spawnTime = data.spawnTime;
+      this.countdownActive = data.countdownActive;
+      this.countdownRemainingTime = data.countdownRemainingTime;
+      this.lastSpawnTime = 0;
+      this.generateNextSpawnTime();
+
+          if (this.countdownActive) {
+              this.addEffects();
+              this.startCountdown(this.countdownRemainingTime);
+          }
     }
   }

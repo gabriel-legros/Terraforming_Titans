@@ -10,11 +10,15 @@
     <link rel="stylesheet" href="save.css">
     <link rel="stylesheet" href="structure.css">
     <link rel="stylesheet" href="colonies.css">
+    <link rel="stylesheet" href="research.css">
     <link rel="stylesheet" href="pop-up.css">
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="resource.css">
     <link rel="stylesheet" href="terraforming.css">
     <link rel="stylesheet" href="gold-asteroid.css">
+    <link rel="stylesheet" href="warning.css">
+    <link rel="stylesheet" href="life.css">
+    <link rel="stylesheet" href="milestones.css">
     <link rel="stylesheet" href="day-night-cycleUI.css">
     <script src="planet-parameters.js"></script>
     <script src="life-parameters.js"></script>
@@ -25,6 +29,7 @@
 
     <script src="progress-data.js"></script>   
 
+    <script src="numbers.js"></script>
     <script src="effectable-entity.js"></script>
     <script src="tab.js"></script>
     <script src="save.js"></script>
@@ -39,6 +44,8 @@
     <script src="colonyUI.js"></script>
     <script src="projects.js"></script>
     <script src="projectsUI.js"></script>
+    <script src="spaceship.js"></script>
+    <script src="spaceshipUI.js"></script>
     <script src="research.js"></script>
     <script src="researchUI.js"></script>
     <script src="funding.js"></script>
@@ -48,12 +55,17 @@
     <script src="progress.js"></script>   
     <script src="terraforming.js"></script>   
     <script src="terraformingUI.js"></script>
+    <script src="life.js"></script>   
+    <script src="lifeUI.js"></script>
+    <script src="milestones.js"></script>   
+    <script src="milestonesUI.js"></script>
     <script src="zones.js"></script>   
     <script src="water-cycle.js"></script>   
     <script src="dry-ice-cycle.js"></script>   
     <script src="globals.js"></script>
     <script src="autobuild.js"></script>
     <script src="gold-asteroid.js"></script>
+    <script src="warning.js"></script>
     <script src="game.js"></script>
 </head>
 
@@ -80,7 +92,11 @@
     <div class="tab-content-wrapper">
 
       <div class="resource-wrapper">
-        <div id="gold-asteroid-container"></div>
+        <div id = "special-messages">
+          <div id="warning-container"></div>
+          <div id="festival-container"></div>
+          <div id="gold-asteroid-container"></div>
+        </div>
         <div class="resource-container" id="resources-container">
             <!-- Resources will be dynamically inserted here -->
         </div>
@@ -166,29 +182,56 @@
             </div>
             <div class="subtab-content-wrapper">
                 <div id="energy-research" class="research-subtab-content active">
-                    <h3>Energy Research</h3>
-                    <div class="research-list" id="energy-research-buttons"></div> <!-- Container for energy research projects -->
+                  <div class="research-header">
+                    <span class="research-title">Energy Research</span>
+                    <button class="toggle-completed-button">Toggle Completed</button>
+                  </div>
+                  <div class="research-list" id="energy-research-buttons"></div> <!-- Container for energy research projects -->
                 </div>
                 <div id="industry-research" class="research-subtab-content">
-                    <h3>Industry Research</h3>
-                    <div class="research-list" id="industry-research-buttons"></div> <!-- Container for industry research projects -->
+                  <div class="research-header">
+                    <span class="research-title">Industry Research</span>
+                    <button class="toggle-completed-button">Toggle Completed</button>
+                  </div>
+                  <div class="research-list" id="industry-research-buttons"></div> <!-- Container for industry research projects -->
                 </div>
                 <div id="colonization-research" class="research-subtab-content">
-                    <h3>Colonization Research</h3>
-                    <div class="research-list" id="colonization-research-buttons"></div> <!-- Container for colonization research projects -->
+                  <div class="research-header">
+                    <span class="research-title">Colonization Research</span>
+                    <button class="toggle-completed-button">Toggle Completed</button>
+                  </div>
+                  <div class="research-list" id="colonization-research-buttons"></div> <!-- Container for colonization research projects -->
                 </div>
                 <div id="terraforming-research" class="research-subtab-content">
-                    <h3>Terraforming Research</h3>
-                    <div class="research-list" id="terraforming-research-buttons"></div> <!-- Container for terraforming research projects -->
+                  <div class="research-header">
+                    <span class="research-title">Terraforming Research</span>
+                    <button class="toggle-completed-button">Toggle Completed</button>
+                  </div>
+                  <div class="research-list" id="terraforming-research-buttons"></div> <!-- Container for terraforming research projects -->
                 </div>
-            </div>
+              </div>
         </div>
     </div>
 
     <div id="terraforming" class="tab-content">
-        <div class="container terraforming-container">
-            <h2>Terraforming</h2>
+      <div class="container">
+        <div class="terraforming-subtabs">
+          <div class="terraforming-subtab active" data-subtab="summary-terraforming">Summary</div>
+          <div class="terraforming-subtab" data-subtab="life-terraforming">Life</div>
+          <div class="terraforming-subtab" data-subtab="milestone-terraforming">Milestones</div>
+      </div>
+      <div class="terraforming-subtab-content-wrapper">
+          <div id = "summary-terraforming" class="terraforming-subtab-content active">
+              <h2>Terraforming</h2>
+          </div>
+          <div id = "life-terraforming" class="terraforming-subtab-content">
+            <h2>Life</h2>
         </div>
+        <div id = "milestone-terraforming" class="terraforming-subtab-content">
+          <h2>Milestones</h2>
+      </div>
+        </div>
+      </div>
     </div>
 
     <div id="settings" class="tab-content active">
@@ -265,6 +308,7 @@
                       </tr>
                       <tr>
                         <td colspan="3">
+                          <button id="new-game-button">New Game</button>
                           <button id="save-to-file-button">Save to File</button>
                           <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
                           <button id="load-from-file-button">Load from File</button>
@@ -299,6 +343,9 @@
             document.getElementById(this.dataset.tab).classList.add('active');
         });
     });
+
+    //Event listener for "New Game" button
+    document.getElementById('new-game-button').addEventListener('click', initializeGameState);
 
         // Event listener for the "Save to File" button
     document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);

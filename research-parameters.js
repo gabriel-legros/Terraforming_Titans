@@ -109,7 +109,22 @@ const researchParameters = {
         ],
       },
       {
-        id: 'fusion_1',
+        id: 'fission_plant1_upgrade2',
+        name: 'Adapted fission power',
+        description: 'Doubles the production of nuclear reactors.',
+        cost: { research: 500000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'productionMultiplier',
+            value: 2
+          }
+        ],
+      },
+      {
+        id: 'fusion',
         name: 'Fusion reactor MkI',
         description: 'Enables a version of an old design from Earth.  Will require superconductors to build.',
         cost: { research: 1000000 },
@@ -117,7 +132,7 @@ const researchParameters = {
         effects: [
           {
             target: 'building',
-            targetId: 'fusionPowerPlant1',
+            targetId: 'fusionPowerPlant',
             type: 'enable',
           },
           {
@@ -129,29 +144,15 @@ const researchParameters = {
         ],
       },
       {
-        id: 'fusion_2',
-        name: 'Fusion reactor MkII',
-        description: 'Enables construction of the latest fusion reactor design.',
-        cost: { research: 100000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'fusionPowerPlant2',
-            type: 'enable',
-          }
-        ],
-      },
-      {
         id: 'improved_fusion_1',
         name: 'Improved fusion reactor',
-        description: 'Doubles the production of modern fusion reactors.',
+        description: 'Doubles the production of fusion reactors.',
         cost: { research: 1000000000 },
         prerequisites: [],
         effects: [
           {
             target: 'building',
-            targetId: 'fusionPowerPlant2',
+            targetId: 'fusionPowerPlant',
             type: 'productionMultiplier',
             value: 2
           }
@@ -166,7 +167,7 @@ const researchParameters = {
         effects: [
           {
             target: 'building',
-            targetId: 'fusionPowerPlant2',
+            targetId: 'fusionPowerPlant',
             type: 'productionMultiplier',
             value: 2
           }
@@ -286,7 +287,7 @@ const researchParameters = {
       {
         id: 'android_factory',
         name: 'Android Manufacturing',
-        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.',
+        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.  Androids require their own housing.',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -349,31 +350,10 @@ const researchParameters = {
         ]
       }, 
       {
-        id: 'robotics_3',
-        name: 'Precision Assembly Lines',
-        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
-        cost: { research: 10000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'superconductorFactory',
-            type: 'workerMultiplier',
-            value: 0.8
-          },
-          {
-            target: 'building',
-            targetId: 'androidFactory',
-            type: 'workerMultiplier',
-            value: 0.8
-          },
-        ],
-      },  
-      {
         id: 'advanced_alloy',
         name: 'Advanced Alloys',
         description: 'Doubles metal output.',
-        cost: { research: 50000000 },
+        cost: { research: 10000000 },
         prerequisites: [],
         effects: [
           {
@@ -389,7 +369,7 @@ const researchParameters = {
         id: 'shipyard',
         name: 'Shipbuilding',
         description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining and resource disposal.',
-        cost: { research: 500000000 },
+        cost: { research: 50000000 },
         prerequisites: [],
         effects: [
           {
@@ -407,12 +387,34 @@ const researchParameters = {
             targetId : 'oreSpaceMining',
             type: 'enable'
           },
-          {target : 'project',
-            targetId : 'exportResources',
+          {
+            target : 'project',
+            targetId : 'disposeResources',
             type: 'enable'
           }
         ],
       },   
+      {
+        id: 'robotics_3',
+        name: 'Precision Assembly Lines',
+        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+        cost: { research: 100000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superconductorFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+          {
+            target: 'building',
+            targetId: 'androidFactory',
+            type: 'workerMultiplier',
+            value: 0.8
+          },
+        ],
+      },  
       {
         id: 'space_elevator',
         name: 'Space Elevator',
@@ -574,7 +576,7 @@ const researchParameters = {
       {
         id: 't4_colony',
         name: 'Dome town',
-        description: 'The first dome design.',
+        description: 'The first dome design.  Can use androids as consumer goods.',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -586,9 +588,36 @@ const researchParameters = {
         ],
       }, 
       {
+        id: 'trading',
+        name: 'Ship trading',
+        description: 'Allows the export of metal and purchase of ships via special projects.  Also significantly reduces the duration of cargo rockets.',
+        cost: { research: 1000000 },
+        prerequisites: [],
+        effects: [
+            {
+              target: 'resource',
+              resourceType: 'special',
+              targetId: 'spaceships',
+              type: 'enable'
+            },
+            {
+              target : 'project',
+              targetId : 'exportResources',
+              type: 'enable'
+            },
+            {
+              target : 'project',
+              targetId : 'cargo_rocket',
+              type: 'booleanFlag',
+              flagId : 'instantDuration',
+              value : true
+            }
+        ],
+      }, 
+      {
         id: 't5_colony',
         name: 'Dome City',
-        description: 'A larger dome design.  Requires androids as consumer goods.',
+        description: 'A larger dome design.',
         cost: { research: 5000000 },
         prerequisites: [],
         effects: [
@@ -770,9 +799,9 @@ const researchParameters = {
         ],
       },
       {
-        id: 'lichen',
-        name: 'Lichen production',
-        description: 'Allows the production and release of lichen from biofactories.  Lichen can survive in extreme conditions but does not grow easily.',
+        id: 'life',
+        name: 'Life Designing and Production',
+        description: 'Allows the designing and production of specially engineered biomass.',
         cost: { research: 1000000 },
         prerequisites: [],
         effects: [
@@ -783,16 +812,14 @@ const researchParameters = {
           },
           {
             target: 'resource',
-            resourceType: 'special',
+            resourceType: 'surface',
             targetId : 'biomass',
             type: 'enable'
-          },          
-          {
-            type: 'booleanFlag',
-            target: 'terraforming',
-            flagId: 'lichen',
-            value: true
           },
+          {
+            target: 'lifeDesigner',
+            type: 'enable'
+          }
         ],
       },
       {
@@ -852,36 +879,6 @@ const researchParameters = {
         ],
       },   
       {
-        id: 'grass',
-        name: 'Grass production',
-        description: 'Replaces lichen production with grass production if conditions allow.  Grass grows faster but is more picky about temperature and requires liquid water.',
-        cost: { research: 500000000 },
-        prerequisites: [],
-        effects: [      
-          {
-            type: 'booleanFlag',
-            target: 'terraforming',
-            flagId: 'grass',
-            value: true
-          },
-        ],
-      },
-      {
-        id: 'trees',
-        name: 'Tree production',
-        description: 'Replaces grass production with tree production if conditions allow.  Trees grow even faster but are also pickier.',
-        cost: { research: 5000000000 },
-        prerequisites: [],
-        effects: [      
-          {
-            type: 'booleanFlag',
-            target: 'terraforming',
-            flagId: 'trees',
-            value: true
-          },
-        ],
-      },
-      {
         id: 'nitrogenImport',
         name: 'Nitrogen Importation',
         description: 'Import nitrogen to fill up the atmosphere with a neutral gas.',
@@ -894,20 +891,6 @@ const researchParameters = {
           }
         ],
       },  
-      {
-        id: 'pollinators',
-        name: 'Adapted Pollinators',
-        description: 'Releases insects well-adapted for survival in harsh conditions.  Their pollination will double growth rate of biomass.',
-        cost: { research: 100000000000 },
-        prerequisites: [],
-        effects: [      
-          {
-            target: 'terraforming',
-            type: 'lifeGrowthMultiplier',
-            value: 2
-          },
-        ],
-      },
       {
         id: 'magneticShield',
         name: 'Magnetic Shield',

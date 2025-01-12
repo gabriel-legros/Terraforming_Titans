@@ -10,6 +10,8 @@ class StoryEvent {
       this.reward = config.reward || [];
       this.rewardDelay = config.rewardDelay || 0;  // Add rewardDelay with a default of 0
       this.special = config.special || null; // Add special field for handling flags
+
+      clearJournal();
     }
 
     // Handle different types of events (pop-up, journal, etc.)
@@ -159,8 +161,24 @@ class StoryEvent {
             }
         case 'terraforming':
             switch(objective.terraformingParameter){
+                case 'complete':
+                    return terraforming.completed;
                 case 'tropicalTemperature':
                     if(terraforming.temperature.zones.tropical.value >= objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'tropicalDayTemperature':
+                    if(terraforming.temperature.zones.tropical.day >= objective.value){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                case 'tropicalNightTemperature':
+                    if(terraforming.temperature.zones.tropical.night >= objective.value){
                         return true;
                     }
                     else{

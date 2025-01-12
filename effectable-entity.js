@@ -20,14 +20,14 @@ class EffectableEntity {
 
       if (existingEffectIndex !== -1) {
         this.activeEffects[existingEffectIndex] = effect;
-        console.log(`Replaced effect with effectId "${effect.effectId}" on ${this.name}`);
-        this.applyActiveEffects();
+        this.applyEffect(effect);
       } else {
         console.log(`Effect with effectId "${effect.effectId}" not found, nothing replaced on ${this.name}`);
       }
     }
   
-    removeEffect(sourceId) {
+    removeEffect(effect) {
+      const sourceId = effect.sourceId;
       if (!sourceId) {
         console.warn("No sourceId provided to removeEffect");
         return;
@@ -97,6 +97,9 @@ class EffectableEntity {
         case 'resourceCostMultiplier':
           this.applyResourceCostMultiplier(effect);
           break;
+        case 'workerMultiplier':
+          this.applyWorkerMultiplier(effect);
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
@@ -105,11 +108,13 @@ class EffectableEntity {
           break;
         case 'activateTab':
           this.activateTab(effect.targetId)
+          break;
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
+          break;
         case 'oneTimeStart':
           this.applyOneTimeStart(effect);
-        break;
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -135,6 +140,10 @@ class EffectableEntity {
     }
 
     applyResourceCostMultiplier(effect) {
+
+    }
+
+    applyWorkerMultiplier(effect) {
 
     }
 
@@ -176,84 +185,49 @@ class EffectableEntity {
     }
 }
 
-function addEffect(effect){
-  if(effect.target === 'funding'){
-    fundingModule.addAndReplace(effect)
-  }
-  else if (effect.target === 'building') {
+function addOrRemoveEffect(effect, action) {
+  const targetHandlers = {
+    'fundingModule': fundingModule,
+    'population': populationModule,
+    'projectManager': projectManager,
+    'tab': tabManager,
+    'tabContent': tabManager,
+    'global': globalEffects,
+    'terraforming': terraforming,
+    'lifeDesigner': lifeDesigner,
+    'lifeManager': lifeManager
+  };
+
+  if (effect.target in targetHandlers) {
+    targetHandlers[effect.target][action](effect);
+  } else if (effect.target === 'building') {
     const building = buildings[effect.targetId];
     if (building) {
-      building.addAndReplace(effect);
+      building[action](effect);
     }
   } else if (effect.target === 'project') {
     const project = projectManager.projects[effect.targetId];
     if (project) {
-      project.addAndReplace(effect);
+      project[action](effect);
     }
-  }  else if (effect.target === 'colony') {
+  } else if (effect.target === 'colony') {
     const colony = colonies[effect.targetId];
     if (colony) {
-      colony.addAndReplace(effect);
+      colony[action](effect);
     }
   } else if (effect.target === 'resource') {
     const resourceType = effect.resourceType;
     const resource = resources[resourceType][effect.targetId];
-    if (resource){
-      resource.addAndReplace(effect);
+    if (resource) {
+      resource[action](effect);
     }
-  } else if (effect.target === 'projectManager') {
-    // Apply effect to the project manager
-    projectManager.addAndReplace(effect);
-  } else if (effect.target === 'tab' || effect.target === 'tabContent') {
-    // Apply effect to the tab manager
-    tabManager.addAndReplace(effect);
-  } else if (effect.target === 'global') {
-    // Apply effect to the tab manager
-    globalEffects.addAndReplace(effect);
-  }
-  else if (effect.target === 'terraforming') {
-    // Apply effect to the tab manager
-    terraforming.addAndReplace(effect);
   }
 }
 
-function removeEffect(effect){
-  if(effect.target === 'funding'){
-    fundingModule.removeEffect(effect.sourceId)
-  }
-  else if (effect.target === 'building') {
-    const building = buildings[effect.targetId];
-    if (building) {
-      building.removeEffect(effect.sourceId);
-    }
-  } else if (effect.target === 'project') {
-    const project = projectManager.projects[effect.targetId];
-    if (project) {
-      project.removeEffect(effect.sourceId);
-    }
-  }  else if (effect.target === 'colony') {
-    const colony = colonies[effect.targetId];
-    if (colony) {
-      colony.removeEffect(effect.sourceId);
-    }
-  } else if (effect.target === 'resource') {
-    const resourceType = effect.resourceType;
-    const resource = resources[resourceType][effect.targetId];
-    if (resource){
-      resource.removeEffect(effect.sourceId);
-    }
-  } else if (effect.target === 'projectManager') {
-    // Apply effect to the project manager
-    projectManager.removeEffect(effect.sourceId);
-  } else if (effect.target === 'tab' || effect.target === 'tabContent') {
-    // Apply effect to the tab manager
-    tabManager.removeEffect(effect.sourceId);
-  } else if (effect.target === 'global') {
-    // Apply effect to the tab manager
-    globalEffects.removeEffect(effect.sourceId);
-  }
-  else if (effect.target === 'terraforming') {
-    // Apply effect to the tab manager
-    terraforming.removeEffect(effect.sourceId);
-  }
+function addEffect(effect) {
+  addOrRemoveEffect(effect, 'addAndReplace');
+}
+
+function removeEffect(effect) {
+  addOrRemoveEffect(effect, 'removeEffect');
 }

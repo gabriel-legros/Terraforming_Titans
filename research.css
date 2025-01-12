@@ -1,0 +1,43 @@
+.research-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .research-title {
+    font-size: 1.17em;
+    font-weight: bold;
+  }
+  
+  .toggle-completed-button {
+    background-color: #b6bfc2;
+    color: rgb(0, 0, 0);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+.research-item {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.research-button {
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.research-cost,
+.research-description {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.completed-research.hidden {
+    display: none;
+}

@@ -5,7 +5,6 @@ function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
   colonyDetails.classList.add('colony-details');
   colonyDetails.style.display = 'flex';
-  colonyDetails.style.gap = '10px';
 
   // Add comfort and happiness boxes
   const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`, false, structure);

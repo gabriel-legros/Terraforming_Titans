@@ -15,7 +15,7 @@ progressData = {
                 targetId: 'cargo_rocket',
                 type: 'oneTimeStart',
                 oneTimeFlag: true,
-                pendingResourceGains: [{ resource: 'metal', quantity: 200 }, {resource: 'food', quantity : 500}, { resource: 'components', quantity: 100 }, { resource: 'electronics', quantity: 100 }]
+                pendingResourceGains: [{ category: 'colony', resource: 'metal', quantity: 200 }, {category: 'colony', resource: 'food', quantity : 500}, { category: 'colony', resource: 'components', quantity: 100 }, {category: 'colony',  resource: 'electronics', quantity: 100 }]
             }
         ],
         nextChapter: "chapter1",
@@ -111,6 +111,12 @@ progressData = {
         objectives: [
         ],
         reward: [   {
+          target: 'resource',
+          resourceType: 'surface',
+          targetId: 'land',
+          type: 'enable'
+        },
+        {
             target: 'resource',
             resourceType: 'surface',
             targetId: 'ice',
@@ -563,7 +569,7 @@ progressData = {
       {
         id: "chapter2.5",
         type: "journal",
-        narrative: "Receiving transmission... \n 'Great job HOPE!  It looks like the temperature is finally starting to shift.  When the tropical temperature reaches 253K, lichen will be able to survive on Mars.  Until then, keep up the good work!'",
+        narrative: "Receiving transmission... \n 'Great job HOPE!  It looks like the temperature is finally starting to shift.  When the nighttime tropical temperature reaches 223.15K, genetically modified lichen will be able to barely survive on Mars.  Until then, keep up the good work!'",
         objectives: [],
         reward: [],
         nextChapter: "chapter2.6"
@@ -571,11 +577,11 @@ progressData = {
       {
         id: "chapter2.6",
         type: "journal",
-        narrative: "Reach a tropical temperature of 253K to continue.",
+        narrative: "Reach a nighttime tropical temperature of 223.15K to continue.",
         objectives: [{
           type: 'terraforming',
-          terraformingParameter : 'tropicalTemperature',
-          value: 253
+          terraformingParameter : 'tropicalNightTemperature',
+          value: 223.15
       }],
         reward: [],
         nextChapter: "chapter3.0"
@@ -592,7 +598,7 @@ progressData = {
       {
         id: "chapter3.1",
         type: "journal",
-        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to grow on Mars.  The job is nowhere near done of course.  If we want liquid water, we are going to have to keep raising the temperature!  Get it up to 273.15K next.  You may not be able to reach this value with greenhouse gases alone.'",
+        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to survive on Mars.  The job is nowhere near done of course.  If we want liquid water and proper growth, we are going to have to keep raising the temperature!  Get the average up to 273.15K next.  You may not be able to reach this value with greenhouse gases alone.'",
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
@@ -624,19 +630,10 @@ progressData = {
       {
         id: "chapter3.4",
         type: "journal",
-        narrative: "Receiving transmission... \n 'You're almost done HOPE.  Just need to get the oxygen pressure above 15kPa, CO2 near 0 and inert gases above 50kPa.'",
+        narrative: "Receiving transmission... \n 'You're almost done HOPE.  Submit your report to the MTC whenever all terraforming parameters are in the green at the same time.'",
         objectives: [{
           type: 'terraforming',
-          terraformingParameter : 'oxygenPressure',
-          value: 15          
-        },{
-          type: 'terraforming',
-          terraformingParameter : 'inertPressure',
-          value: 50          
-        },{
-          type: 'terraforming',
-          terraformingParameter : 'lowCO2Pressure',
-          value: 0.01       
+          terraformingParameter : 'complete',     
         }],
         reward: [],
         nextChapter: "chapter3.5"

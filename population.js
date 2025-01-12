@@ -1,11 +1,23 @@
-class PopulationModule {
+class PopulationModule extends EffectableEntity {
     constructor(resources, populationParameters) {
+      super({config : 'population module'})
+
       this.populationResource = resources.colony.colonists; // Reference to the population resource
       this.workerResource = resources.colony.workers; // Reference to the worker resource
       this.workerRatio = populationParameters.workerRatio; // Ratio of colonists that become workers
       this.growthRate = 0; // Population growth rate, e.g., 0.01 for 1% per second
       this.totalWorkersRequired = 0;
     }
+
+    getEffectiveGrowthMultiplier(){
+    let multiplier = 1; // Start with default multiplier
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'growthMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
   
     calculateGrowthRate() {
       let totalWeightedHappiness = 0;
@@ -45,7 +57,7 @@ class PopulationModule {
   
       if (this.growthRate > 0 && populationCap > 0) {
         // Logistic growth formula: dP/dt = r * P * (1 - P / K)
-        const logisticGrowth = this.growthRate * currentPopulation * (1 - currentPopulation / populationCap);
+        const logisticGrowth = this.growthRate * currentPopulation * (1 - currentPopulation / populationCap) * this.getEffectiveGrowthMultiplier();
         populationChange = logisticGrowth * (deltaTime / 1000);
       } else if (this.growthRate < 0) {
         // Decay even if population is above the cap
@@ -63,7 +75,7 @@ class PopulationModule {
         this.populationResource.modifyRate(populationChange * (1000 / deltaTime), 'Growth');
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
-        this.populationResource.modifyRate(-populationChange * (1000 / deltaTime), 'Decay');
+        this.populationResource.modifyRate(populationChange * (1000 / deltaTime), 'Decay');
       }
 
       if(currentPopulation < 1)

@@ -44,6 +44,8 @@ function create() {
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
 
+  oreScanner = new OreScanning(currentPlanetParameters);
+
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
 
@@ -52,7 +54,7 @@ function create() {
 
   // Initialize research
   researchManager = new ResearchManager(researchParameters);
-  initializeResearch();
+  initializeResearchUI();
 
   //Initialize funding
   const fundingRate = currentPlanetParameters.fundingRate || 0;
@@ -70,25 +72,52 @@ function create() {
 
   goldenAsteroid = new GoldenAsteroid();
 
-  initializeGameState();  // Handle initial game state (building counts, etc.)
-  loadMostRecentSave();
+  lifeDesigner = new LifeDesigner();
+  lifeManager = new LifeManager();
+  initializeLifeUI();
+
+  milestonesManager = new MilestonesManager();
+  createMilestonesUI();
+
+  if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
+    initializeGameState();
+  }
 }
 
 function initializeGameState() {
-  const initialState = currentPlanetParameters.initialGameState;
+  tabManager = new TabManager({
+    description: 'Manages game tabs and unlocks them based on effects.',
+  }, tabParameters);
 
-  if (initialState && initialState.buildings) {
-    for (const buildingName in initialState.buildings) {
-      const count = initialState.buildings[buildingName];
-      const building = buildings[buildingName];
+  globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
-      if (building) {
-        building.count = count;
-        building.active = count;
-        building.setStorage(resources);
-      }
-    }
-  }
+  dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
+  resources = {};
+  resources = createResources(currentPlanetParameters.resources);
+  buildings = initializeBuildings(buildingsParameters);
+  projectManager = new ProjectManager();
+  projectManager.initializeProjects(projectParameters);
+  oreScanner = new OreScanning(currentPlanetParameters);
+  colonies = initializeColonies(colonyParameters);
+  structures = { ...buildings, ...colonies };
+  researchManager = new ResearchManager(researchParameters);
+  const fundingRate = currentPlanetParameters.fundingRate || 0;
+  fundingModule = new FundingModule(resources, fundingRate);
+  populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
+
+  celestialParameters = currentPlanetParameters.celestialParameters;
+  terraforming = new Terraforming(resources, celestialParameters);
+  terraforming.initializeTerraforming();
+
+  goldenAsteroid = new GoldenAsteroid();
+
+  lifeDesigner = new LifeDesigner();
+  lifeManager = new LifeManager();
+
+  milestonesManager = new MilestonesManager();
+  storyManager = new StoryManager(progressData);  // Pass the progressData object
+
+  storyManager.triggerCurrentChapter();
 }
 
 function updateLogic(delta) {
@@ -96,7 +125,6 @@ function updateLogic(delta) {
 
   const allStructures = {...buildings, ...colonies};
   // Update funding
-  fundingModule.update(delta);
   terraforming.update(delta);
   
   produceResources(delta, allStructures);
@@ -115,6 +143,10 @@ function updateLogic(delta) {
   oreScanner.updateScan(delta);  // Update ore scanning progress
 
   goldenAsteroid.update(delta);
+
+  lifeDesigner.update(delta);
+
+  milestonesManager.update(delta);
 }
 
 function updateRender() {
@@ -123,8 +155,10 @@ function updateRender() {
   updateBuildingDisplay(buildings);  // Render building information
   updateColonyDisplay(colonies);     // Render colony information
   renderProjects();                  // Render project information (handled in projects.js)
-  updateAllResearchButtons(researchManager.researches); // Update research buttons display
+  updateResearchUI();
   updateTerraformingUI();
+  updateColonistWarning();
+  updateMilestonesUI();
 }
 
 function update(time, delta) {

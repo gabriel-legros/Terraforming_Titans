@@ -13,12 +13,14 @@
   
   .terraforming-box {
     flex: 0 0 30%;
-    padding: 20px;
+    padding: 15px;
     background-color: #f5f5f5;
-    border: 1px solid #ccc;
+    border: 3px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
+    display: flex;
+    flex-direction: column;
   }
   
   .terraforming-box h3 {
@@ -32,7 +34,16 @@
     font-size: 14px;
     color: #666;
   }
+
+  .terraforming-box table {
+    margin: 0 auto;  /* Centers the table inside the box */
+    font-size: 14px;
+  }
   
-  .terraforming-box span {
-    font-weight: bold;
+  .gas-range {
+    font-size:12px;
+  }
+
+  .terraforming-target {
+    font-size: 14px;
   }

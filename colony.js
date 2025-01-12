@@ -31,6 +31,11 @@ class Colony extends Building {
     this.happiness = 0.5;
   }
 
+  initializeFromConfig(config, colonyName) {
+    super.initializeFromConfig(config, colonyName);
+    this.baseComfort = config.baseComfort;
+  }
+
   getConsumptionRatio(){
     // Calculate minRatio based on colonist availability
     const colonists = resources.colony.colonists.value;
@@ -51,8 +56,6 @@ class Colony extends Building {
     const dampingFactor = difference < 0.05 ? 0.01 : 1; // Use smaller damping if close to target
     this.productivity += dampingFactor * (targetProductivity - this.productivity);
   }
-
-  javascript
 
   updateNeedsRatio(resources, deltaTime) {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
@@ -158,28 +161,36 @@ class Colony extends Building {
   updateHappiness(deltaTime) {
     this.updateNeedsRatio(resources, deltaTime);
   
-    // Calculate happiness from non-luxury goods (food and energy)
+    // Calculate non-luxury happiness based on the minimum of food and energy needs
     const foodNeed = this.filledNeeds.food || 0;
     const energyNeed = this.filledNeeds.energy || 0;
-    const nonLuxuryHappiness = (foodNeed * 25) + (energyNeed * 25);
+    const nonLuxuryHappiness = Math.min(foodNeed, energyNeed) * 50;
   
     // Calculate happiness from comfort
     const comfortHappiness = this.baseComfort * 25;
   
-    // Calculate happiness from luxury goods (electronics and androids)
-    const electronicsNeed = this.filledNeeds.electronics || 0;
-    const androidsNeed = this.filledNeeds.androids || 0;
-    const luxuryHappiness = (electronicsNeed * 10) + (androidsNeed * 10);
+    // Calculate total luxury happiness
+    let totalLuxuryHappiness = 0;
+    for (const resource in this.filledNeeds) {
+      if (['food', 'energy'].includes(resource)) continue;
+      const need = this.filledNeeds[resource] || 0;
+      totalLuxuryHappiness += need * 10;
+    }
+  
+    // Cap total luxury happiness based on the ratio of non-luxury happiness
+    totalLuxuryHappiness = Math.min(foodNeed, energyNeed) * totalLuxuryHappiness;
+
+    const milestoneHappiness = milestonesManager.getHappinessBonus();
   
     // Calculate the target happiness
-    const targetHappiness = nonLuxuryHappiness + comfortHappiness + luxuryHappiness;
+    const targetHappiness = nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness;
   
     // Adjust the happiness towards the target value
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness / 100, deltaTime);
   }
 
   enable(tierName){
-    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
 
     // Unlock the new tier
     colonies[tierName].unlocked = true;
@@ -192,9 +203,6 @@ class Colony extends Building {
       const obsoleteTierName = tiers[i];
       colonies[obsoleteTierName].obsolete = true;
     }
-
-    // Refresh the colony buildings UI
-    createColonyButtons(colonies);
   }
 }
 

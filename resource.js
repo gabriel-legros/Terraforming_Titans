@@ -119,7 +119,7 @@ function createResources(resourcesData) {
     resources[category] = {};
     for (const resourceName in resourcesData[category]) {
       const resourceData = resourcesData[category][resourceName];
-      resourceData.displayName = resourceData.name; // Assign resource name to the resourceData object
+      resourceData.displayName = resourceData.displayName || resourceData.name; // Assign resource name to the resourceData object
       resourceData.name = resourceName;
       resourceData.category = category;
       resources[category][resourceName] = new Resource(resourceData);
@@ -239,14 +239,19 @@ function produceResources(deltaTime, buildings) {
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
-    accumulatedChanges.colony.funding += fundingIncreaseRate * (deltaTime / 1000);
-
-    // Update production rate for funding resource
-    resources.colony.funding.productionRate = fundingIncreaseRate;
+    fundingModule.update(deltaTime);
   }
 
   if(terraforming) {
     terraforming.updateResources(accumulatedChanges, deltaTime);
+  }
+
+  if(lifeManager){
+    lifeManager.updateLife(deltaTime);
+  }
+
+  if(projectManager){
+    projectManager.estimateProjects();
   }
 
   // Apply accumulated changes to resources

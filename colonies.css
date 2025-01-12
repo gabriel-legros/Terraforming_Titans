@@ -21,17 +21,16 @@
 
 /* Style the need boxes */
 .need-box {
-  width: 150px;
+  width: 120px;
   height: 25px;
   border: 1px solid #ccc;
-  border-radius: 5px;
   position: relative;
   overflow: hidden;
   display: flex;
   align-items: center;
   margin-right: 10px;
   margin-bottom: 10px;
-  padding-left: 10px;
+  padding-left: 20px;
   background-color: transparent;
 }
 
@@ -52,7 +51,7 @@
   align-items: center;
   justify-content: center;
   color: black;
-  font-size: 14px;
+  font-size: 12px;
   flex-grow: 1;
 }
 

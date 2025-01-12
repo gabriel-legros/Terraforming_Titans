@@ -17,7 +17,11 @@ const projectParameters = {
           water : 1,
           food : 1,
           components: 10,
-          electronics: 10
+          electronics: 10,
+          androids: 1000,
+        },
+        special: {
+          spaceships:10000
         }
       }
     }
@@ -38,6 +42,24 @@ const projectParameters = {
           colonists: 10
         }
       }
+    }
+  },
+  exportResources: {
+    name : "Metal Exportation",
+    category : "resources",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to export resources to the market.  Generates funding.  The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceExport : true,
+      costPerShip : {colony : {metal : 100000, energy : 1000000}},
+      disposable : {colony : ['metal']},
+      defaultDisposal : {category : 'colony', resource : 'metal'},
+      disposalAmount : 1000000,
+      fundingGainAmount : 0.1
     }
   },
   satellite: {
@@ -257,6 +279,14 @@ const projectParameters = {
         },
         {
           target : 'project',
+          targetId : 'disposeResources',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        },
+        {
+          target : 'project',
           targetId : 'exportResources',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
@@ -274,11 +304,11 @@ const projectParameters = {
         metal: 1e12,
         glass: 1e12,
         electronics: 1e10,
-        components: 1e11,
+        components: 1e10,
         superconductors : 1e9
       }
     },
-    duration: 36,
+    duration: 120000,
     description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates provides an effective boost of 50% to life growth.",
     repeatable: false,
     unlocked : false,
@@ -298,7 +328,7 @@ const projectParameters = {
       ]
     }
   },
-  exportResources : {
+  disposeResources : {
     name : "Resource Disposal",
     category : "resources",
     cost: {},
@@ -310,7 +340,7 @@ const projectParameters = {
     attributes: {
       spaceExport : true,
       costPerShip : {colony : {metal : 100000, energy : 1000000}},
-      disposable : {colony : ['metal'], surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas']},
+      disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas']},
       disposalAmount : 1000000
     }
   }

@@ -4,6 +4,15 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
+const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
+const BASE_COMFORTABLE_TEMPERATURE = 295.15;
+
+const terraformingGasTargets = {
+  carbonDioxide : {min : 0, max : 100},
+  oxygen : {min : 15000, max : 25000},
+  inertGas : {min : 50000, max : 100000}
+}
+
 class Terraforming extends EffectableEntity{
   constructor(resources, celestialParameters) {
     super({description : 'This module manages all terraforming compononents'});
@@ -16,11 +25,13 @@ class Terraforming extends EffectableEntity{
 
     this.initialValuesCalculated = false;
 
+    this.completed = false;
+
     this.water = {
       name: 'Water',
       value: 0,
       iceValue: 0,
-      target: 0.70,
+      target: 0.2,
       unlocked: false,
       humidity: 0,
       evaporationRate:0,
@@ -32,34 +43,43 @@ class Terraforming extends EffectableEntity{
     };
     this.atmosphere = {
       name: 'Atmosphere',
+      totalDelta : 0,
       gases : {}
     };
     this.temperature = {
       name: 'Temperature',
       value: 0,
-      target: 288.15, // 15°C in Kelvin
+      targetMin: 278.15, // 15°C in Kelvin,
+      targetMax: 293.15,
       effectiveTempNoAtmosphere: 0,
       emissivity: 0,
       unlocked: false,
       zones: {
         tropical: {
           initial: 0,
-          value: 0
+          value: 0,
+          day: 0,
+          night: 0
         },
         temperate: {
           initial: 0,
-          value: 0
+          value: 0,
+          day: 0,
+          night: 0
         },
         polar: {
           initial: 0,
-          value: 0
+          value: 0,
+          day: 0,
+          night: 0
         }
       }
     };
     this.luminosity = {
       name: 'Luminosity',
       value: 100,
-      target: 0,
+      targetMin: 600,
+      targetMax: 2000,
       unlocked: false,
       albedo: 0.25,
       solarFlux: 0,
@@ -69,17 +89,8 @@ class Terraforming extends EffectableEntity{
     this.life = {
       name: 'Life',
       unlocked: false,
-      zones: {
-        tropical: {
-          value: 0
-        },
-        temperate: {
-          value: 0
-        },
-        polar: {
-          value: 0
-        }
-      },
+      target : 0.50,
+      biomassCoverage : 0,
       dryIceCoverage: 0
     };
     this.magnetosphere = {
@@ -91,6 +102,46 @@ class Terraforming extends EffectableEntity{
 
     this.updateLuminosity();
     this.updateSurfaceTemperature();
+  }
+
+  getMagnetosphereStatus() {
+    if(this.magnetosphere.value >= 100){
+      return true;
+    }
+    if(this.isBooleanFlagSet('magneticShield')){
+      return true;
+    }
+    return false;
+  }
+
+  getTemperatureStatus() {
+    return (this.temperature.value >= this.temperature.targetMin && this.temperature.value <= this.temperature.targetMax)
+  }
+
+  getAtmosphereStatus() {
+    for(const gas in terraformingGasTargets){
+      const gasPressure = calculateGasPressure(gas);
+      if(gasPressure < terraformingGasTargets[gas].min || gasPressure > terraformingGasTargets[gas].max){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getWaterStatus() {
+    return (this.water.value > this.water.target);
+  }
+
+  getLuminosityStatus() {
+    return ((this.luminosity.modifiedSolarFlux > this.luminosity.targetMin) && (this.luminosity.modifiedSolarFlux < this.luminosity.targetMax));
+  }
+
+  getLifeStatus() {
+    return (this.life.biomassCoverage > this.life.target);
+  }
+
+  getTerraformingStatus() {
+    return (this.getTemperatureStatus() && this.getAtmosphereStatus() && this.getWaterStatus() && this.getLuminosityStatus() && this.getLifeStatus() && this.getMagnetosphereStatus());
   }
 
   calculateInitialValues(){
@@ -109,8 +160,6 @@ class Terraforming extends EffectableEntity{
       this.applyMeltingAndFreezing(accumulatedChanges, deltaTime);
 
       this.condenseCO2(accumulatedChanges, deltaTime);
-
-      this.updateLife(deltaTime);
     }
 
     // Function to update luminosity properties
@@ -128,6 +177,7 @@ class Terraforming extends EffectableEntity{
       let co2WaterMass = 0;
       let greenhouseGasMass = 0;
       let inertMass = 0;
+      let totalMass = 0;
   
       for (const gas in this.resources.atmospheric) {
         if (gas === 'carbonDioxide' || gas === 'atmosphericWater') {
@@ -138,6 +188,7 @@ class Terraforming extends EffectableEntity{
           inertMass += 1e3*this.resources.atmospheric[gas].value;
         }
       }
+      totalMass = co2WaterMass + greenhouseGasMass + inertMass;
 
       const emissivity = calculateEmissivity(radiusInMeters, inertMass, co2WaterMass, greenhouseGasMass);
 
@@ -147,6 +198,9 @@ class Terraforming extends EffectableEntity{
 
       for (const zone in this.temperature.zones) {
         this.temperature.zones[zone].value = calculateEffectiveTemperature(modifiedSolarFlux, albedo, emissivity, getZoneRatio(zone));
+        const variation = calculateDayNightTemperatureVariation(this.temperature.zones[zone].value, totalMass / this.celestialParameters.surfaceArea);
+        this.temperature.zones[zone].day = this.temperature.zones[zone].value + variation / 2;
+        this.temperature.zones[zone].night = this.temperature.zones[zone].value - variation / 2;
       }
     }
 
@@ -178,6 +232,9 @@ class Terraforming extends EffectableEntity{
       this.calculateCoverage('liquidWater');
       this.calculateCoverage('ice');
       this.calculateCoverage('dryIce');
+      this.calculateCoverage('biomass');
+
+      this.applyTerraformingEffects();
     }
   
     unlock(aspect) {
@@ -187,7 +244,8 @@ class Terraforming extends EffectableEntity{
     }
 
     initializeTerraforming(){
-        createTerraformingUI();
+        initializeTerraformingTabs();
+        createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){
           this.calculateInitialValues();
         }
@@ -216,6 +274,9 @@ class Terraforming extends EffectableEntity{
       if(resourceType === 'dryIce'){
         resourceRatio = 100 * resourceRatio;
       }
+      if(resourceType === 'biomass'){
+        resourceRatio = 1000 * resourceRatio;
+      }
     
       let coverage;
     
@@ -236,6 +297,8 @@ class Terraforming extends EffectableEntity{
         this.water.iceValue = coverage;
       } else if (resourceType === 'dryIce') {
         this.life.dryIceCoverage = coverage;
+      } else if (resourceType === 'biomass') {
+        this.life.biomassCoverage = coverage;
       }
     }
 
@@ -469,118 +532,82 @@ class Terraforming extends EffectableEntity{
       return baseFlux + mirrorFlux*buildings['spaceMirror'].active;
     }
 
-    getEffectiveLifeGrowthMultiplier(){
-        let multiplier = 1; // Start with default multiplier
-        this.activeEffects.forEach(effect => {
-          if (effect.type === 'lifeGrowthMultiplier') {
-            multiplier *= effect.value;
-          }
-        });
-        return multiplier;
-      }
-
-    // Method to update life growth based on environmental conditions
-    updateLife(deltaTime) {
-      let maxGrowthRate = 0; // Start with a base growth rate multiplier of 1
-      let canGrow = false; // Track if any suitable condition for growth is met
-
-      for (const [lifeType, params] of Object.entries(this.lifeParameters)) {
-        if (this.isBooleanFlagSet(lifeType)) {
-            // Check each zone for suitable conditions
-            for (const zone of Object.values(this.temperature.zones)) {
-                const temperature = zone.value;
-                const rainfall = this.water.rainfallRate;
-
-                // Check if zone meets temperature and rainfall requirements
-                if (temperature >= params.minTemperature && temperature <= params.maxTemperature && rainfall >= params.minRainfall) {
-                    // Update maxGrowthRate if this life type's growth rate is higher
-                    maxGrowthRate = Math.max(maxGrowthRate, params.growthRate);
-                    canGrow = true;
-                    break; // Once we find a valid zone, we don't need to check others for this life type
-                }
-            }
-        }
+    calculateSolarPanelMultiplier(){
+      return this.luminosity.modifiedSolarFlux / SOLAR_PANEL_BASE_LUMINOSITY;
     }
 
-    const biomass = this.resources.special.biomass;
-    const co2 = this.resources.atmospheric.carbonDioxide;
-    const water = this.resources.surface.liquidWater;
-    const oxygen = this.resources.atmospheric.oxygen;
+    calculateColonyEnergyPenalty() {
+      const zones = this.temperature.zones;
+      const baseTemperature = BASE_COMFORTABLE_TEMPERATURE;
+  
+      // Find the smallest difference across all zones
+      const smallestDifference = Math.min(
+          Math.abs(zones.tropical.value - baseTemperature),
+          Math.abs(zones.temperate.value - baseTemperature),
+          Math.abs(zones.polar.value - baseTemperature)
+      );
+  
+      // Calculate penalty based on the smallest difference
+      return smallestDifference <= 2 ? 1 : 1 + smallestDifference / 10;
+  }
 
-    // Define consumption/production ratios
-    const waterRatio = 1;
-    const co2Ratio = 2.44;
-    const biomassRatio = 1.66612;
-    const oxygenRatio = 1.77388
-
-    // Determine growth or decay factor
-    const factor = canGrow ? maxGrowthRate : 0.999;
-    const biomassChange = biomass.value * factor * deltaTime / 1000;
-    const absoluteChange = Math.abs(biomassChange);
-
-    // Apply resource adjustments based on growth or decay
-    if (canGrow) {
-      const maxPossibleBiomassIncrease = Math.min(
-          biomassChange,
-          (water.value / waterRatio) * biomassRatio,
-          (co2.value / co2Ratio) * biomassRatio
-      ) * this.getEffectiveLifeGrowthMultiplier();
-
-      const adjustedWaterChange = (maxPossibleBiomassIncrease / biomassRatio) * waterRatio;
-      const adjustedCo2Change = (maxPossibleBiomassIncrease / biomassRatio) * co2Ratio;
-      const adjustedOxygenChange = (maxPossibleBiomassIncrease / biomassRatio) * oxygenRatio;
-
-      // Apply growth-related resource adjustments
-      water.value -= adjustedWaterChange;
-      co2.value -= adjustedCo2Change;
-      oxygen.value += adjustedOxygenChange;
-      biomass.value += maxPossibleBiomassIncrease;
-
-      // Update production and consumption rates
-      water.modifyRate(- adjustedWaterChange * (1000 / deltaTime), 'Life Growth');
-      co2.modifyRate(- adjustedCo2Change * (1000 / deltaTime), 'Life Growth');
-      oxygen.modifyRate(adjustedOxygenChange * (1000 / deltaTime), 'Life Growth');
-      biomass.modifyRate(maxPossibleBiomassIncrease * (1000 / deltaTime), 'Life Growth');
-    } else if (oxygen.value > 0) {
-      // Apply decay-related resource adjustments only if oxygen is available
-      const tempDecay = Math.min(biomass.value, absoluteChange); // Prevent negative biomass
-      const actualDecay = Math.min(tempDecay, oxygen.value * oxygenRatio / biomassRatio)
-      biomass.value -= actualDecay;
-
-      const adjustedWaterChange = (actualDecay / biomassRatio) * waterRatio;
-      const adjustedCo2Change = (actualDecay / biomassRatio) * co2Ratio;
-      const adjustedOxygenChange = (actualDecay / biomassRatio) * oxygenRatio;
-
-      // Decay-related resource adjustments
-      water.value += adjustedWaterChange;
-      co2.value += adjustedCo2Change;
-      oxygen.value -= adjustedOxygenChange;
-
-      // Update production and consumption rates
-      water.modifyRate(- adjustedWaterChange * (1000 / deltaTime), 'Life Decay');
-      co2.modifyRate(- adjustedCo2Change * (1000 / deltaTime), 'Life Decay');
-      oxygen.modifyRate(adjustedOxygenChange * (1000 / deltaTime), 'Life Decay');
-      biomass.modifyRate(actualDecay * (1000 / deltaTime), 'Life Decay');
-
-      if(biomass.value < 1e-2){
-        biomass.value = 0;
+    calculateTotalPressureDelta() {
+      this.totalDelta = 0;
+  
+      for (const gas in terraforming.resources.atmospheric) {
+          const currentPressure = calculateGasPressure(gas);
+          const initialPressure = this.atmosphere.gases[gas]?.initial || 0;
+          this.totalDelta += Math.abs(currentPressure - initialPressure);
       }
-  }
 
-  }
+      return this.totalDelta;
+    }
+
+    applyTerraformingEffects(){
+      const solarPanelMultiplier = this.calculateSolarPanelMultiplier();
+
+      const solarPanelEffect = {
+        effectId : 'luminosity',
+        target: 'building',
+        targetId: 'solarPanel',
+        type: 'productionMultiplier',
+        value: solarPanelMultiplier
+      }
+      addEffect(solarPanelEffect);
+
+      const colonyEnergyPenalty = this.calculateColonyEnergyPenalty()
+      
+      for (let i = 1; i <= 6; i++) {
+        const temperaturePenaltyEffect = {
+            effectId: 'temperaturePenalty',
+            target: 'colony',
+            targetId: `t${i}_colony`, // Dynamically set targetId
+            type: 'resourceConsumptionMultiplier',
+            resourceCategory: 'colony',
+            resourceTarget: 'energy',
+            value: colonyEnergyPenalty
+        };
+    
+        addEffect(temperaturePenaltyEffect);
+      }
+    }
 
   saveState(){
     return {
       initialValuesCalculated: this.initialValuesCalculated,
       temperature: this.temperature,
       atmosphere: this.atmosphere,
+      completed: this.completed
       };    
   }
 
   loadState(terraformingState){
     this.initialValuesCalculated = terraformingState.initialValuesCalculated;
-    this.temperature = terraformingState.temperature;
+    this.temperature.zones.tropical.initial = terraformingState.temperature.zones.tropical.initial;
+    this.temperature.zones.temperate.initial = terraformingState.temperature.zones.temperate.initial;
+    this.temperature.zones.polar.initial = terraformingState.temperature.zones.polar.initial;
     this.atmosphere = terraformingState.atmosphere;
+    this.completed = terraformingState.completed || false;
   }
 
 }
@@ -669,3 +696,10 @@ function airDensity(atmPressure, T) {
     return atmPressure / (R_AIR * T); // kg/m³
 }
 
+function calculateDayNightTemperatureVariation(temperature, columnMass){
+  if(columnMass < 1){
+    return temperature/0.75;
+  } else {
+    return temperature/(0.75 + 0.255*Math.pow(Math.log10(columnMass), 2.91));
+  }
+}

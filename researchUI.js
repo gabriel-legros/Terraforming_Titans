@@ -1,25 +1,4 @@
-// Create Research Buttons for each category
-function createResearchButtons(researchData) {
-    const researchTabs = ['energy', 'industry', 'colonization', 'terraforming'];
-    researchTabs.forEach((tab) => {
-        const researchList = document.getElementById(`${tab}-research-buttons`);
-        researchList.innerHTML = ''; // Clear existing buttons
-        researchData[tab].forEach((researchItem) => {
-            const button = document.createElement('button');
-            button.classList.add('research-button');
-            button.id = `research-${researchItem.id}`;
-            updateResearchButtonText(button, researchItem);
-
-            // Add event listener for research
-            button.addEventListener('click', function () {
-                researchManager.completeResearch(researchItem.id);
-                updateAllResearchButtons(researchManager.researches);
-            });
-
-            researchList.appendChild(button);
-        });
-    });
-}
+let completedResearchHidden = false; // Initialize the toggle state
 
 function updateAllResearchButtons(researchData) {
     const researchTabs = ['energy', 'industry', 'colonization', 'terraforming'];
@@ -27,6 +6,20 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const button = document.getElementById(`research-${researchItem.id}`);
             if (button) {
+                
+                // Add or remove the 'completed-research' class based on the research status
+                const researchContainer = button.closest('.research-item');
+                if (researchContainer) {
+                    if (researchItem.isResearched) {
+                        researchContainer.classList.add('completed-research');
+                        // Hide or show the completed research based on the toggle state
+                        researchContainer.classList.toggle('hidden', completedResearchHidden);
+                    } else {
+                        researchContainer.classList.remove('completed-research');
+                        researchContainer.classList.remove('hidden');
+                    }
+                }
+
                 updateResearchButtonText(button, researchItem);
             }
         });
@@ -58,13 +51,24 @@ function initializeResearchTabs() {
         subtab.addEventListener('click', () => {
             const subtabContentId = subtab.dataset.subtab;
             activateResearchSubtab(subtabContentId);
-            loadResearchCategory(subtabContentId.replace('-research', ''));
         });
     });
 
-    // Initial load of research categories
+    // Add event listeners for "Toggle Completed" buttons
+    document.querySelectorAll('.toggle-completed-button').forEach(button => {
+        button.addEventListener('click', () => {
+            toggleCompletedResearch();
+        });
+    });
+
+    // Load all research categories
+    const researchCategories = ['energy', 'industry', 'colonization', 'terraforming'];
+    researchCategories.forEach(category => {
+        loadResearchCategory(category);
+    });
+
+    // Activate the 'energy' category
     activateResearchSubtab('energy-research');
-    loadResearchCategory('energy');
 }
 
 function activateResearchSubtab(subtabId) {
@@ -105,7 +109,7 @@ function loadResearchCategory(category) {
 
         researchButton.addEventListener('click', () => {
             researchManager.completeResearch(research.id);
-            loadResearchCategory(category); // Reload to update the availability and state
+            updateAllResearchButtons(researchManager.researches);
         });
 
         const researchDescription = document.createElement('p');
@@ -124,4 +128,34 @@ function loadResearchCategory(category) {
         // Append the research container to the research list
         researchListContainer.appendChild(researchContainer);
     });
+}
+
+function toggleCompletedResearch() {
+    completedResearchHidden = !completedResearchHidden; // Toggle the state
+    const completedResearch = document.querySelectorAll('.completed-research');
+    completedResearch.forEach((research) => {
+        research.classList.toggle('hidden', completedResearchHidden);
+    });
+    updateCompletedResearchVisibility();
+}
+
+
+function updateCompletedResearchVisibility() {
+    const toggleButtons = document.querySelectorAll('.toggle-completed-button');
+    const allResearches = Object.values(researchManager.researches).flat();
+    const completedResearch = allResearches.filter((research) => research.isResearched);
+
+    toggleButtons.forEach((toggleButton) => {
+        if (completedResearch.length === 0) {
+            toggleButton.style.display = 'none';
+        } else {
+            toggleButton.style.display = 'inline-block';
+            toggleButton.textContent = completedResearchHidden ? 'Show Completed' : 'Hide Completed';
+        }
+    });
+}
+
+function updateResearchUI() {
+    updateAllResearchButtons(researchManager.researches); // Update research buttons display
+    updateCompletedResearchVisibility();
 }

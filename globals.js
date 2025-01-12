@@ -9,7 +9,7 @@ let buildings = {};
 let colonies = {};
 let structures = {};
 let populationModule;
-let oreScanner = new OreScanning(currentPlanetParameters);
+let oreScanner = {};
 let projectManager;  // Use ProjectManager instead of individual projects
 let storyStarted = false;  // Track if the story has been triggered
 let terraforming;

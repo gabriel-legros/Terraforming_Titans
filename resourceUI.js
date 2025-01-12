@@ -5,10 +5,13 @@ function createResourceContainers(resourcesData) {
     // Create a new container for each category
     const categoryContainer = document.createElement('div');
     categoryContainer.classList.add('resource-display');
+    categoryContainer.style.display = 'none'; // Initially hidden
 
     // Create and append the header for the category
     const header = document.createElement('h3');
     header.textContent = `${capitalizeFirstLetter(category)} Resources`;
+    header.id = `${category}-resources-header`;
+    header.style.display = 'none'; // Initially hidden
     categoryContainer.appendChild(header);
 
     // Create and append the resource list container
@@ -24,6 +27,8 @@ function createResourceContainers(resourcesData) {
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
+  resourceElement.id = `${resourceName}-container`;
+  resourceElement.style.display = 'none'; // Initially hidden
 
   if (resourceName === 'colonists') {
     // Special display for population (colonists) as an integer
@@ -39,7 +44,7 @@ function createResourceElement(category, resourceObj, resourceName) {
       </div>
       <div class="resource-tooltip" id="${resourceName}-tooltip">Test Tooltip</div>
     `;
-  } else if (category === 'underground') {
+  } else if (category === 'underground' || resourceObj.name === 'land') {
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
@@ -80,32 +85,15 @@ function createResourceElement(category, resourceObj, resourceName) {
 function populateResourceElements(resources) {
   for (const category in resources) {
     const containerId = `${category}-resources-resources-container`;
-    const categoryContainer = document.getElementById(containerId).parentElement; // Get the full container, not just the list
     const container = document.getElementById(containerId);
 
     if (container) {
-      let hasUnlockedResources = false;
-
       for (const resourceName in resources[category]) {
         const resourceObj = resources[category][resourceName];
-
-        // Only render resources that are unlocked
-        if (resourceObj.unlocked) {
-          hasUnlockedResources = true;
-
-          // Use helper function to create the resource element if it doesn't already exist
-          if (!document.getElementById(`${resourceName}-resources-container`)) {
-            const resourceElement = createResourceElement(category, resourceObj, resourceName);
-            container.appendChild(resourceElement);
-          }
+        if (!document.getElementById(`${resourceName}-container`)) {
+          const resourceElement = createResourceElement(category, resourceObj, resourceName);
+          container.appendChild(resourceElement);
         }
-      }
-
-      // Hide the entire category container if no resources are unlocked
-      if (!hasUnlockedResources) {
-        categoryContainer.style.display = 'none';
-      } else {
-        categoryContainer.style.display = 'block'; // Show the category if resources are unlocked
       }
     }
   }
@@ -130,8 +118,37 @@ function unlockResource(resource) {
 
 function updateResourceDisplay(resources) {
   for (const category in resources) {
+    const containerId = `${category}-resources-resources-container`;
+    const container = document.getElementById(containerId);
+    const header = document.getElementById(`${category}-resources-header`);
+
+    let hasUnlockedResources = false;
+
     for (const resourceName in resources[category]) {
       const resourceObj = resources[category][resourceName];
+      const resourceElement = document.getElementById(`${resourceName}-container`);
+      const resourceNameElement = document.getElementById(`${resourceName}-name`);
+
+      // Reveal resource if unlocked
+      if (resourceObj.unlocked) {
+        hasUnlockedResources = true;
+        if (resourceElement) resourceElement.style.display = 'block';
+      } else {
+        if (resourceElement) resourceElement.style.display = 'none';
+      }
+
+      if (resourceObj.isBooleanFlagSet('festival') && resourceNameElement) {
+        resourceNameElement.classList.add('resource-festival');
+      } else if (resourceNameElement) {
+        resourceNameElement.classList.remove('resource-festival');
+      }
+    
+      // Check if the resource has the "golden" flag set
+      if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
+        resourceNameElement.classList.add('sparkling-gold');
+      } else if (resourceNameElement) {
+        resourceNameElement.classList.remove('sparkling-gold');
+      }
 
       if (resourceName === 'colonists') {
         // Update population as an integer
@@ -146,7 +163,7 @@ function updateResourceDisplay(resources) {
         }
 
         updateResourceRateDisplay(resourceObj);
-      } else if (category === 'underground') {
+      } else if (category === 'underground' || resourceObj.name === 'land') {
         // Update underground resources
         const availableElement = document.getElementById(`${resourceName}-available-resources-container`);
         const totalElement = document.getElementById(`${resourceName}-total-resources-container`);
@@ -180,16 +197,17 @@ function updateResourceDisplay(resources) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
       
-        // Check if the resource has the "golden" flag set
-        const resourceNameElement = document.getElementById(`${resourceName}-name`);
-        if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
-          resourceNameElement.classList.add('sparkling-gold');
-        } else if (resourceNameElement) {
-          resourceNameElement.classList.remove('sparkling-gold');
-        }
-      
         updateResourceRateDisplay(resourceObj);
       }
+    }
+
+    // Reveal the category header if any resources in the category are unlocked
+    if (hasUnlockedResources) {
+      container.parentElement.style.display = 'block'; // Show category container
+      if (header) header.style.display = 'block'; // Show header
+    } else {
+      container.parentElement.style.display = 'none'; // Hide category container
+      if (header) header.style.display = 'none'; // Hide header
     }
   }
 }
@@ -199,7 +217,7 @@ function updateResourceRateDisplay(resource){
   if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
     const formattedNumber = formatNumber(netRate);
-    if(Math.abs(netRate) < 1e-3)
+    if(Math.abs(netRate) < 1e-3 || (resource.category === 'surface' && Math.abs(netRate) < 1))
     {
       ppsElement.textContent = `0/s`;
     } else {
@@ -223,25 +241,36 @@ function updateResourceRateDisplay(resource){
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
   if (tooltipElement) {
     let tooltipContent = '';
+    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}</div>`
 
     // Generate the production content
     const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
     if (productionEntries.length > 0) {
-      tooltipContent += '<strong>Production:</strong><br>';
+      tooltipContent += '<strong>Production:</strong><br><div style="display: table; width: 100%;">';
       productionEntries.sort((a, b) => b[1] - a[1]); // Sort production entries in descending order
       productionEntries.forEach(([source, rate]) => {
-        tooltipContent += `${source}: ${formatNumber(rate, false)}/s<br>`;
+        tooltipContent += `
+          <div style="display: table-row;">
+            <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
+          </div>`;
       });
+      tooltipContent += '</div>';
     }
 
     // Generate the consumption content
     const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
     if (consumptionEntries.length > 0) {
-      tooltipContent += '<br><strong>Consumption and Maintenance:</strong><br>';
+      tooltipContent += '<br><strong>Consumption and Maintenance:</strong><br><div style="display: table; width: 100%;">';
       consumptionEntries.sort((a, b) => b[1] - a[1]); // Sort consumption entries in descending order
       consumptionEntries.forEach(([source, rate]) => {
-        tooltipContent += `${source}: ${formatNumber(rate, false)}/s<br>`;
+        tooltipContent += `
+          <div style="display: table-row;">
+            <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
+          </div>`;
       });
+      tooltipContent += '</div>';
     }
 
     tooltipElement.innerHTML = tooltipContent;
@@ -262,38 +291,4 @@ function createResourceDisplay(resources) {
 
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-function formatNumber(value, integer = false, precision = 1) {
-  const absValue = Math.abs(value);
-  let formatted;
-
-  if (absValue >= 1e18 - 1e15) {
-    formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(precision) + 'Qn';
-  } else if (absValue >= 1e15 - 1e12) {
-    formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(precision) + 'Q';
-  } else if (absValue >= 1e12 - 1e9) {
-    formatted = integer && absValue % 1e12 === 0 ? (absValue / 1e12) + 'T' : (absValue / 1e12).toFixed(precision) + 'T';
-  } else if (absValue >= 1e9 - 1e6) {
-    formatted = integer && absValue % 1e9 === 0 ? (absValue / 1e9) + 'B' : (absValue / 1e9).toFixed(precision) + 'B';
-  } else if (absValue >= 1e6 - 1e3) {
-    formatted = integer && absValue % 1e6 === 0 ? (absValue / 1e6) + 'M' : (absValue / 1e6).toFixed(precision) + 'M';
-  } else if (absValue >= 1e3 - 1) {
-    formatted = integer && absValue % 1e3 === 0 ? (absValue / 1e3) + 'k' : (absValue / 1e3).toFixed(precision) + 'k';
-  } else if (absValue >= 1e-2) {
-    formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(precision);
-  } else if (absValue >= 1e-3 - 1e-6) {
-    formatted = (absValue / 1e-3).toFixed(precision) + 'm'; // Milli
-  } else if (absValue >= 1e-6 - 1e-9) {
-    formatted = (absValue / 1e-6).toFixed(precision) + 'µ'; // Micro
-  } else if (absValue >= 1e-9 - 1e-12) {
-    formatted = (absValue / 1e-9).toFixed(precision) + 'n'; // Nano
-  } else if (absValue <= 1e-12) {
-    formatted = 0;
-    value = 0;
-  } else {
-    formatted = absValue.toExponential(1); // Scientific notation
-  }
-
-  return value < 0 ? '-' + formatted : formatted;
 }

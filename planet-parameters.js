@@ -15,34 +15,31 @@ const planetParameters = {
         components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}  }, // Base cap from one Storage Depot
         electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, conversionValue : 0.2}, // Base cap from one Storage Depot
         superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} }, // Base cap from one Storage Depot
-        androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 0, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
+        androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
         research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       },
       surface: {
-        ice: { name: 'Ice', initialValue: 1e16, unlocked:false },
+        land: {name : 'Land', initialValue : 1440000000, baseCap : 1440000000, hasCap: true, unlocked: false, land:true},
+        ice: { name: 'Ice', initialValue: 10000000003841538, unlocked:false },
         liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
-        dryIce : {name : 'Dry Ice', initialValue: 3.001e13, unlocked: false},
-        scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false}
+        dryIce : {name : 'Dry Ice', initialValue: 30010420953259, unlocked: false},
+        scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false},
+        biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false}
       },
       underground: {
         ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },
-        geothermal: { name: 'Geothermal vent', initialValue: 0, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
+        geothermal: { name: 'Geothermal vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
       },
       atmospheric: {
-        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.4158e13, unlocked:false },
+        carbonDioxide: { name: 'Carbon Dioxide', initialValue: 24157579046739, unlocked:false },
         inertGas: { name: 'Inert Gas', initialValue: 8.03e11, unlocked:false },
         oxygen: { name: 'Oxygen', initialValue: 2.39e10, unlocked:false },
-        atmosphericWater: { name: 'Water Vap.', initialValue: 6.76505e10, unlocked:false },
+        atmosphericWater: { name: 'Water Vap.', initialValue: 67646657792, unlocked:false },
         greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}
       },
       special: {
         albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false},
-        spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
-        biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false}
-      }
-    },
-    initialGameState: {
-      buildings: {
+        spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false}
       }
     },
     buildingParameters: {
@@ -51,7 +48,7 @@ const planetParameters = {
     populationParameters: {
       workerRatio: 0.5 // 60% of colonists are considered workers
     },
-    fundingRate: 5, // Rate at which funding increases over time
+    fundingRate: 10, // Rate at which funding increases over time
     celestialParameters : {
     distanceFromSun: 1.52, // Average distance from the Sun in AU
     gravity: 3.711, // Surface gravity in m/s^2

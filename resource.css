@@ -1,14 +1,14 @@
   
   .resource-row {
     display: grid;
-    grid-template-columns: 30% 21% 3% 21% 25%; /* Default layout with cap */
+    grid-template-columns: 32% 21% 3% 21% 23%; /* Default layout with cap */
     align-items: center;
     font-size: 13px;
     column-gap: 0;
   }
   
   .resource-row.no-cap {
-    grid-template-columns: 30% 45% 25%; /* When there's no cap, value takes more space */
+    grid-template-columns: 32% 45% 23%; /* When there's no cap, value takes more space */
   }
   
   .resource-name {
@@ -65,6 +65,12 @@
     display: block;
   }
 
+  .resource-festival {
+    color: red;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+  }
+
   .sparkling-gold {
     color: gold;
     font-weight: bold;
@@ -74,4 +80,10 @@
   .resource-wrapper {
     background-color: #f4f4f4;
     padding-right: 5px;
+  }
+
+
+  #resources-container h3 {
+    margin-top: 10px;
+    margin-bottom: 5px;
   }
