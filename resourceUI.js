@@ -1,5 +1,6 @@
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
+  resourcesContainer.innerHTML = ''; // Clear the main container first
 
   for (const category in resourcesData) {
     // Create a new container for each category
@@ -217,7 +218,8 @@ function updateResourceRateDisplay(resource){
   if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
     const formattedNumber = formatNumber(netRate);
-    if(Math.abs(netRate) < 1e-3 || (resource.category === 'surface' && Math.abs(netRate) < 1))
+    // Removed the specific check for surface category to allow displaying rates < 1
+    if(Math.abs(netRate) < 1e-3)
     {
       ppsElement.textContent = `0/s`;
     } else {

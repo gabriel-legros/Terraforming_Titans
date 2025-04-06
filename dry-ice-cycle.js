@@ -104,5 +104,6 @@ function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
   const denominator = (Delta_s + gamma_s) * L_S_CO2;
   const E_sub = numerator / denominator; // kg/m²/s
   
-  return E_sub;
+  // Ensure sublimation rate is non-negative (Penman can be negative if e_a > e_s)
+  return Math.max(0, E_sub);
 }

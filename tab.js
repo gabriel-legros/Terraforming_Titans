@@ -31,6 +31,12 @@ const tabParameters = {
         isHidden: true // Hidden initially
       },
       {
+        id: "space-tab",
+        label: "Space",
+        isActive: false, // Not active when unlocked initially
+        isHidden: true   // Start hidden
+      },
+      {
         id: "settings-tab",
         label: "Settings",
         isActive: false,

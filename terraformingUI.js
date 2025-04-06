@@ -215,15 +215,16 @@ function createTemperatureBox(row) {
         <tbody>
     `;
   
-    for (const gas in terraforming.resources.atmospheric) {
-      innerHTML += `
-        <tr>
-          <td>${terraforming.resources.atmospheric[gas].displayName}</td>
-          <td><span id="${gas}-pressure">${formatNumber(calculateGasPressure(gas), false, 2)}</span></td>
-          <td><span id="${gas}-delta"></span></td>
-          <td><span class='gas-range'>${getGasRangeString(gas)}</span></td>
-        </tr>
-      `;
+    // Iterate through gases defined in the global resources to build the table structure
+    for (const gas in resources.atmospheric) {
+        innerHTML += `
+          <tr>
+            <td>${resources.atmospheric[gas].displayName}</td>
+            <td><span id="${gas}-pressure">0.00</span></td> <!-- Initial placeholder, updated by updateAtmosphereBox -->
+            <td><span id="${gas}-delta">N/A</span></td> <!-- Initial placeholder -->
+            <td><span class='gas-range'>${getGasRangeString(gas)}</span></td>
+          </tr>
+        `;
     }
   
     innerHTML += `
@@ -245,20 +246,41 @@ function createTemperatureBox(row) {
     }
 
     const atmosphereCurrent = document.getElementById('atmosphere-current');
-    atmosphereCurrent.textContent = terraforming.atmosphere.value.toFixed(2);
-  
+    // Calculate total pressure on the fly
+    atmosphereCurrent.textContent = terraforming.calculateTotalPressure().toFixed(2);
+
     const emissivity = document.getElementById('emissivity');
     emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
   
-    for (const gas in terraforming.resources.atmospheric) {
-      const gasPressure = document.getElementById(`${gas}-pressure`);
-      const currentPressure = calculateGasPressure(gas);
-      gasPressure.textContent = formatNumber(currentPressure, false, 2);
-  
-      const gasInitial = terraforming.atmosphere.gases[gas].initial;
-      const gasDelta = document.getElementById(`${gas}-delta`);
-      delta = currentPressure - gasInitial;
-      gasDelta.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+    // Iterate through gases defined in the global resources (which the UI table expects)
+    for (const gas in resources.atmospheric) {
+        // Calculate current global pressure for this gas on the fly (in Pa)
+        const currentAmount = resources.atmospheric[gas]?.value || 0;
+        const currentGlobalPressurePa = calculateAtmosphericPressure(
+            currentAmount,
+            terraforming.celestialParameters.gravity,
+            terraforming.celestialParameters.radius
+        );
+
+        const gasPressureElement = document.getElementById(`${gas}-pressure`);
+        if (gasPressureElement) {
+            // Display the pressure in Pa
+            gasPressureElement.textContent = formatNumber(currentGlobalPressurePa, false, 2);
+        }
+
+        // Calculate initial pressure from initial parameters
+        const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
+        const initialGlobalPressurePa = calculateAtmosphericPressure(
+             initialAmount,
+             terraforming.celestialParameters.gravity,
+             terraforming.celestialParameters.radius
+        );
+
+        const gasDeltaElement = document.getElementById(`${gas}-delta`);
+        if (gasDeltaElement) {
+            const delta = currentGlobalPressurePa - initialGlobalPressurePa; // Delta in Pa
+            gasDeltaElement.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+        }
     }
   }
   
@@ -266,40 +288,41 @@ function createTemperatureBox(row) {
     const waterBox = document.createElement('div');
     waterBox.classList.add('terraforming-box');
     waterBox.id = 'water-box';
+    // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
-      <h3>${terraforming.water.name}</h3>
-      <p>Water coverage: <span id="water-current">${(terraforming.water.value * 100).toFixed(2)}</span>%</p>
-      <p>Ice coverage: <span id="ice-current">${(terraforming.water.iceValue * 100).toFixed(2)}</span>%</p>
+      <h3>Water</h3> <!-- Static name -->
+      <p>Water coverage: <span id="water-current">0.00</span>%</p>
+      <p>Ice coverage: <span id="ice-current">0.00</span>%</p>
       <table>
         <tr>
           <td>Evaporation rate:</td>
-          <td><span id="evaporation-rate">${formatNumber(terraforming.water.evaporationRate)}</span> /s</td>
-          <td><span id="evaporation-rate-kg">${formatNumber(terraforming.water.evaporationRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="evaporation-rate">N/A</span> /s</td>
+          <td><span id="evaporation-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
         <tr>
           <td>Sublimation rate:</td>
-          <td><span id="sublimation-rate">${formatNumber(terraforming.water.sublimationRate)}</span> /s</td>
-          <td><span id="sublimation-rate-kg">${formatNumber(terraforming.water.sublimationRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="sublimation-rate">N/A</span> /s</td>
+          <td><span id="sublimation-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
         <tr>
           <td>Rainfall rate:</td>
-          <td><span id="rainfall-rate">${formatNumber(terraforming.water.rainfallRate)}</span> /s</td>
-          <td><span id="rainfall-rate-kg">${formatNumber(terraforming.water.rainfallRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="rainfall-rate">N/A</span> /s</td>
+          <td><span id="rainfall-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
         <tr>
           <td>Snowfall rate:</td>
-          <td><span id="snowfall-rate">${formatNumber(terraforming.water.snowfallRate)}</span> /s</td>
-          <td><span id="snowfall-rate-kg">${formatNumber(terraforming.water.snowfallRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="snowfall-rate">N/A</span> /s</td>
+          <td><span id="snowfall-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
         <tr>
           <td>Melting rate:</td>
-          <td><span id="melting-rate">${formatNumber(terraforming.water.meltingRate)}</span> /s</td>
-          <td><span id="melting-rate-kg">${formatNumber(terraforming.water.meltingRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="melting-rate">N/A</span> /s</td>
+          <td><span id="melting-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
         <tr>
           <td>Freezing rate:</td>
-          <td><span id="freezing-rate">${formatNumber(terraforming.water.freezingRate)}</span> /s</td>
-          <td><span id="freezing-rate-kg">${formatNumber(terraforming.water.freezingRate * 1000 / this.celestialParameters.surfaceArea)}</span> kg/m²/s</td>
+          <td><span id="freezing-rate">N/A</span> /s</td>
+          <td><span id="freezing-rate-kg">N/A</span> kg/m²/s</td>
         </tr>
       </table>
     `;
@@ -315,62 +338,80 @@ function createTemperatureBox(row) {
   
   function updateWaterBox() {
     const waterBox = document.getElementById('water-box');
-    if(terraforming.getWaterStatus()){
-      waterBox.style.borderColor = 'green';
+    const zones = ['tropical', 'temperate', 'polar'];
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+
+    // Totals are no longer calculated here; they are read from terraforming object
+    // let totalLiquid = 0; // Not needed for rate display
+    // let totalIce = 0; // Not needed for rate display
+    // let totalEvaporationRate = 0; // Read from terraforming.totalEvaporationRate
+    // let totalSublimationRate = 0; // Read from terraforming.totalWaterSublimationRate
+    // let totalRainfallRate = 0; // Read from terraforming.totalRainfallRate
+    // let totalSnowfallRate = 0; // Read from terraforming.totalSnowfallRate
+    // let totalMeltingRate = 0; // Read from terraforming.totalMeltRate
+    // let totalFreezingRate = 0; // Read from terraforming.totalFreezeRate
+
+    // zones.forEach(zone => { // Loop no longer needed for rates
+    //     totalLiquid += terraforming.zonalWater[zone].liquid || 0;
+    //     totalIce += terraforming.zonalWater[zone].ice || 0;
+    //     // Remove rate summing from zonal data
+    // });
+
+    // Calculate average coverage percentages using the centralized helper function
+
+    const avgLiquidCoverage = terraforming._calculateAverageCoverage('liquidWater');
+    const avgIceCoverage = terraforming._calculateAverageCoverage('ice');
+
+    // Update border based on average liquid coverage vs target
+    if (avgLiquidCoverage > terraforming.waterTarget) { // Use the stored global target
+        waterBox.style.borderColor = 'green';
     } else {
-      waterBox.style.borderColor = 'red';
+        waterBox.style.borderColor = 'red';
     }
 
+    // Update UI elements
     const waterCurrent = document.getElementById('water-current');
-    waterCurrent.textContent = (terraforming.water.value * 100).toFixed(2);
-  
+    waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
+
     const iceCurrent = document.getElementById('ice-current');
-    iceCurrent.textContent = (terraforming.water.iceValue * 100).toFixed(2);
-  
-    const evaporationRate = document.getElementById('evaporation-rate');
-    evaporationRate.textContent = formatNumber(terraforming.water.evaporationRate);
-  
-    const sublimationRate = document.getElementById('sublimation-rate');
-    sublimationRate.textContent = formatNumber(terraforming.water.sublimationRate);
-  
-    const rainfallRate = document.getElementById('rainfall-rate');
-    rainfallRate.textContent = formatNumber(terraforming.water.rainfallRate);
-  
-    const snowfallRate = document.getElementById('snowfall-rate');
-    snowfallRate.textContent = formatNumber(terraforming.water.snowfallRate);
-  
-    const meltingRate = document.getElementById('melting-rate');
-    meltingRate.textContent = formatNumber(terraforming.water.meltingRate);
-  
-    const freezingRate = document.getElementById('freezing-rate');
-    freezingRate.textContent = formatNumber(terraforming.water.freezingRate);
-  
-    const evaporationRateKg = document.getElementById('evaporation-rate-kg');
-    evaporationRateKg.textContent = formatNumber(terraforming.water.evaporationRate * 1000 / this.celestialParameters.surfaceArea);
-  
+    iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
+
+    // Update rates (displaying total tons/s from terraforming object)
+    document.getElementById('evaporation-rate').textContent = formatNumber(terraforming.totalEvaporationRate);
+    document.getElementById('sublimation-rate').textContent = formatNumber(terraforming.totalWaterSublimationRate); // Corrected property name
+    document.getElementById('rainfall-rate').textContent = formatNumber(terraforming.totalRainfallRate);
+    document.getElementById('snowfall-rate').textContent = formatNumber(terraforming.totalSnowfallRate);
+    document.getElementById('melting-rate').textContent = formatNumber(terraforming.totalMeltRate); // Corrected property name
+    document.getElementById('freezing-rate').textContent = formatNumber(terraforming.totalFreezeRate); // Corrected property name
+
+    // Update rates (displaying kg/m²/s average)
+    const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1; // Avoid division by zero
+    document.getElementById('evaporation-rate-kg').textContent = formatNumber(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
+    // Use the stored total rates from terraforming object for kg/m²/s display
     const sublimationRateKg = document.getElementById('sublimation-rate-kg');
-    sublimationRateKg.textContent = formatNumber(terraforming.water.sublimationRate * 1000 / this.celestialParameters.surfaceArea);
-  
+    sublimationRateKg.textContent = formatNumber(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea); // Corrected property name
+
     const rainfallRateKg = document.getElementById('rainfall-rate-kg');
-    rainfallRateKg.textContent = formatNumber(terraforming.water.rainfallRate * 1000 / this.celestialParameters.surfaceArea);
-  
+    rainfallRateKg.textContent = formatNumber(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
+
     const snowfallRateKg = document.getElementById('snowfall-rate-kg');
-    snowfallRateKg.textContent = formatNumber(terraforming.water.snowfallRate * 1000 / this.celestialParameters.surfaceArea);
-  
+    snowfallRateKg.textContent = formatNumber(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
+
     const meltingRateKg = document.getElementById('melting-rate-kg');
-    meltingRateKg.textContent = formatNumber(terraforming.water.meltingRate * 1000 / this.celestialParameters.surfaceArea);
-  
+    meltingRateKg.textContent = formatNumber(terraforming.totalMeltRate * 1000 / safeSurfaceArea); // Corrected property name
+
     const freezingRateKg = document.getElementById('freezing-rate-kg');
-    freezingRateKg.textContent = formatNumber(terraforming.water.freezingRate * 1000 / this.celestialParameters.surfaceArea);
+    freezingRateKg.textContent = formatNumber(terraforming.totalFreezeRate * 1000 / safeSurfaceArea); // Corrected property name
   }
 
   function createLifeBox(row) {
     const lifeBox = document.createElement('div');
     lifeBox.classList.add('terraforming-box');
     lifeBox.id = 'life-box';
+    // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
-      <h3>${terraforming.life.name}</h3>
-      <p>Life coverage: <span id="life-current">${(terraforming.life.biomassCoverage * 100).toFixed(2)}</span>%</p>
+      <h3>Life</h3> <!-- Static name -->
+      <p>Life coverage: <span id="life-current">0.00</span>%</p>
       `;
 
     const targetSpan = document.createElement('span');
@@ -384,15 +425,30 @@ function createTemperatureBox(row) {
 
 function updateLifeBox() {
     const lifeBox = document.getElementById('life-box');
-    if(terraforming.getLifeStatus()){
-      lifeBox.style.borderColor = 'green';
+    const zones = ['tropical', 'temperate', 'polar'];
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+
+    // Calculate total biomass from zonal data
+    let totalBiomass = 0;
+    zones.forEach(zone => {
+        totalBiomass += terraforming.zonalSurface[zone].biomass || 0;
+    });
+
+    // Calculate average biomass coverage percentage using the centralized helper function
+    const avgBiomassCoverage = terraforming._calculateAverageCoverage('biomass');
+
+    // Update border based on average biomass coverage vs target
+    // TODO: The getLifeStatus function itself needs updating in terraforming.js
+    //       to use the new avgBiomassCoverage calculation. For now, we replicate the check.
+    if (avgBiomassCoverage > terraforming.life.target) {
+        lifeBox.style.borderColor = 'green';
     } else {
-      lifeBox.style.borderColor = 'red';
+        lifeBox.style.borderColor = 'red';
     }
 
-    // Update life coverage
+    // Update life coverage display
     const lifeCoverageSpan = document.getElementById('life-current');
-    lifeCoverageSpan.textContent = `${(terraforming.life.biomassCoverage * 100).toFixed(2)}`
+    lifeCoverageSpan.textContent = `${(avgBiomassCoverage * 100).toFixed(2)}`; // Display percentage
   }
   
   // Function to create the magnetosphere box, with conditional text based on boolean flag

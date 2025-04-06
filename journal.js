@@ -23,9 +23,12 @@ function addJournalEntry(text) {
     } else {
       journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
 
-      // Dispatch a custom event to signal that typing is complete
-      const event = new Event('journalTypedComplete');
-      journalEntries.dispatchEvent(event);
+      // This signals globally that *a* journal entry finished typing.
+      // The StoryManager will check if it was the one it was waiting for.
+      console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
+      const storyEvent = new CustomEvent('storyJournalFinishedTyping');
+      document.dispatchEvent(storyEvent);
+      // --- End of change ---
     }
   }
 

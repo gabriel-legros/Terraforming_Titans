@@ -26,7 +26,6 @@ class FundingModule extends EffectableEntity {
   update(deltaTime) {
     const baseFundingIncrease = this.fundingRate * this.getEffectiveProductionMultiplier();
     const fundingIncrease = baseFundingIncrease * deltaTime / 1000; // Calculate the increase in funding based on the rate
-    resources.colony.funding.increase(fundingIncrease); // Increase funding in the resources
     resources.colony.funding.modifyRate(baseFundingIncrease, 'Funding');
   }
 }

@@ -67,6 +67,8 @@ function sphericalSegmentArea(phi1, phi2) {
 
   function getZonePercentage(zone) {
     switch (zone) {
+        case 'global': // Added case for global
+            return 1.0;
         case 'tropical':
           return tropicalSurfaceArea / totalSurfaceArea;
         case 'temperate':
@@ -74,6 +76,7 @@ function sphericalSegmentArea(phi1, phi2) {
         case 'polar':
           return polarSurfaceArea / totalSurfaceArea;
         default:
-          throw new Error(`Invalid zone: ${zone}`);
+          console.warn(`Invalid zone requested for percentage: ${zone}. Returning 0.`); // Changed error to warning
+          return 0; // Return 0 instead of throwing error
     }
   }

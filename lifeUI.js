@@ -15,40 +15,104 @@ function initializeLifeTerraformingDesignerUI() {
     lifeTerraformingDiv.innerHTML = `
       <div id="life-terraforming-content">
         <h2>Life Designer</h2>
-        <table id="life-designs-table">
-        <thead>
-            <tr>
-            <th>Attribute</th>
-            <th>Current Design</th>
-            <th id="tentative-design-header" style="display: none;">Tentative Design</th>
-            </tr>
-        </thead>
-        <tbody id="life-attributes-body">
-            ${generateAttributeRows()}
-        </tbody>
-        </table>
-    <div id="life-terraforming-controls">
-      <div id="life-design-controls">
-        <button id="life-new-design-btn">Create New Design</button>
-        <button id="life-revert-btn" style="display: none;">Cancel</button>
-        <div id="life-apply-progress-container" style="display: none;">
-          <button id="life-apply-btn">Deploy</button>
-          <div id="life-apply-progress"></div>
+        <div id="life-designer-main-area" style="display: flex; gap: 20px; align-items: stretch;">
+            <table id="life-designs-table" style="flex: 3;">
+            <thead>
+                <tr>
+                <th>Attribute</th>
+                <th>Current Design</th>
+                <th id="tentative-design-header" style="display: none;">Tentative Design</th>
+                <th id="modify-header" style="display: none;">Modify</th>
+                </tr>
+            </thead>
+            <tbody id="life-attributes-body">
+                ${generateAttributeRows()}
+            </tbody>
+            </table>
+            <div id="life-point-shop" style="flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
+              <h4>Controls</h4>
+               <div id="life-points-display" style="margin-top: 5px;">
+                 <p><span title="Total points purchased">Points Available:</span> <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;" title="Points left to allocate in tentative design">Remaining: <span id="life-points-remaining"></span></span></p>
+               </div>
+               <div style="margin-top: 10px;">
+                   <button id="life-new-design-btn">Create New Design</button>
+                   <button id="life-revert-btn" style="display: none;">Cancel</button>
+               </div>
+               <div id="life-apply-progress-container" style="display: none; margin-top: 10px;">
+                 <button id="life-apply-btn">Deploy</button>
+                 <div id="life-apply-progress"></div>
+               </div>
+               <hr style="margin: 15px 0;">
+               <h3>Point Shop</h3>
+            </div>
         </div>
-        <div id="life-points-display">
-          <p>Points Available: <span id="life-points-available"></span></p>
-          <p id="life-points-remaining-display" style="display: none;">Points Remaining: <span id="life-points-remaining"></span></p>
+
+        <div id="life-terraforming-controls">
+            <div id="life-design-controls">
+        <div id="life-status-table-container" style="margin-top: 15px;">
+            <table id="life-status-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Requirement <small>(Hover ❌ for details)</small></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Global</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Survival Temp</td>
+                        <td id="survival-temp-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="survival-temp-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="survival-temp-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="survival-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Growth Temp</td>
+                        <td id="growth-temp-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-temp-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-temp-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Moisture</td>
+                        <td id="moisture-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="moisture-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="moisture-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="moisture-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                     <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Radiation</td>
+                        <td id="radiation-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="radiation-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="radiation-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="radiation-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                     <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Toxicity</td>
+                        <td id="toxicity-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="toxicity-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="toxicity-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="toxicity-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Biomass Amount (tons)</td>
+                        <td id="biomass-amount-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-amount-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-amount-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-amount-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                     <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Biomass Density (tons/m²)</td>
+                        <td id="biomass-density-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-density-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-density-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="biomass-density-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div id="life-status-messages">
-          <p id="temperature-survival-message"></p>
-          <p id="temperature-growth-message"></p>
-          <p id="moisture-message"></p>
-          <p id="radiation-message"></p>
-          <p id="toxicity-message"></p>
-        </div>
-      </div>
-      <div id="life-point-shop">
-        <h3>Point Shop</h3>
       </div>
     </div>
     </div>
@@ -71,26 +135,38 @@ function initializeLifeTerraformingDesignerUI() {
   
     function generateAttributeRows() {
       let rows = '';
-      for (const attributeName in lifeDesigner.currentDesign) {
+      const attributeOrder = [
+          'minTemperatureTolerance', 'maxTemperatureTolerance',
+          'minTemperatureGrowth', 'maxTemperatureGrowth',
+          'photosynthesisEfficiency', 'moistureEfficiency',
+          'radiationTolerance', 'toxicityTolerance',
+          'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
+      ];
+
+      for (const attributeName of attributeOrder) {
+        if (!lifeDesigner.currentDesign[attributeName]) continue;
+
         const attribute = lifeDesigner.currentDesign[attributeName];
         const convertedValue = attribute.getConvertedValue();
         rows += `
           <tr>
             <td class="life-attribute-name">
               ${attribute.displayName} (Max ${attribute.maxUpgrades})
-              <div class="life-attribute-description">${attribute.description}</div>
+              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}</div>
             </td>
             <td>
-              <div id="${attributeName}-current-value">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
+              <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
             </td>
             <td class="tentative-design-cell" style="display: none;">
-              <div id="${attributeName}-tentative-value">
-                  <span class="life-tentative-display">0</span>
-                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
-                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
-                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
-                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
+              <div id="${attributeName}-tentative-value" data-attribute="${attributeName}">
+                  <span class="life-tentative-display">0 / -</span>
               </div>
+            </td>
+            <td class="modify-buttons-cell" style="display: none;">
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
             </td>
           </tr>
         `;
@@ -144,44 +220,61 @@ function initializeLifeTerraformingDesignerUI() {
       }
   });
 
-  // Generate the point shop buttons
+  // Generate the point shop buttons (Target the moved div)
   const lifePointShopDiv = document.getElementById('life-point-shop');
-  lifeShopCategories.forEach((category, index) => {
-    const categoryContainer = document.createElement('div');
-    categoryContainer.classList.add('shop-category-container');
-  
-    // Add button
-    const button = document.createElement('button');
-    button.textContent = `Buy with ${category.name} Point`;
-    button.dataset.category = category.name;
-    button.classList.add('life-point-shop-btn');
-    categoryContainer.appendChild(button);
-  
-    // Add description
-    const description = document.createElement('p');
-    description.textContent = category.description;
-    description.classList.add('shop-category-description');
-    categoryContainer.appendChild(description);
-  
-    // Add separator line if not the last category
-    if (index < lifeShopCategories.length - 1) {
-      const separator = document.createElement('hr');
-      categoryContainer.appendChild(separator);
-    }
-  
-    lifePointShopDiv.appendChild(categoryContainer);
-  });
-  
-  // Event listener for point shop button clicks
-  lifePointShopDiv.addEventListener('click', (event) => {
-    if (event.target.classList.contains('life-point-shop-btn')) {
-      const category = event.target.dataset.category;
-      if (lifeDesigner.canAfford(category)) {
-        lifeDesigner.buyPoint(category);
-        updateLifeUI();
-      }
-    }
-  });
+  if (lifePointShopDiv) { // Check if element exists before adding content
+      lifeShopCategories.forEach((category, index) => {
+        const categoryContainer = document.createElement('div');
+        categoryContainer.classList.add('shop-category-container');
+      
+        // Add button
+        const button = document.createElement('button');
+        button.textContent = `Buy with ${category.name} Point`;
+        button.dataset.category = category.name;
+        button.classList.add('life-point-shop-btn');
+        categoryContainer.appendChild(button);
+      
+        // Add description
+        const description = document.createElement('p');
+        description.textContent = category.description;
+        description.classList.add('shop-category-description');
+        categoryContainer.appendChild(description);
+      
+        // Add separator line if not the last category
+        if (index < lifeShopCategories.length - 1) {
+          const separator = document.createElement('hr');
+          categoryContainer.appendChild(separator);
+        }
+      
+        lifePointShopDiv.appendChild(categoryContainer);
+      });
+      
+      // Event listener for point shop button clicks (Attached to the moved div)
+      lifePointShopDiv.addEventListener('click', (event) => {
+          // Actual listener logic moved inside here
+          if (event.target.classList.contains('life-point-shop-btn')) {
+              const category = event.target.dataset.category;
+              if (lifeDesigner.canAfford(category)) {
+                  lifeDesigner.buyPoint(category);
+                  updateLifeUI();
+              }
+          }
+      });
+  } else {
+      console.error("Could not find #life-point-shop element to populate.");
+  }
+
+  // Removed the misplaced/redundant listener code below
+  // // Event listener for point shop button clicks (Original listener location - now redundant if above works)
+  // // lifePointShopDiv.addEventListener('click', (event) => {
+  //   if (event.target.classList.contains('life-point-shop-btn')) {
+  //     const category = event.target.dataset.category;
+  //     if (lifeDesigner.canAfford(category)) {
+  //       lifeDesigner.buyPoint(category);
+  //       updateLifeUI();
+  //     }
+  //   }
+  // });
 
 }
 
@@ -197,7 +290,8 @@ function updateLifeUI() {
 
     updateDesignValues();
     updatePointsDisplay();
-    updateTemperatureRangesAndMessages();
+    // updateZonalBiomassDensities(); // Remove call to old function
+    updateLifeStatusTable();
 
     const tentativeDesignHeader = document.getElementById('tentative-design-header');
     const lifePointsRemainingDisplay = document.getElementById('life-points-remaining-display');
@@ -209,32 +303,40 @@ function updateLifeUI() {
   
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
-        lifePointsRemainingDisplay.style.display = 'block';
+        document.getElementById('modify-header').style.display = 'table-cell';
+        lifePointsRemainingDisplay.style.display = 'inline'; // Ensure it's visible here
         createBtn.style.display = 'inline-block';
         applyBtn.style.display = 'inline-block';
         revertBtn.style.display = 'inline-block';
         applyProgressContainer.style.display = 'block';
         if (lifeDesigner.isActive) {
             tentativeDesignHeader.style.display = 'table-cell';
-            lifePointsRemainingDisplay.style.display = 'none';
+            lifePointsRemainingDisplay.style.display = 'inline'; // Keep visible even when deploying
             revertBtn.style.display = 'none';
             createBtn.style.display = 'none';
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
             const progressPercent = lifeDesigner.getProgress();
-            applyBtn.textContent = `New Design Deployment Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
+            // Shorter button text
+            applyBtn.textContent = `Deploying: ${timeRemaining}s (${progressPercent.toFixed(0)}%)`;
             applyBtn.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+            applyBtn.disabled = true; // Disable button during deployment
         } else {
             showTentativeDesignCells();
             applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
             applyProgressBar.style.width = '0%';
+            applyBtn.disabled = false; // Ensure button is enabled when not active
+            applyBtn.style.background = ''; // Reset background
         }
     }
     else {
       tentativeDesignHeader.style.display = 'none';
+      document.getElementById('modify-header').style.display = 'none';
+      lifePointsRemainingDisplay.style.display = 'inline'; // Ensure it's visible when no tentative design
       createBtn.style.display = 'inline-block';
       applyProgressContainer.style.display = 'none';
       applyBtn.style.display = 'none';
+      applyBtn.disabled = true;
       revertBtn.style.display = 'none';
       hideTentativeDesignCells();
     }
@@ -251,43 +353,60 @@ function updateLifeUI() {
 
   }
 
-    // Function to show the tentative design cells
+    // Function to show the tentative design and modify button cells
     function showTentativeDesignCells() {
-        const tentativeDesignCells = document.querySelectorAll('.tentative-design-cell');
-        tentativeDesignCells.forEach((cell) => {
+        document.querySelectorAll('.tentative-design-cell, .modify-buttons-cell').forEach((cell) => {
         cell.style.display = 'table-cell';
         });
     }
     
-    // Function to hide the tentative design cells
+    // Function to hide the tentative design and modify button cells
     function hideTentativeDesignCells() {
-        const tentativeDesignCells = document.querySelectorAll('.tentative-design-cell');
-        tentativeDesignCells.forEach((cell) => {
+        document.querySelectorAll('.tentative-design-cell, .modify-buttons-cell').forEach((cell) => {
         cell.style.display = 'none';
         });
     }
   
     function updateDesignValues() {
-      const designCells = document.querySelectorAll('#life-designs-table td:not(:first-child)');
-      designCells.forEach((cell, index) => {
-        const attributeName = Object.keys(lifeDesigner.currentDesign)[index % Object.keys(lifeDesigner.currentDesign).length];
-        const isTentativeCell = cell.classList.contains('tentative-design-cell');
-        const design = isTentativeCell ? lifeDesigner.tentativeDesign : lifeDesigner.currentDesign;
-        if (design) {
-          const attribute = design[attributeName];
-  
-          const valueDiv = document.getElementById(`${attributeName}-${isTentativeCell ? 'tentative' : 'current'}-value`);
-          if (isTentativeCell) {
-            const tentativeValueDisplay = valueDiv.querySelector('.life-tentative-display');
-            tentativeValueDisplay.textContent = `${attribute.value} / ${attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-'}`;
-          } else {
-            valueDiv.textContent = `${attribute.value} / ${attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-'}`;
-          }
-  
-          if (isTentativeCell) {
-            cell.style.display = lifeDesigner.tentativeDesign ? 'table-cell' : 'none';
-          }
+      // Use the same attribute order as in generateAttributeRows
+      const attributeOrder = [
+           'minTemperatureTolerance', 'maxTemperatureTolerance',
+           'minTemperatureGrowth', 'maxTemperatureGrowth',
+           'photosynthesisEfficiency', 'moistureEfficiency',
+           'radiationTolerance', 'toxicityTolerance',
+           'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
+        ];
+
+      attributeOrder.forEach(attributeName => {
+        // Update Current Design Value
+        const currentAttribute = lifeDesigner.currentDesign[attributeName];
+        // Use querySelector with data-attribute for reliability
+        const currentValueDiv = document.querySelector(`div[data-attribute="${attributeName}"][id$="-current-value"]`);
+        if (currentValueDiv && currentAttribute) {
+          currentValueDiv.textContent = `${currentAttribute.value} / ${currentAttribute.getConvertedValue() !== null ? currentAttribute.getConvertedValue() : '-'}`;
+        } else if (currentValueDiv) {
+            currentValueDiv.textContent = 'N/A'; // Handle case where attribute might not exist?
         }
+
+        // Update Tentative Design Value (if applicable)
+        const tentativeAttribute = lifeDesigner.tentativeDesign ? lifeDesigner.tentativeDesign[attributeName] : null;
+         // Use querySelector with data-attribute for reliability
+        const tentativeValueDiv = document.querySelector(`div[data-attribute="${attributeName}"][id$="-tentative-value"]`);
+        const tentativeCell = tentativeValueDiv ? tentativeValueDiv.closest('.tentative-design-cell') : null;
+
+        if (tentativeCell) { // Check if the parent cell exists
+            if (lifeDesigner.tentativeDesign && tentativeAttribute && tentativeValueDiv) {
+                const tentativeValueDisplay = tentativeValueDiv.querySelector('.life-tentative-display');
+                if (tentativeValueDisplay) {
+                    tentativeValueDisplay.textContent = `${tentativeAttribute.value} / ${tentativeAttribute.getConvertedValue() !== null ? tentativeAttribute.getConvertedValue() : '-'}`;
+                }
+                tentativeCell.style.display = 'table-cell'; // Show the cell
+            } else {
+                 tentativeCell.style.display = 'none'; // Hide the cell
+            }
+        }
+
+        // Removed logic for updating the non-existent max-density cell
       });
     }
   
@@ -295,41 +414,125 @@ function updateLifeUI() {
     function updatePointsDisplay() {
         const pointsAvailableSpan = document.getElementById('life-points-available');
         const pointsRemainingSpan = document.getElementById('life-points-remaining');
-        pointsAvailableSpan.textContent = lifeDesigner.maxLifeDesignPoints();
+        const maxPoints = lifeDesigner.maxLifeDesignPoints();
+        pointsAvailableSpan.textContent = maxPoints;
+        
+        let pointsRemaining = 0;
         if (lifeDesigner.tentativeDesign) {
-          const pointsUsed = Object.values(lifeDesigner.tentativeDesign).reduce((sum, attribute) => sum + attribute.value, 0);
-          pointsRemainingSpan.textContent = lifeDesigner.maxLifeDesignPoints() - pointsUsed;
+          // Calculate remaining based on TENTATIVE design
+          const pointsUsed = Object.values(lifeDesigner.tentativeDesign).reduce((sum, attribute) => {
+              if (attribute instanceof LifeAttribute) {
+                  return sum + attribute.value;
+              }
+              return sum;
+          }, 0);
+          pointsRemaining = maxPoints - pointsUsed;
+        } else {
+          // Calculate remaining based on CURRENT design when no tentative design exists
+           const pointsUsed = Object.values(lifeDesigner.currentDesign).reduce((sum, attribute) => {
+              if (attribute instanceof LifeAttribute) {
+                  return sum + attribute.value;
+              }
+              return sum;
+          }, 0);
+          pointsRemaining = maxPoints - pointsUsed;
         }
+        pointsRemainingSpan.textContent = pointsRemaining;
     }
 
-function updateTemperatureRangesAndMessages() {
-    const temperatureSurvivalMessageParagraph = document.getElementById('temperature-survival-message');
-    const temperatureGrowthMessageParagraph = document.getElementById('temperature-growth-message');
-    const moistureMessageParagraph = document.getElementById('moisture-message');
-    const radiationMessageParagraph = document.getElementById('radiation-message');
-    const toxicityMessageParagraph = document.getElementById('toxicity-message');
-    
-    const currentDesign = lifeDesigner.currentDesign;
-    const tentativeDesign = lifeDesigner.tentativeDesign || currentDesign;
-    
-    const canSurviveTemperature = tentativeDesign.temperatureSurvivalCheck();
-    const canGrowTemperature = tentativeDesign.temperatureGrowthCheck();
-    const moistureCheck = tentativeDesign.moistureCheck();
-    const radiationCheck = tentativeDesign.radiationCheck();
-    const toxicityCheck = tentativeDesign.toxicityCheck();
-    
-    temperatureSurvivalMessageParagraph.textContent = canSurviveTemperature ? 'Life can survive in the current temperature range.' : 'Life cannot survive anywhere in the current temperature range.';
-    temperatureSurvivalMessageParagraph.style.color = canSurviveTemperature ? 'green' : 'red';
-    
-    temperatureGrowthMessageParagraph.textContent = canGrowTemperature ? 'Life can grow in the current temperature range.' : 'Life cannot grow anywhere in the current temperature range.';
-    temperatureGrowthMessageParagraph.style.color = canGrowTemperature ? 'green' : 'red';
-    
-    moistureMessageParagraph.textContent = moistureCheck ? 'Moisture levels are sufficient for life.' : 'Moisture levels are insufficient for life.  Growth will be impossible.';
-    moistureMessageParagraph.style.color = moistureCheck ? 'green' : 'red';
-    
-    radiationMessageParagraph.textContent = radiationCheck ? 'Radiation levels are safe for life.' : `Radiation levels are too high for life due to lack of a magnetosphere.  Growth will be reduced by ${((0.5 - tentativeDesign.getRadiationMitigationRatio() / 2) * 100).toFixed(0)}%.`;
-    radiationMessageParagraph.style.color = radiationCheck ? 'green' : 'orange';
-    
-    toxicityMessageParagraph.textContent = toxicityCheck ? 'Toxicity levels are safe for life.' : 'Toxicity levels are too high for life.';
-    toxicityMessageParagraph.style.color = toxicityCheck ? 'green' : 'orange';
+// Removed old updateTemperatureRangesAndMessages function
+
+// Function to update the new life status table
+function updateLifeStatusTable() {
+    const designToCheck = lifeDesigner.tentativeDesign || lifeDesigner.currentDesign;
+    // Ensure designToCheck is valid before proceeding
+    if (!designToCheck) {
+        console.error("No life design available to check status.");
+        // Optionally clear the table or show a message
+        return;
     }
+    
+    const zones = ['global', 'tropical', 'temperate', 'polar'];
+
+    // Helper function to update a single status cell
+    const updateStatusCell = (elementId, result, isGlobalRadiation = false) => { // Added flag
+        const cell = document.getElementById(elementId);
+        if (!cell) return;
+        
+        if (typeof result !== 'object' || result === null || typeof result.pass === 'undefined') {
+             console.error(`Invalid result format for ${elementId}:`, result);
+             cell.innerHTML = '?';
+             cell.title = 'Error fetching status';
+             return;
+        }
+
+        if (result.pass) {
+            cell.innerHTML = '&#x2705;';
+            cell.title = '';
+        } else {
+            // Add reduction % for global radiation cell if applicable
+            const reductionText = (isGlobalRadiation && result.reduction > 0)
+                                 ? ` (-${result.reduction.toFixed(0)}% Growth)`
+                                 : '';
+            cell.innerHTML = `&#x274C;${reductionText}`; // Display X and reduction
+            cell.title = result.reason || 'Failed';
+        }
+    };
+
+    // Get results from check functions
+    const survivalTempResults = designToCheck.temperatureSurvivalCheck();
+    const growthTempResults = designToCheck.temperatureGrowthCheck();
+    const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
+    const radiationResult = designToCheck.radiationCheck(); // Global check
+    const toxicityResult = designToCheck.toxicityCheck();   // Global check
+    // Calculate max density based on space efficiency
+    const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
+    const densityMultiplier = 1 + (spaceEfficiencyAttr?.value || 0);
+    const maxDensity = BASE_MAX_BIOMASS_DENSITY * densityMultiplier;
+
+    // Get biomass and area info
+    const totalBiomass = resources.surface.biomass?.value || 0;
+    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
+    const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
+
+    // Update table cells row by row
+    zones.forEach(zone => {
+        // --- Update Status Checks ---
+        // Survival Temp
+        updateStatusCell(`survival-temp-${zone}-status`, survivalTempResults[zone]);
+        // Growth Temp
+        updateStatusCell(`growth-temp-${zone}-status`, growthTempResults[zone]);
+        // Moisture
+        updateStatusCell(`moisture-${zone}-status`, moistureResults[zone]);
+         // Radiation (Apply global result, pass flag for special text)
+         updateStatusCell(`radiation-${zone}-status`, radiationResult, zone === 'global');
+         // Toxicity (Apply global result to all zone cells for this row)
+         updateStatusCell(`toxicity-${zone}-status`, toxicityResult);
+         // Max Density (Display calculated value - same for all zones based on design)
+         const maxDensityCell = document.getElementById(`max-density-${zone}-status`);
+         if (maxDensityCell) {
+             maxDensityCell.textContent = formatNumber(maxDensity, false, 2); // Use 1 decimal place
+             maxDensityCell.title = ''; // No tooltip needed usually
+         }
+
+         // --- Update Biomass Amount and Density ---
+         const amountCell = document.getElementById(`biomass-amount-${zone}-status`);
+         const densityCell = document.getElementById(`biomass-density-${zone}-status`);
+
+         if (zone === 'global') {
+             if(amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
+             // Use 1 decimal place for global density
+             if(densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
+         } else {
+             const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
+             const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
+
+             if(amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
+              // Use 1 decimal place for zonal density
+             if(densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
+         }
+    });
+}
+
+// Removed old updateZonalBiomassDensities function

@@ -126,8 +126,8 @@ function sublimationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     const denominator = (Delta_s + gamma_s) * L_S_WATER;
     const E_sub = numerator / denominator; // kg/m²/s
   
-    // Ensure sublimation only occurs when saturation vapor pressure exceeds actual vapor pressure
-    return E_sub; // kg/m²/s
+    // Ensure sublimation rate is non-negative (Penman can be negative if e_a > e_s)
+    return Math.max(0, E_sub); // kg/m²/s
 }
 
 // Function to calculate evaporation rate for water using the modified Penman equation
@@ -160,6 +160,6 @@ function evaporationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     const denominator = (Delta_s + gamma_s) * L_V_WATER;
     const E_evp = numerator / denominator; // kg/m²/s
   
-    // Ensure evaporation only occurs when saturation vapor pressure exceeds actual vapor pressure
-    return E_evp; // kg/m²/s
+    // Ensure evaporation rate is non-negative (Penman can be negative if e_a > e_s)
+    return Math.max(0, E_evp); // kg/m²/s
 }

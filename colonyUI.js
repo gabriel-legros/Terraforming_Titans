@@ -113,13 +113,18 @@ function getNeedColor(value) {
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('unhide-obsolete-button').addEventListener('click', () => {
-      // Set the isHidden attribute to true for each obsolete colony
+document.addEventListener('DOMContentLoaded', () => {
+  const unhideButton = document.getElementById('unhide-obsolete-button');
+  if (unhideButton) {
+    unhideButton.addEventListener('click', () => {
+      // Access the *current* global colonies object directly inside the handler
       Object.values(colonies).forEach(colony => {
-        if (colony.unlocked) {
+        if (colony.unlocked && colony.obsolete) { // Only unhide obsolete ones that were hidden
           colony.isHidden = false;
         }
       });
+      // Potentially need to re-render the colony buttons after unhiding
+      updateColonyDisplay(colonies); // Re-render to show the unhidden buildings
     });
-  });
+  }
+});

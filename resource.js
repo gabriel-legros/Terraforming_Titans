@@ -10,9 +10,13 @@ class Resource extends EffectableEntity {
     this.hasCap = resourceData.hasCap || false;
     this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
     this.cap = this.hasCap ? this.baseCap : Infinity; // Set the initial cap
-    this.baseProductionRate = 0;
-    this.productionRate = 0; // Rate of production per second
-    this.consumptionRate = 0; // Rate of consumption per second
+    this.baseProductionRate = 0; // Keep for potential base calculations if needed later
+    // Store rates by type { type: { sourceName: rate } } e.g., { 'building': { 'Mine': 10 }, 'terraforming': { 'Evaporation': -5 } }
+    this.productionRateByType = {};
+    this.consumptionRateByType = {};
+    // Keep overall rates for potential display/compatibility, calculated by summing typed rates
+    this.productionRate = 0;
+    this.consumptionRate = 0;
     this.reserved = resourceData.reserved || 0;
     this.unlocked = resourceData.unlocked;
     this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
@@ -83,24 +87,76 @@ class Resource extends EffectableEntity {
     this.cap = this.hasCap ? newCap : Infinity;
   }
 
-  modifyRate(value, source) {
-    if(source === undefined){
-      console.log('Undefined source');
+  // Modify rate, now requires a rateType (e.g., 'building', 'terraforming', 'life', 'funding')
+  modifyRate(value, source, rateType) {
+    if (source === undefined) {
+      source = 'Unknown'; // Assign a default source if undefined
+    }
+    if (rateType === undefined) {
+        rateType = 'unknown'; // Assign a default type if undefined - THIS IS AN ERROR
     }
 
     if (value > 0) {
       this.productionRate += value;
-      if (!this.productionRateBySource[source]) {
-        this.productionRateBySource[source] = 0;
+      // Initialize type if not present
+      if (!this.productionRateByType[rateType]) {
+        this.productionRateByType[rateType] = {};
       }
-      this.productionRateBySource[source] += value;
-    } else {
-      this.consumptionRate -= value;
-      if (!this.consumptionRateBySource[source]) {
-        this.consumptionRateBySource[source] = 0;
+      // Initialize source within type if not present
+      if (!this.productionRateByType[rateType][source]) {
+        this.productionRateByType[rateType][source] = 0;
       }
-      this.consumptionRateBySource[source] -= value;
+      this.productionRateByType[rateType][source] += value;
+    } else if (value < 0) { // Only process negative values for consumption
+      this.consumptionRate += -value;
+      // Initialize type if not present
+      if (!this.consumptionRateByType[rateType]) {
+        this.consumptionRateByType[rateType] = {};
+      }
+      // Initialize source within type if not present
+      if (!this.consumptionRateByType[rateType][source]) {
+        this.consumptionRateByType[rateType][source] = 0;
+      }
+      // Store consumption as a positive value
+      this.consumptionRateByType[rateType][source] -= value;
     }
+    // Note: We will recalculate total production/consumption rates later if needed
+  }
+
+  // Recalculates total production and consumption rates by summing typed rates
+  recalculateTotalRates() {
+    this.productionRate = 0;
+    this.consumptionRate = 0;
+    this.productionRateBySource = {}; // Keep this for potential UI use, sum across types
+    this.consumptionRateBySource = {}; // Keep this for potential UI use, sum across types
+
+    for (const type in this.productionRateByType) {
+        for (const source in this.productionRateByType[type]) {
+            const rate = this.productionRateByType[type][source];
+            this.productionRate += rate;
+            if (!this.productionRateBySource[source]) this.productionRateBySource[source] = 0;
+            this.productionRateBySource[source] += rate;
+        }
+    }
+
+    for (const type in this.consumptionRateByType) {
+        for (const source in this.consumptionRateByType[type]) {
+            const rate = this.consumptionRateByType[type][source];
+            this.consumptionRate += rate;
+            if (!this.consumptionRateBySource[source]) this.consumptionRateBySource[source] = 0;
+            this.consumptionRateBySource[source] += rate;
+        }
+    }
+  }
+
+  // Resets all rate trackers
+  resetRates() {
+      this.productionRate = 0;
+      this.consumptionRate = 0;
+      this.productionRateByType = {};
+      this.consumptionRateByType = {};
+      this.productionRateBySource = {}; // Also reset the aggregated source map
+      this.consumptionRateBySource = {}; // Also reset the aggregated source map
   }
 
   enable() {
@@ -135,13 +191,10 @@ function createResources(resourcesData) {
 function calculateProductionRates(deltaTime, buildings) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
+  // Reset rates using the new method
   for (const category in resources) {
     for (const resourceName in resources[category]) {
-      const resource = resources[category][resourceName];
-      resource.productionRate = 0;
-      resource.consumptionRate = 0;
-      resource.productionRateBySource = {};
-      resource.consumptionRateBySource = {};
+      resources[category][resourceName].resetRates();
     }
   }
 
@@ -152,7 +205,8 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const category in building.production) {
       for (const resource in building.production[category]) {
         const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
-        resources[category][resource].modifyRate(actualProduction, building.displayName);
+        // Specify 'building' as the rateType
+        resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
       }
     }
 
@@ -160,7 +214,8 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const category in building.consumption) {
       for (const resource in building.consumption[category]) {
         const actualConsumption = (building.consumption[category][resource] || 0) * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
-        resources[category][resource].modifyRate(-actualConsumption, building.displayName);
+        // Specify 'building' as the rateType
+        resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
       }
     }
   }
@@ -168,7 +223,8 @@ function calculateProductionRates(deltaTime, buildings) {
   // Add funding rate to the production of funding resource
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
-    resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding'); // Update funding production rate
+    // Specify 'funding' as the rateType
+    resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding', 'funding'); // Update funding production rate
   }
 }
 
@@ -202,13 +258,11 @@ function produceResources(deltaTime, buildings) {
   //Productivity has now been calculated and applied
 
   //Reset production and consumption rates for all resources because we want to display actuals
+  // Reset rates again using the new method before accumulating actual changes
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
-      resource.productionRate = 0;
-      resource.consumptionRate = 0;
-      resource.productionRateBySource = {};
-      resource.consumptionRateBySource = {};
+      resource.resetRates(); // Reset typed rates
       if(resource.name != 'workers'){
         resource.updateStorageCap();
       }
@@ -243,13 +297,23 @@ function produceResources(deltaTime, buildings) {
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
-    fundingModule.update(deltaTime);
+    // Accumulate funding change directly into accumulatedChanges, no need to call modifyRate here again
+    if (accumulatedChanges.colony && accumulatedChanges.colony.funding !== undefined) {
+        accumulatedChanges.colony.funding += fundingIncreaseRate * deltaTime / 1000;
+    }
+    fundingModule.update(deltaTime); // Update funding module state if needed
   }
 
+  // Call terraforming.updateResources AFTER accumulating building/funding changes
+  // but BEFORE applying accumulatedChanges to resource values.
+  // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
-    terraforming.updateResources(accumulatedChanges, deltaTime);
+    terraforming.updateResources(deltaTime);
   }
 
+  // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
+  // depending on desired interaction. Assuming it runs after buildings and before applying changes.
+  // It should call modifyRate with type 'life'.
   if(lifeManager){
     lifeManager.updateLife(deltaTime);
   }
@@ -281,4 +345,14 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  recalculateTotalRates();
+}
+
+function recalculateTotalRates(){
+  // After all changes are applied, recalculate total rates for UI display
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      resources[category][resourceName].recalculateTotalRates();
+    }
+  }
 }

@@ -189,6 +189,48 @@ class Colony extends Building {
     this.happiness = this.adjustToTarget(this.happiness, targetHappiness / 100, deltaTime);
   }
 
+  // Override calculateBaseMinRatio to exclude luxury resources from productivity calculation
+  calculateBaseMinRatio(resources, deltaTime) {
+      let minRatio = Infinity;
+
+      // Calculate minRatio based on NON-LUXURY resource consumption
+      for (const category in this.consumption) {
+          for (const resource in this.consumption[category]) {
+              // Skip luxury resources
+              if (luxuryResources[resource]) {
+                  continue;
+              }
+
+              // Original logic from Building class for non-luxury resources
+              const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
+              if (requiredAmount === 0) continue;
+              // Use available value directly, production rate during the tick shouldn't affect availability *for* consumption in the same tick
+              const availableAmount = resources[category][resource].value;
+              if (availableAmount < requiredAmount) {
+                  // If consumption rate is zero (e.g., due to other shortages), ratio is effectively infinite (or 1 if available > 0)
+                  // Avoid division by zero or negative rates.
+                  const consumptionRate = resources[category][resource].consumptionRate;
+                  if (consumptionRate <= 0) {
+                     minRatio = Math.min(minRatio, 1); // Can't be limited by zero or negative consumption
+                  } else {
+                     // Calculate ratio based on production vs consumption *rates* if available amount is insufficient
+                     const productionRate = resources[category][resource].productionRate;
+                     const ratio = productionRate / consumptionRate;
+                     minRatio = Math.min(minRatio, Math.max(ratio, 0)); // Ensure ratio isn't negative
+                  }
+
+              } else {
+                  minRatio = Math.min(minRatio, 1); // Not limited by this resource
+              }
+          }
+      }
+
+      // Worker check is NOT needed here because Colony's overridden updateProductivity handles population ratio separately.
+
+      // If no non-luxury resources are consumed, or if all needs are met, return 1.
+      return minRatio === Infinity ? 1 : minRatio;
+  }
+
   enable(tierName){
     const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
 

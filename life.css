@@ -1,10 +1,11 @@
-#life-terraforming {
+#life-terraforming-content { /* Target the main container */
     font-family: Arial, sans-serif;
-    margin: 20px;
+    font-size: 14px; /* Set smaller base font size */
+    /* margin: 20px; */ /* Margin might be handled by parent */
   }
 
   #life-designs-table .life-attribute-name {
-    width: 500px; /* Adjust the width as needed */
+    width: 350px; /* Make attribute column narrower */
   }
   
   #life-designs-table {
@@ -13,21 +14,28 @@
   
   #life-designs-table th,
   #life-designs-table td {
-    padding: 10px;
+    padding: 6px; /* Reduce padding slightly */
     border: 1px solid #ccc;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
+    font-size: 0.95em; /* Slightly smaller than base */
   }
   
   #life-designs-table th {
     font-weight: bold;
     background-color: #f5f5f5;
+    text-align: center;
+    padding: 6px; /* Match cell padding */
+  }
+  /* Keep first header left-aligned */
+  #life-designs-table th:first-child {
+      text-align: left;
   }
   
   .life-attribute-description {
-    font-size: 12px;
+    font-size: 0.85em; /* Relative to parent cell */
     color: #666;
-    margin-top: 5px;
+    margin-top: 3px;
   }
   
   #life-designs-table input {
@@ -38,9 +46,9 @@
     margin-right: 10px;
   }
   
+  /* #life-points-display font-size is now inherited */
   #life-points-display {
-    font-size: 14px;
-    margin-top: 20px;
+    margin-top: 15px; /* Keep margin */
   }
   
   #life-points-display p {
@@ -51,10 +59,19 @@
     width: 60px;
   }
 
-  #life-designs-table td > div {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  /* Adjust flex alignment for value cells if needed */
+  /* #life-designs-table td > div { ... } */
+
+  /* Style for the new modify buttons cell */
+  .modify-buttons-cell {
+      text-align: center; /* Center buttons */
+      white-space: nowrap; /* Prevent buttons from wrapping */
+  }
+  .modify-buttons-cell button {
+      margin: 0 2px; /* Add small horizontal space between buttons */
+      padding: 2px 5px;
+      min-width: 30px;
+      font-size: 0.9em; /* Smaller font for buttons */
   }
   
   #life-apply-progress-container {
@@ -71,40 +88,97 @@
     display: block;
   }
 
-  #life-terraforming-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    margin-top: 20px;
+  /* Remove old flex rules for the controls container and its direct children */
+  /* #life-terraforming-controls { ... } */
+  /* #life-design-controls, #life-point-shop { ... } */
+
+  /* Adjust flex properties for main area */
+  #life-designer-main-area {
+     /* display: flex; gap: 20px; align-items: flex-start; */ /* Keep inline styles for now */
   }
+
+  /* Adjust table and shop widths */
+  #life-designs-table {
+     flex: 2.5; /* Give slightly less dominance */
+  }
+   #life-point-shop {
+     flex: 1.5; /* Give slightly more space */
+     /* border: 1px solid #ccc; ... */ /* Keep inline styles */
+     /* Add specific styles for controls moved inside the shop if needed */
+     /* Add padding inside shop/controls */
+     padding: 15px;
+   }
+    /* Style controls moved into the shop */
+    #life-point-shop #life-points-display p { margin: 3px 0; font-size: 1em; } /* Ensure base font size */
+    #life-point-shop button { margin-top: 5px; font-size: 0.95em; } /* Slightly smaller buttons */
+    /* Standardize titles within the shop */
+    #life-point-shop h3, #life-point-shop h4 {
+        font-size: 1.1em; /* Slightly larger than base */
+        font-weight: bold;
+        margin-bottom: 8px;
+        margin-top: 0; /* Remove default top margin for h4 */
+    }
+
+
+   /* Ensure the lower controls container takes full width */
+   #life-terraforming-controls {
+       margin-top: 20px;
+       width: 100%;
+   }
+   #life-design-controls { /* This now only contains the status table */
+       width: 100%;
+       /* Remove border if not desired around status table */
+       /* border: 1px solid #ccc; */
+       /* border-radius: 5px; */
+       padding: 0;
+   }
+
+  /* Style the modify buttons column */
+   .modify-buttons-cell {
+       text-align: center;
+       white-space: nowrap;
+       vertical-align: middle;
+       width: 160px; /* Set explicit width for the column */
+   }
+   .modify-buttons-cell button {
+       margin: 1px 2px;
+       padding: 2px 5px;
+       min-width: 30px;
+       font-size: 0.9em; /* Match other small buttons */
+   }
+
+  /* #life-design-controls button { ... } */ /* Rule is likely irrelevant now */
   
-  #life-design-controls, #life-point-shop {
-    width: 48%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
+  /* #life-points-display styling moved inside #life-point-shop rule */
+  /* #life-status-messages styling handled by status table container */
+  /* #life-points-display, #life-status-messages { margin-top: 10px; } */
   
-  #life-design-controls button {
-    margin-bottom: 10px;
+  /* Style for the status table */
+  #life-status-table {
+      table-layout: fixed; /* Force fixed column widths */
+      width: 100%; /* Ensure table takes full width of its container */
+      margin-top: 5px; /* Add some space above the table */
   }
-  
-  #life-points-display, #life-status-messages {
-    margin-top: 10px;
+  #life-status-table th, #life-status-table td {
+      padding: 5px; /* Adjust padding for status table */
+      font-size: 0.9em; /* Slightly smaller font */
+      border: 1px solid #ccc; /* Keep borders */
+      text-align: center; /* Center content */
   }
-  
-  #life-status-messages p {
-    margin: 5px 0;
-  }
+   #life-status-table th:first-child, #life-status-table td:first-child {
+       text-align: left; /* Keep first column left-aligned */
+   }
+
+  /* #life-status-messages p { ... } */ /* Rule likely irrelevant now */
   
   .shop-category-container {
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduced margin */
   }
   
   .life-point-shop-btn {
     display: block;
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 2px; /* Reduced margin */
   }
   
   .shop-category-description {
@@ -112,9 +186,21 @@
     color: #555;
     margin-bottom: 5px;
   }
+  .life-point-shop-btn { /* Ensure shop buttons inherit font size correctly */
+      font-size: 0.95em;
+  }
   
   hr {
     border: 0;
     border-top: 1px solid #ccc;
     margin: 10px 0;
+  }
+
+  /* Style for the info tooltip icon */
+  .info-tooltip-icon {
+    font-weight: bold;
+    color: #007bff; /* A distinct blue color */
+    cursor: help; /* Indicate it provides help on hover */
+    margin-left: 4px; /* Add a little space before the icon */
+    font-size: 1.1em; /* Slightly larger than surrounding text */
   }

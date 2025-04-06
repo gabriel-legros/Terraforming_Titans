@@ -665,7 +665,15 @@ progressData = {
         type: "journal",
         narrative: "Chapter 4 : Dark forest",
         objectives: [],
-        reward: [],
+        reward: [
+          // <<< ADD REWARD TO ENABLE THE SPACE TAB >>>
+          {
+              target: 'tab',          // Target the TabManager
+              targetId: 'space-tab',  // The ID of the tab button in index.html
+              type: 'enable'          // Calls the 'enable' method in TabManager
+          }
+          // You can add other rewards here if needed
+      ],
         special : 'clearJournal',
         nextChapter: "chapter4.2"
       }, 

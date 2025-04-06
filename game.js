@@ -79,6 +79,9 @@ function create() {
   milestonesManager = new MilestonesManager();
   createMilestonesUI();
 
+  spaceManager = new SpaceManager(planetParameters);
+  initializeSpaceUI(spaceManager);
+
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
     initializeGameState();
   }
@@ -116,8 +119,13 @@ function initializeGameState() {
 
   milestonesManager = new MilestonesManager();
   storyManager = new StoryManager(progressData);  // Pass the progressData object
+  storyManager.initializeStory();
 
-  storyManager.triggerCurrentChapter();
+  // Regenerate UI elements to bind to new objects
+  createResourceDisplay(resources); // Also need to update resource display
+  createBuildingButtons(buildings);
+  createColonyButtons(colonies);
+  initializeResearchUI(); // Reinitialize research UI as well
 }
 
 function updateLogic(delta) {
@@ -147,6 +155,13 @@ function updateLogic(delta) {
   lifeDesigner.update(delta);
 
   milestonesManager.update(delta);
+
+  // **** Update the Story Manager ****
+  // This will check objectives for active events, process completions,
+  // apply rewards, and check for/activate newly available events.
+  storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
+
+  recalculateTotalRates();
 }
 
 function updateRender() {
@@ -162,14 +177,6 @@ function updateRender() {
 }
 
 function update(time, delta) {
-
-  // Trigger the first chapter of the story, but only once
-  if (!storyStarted) {
-    storyManager.triggerCurrentChapter();  // Trigger the first chapter
-    storyStarted = true;                   // Set flag to ensure it doesn't retrigger
-  } else{
-    storyManager.checkObjectives({ resources});
-  }
 
   updateLogic(delta);   // Update game state
   updateRender();       // Render updated game state

@@ -4,8 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraforming Titans - Mars</title>
+    <!-- Update title maybe? -->
+    <title>Terraforming Titans</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="save.css">
     <link rel="stylesheet" href="structure.css">
@@ -20,26 +22,30 @@
     <link rel="stylesheet" href="life.css">
     <link rel="stylesheet" href="milestones.css">
     <link rel="stylesheet" href="day-night-cycleUI.css">
+    <!-- Add CSS for the new Space tab if needed -->
+    <link rel="stylesheet" href="space.css">
+
+    <!-- Parameter Scripts -->
     <script src="planet-parameters.js"></script>
     <script src="life-parameters.js"></script>
     <script src="buildings-parameters.js"></script>
     <script src="colony-parameters.js"></script>
     <script src="project-parameters.js"></script>
     <script src="research-parameters.js"></script>
+    <script src="progress-data.js"></script>
 
-    <script src="progress-data.js"></script>   
-
+    <!-- Core Scripts -->
     <script src="numbers.js"></script>
     <script src="effectable-entity.js"></script>
     <script src="tab.js"></script>
     <script src="save.js"></script>
     <script src="structuresUI.js"></script>
-    <script src="day-night-cycle.js"></script>    
+    <script src="day-night-cycle.js"></script>
     <script src="ore-scanning.js"></script>
     <script src="resource.js"></script>
     <script src="resourceUI.js"></script>
     <script src="building.js"></script>
-    <script src="buildingUI.js"></script>    
+    <script src="buildingUI.js"></script>
     <script src="colony.js"></script>
     <script src="colonyUI.js"></script>
     <script src="projects.js"></script>
@@ -52,19 +58,21 @@
     <script src="population.js"></script>
     <script src="pop-up.js"></script>
     <script src="journal.js"></script>
-    <script src="progress.js"></script>   
-    <script src="terraforming.js"></script>   
+    <script src="progress.js"></script>
+    <script src="terraforming.js"></script>
     <script src="terraformingUI.js"></script>
-    <script src="life.js"></script>   
+    <script src="life.js"></script>
     <script src="lifeUI.js"></script>
-    <script src="milestones.js"></script>   
+    <script src="milestones.js"></script>
     <script src="milestonesUI.js"></script>
-    <script src="zones.js"></script>   
-    <script src="water-cycle.js"></script>   
-    <script src="dry-ice-cycle.js"></script>   
+    <script src="zones.js"></script>
+    <script src="water-cycle.js"></script>
+    <script src="dry-ice-cycle.js"></script>
     <script src="globals.js"></script>
     <script src="autobuild.js"></script>
     <script src="gold-asteroid.js"></script>
+    <script src="space.js"></script>
+    <script src="spaceUI.js"></script>      <!-- <<< ADD THIS -->
     <script src="warning.js"></script>
     <script src="game.js"></script>
 </head>
@@ -80,17 +88,21 @@
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
     <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming</div>
+    <!-- *** NEW SPACE TAB BUTTON *** -->
+    <div class="tab hidden" id="space-tab" data-tab="space">Space</div>
+    <!-- *************************** -->
     <div class="tab active" id="settings-tab" data-tab="settings">Save and Settings</div>
   </div>
 
   <div class="day-night-progress-bar-container">
     <span id="progress-text" class="progress-text">Day Progress</span>
     <div id="day-night-progress-bar" class="day-night-progress-bar"></div>
-</div>
+  </div>
 
     <!-- Game Content Tabs -->
     <div class="tab-content-wrapper">
 
+      <!-- Resource Bar (always visible) -->
       <div class="resource-wrapper">
         <div id = "special-messages">
           <div id="warning-container"></div>
@@ -100,10 +112,11 @@
         <div class="resource-container" id="resources-container">
             <!-- Resources will be dynamically inserted here -->
         </div>
-    </div>
+      </div>
 
     <!-- Buildings Tab Content -->
     <div id="buildings" class="tab-content">
+        <!-- ... existing buildings content ... -->
         <div class="container hidden" id="building-container">
             <div class="buildings-subtabs">
                 <div id="resource-buildings-tab" class="building-subtab" data-subtab="resource-buildings">Resources</div>
@@ -115,39 +128,37 @@
             <div class="building-subtab-content-wrapper">
                 <div id="resource-buildings" class="building-subtab-content">
                     <h3>Resource Buildings</h3>
-                    <div class="building-list" id="resource-buildings-buttons"></div> <!-- Container for production buildings -->
+                    <div class="building-list" id="resource-buildings-buttons"></div>
                 </div>
                 <div id="production-buildings" class="building-subtab-content">
                     <h3>Production Buildings</h3>
-                    <div class="building-list" id="production-buildings-buttons"></div> <!-- Container for production buildings -->
+                    <div class="building-list" id="production-buildings-buttons"></div>
                 </div>
                 <div id="energy-buildings" class="building-subtab-content">
                     <h3>Energy Buildings</h3>
-                    <div class="building-list" id="energy-buildings-buttons"></div> <!-- Container for energy buildings -->
+                    <div class="building-list" id="energy-buildings-buttons"></div>
                 </div>
                 <div id="storage-buildings" class="building-subtab-content">
                     <h3>Storage Buildings</h3>
-                    <div class="building-list" id="storage-buildings-buttons"></div> <!-- Container for storage buildings -->
+                    <div class="building-list" id="storage-buildings-buttons"></div>
                 </div>
                 <div id="terraforming-buildings" class="building-subtab-content">
                     <h3>Terraforming Buildings</h3>
-                    <div class="building-list" id="terraforming-buildings-buttons"></div> <!-- Container for storage buildings -->
+                    <div class="building-list" id="terraforming-buildings-buttons"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Special Projects Tab Content -->
     <div id="special-projects" class="tab-content">
+        <!-- ... existing special projects content ... -->
         <div class="container special-projects-container">
           <h2>Special Projects</h2>
-      
-          <!-- Subtabs for Resources and Infrastructure projects -->
           <div class="projects-subtabs">
             <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects">Resources</div>
             <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects">Infrastructure</div>
           </div>
-      
-          <!-- Subtab content wrapper for Resources and Infrastructure -->
           <div class="projects-subtab-content-wrapper">
             <div id="resources-projects" class="projects-subtab-content active">
               <div class="projects-list" id="resources-projects-list"></div>
@@ -159,8 +170,10 @@
         </div>
       </div>
 
-        <div id="colonies" class="tab-content">
-            <div class="container colonies-container">
+    <!-- Colonies Tab Content -->
+    <div id="colonies" class="tab-content">
+        <!-- ... existing colonies content ... -->
+         <div class="container colonies-container">
               <div class="header-container">
                 <h2>Colonies</h2>
                 <div id="unhide-obsolete-container" style="display: none;">
@@ -169,11 +182,12 @@
               </div>
               <div class="building-list" id="colony-buildings-buttons"></div>
             </div>
-          </div>
+    </div>
 
     <!-- Research Tab Content -->
     <div id="research" class="tab-content">
-        <div class="container">
+        <!-- ... existing research content ... -->
+         <div class="container">
             <div class="research-subtabs">
                 <div class="research-subtab active" data-subtab="energy-research">Energy</div>
                 <div class="research-subtab" data-subtab="industry-research">Industry</div>
@@ -186,35 +200,37 @@
                     <span class="research-title">Energy Research</span>
                     <button class="toggle-completed-button">Toggle Completed</button>
                   </div>
-                  <div class="research-list" id="energy-research-buttons"></div> <!-- Container for energy research projects -->
+                  <div class="research-list" id="energy-research-buttons"></div>
                 </div>
                 <div id="industry-research" class="research-subtab-content">
                   <div class="research-header">
                     <span class="research-title">Industry Research</span>
                     <button class="toggle-completed-button">Toggle Completed</button>
                   </div>
-                  <div class="research-list" id="industry-research-buttons"></div> <!-- Container for industry research projects -->
+                  <div class="research-list" id="industry-research-buttons"></div>
                 </div>
                 <div id="colonization-research" class="research-subtab-content">
                   <div class="research-header">
                     <span class="research-title">Colonization Research</span>
                     <button class="toggle-completed-button">Toggle Completed</button>
                   </div>
-                  <div class="research-list" id="colonization-research-buttons"></div> <!-- Container for colonization research projects -->
+                  <div class="research-list" id="colonization-research-buttons"></div>
                 </div>
                 <div id="terraforming-research" class="research-subtab-content">
                   <div class="research-header">
                     <span class="research-title">Terraforming Research</span>
                     <button class="toggle-completed-button">Toggle Completed</button>
                   </div>
-                  <div class="research-list" id="terraforming-research-buttons"></div> <!-- Container for terraforming research projects -->
+                  <div class="research-list" id="terraforming-research-buttons"></div>
                 </div>
               </div>
         </div>
     </div>
 
+    <!-- Terraforming Tab Content -->
     <div id="terraforming" class="tab-content">
-      <div class="container">
+      <!-- ... existing terraforming content ... -->
+       <div class="container">
         <div class="terraforming-subtabs">
           <div class="terraforming-subtab active" data-subtab="summary-terraforming">Summary</div>
           <div class="terraforming-subtab" data-subtab="life-terraforming">Life</div>
@@ -223,21 +239,42 @@
       <div class="terraforming-subtab-content-wrapper">
           <div id = "summary-terraforming" class="terraforming-subtab-content active">
               <h2>Terraforming</h2>
+               <!-- Terraforming UI goes here -->
           </div>
           <div id = "life-terraforming" class="terraforming-subtab-content">
             <h2>Life</h2>
-        </div>
-        <div id = "milestone-terraforming" class="terraforming-subtab-content">
-          <h2>Milestones</h2>
-      </div>
+             <!-- Life UI goes here -->
+          </div>
+          <div id = "milestone-terraforming" class="terraforming-subtab-content">
+            <h2>Milestones</h2>
+             <!-- Milestones UI goes here -->
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- *** NEW SPACE TAB CONTENT *** -->
+    <div id="space" class="tab-content">
+        <div class="container space-container"> <!-- Add specific class if needed -->
+            <h2>Planet Selection</h2>
+            <div id="planet-selection-options">
+                <!-- Planet options will be added dynamically here later -->
+                <p>Select your next destination...</p>
+            </div>
+            <div id="travel-status">
+                <!-- Status messages about travel preparation/progress -->
+            </div>
+        </div>
+    </div>
+    <!-- *************************** -->
+
+    <!-- Settings Tab Content -->
     <div id="settings" class="tab-content active">
-      <div class="container settings-container">
+      <!-- ... existing settings content ... -->
+       <div class="container settings-container">
           <h2>Save</h2>
           <div class="save-slots">
+              <!-- ... table ... -->
               <table>
                   <thead>
                       <tr>
@@ -270,7 +307,8 @@
                             <button class="delete-button" data-slot="slot1">Delete</button>
                         </td>
                     </tr>
-                      <tr>
+                    <!-- ... other slots ... -->
+                     <tr>
                           <td>Slot 2</td>
                           <td id="slot2-date">Empty</td>
                           <td>
@@ -318,9 +356,9 @@
               </table>
           </div>
       </div>
-  </div>
+    </div>
 
-    <!-- Journal Section (New) -->
+    <!-- Journal Section -->
     <div id="journal" class="journal">
         <h3>Journal</h3>
         <div id="journal-entries">
@@ -328,35 +366,77 @@
         </div>
     </div>
 
-    </div>
+    </div> <!-- End tab-content-wrapper -->
 
-</div>
+</div> <!-- End game-container -->
 
     <script>
-    // Function to handle tab switching
+    // Consolidated Tab Switching Logic
+    function activateTab(tabId) {
+        // Deactivate all tabs and content
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+        // Activate the selected tab button and content
+        const tabButton = document.querySelector(`.tab[data-tab="${tabId}"]`);
+        const tabContent = document.getElementById(tabId);
+
+        if (tabButton && !tabButton.classList.contains('hidden')) { // Only activate if not hidden
+            tabButton.classList.add('active');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            } else {
+                console.error(`Tab content with id "${tabId}" not found.`);
+            }
+        } else if (!tabButton) {
+             console.error(`Tab button with data-tab="${tabId}" not found.`);
+        } else {
+            console.log(`Tab ${tabId} is hidden, cannot activate.`);
+             // Optionally, activate a default tab like 'settings' if the target is hidden
+             activateTab('settings');
+        }
+    }
+
+    // Add event listeners to all tab buttons
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function () {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-
-            this.classList.add('active');
-            document.getElementById(this.dataset.tab).classList.add('active');
+            // Check if the tab is hidden before trying to activate
+             if (!this.classList.contains('hidden')) {
+                  activateTab(this.dataset.tab);
+             } else {
+                 console.log(`Tab ${this.dataset.tab} is hidden and cannot be clicked.`);
+             }
         });
     });
 
-    //Event listener for "New Game" button
-    document.getElementById('new-game-button').addEventListener('click', initializeGameState);
 
-        // Event listener for the "Save to File" button
-    document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);
-
-    // Event listener for the "Load from File" button
-    document.getElementById('load-from-file-button').addEventListener('click', function() {
-    document.getElementById('load-from-file-input').click();
+    // Event listener for "New Game" button
+    document.getElementById('new-game-button').addEventListener('click', () => {
+        // Add a confirmation dialog
+        if (confirm("Are you sure you want to start a new game? Any unsaved progress will be lost.")) {
+            initializeGameState(); // Call your existing function
+             activateTab('settings'); // Switch back to settings tab after reset
+        }
     });
 
-    // Event listener for the file input change event
+    // Event listener for the "Save to File" button
+    document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);
+
+    // Event listener for the "Load from File" button trigger
+    document.getElementById('load-from-file-button').addEventListener('click', function() {
+        document.getElementById('load-from-file-input').click();
+    });
+
+    // Event listener for the actual file input change
     document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
+
+     // Ensure the initially active tab content is displayed on load
+     // (The 'settings' tab has 'active' class in HTML, so this might be redundant
+     // unless dynamically changing the default)
+     // document.addEventListener('DOMContentLoaded', () => {
+     //    activateTab('settings'); // Or whichever tab should be active first
+     // });
+
     </script>
 </body>
 

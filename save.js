@@ -14,7 +14,8 @@ function getGameState() {
     journalEntries: journalEntriesData,
     goldenAsteroid: goldenAsteroid.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
-    milestonesManager: milestonesManager.saveState()
+    milestonesManager: milestonesManager.saveState(),
+    spaceState: spaceManager.saveState()
   };
 }
 
@@ -138,6 +139,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.milestonesManager){
       milestonesManager.loadState(gameState.milestonesManager);
+    }
+
+    if(gameState.spaceManager){
+      spaceManager.loadState(gameState.spaceManager);
     }
 
     tabManager.activateTab('buildings');

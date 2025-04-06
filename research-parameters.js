@@ -460,6 +460,24 @@ const researchParameters = {
             type: 'workerMultiplier',
             value: 0.75
           },
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+          {
+            target: 'building',
+            targetId: 'oxygenFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
+          {
+            target: 'building',
+            targetId: 'bioFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          }
         ],
       },  
     ],
@@ -775,6 +793,20 @@ const researchParameters = {
             targetId: 'dustFactory',
             type: 'productionMultiplier',
             value: 4,
+          },
+        ],
+      },
+      {
+        id: 'water_electrolysis',
+        name: 'Water Electrolysis',
+        description: 'Unlocks a factory to produce oxygen from water.  Very energy intensive.',
+        cost: { research: 100000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'oxygenFactory',
+            type: 'enable'
           },
         ],
       },
