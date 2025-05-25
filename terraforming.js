@@ -8,6 +8,8 @@ const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 
 const EQUILIBRIUM_WATER_PARAMETER = 2.405039964909942;
 const EQUILIBRIUM_CO2_PARAMETER = 6.195957222841782e-8;
+// Controls how much global temperature influences zone saturation
+const MIX_FACTOR = 0.2;
 
 const terraformingGasTargets = {
   carbonDioxide : {min : 0, max : 100},
@@ -28,6 +30,8 @@ class Terraforming extends EffectableEntity{
     this.initialValuesCalculated = false;
     this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
     this.equilibriumCondensationParameter = EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
+    // Default mix factor controlling how much global conditions influence zonal precipitation
+    this.precipitationMixFactor = MIX_FACTOR;
 
     this.completed = false;
     // Add properties to store total rates for UI display
@@ -355,18 +359,23 @@ class Terraforming extends EffectableEntity{
       let potentialRainRateFactor = 0; // tons/s if multiplier=1
       let potentialSnowRateFactor = 0; // tons/s if multiplier=1
 
-      // Calculate average zone temperature
-      const avgZoneTemp = (dayTemperature + nightTemperature) / 2;
+        // Calculate average zone temperature
+        const avgZoneTemp = (dayTemperature + nightTemperature) / 2;
+
+        // Determine effective saturation pressure mixing zonal and global temperatures
+        const zoneSat = saturationVaporPressureBuck(avgZoneTemp);
+        const globalSat = saturationVaporPressureBuck(this.temperature.value);
+        const mixFactor = this.precipitationMixFactor ?? MIX_FACTOR;
+        const effectiveSat = zoneSat * (1 - mixFactor) + globalSat * mixFactor;
 
       // Function to calculate potential rate factor for a given temperature
       const calculatePotential = (temp) => {
           let rainFactor = 0;
           let snowFactor = 0;
-          if (zoneArea > 0 && typeof temp === 'number') {
-              const saturationPressure = saturationVaporPressureBuck(this.temperature.value);
+            if (zoneArea > 0 && typeof temp === 'number') {
 
-              if (waterVaporPressure > saturationPressure) { // Only proceed if there's some effective pressure
-                  const excessPressure = waterVaporPressure - saturationPressure;
+                if (waterVaporPressure > effectiveSat) { // Only proceed if there's some effective pressure
+                    const excessPressure = waterVaporPressure - effectiveSat;
                   const excessMassKg = (excessPressure * zoneArea) / gravity;
                   const excessMassTons = excessMassKg / 1000;
                   const potentialRate = excessMassTons / 86400; // Base rate factor (tons/s if multiplier=1), using 86400s duration
