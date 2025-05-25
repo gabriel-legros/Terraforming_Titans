@@ -340,7 +340,7 @@ const projectParameters = {
     attributes: {
       spaceExport : true,
       costPerShip : {colony : {metal : 100000, energy : 1000000}},
-      disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas']},
+      disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas']},
       disposalAmount : 1000000
     }
   }
