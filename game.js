@@ -172,7 +172,7 @@ function updateRender() {
   renderProjects();                  // Render project information (handled in projects.js)
   updateResearchUI();
   updateTerraformingUI();
-  updateColonistWarning();
+  updateWarnings();
   updateMilestonesUI();
 }
 
