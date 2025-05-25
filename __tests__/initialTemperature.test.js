@@ -2,7 +2,6 @@ const { getPlanetParameters } = require('../planet-parameters.js');
 const { getZoneRatio, getZonePercentage } = require('../zones.js');
 const EffectableEntity = require('../effectable-entity.js');
 const lifeParameters = require('../life-parameters.js');
-const Terraforming = require('../terraforming.js');
 const physics = require('../physics.js');
 
 // Expose globals expected by terraforming module
@@ -10,6 +9,13 @@ global.getZoneRatio = getZoneRatio;
 global.getZonePercentage = getZonePercentage;
 global.EffectableEntity = EffectableEntity;
 global.lifeParameters = lifeParameters;
+global.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
+global.calculateEmissivity = physics.calculateEmissivity;
+global.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
+global.effectiveTemp = physics.effectiveTemp;
+global.surfaceAlbedoMix = physics.surfaceAlbedoMix;
+
+const Terraforming = require('../terraforming.js');
 
 function createResources(config) {
   const res = {};
