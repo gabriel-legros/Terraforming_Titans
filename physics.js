@@ -156,7 +156,7 @@ function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
 }
 
 function dayNightTemperaturesModel({
-  rockAlbedo,
+  groundAlbedo,
   flux,
   rotationPeriodH,
   surfacePressureBar,
@@ -169,7 +169,7 @@ function dayNightTemperaturesModel({
   if (slabHeatCapacity === null) {
     slabHeatCapacity = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, gSurface);
   }
-  const aSurf = surfaceAlbedoMix(rockAlbedo, surfaceFractions, surfaceAlbedos);
+  const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
   const cf = cloudFraction(surfacePressureBar);
   const aCloud = 0.55 + 0.20 * Math.tanh(surfacePressureBar / 5.0);
   const A = (1 - cf) * aSurf + cf * aCloud;

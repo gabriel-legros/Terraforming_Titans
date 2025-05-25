@@ -897,7 +897,7 @@ class Terraforming extends EffectableEntity{
     }
 
     updateSurfaceTemperature() {
-      const rockAlbedo = this.celestialParameters.albedo;
+      const groundAlbedo = this.luminosity.albedo;
       const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
       const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
       const gSurface = this.celestialParameters.gravity;
@@ -934,7 +934,7 @@ class Terraforming extends EffectableEntity{
       };
 
       const baseParams = {
-        rockAlbedo: rockAlbedo,
+        groundAlbedo: groundAlbedo,
         flux: modifiedSolarFlux,
         rotationPeriodH: rotationPeriod,
         surfacePressureBar: surfacePressureBar,
@@ -945,7 +945,7 @@ class Terraforming extends EffectableEntity{
 
       const globalTemps = dayNightTemperaturesModel(baseParams);
       this.temperature.value = globalTemps.mean;
-      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(rockAlbedo, surfaceFractions), modifiedSolarFlux);
+      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
 
       for (const zone in this.temperature.zones) {
         const zoneFlux = modifiedSolarFlux * (getZoneRatio(zone) / 0.25);
