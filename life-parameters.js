@@ -21,3 +21,6 @@ const lifeParameters = {
         growthRate : 0.0012
     }
 }
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = lifeParameters;
+}
