@@ -231,3 +231,6 @@ function addEffect(effect) {
 function removeEffect(effect) {
   addOrRemoveEffect(effect, 'removeEffect');
 }
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = EffectableEntity;
+}

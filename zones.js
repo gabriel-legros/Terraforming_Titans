@@ -80,3 +80,6 @@ function sphericalSegmentArea(phi1, phi2) {
           return 0; // Return 0 instead of throwing error
     }
   }
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { getZoneRatio, getZonePercentage };
+}

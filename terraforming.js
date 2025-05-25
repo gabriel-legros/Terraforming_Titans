@@ -1401,3 +1401,7 @@ synchronizeGlobalResources() {
   // Removed redundant calculateGasPressure helper function.
 
 
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = Terraforming;
+}

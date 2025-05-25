@@ -171,3 +171,6 @@ const planetParameters = {
 
 // If the codebase evolves to use the getPlanetParameters function directly,
 // the export could be changed to: export { getPlanetParameters, defaultPlanetParameters };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters };
+}
