@@ -5,3 +5,5 @@ Players start on Mars and will (eventually) be able to terraform other planet.  
 Terraforming.js deals with the weather model.  Base planet parameters can be found in planet-parameters.js.  From there temperature is also calculated in physics.js. 
 
 Each planet is broken up into three zones (see zones.js), which have their own temperatures and surface conditions (mostly ocean/ice).
+
+Run tests with npm test
