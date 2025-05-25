@@ -36,3 +36,10 @@ function formatNumber(value, integer = false, precision = 1) {
     // Convert the number to a string and use regex to add commas
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      formatNumber,
+      formatBigInteger,
+    };
+  }
