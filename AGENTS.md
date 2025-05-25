@@ -1,3 +1,7 @@
+#Instructions
+Use npm install <package-name> to install any npm package
+
+#Overview of code
 This project is a game about terraforming.
 
 Players start on Mars and will (eventually) be able to terraform other planet.  The game is played from index.html, which generates the UI.  The main game loop runs in game.js
@@ -6,4 +10,5 @@ Terraforming.js deals with the weather model.  Base planet parameters can be fou
 
 Each planet is broken up into three zones (see zones.js), which have their own temperatures and surface conditions (mostly ocean/ice).
 
+#Testing
 Run tests with npm test
