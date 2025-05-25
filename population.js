@@ -72,10 +72,18 @@ class PopulationModule extends EffectableEntity {
       // Apply the population change and update production/consumption rates
       if (populationChange > 0) {
         this.populationResource.increase(populationChange);
-        this.populationResource.modifyRate(populationChange * (1000 / deltaTime), 'Growth');
+          this.populationResource.modifyRate(
+            populationChange * (1000 / deltaTime),
+            'Growth',
+            'population'
+          );
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
-        this.populationResource.modifyRate(populationChange * (1000 / deltaTime), 'Decay');
+          this.populationResource.modifyRate(
+            populationChange * (1000 / deltaTime),
+            'Decay',
+            'population'
+          );
       }
 
       if(currentPopulation < 1)

@@ -127,7 +127,11 @@ class Colony extends Building {
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - scaledConsumption;
   
         // Update consumption rate for the resource
-        resources[category][resource].modifyRate(- (scaledConsumption * (1000 / deltaTime)), this.displayName);
+        resources[category][resource].modifyRate(
+          - (scaledConsumption * (1000 / deltaTime)),
+          this.displayName,
+          'building'
+        );
       }
     }
   }
