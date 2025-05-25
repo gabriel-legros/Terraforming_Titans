@@ -21,23 +21,10 @@ const R_AIR = 287;
     return pressure;
 }
 
-function calculateEmissivity(radius, inertMass, co2WaterMass, greenhouseGasMass){
-  const absorptionCoefficient = 0.0013; // Mean infrared absorption coefficient (m²/kg)
-  const inertFactor = 0.1;
-  const ghgFactor = 23500;
-
-  // Calculate the planet's surface area (A)
-  const surfaceArea = 4 * Math.PI * Math.pow(radius, 2); // m²
-
-  // Calculate the column mass of greenhouse gases (m)
-  const inertColumnMass = inertMass / surfaceArea;
-  const co2WaterColumnMass = co2WaterMass / surfaceArea;
-  const ghgColumnMass = greenhouseGasMass / surfaceArea; // kg/m²
-
-  // Calculate the atmospheric emissivity (epsilon)
-  const emissivity = 1 - Math.exp(-absorptionCoefficient*(co2WaterColumnMass + ghgFactor*ghgColumnMass + inertFactor*inertColumnMass));
-
-  return emissivity;
+// Calculate atmospheric emissivity directly from optical depth
+function calculateEmissivity(composition, surfacePressureBar){
+  const tau = opticalDepth(composition, surfacePressureBar);
+  return 1 - Math.exp(-tau);
 }
 
 function calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio){
@@ -87,7 +74,8 @@ function calculateDayNightTemperatureVariation(temperature, columnMass){
 // Improved weather model derived from planet_temp_model.py
 // ───────────────────────────────────────────────────────────
 const SIGMA = 5.670374419e-8;
-const GAMMA = { h2o: 90.0, co2: 10.0, ch4: 150.0 };
+// Include Safe GHG (modeled after SF6) with a very high optical depth factor
+const GAMMA = { h2o: 90.0, co2: 10.0, ch4: 150.0, greenhousegas: 23500.0 };
 const ALPHA = 1.0;
 const BETA = 0.6;
 

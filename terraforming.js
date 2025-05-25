@@ -901,9 +901,8 @@ class Terraforming extends EffectableEntity{
       const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
       const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
       const gSurface = this.celestialParameters.gravity;
-      const radiusInMeters = this.celestialParameters.radius * 1000;
 
-      let co2Mass = 0, h2oMass = 0, ch4Mass = 0, inertMass = 0, totalMass = 0;
+      let co2Mass = 0, h2oMass = 0, ch4Mass = 0, safeGHGMass = 0, inertMass = 0, totalMass = 0;
 
       for (const gas in resources.atmospheric) {
         const amountTons = resources.atmospheric[gas].value || 0;
@@ -911,12 +910,10 @@ class Terraforming extends EffectableEntity{
         if (gas === 'carbonDioxide') co2Mass += kg;
         else if (gas === 'atmosphericWater') h2oMass += kg;
         else if (gas === 'methane') ch4Mass += kg;
+        else if (gas === 'greenhouseGas') safeGHGMass += kg;
         else inertMass += kg;
       }
-      totalMass = co2Mass + h2oMass + ch4Mass + inertMass;
-
-      const emissivity = calculateEmissivity(radiusInMeters, inertMass, co2Mass + h2oMass, ch4Mass);
-      this.temperature.emissivity = emissivity;
+      totalMass = co2Mass + h2oMass + ch4Mass + safeGHGMass + inertMass;
 
       const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
       const surfacePressureBar = surfacePressurePa / 100000;
@@ -926,7 +923,11 @@ class Terraforming extends EffectableEntity{
         if (co2Mass > 0) composition.co2 = co2Mass / totalMass;
         if (h2oMass > 0) composition.h2o = h2oMass / totalMass;
         if (ch4Mass > 0) composition.ch4 = ch4Mass / totalMass;
+        if (safeGHGMass > 0) composition.greenhouseGas = safeGHGMass / totalMass;
       }
+
+      const emissivity = calculateEmissivity(composition, surfacePressureBar);
+      this.temperature.emissivity = emissivity;
 
       const surfaceFractions = {
         ocean: this._calculateAverageCoverage('liquidWater'),
