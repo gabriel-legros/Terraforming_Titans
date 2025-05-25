@@ -477,20 +477,32 @@ class Project extends EffectableEntity {
       const totalCost = this.calculateSpaceshipTotalCost();
       for (const category in totalCost) {
         for (const resource in totalCost[category]){
-          resources[category][resource].modifyRate(- 1000*totalCost[category][resource] / this.getEffectiveDuration(), 'Spaceship Cost') / this.getEffectiveDuration();
+          resources[category][resource].modifyRate(
+            -1000 * totalCost[category][resource] / this.getEffectiveDuration(),
+            'Spaceship Cost',
+            'project'
+          );
         }
       }
 
       const totalDisposal = this.calculateSpaceshipTotalDisposal();
       for (const category in totalDisposal) {
         for (const resource in totalDisposal[category]){
-          resources[category][resource].modifyRate(- 1000*totalDisposal[category][resource] / this.getEffectiveDuration(), 'Spaceship Export');
+          resources[category][resource].modifyRate(
+            -1000 * totalDisposal[category][resource] / this.getEffectiveDuration(),
+            'Spaceship Export',
+            'project'
+          );
         }
       }
 
       const totalGain = this.pendingResourceGains;
       totalGain.forEach((gain) => {
-            resources[gain.category][gain.resource].modifyRate(gain.quantity, this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export') / this.getEffectiveDuration();
+            resources[gain.category][gain.resource].modifyRate(
+              gain.quantity,
+              this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export',
+              'project'
+            );
         });
       }
 
@@ -498,12 +510,20 @@ class Project extends EffectableEntity {
         const totalGain = this.pendingResourceGains;
         if(totalGain){
         totalGain.forEach((gain) => {
-              resources[gain.category][gain.resource].modifyRate(1000*gain.quantity / this.getEffectiveDuration(), 'Cargo Rockets');
+              resources[gain.category][gain.resource].modifyRate(
+                1000 * gain.quantity / this.getEffectiveDuration(),
+                'Cargo Rockets',
+                'project'
+              );
           });
         }
 
         const fundingCost = 1000*this.getResourceChoiceGainCost() / this.getEffectiveDuration();
-        resources.colony.funding.modifyRate(-fundingCost, 'Cargo Rockets');
+        resources.colony.funding.modifyRate(
+          -fundingCost,
+          'Cargo Rockets',
+          'project'
+        );
         }
     }
   }
