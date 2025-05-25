@@ -194,7 +194,7 @@ const researchParameters = {
       {
         id: 'ore_scanning',
         name: 'Ore Scanning Satellite',
-        description: 'Enables a project at launch satellites for scanning the surface for new ore veins.',
+        description: 'Enables a project to launch satellites for scanning the surface for new ore veins.',
         cost: { research: 500 },
         prerequisites: [],
         effects: [
