@@ -69,6 +69,7 @@ class Terraforming extends EffectableEntity{
       targetMax: 293.15,
       effectiveTempNoAtmosphere: 0,
       emissivity: 0,
+      opticalDepth: 0,
       unlocked: false,
       zones: {
         tropical: {
@@ -923,6 +924,8 @@ class Terraforming extends EffectableEntity{
 
       const emissivity = calculateEmissivity(composition, surfacePressureBar);
       this.temperature.emissivity = emissivity;
+      const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
+      this.temperature.opticalDepth = tau;
 
       const surfaceFractions = {
         ocean: this._calculateAverageCoverage('liquidWater'),
@@ -1355,6 +1358,7 @@ synchronizeGlobalResources() {
           this.temperature.value = terraformingState.temperature.value || 0;
           this.temperature.emissivity = terraformingState.temperature.emissivity || 0;
           this.temperature.effectiveTempNoAtmosphere = terraformingState.temperature.effectiveTempNoAtmosphere || 0;
+          this.temperature.opticalDepth = terraformingState.temperature.opticalDepth || 0;
           this.temperature.unlocked = terraformingState.temperature.unlocked || false;
           if (terraformingState.temperature.zones) {
               for (const zone of ['tropical', 'temperate', 'polar']) {
