@@ -174,3 +174,22 @@
   margin: 0;
   padding: 0;
 }
+
+/* Table layout for space mining/export projects */
+.space-projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.space-projects-table th,
+.space-projects-table td {
+  border: 1px solid #ccc;
+  padding: 4px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.space-projects-table th {
+  background-color: #f5f5f5;
+}

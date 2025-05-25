@@ -22,13 +22,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Table body for space mining and export projects
+let spaceProjectsTableBody = null;
+
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
+
+  // Create table for space projects if needed
+  if (!spaceProjectsTableBody) {
+    const spaceProjects = projectsArray.filter(p => p.attributes.spaceMining || p.attributes.spaceExport);
+    if (spaceProjects.length > 0) {
+      createSpaceProjectsTable();
+    }
+  }
 
   // Create all project items initially
   projectsArray.forEach(project => {
     if (!projectElements[project.name]) {
-      createProjectItem(project);
+      if (project.attributes.spaceMining || project.attributes.spaceExport) {
+        createSpaceProjectRow(project);
+      } else {
+        createProjectItem(project);
+      }
     }
   });
 
@@ -36,6 +51,106 @@ function renderProjects() {
   projectsArray.forEach(project => {
     updateProjectUI(project.name);
   });
+}
+
+function createSpaceProjectsTable() {
+  const container = document.getElementById('resources-projects-list');
+  const table = document.createElement('table');
+  table.classList.add('space-projects-table');
+
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr><th>Project</th><th>Spaceships</th><th>Cost</th><th>Gain/Export</th><th>Controls</th></tr>`;
+  table.appendChild(thead);
+
+  spaceProjectsTableBody = document.createElement('tbody');
+  table.appendChild(spaceProjectsTableBody);
+
+  container.appendChild(table);
+}
+
+function createSpaceProjectRow(project) {
+  const row = document.createElement('tr');
+  row.classList.add('space-project-row');
+
+  projectElements[project.name] = projectElements[project.name] || {};
+
+  const nameCell = document.createElement('td');
+  const nameElement = document.createElement('strong');
+  nameElement.textContent = project.displayName;
+  const desc = document.createElement('div');
+  desc.classList.add('project-description');
+  desc.textContent = project.description;
+  nameCell.appendChild(nameElement);
+  nameCell.appendChild(desc);
+  row.appendChild(nameCell);
+
+  const shipCell = document.createElement('td');
+  if (project.attributes.spaceMining || project.attributes.spaceExport) {
+    createSpaceshipAssignmentUI(project, shipCell);
+  }
+  row.appendChild(shipCell);
+
+  const costCell = document.createElement('td');
+  if (project.attributes.costPerShip) {
+    createCostPerShipAndTotalCostUI(project, costCell);
+  }
+  row.appendChild(costCell);
+
+  const gainCell = document.createElement('td');
+  if (project.attributes.spaceExport) {
+    createResourceDisposalUI(project, gainCell);
+  }
+  if (project.attributes.resourceGainPerShip) {
+    createResourceGainPerShipAndTotalGainUI(project, gainCell);
+  }
+  row.appendChild(gainCell);
+
+  const controlCell = document.createElement('td');
+  const progressButton = document.createElement('button');
+  progressButton.classList.add('progress-button');
+  progressButton.style.width = '100%';
+  progressButton.textContent = `Start ${project.displayName}`;
+  controlCell.appendChild(progressButton);
+
+  const checkboxRowContainer = document.createElement('div');
+  checkboxRowContainer.classList.add('checkbox-row-container');
+
+  const autoStartCheckboxContainer = document.createElement('div');
+  autoStartCheckboxContainer.classList.add('checkbox-container');
+  const autoStartCheckbox = document.createElement('input');
+  autoStartCheckbox.type = 'checkbox';
+  autoStartCheckbox.checked = project.autoStart || false;
+  autoStartCheckbox.id = `${project.name}-auto-start`;
+  autoStartCheckbox.classList.add('auto-start-checkbox');
+  autoStartCheckbox.addEventListener('change', (e) => { project.autoStart = e.target.checked; });
+  const autoStartLabel = document.createElement('label');
+  autoStartLabel.htmlFor = `${project.name}-auto-start`;
+  autoStartLabel.textContent = 'Auto start';
+  autoStartCheckboxContainer.appendChild(autoStartCheckbox);
+  autoStartCheckboxContainer.appendChild(autoStartLabel);
+  checkboxRowContainer.appendChild(autoStartCheckboxContainer);
+
+  if (project.attributes.spaceMining || project.attributes.spaceExport) {
+    createAutoAssignSpaceshipsCheckbox(project, checkboxRowContainer);
+  }
+
+  controlCell.appendChild(checkboxRowContainer);
+  row.appendChild(controlCell);
+
+  projectElements[project.name] = {
+    ...projectElements[project.name],
+    progressButton,
+    autoStartCheckbox,
+    autoStartCheckboxContainer,
+    checkboxRowContainer,
+    projectItem: row
+  };
+
+  progressButton.addEventListener('click', function () {
+    startProjectWithSelectedResources(project);
+  });
+
+  spaceProjectsTableBody.appendChild(row);
 }
 
 function createProjectItem(project) {
@@ -398,7 +513,11 @@ function updateProjectUI(projectName) {
   const projectItem = elements.projectItem;
   if (projectItem) {
     if (project.unlocked) {
-      projectItem.style.display = 'block';
+      if (projectItem.tagName === 'TR') {
+        projectItem.style.display = 'table-row';
+      } else {
+        projectItem.style.display = 'block';
+      }
     } else {
       projectItem.style.display = 'none';
     }
