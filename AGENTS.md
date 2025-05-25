@@ -1,5 +1,5 @@
 #Instructions
-Use npm install <package-name> to install any npm package
+
 
 #Overview of code
 This project is a game about terraforming.
