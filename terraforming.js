@@ -898,45 +898,62 @@ class Terraforming extends EffectableEntity{
     }
 
     updateSurfaceTemperature() {
-      const albedo = this.luminosity.albedo;
+      const rockAlbedo = this.celestialParameters.albedo;
       const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
-      const radiusInMeters = this.celestialParameters.radius * 1000; // 
+      const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
+      const gSurface = this.celestialParameters.gravity;
+      const radiusInMeters = this.celestialParameters.radius * 1000;
 
-      let co2WaterMass = 0;
-      let greenhouseGasMass = 0;
-      let inertMass = 0;
-      let totalMass = 0;
+      let co2Mass = 0, h2oMass = 0, ch4Mass = 0, inertMass = 0, totalMass = 0;
 
-      // Get gas amounts (in tons) directly from the global resources object
       for (const gas in resources.atmospheric) {
-          const amountTons = resources.atmospheric[gas].value || 0;
-          const amountKg = amountTons * 1000; // Convert tons to kg for emissivity calc
-
-          if (gas === 'carbonDioxide' || gas === 'atmosphericWater') {
-              co2WaterMass += amountKg;
-          } else if (gas === 'greenhouseGas') { // Assuming 'greenhouseGas' is a defined resource key
-              greenhouseGasMass += amountKg;
-          } else {
-              // Assume all other defined atmospheric gases are inert for emissivity
-              inertMass += amountKg;
-          }
+        const amountTons = resources.atmospheric[gas].value || 0;
+        const kg = amountTons * 1000;
+        if (gas === 'carbonDioxide') co2Mass += kg;
+        else if (gas === 'atmosphericWater') h2oMass += kg;
+        else if (gas === 'methane') ch4Mass += kg;
+        else inertMass += kg;
       }
-      totalMass = co2WaterMass + greenhouseGasMass + inertMass;
+      totalMass = co2Mass + h2oMass + ch4Mass + inertMass;
 
-      const emissivity = calculateEmissivity(radiusInMeters, inertMass, co2WaterMass, greenhouseGasMass);
-
+      const emissivity = calculateEmissivity(radiusInMeters, inertMass, co2Mass + h2oMass, ch4Mass);
       this.temperature.emissivity = emissivity;
-      // Calculate global average effective temperature first
-      this.temperature.effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, 0.25); // Global average solar ratio
-      this.temperature.value = calculateEffectiveTemperature(modifiedSolarFlux, albedo, emissivity, 0.25); // Global average solar ratio
 
-      // Calculate zonal temperatures based on global emissivity and zonal solar ratio
-      const totalColumnMass = totalMass / this.celestialParameters.surfaceArea;
+      const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
+      const surfacePressureBar = surfacePressurePa / 100000;
+
+      const composition = {};
+      if (totalMass > 0) {
+        if (co2Mass > 0) composition.co2 = co2Mass / totalMass;
+        if (h2oMass > 0) composition.h2o = h2oMass / totalMass;
+        if (ch4Mass > 0) composition.ch4 = ch4Mass / totalMass;
+      }
+
+      const surfaceFractions = {
+        ocean: this._calculateAverageCoverage('liquidWater'),
+        ice: this._calculateAverageCoverage('ice')
+      };
+
+      const baseParams = {
+        rockAlbedo: rockAlbedo,
+        flux: modifiedSolarFlux,
+        rotationPeriodH: rotationPeriod,
+        surfacePressureBar: surfacePressureBar,
+        composition: composition,
+        surfaceFractions: surfaceFractions,
+        gSurface: gSurface
+      };
+
+      const globalTemps = dayNightTemperaturesModel(baseParams);
+      this.temperature.value = globalTemps.mean;
+      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(rockAlbedo, surfaceFractions), modifiedSolarFlux);
+
       for (const zone in this.temperature.zones) {
-        this.temperature.zones[zone].value = calculateEffectiveTemperature(modifiedSolarFlux, albedo, emissivity, getZoneRatio(zone)); // Use zonal solar ratio
-        const variation = calculateDayNightTemperatureVariation(this.temperature.zones[zone].value, totalColumnMass); // Use total column mass for variation
-        this.temperature.zones[zone].day = this.temperature.zones[zone].value + variation / 2;
-        this.temperature.zones[zone].night = this.temperature.zones[zone].value - variation / 2;
+        const zoneFlux = modifiedSolarFlux * (getZoneRatio(zone) / 0.25);
+        const zoneTemps = dayNightTemperaturesModel({ ...baseParams, flux: zoneFlux });
+        this.temperature.zones[zone].value = zoneTemps.mean;
+        this.temperature.zones[zone].day = zoneTemps.day;
+        this.temperature.zones[zone].night = zoneTemps.night;
       }
     }
 
@@ -1521,4 +1538,104 @@ function calculateDayNightTemperatureVariation(temperature, columnMass){
     return temperature/(0.75 + 0.255*Math.pow(Math.log10(columnMass), 2.91));
   }
 }
+
+// ───────────────────────────────────────────────────────────
+// Improved weather model derived from planet_temp_model.py
+// ───────────────────────────────────────────────────────────
+const SIGMA = 5.670374419e-8;
+const GAMMA = { h2o: 90.0, co2: 10.0, ch4: 150.0 };
+const ALPHA = 1.0;
+const BETA = 0.6;
+
+const DEFAULT_SURFACE_ALBEDO = {
+  ocean: 0.06,
+  ice: 0.65,
+  snow: 0.85,
+  co2_ice: 0.50,
+  hydrocarbon: 0.10
+};
+
+function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, g = 9.81, kappaSoil = 7e-7, rhoCSoil = 1.4e6) {
+  const f = surfaceFractions || {};
+  const fOcean = f.ocean || 0.0;
+  const fIce = f.ice || 0.0;
+  const fOther = 1.0 - fOcean - fIce;
+
+  const hSoil = Math.sqrt(kappaSoil * rotationPeriodH * 3600 / Math.PI);
+  const CSoil = rhoCSoil * hSoil;
+  const COcean = 4.2e6 * 50.0;
+  const CIce = 1.9e6 * 0.05;
+
+  const cpAir = 850.0;
+  const CAtm = cpAir * (surfacePressureBar * 1e5) / g;
+
+  return fOther * CSoil + fOcean * COcean + fIce * CIce + CAtm;
+}
+
+function effectiveTemp(albedo, flux) {
+  return Math.pow((1 - albedo) * flux / (4 * SIGMA), 0.25);
+}
+
+function opticalDepth(comp, pBar) {
+  let tau = 0;
+  for (const gas in comp) {
+    const x = comp[gas];
+    const g = gas.toLowerCase();
+    tau += (GAMMA[g] || 0) * Math.pow(x, ALPHA) * Math.pow(pBar, BETA);
+  }
+  return tau;
+}
+
+function cloudFraction(pBar) {
+  const cf = 1.0 - Math.exp(-pBar / 3.0);
+  return Math.min(cf, 0.99);
+}
+
+function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
+  if (!fractions) return rockAlb;
+  const albs = { ...DEFAULT_SURFACE_ALBEDO };
+  if (customAlb) Object.assign(albs, customAlb);
+  const rockFrac = 1.0 - Object.values(fractions).reduce((a, b) => a + b, 0);
+  if (rockFrac < 0) return rockAlb;
+  let a = rockFrac * rockAlb;
+  for (const k in fractions) {
+    a += fractions[k] * (albs[k] !== undefined ? albs[k] : rockAlb);
+  }
+  return a;
+}
+
+function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
+  const omega = 2.0 * Math.PI / (Math.abs(rotH) * 3600.0);
+  const num = (1 - albedo) * flux / 2.0;
+  const den = Math.sqrt(heatCap * omega * 4.0 * SIGMA * Math.pow(T, 3));
+  return num / den;
+}
+
+function dayNightTemperaturesModel({
+  rockAlbedo,
+  flux,
+  rotationPeriodH,
+  surfacePressureBar,
+  composition = {},
+  slabHeatCapacity = null,
+  surfaceFractions = null,
+  surfaceAlbedos = null,
+  gSurface = 9.81
+}) {
+  if (slabHeatCapacity === null) {
+    slabHeatCapacity = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, gSurface);
+  }
+  const aSurf = surfaceAlbedoMix(rockAlbedo, surfaceFractions, surfaceAlbedos);
+  const cf = cloudFraction(surfacePressureBar);
+  const aCloud = 0.55 + 0.20 * Math.tanh(surfacePressureBar / 5.0);
+  const A = (1 - cf) * aSurf + cf * aCloud;
+
+  const TEff = effectiveTemp(A, flux);
+  const tau = opticalDepth(composition, surfacePressureBar);
+  const TSurf = TEff * Math.pow(1 + 0.75 * tau, 0.25);
+
+  const dT = diurnalAmplitude(A, flux, TSurf, slabHeatCapacity, rotationPeriodH);
+  return { day: TSurf + 0.5 * dT, night: TSurf - 0.5 * dT, mean: TSurf };
+}
+
 

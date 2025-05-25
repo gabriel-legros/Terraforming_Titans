@@ -83,6 +83,7 @@ const defaultPlanetParameters = {
     gravity: 3.711, // Default (Mars)
     radius: 3389.5, // Default (Mars)
     albedo: 0.25, // Default (Mars)
+    rotationPeriod: 24.6, // hours, Default (Mars)
   }
 };
 
@@ -129,6 +130,7 @@ const titanOverrides = {
     gravity: 1.35,
     radius: 2574.7,
     albedo: 0.22,
+    rotationPeriod: 382.7,
   }
 };
 
