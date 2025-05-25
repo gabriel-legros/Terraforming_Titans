@@ -6,8 +6,8 @@ const AU_METER = 149597870700;
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 
-const EQUILIBRIUM_WATER_PARAMETER = 2.405039964909942;
-const EQUILIBRIUM_CO2_PARAMETER = 6.195957222841782e-8;
+const EQUILIBRIUM_WATER_PARAMETER = 0.042841229754382766;
+const EQUILIBRIUM_CO2_PARAMETER = 6.204412788729393e-8;
 
 const terraformingGasTargets = {
   carbonDioxide : {min : 0, max : 100},
@@ -476,11 +476,11 @@ class Terraforming extends EffectableEntity{
           // Distribute Ice based on Mars-like model (90% Polar, 9% Temperate, 1% Tropical)
           let iceDistributionFactor = 0;
           if (zone === 'polar') {
-              iceDistributionFactor = 0.90;
+              iceDistributionFactor = 1;
           } else if (zone === 'temperate') {
-              iceDistributionFactor = 0.09;
+              iceDistributionFactor = 0;
           } else if (zone === 'tropical') {
-              iceDistributionFactor = 0.01;
+              iceDistributionFactor = 0;
           }
           this.zonalWater[zone].ice = initialIce * iceDistributionFactor;
 
@@ -490,11 +490,6 @@ class Terraforming extends EffectableEntity{
           } else {
               this.zonalSurface[zone].dryIce = 0;
           }
-
-          // Zonal atmosphere distribution removed. Global handling below.
-        if(currentPlanetParameters.zonalWater){
-            this.zonalWater = structuredClone(currentPlanetParameters.zonalWater);
-        }
 
     });
 
