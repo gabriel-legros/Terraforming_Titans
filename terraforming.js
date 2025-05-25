@@ -359,11 +359,11 @@ class Terraforming extends EffectableEntity{
       const avgZoneTemp = (dayTemperature + nightTemperature) / 2;
 
       // Function to calculate potential rate factor for a given temperature
-      const calculatePotential = (temp) => {
-          let rainFactor = 0;
-          let snowFactor = 0;
-          if (zoneArea > 0 && typeof temp === 'number') {
-              const saturationPressure = saturationVaporPressureBuck(this.temperature.value);
+        const calculatePotential = (temp) => {
+            let rainFactor = 0;
+            let snowFactor = 0;
+            if (zoneArea > 0 && typeof temp === 'number') {
+                const saturationPressure = saturationVaporPressureBuck(temp);
 
               if (waterVaporPressure > saturationPressure) { // Only proceed if there's some effective pressure
                   const excessPressure = waterVaporPressure - saturationPressure;
