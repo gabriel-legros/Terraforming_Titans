@@ -3,6 +3,17 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
+// Load utility functions when running under Node for tests
+if (typeof module !== 'undefined' && module.exports) {
+    const hydrology = require('./hydrology.js');
+    var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
+    var calculateMeltingFreezingRates = hydrology.calculateMeltingFreezingRates;
+
+    const waterCycle = require('./water-cycle.js');
+    var calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
+    var calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
+}
+
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 
@@ -243,61 +254,22 @@ class Terraforming extends EffectableEntity{
   // Internal helper to calculate evaporation/sublimation RATES for a zone, averaging day/night potentials
   _calculateEvaporationSublimationRates(zone, dayTemperature, nightTemperature, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
       const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
-      if (zoneArea <= 0) return { evaporationRate: 0, waterSublimationRate: 0, co2SublimationRate: 0 };
-
-      let dayEvaporationRate = 0, nightEvaporationRate = 0;
-      let dayWaterSublimationRate = 0, nightWaterSublimationRate = 0;
-      let dayCo2SublimationRate = 0, nightCo2SublimationRate = 0;
-
-      // --- Calculate Rates for Day ---
       const liquidWaterCoverage = this._calculateZonalCoverage(zone, 'liquidWater');
-      const liquidWaterCoveredArea = zoneArea * liquidWaterCoverage;
       const iceCoverage = this._calculateZonalCoverage(zone, 'ice');
-      const iceCoveredArea = zoneArea * iceCoverage;
       const dryIceCoverage = this._calculateZonalCoverage(zone, 'dryIce');
-      const dryIceCoveredArea = zoneArea * dryIceCoverage;
 
-      const daySolarFlux = 2*zonalSolarFlux;
-
-      if (liquidWaterCoveredArea > 0 && typeof dayTemperature === 'number') {
-          const dayEvpRateKgM2S = evaporationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
-          dayEvaporationRate = dayEvpRateKgM2S * liquidWaterCoveredArea / 1000;
-      }
-      if (iceCoveredArea > 0 && typeof dayTemperature === 'number') {
-          const dayWaterSublRateKgM2S = sublimationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
-          dayWaterSublimationRate = dayWaterSublRateKgM2S * iceCoveredArea / 1000;
-      }
-      if (dryIceCoveredArea > 0 && typeof dayTemperature === 'number') {
-          const dayCo2SublRateKgM2S = sublimationRateCO2(dayTemperature, daySolarFlux, avgAtmPressure, co2VaporPressure, 100);
-          dayCo2SublimationRate = dayCo2SublRateKgM2S * dryIceCoveredArea / 1000;
-      }
-
-      // --- Calculate Rates for Night (assuming zero solar flux at night) ---
-      const nightSolarFlux = 0; // No sun at night
-      if (liquidWaterCoveredArea > 0 && typeof nightTemperature === 'number') {
-          const nightEvpRateKgM2S = evaporationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
-          nightEvaporationRate = nightEvpRateKgM2S * liquidWaterCoveredArea / 1000;
-      }
-      if (iceCoveredArea > 0 && typeof nightTemperature === 'number') {
-          const nightWaterSublRateKgM2S = sublimationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
-          nightWaterSublimationRate = nightWaterSublRateKgM2S * iceCoveredArea / 1000;
-      }
-      if (dryIceCoveredArea > 0 && typeof nightTemperature === 'number') {
-          const nightCo2SublRateKgM2S = sublimationRateCO2(nightTemperature, nightSolarFlux, avgAtmPressure, co2VaporPressure, 100);
-          nightCo2SublimationRate = nightCo2SublRateKgM2S * dryIceCoveredArea / 1000;
-      }
-
-      // --- Average Day and Night Rates ---
-      const avgEvaporationRate = (dayEvaporationRate + nightEvaporationRate) / 2;
-      const avgWaterSublimationRate = (dayWaterSublimationRate + nightWaterSublimationRate) / 2;
-      const avgCo2SublimationRate = (dayCo2SublimationRate + nightCo2SublimationRate) / 2;
-
-      // Note: Limits (Math.min) are NOT applied here; they apply to the *amount* in updateResources
-      return {
-          evaporationRate: avgEvaporationRate,           // tons/s
-          waterSublimationRate: avgWaterSublimationRate, // tons/s
-          co2SublimationRate: avgCo2SublimationRate      // tons/s
-      };
+      return calculateEvaporationSublimationRates({
+          zoneArea,
+          liquidWaterCoverage,
+          iceCoverage,
+          dryIceCoverage,
+          dayTemperature,
+          nightTemperature,
+          waterVaporPressure,
+          co2VaporPressure,
+          avgAtmPressure,
+          zonalSolarFlux
+      });
   }
 
   // Internal helper to calculate potential CO2 condensation RATE FACTOR (rate if parameter=1) for a zone, averaging day/night potentials
@@ -356,90 +328,21 @@ class Terraforming extends EffectableEntity{
 
   // Internal helper to calculate potential precipitation RATE FACTOR (rate if multiplier=1) for a zone, averaging day/night potentials
   _calculatePrecipitationRateFactor(zone, waterVaporPressure, gravity, dayTemperature, nightTemperature) {
-      const totalSurfaceArea = this.celestialParameters.surfaceArea;
-      const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-      const freezingPointWater = 273.15; // K
-      let potentialRainRateFactor = 0; // tons/s if multiplier=1
-      let potentialSnowRateFactor = 0; // tons/s if multiplier=1
-
-      // Calculate average zone temperature
-      const avgZoneTemp = (dayTemperature + nightTemperature) / 2;
-
-      // Function to calculate potential rate factor for a given temperature
-        const calculatePotential = (temp) => {
-            let rainFactor = 0;
-            let snowFactor = 0;
-            if (zoneArea > 0 && typeof temp === 'number') {
-                const saturationPressure = saturationVaporPressureBuck(temp);
-
-              if (waterVaporPressure > saturationPressure) { // Only proceed if there's some effective pressure
-                  const excessPressure = waterVaporPressure - saturationPressure;
-                  const excessMassKg = (excessPressure * zoneArea) / gravity;
-                  const excessMassTons = excessMassKg / 1000;
-                  const potentialRate = excessMassTons / 86400; // Base rate factor (tons/s if multiplier=1), using 86400s duration
-
-                  if (!isNaN(potentialRate) && potentialRate > 0) {
-                      // Determine form and apply scaling based on the specific temp (day or night)
-                      // Rain occurs if instantaneous temp > freezing (check avg temp later)
-                      if (temp > freezingPointWater) {
-                          rainFactor = potentialRate; // Rain rate is not scaled by temp difference
-                      } else {
-                          // Apply linear scaling for snow based on how far below freezing it is
-                          const tempDifference = freezingPointWater - temp;
-                          const maxSnowScaleDiff = 10.0; // Reach max snow rate 10K below freezing
-                          const temperatureScale = Math.min(tempDifference / maxSnowScaleDiff, 1.0);
-                          snowFactor = potentialRate * temperatureScale;
-                      }
-                  }
-              }
-              // --- End Continuous Precipitation Calculation ---
-          }
-          
-          // If average zone temperature is freezing or below, convert potential rain to snow
-          if (avgZoneTemp <= freezingPointWater && rainFactor > 0) {
-              snowFactor += rainFactor;
-              rainFactor = 0;
-          }
-
-          return { rainFactor, snowFactor };
-      };
-
-      // Calculate for night and day
-      const nightPotential = calculatePotential(nightTemperature);
-      const dayPotential = calculatePotential(dayTemperature);
-
-      // Average the rates (assuming day/night are equal length for simplicity)
-      potentialRainRateFactor = (nightPotential.rainFactor + dayPotential.rainFactor) / 2;
-      potentialSnowRateFactor = (nightPotential.snowFactor + dayPotential.snowFactor) / 2;
-
-      // Note: Limits (Math.min) are NOT applied here; they apply to the *amount* in updateResources
-      return { rainfallRateFactor: potentialRainRateFactor, snowfallRateFactor: potentialSnowRateFactor }; // tons/s if multiplier=1
+      const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+      return calculatePrecipitationRateFactor({
+          zoneArea,
+          waterVaporPressure,
+          gravity,
+          dayTemperature,
+          nightTemperature
+      });
   }
 
   // Internal helper to calculate melting/freezing RATES for a zone
   _calculateMeltingFreezingRates(zone, temperature) {
-      const freezingPoint = 273.15;
-      const meltingRateMultiplier = 0.0000001; // Rate based on temp difference and available ice
-      const freezingRateMultiplier = 0.0000001; // Rate based on temp difference and available water
       const availableIce = this.zonalWater[zone].ice || 0;
       const availableLiquid = this.zonalWater[zone].liquid || 0;
-
-      let meltingRate = 0; // tons/s
-      let freezingRate = 0; // tons/s
-
-      if (temperature > freezingPoint && availableIce > 0) {
-          // Melting conditions
-          const temperatureDifference = temperature - freezingPoint;
-          // Rate calculation needs to be independent of duration here
-          // Assuming multipliers are implicitly per second? Let's verify units later if needed.
-          meltingRate = availableIce * meltingRateMultiplier * temperatureDifference;
-      } else if (temperature < freezingPoint && availableLiquid > 0) {
-          // Freezing conditions
-          const temperatureDifference = freezingPoint - temperature;
-          freezingRate = availableLiquid * freezingRateMultiplier * temperatureDifference;
-      }
-      // Note: Limits (Math.min) are NOT applied here; they apply to the *amount* in updateResources
-      return { meltingRate: meltingRate, freezingRate: freezingRate }; // tons/s
+      return calculateMeltingFreezingRates(temperature, availableIce, availableLiquid);
   }
 
 
