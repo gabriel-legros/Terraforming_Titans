@@ -1,6 +1,7 @@
 // Utility functions for terraforming calculations
 
-let ZONES, getZonePercentage;
+let ZONES;
+var getZonePercentage;
 let baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
 
 if (typeof module !== 'undefined' && module.exports) {
