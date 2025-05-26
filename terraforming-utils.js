@@ -16,6 +16,7 @@ if (isNode) {
 } else {
   baseCalculateEvapSubl = globalThis.calculateEvaporationSublimationRates;
   baseCalculatePrecipFactor = globalThis.calculatePrecipitationRateFactor;
+  // capture the base implementation from hydrology before defining our wrapper
   baseCalculateMeltFreeze = globalThis.calculateMeltingFreezingRates;
 }
 
@@ -109,10 +110,15 @@ function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure
   });
 }
 
-function calculateMeltingFreezingRates(terraforming, zone, temperature) {
+const calculateMeltingFreezingRates = (terraforming, zone, temperature) => {
   const availableIce = terraforming.zonalWater?.[zone]?.ice || 0;
   const availableLiquid = terraforming.zonalWater?.[zone]?.liquid || 0;
   return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid);
+};
+
+if (!isNode) {
+  // expose wrapper for browser usage without overwriting the captured base
+  globalThis.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -124,4 +130,3 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateMeltingFreezingRates
   };
 }
-
