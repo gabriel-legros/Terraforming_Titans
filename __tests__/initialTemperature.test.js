@@ -3,7 +3,6 @@ const { getZoneRatio, getZonePercentage } = require('../zones.js');
 const EffectableEntity = require('../effectable-entity.js');
 const lifeParameters = require('../life-parameters.js');
 const physics = require('../physics.js');
-const { calculateAverageCoverage } = require('../terraforming-utils.js');
 
 // Expose globals expected by terraforming module
 global.getZoneRatio = getZoneRatio;
@@ -59,8 +58,8 @@ function expectedTemperature(terra, params, resources) {
   }
 
   const surfaceFractions = {
-    ocean: calculateAverageCoverage(terra, 'liquidWater'),
-    ice: calculateAverageCoverage(terra, 'ice')
+    ocean: terra._calculateAverageCoverage('liquidWater'),
+    ice: terra._calculateAverageCoverage('ice')
   };
 
   const temps = physics.dayNightTemperaturesModel({
