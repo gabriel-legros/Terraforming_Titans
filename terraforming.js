@@ -12,13 +12,16 @@ if (typeof module !== 'undefined' && module.exports) {
     const waterCycle = require('./water-cycle.js');
     var calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
     var calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
+
+    const dryIceCycle = require('./dry-ice-cycle.js');
+    var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
+    var EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.042841229754382766;
-const EQUILIBRIUM_CO2_PARAMETER = 6.204412788729393e-8;
 
 // Fraction of precipitation redistributed across zones
 const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
@@ -272,59 +275,6 @@ class Terraforming extends EffectableEntity{
       });
   }
 
-  // Internal helper to calculate potential CO2 condensation RATE FACTOR (rate if parameter=1) for a zone, averaging day/night potentials
-  _calculateCO2CondensationRateFactor(zone, co2VaporPressure, dayTemperature, nightTemperature) {
-      const totalSurfaceArea = this.celestialParameters.surfaceArea;
-      const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-      const condensationTemperatureCO2 = 195; // K
-      let potentialCondensationRateFactor = 0; // tons/s if parameter=1
-
-      // --- Add check: Only allow condensation if average temp is below condensation point ---
-      const avgTemp = (dayTemperature + nightTemperature) / 2;
-      if (avgTemp >= condensationTemperatureCO2) {
-          return 0; // Return 0 immediately if average temp is too high
-      }
-      // --- End check ---
-
-      // Function to calculate potential rate factor for a given temperature,
-      // now including temperature scaling.
-      const calculatePotential = (temp) => {
-          let rateFactor = 0;
-          if (zoneArea > 0 && typeof temp === 'number' && temp < condensationTemperatureCO2 && co2VaporPressure > 0) {
-              const tempDifference = condensationTemperatureCO2 - temp; // How far below condensation point?
-              const startLinearDiff = 5.0; // Start linear scaling 5K below condensation temp
-              const maxLinearDiff = 45.0; // Reach max scaling 45K below condensation temp (Wider range for less sensitivity)
-
-              // Piecewise scale factor
-              let temperatureScale = 0;
-              if (tempDifference > maxLinearDiff) {
-                  temperatureScale = 1.0; // Constant max scale
-              } else if (tempDifference > startLinearDiff) {
-                  // Linear scale between startLinearDiff and maxLinearDiff
-                  temperatureScale = (tempDifference - startLinearDiff) / (maxLinearDiff - startLinearDiff);
-              } // Else (tempDifference <= startLinearDiff), temperatureScale remains 0 (Constant low scale)
-
-              // Base factor related to area and pressure
-              const baseCalculatedFactor = (zoneArea * co2VaporPressure / 1000);
-
-              if (!isNaN(baseCalculatedFactor) && baseCalculatedFactor > 0) {
-                   // Apply temperature scaling
-                   rateFactor = baseCalculatedFactor * temperatureScale;
-              }
-          }
-          return rateFactor;
-      };
-
-      // Calculate for night and day
-      const nightPotentialFactor = calculatePotential(nightTemperature);
-      const dayPotentialFactor = calculatePotential(dayTemperature);
-
-      // Average the rate factors
-      potentialCondensationRateFactor = (nightPotentialFactor + dayPotentialFactor) / 2;
-
-      // Note: Limits (Math.min) are NOT applied here; they apply to the *amount* in updateResources
-      return potentialCondensationRateFactor; // tons/s if parameter=1
-  }
 
   // Internal helper to calculate potential precipitation RATE FACTOR (rate if multiplier=1) for a zone, averaging day/night potentials
   _calculatePrecipitationRateFactor(zone, waterVaporPressure, gravity, dayTemperature, nightTemperature) {
@@ -486,9 +436,13 @@ class Terraforming extends EffectableEntity{
             );
             potentialPrecipitationRateFactor += precipRateFactors.rainfallRateFactor + precipRateFactors.snowfallRateFactor;
 
-            const co2CondRateFactor = this._calculateCO2CondensationRateFactor(
-                zone, initialCo2PressurePa, dayTemp, nightTemp
-            );
+            const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+            const co2CondRateFactor = calculateCO2CondensationRateFactor({
+                zoneArea,
+                co2VaporPressure: initialCo2PressurePa,
+                dayTemperature: dayTemp,
+                nightTemperature: nightTemp
+            });
             potentialCondensationRateFactor += co2CondRateFactor;
         }
         // Since we looped over zones just for area/coverage, the summed rates represent the global total.
@@ -619,9 +573,13 @@ class Terraforming extends EffectableEntity{
             zonalChanges[zone].potentialRainfall = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
             zonalChanges[zone].potentialSnowfall = precipRateFactors.snowfallRateFactor * precipitationMultiplier * durationSeconds;
 
-            const co2CondRateFactor = this._calculateCO2CondensationRateFactor(
-                zone, globalCo2PressurePa, dayTemp, nightTemp
-            );
+            const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+            const co2CondRateFactor = calculateCO2CondensationRateFactor({
+                zoneArea,
+                co2VaporPressure: globalCo2PressurePa,
+                dayTemperature: dayTemp,
+                nightTemperature: nightTemp
+            });
             zonalChanges[zone].potentialCO2Condensation = co2CondRateFactor * condensationParameter * durationSeconds;
 
 
