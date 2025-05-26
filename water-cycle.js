@@ -163,3 +163,133 @@ function evaporationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     // Ensure evaporation rate is non-negative (Penman can be negative if e_a > e_s)
     return Math.max(0, E_evp); // kg/m²/s
 }
+
+// Calculate average evaporation and sublimation rates for a surface zone
+function calculateEvaporationSublimationRates({
+    zoneArea,
+    liquidWaterCoverage,
+    iceCoverage,
+    dryIceCoverage,
+    dayTemperature,
+    nightTemperature,
+    waterVaporPressure,
+    co2VaporPressure,
+    avgAtmPressure,
+    zonalSolarFlux
+}) {
+    if (zoneArea <= 0) {
+        return { evaporationRate: 0, waterSublimationRate: 0, co2SublimationRate: 0 };
+    }
+
+    let dayEvaporationRate = 0, nightEvaporationRate = 0;
+    let dayWaterSublimationRate = 0, nightWaterSublimationRate = 0;
+    let dayCo2SublimationRate = 0, nightCo2SublimationRate = 0;
+
+    const liquidWaterCoveredArea = zoneArea * liquidWaterCoverage;
+    const iceCoveredArea = zoneArea * iceCoverage;
+    const dryIceCoveredArea = zoneArea * dryIceCoverage;
+
+    const daySolarFlux = 2 * zonalSolarFlux;
+    const nightSolarFlux = 0;
+
+    if (liquidWaterCoveredArea > 0 && typeof dayTemperature === 'number') {
+        const rate = evaporationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
+        dayEvaporationRate = rate * liquidWaterCoveredArea / 1000;
+    }
+    if (iceCoveredArea > 0 && typeof dayTemperature === 'number') {
+        const rate = sublimationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
+        dayWaterSublimationRate = rate * iceCoveredArea / 1000;
+    }
+    if (dryIceCoveredArea > 0 && typeof dayTemperature === 'number') {
+        const rate = sublimationRateCO2(dayTemperature, daySolarFlux, avgAtmPressure, co2VaporPressure, 100);
+        dayCo2SublimationRate = rate * dryIceCoveredArea / 1000;
+    }
+
+    if (liquidWaterCoveredArea > 0 && typeof nightTemperature === 'number') {
+        const rate = evaporationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
+        nightEvaporationRate = rate * liquidWaterCoveredArea / 1000;
+    }
+    if (iceCoveredArea > 0 && typeof nightTemperature === 'number') {
+        const rate = sublimationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
+        nightWaterSublimationRate = rate * iceCoveredArea / 1000;
+    }
+    if (dryIceCoveredArea > 0 && typeof nightTemperature === 'number') {
+        const rate = sublimationRateCO2(nightTemperature, nightSolarFlux, avgAtmPressure, co2VaporPressure, 100);
+        nightCo2SublimationRate = rate * dryIceCoveredArea / 1000;
+    }
+
+    const avgEvap = (dayEvaporationRate + nightEvaporationRate) / 2;
+    const avgWaterSubl = (dayWaterSublimationRate + nightWaterSublimationRate) / 2;
+    const avgCo2Subl = (dayCo2SublimationRate + nightCo2SublimationRate) / 2;
+
+    return {
+        evaporationRate: avgEvap,
+        waterSublimationRate: avgWaterSubl,
+        co2SublimationRate: avgCo2Subl
+    };
+}
+
+// Calculate potential precipitation rate factors for a zone
+function calculatePrecipitationRateFactor({
+    zoneArea,
+    waterVaporPressure,
+    gravity,
+    dayTemperature,
+    nightTemperature
+}) {
+    const freezingPoint = 273.15;
+    let potentialRain = 0;
+    let potentialSnow = 0;
+
+    const avgTemp = (dayTemperature + nightTemperature) / 2;
+
+    const calc = (temp) => {
+        let rain = 0, snow = 0;
+        if (zoneArea > 0 && typeof temp === 'number') {
+            const saturationPressure = saturationVaporPressureBuck(temp);
+            if (waterVaporPressure > saturationPressure) {
+                const excessPressure = waterVaporPressure - saturationPressure;
+                const excessMassKg = (excessPressure * zoneArea) / gravity;
+                const excessMassTons = excessMassKg / 1000;
+                const baseRate = excessMassTons / 86400;
+                if (!isNaN(baseRate) && baseRate > 0) {
+                    if (temp > freezingPoint) {
+                        rain = baseRate;
+                    } else {
+                        const diff = freezingPoint - temp;
+                        const maxDiff = 10.0;
+                        const scale = Math.min(diff / maxDiff, 1.0);
+                        snow = baseRate * scale;
+                    }
+                }
+            }
+        }
+
+        if (avgTemp <= freezingPoint && rain > 0) {
+            snow += rain;
+            rain = 0;
+        }
+        return { rain, snow };
+    };
+
+    const night = calc(nightTemperature);
+    const day = calc(dayTemperature);
+
+    potentialRain = (night.rain + day.rain) / 2;
+    potentialSnow = (night.snow + day.snow) / 2;
+
+    return { rainfallRateFactor: potentialRain, snowfallRateFactor: potentialSnow };
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        saturationVaporPressureBuck,
+        derivativeSaturationVaporPressureBuck,
+        slopeSaturationVaporPressureWater,
+        psychrometricConstantWater,
+        sublimationRateWater,
+        evaporationRateWater,
+        calculateEvaporationSublimationRates,
+        calculatePrecipitationRateFactor
+    };
+}
