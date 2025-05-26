@@ -1,27 +1,35 @@
 // Utility functions for terraforming calculations
 
-let ZONES;
-var getZonePercentage;
+const isNode = (typeof module !== 'undefined' && module.exports);
+let ZONES_NODE, getZonePercentageNode;
 let baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
 
-if (typeof module !== 'undefined' && module.exports) {
-  ({ ZONES, getZonePercentage } = require('./zones.js'));
+if (isNode) {
+  const zonesMod = require('./zones.js');
+  ZONES_NODE = zonesMod.ZONES;
+  getZonePercentageNode = zonesMod.getZonePercentage;
   const waterCycle = require('./water-cycle.js');
   baseCalculateEvapSubl = waterCycle.calculateEvaporationSublimationRates;
   baseCalculatePrecipFactor = waterCycle.calculatePrecipitationRateFactor;
   const hydrology = require('./hydrology.js');
   baseCalculateMeltFreeze = hydrology.calculateMeltingFreezingRates;
 } else {
-  ZONES = globalThis.ZONES;
-  getZonePercentage = globalThis.getZonePercentage;
   baseCalculateEvapSubl = globalThis.calculateEvaporationSublimationRates;
   baseCalculatePrecipFactor = globalThis.calculatePrecipitationRateFactor;
   baseCalculateMeltFreeze = globalThis.calculateMeltingFreezingRates;
 }
 
+function getZones() {
+  return isNode ? ZONES_NODE : globalThis.ZONES;
+}
+
+function zonePercentage(zone) {
+  return isNode ? getZonePercentageNode(zone) : globalThis.getZonePercentage(zone);
+}
+
 function calculateZonalCoverage(terraforming, zone, resourceType) {
   const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-  const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+  const zoneArea = totalSurfaceArea * zonePercentage(zone);
   if (zoneArea <= 0) return 0;
 
   let zonalAmount = 0;
@@ -63,16 +71,16 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
 
 function calculateAverageCoverage(terraforming, resourceType) {
   let weightedAverageCoverage = 0;
-  for (const zone of ZONES) {
+  for (const zone of getZones()) {
     const cov = calculateZonalCoverage(terraforming, zone, resourceType);
-    const zonePct = getZonePercentage(zone);
+    const zonePct = zonePercentage(zone);
     weightedAverageCoverage += cov * zonePct;
   }
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
 }
 
 function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
-  const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zone);
+  const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
   const iceCoverage = calculateZonalCoverage(terraforming, zone, 'ice');
   const dryIceCoverage = calculateZonalCoverage(terraforming, zone, 'dryIce');
@@ -91,7 +99,7 @@ function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, night
 }
 
 function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp) {
-  const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zone);
+  const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   return baseCalculatePrecipFactor({
     zoneArea,
     waterVaporPressure,
