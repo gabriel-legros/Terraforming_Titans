@@ -338,7 +338,7 @@ function createTemperatureBox(row) {
   
   function updateWaterBox() {
     const waterBox = document.getElementById('water-box');
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = ZONES;
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
     // Totals are no longer calculated here; they are read from terraforming object
@@ -425,7 +425,7 @@ function createTemperatureBox(row) {
 
 function updateLifeBox() {
     const lifeBox = document.getElementById('life-box');
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = ZONES;
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
     // Calculate total biomass from zonal data

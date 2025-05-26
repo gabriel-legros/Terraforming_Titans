@@ -1,3 +1,5 @@
+const ZONES = ['tropical', 'temperate', 'polar'];
+
 // Function to calculate the surface area of a spherical segment between two latitudes (in radians)
 function sphericalSegmentArea(phi1, phi2) {
     return 2 * Math.PI * (Math.sin(phi2) - Math.sin(phi1));
@@ -81,5 +83,6 @@ function sphericalSegmentArea(phi1, phi2) {
     }
   }
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { getZoneRatio, getZonePercentage };
+  module.exports = { ZONES, getZoneRatio, getZonePercentage };
 }
+
