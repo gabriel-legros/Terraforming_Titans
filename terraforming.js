@@ -9,11 +9,6 @@ let ZONES;
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
-    var calculateMeltingFreezingRates = hydrology.calculateMeltingFreezingRates;
-
-    const waterCycle = require('./water-cycle.js');
-    var calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
-    var calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
 
     const dryIceCycle = require('./dry-ice-cycle.js');
     var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
@@ -24,6 +19,13 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
         globalThis.EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
     }
+
+    var terraformUtils = require('./terraforming-utils.js');
+    var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
+    var calculateZonalCoverage = terraformUtils.calculateZonalCoverage;
+    var calculateEvaporationSublimationRates = terraformUtils.calculateEvaporationSublimationRates;
+    var calculatePrecipitationRateFactor = terraformUtils.calculatePrecipitationRateFactor;
+    var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
@@ -194,119 +196,12 @@ class Terraforming extends EffectableEntity{
       return true;
   }
 
-  // Calculates average coverage percentage using a logistic function
-  _calculateAverageCoverage(resourceType) {
-      const zones = ZONES;
-      let weightedAverageCoverage = 0;
 
-      for (const zone of zones) {
-          const zonalCoverage = this._calculateZonalCoverage(zone, resourceType);
-          const zonePercentage = getZonePercentage(zone); // Get the surface area percentage for this zone
-          weightedAverageCoverage += zonalCoverage * zonePercentage;
-      }
-
-      return Math.max(0, Math.min(weightedAverageCoverage, 1.0)); // Ensure result is between 0 and 1
-  }
-
-  // Calculates zonal coverage percentage using a logistic function
-  _calculateZonalCoverage(zone, resourceType) {
-      const totalSurfaceArea = this.celestialParameters.surfaceArea;
-      const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-      if (zoneArea <= 0) return 0;
-
-      let zonalAmount = 0;
-
-      // Get amount (tons) from the specific zone
-      if (resourceType === 'liquidWater') {
-          zonalAmount = this.zonalWater[zone]?.liquid || 0;
-      } else if (resourceType === 'ice') {
-          zonalAmount = this.zonalWater[zone]?.ice || 0;
-      } else if (resourceType === 'biomass') {
-          zonalAmount = this.zonalSurface[zone]?.biomass || 0;
-      } else if (resourceType === 'dryIce') {
-          zonalAmount = this.zonalSurface[zone]?.dryIce || 0;
-      } else {
-          console.warn(`_calculateZonalCoverage called with invalid resourceType: ${resourceType}`);
-          return 0;
-      }
-
-      // --- Piecewise Linear/Logarithmic Calculation (Based on old logic, applied zonally) ---
-      let resourceRatio = 0.00005 * zonalAmount / zoneArea; // Base ratio for the zone (Reduced from 0.0001)
-
-      // Apply specific multipliers
-      if (resourceType === 'dryIce') {
-          resourceRatio = 100 * resourceRatio;
-      } else if (resourceType === 'biomass') {
-          resourceRatio = 1000 * resourceRatio;
-      }
-
-      let coverage;
-
-      if (resourceRatio <= 0) {
-          coverage = 0;
-      } else if (resourceRatio <= 0.001) {
-          // Linear part
-          coverage = 10 * resourceRatio;
-          coverage = Math.max(coverage, 0.00001); // Ensure a minimum small value if ratio > 0
-      } else if (resourceRatio < 1) {
-          // Logarithmic part
-          coverage = 0.143317 * Math.log(resourceRatio) + 1;
-          // Clamp coverage between the end of the linear part and 1
-          const linearEndCoverage = 10 * 0.001; // Coverage at ratio = 0.001
-          coverage = Math.max(linearEndCoverage, Math.min(coverage, 1.0));
-      } else { // resourceRatio >= 1
-          // Plateau
-          coverage = 1;
-      }
-
-      return Math.max(0, Math.min(coverage, 1.0)); // Ensure coverage is between 0 and 1
-  }
-
-  // Internal helper to calculate evaporation/sublimation RATES for a zone, averaging day/night potentials
-  _calculateEvaporationSublimationRates(zone, dayTemperature, nightTemperature, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
-      const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
-      const liquidWaterCoverage = this._calculateZonalCoverage(zone, 'liquidWater');
-      const iceCoverage = this._calculateZonalCoverage(zone, 'ice');
-      const dryIceCoverage = this._calculateZonalCoverage(zone, 'dryIce');
-
-      return calculateEvaporationSublimationRates({
-          zoneArea,
-          liquidWaterCoverage,
-          iceCoverage,
-          dryIceCoverage,
-          dayTemperature,
-          nightTemperature,
-          waterVaporPressure,
-          co2VaporPressure,
-          avgAtmPressure,
-          zonalSolarFlux
-      });
-  }
-
-
-  // Internal helper to calculate potential precipitation RATE FACTOR (rate if multiplier=1) for a zone, averaging day/night potentials
-  _calculatePrecipitationRateFactor(zone, waterVaporPressure, gravity, dayTemperature, nightTemperature) {
-      const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
-      return calculatePrecipitationRateFactor({
-          zoneArea,
-          waterVaporPressure,
-          gravity,
-          dayTemperature,
-          nightTemperature
-      });
-  }
-
-  // Internal helper to calculate melting/freezing RATES for a zone
-  _calculateMeltingFreezingRates(zone, temperature) {
-      const availableIce = this.zonalWater[zone].ice || 0;
-      const availableLiquid = this.zonalWater[zone].liquid || 0;
-      return calculateMeltingFreezingRates(temperature, availableIce, availableLiquid);
-  }
 
 
   getWaterStatus() {
     // Compare average liquid water coverage to the global target
-    return (this._calculateAverageCoverage('liquidWater') > this.waterTarget);
+    return (calculateAverageCoverage(this, 'liquidWater') > this.waterTarget);
   }
 
   getLuminosityStatus() {
@@ -315,7 +210,7 @@ class Terraforming extends EffectableEntity{
 
   getLifeStatus() {
      // Compare average biomass coverage to the global target
-    return (this._calculateAverageCoverage('biomass') > this.life.target);
+    return (calculateAverageCoverage(this, 'biomass') > this.life.target);
   }
 
   getTerraformingStatus() {
@@ -431,16 +326,28 @@ class Terraforming extends EffectableEntity{
             const zonalSolarFlux = solarFlux * getZoneRatio(zone); // Calculate zone-specific flux
              // Initial Upward Rates (tons/s) - Use average temps, global pressures
              // Pass zone only for coverage/area calculation inside the function
-            const evapSublRates = this._calculateEvaporationSublimationRates(
-                zone, dayTemp, nightTemp, initialWaterPressurePa, initialCo2PressurePa, initialTotalPressurePa, zonalSolarFlux
+            const evapSublRates = calculateEvaporationSublimationRates(
+                this,
+                zone,
+                dayTemp,
+                nightTemp,
+                initialWaterPressurePa,
+                initialCo2PressurePa,
+                initialTotalPressurePa,
+                zonalSolarFlux
             );
             initialTotalWaterEvapSublRate += evapSublRates.evaporationRate + evapSublRates.waterSublimationRate;
             initialTotalCO2SublRate += evapSublRates.co2SublimationRate;
 
             // Potential Downward Rate Factors (tons/s if multiplier/parameter = 1) - Use average temps, global pressures
             // Pass zone only for area calculation inside the function
-            const precipRateFactors = this._calculatePrecipitationRateFactor(
-                zone, initialWaterPressurePa, gravity, dayTemp, nightTemp
+            const precipRateFactors = calculatePrecipitationRateFactor(
+                this,
+                zone,
+                initialWaterPressurePa,
+                gravity,
+                dayTemp,
+                nightTemp
             );
             potentialPrecipitationRateFactor += precipRateFactors.rainfallRateFactor + precipRateFactors.snowfallRateFactor;
 
@@ -554,8 +461,15 @@ class Terraforming extends EffectableEntity{
             const zonalSolarFlux = solarFlux * getZoneRatio(zone); // Calculate zone-specific flux
 
             // --- Upward Flux (Surface -> Atmosphere) ---
-            const evapSublRates = this._calculateEvaporationSublimationRates(
-                zone, dayTemp, nightTemp, globalWaterPressurePa, globalCo2PressurePa, globalTotalPressurePa, zonalSolarFlux // Pass zone-specific flux
+            const evapSublRates = calculateEvaporationSublimationRates(
+                this,
+                zone,
+                dayTemp,
+                nightTemp,
+                globalWaterPressurePa,
+                globalCo2PressurePa,
+                globalTotalPressurePa,
+                zonalSolarFlux // Pass zone-specific flux
             );
             const evaporationAmount = Math.min(evapSublRates.evaporationRate * durationSeconds, availableLiquid);
             const waterSublimationAmount = Math.min(evapSublRates.waterSublimationRate * durationSeconds, availableIce);
@@ -574,8 +488,13 @@ class Terraforming extends EffectableEntity{
             totalCo2SublimationAmount += co2SublimationAmount;
 
             // --- Downward Flux (Atmosphere -> Surface) ---
-            const precipRateFactors = this._calculatePrecipitationRateFactor(
-                zone, globalWaterPressurePa, gravity, dayTemp, nightTemp
+            const precipRateFactors = calculatePrecipitationRateFactor(
+                this,
+                zone,
+                globalWaterPressurePa,
+                gravity,
+                dayTemp,
+                nightTemp
             );
             // Calculate potential amounts based on zonal conditions (before global limits)
             zonalChanges[zone].potentialRainfall = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
@@ -596,7 +515,7 @@ class Terraforming extends EffectableEntity{
             zonalChanges[zone].potentialAtmosphericCO2Change -= zonalChanges[zone].potentialCO2Condensation;
 
             // --- Phase Changes (Surface Only) ---
-            const meltFreezeRates = this._calculateMeltingFreezingRates(zone, zoneTemp);
+            const meltFreezeRates = calculateMeltingFreezingRates(this, zone, zoneTemp);
             // Calculate melt/freeze based on amounts *after* sublimation/evaporation but *before* potential precipitation
             const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableIce + zonalChanges[zone].ice); // Limit by ice available after subl
             const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].liquidWater); // Limit by liquid available after evap
@@ -690,7 +609,7 @@ class Terraforming extends EffectableEntity{
             const zoneWeights = {};
             let weightSum = 0;
             warmZones.forEach(z => {
-                const waterCov = this._calculateZonalCoverage(z, 'liquidWater');
+                const waterCov = calculateZonalCoverage(this, z, 'liquidWater');
                 const w = WIND_WEIGHT + WATER_WEIGHT * waterCov;
                 zoneWeights[z] = w;
                 weightSum += w;
@@ -841,10 +760,10 @@ class Terraforming extends EffectableEntity{
       const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
       this.temperature.opticalDepth = tau;
 
-      const surfaceFractions = {
-        ocean: this._calculateAverageCoverage('liquidWater'),
-        ice: this._calculateAverageCoverage('ice')
-      };
+        const surfaceFractions = {
+          ocean: calculateAverageCoverage(this, 'liquidWater'),
+          ice: calculateAverageCoverage(this, 'ice')
+        };
 
       const baseParams = {
         groundAlbedo: groundAlbedo,
@@ -876,7 +795,7 @@ class Terraforming extends EffectableEntity{
         const surfaceArea = this.celestialParameters.surfaceArea;
 
         // Use the new helper function to get water coverage ratio
-        const waterRatio = this._calculateAverageCoverage('liquidWater');
+        const waterRatio = calculateAverageCoverage(this, 'liquidWater');
 
         const albedoUpgrades = resources.special.albedoUpgrades.value;
         // Calculate ratios, ensuring they don't exceed available land area
@@ -904,8 +823,9 @@ class Terraforming extends EffectableEntity{
       // Note: synchronizeGlobalResources now calculates this.atmosphere.value
       // this.atmosphere.value = this.calculateTotalPressure(); // No longer needed here
   
-      // Coverage is now calculated on-demand by _calculateAverageCoverage where needed.
-      // Removed redundant calls to the old calculateCoverage function.
+      // Coverage is now calculated on-demand using calculateAverageCoverage from
+      // terraforming-utils.js. Removed redundant calls to the old
+      // calculateCoverage function.
 
       // Simulate atmospheric and water flow between zones
       simulateSurfaceWaterFlow(this.zonalWater, deltaTime); // Call for Step 4
@@ -966,7 +886,8 @@ class Terraforming extends EffectableEntity{
 
     // Removed global calculateHumidity function as humidity should be calculated zonally if needed.
 
-    // Removed redundant calculateCoverage function. Logic is now in _calculateAverageCoverage.
+    // Removed redundant calculateCoverage function. Logic now resides in
+    // calculateAverageCoverage within terraforming-utils.js.
     // Mirror Effect Calculation
     calculateMirrorEffect() {
       // Solar flux hitting the mirror (same as base flux at mirror's position)
