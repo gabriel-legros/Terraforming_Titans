@@ -84,5 +84,10 @@ function sphericalSegmentArea(phi1, phi2) {
   }
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { ZONES, getZoneRatio, getZonePercentage };
+} else {
+  // Expose constants and helpers on the global object for browser usage
+  globalThis.ZONES = ZONES;
+  globalThis.getZoneRatio = getZoneRatio;
+  globalThis.getZonePercentage = getZonePercentage;
 }
 
