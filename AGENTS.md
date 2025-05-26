@@ -1,5 +1,5 @@
 #Instructions
-
+All imports and exports need to be done with the fact this game will be run in a browser in mind.
 
 #Overview of code
 This repository hosts a browser‑based incremental game written in JavaScript.
