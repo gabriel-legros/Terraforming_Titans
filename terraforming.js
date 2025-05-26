@@ -491,6 +491,11 @@ class Terraforming extends EffectableEntity{
           }
           this.zonalWater[zone].ice = initialIce * iceDistributionFactor;
 
+          // If zonalWater exists in planet parameters, we override
+          if(currentPlanetParameters.zonalWater){
+              this.zonalWater = structuredClone(currentPlanetParameters.zonalWater);
+          }
+
           // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
           if (zone === 'polar') {
               this.zonalSurface[zone].dryIce = initialDryIce;

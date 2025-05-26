@@ -63,7 +63,7 @@ const defaultPlanetParameters = {
       carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23156295427188.7, unlocked:false }, // Default (Mars)
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
-      atmosphericWater: { name: 'Water Vap.', initialValue: 6.3e10, unlocked:false }, // Default (Mars) - Adjusted based on review
+      atmosphericWater: { name: 'Water Vap.', initialValue: 1e10, unlocked:false }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false} // Default (Mars)
     },
     special: {
@@ -91,7 +91,8 @@ const defaultPlanetParameters = {
 // Define only the properties that differ from the defaults for each planet.
 
 const marsOverrides = {
-  name: 'Mars'
+  name: 'Mars',
+zonalWater : {tropical : {liquid : 0, ice : 0}, temperate : {liquid : 0, ice : 0}, polar : {liquid : 0, ice : 1e16 } }
 };
 
 const titanOverrides = {
