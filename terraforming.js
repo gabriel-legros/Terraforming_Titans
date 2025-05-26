@@ -540,25 +540,18 @@ class Terraforming extends EffectableEntity{
         }
 
         const gravity = this.celestialParameters.gravity;
-        // Calculate initial global pressures on the fly from initial resource values
+        // Calculate current global pressures from resources
         let initialTotalPressurePa = 0;
         let initialWaterPressurePa = 0;
         let initialCo2PressurePa = 0;
-        for (const gas in currentPlanetParameters.resources.atmospheric) {
-            const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
-            const pressure = calculateAtmosphericPressure(initialAmount, gravity, this.celestialParameters.radius);
+        for (const gas in resources.atmospheric) {
+            const amount = resources.atmospheric[gas]?.value || 0;
+            const pressure = calculateAtmosphericPressure(amount, gravity, this.celestialParameters.radius);
             initialTotalPressurePa += pressure;
             if (gas === 'atmosphericWater') initialWaterPressurePa = pressure;
             if (gas === 'carbonDioxide') initialCo2PressurePa = pressure;
         }
-        const solarFlux = this.luminosity.modifiedSolarFlux; // Use initial modified flux
-
-        // Use global average initial temperature for simplicity in equilibrium calculation
-        // A more complex approach could average rates across zones.
-        const avgInitialTemp = this.temperature.value; // Global average temp calculated in updateSurfaceTemperature called by calculateInitialValues
-        // We need average day/night temps for the rate functions
-        const avgInitialDayTemp = (this.temperature.zones.tropical.day + this.temperature.zones.temperate.day + this.temperature.zones.polar.day) / 3;
-        const avgInitialNightTemp = (this.temperature.zones.tropical.night + this.temperature.zones.temperate.night + this.temperature.zones.polar.night) / 3;
+        const solarFlux = this.luminosity.modifiedSolarFlux;
 
 
         let initialTotalWaterEvapSublRate = 0; // tons/s
