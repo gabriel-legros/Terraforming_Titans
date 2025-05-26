@@ -835,7 +835,8 @@ class Terraforming extends EffectableEntity{
                     const zoneTemp = this.temperature.zones[z].value;
                     const isRain = zoneTemp > 273.15; // >0°C
                     const rainAdj = isRain ? diff : 0;
-                    const snowAdj = isRain ? 0 : diff;
+                    const snowAdj = isRain ? 0 : diff;            
+                    
                     zonalChanges[z].liquidWater += rainAdj;
                     zonalChanges[z].ice += snowAdj;
                     totalRainfallAmount += rainAdj;
