@@ -832,9 +832,11 @@ class Terraforming extends EffectableEntity{
                 const desired = totalPrecip * zoneWeights[z] / weightSum;
                 const diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
                 if (diff !== 0) {
-                    const rainRatio = current > 0 ? zonalChanges[z].actualRainfall / current : 0.5;
-                    const rainAdj = diff * rainRatio;
-                    const snowAdj = diff - rainAdj;
+                    const zoneTemp = this.temperature.zones[z].value;
+                    const isRain = zoneTemp > 273.15; // >0°C
+                    const rainAdj = isRain ? diff : 0;
+                    const snowAdj = isRain ? 0 : diff;            
+                    
                     zonalChanges[z].liquidWater += rainAdj;
                     zonalChanges[z].ice += snowAdj;
                     totalRainfallAmount += rainAdj;
