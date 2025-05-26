@@ -359,8 +359,8 @@ function createTemperatureBox(row) {
 
     // Calculate average coverage percentages using the centralized helper function
 
-    const avgLiquidCoverage = terraforming._calculateAverageCoverage('liquidWater');
-    const avgIceCoverage = terraforming._calculateAverageCoverage('ice');
+    const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater');
+    const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice');
 
     // Update border based on average liquid coverage vs target
     if (avgLiquidCoverage > terraforming.waterTarget) { // Use the stored global target
@@ -435,7 +435,7 @@ function updateLifeBox() {
     });
 
     // Calculate average biomass coverage percentage using the centralized helper function
-    const avgBiomassCoverage = terraforming._calculateAverageCoverage('biomass');
+    const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     // Update border based on average biomass coverage vs target
     // TODO: The getLifeStatus function itself needs updating in terraforming.js
