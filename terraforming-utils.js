@@ -110,8 +110,8 @@ function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure
 }
 
 function calculateMeltingFreezingRates(terraforming, zone, temperature) {
-  const availableIce = terraforming.zonalWater[zone].ice || 0;
-  const availableLiquid = terraforming.zonalWater[zone].liquid || 0;
+  const availableIce = terraforming.zonalWater?.[zone]?.ice || 0;
+  const availableLiquid = terraforming.zonalWater?.[zone]?.liquid || 0;
   return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid);
 }
 
