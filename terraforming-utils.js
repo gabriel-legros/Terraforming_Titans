@@ -2,20 +2,9 @@
 
 let baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
 
-if (typeof module !== 'undefined' && module.exports) {
-  ({ ZONES, getZonePercentage } = require('./zones.js'));
-  const waterCycle = require('./water-cycle.js');
-  baseCalculateEvapSubl = waterCycle.calculateEvaporationSublimationRates;
-  baseCalculatePrecipFactor = waterCycle.calculatePrecipitationRateFactor;
-  const hydrology = require('./hydrology.js');
-  baseCalculateMeltFreeze = hydrology.calculateMeltingFreezingRates;
-
-} else {
-  getZonePercentage = globalThis.getZonePercentage;
-  baseCalculateEvapSubl = globalThis.calculateEvaporationSublimationRates;
-  baseCalculatePrecipFactor = globalThis.calculatePrecipitationRateFactor;
-  baseCalculateMeltFreeze = globalThis.calculateMeltingFreezingRates;
-}
+  baseCalculateEvapSubl = calculateEvaporationSublimationRates;
+  baseCalculatePrecipFactor = calculatePrecipitationRateFactor;
+  baseCalculateMeltFreeze = calculateMeltingFreezingRates;
 
 function resolveSurfaceArea(terraforming) {
   if (!terraforming || !terraforming.celestialParameters) return 0;
