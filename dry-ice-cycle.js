@@ -3,6 +3,10 @@ const STEFAN_BOLTZMANN = 5.67e-8; // W/m²·K⁴
 const L_S_CO2 = 574000; // J/kg (latent heat of sublimation for CO2)
 const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
+// Default equilibrium parameter for CO₂ condensation. This value is used until
+// a more accurate one can be calculated from in-game conditions.
+const EQUILIBRIUM_CO2_PARAMETER = 6.204412788729393e-8;
+
 function calculateSaturationPressureCO2(temperature) {
     // Critical properties of CO₂
     const Tc = 304.1282; // Critical temperature in K
@@ -106,4 +110,59 @@ function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
   
   // Ensure sublimation rate is non-negative (Penman can be negative if e_a > e_s)
   return Math.max(0, E_sub);
+}
+
+// Calculate potential CO₂ condensation rate factor for a zone. The returned
+// value represents the rate (in tons/s) that would occur if the condensation
+// parameter were equal to 1.
+function calculateCO2CondensationRateFactor({
+    zoneArea,
+    co2VaporPressure,
+    dayTemperature,
+    nightTemperature
+}) {
+    const condensationTemperatureCO2 = 195; // K
+
+    const calculatePotential = (temp) => {
+        if (zoneArea <= 0 || typeof temp !== 'number' || co2VaporPressure <= 0) {
+            return 0;
+        }
+        if (temp >= condensationTemperatureCO2) {
+            return 0;
+        }
+
+        const tempDifference = condensationTemperatureCO2 - temp;
+        const startLinearDiff = 5.0;
+        const maxLinearDiff = 45.0;
+
+        let temperatureScale = 0;
+        if (tempDifference > maxLinearDiff) {
+            temperatureScale = 1.0;
+        } else if (tempDifference > startLinearDiff) {
+            temperatureScale = (tempDifference - startLinearDiff) /
+                               (maxLinearDiff - startLinearDiff);
+        }
+
+        const baseCalculatedFactor = zoneArea * co2VaporPressure / 1000;
+
+        return (!isNaN(baseCalculatedFactor) && baseCalculatedFactor > 0)
+            ? baseCalculatedFactor * temperatureScale
+            : 0;
+    };
+
+    const nightPotential = calculatePotential(nightTemperature);
+    const dayPotential = calculatePotential(dayTemperature);
+
+    return (nightPotential + dayPotential) / 2;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        calculateSaturationPressureCO2,
+        slopeSVPCO2,
+        psychrometricConstantCO2,
+        sublimationRateCO2,
+        calculateCO2CondensationRateFactor,
+        EQUILIBRIUM_CO2_PARAMETER
+    };
 }
