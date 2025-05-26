@@ -9,6 +9,7 @@ if (typeof module !== 'undefined' && module.exports) {
   baseCalculatePrecipFactor = waterCycle.calculatePrecipitationRateFactor;
   const hydrology = require('./hydrology.js');
   baseCalculateMeltFreeze = hydrology.calculateMeltingFreezingRates;
+
 } else {
   getZonePercentage = globalThis.getZonePercentage;
   baseCalculateEvapSubl = globalThis.calculateEvaporationSublimationRates;
@@ -16,8 +17,21 @@ if (typeof module !== 'undefined' && module.exports) {
   baseCalculateMeltFreeze = globalThis.calculateMeltingFreezingRates;
 }
 
+function resolveSurfaceArea(terraforming) {
+  if (!terraforming || !terraforming.celestialParameters) return 0;
+  const params = terraforming.celestialParameters;
+  if (!params.surfaceArea) {
+    if (typeof params.radius === 'number') {
+      params.surfaceArea = 4 * Math.PI * Math.pow(params.radius * 1000, 2);
+    } else {
+      return 0;
+    }
+  }
+  return params.surfaceArea;
+}
+
 function calculateZonalCoverage(terraforming, zone, resourceType) {
-  const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
+  const totalSurfaceArea = resolveSurfaceArea(terraforming);
   const zoneArea = totalSurfaceArea * getZonePercentage(zone);
   if (zoneArea <= 0) return 0;
 
@@ -69,7 +83,7 @@ function calculateAverageCoverage(terraforming, resourceType) {
 }
 
 function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
-  const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zone);
+  const zoneArea = resolveSurfaceArea(terraforming) * getZonePercentage(zone);
   const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
   const iceCoverage = calculateZonalCoverage(terraforming, zone, 'ice');
   const dryIceCoverage = calculateZonalCoverage(terraforming, zone, 'dryIce');
@@ -88,7 +102,7 @@ function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, night
 }
 
 function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp) {
-  const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zone);
+  const zoneArea = resolveSurfaceArea(terraforming) * getZonePercentage(zone);
   return baseCalculatePrecipFactor({
     zoneArea,
     waterVaporPressure,
