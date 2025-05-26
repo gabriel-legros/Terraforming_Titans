@@ -292,4 +292,14 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateEvaporationSublimationRates,
         calculatePrecipitationRateFactor
     };
+} else {
+    // Expose functions globally for browser usage
+    globalThis.saturationVaporPressureBuck = saturationVaporPressureBuck;
+    globalThis.derivativeSaturationVaporPressureBuck = derivativeSaturationVaporPressureBuck;
+    globalThis.slopeSaturationVaporPressureWater = slopeSaturationVaporPressureWater;
+    globalThis.psychrometricConstantWater = psychrometricConstantWater;
+    globalThis.sublimationRateWater = sublimationRateWater;
+    globalThis.evaporationRateWater = evaporationRateWater;
+    globalThis.calculateEvaporationSublimationRates = calculateEvaporationSublimationRates;
+    globalThis.calculatePrecipitationRateFactor = calculatePrecipitationRateFactor;
 }

@@ -69,4 +69,8 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { simulateSurfaceWaterFlow, calculateMeltingFreezingRates };
+} else {
+    // Expose functions globally for browser usage
+    globalThis.simulateSurfaceWaterFlow = simulateSurfaceWaterFlow;
+    globalThis.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
 }
