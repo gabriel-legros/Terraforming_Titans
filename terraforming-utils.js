@@ -80,7 +80,7 @@ function calculateAverageCoverage(terraforming, resourceType) {
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
 }
 
-function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
+function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
   const iceCoverage = calculateZonalCoverage(terraforming, zone, 'ice');
@@ -99,7 +99,7 @@ function calculateEvaporationSublimationRates(terraforming, zone, dayTemp, night
   });
 }
 
-function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp) {
+function calculateZonalPrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   return baseCalculatePrecipFactor({
     zoneArea,
@@ -110,23 +110,26 @@ function calculatePrecipitationRateFactor(terraforming, zone, waterVaporPressure
   });
 }
 
-const calculateMeltingFreezingRates = (terraforming, zone, temperature) => {
+const calculateZonalMeltingFreezingRates = (terraforming, zone, temperature) => {
   const availableIce = terraforming.zonalWater?.[zone]?.ice || 0;
   const availableLiquid = terraforming.zonalWater?.[zone]?.liquid || 0;
   return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid);
 };
 
 if (!isNode) {
-  // expose wrapper for browser usage without overwriting the captured base
-  globalThis.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
+  // expose wrappers for browser usage without overwriting the captured bases
+  globalThis.calculateEvaporationSublimationRates = calculateZonalEvaporationSublimationRates;
+  globalThis.calculatePrecipitationRateFactor = calculateZonalPrecipitationRateFactor;
+  globalThis.calculateMeltingFreezingRates = calculateZonalMeltingFreezingRates;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     calculateAverageCoverage,
     calculateZonalCoverage,
-    calculateEvaporationSublimationRates,
-    calculatePrecipitationRateFactor,
-    calculateMeltingFreezingRates
+    // expose with original names for consumers
+    calculateEvaporationSublimationRates: calculateZonalEvaporationSublimationRates,
+    calculatePrecipitationRateFactor: calculateZonalPrecipitationRateFactor,
+    calculateMeltingFreezingRates: calculateZonalMeltingFreezingRates
   };
 }
