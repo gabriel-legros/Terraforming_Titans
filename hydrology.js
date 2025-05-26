@@ -2,7 +2,7 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
     const flowRateCoefficient = 0.005; // Adjust to control flow speed (fraction per second)
     const secondsMultiplier = deltaTime / 1000;
 
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
     // Define flow direction: Polar -> Temperate -> Tropical
     const flowPaths = {
         polar: 'temperate',

@@ -3,6 +3,8 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
+let ZONES;
+
 // Load utility functions when running under Node for tests
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
@@ -15,6 +17,10 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const dryIceCycle = require('./dry-ice-cycle.js');
     var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
+    ZONES = require('./zones.js').ZONES;
+    if (typeof globalThis.ZONES === 'undefined') {
+        globalThis.ZONES = ZONES;
+    }
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
         globalThis.EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
     }
@@ -190,7 +196,7 @@ class Terraforming extends EffectableEntity{
 
   // Calculates average coverage percentage using a logistic function
   _calculateAverageCoverage(resourceType) {
-      const zones = ['tropical', 'temperate', 'polar'];
+      const zones = ZONES;
       let weightedAverageCoverage = 0;
 
       for (const zone of zones) {
@@ -322,7 +328,7 @@ class Terraforming extends EffectableEntity{
           this.temperature.zones[zone].initial = this.temperature.zones[zone].value;
       }
       // This code block belongs inside calculateInitialValues
-      const zones = ['tropical', 'temperate', 'polar'];
+      const zones = ZONES;
       // Get initial amounts directly from currentPlanetParameters
       const initialLiquidWater = currentPlanetParameters.resources.surface.liquidWater?.initialValue || 0;
       const initialIce = currentPlanetParameters.resources.surface.ice?.initialValue || 0;
@@ -418,7 +424,7 @@ class Terraforming extends EffectableEntity{
         // Note: This is an approximation. Calculating per zone and summing would be more accurate but complex.
 
         // Calculate rates as if the whole planet was one zone
-        const zones = ['tropical', 'temperate', 'polar']; // Still need zones for coverage/area calcs inside rate functions
+        const zones = ZONES; // Still need zones for coverage/area calcs inside rate functions
         for (const zone of zones) {
             const dayTemp = this.temperature.zones[zone].day;
             const nightTemp = this.temperature.zones[zone].night;
@@ -492,7 +498,7 @@ class Terraforming extends EffectableEntity{
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         if (durationSeconds <= 0) return;
 
-        const zones = ['tropical', 'temperate', 'polar'];
+        const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
         // Get current global atmospheric state directly from resources or calculate pressures
         let globalTotalPressurePa = 0;
@@ -1062,7 +1068,7 @@ class Terraforming extends EffectableEntity{
 // Distributes net changes from global resources (caused by buildings/other non-zonal processes)
 // proportionally into the zonal data structures before zonal simulation runs.
 distributeGlobalChangesToZones(deltaTime) {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = ZONES;
     const secondsMultiplier = deltaTime / 1000;
 
     // Define which SURFACE resources need distribution
@@ -1211,7 +1217,7 @@ distributeGlobalChangesToZones(deltaTime) {
 // Updates the global SURFACE resources object based on summed zonal surface/water data.
 // Atmospheric resources are now updated directly in updateResources.
 synchronizeGlobalResources() {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = ZONES;
     let totalLiquidWater = 0;
     let totalIce = 0;
     let totalDryIce = 0;
