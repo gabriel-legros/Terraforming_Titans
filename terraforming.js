@@ -816,10 +816,11 @@ class Terraforming extends EffectableEntity{
 
         // --- Redistribution of precipitation based on wind and water coverage ---
         const totalPrecip = zones.reduce((sum, z) => sum + zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall, 0);
-        if (totalPrecip > 0) {
+        const warmZones = zones.filter(z => this.temperature.zones[z].value > 273.15);
+        if (totalPrecip > 0 && warmZones.length > 0) {
             const zoneWeights = {};
             let weightSum = 0;
-            zones.forEach(z => {
+            warmZones.forEach(z => {
                 const waterCov = this._calculateZonalCoverage(z, 'liquidWater');
                 const w = WIND_WEIGHT + WATER_WEIGHT * waterCov;
                 zoneWeights[z] = w;
@@ -827,14 +828,16 @@ class Terraforming extends EffectableEntity{
             });
             zones.forEach(z => {
                 const current = zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall;
-                const desired = totalPrecip * zoneWeights[z] / weightSum;
-                const diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
+                const isWarm = warmZones.includes(z);
+                const desired = isWarm ? totalPrecip * zoneWeights[z] / weightSum : 0;
+                let diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
+                if (!isWarm && diff > 0) diff = 0; // cold zones cannot gain
                 if (diff !== 0) {
                     const zoneTemp = this.temperature.zones[z].value;
                     const isRain = zoneTemp > 273.15; // >0°C
                     const rainAdj = isRain ? diff : 0;
-                    const snowAdj = isRain ? 0 : diff;            
-                    
+                    const snowAdj = isRain ? 0 : diff;
+
                     zonalChanges[z].liquidWater += rainAdj;
                     zonalChanges[z].ice += snowAdj;
                     totalRainfallAmount += rainAdj;
