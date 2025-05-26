@@ -9,6 +9,12 @@ const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 const EQUILIBRIUM_WATER_PARAMETER = 0.042841229754382766;
 const EQUILIBRIUM_CO2_PARAMETER = 6.204412788729393e-8;
 
+// Fraction of precipitation redistributed across zones
+const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
+// Weights for redistribution: small effect from winds, larger from water coverage
+const WIND_WEIGHT = 0.2;
+const WATER_WEIGHT = 0.8;
+
 const terraformingGasTargets = {
   carbonDioxide : {min : 0, max : 100},
   oxygen : {min : 15000, max : 25000},
@@ -659,7 +665,10 @@ class Terraforming extends EffectableEntity{
                 // Store potential downward flux amounts for scaling
                 potentialRainfall: 0,
                 potentialSnowfall: 0,
-                potentialCO2Condensation: 0
+                potentialCO2Condensation: 0,
+                // Track realized precipitation before redistribution
+                actualRainfall: 0,
+                actualSnowfall: 0
             };
         });
 
@@ -770,6 +779,9 @@ class Terraforming extends EffectableEntity{
                 // Accumulate actual totals for UI
                 totalRainfallAmount += actualRainfall;
                 totalSnowfallAmount += actualSnowfall;
+                // Store for redistribution
+                zonalChanges[zone].actualRainfall = actualRainfall;
+                zonalChanges[zone].actualSnowfall = actualSnowfall;
             } else {
                 // If it was a net gain zone, add potential precipitation anyway (it wasn't limited)
                 // These amounts were stored as potential gains initially, add them now.
@@ -780,6 +792,9 @@ class Terraforming extends EffectableEntity{
                 // Accumulate actual totals for UI
                 totalRainfallAmount += actualRainfall;
                 totalSnowfallAmount += actualSnowfall;
+                // Store for redistribution
+                zonalChanges[zone].actualRainfall = actualRainfall;
+                zonalChanges[zone].actualSnowfall = actualSnowfall;
             }
 
             // Adjust CO2 Loss/Gain
@@ -797,9 +812,38 @@ class Terraforming extends EffectableEntity{
                  const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation; // Not scaled
                  zonalChanges[zone].dryIce += actualCO2Condensation;
                  // Accumulate actual total for UI
-                 totalCo2CondensationAmount += actualCO2Condensation;
+                totalCo2CondensationAmount += actualCO2Condensation;
             }
         });
+
+        // --- Redistribution of precipitation based on wind and water coverage ---
+        const totalPrecip = zones.reduce((sum, z) => sum + zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall, 0);
+        if (totalPrecip > 0) {
+            const zoneWeights = {};
+            let weightSum = 0;
+            zones.forEach(z => {
+                const waterCov = this._calculateZonalCoverage(z, 'liquidWater');
+                const w = WIND_WEIGHT + WATER_WEIGHT * waterCov;
+                zoneWeights[z] = w;
+                weightSum += w;
+            });
+            zones.forEach(z => {
+                const current = zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall;
+                const desired = totalPrecip * zoneWeights[z] / weightSum;
+                const diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
+                if (diff !== 0) {
+                    const zoneTemp = this.temperature.zones[z].value;
+                    const isRain = zoneTemp > 273.15; // >0°C
+                    const rainAdj = isRain ? diff : 0;
+                    const snowAdj = isRain ? 0 : diff;            
+                    
+                    zonalChanges[z].liquidWater += rainAdj;
+                    zonalChanges[z].ice += snowAdj;
+                    totalRainfallAmount += rainAdj;
+                    totalSnowfallAmount += snowAdj;
+                }
+            });
+        }
 
 
         // --- 3. Apply net changes ---
