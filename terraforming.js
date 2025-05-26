@@ -15,7 +15,9 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const dryIceCycle = require('./dry-ice-cycle.js');
     var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
-    var EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
+    if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
+        globalThis.EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
+    }
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
