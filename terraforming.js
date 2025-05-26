@@ -3,8 +3,6 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
-let ZONES;
-
 // Load utility functions when running under Node for tests
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');

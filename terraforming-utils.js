@@ -1,6 +1,5 @@
 // Utility functions for terraforming calculations
 
-let ZONES, getZonePercentage;
 let baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -11,7 +10,6 @@ if (typeof module !== 'undefined' && module.exports) {
   const hydrology = require('./hydrology.js');
   baseCalculateMeltFreeze = hydrology.calculateMeltingFreezingRates;
 } else {
-  ZONES = globalThis.ZONES;
   getZonePercentage = globalThis.getZonePercentage;
   baseCalculateEvapSubl = globalThis.calculateEvaporationSublimationRates;
   baseCalculatePrecipFactor = globalThis.calculatePrecipitationRateFactor;
