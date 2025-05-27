@@ -5,7 +5,7 @@ class DayNightCycle {
       this.dayProgress = 0;
     }
   
-    update(delta) {
+    updatee(delta) {
       this.elapsedTime += delta;
       this.dayProgress = (this.elapsedTime % this.dayDuration) / this.dayDuration;
     }
@@ -43,7 +43,7 @@ class DayNightCycle {
 
   
 
-function updateeDayNightDisplay() {
+function updateDayNightDisplay() {
   const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
   const dayProgress = dayNightCycle.getDayProgress() * 100;  
 
