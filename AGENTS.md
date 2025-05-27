@@ -28,5 +28,7 @@ Tests covering helper utilities and physics functions reside in the `__tests__`
 directory and run under Jest.
 
 #Testing
+
+jest and jsdom are installed globally
 Create new tests for any newly implemented feature
 Run tests with npm test
