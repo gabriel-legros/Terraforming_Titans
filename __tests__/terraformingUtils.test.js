@@ -6,18 +6,19 @@ global.EffectableEntity = EffectableEntity;
 const lifeParameters = require('../life-parameters.js');
 global.lifeParameters = lifeParameters;
 const Terraforming = require('../terraforming.js');
+const { calculateZonalCoverage } = require('../terraforming-utils.js');
 
 // Disable expensive updates that rely on global resources
 Terraforming.prototype.updateLuminosity = function() {};
 Terraforming.prototype.updateSurfaceTemperature = function() {};
 
-describe('Terraforming _calculateZonalCoverage', () => {
+describe('Terraforming calculateZonalCoverage util', () => {
   test('handles missing zonal data gracefully', () => {
     const terra = new Terraforming({}, { radius: 10 });
     terra.zonalWater = {}; // no data for zones
     terra.zonalSurface = {};
-    expect(() => terra._calculateZonalCoverage('tropical', 'liquidWater')).not.toThrow();
-    expect(terra._calculateZonalCoverage('tropical', 'liquidWater')).toBe(0);
+    expect(() => calculateZonalCoverage(terra, 'tropical', 'liquidWater')).not.toThrow();
+    expect(calculateZonalCoverage(terra, 'tropical', 'liquidWater')).toBe(0);
   });
 
   test('computes surface area from radius during initialization', () => {
