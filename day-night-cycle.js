@@ -5,7 +5,7 @@ class DayNightCycle {
       this.dayProgress = 0;
     }
   
-    updatee(delta) {
+    update(delta) {
       this.elapsedTime += delta;
       this.dayProgress = (this.elapsedTime % this.dayDuration) / this.dayDuration;
     }
