@@ -237,7 +237,7 @@ function createTemperatureBox(row) {
     row.appendChild(atmosphereBox);
   }
   
-  function updateAtmosphereBox() {
+  function updateeAtmosphereBox() {
     const atmosphereBox = document.getElementById('atmosphere-box');
     if(terraforming.getAtmosphereStatus()){
       atmosphereBox.style.borderColor = 'green';
