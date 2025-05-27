@@ -215,9 +215,6 @@ class Terraforming extends EffectableEntity{
     return (this.getTemperatureStatus() && this.getAtmosphereStatus() && this.getWaterStatus() && this.getLuminosityStatus() && this.getLifeStatus() && this.getMagnetosphereStatus());
   }
 
-  _calculateZonalCoverage(zone, resourceType) {
-    return calculateZonalCoverage(this, zone, resourceType);
-  }
 
   calculateInitialValues() {
       // Store initial zonal temperatures
