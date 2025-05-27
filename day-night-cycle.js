@@ -43,7 +43,7 @@ class DayNightCycle {
 
   
 
-function updateDayNightDisplay() {
+function updateeDayNightDisplay() {
   const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
   const dayProgress = dayNightCycle.getDayProgress() * 100;  
 
