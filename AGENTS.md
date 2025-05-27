@@ -1,5 +1,5 @@
 #Instructions
-All imports and exports need to be done with the fact this game will be run in a browser in mind.
+All imports and exports need to be done with the fact this game will be run in a browser from index.html in mind.
 
 #Overview of code
 This repository hosts a browser‑based incremental game written in JavaScript.
@@ -28,4 +28,5 @@ Tests covering helper utilities and physics functions reside in the `__tests__`
 directory and run under Jest.
 
 #Testing
+Create new tests for any newly implemented feature
 Run tests with npm test
