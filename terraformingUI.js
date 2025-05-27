@@ -573,5 +573,3 @@ function updateCompleteTerraformingButton() {
       button.disabled = true; // Disable the button
   }
 }
-
-let oauedtnsoaue = 1/0
