@@ -1150,7 +1150,9 @@ synchronizeGlobalResources() {
     // Sum up surface resources from zones
     zones.forEach(zone => {
         totalLiquidWater += this.zonalWater[zone].liquid || 0;
-        totalIce += this.zonalWater[zone].ice || 0;
+        const surfaceIce = this.zonalWater[zone].ice || 0;
+        const buried = this.zonalWater[zone].buriedIce || 0;
+        totalIce += surfaceIce + buried;
         totalDryIce += this.zonalSurface[zone].dryIce || 0;
         totalBiomass += this.zonalSurface[zone].biomass || 0;
     });
