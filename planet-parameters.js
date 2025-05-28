@@ -92,7 +92,7 @@ const defaultPlanetParameters = {
 
 const marsOverrides = {
   name: 'Mars',
-zonalWater : {tropical : {liquid : 0, ice : 0}, temperate : {liquid : 0, ice : 0}, polar : {liquid : 0, ice : 1e16 } }
+//zonalWater : {tropical : {liquid : 0, ice : 0}, temperate : {liquid : 0, ice : 0}, polar : {liquid : 0, ice : 1e16 } }
 };
 
 const titanOverrides = {

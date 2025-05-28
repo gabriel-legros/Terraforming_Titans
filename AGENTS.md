@@ -32,3 +32,4 @@ directory and run under Jest.
 jest and jsdom are installed globally
 Create new tests for any newly implemented feature
 Run tests with npm test
+Describe how many tests have passed/failed and describe any tests that failed if you cannot fix it.

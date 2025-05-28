@@ -232,7 +232,7 @@ class Terraforming extends EffectableEntity{
       const initialBiomass = currentPlanetParameters.resources.surface.biomass?.initialValue || 0;
 
       const iceZoneDistribution = { tropical: 0.01, temperate: 0.09, polar: 0.90 };
-      const buriedFractions = { tropical: 0.9, temperate: 0.9, polar: 0.3 };
+      const buriedFractions = { tropical: 1, temperate: 1, polar: 0.3 };
 
       zones.forEach(zone => {
           const zoneRatio = getZonePercentage(zone);
