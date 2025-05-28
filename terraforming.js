@@ -35,7 +35,6 @@ const EQUILIBRIUM_WATER_PARAMETER = 0.042841229754382766;
 const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
 // Weights for redistribution: small effect from winds, larger from water coverage
 const WIND_WEIGHT = 0.2;
-const WATER_WEIGHT = 0.8;
 
 const terraformingGasTargets = {
   carbonDioxide : {min : 0, max : 100},
@@ -607,22 +606,18 @@ class Terraforming extends EffectableEntity{
 
         // --- Redistribution of precipitation based on wind and water coverage ---
         const totalPrecip = zones.reduce((sum, z) => sum + zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall, 0);
-        const warmZones = zones.filter(z => this.temperature.zones[z].value > 273.15);
-        if (totalPrecip > 0 && warmZones.length > 0) {
+        if (totalPrecip > 0 && zones.length > 0) {
             const zoneWeights = {};
             let weightSum = 0;
-            warmZones.forEach(z => {
-                const waterCov = calculateZonalCoverage(this, z, 'liquidWater');
-                const w = WIND_WEIGHT + WATER_WEIGHT * waterCov;
+            zones.forEach(z => {
+                const w = WIND_WEIGHT;
                 zoneWeights[z] = w;
                 weightSum += w;
             });
             zones.forEach(z => {
                 const current = zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall;
-                const isWarm = warmZones.includes(z);
-                const desired = isWarm ? totalPrecip * zoneWeights[z] / weightSum : 0;
+                const desired = totalPrecip * zoneWeights[z] / weightSum;
                 let diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
-                if (!isWarm && diff > 0) diff = 0; // cold zones cannot gain
                 if (diff !== 0) {
                     const zoneTemp = this.temperature.zones[z].value;
                     const isRain = zoneTemp > 273.15; // >0°C
