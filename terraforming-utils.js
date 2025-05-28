@@ -61,7 +61,6 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
     coverage = 0;
   } else if (resourceRatio <= 0.001) {
     coverage = 10 * resourceRatio;
-    coverage = Math.max(coverage, 0.00001);
   } else if (resourceRatio < 1) {
     coverage = 0.143317 * Math.log(resourceRatio) + 1;
     const linearEndCoverage = 10 * 0.001;

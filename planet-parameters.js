@@ -49,9 +49,9 @@ const defaultPlanetParameters = {
     },
     surface: {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
-      ice: { name: 'Ice', initialValue: 1e16, unlocked:false }, // Default (Mars)
+      ice: { name: 'Ice', initialValue: 0, unlocked:false }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
-      dryIce : {name : 'Dry Ice', initialValue: 30011579346450, unlocked: false}, // Default (Mars)
+      dryIce : {name : 'Dry Ice', initialValue: 30010169900060.594, unlocked: false}, // Default (Mars)
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false},
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false}
     },
@@ -60,10 +60,10 @@ const defaultPlanetParameters = {
       geothermal: { name: 'Geothermal vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
     },
     atmospheric: {
-      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23156295427188.7, unlocked:false }, // Default (Mars)
+      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23157704873578.164, unlocked:false }, // Default (Mars)
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
-      atmosphericWater: { name: 'Water Vap.', initialValue: 1e10, unlocked:false }, // Default (Mars) - Adjusted based on review
+      atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false} // Default (Mars)
     },
     special: {
@@ -92,7 +92,7 @@ const defaultPlanetParameters = {
 
 const marsOverrides = {
   name: 'Mars',
-//zonalWater : {tropical : {liquid : 0, ice : 0}, temperate : {liquid : 0, ice : 0}, polar : {liquid : 0, ice : 1e16 } }
+zonalWater : {tropical : {liquid : 0, ice :  74964827777.23979, buriedIce : 100000000000000}, temperate : {liquid : 0, ice : 120302415739.05075, buriedIce : 900000000000000}, polar : {liquid : 0, ice : 6299804540157335, buriedIce : 2700000000000000 } }
 };
 
 const titanOverrides = {
