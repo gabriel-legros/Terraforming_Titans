@@ -34,29 +34,42 @@
   }
 
   function fastForwardToEquilibrium(options = {}) {
-    const stepMs = options.stepMs || 1000;
+    let stepMs = options.stepMs || 1000;
     const maxSteps = options.maxSteps || 100000;
     const stableSteps = options.stableSteps || 10;
     const threshold = options.threshold || 1;
+    const refineFactor = options.refineFactor || 0.5;
+    const minStepMs = options.minStepMs || 1;
+
     let prev = captureValues();
     let stable = 0;
     let step;
+
     for (step = 0; step < maxSteps; step++) {
       updateLogic(stepMs);
       const cur = captureValues();
+
       if (isStable(prev, cur, threshold)) {
         stable++;
       } else {
         stable = 0;
       }
+
       if (stable >= stableSteps) {
-        console.log('Equilibrium reached after', step + 1, 'steps');
-        console.log('Global values:', cur.global);
-        console.log('Zonal values:', cur.zones);
-        return cur;
+        if (stepMs > minStepMs) {
+          stepMs = Math.max(minStepMs, stepMs * refineFactor);
+          stable = 0;
+        } else {
+          console.log('Equilibrium reached after', step + 1, 'steps');
+          console.log('Global values:', cur.global);
+          console.log('Zonal values:', cur.zones);
+          return cur;
+        }
       }
+
       prev = cur;
     }
+
     console.log('Max steps reached without clear equilibrium');
     console.log('Global values:', prev.global);
     console.log('Zonal values:', prev.zones);
