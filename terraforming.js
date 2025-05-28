@@ -72,11 +72,13 @@ class Terraforming extends EffectableEntity{
     this.zonalWater = {};
     ['tropical', 'temperate', 'polar'].forEach(zone => {
         this.zonalWater[zone] = {
-            liquid: 0, // Represents amount/mass in the zone
-            ice: 0,    // Represents amount/mass in the zone
+            liquid: 0,     // Amount of liquid water at the surface
+            ice: 0,        // Surface ice
+            buriedIce: 0   // Subsurface/covered ice that does not directly sublimate
             // humidity: 0, // Zonal humidity will likely be calculated dynamically
         };
     });
+
     // Global water target remains, moved outside the old structure
     this.waterTarget = 0.2; // Target for average liquid water coverage
     this.waterUnlocked = false; // Global unlock status
@@ -229,27 +231,19 @@ class Terraforming extends EffectableEntity{
       const initialDryIce = currentPlanetParameters.resources.surface.dryIce?.initialValue || 0;
       const initialBiomass = currentPlanetParameters.resources.surface.biomass?.initialValue || 0;
 
+      const iceZoneDistribution = { tropical: 0.01, temperate: 0.09, polar: 0.90 };
+      const buriedFractions = { tropical: 0.9, temperate: 0.9, polar: 0.3 };
+
       zones.forEach(zone => {
           const zoneRatio = getZonePercentage(zone);
           // Distribute Liquid Water and Biomass proportionally
           this.zonalWater[zone].liquid = initialLiquidWater * zoneRatio;
           this.zonalSurface[zone].biomass = initialBiomass * zoneRatio;
 
-          // Distribute Ice based on Mars-like model (90% Polar, 9% Temperate, 1% Tropical)
-          let iceDistributionFactor = 0;
-          if (zone === 'polar') {
-              iceDistributionFactor = 1;
-          } else if (zone === 'temperate') {
-              iceDistributionFactor = 0;
-          } else if (zone === 'tropical') {
-              iceDistributionFactor = 0;
-          }
-          this.zonalWater[zone].ice = initialIce * iceDistributionFactor;
-
-          // If zonalWater exists in planet parameters, we override
-          if(currentPlanetParameters.zonalWater){
-              this.zonalWater = structuredClone(currentPlanetParameters.zonalWater);
-          }
+          const zoneIce = initialIce * (iceZoneDistribution[zone] || 0);
+          const buriedFraction = buriedFractions[zone] || 0;
+          this.zonalWater[zone].ice = zoneIce * (1 - buriedFraction);
+          this.zonalWater[zone].buriedIce = zoneIce * buriedFraction;
 
           // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
           if (zone === 'polar') {
@@ -259,6 +253,16 @@ class Terraforming extends EffectableEntity{
           }
 
     });
+
+    // Override defaults if planet parameters specify zonal water amounts
+    if (currentPlanetParameters.zonalWater) {
+        this.zonalWater = structuredClone(currentPlanetParameters.zonalWater);
+        zones.forEach(z => {
+            if (!this.zonalWater[z].hasOwnProperty('buriedIce')) {
+                this.zonalWater[z].buriedIce = 0;
+            }
+        });
+    }
 
     // Initialize global atmospheric resource amounts (no longer storing in this.atmosphere.gases)
     for (const gas in currentPlanetParameters.resources.atmospheric) {

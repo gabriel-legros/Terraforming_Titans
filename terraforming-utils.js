@@ -37,7 +37,9 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
   if (resourceType === 'liquidWater') {
     zonalAmount = terraforming.zonalWater[zone]?.liquid || 0;
   } else if (resourceType === 'ice') {
-    zonalAmount = terraforming.zonalWater[zone]?.ice || 0;
+    zonalAmount = terraforming.zonalWater[zone]?.ice || 0; // exclude buried ice from coverage
+  } else if (resourceType === 'buriedIce') {
+    zonalAmount = terraforming.zonalWater[zone]?.buriedIce || 0;
   } else if (resourceType === 'biomass') {
     zonalAmount = terraforming.zonalSurface[zone]?.biomass || 0;
   } else if (resourceType === 'dryIce') {
