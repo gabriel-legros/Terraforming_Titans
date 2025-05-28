@@ -48,7 +48,7 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
 }
 
 // Compute melting and freezing rates for a surface zone based on temperature
-function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid) {
+function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0) {
     const freezingPoint = 273.15;
     const meltingRateMultiplier = 0.0000001; // per K per second
     const freezingRateMultiplier = 0.0000001; // per K per second
@@ -56,9 +56,11 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
     let meltingRate = 0;
     let freezingRate = 0;
 
-    if (temperature > freezingPoint && availableIce > 0) {
+    const totalIce = (availableIce || 0) + (availableBuriedIce || 0);
+
+    if (temperature > freezingPoint && totalIce > 0) {
         const diff = temperature - freezingPoint;
-        meltingRate = availableIce * meltingRateMultiplier * diff;
+        meltingRate = totalIce * meltingRateMultiplier * diff;
     } else if (temperature < freezingPoint && availableLiquid > 0) {
         const diff = freezingPoint - temperature;
         freezingRate = availableLiquid * freezingRateMultiplier * diff;

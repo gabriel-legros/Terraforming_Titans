@@ -430,7 +430,7 @@ class Terraforming extends EffectableEntity{
         let zonalChanges = {}; // Store calculated zonal change *amounts* for the tick
         zones.forEach(zone => {
             zonalChanges[zone] = {
-                liquidWater: 0, ice: 0, dryIce: 0, // Net surface changes
+                liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, // Net surface changes
                 // Store potential atmospheric changes originating/terminating in this zone
                 potentialAtmosphericWaterChange: 0,
                 potentialAtmosphericCO2Change: 0,
@@ -459,6 +459,7 @@ class Terraforming extends EffectableEntity{
             const nightTemp = this.temperature.zones[zone].night;
             const availableLiquid = this.zonalWater[zone].liquid || 0;
             const availableIce = this.zonalWater[zone].ice || 0;
+            const availableBuriedIce = this.zonalWater[zone].buriedIce || 0;
             const availableDryIce = this.zonalSurface[zone].dryIce || 0;
             const zonalSolarFlux = solarFlux * getZoneRatio(zone); // Calculate zone-specific flux
 
@@ -519,12 +520,16 @@ class Terraforming extends EffectableEntity{
             // --- Phase Changes (Surface Only) ---
             const meltFreezeRates = calculateMeltingFreezingRates(this, zone, zoneTemp);
             // Calculate melt/freeze based on amounts *after* sublimation/evaporation but *before* potential precipitation
-            const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableIce + zonalChanges[zone].ice); // Limit by ice available after subl
+            const availableForMelt = availableIce + availableBuriedIce + zonalChanges[zone].ice + zonalChanges[zone].buriedIce;
+            const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt); // Limit by ice available after sublimation
             const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].liquidWater); // Limit by liquid available after evap
 
             // Apply melt/freeze changes to surface stores (adjusting the net change)
             zonalChanges[zone].liquidWater += meltAmount - freezeAmount;
-            zonalChanges[zone].ice += freezeAmount - meltAmount;
+            const meltFromIce = Math.min(meltAmount, availableIce + zonalChanges[zone].ice);
+            const meltFromBuried = meltAmount - meltFromIce;
+            zonalChanges[zone].ice += freezeAmount - meltFromIce;
+            zonalChanges[zone].buriedIce -= meltFromBuried;
             // Accumulate totals for UI
             totalMeltAmount += meltAmount;
             totalFreezeAmount += freezeAmount;
@@ -646,15 +651,17 @@ class Terraforming extends EffectableEntity{
 
         // Apply to Zonal Surface Stores
         for (const zone of zones) {
-            // Net changes already calculated and stored in zonalChanges[zone].liquidWater, .ice, .dryIce
+            // Net changes already calculated and stored in zonalChanges[zone].liquidWater, .ice, .buriedIce, .dryIce
             this.zonalWater[zone].liquid += zonalChanges[zone].liquidWater;
             this.zonalWater[zone].ice += zonalChanges[zone].ice;
+            this.zonalWater[zone].buriedIce += zonalChanges[zone].buriedIce;
             if (!this.zonalSurface[zone].dryIce) this.zonalSurface[zone].dryIce = 0;
             this.zonalSurface[zone].dryIce += zonalChanges[zone].dryIce;
 
             // Ensure non-negative
             this.zonalWater[zone].liquid = Math.max(0, this.zonalWater[zone].liquid);
             this.zonalWater[zone].ice = Math.max(0, this.zonalWater[zone].ice);
+            this.zonalWater[zone].buriedIce = Math.max(0, this.zonalWater[zone].buriedIce);
             this.zonalSurface[zone].dryIce = Math.max(0, this.zonalSurface[zone].dryIce);
         }
 
