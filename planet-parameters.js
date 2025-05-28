@@ -92,8 +92,55 @@ const defaultPlanetParameters = {
 
 const marsOverrides = {
   name: 'Mars',
-zonalWater : {tropical : {liquid : 0, ice :  74964827777.23979, buriedIce : 100000000000000}, temperate : {liquid : 0, ice : 120302415739.05075, buriedIce : 900000000000000}, polar : {liquid : 0, ice : 6299804540157335, buriedIce : 2700000000000000 } }
-};
+ "resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 9999999807400868
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 30010169900060.53
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 23157704873578.164
+      },
+      "atmosphericWater": {
+        "initialValue": 10192599116.536034
+      }
+    }
+  },
+  "zonalWater": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 74964827777.51788,
+      "buriedIce": 100000000000000
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 120302415755.53934,
+      "buriedIce": 900000000000000
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 6299804540157335,
+      "buriedIce": 2700000000000000
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "dryIce": 0
+    },
+    "temperate": {
+      "dryIce": 0
+    },
+    "polar": {
+      "dryIce": 30010169900060.53
+    }
+  }};
 
 const titanOverrides = {
   name: 'Titan',
