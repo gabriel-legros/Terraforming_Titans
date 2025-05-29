@@ -14,4 +14,6 @@ let projectManager;  // Use ProjectManager instead of individual projects
 let storyStarted = false;  // Track if the story has been triggered
 let terraforming;
 
+let gameSettings = { useCelsius: false };
+
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});

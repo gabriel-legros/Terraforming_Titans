@@ -32,14 +32,25 @@ function formatNumber(value, integer = false, precision = 1) {
     return value < 0 ? '-' + formatted : formatted;
   }
   
-  function formatBigInteger(number) {
+function formatBigInteger(number) {
     // Convert the number to a string and use regex to add commas
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function toDisplayTemperature(kelvin) {
+    const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
+    return useC ? kelvin - 273.15 : kelvin;
+  }
+
+  function getTemperatureUnit() {
+    return (typeof gameSettings !== 'undefined' && gameSettings.useCelsius) ? '°C' : 'K';
   }
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       formatNumber,
       formatBigInteger,
+      toDisplayTemperature,
+      getTemperatureUnit,
     };
   }

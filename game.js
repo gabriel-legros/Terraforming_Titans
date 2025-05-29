@@ -92,6 +92,8 @@ function initializeGameState() {
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
 
+  gameSettings.useCelsius = false;
+  
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
   dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)

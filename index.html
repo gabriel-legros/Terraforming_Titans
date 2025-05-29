@@ -277,6 +277,9 @@
       <!-- ... existing settings content ... -->
        <div class="container settings-container">
           <h2>Save</h2>
+          <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
+          </label>
           <div class="save-slots">
               <!-- ... table ... -->
               <table>
@@ -433,6 +436,15 @@
 
     // Event listener for the actual file input change
     document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
+
+    const celsiusToggle = document.getElementById('celsius-toggle');
+    if (celsiusToggle) {
+        celsiusToggle.checked = gameSettings.useCelsius;
+        celsiusToggle.addEventListener('change', () => {
+            gameSettings.useCelsius = celsiusToggle.checked;
+            updateTerraformingUI();
+        });
+    }
 
      // Ensure the initially active tab content is displayed on load
      // (The 'settings' tab has 'active' class in HTML, so this might be redundant
