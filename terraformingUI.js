@@ -93,16 +93,16 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p>Current average: <span id="temperature-current">${terraforming.temperature.value}</span>K</p>
-      <p>Effective Temp (No Atm): <span id="effective-temp-no-atm">${terraforming.temperature.effectiveTempNoAtmosphere.toFixed(2)}</span> K</p>
+      <p>Current average: <span id="temperature-current"></span><span class="temp-unit"></span></p>
+      <p>Effective Temp (No Atm): <span id="effective-temp-no-atm"></span> <span class="temp-unit"></span></p>
       <table>
         <thead>
           <tr>
             <th>Zone</th>
-            <th>T (K)</th>
-            <th>Delta (K)</th>
-            <th>Day (K)</th>
-            <th>Night (K)</th>
+            <th>T (<span class="temp-unit"></span>)</th>
+            <th>Delta (<span class="temp-unit"></span>)</th>
+            <th>Day (<span class="temp-unit"></span>)</th>
+            <th>Night (<span class="temp-unit"></span>)</th>
           </tr>
         </thead>
         <tbody>
@@ -137,7 +137,8 @@ function createTemperatureBox(row) {
     temperatureBox.appendChild(tempPenaltySpan);
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Average between 278.15K and 293.15K.";
+    targetSpan.id = 'temperature-target';
+    targetSpan.textContent = "";
     targetSpan.classList.add('terraforming-target')
     targetSpan.style.marginTop = 'auto';
     temperatureBox.appendChild(targetSpan);
@@ -148,41 +149,48 @@ function createTemperatureBox(row) {
   function updateTemperatureBox() {
     const temperatureBox = document.getElementById('temperature-box');
 
+    const unit = getTemperatureUnit();
+    temperatureBox.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
+    const targetSpan = document.getElementById('temperature-target');
+    if(targetSpan){
+      targetSpan.textContent = `Target : Average between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(293.15), false, 2)}${unit}.`;
+    }
+
     const temperatureCurrent = document.getElementById('temperature-current');
-    temperatureCurrent.textContent = formatNumber(terraforming.temperature.value, false, 2);
+    temperatureCurrent.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
   
     const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
-    effectiveTempNoAtm.textContent = formatNumber(terraforming.temperature.effectiveTempNoAtmosphere, false, 2);
+    effectiveTempNoAtm.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.effectiveTempNoAtmosphere), false, 2);
   
     const tropicalTemp = document.getElementById('tropical-temp');
-    tropicalTemp.textContent = formatNumber(terraforming.temperature.zones.tropical.value, false, 2);
+    tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
     const tropicalDelta = document.getElementById('tropical-delta');
     const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
     tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
     const tropicalDay = document.getElementById('tropical-day');
-    tropicalDay.textContent = formatNumber(terraforming.temperature.zones.tropical.day, false, 2);
+    tropicalDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
     const tropicalNight = document.getElementById('tropical-night');
-    tropicalNight.textContent = formatNumber(terraforming.temperature.zones.tropical.night, false, 2);
+    tropicalNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
   
     const temperateTemp = document.getElementById('temperate-temp');
-    temperateTemp.textContent = formatNumber(terraforming.temperature.zones.temperate.value, false, 2);
+    temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
     const temperateDelta = document.getElementById('temperate-delta');
     const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
     temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
     const temperateDay = document.getElementById('temperate-day');
-    temperateDay.textContent = formatNumber(terraforming.temperature.zones.temperate.day, false, 2);
+    temperateDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
     const temperateNight = document.getElementById('temperate-night');
-    temperateNight.textContent = formatNumber(terraforming.temperature.zones.temperate.night, false, 2);
+    temperateNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
   
     const polarTemp = document.getElementById('polar-temp');
-    polarTemp.textContent = formatNumber(terraforming.temperature.zones.polar.value, false, 2);
+    polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
     const polarDelta = document.getElementById('polar-delta');
     const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
     polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
     const polarDay = document.getElementById('polar-day');
-    polarDay.textContent = formatNumber(terraforming.temperature.zones.polar.day, false, 2);
+    polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
     const polarNight = document.getElementById('polar-night');
-    polarNight.textContent = formatNumber(terraforming.temperature.zones.polar.night, false, 2);
+    polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
 
     if(terraforming.getTemperatureStatus()){
       temperatureBox.style.borderColor = 'green';

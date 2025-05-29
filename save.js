@@ -15,7 +15,8 @@ function getGameState() {
     goldenAsteroid: goldenAsteroid.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
-    spaceState: spaceManager.saveState()
+    spaceState: spaceManager.saveState(),
+    settings: gameSettings
   };
 }
 
@@ -143,6 +144,14 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.spaceManager){
       spaceManager.loadState(gameState.spaceManager);
+    }
+
+    if(gameState.settings){
+      Object.assign(gameSettings, gameState.settings);
+      const toggle = document.getElementById('celsius-toggle');
+      if(toggle){
+        toggle.checked = gameSettings.useCelsius;
+      }
     }
 
     tabManager.activateTab('buildings');
