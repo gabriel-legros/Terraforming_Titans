@@ -98,21 +98,37 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountLabel.textContent = 'Amount: ';
   buildCountButtons.appendChild(buildCountLabel);
 
-  const buildCounts = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000];
-  buildCounts.forEach((count) => {
-    const countButton = document.createElement('button');
-    countButton.textContent = formatNumber(count, true);
-    countButton.addEventListener('click', function () {
-      selectedBuildCounts[structure.name] = count;
-      updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
-      updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
-      if (structure.canBeToggled) {
-        updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
-        updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
-      }
-    });
-    buildCountButtons.appendChild(countButton);
+  const buildCountDisplay = document.createElement('span');
+  buildCountDisplay.textContent = formatNumber(selectedBuildCount, true);
+  buildCountButtons.appendChild(buildCountDisplay);
+
+  const multiplyButton = document.createElement('button');
+  multiplyButton.textContent = 'x10';
+  multiplyButton.addEventListener('click', function () {
+    selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
+    buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
+    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
+    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    if (structure.canBeToggled) {
+      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+    }
   });
+  buildCountButtons.appendChild(multiplyButton);
+
+  const divideButton = document.createElement('button');
+  divideButton.textContent = '/10';
+  divideButton.addEventListener('click', function () {
+    selectedBuildCounts[structure.name] = divideByTen(selectedBuildCounts[structure.name]);
+    buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
+    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
+    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    if (structure.canBeToggled) {
+      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+    }
+  });
+  buildCountButtons.appendChild(divideButton);
 
   leftContainer.appendChild(buildCountButtons);
 
