@@ -131,3 +131,29 @@ body {
 #special-messages {
     min-height: 65px;
 }
+
+/* Top bar holding progress and journal toggle */
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.top-bar .day-night-progress-bar-container {
+    flex: 1;
+}
+
+.journal-toggle {
+    padding: 5px 10px;
+}
+
+.journal-alert {
+    color: red;
+    font-weight: bold;
+    display: none;
+}
+
+.journal.collapsed {
+    display: none;
+}
