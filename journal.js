@@ -1,4 +1,6 @@
 let journalEntriesData = []; // Array to store journal entries
+let journalCollapsed = false;
+let journalUnread = false;
 
 function addJournalEntry(text) {
   const journalEntries = document.getElementById('journal-entries');
@@ -33,6 +35,11 @@ function addJournalEntry(text) {
   }
 
   typeLetter();
+
+  if (journalCollapsed) {
+    journalUnread = true;
+    updateJournalAlert();
+  }
 }
 
 function loadJournalEntries(entries) {
@@ -64,3 +71,32 @@ function clearJournal() {
   journalEntries.innerHTML = ''; // Remove all entries from the display
   journalEntriesData = []; // Clear the stored data array
 }
+
+function updateJournalAlert() {
+  const alertEl = document.getElementById('journal-alert');
+  if (alertEl) {
+    alertEl.style.display = journalUnread ? 'inline' : 'none';
+  }
+}
+
+function toggleJournal() {
+  const journal = document.getElementById('journal');
+  const button = document.getElementById('toggle-journal-button');
+  journalCollapsed = !journalCollapsed;
+  if (journalCollapsed) {
+    journal.classList.add('collapsed');
+    if (button) button.textContent = 'Show Journal';
+  } else {
+    journal.classList.remove('collapsed');
+    if (button) button.textContent = 'Hide Journal';
+    journalUnread = false;
+    updateJournalAlert();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleButton = document.getElementById('toggle-journal-button');
+  if (toggleButton) {
+    toggleButton.addEventListener('click', toggleJournal);
+  }
+});
