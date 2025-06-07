@@ -105,6 +105,12 @@
     text-align: right;
 }
 
+.build-button-count {
+    display: inline-block;
+    min-width: 5ch;
+    text-align: right;
+}
+
 .building-controls .label {
     font-size: 0.85em;
 }

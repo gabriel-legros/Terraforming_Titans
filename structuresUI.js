@@ -77,10 +77,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
   button.classList.add('building-button');
-  button.textContent = `Build ${structure.displayName}`;
+  // Initial button text with a span for the build count to keep width stable
+  button.innerHTML = `Build <span class="build-button-count">1</span> ${structure.displayName}`;
 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
+  // Set initial button text and color based on affordability
+  updateStructureButtonText(button, structure, selectedBuildCount);
 
   button.addEventListener('click', function () {
     buildCallback(structure.name, selectedBuildCounts[structure.name]);
@@ -320,10 +323,9 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureButtonText(button, structure, buildCount = 1) {
-    let buttonText = `Build ${formatNumber(buildCount, true)} ${structure.displayName}`;
-    let canAfford = structure.canAfford(buildCount);
-  
-    button.textContent = buttonText;
+    const canAfford = structure.canAfford(buildCount);
+    const countSpan = `<span class="build-button-count">${formatNumber(buildCount, true)}</span>`;
+    button.innerHTML = `Build ${countSpan} ${structure.displayName}`;
     button.style.color = canAfford ? 'inherit' : 'red';
   }
   
