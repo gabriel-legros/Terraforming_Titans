@@ -45,6 +45,36 @@ based on its `target` field, enabling data-driven gameplay adjustments.
 Tests covering helper utilities and physics functions reside in the `__tests__`
 directory and run under Jest.
 
+# Resource Flow
+
+Resources are defined in **resource.js**.  Each instance stores its value,
+optional storage cap and typed production/consumption rates.  Buildings and
+other systems call `modifyRate(value, source, type)` to register production or
+consumption.  Rates are tracked per source and per type (e.g. `building`,
+`terraforming`, `life`, `funding`) so the UI can show a breakdown of where a
+resource is coming from.
+
+The global `resources` object is constructed via `createResources` from the
+parameter files.  Every game tick `produceResources` performs the following
+steps:
+
+1. `calculateProductionRates` computes theoretical output of each building at
+   100 % productivity and updates the typed rate data.
+2. Storage capacities are recalculated by calling `updateStorageCap` on each
+   resource.
+3. Buildings update their actual productivity based on day/night and available
+   inputs.
+4. Production and consumption trackers are reset and actual changes are
+   accumulated through `building.produce`, `building.consume` and maintenance
+   costs.
+5. Funding, terraforming and life modules modify the accumulated changes before
+   they are applied to each resource.
+6. Values are then clamped by caps and never drop below zero.
+7. Finally `recalculateTotalRates` aggregates the rates for display.
+
+Functions like `checkResourceAvailability` and `reserve` help other modules plan
+actions without immediately consuming resources.
+
 #Testing
 
 jest and jsdom are installed globally
