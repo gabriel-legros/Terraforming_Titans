@@ -845,10 +845,40 @@ const researchParameters = {
         ],
       },
       {
+        id: 'ghg_efficiency',
+        name: 'Streamlined Greenhouse Gas Production',
+        description: 'Doubles the efficiency of GHG factories.',
+        cost: { research: 1000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'productionMultiplier',
+            value: 2,
+          },
+        ],
+      },
+      {
+        id: 'ghg_efficiency2',
+        name: 'Mass Greenhouse Gas Production',
+        description: 'Doubles the efficiency of GHG factories, again.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'productionMultiplier',
+            value: 2,
+          },
+        ],
+      },
+      {
         id: 'life',
         name: 'Life Designing and Production',
         description: 'Allows the designing and production of specially engineered biomass.',
-        cost: { research: 1000000 },
+        cost: { research: 100000000 },
         prerequisites: [],
         effects: [
           {
@@ -866,36 +896,6 @@ const researchParameters = {
             target: 'lifeDesigner',
             type: 'enable'
           }
-        ],
-      },
-      {
-        id: 'ghg_efficiency',
-        name: 'Streamlined Greenhouse Gas Production',
-        description: 'Doubles the efficiency of GHG factories.',
-        cost: { research: 10000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'ghgFactory',
-            type: 'productionMultiplier',
-            value: 2,
-          },
-        ],
-      },
-      {
-        id: 'ghg_efficiency2',
-        name: 'Mass Greenhouse Gas Production',
-        description: 'Doubles the efficiency of GHG factories, again.',
-        cost: { research: 100000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'ghgFactory',
-            type: 'productionMultiplier',
-            value: 2,
-          },
         ],
       },
       {
