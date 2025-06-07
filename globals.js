@@ -16,4 +16,6 @@ let terraforming;
 
 let gameSettings = { useCelsius: false };
 
+let colonySliderSettings = { workerRatio: 0.5 };
+
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});

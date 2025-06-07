@@ -16,7 +16,8 @@ function getGameState() {
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
     spaceState: spaceManager.saveState(),
-    settings: gameSettings
+    settings: gameSettings,
+    colonySliderSettings: colonySliderSettings
   };
 }
 
@@ -152,6 +153,11 @@ function loadGame(slotOrCustomString) {
       if(toggle){
         toggle.checked = gameSettings.useCelsius;
       }
+    }
+
+    if(gameState.colonySliderSettings){
+      Object.assign(colonySliderSettings, gameState.colonySliderSettings);
+      setWorkforceRatio(colonySliderSettings.workerRatio);
     }
 
     tabManager.activateTab('buildings');

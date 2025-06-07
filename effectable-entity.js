@@ -100,6 +100,9 @@ class EffectableEntity {
         case 'workerMultiplier':
           this.applyWorkerMultiplier(effect);
           break;
+        case 'workerRatio':
+          this.applyWorkerRatio(effect);
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
@@ -144,6 +147,10 @@ class EffectableEntity {
     }
 
     applyWorkerMultiplier(effect) {
+
+    }
+
+    applyWorkerRatio(effect) {
 
     }
 
