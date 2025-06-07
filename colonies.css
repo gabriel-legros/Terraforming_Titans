@@ -76,6 +76,10 @@
   justify-content: center;
 }
 
+#colony-sliders-container.hidden {
+  display: none;
+}
+
 .sliders-box {
   border: 1px solid #ccc;
   padding: 10px;
