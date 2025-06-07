@@ -99,6 +99,19 @@
     font-size: 0.85em;
 }
 
+.build-count-display {
+    display: inline-block;
+    min-width: 5ch;
+    text-align: right;
+}
+
+/* Keep build count inside build button from shifting width */
+.build-button-count {
+    display: inline-block;
+    min-width: 5ch;
+    text-align: right;
+}
+
 .building-controls .label {
     font-size: 0.85em;
 }
