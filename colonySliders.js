@@ -18,11 +18,13 @@ function initializeColonySlidersUI() {
 
   const label = document.createElement('label');
   label.htmlFor = 'workforce-slider';
-  label.textContent = 'Workforce Allocation: ';
+  label.textContent = 'Workforce Allocation';
+  sliderRow.appendChild(label);
+
   const valueSpan = document.createElement('span');
   valueSpan.id = 'workforce-slider-value';
-  label.appendChild(valueSpan);
-  sliderRow.appendChild(label);
+  valueSpan.classList.add('slider-value');
+  sliderRow.appendChild(valueSpan);
 
   const input = document.createElement('input');
   input.type = 'range';
@@ -31,8 +33,14 @@ function initializeColonySlidersUI() {
   input.step = 5;
   input.id = 'workforce-slider';
   input.value = colonySliderSettings.workerRatio * 100;
+  input.style.width = '200px';
   input.setAttribute('list', 'workforce-slider-ticks');
   sliderRow.appendChild(input);
+
+  const effectSpan = document.createElement('span');
+  effectSpan.id = 'workforce-slider-effect';
+  effectSpan.classList.add('slider-effect');
+  sliderRow.appendChild(effectSpan);
 
   const datalist = document.createElement('datalist');
   datalist.id = 'workforce-slider-ticks';
@@ -48,10 +56,11 @@ function initializeColonySlidersUI() {
 
   // Update display and apply value
   const updateValue = (val) => {
-    if (valueSpan) {
+    if (valueSpan && effectSpan) {
       const workers = Math.round(val);
       const scientists = 100 - workers;
-      valueSpan.textContent = `Workers: ${workers}% | Scientists: ${scientists}%`;
+      valueSpan.textContent = `Workers: ${workers}%`;
+      effectSpan.textContent = `Scientists: ${scientists}%`;
     }
   };
   let startVal = 50;
@@ -79,11 +88,13 @@ function initializeColonySlidersUI() {
   foodRow.classList.add('colony-slider');
   const foodLabel = document.createElement('label');
   foodLabel.htmlFor = 'food-slider';
-  foodLabel.textContent = 'Food Consumption: ';
+  foodLabel.textContent = 'Food Consumption';
+  foodRow.appendChild(foodLabel);
+
   const foodValue = document.createElement('span');
   foodValue.id = 'food-slider-value';
-  foodLabel.appendChild(foodValue);
-  foodRow.appendChild(foodLabel);
+  foodValue.classList.add('slider-value');
+  foodRow.appendChild(foodValue);
   const foodInput = document.createElement('input');
   foodInput.type = 'range';
   foodInput.min = 1;
@@ -91,8 +102,14 @@ function initializeColonySlidersUI() {
   foodInput.step = 0.5;
   foodInput.id = 'food-slider';
   foodInput.value = colonySliderSettings.foodConsumption;
+  foodInput.style.width = '200px';
   foodInput.setAttribute('list', 'food-slider-ticks');
   foodRow.appendChild(foodInput);
+
+  const foodEffect = document.createElement('span');
+  foodEffect.id = 'food-slider-effect';
+  foodEffect.classList.add('slider-effect');
+  foodRow.appendChild(foodEffect);
   const foodList = document.createElement('datalist');
   foodList.id = 'food-slider-ticks';
   for (let i = 1; i <= 6; i += 0.5) {
@@ -104,8 +121,11 @@ function initializeColonySlidersUI() {
   box.appendChild(foodRow);
 
   const updateFoodValue = (val) => {
-    if (foodValue) {
+    if (foodValue && foodEffect) {
       foodValue.textContent = `${val.toFixed(1)}x`;
+      const growth = 1 + (val - 1) * 0.02;
+      const percent = ((growth - 1) * 100).toFixed(1);
+      foodEffect.textContent = `Growth: +${percent}%`;
     }
   };
   let initialFood;
@@ -130,11 +150,13 @@ function initializeColonySlidersUI() {
   waterRow.classList.add('colony-slider');
   const waterLabel = document.createElement('label');
   waterLabel.htmlFor = 'water-slider';
-  waterLabel.textContent = 'Luxury Water Use: ';
+  waterLabel.textContent = 'Luxury Water Use';
+  waterRow.appendChild(waterLabel);
+
   const waterValue = document.createElement('span');
   waterValue.id = 'water-slider-value';
-  waterLabel.appendChild(waterValue);
-  waterRow.appendChild(waterLabel);
+  waterValue.classList.add('slider-value');
+  waterRow.appendChild(waterValue);
   const waterInput = document.createElement('input');
   waterInput.type = 'range';
   waterInput.min = 1;
@@ -142,8 +164,14 @@ function initializeColonySlidersUI() {
   waterInput.step = 0.5;
   waterInput.id = 'water-slider';
   waterInput.value = colonySliderSettings.luxuryWater;
+  waterInput.style.width = '200px';
   waterInput.setAttribute('list', 'water-slider-ticks');
   waterRow.appendChild(waterInput);
+
+  const waterEffect = document.createElement('span');
+  waterEffect.id = 'water-slider-effect';
+  waterEffect.classList.add('slider-effect');
+  waterRow.appendChild(waterEffect);
   const waterList = document.createElement('datalist');
   waterList.id = 'water-slider-ticks';
   for (let i = 1; i <= 6; i += 0.5) {
@@ -155,8 +183,11 @@ function initializeColonySlidersUI() {
   box.appendChild(waterRow);
 
   const updateWaterValue = (val) => {
-    if (waterValue) {
+    if (waterValue && waterEffect) {
       waterValue.textContent = `${val.toFixed(1)}x`;
+      const growth = 1 + (val - 1) * 0.01;
+      const percent = ((growth - 1) * 100).toFixed(1);
+      waterEffect.textContent = `Growth: +${percent}%`;
     }
   };
   let initialWater;
@@ -269,19 +300,25 @@ function resetColonySliders() {
     if (input) {
       input.value = 50;
       const valueSpan = document.getElementById('workforce-slider-value');
-      if (valueSpan) valueSpan.textContent = 'Workers: 50% | Scientists: 50%';
+      const effectSpan = document.getElementById('workforce-slider-effect');
+      if (valueSpan) valueSpan.textContent = 'Workers: 50%';
+      if (effectSpan) effectSpan.textContent = 'Scientists: 50%';
     }
     const foodInput = document.getElementById('food-slider');
     if (foodInput) {
       foodInput.value = 1;
       const foodSpan = document.getElementById('food-slider-value');
+      const foodEffect = document.getElementById('food-slider-effect');
       if (foodSpan) foodSpan.textContent = '1.0x';
+      if (foodEffect) foodEffect.textContent = 'Growth: +0%';
     }
     const waterInput = document.getElementById('water-slider');
     if (waterInput) {
       waterInput.value = 1;
       const waterSpan = document.getElementById('water-slider-value');
+      const waterEffect = document.getElementById('water-slider-effect');
       if (waterSpan) waterSpan.textContent = '1.0x';
+      if (waterEffect) waterEffect.textContent = 'Growth: +0%';
     }
   }
 }

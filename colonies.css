@@ -94,5 +94,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+.colony-slider label {
+  width: 160px;
+  text-align: right;
+}
+
+.colony-slider .slider-value,
+.colony-slider .slider-effect {
+  width: 120px;
+  text-align: center;
+}
+
+.colony-slider input[type="range"] {
+  width: 200px;
 }
