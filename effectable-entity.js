@@ -97,6 +97,9 @@ class EffectableEntity {
         case 'resourceCostMultiplier':
           this.applyResourceCostMultiplier(effect);
           break;
+        case 'maintenanceCostMultiplier':
+          this.applyMaintenanceCostMultiplier(effect);
+          break;
         case 'workerMultiplier':
           this.applyWorkerMultiplier(effect);
           break;
@@ -146,6 +149,10 @@ class EffectableEntity {
 
     }
 
+    applyMaintenanceCostMultiplier(effect) {
+
+    }
+
     applyWorkerMultiplier(effect) {
 
     }
@@ -184,6 +191,22 @@ class EffectableEntity {
           effect.resourceId === resourceId
         ) {
           // Apply the effect multiplier
+          multiplier *= effect.value;
+        }
+      });
+
+      return multiplier;
+    }
+
+    getEffectiveMaintenanceCostMultiplier(resourceCategory, resourceId) {
+      let multiplier = 1;
+
+      this.activeEffects.forEach((effect) => {
+        if (
+          effect.type === 'maintenanceCostMultiplier' &&
+          effect.resourceCategory === resourceCategory &&
+          effect.resourceId === resourceId
+        ) {
           multiplier *= effect.value;
         }
       });
