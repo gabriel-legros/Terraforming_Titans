@@ -4,12 +4,13 @@ class PopulationModule extends EffectableEntity {
 
       this.populationResource = resources.colony.colonists; // Reference to the population resource
       this.workerResource = resources.colony.workers; // Reference to the worker resource
-      this.workerRatio = populationParameters.workerRatio; // Ratio of colonists that become workers
+      this.baseWorkerRatio = populationParameters.workerRatio;
+      this.workerRatio = this.baseWorkerRatio; // Current ratio of colonists that become workers
       this.growthRate = 0; // Population growth rate, e.g., 0.01 for 1% per second
       this.totalWorkersRequired = 0;
     }
 
-    getEffectiveGrowthMultiplier(){
+  getEffectiveGrowthMultiplier(){
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'growthMultiplier') {
@@ -17,6 +18,16 @@ class PopulationModule extends EffectableEntity {
       }
     });
     return multiplier;
+  }
+
+  getEffectiveWorkerRatio(){
+    let ratio = this.baseWorkerRatio;
+    this.activeEffects.forEach(effect => {
+      if(effect.type === 'workerRatio'){
+        ratio = effect.value;
+      }
+    });
+    return ratio;
   }
   
     calculateGrowthRate() {
@@ -101,7 +112,8 @@ class PopulationModule extends EffectableEntity {
 
   updateWorkerCap() {
     // Set the worker cap based on the current population and worker ratio
-    const workerCap = Math.floor(this.workerRatio * this.populationResource.value) + resources.colony.androids.value;
+    const ratio = this.getEffectiveWorkerRatio();
+    const workerCap = Math.floor(ratio * this.populationResource.value) + resources.colony.androids.value;
     this.workerResource.cap = workerCap;
 
     // Adjust the worker value if it exceeds the cap
@@ -131,5 +143,9 @@ class PopulationModule extends EffectableEntity {
       return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
     }
     return this.workerResource.cap / this.totalWorkersRequired;
+  }
+
+  applyWorkerRatio(effect){
+    this.workerRatio = effect.value;
   }
 }

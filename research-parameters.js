@@ -515,6 +515,20 @@ const researchParameters = {
         ],
       },
       {
+        id: 'colony_sliders',
+        name: 'Colony Management',
+        description: 'Unlocks adjustable colony sliders.',
+        cost: { research: 500 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'tabContent',
+            targetId: 'colony-sliders-container',
+            type: 'enableContent'
+          }
+        ],
+      },
+      {
         id: 't2_colony',
         name: 'Small outpost',
         description: 'Enables a larger colony for more efficient colonization.',

@@ -69,3 +69,11 @@
   margin: 0;
   cursor: pointer;
 }
+
+#colony-sliders-container {
+  margin-top: 10px;
+}
+
+.colony-slider {
+  margin-bottom: 10px;
+}
