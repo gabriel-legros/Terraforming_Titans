@@ -94,7 +94,7 @@ describe('colony sliders', () => {
     expect(colonySliderSettings.luxuryWater).toBe(1);
   });
 
-  test('initializeColonySlidersUI sets text with worker and scientist ratios', () => {
+  test('initializeColonySlidersUI sets default text values', () => {
     const fs = require('fs');
     const path = require('path');
     const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
@@ -108,7 +108,13 @@ describe('colony sliders', () => {
     vm.runInContext(code, ctx);
 
     ctx.initializeColonySlidersUI();
-    const text = dom.window.document.getElementById('workforce-slider-value').textContent;
-    expect(text).toBe('Workers: 50% | Scientists: 50%');
+    const worker = dom.window.document.getElementById('workforce-slider-value').textContent;
+    const scientist = dom.window.document.getElementById('workforce-slider-effect').textContent;
+    const foodEffect = dom.window.document.getElementById('food-slider-effect').textContent;
+    const waterEffect = dom.window.document.getElementById('water-slider-effect').textContent;
+    expect(worker).toBe('Workers: 50%');
+    expect(scientist).toBe('Scientists: 50%');
+    expect(foodEffect).toBe('Growth: +0.0%');
+    expect(waterEffect).toBe('Growth: +0.0%');
   });
 });
