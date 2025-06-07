@@ -2,7 +2,25 @@ let journalEntriesData = []; // Array to store journal entries
 let journalCollapsed = false;
 let journalUnread = false;
 
+// --- New: queue management for sequential typing ---
+let journalQueue = [];      // queue of pending entry texts
+let journalTyping = false;  // flag indicating an entry is currently being typed
+
 function addJournalEntry(text) {
+  journalQueue.push(text);
+  if (!journalTyping) {
+    processNextJournalEntry();
+  }
+}
+
+function processNextJournalEntry() {
+  if (journalQueue.length === 0) {
+    journalTyping = false;
+    return;
+  }
+
+  journalTyping = true;
+  const text = journalQueue.shift();
   const journalEntries = document.getElementById('journal-entries');
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
@@ -25,12 +43,12 @@ function addJournalEntry(text) {
     } else {
       journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
 
-      // This signals globally that *a* journal entry finished typing.
-      // The StoryManager will check if it was the one it was waiting for.
       console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
       const storyEvent = new CustomEvent('storyJournalFinishedTyping');
       document.dispatchEvent(storyEvent);
-      // --- End of change ---
+
+      // Start next entry if queued
+      processNextJournalEntry();
     }
   }
 
