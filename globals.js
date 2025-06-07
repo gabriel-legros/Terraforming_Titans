@@ -18,6 +18,10 @@ let lifeManager;
 
 let gameSettings = { useCelsius: false };
 
-let colonySliderSettings = { workerRatio: 0.5 };
+let colonySliderSettings = {
+  workerRatio: 0.5,
+  foodConsumption: 1,
+  luxuryWater: 1
+};
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
