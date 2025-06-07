@@ -24,6 +24,24 @@ Each planet is divided into tropical, temperate and polar zones via **zones.js**
 which maintain their own temperature and surface conditions.  Various CSS and UI
 scripts implement the tabs, pop-ups and other interface elements.
 
+# Effectable Entities Design
+
+Gameplay objects that can receive temporary or permanent modifiers extend
+`EffectableEntity` defined in **effectable-entity.js**.  Each entity keeps an
+array of `activeEffects` and a set of boolean flags.  Effects are lightweight
+objects identified by `effectId` and `sourceId` describing the type of change to
+apply.  Calling `addEffect` stores the effect and invokes `applyEffect` to
+modify the entity immediately.  `replaceEffect` swaps an existing effect with
+the same `effectId` while `removeEffect` clears effects from a given
+`sourceId` and re-applies any remaining ones.
+
+`applyEffect` dispatches on the effect's `type` to handlers such as
+`applyResourceCostMultiplier`, `applyWorkerMultiplier` or boolean flag logic.
+Building, resource, project and life-management modules all inherit from this
+class so that the same effect system works across the game.  Helper functions
+`addEffect` and `removeEffect` route an effect to the correct target instance
+based on its `target` field, enabling data-driven gameplay adjustments.
+
 Tests covering helper utilities and physics functions reside in the `__tests__`
 directory and run under Jest.
 
