@@ -20,7 +20,7 @@ describe('colony sliders', () => {
     const multiplier = (1 - 0.8) / 0.5;
     researchColonies.forEach(colonyId => {
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
-        target: 'building',
+        target: 'colony',
         targetId: colonyId,
         type: 'resourceProductionMultiplier',
         resourceCategory: 'colony',
@@ -28,6 +28,13 @@ describe('colony sliders', () => {
         value: multiplier
       }));
     });
+  });
+
+  test('setWorkforceRatio clamps to range', () => {
+    setWorkforceRatio(0.1);
+    expect(colonySliderSettings.workerRatio).toBe(0.25);
+    setWorkforceRatio(1.0);
+    expect(colonySliderSettings.workerRatio).toBe(0.9);
   });
 
   test('resetColonySliders resets to default', () => {

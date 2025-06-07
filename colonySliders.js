@@ -18,22 +18,32 @@ function initializeColonySlidersUI() {
 
   const input = document.createElement('input');
   input.type = 'range';
-  input.min = 0;
-  input.max = 1;
-  input.step = 0.01;
+  input.min = 25;
+  input.max = 90;
+  input.step = 5;
   input.id = 'workforce-slider';
-  input.value = colonySliderSettings.workerRatio;
+  input.value = colonySliderSettings.workerRatio * 100;
+  input.setAttribute('list', 'workforce-slider-ticks');
   sliderRow.appendChild(input);
+
+  const datalist = document.createElement('datalist');
+  datalist.id = 'workforce-slider-ticks';
+  for (let i = 25; i <= 90; i += 5) {
+    const option = document.createElement('option');
+    option.value = i;
+    datalist.appendChild(option);
+  }
+  container.appendChild(datalist);
 
   container.appendChild(sliderRow);
 
   // Update display and apply value
   const updateValue = (val) => {
     if (valueSpan) {
-      valueSpan.textContent = `${Math.round(val * 100)}%`;
+      valueSpan.textContent = `${Math.round(val)}%`;
     }
   };
-  let startVal = 0.5;
+  let startVal = 50;
   try {
     const raw = input.value;
     const parsed = typeof raw === 'number' || typeof raw === 'string' ? parseFloat(raw) : NaN;
@@ -43,20 +53,21 @@ function initializeColonySlidersUI() {
 
   input.addEventListener('input', () => {
     let v = parseFloat(input.value);
-    if (isNaN(v)) v = colonySliderSettings.workerRatio;
+    if (isNaN(v)) v = colonySliderSettings.workerRatio * 100;
     updateValue(v);
   });
 
   input.addEventListener('change', () => {
     let v = parseFloat(input.value);
-    if (isNaN(v)) v = colonySliderSettings.workerRatio;
-    setWorkforceRatio(v);
+    if (isNaN(v)) v = colonySliderSettings.workerRatio * 100;
+    setWorkforceRatio(v / 100);
   });
 }
 
 const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
 
 function setWorkforceRatio(value) {
+  value = Math.min(0.9, Math.max(0.25, value));
   colonySliderSettings.workerRatio = value;
   const researchMultiplier = (1 - value) / 0.5;
 
@@ -87,7 +98,7 @@ function resetColonySliders() {
   if (typeof document !== 'undefined') {
     const input = document.getElementById('workforce-slider');
     if (input) {
-      input.value = 0.5;
+      input.value = 50;
       const valueSpan = document.getElementById('workforce-slider-value');
       if (valueSpan) valueSpan.textContent = '50%';
     }
