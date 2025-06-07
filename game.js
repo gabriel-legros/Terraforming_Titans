@@ -48,7 +48,6 @@ function create() {
 
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
-  resetColonySliders();
   initializeColonySlidersUI();
 
   // Combine buildings and colonies into the structures object
