@@ -42,4 +42,22 @@ describe('colony sliders', () => {
     resetColonySliders();
     expect(colonySliderSettings.workerRatio).toBe(0.5);
   });
+
+  test('initializeColonySlidersUI sets text with worker and scientist ratios', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.colonySliderSettings = { workerRatio: 0.5 };
+    const code = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
+    vm.runInContext(code, ctx);
+
+    ctx.initializeColonySlidersUI();
+    const text = dom.window.document.getElementById('workforce-slider-value').textContent;
+    expect(text).toBe('Workers: 50% | Scientists: 50%');
+  });
 });
