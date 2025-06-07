@@ -100,7 +100,10 @@
 }
 
 .build-count-display {
-    margin-right: 5em;
+    display: inline-block; /* Reserve consistent space for the count */
+    width: 5em;           /* Keep x10 and /10 buttons aligned */
+    margin-right: 0;      /* Rely on container gap for spacing */
+    text-align: right;    /* Numbers align nicely inside the width */
 }
 
 .building-controls .label {
