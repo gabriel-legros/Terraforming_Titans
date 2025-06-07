@@ -19,7 +19,7 @@
 
 .building-button {
     max-width: 200px; /* Set a maximum width for the buttons */
-    width: 100%; /* Make the button take up the available width within the container */
+    width: 200px; /* Make the button take up the available width within the container */
     text-align: center; /* Center the text */
     white-space: nowrap; /* Prevent button text from wrapping */
     overflow: hidden; /* Hide overflow if the text is too long */
@@ -103,7 +103,7 @@
     display: inline-block; /* Reserve consistent space for the count */
     width: 5em;           /* Keep x10 and /10 buttons aligned */
     margin-right: 0;      /* Rely on container gap for spacing */
-    text-align: right;    /* Numbers align nicely inside the width */
+    text-align: left;    /* Numbers align nicely inside the width */
 }
 
 .building-controls .label {
