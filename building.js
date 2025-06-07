@@ -98,6 +98,21 @@ class Building extends EffectableEntity {
     return multiplier;
   }
 
+  // Method to get additional worker requirements from effects
+  getAddedWorkerNeed() {
+    let added = 0;
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'addedWorkerNeed') {
+        added += effect.value;
+      }
+    });
+    return added;
+  }
+
+  getTotalWorkerNeed() {
+    return this.requiresWorker + this.getAddedWorkerNeed();
+  }
+
   // Method to get the effective storage multiplier
   getEffectiveStorageMultiplier() {
     let multiplier = 1; // Start with default multiplier
@@ -368,7 +383,7 @@ class Building extends EffectableEntity {
     }
 
     // Calculate minRatio based on worker availability if applicable
-    if (this.requiresWorker) {
+    if (this.getTotalWorkerNeed() > 0) {
       const workerRatio = populationModule.getWorkerAvailabilityRatio();
       minRatio = Math.min(minRatio, workerRatio);
     }
