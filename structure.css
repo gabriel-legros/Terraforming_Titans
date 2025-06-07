@@ -99,17 +99,9 @@
     font-size: 0.85em;
 }
 
+/* Adds extra space after the build amount so x10 and /10 stay put */
 .build-count-display {
-    display: inline-block;
-    min-width: 5ch;
-    text-align: right;
-}
-
-.build-button-count {
-    display: inline-block;
-    min-width: 5ch;
-    text-align: right;
-}
+    margin-right: 2em;
 
 .building-controls .label {
     font-size: 0.85em;
