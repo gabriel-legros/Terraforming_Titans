@@ -158,6 +158,8 @@ function loadGame(slotOrCustomString) {
     if(gameState.colonySliderSettings){
       Object.assign(colonySliderSettings, gameState.colonySliderSettings);
       setWorkforceRatio(colonySliderSettings.workerRatio);
+      setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
+      setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
     }
 
     tabManager.activateTab('buildings');
