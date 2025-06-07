@@ -72,8 +72,26 @@
 
 #colony-sliders-container {
   margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.sliders-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  background-color: #e8e8e8;
+  text-align: center;
+}
+
+.sliders-title {
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .colony-slider {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
 }

@@ -5,6 +5,14 @@ function initializeColonySlidersUI() {
   if (!container) return;
   container.innerHTML = '';
 
+  const box = document.createElement('div');
+  box.classList.add('sliders-box');
+
+  const title = document.createElement('div');
+  title.classList.add('sliders-title');
+  title.textContent = 'Colony Management';
+  box.appendChild(title);
+
   const sliderRow = document.createElement('div');
   sliderRow.classList.add('colony-slider');
 
@@ -35,12 +43,15 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(datalist);
 
-  container.appendChild(sliderRow);
+  box.appendChild(sliderRow);
+  container.appendChild(box);
 
   // Update display and apply value
   const updateValue = (val) => {
     if (valueSpan) {
-      valueSpan.textContent = `${Math.round(val)}%`;
+      const workers = Math.round(val);
+      const scientists = 100 - workers;
+      valueSpan.textContent = `Workers: ${workers}% | Scientists: ${scientists}%`;
     }
   };
   let startVal = 50;
@@ -100,7 +111,7 @@ function resetColonySliders() {
     if (input) {
       input.value = 50;
       const valueSpan = document.getElementById('workforce-slider-value');
-      if (valueSpan) valueSpan.textContent = '50%';
+      if (valueSpan) valueSpan.textContent = 'Workers: 50% | Scientists: 50%';
     }
   }
 }
