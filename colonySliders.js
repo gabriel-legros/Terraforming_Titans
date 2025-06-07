@@ -84,10 +84,36 @@ function setLuxuryWaterMultiplier(value) {
   });
 }
 
+function setOreMineWorkerAssist(value) {
+  value = Math.min(10, Math.max(0, value));
+  colonySliderSettings.oreMineWorkers = value;
+
+  addEffect({
+    target: 'building',
+    targetId: 'oreMine',
+    type: 'addedWorkerNeed',
+    value: value * 10,
+    effectId: 'oreMineWorkerNeed',
+    sourceId: 'oreMineWorkers'
+  });
+
+  const multiplier = value === 0 ? 1 : value * value;
+
+  addEffect({
+    target: 'building',
+    targetId: 'oreMine',
+    type: 'productionMultiplier',
+    value: multiplier,
+    effectId: 'oreMineProductionBoost',
+    sourceId: 'oreMineWorkers'
+  });
+}
+
 function resetColonySliders() {
   setWorkforceRatio(0.5);
   setFoodConsumptionMultiplier(1);
   setLuxuryWaterMultiplier(1);
+  setOreMineWorkerAssist(0);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -95,6 +121,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setWorkforceRatio,
     setFoodConsumptionMultiplier,
     setLuxuryWaterMultiplier,
+    setOreMineWorkerAssist,
     resetColonySliders
   };
 }

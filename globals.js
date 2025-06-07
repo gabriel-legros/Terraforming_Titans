@@ -22,7 +22,8 @@ let gameSettings = { useCelsius: false };
 let colonySliderSettings = {
   workerRatio: 0.5,
   foodConsumption: 1,
-  luxuryWater: 1
+  luxuryWater: 1,
+  oreMineWorkers: 0
 };
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
