@@ -206,6 +206,72 @@ function initializeColonySlidersUI() {
     if (isNaN(v)) v = colonySliderSettings.luxuryWater;
     setLuxuryWaterMultiplier(v);
   });
+
+  // Ore mine worker slider
+  const oreRow = document.createElement('div');
+  oreRow.classList.add('colony-slider');
+  const oreLabel = document.createElement('label');
+  oreLabel.htmlFor = 'ore-worker-slider';
+  oreLabel.textContent = 'Ore Mine Workers';
+  oreRow.appendChild(oreLabel);
+
+  const oreValue = document.createElement('span');
+  oreValue.id = 'ore-worker-slider-value';
+  oreValue.classList.add('slider-value');
+  oreRow.appendChild(oreValue);
+
+  const oreInput = document.createElement('input');
+  oreInput.type = 'range';
+  oreInput.min = 0;
+  oreInput.max = 10;
+  oreInput.step = 1;
+  oreInput.id = 'ore-worker-slider';
+  oreInput.value = colonySliderSettings.oreMineWorkers;
+  oreInput.style.width = '200px';
+  oreInput.setAttribute('list', 'ore-worker-slider-ticks');
+  oreRow.appendChild(oreInput);
+
+  const oreEffect = document.createElement('span');
+  oreEffect.id = 'ore-worker-slider-effect';
+  oreEffect.classList.add('slider-effect');
+  oreRow.appendChild(oreEffect);
+
+  const oreList = document.createElement('datalist');
+  oreList.id = 'ore-worker-slider-ticks';
+  for (let i = 0; i <= 10; i += 1) {
+    const option = document.createElement('option');
+    option.value = i;
+    oreList.appendChild(option);
+  }
+  container.appendChild(oreList);
+  box.appendChild(oreRow);
+
+  const updateOreValue = (val) => {
+    if (oreValue && oreEffect) {
+      const workers = val * 10;
+      oreValue.textContent = `${workers}`;
+      const mult = val === 0 ? 1 : val * val;
+      const percent = (mult * 100).toFixed(0);
+      oreEffect.textContent = `Boost: ${percent}%`;
+    }
+  };
+
+  let initialOre;
+  try { initialOre = parseFloat(oreInput.value); } catch (e) { initialOre = NaN; }
+  if (isNaN(initialOre)) initialOre = colonySliderSettings.oreMineWorkers;
+  updateOreValue(initialOre);
+  oreInput.addEventListener('input', () => {
+    let v;
+    try { v = parseFloat(oreInput.value); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.oreMineWorkers;
+    updateOreValue(v);
+  });
+  oreInput.addEventListener('change', () => {
+    let v;
+    try { v = parseFloat(oreInput.value); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.oreMineWorkers;
+    setOreMineWorkerAssist(v);
+  });
 }
 
 if (typeof module !== "undefined" && module.exports) {
