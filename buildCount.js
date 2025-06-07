@@ -1,5 +1,5 @@
 function multiplyByTen(count) {
-  return count * 10;
+  return Math.min(1e15, count * 10);
 }
 
 function divideByTen(count) {
