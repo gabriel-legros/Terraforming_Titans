@@ -220,7 +220,8 @@ class Building extends EffectableEntity {
     const effectiveCost = this.getEffectiveCost();
     for (const resource in effectiveCost.colony) {
       const resourceCost = effectiveCost.colony[resource];
-      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor;
+      const multiplier = this.getEffectiveMaintenanceCostMultiplier('colony', resource);
+      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier;
     }
     return maintenanceCost;
   }
@@ -534,4 +535,8 @@ function initializeBuildings(buildingsParameters) {
   }
   initializeBuildingTabs();
   return buildings;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { Building, initializeBuildings };
 }
