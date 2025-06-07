@@ -100,15 +100,7 @@
 }
 
 .build-count-display {
-    display: inline-block;
-    min-width: 5ch;
-    text-align: right;
-}
-
-.build-button-count {
-    display: inline-block;
-    min-width: 5ch;
-    text-align: right;
+    margin-right: 5em;
 }
 
 .building-controls .label {
