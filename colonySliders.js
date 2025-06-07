@@ -25,9 +25,23 @@ function setWorkforceRatio(value) {
       resourceTarget: 'research',
       value: researchMultiplier,
       effectId: 'researchSlider',
-      sourceId: 'researchSlider'
-    });
+    sourceId: 'researchSlider'
   });
+  });
+
+  // Update UI elements if they exist
+  if (typeof document !== 'undefined') {
+    const input = document.getElementById('workforce-slider');
+    if (input) input.value = (value * 100).toString();
+    const valueSpan = document.getElementById('workforce-slider-value');
+    const effectSpan = document.getElementById('workforce-slider-effect');
+    if (valueSpan && effectSpan) {
+      const workers = Math.round(value * 100);
+      const scientists = 100 - workers;
+      valueSpan.textContent = `Workers: ${workers}%`;
+      effectSpan.textContent = `Scientists: ${scientists}%`;
+    }
+  }
 }
 
 function setFoodConsumptionMultiplier(value) {
@@ -52,9 +66,23 @@ function setFoodConsumptionMultiplier(value) {
       resourceTarget: 'food',
       value: value,
       effectId: 'foodConsumption',
-      sourceId: 'foodConsumption'
-    });
+    sourceId: 'foodConsumption'
   });
+  });
+
+  // Update UI elements if they exist
+  if (typeof document !== 'undefined') {
+    const input = document.getElementById('food-slider');
+    if (input) input.value = value.toString();
+    const valueSpan = document.getElementById('food-slider-value');
+    const effectSpan = document.getElementById('food-slider-effect');
+    if (valueSpan && effectSpan) {
+      valueSpan.textContent = `${value.toFixed(1)}x`;
+      const growthVal = 1 + (value - 1) * 0.02;
+      const percent = ((growthVal - 1) * 100).toFixed(1);
+      effectSpan.textContent = `Growth: +${percent}%`;
+    }
+  }
 }
 
 function setLuxuryWaterMultiplier(value) {
@@ -79,9 +107,23 @@ function setLuxuryWaterMultiplier(value) {
       resourceId: 'water',
       value: value,
       effectId: 'luxuryWaterMaintenance',
-      sourceId: 'luxuryWaterMaintenance'
-    });
+    sourceId: 'luxuryWaterMaintenance'
   });
+  });
+
+  // Update UI elements if they exist
+  if (typeof document !== 'undefined') {
+    const input = document.getElementById('water-slider');
+    if (input) input.value = value.toString();
+    const valueSpan = document.getElementById('water-slider-value');
+    const effectSpan = document.getElementById('water-slider-effect');
+    if (valueSpan && effectSpan) {
+      valueSpan.textContent = `${value.toFixed(1)}x`;
+      const growthVal = 1 + (value - 1) * 0.01;
+      const percent = ((growthVal - 1) * 100).toFixed(1);
+      effectSpan.textContent = `Growth: +${percent}%`;
+    }
+  }
 }
 
 function setOreMineWorkerAssist(value) {
@@ -107,6 +149,21 @@ function setOreMineWorkerAssist(value) {
     effectId: 'oreMineProductionBoost',
     sourceId: 'oreMineWorkers'
   });
+
+  // Update UI elements if they exist
+  if (typeof document !== 'undefined') {
+    const input = document.getElementById('ore-worker-slider');
+    if (input) input.value = value.toString();
+    const valueSpan = document.getElementById('ore-worker-slider-value');
+    const effectSpan = document.getElementById('ore-worker-slider-effect');
+    if (valueSpan && effectSpan) {
+      const workers = value * 10;
+      valueSpan.textContent = `${workers}`;
+      const mult = value === 0 ? 1 : value * value;
+      const percent = (mult * 100).toFixed(0);
+      effectSpan.textContent = `Boost: ${percent}%`;
+    }
+  }
 }
 
 function resetColonySliders() {

@@ -144,4 +144,45 @@ describe('colony sliders', () => {
     expect(oreWorkers).toBe('0');
     expect(oreBoost).toBe('Boost: 100%');
   });
+
+  test('slider functions update UI values', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    ctx.addEffect = jest.fn();
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
+
+    ctx.initializeColonySlidersUI();
+    ctx.setWorkforceRatio(0.7);
+    ctx.setFoodConsumptionMultiplier(2);
+    ctx.setLuxuryWaterMultiplier(3);
+    ctx.setOreMineWorkerAssist(4);
+
+    const worker = dom.window.document.getElementById('workforce-slider-value').textContent;
+    const scientist = dom.window.document.getElementById('workforce-slider-effect').textContent;
+    const foodVal = dom.window.document.getElementById('food-slider-value').textContent;
+    const foodEffect = dom.window.document.getElementById('food-slider-effect').textContent;
+    const waterVal = dom.window.document.getElementById('water-slider-value').textContent;
+    const waterEffect = dom.window.document.getElementById('water-slider-effect').textContent;
+    const oreWorkers = dom.window.document.getElementById('ore-worker-slider-value').textContent;
+    const oreBoost = dom.window.document.getElementById('ore-worker-slider-effect').textContent;
+
+    expect(worker).toBe('Workers: 70%');
+    expect(scientist).toBe('Scientists: 30%');
+    expect(foodVal).toBe('2.0x');
+    expect(foodEffect).toBe('Growth: +2.0%');
+    expect(waterVal).toBe('3.0x');
+    expect(waterEffect).toBe('Growth: +2.0%');
+    expect(oreWorkers).toBe('40');
+    expect(oreBoost).toBe('Boost: 1600%');
+  });
 });
