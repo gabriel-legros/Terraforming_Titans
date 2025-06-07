@@ -350,15 +350,15 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   
     // Include worker cost if applicable
-    if (structure.requiresWorker > 0) {
-      const requiredWorkers = structure.requiresWorker * buildCount * structure.getEffectiveWorkerMultiplier();
+    if (structure.getTotalWorkerNeed() > 0) {
+      const requiredWorkers = structure.getTotalWorkerNeed() * buildCount * structure.getEffectiveWorkerMultiplier();
       const availableWorkers = resources.colony.workers?.value || 0;
   
       // Check if there are enough workers available
       const workerText = `Workers: ${formatNumber(requiredWorkers, true)}`;
       let formattedWorkerText;
   
-      if (availableWorkers >= structure.requiresWorker) {
+      if (availableWorkers >= structure.getTotalWorkerNeed()) {
         formattedWorkerText = workerText;
       } else {
         // Use yellow color if not enough workers are available

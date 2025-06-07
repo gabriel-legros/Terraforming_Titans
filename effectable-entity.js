@@ -100,6 +100,9 @@ class EffectableEntity {
         case 'maintenanceCostMultiplier':
           this.applyMaintenanceCostMultiplier(effect);
           break;
+        case 'addedWorkerNeed':
+          this.applyAddedWorkerNeed(effect);
+          break;
         case 'workerMultiplier':
           this.applyWorkerMultiplier(effect);
           break;
@@ -150,6 +153,10 @@ class EffectableEntity {
     }
 
     applyMaintenanceCostMultiplier(effect) {
+
+    }
+
+    applyAddedWorkerNeed(effect) {
 
     }
 
