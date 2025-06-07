@@ -105,7 +105,6 @@
     text-align: right;
 }
 
-/* Keep build count inside build button from shifting width */
 .build-button-count {
     display: inline-block;
     min-width: 5ch;
