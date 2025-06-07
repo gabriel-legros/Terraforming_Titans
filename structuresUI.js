@@ -99,6 +99,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountButtons.appendChild(buildCountLabel);
 
   const buildCountDisplay = document.createElement('span');
+  buildCountDisplay.classList.add('build-count-display');
   buildCountDisplay.textContent = formatNumber(selectedBuildCount, true);
   buildCountButtons.appendChild(buildCountDisplay);
 
