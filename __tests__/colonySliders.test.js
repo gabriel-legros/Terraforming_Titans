@@ -4,6 +4,7 @@ const {
   setLuxuryWaterMultiplier,
   resetColonySliders
 } = require('../colonySliders.js');
+const { initializeColonySlidersUI } = require('../colonySlidersUI.js');
 
 const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony'];
 
@@ -104,8 +105,10 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1 };
-    const code = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
-    vm.runInContext(code, ctx);
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
 
     ctx.initializeColonySlidersUI();
     const worker = dom.window.document.getElementById('workforce-slider-value').textContent;

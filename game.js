@@ -48,6 +48,7 @@ function create() {
 
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
+  resetColonySliders();
   initializeColonySlidersUI();
 
   // Combine buildings and colonies into the structures object
@@ -63,8 +64,6 @@ function create() {
 
   //initialize population module
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
-
-  resetColonySliders();
 
   // Initialize StoryManager
   storyManager = new StoryManager(progressData);  // Pass the progressData object
