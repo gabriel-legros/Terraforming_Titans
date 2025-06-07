@@ -33,25 +33,26 @@
 /* Milestone description */
 .milestone-description {
     font-size: 12px; /* Smaller font size for description */
-    color: #000;
+    color: inherit; /* Use the color defined by the button state */
     text-align: center;
 }
 
 /* Button states */
+
 .milestone-button.completed {
-    background-color: green;
-    color: white;
+    background-color: #28a745; /* Green for completed */
+    color: #fff;
     cursor: not-allowed;
 }
 
 .milestone-button.completable {
-    background-color: blue;
-    color: white;
+    background-color: #007bff; /* Blue for available */
+    color: #fff;
 }
 
 .milestone-button.not-completable {
-    background-color: gray;
-    color: white;
+    background-color: #b0b0b0; /* Gray for locked */
+    color: #333;
     cursor: not-allowed;
 }
 
