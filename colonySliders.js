@@ -70,7 +70,7 @@ function setWorkforceRatio(value) {
 
   researchColonies.forEach((colonyId) => {
     addEffect({
-      target: 'building',
+      target: 'colony',
       targetId: colonyId,
       type: 'resourceProductionMultiplier',
       resourceCategory: 'colony',
