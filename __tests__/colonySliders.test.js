@@ -2,6 +2,7 @@ const {
   setWorkforceRatio,
   setFoodConsumptionMultiplier,
   setLuxuryWaterMultiplier,
+  setOreMineWorkerAssist,
   resetColonySliders
 } = require('../colonySliders.js');
 const { initializeColonySlidersUI } = require('../colonySlidersUI.js');
@@ -11,7 +12,7 @@ const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_co
 describe('colony sliders', () => {
   beforeEach(() => {
     global.addEffect = jest.fn();
-    global.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1 };
+    global.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
   });
 
   test('setWorkforceRatio stores value and adds effect', () => {
@@ -85,14 +86,33 @@ describe('colony sliders', () => {
     });
   });
 
+  test('setOreMineWorkerAssist adds effects', () => {
+    setOreMineWorkerAssist(5);
+    expect(colonySliderSettings.oreMineWorkers).toBe(5);
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'building',
+      targetId: 'oreMine',
+      type: 'addedWorkerNeed',
+      value: 50
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'building',
+      targetId: 'oreMine',
+      type: 'productionMultiplier',
+      value: 25
+    }));
+  });
+
   test('resetColonySliders resets to default', () => {
     colonySliderSettings.workerRatio = 0.7;
     colonySliderSettings.foodConsumption = 2;
     colonySliderSettings.luxuryWater = 3;
+    colonySliderSettings.oreMineWorkers = 5;
     resetColonySliders();
     expect(colonySliderSettings.workerRatio).toBe(0.5);
     expect(colonySliderSettings.foodConsumption).toBe(1);
     expect(colonySliderSettings.luxuryWater).toBe(1);
+    expect(colonySliderSettings.oreMineWorkers).toBe(0);
   });
 
   test('initializeColonySlidersUI sets default text values', () => {
@@ -104,7 +124,7 @@ describe('colony sliders', () => {
 
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
-    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1 };
+    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'colonySlidersUI.js'), 'utf8');
@@ -115,9 +135,13 @@ describe('colony sliders', () => {
     const scientist = dom.window.document.getElementById('workforce-slider-effect').textContent;
     const foodEffect = dom.window.document.getElementById('food-slider-effect').textContent;
     const waterEffect = dom.window.document.getElementById('water-slider-effect').textContent;
+    const oreWorkers = dom.window.document.getElementById('ore-worker-slider-value').textContent;
+    const oreBoost = dom.window.document.getElementById('ore-worker-slider-effect').textContent;
     expect(worker).toBe('Workers: 50%');
     expect(scientist).toBe('Scientists: 50%');
     expect(foodEffect).toBe('Growth: +0.0%');
     expect(waterEffect).toBe('Growth: +0.0%');
+    expect(oreWorkers).toBe('0');
+    expect(oreBoost).toBe('Boost: 100%');
   });
 });

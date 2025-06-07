@@ -160,6 +160,7 @@ function loadGame(slotOrCustomString) {
       setWorkforceRatio(colonySliderSettings.workerRatio);
       setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
       setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
+      setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
     }
 
     tabManager.activateTab('buildings');
