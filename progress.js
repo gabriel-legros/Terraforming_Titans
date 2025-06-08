@@ -235,6 +235,8 @@ class StoryManager {
                          return terraforming.temperature?.zones?.tropical?.value >= objective.value;
                     case 'tropicalNightTemperature':
                          return terraforming.temperature?.zones?.tropical?.night >= objective.value;
+                    case 'tropicalDayTemperature':
+                         return terraforming.temperature?.zones?.tropical?.day >= objective.value;
                     case 'pressure':
                          return terraforming.calculateTotalPressure() > objective.value;
                     // ... etc

@@ -610,7 +610,7 @@ progressData = {
       {
         id: "chapter3.2",
         type: "journal",
-        narrative: "Terraforming milestone achieved : life can now grow on Mars.",
+        narrative: "Terraforming milestone achieved : positive temperature.",
         objectives: [],
         reward: [],
         nextChapter: "chapter3.3"
@@ -618,7 +618,7 @@ progressData = {
       {
         id: "chapter3.3",
         type: "journal",
-        narrative: "Receiving transmission... \n 'Outstanding! Lichen and other plants will now be able to grow on their own.  You should notice exponential growth soon.  You should focus your effort on thickening atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you swith to pumps when you can.'",
+        narrative: "Receiving transmission... \n 'Outstanding! This temperature is enough for lichen to grow.  You may still need more moisture in the air though.  If not, you should notice exponential growth soon.  You should focus your effort on thickening atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you swith to pumps when you can.'",
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
