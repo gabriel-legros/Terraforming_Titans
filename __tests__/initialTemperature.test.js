@@ -43,7 +43,7 @@ function expectedTemperature(terra, params, resources) {
     const massKg = (resources.atmospheric[gas].value || 0) * 1000;
     if (gas === 'carbonDioxide') co2 += massKg;
     else if (gas === 'atmosphericWater') h2o += massKg;
-    else if (gas === 'methane') ch4 += massKg;
+    else if (gas === 'atmosphericMethane') ch4 += massKg;
     else if (gas === 'greenhouseGas') ghg += massKg;
     else inert += massKg;
   }
