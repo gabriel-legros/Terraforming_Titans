@@ -5,7 +5,7 @@ const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
 // Default equilibrium parameter for CO₂ condensation. This value is used until
 // a more accurate one can be calculated from in-game conditions.
-const EQUILIBRIUM_CO2_PARAMETER = 6.190062011688418e-8;
+const EQUILIBRIUM_CO2_PARAMETER = 7.741679251210296e-8;
 
 function calculateSaturationPressureCO2(temperature) {
     // Critical properties of CO₂

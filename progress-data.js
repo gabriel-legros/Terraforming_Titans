@@ -680,10 +680,21 @@ progressData = {
       {
         id: "chapter4.2",
         type: "journal",
-        narrative: "",
+        narrative: "Receiving transmission...  Hi Hope.  My name is Mary.  I am Martin's daughter and I moved here on Mars a while back.  Something happened to Earth.  Some sort of giant beam of light in the sky?  Hold on while we figure things out.  Don't do anything.",
         objectives: [],
         reward: [],
-        nextChapter: "chapter4.2"
+        nextChapter: "chapter4.3"
+      }, 
+      {
+        id: "chapter4.3",
+        type: "journal",
+        narrative: "Begin terraforming to continue.",
+        objectives: [{
+          type: 'currentPlanet',
+          planetId : 'titan',     
+        }],
+        reward: [],
+        nextChapter: "chapter4.4"
       }, 
     ]
   };

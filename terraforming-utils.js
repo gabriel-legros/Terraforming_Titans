@@ -49,7 +49,7 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
     return 0;
   }
 
-  let resourceRatio = 0.00005 * zonalAmount / zoneArea;
+  let resourceRatio = 0.0001 * zonalAmount / zoneArea;
   if (resourceType === 'dryIce') {
     resourceRatio *= 100;
   } else if (resourceType === 'biomass') {

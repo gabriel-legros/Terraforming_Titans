@@ -30,7 +30,7 @@ if (typeof module !== 'undefined' && module.exports) {
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 
-const EQUILIBRIUM_WATER_PARAMETER = 0.0009701364509976772;
+const EQUILIBRIUM_WATER_PARAMETER = 0.0007815298782079626;
 
 // Fraction of precipitation redistributed across zones
 const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
