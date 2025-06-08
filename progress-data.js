@@ -666,19 +666,6 @@ progressData = {
         narrative: "Chapter 4 : Dark forest",
         objectives: [],
         reward: [
-          // <<< ADD REWARD TO ENABLE THE SPACE TAB >>>
-          {
-              target: 'tab',          // Target the TabManager
-              targetId: 'space-tab',  // The ID of the tab button in index.html
-              type: 'enable'          // Calls the 'enable' method in TabManager
-          },
-          {
-            target: 'tab',
-            targetId: 'space',
-            type: 'activateTab',
-            onLoad : false
-          }
-          // You can add other rewards here if needed
       ],
         special : 'clearJournal',
         nextChapter: "chapter4.2"
@@ -688,7 +675,17 @@ progressData = {
         type: "journal",
         narrative: "Receiving transmission...\n  'Hi Hope.  My name is Mary.  I am Martin's daughter and I moved here on Mars a while back.  Something happened to Earth.  Some sort of giant beam of light in the sky?  Hold on while we figure things out.  Don't do anything.'",
         objectives: [],
-        reward: [],
+        reward: [          {
+              target: 'tab',          // Target the TabManager
+              targetId: 'space-tab',  // The ID of the tab button in index.html
+              type: 'enable'          // Calls the 'enable' method in TabManager
+          },
+          {
+            target: 'tab',
+            targetId: 'space',
+            type: 'activateTab',
+            onLoad : false
+          }],
         nextChapter: "chapter4.3"
       }, 
       {
