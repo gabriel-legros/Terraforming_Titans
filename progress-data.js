@@ -618,7 +618,7 @@ progressData = {
       {
         id: "chapter3.3",
         type: "journal",
-        narrative: "Receiving transmission... \n 'Outstanding! This temperature is enough for lichen to grow.  You may still need more moisture in the air though.  If not, you should notice exponential growth soon.  You should focus your effort on thickening atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you swith to pumps when you can.'",
+        narrative: "Receiving transmission... \n 'Outstanding! This temperature is enough for lichen to grow.  You may still need more moisture in the air though.  If not, you should notice exponential growth soon.  You should focus your effort on thickening the atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you switch to pumps when you can.'",
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
