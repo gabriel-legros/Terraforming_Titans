@@ -837,6 +837,8 @@ class Terraforming extends EffectableEntity{
         const atmosphericWaterConsumptionRate = (totalRainfallAmount + totalSnowfallAmount) / durationSeconds * 86400;
         const atmosphericCO2ProductionRate = totalCo2SublimationAmount / durationSeconds * 86400;
         const atmosphericCO2ConsumptionRate = totalCo2CondensationAmount / durationSeconds * 86400;
+        const atmosphericMethaneProductionRate = totalMethaneEvaporationAmount / durationSeconds * 86400;
+        const atmosphericMethaneConsumptionRate = totalMethaneCondensationAmount / durationSeconds * 86400;
 
         const rateType = 'terraforming';
 
@@ -848,6 +850,10 @@ class Terraforming extends EffectableEntity{
         if (resources.atmospheric.carbonDioxide) {
             resources.atmospheric.carbonDioxide.modifyRate(atmosphericCO2ProductionRate, 'CO2 Sublimation', rateType);
             resources.atmospheric.carbonDioxide.modifyRate(-atmosphericCO2ConsumptionRate, 'CO2 Condensation', rateType); // Consumption is negative
+        }
+        if (resources.atmospheric.atmosphericMethane) {
+            resources.atmospheric.atmosphericMethane.modifyRate(atmosphericMethaneProductionRate, 'Methane Evaporation', rateType);
+            resources.atmospheric.atmosphericMethane.modifyRate(-atmosphericMethaneConsumptionRate, 'Methane Condensation', rateType); // Consumption is negative
         }
 
         // Update Surface Resource Rates (Individual Processes for Tooltip)
