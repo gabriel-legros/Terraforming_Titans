@@ -15,7 +15,7 @@ function getGameState() {
     goldenAsteroid: goldenAsteroid.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
-    spaceState: spaceManager.saveState(),
+    spaceManager: spaceManager.saveState(),
     settings: gameSettings,
     colonySliderSettings: colonySliderSettings
   };
@@ -43,8 +43,9 @@ function loadGame(slotOrCustomString) {
       const gameState = JSON.parse(savedState);
 
       // Load space state first so planet parameters are correct
-      if (gameState.spaceManager) {
-        spaceManager.loadState(gameState.spaceManager);
+      const savedSpace = gameState.spaceManager || gameState.spaceState;
+      if (savedSpace) {
+        spaceManager.loadState(savedSpace);
         const key = spaceManager.getCurrentPlanetKey();
         if (planetParameters[key]) {
           defaultPlanet = key; // keep global consistent
