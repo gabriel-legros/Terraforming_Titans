@@ -598,10 +598,10 @@ progressData = {
       {
         id: "chapter3.1",
         type: "journal",
-        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to survive on Mars.  The job is nowhere near done of course.  If we want proper growth, we are going to have to keep raising the temperature!  Get the day temperature up to 273.15K next.  Watch out your greenhouse gases though; too many and you'll get a runaway greenhouse effect.'",
+        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to survive on Mars.  The job is nowhere near done of course.  If we want proper growth, we are going to have to keep raising the temperature!  Get the average temperature up to 273.15K next.  This should give you liquid water at the tropics.  Watch out your greenhouse gases though; too many and you'll get a runaway greenhouse effect.'",
         objectives: [{
           type: 'terraforming',
-          terraformingParameter : 'tropicalDayTemperature',
+          terraformingParameter : 'tropicalTemperature',
           value: 273.15
       }],
         reward: [],
@@ -610,7 +610,7 @@ progressData = {
       {
         id: "chapter3.2",
         type: "journal",
-        narrative: "Terraforming milestone achieved : positive temperature.",
+        narrative: "Terraforming milestone achieved : liquid water.",
         objectives: [],
         reward: [],
         nextChapter: "chapter3.3"
@@ -618,7 +618,7 @@ progressData = {
       {
         id: "chapter3.3",
         type: "journal",
-        narrative: "Receiving transmission... \n 'Outstanding! This temperature is enough for lichen to grow.  You may still need more moisture in the air though.  If not, you should notice exponential growth soon.  You should focus your effort on thickening the atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you switch to pumps when you can.'",
+        narrative: "Receiving transmission... \n 'Outstanding! The conditions are now perfect for lichen to grow.  You should notice exponential growth soon.  You should focus your effort on thickening the atmosphere.  Also your ice harvesters will become obsolete soon.  I recommend you switch to pumps when you can.'",
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
