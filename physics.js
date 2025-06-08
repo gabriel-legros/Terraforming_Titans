@@ -79,6 +79,13 @@ const GAMMA = { h2o: 1, co2: 10.0, ch4: 150.0, greenhousegas: 235000.0 };
 const ALPHA = 1.0;
 const BETA = 0.6;
 
+const SAT_COEFF = {          // B_i   (bar‑1)
+  h2o: 0.0,                  // water vapour saturates even at low P
+  co2: 0.0,                  // CO₂ lines strong everywhere
+  ch4: 0.7                   // CH₄ needs higher pressure to close Titan’s window
+  // add NH3, SO2 … here as needed
+};
+
 const DEFAULT_SURFACE_ALBEDO = {
   ocean: 0.06,
   ice: 0.65,
@@ -111,9 +118,11 @@ function effectiveTemp(albedo, flux) {
 function opticalDepth(comp, pBar) {
   let tau = 0;
   for (const gas in comp) {
-    const x = comp[gas];
-    const g = gas.toLowerCase();
-    tau += (GAMMA[g] || 0) * Math.pow(x, ALPHA) * Math.pow(pBar, BETA);
+    const x   = comp[gas];          // mixing ratio
+    const key = gas.toLowerCase();
+    const G   = GAMMA[key] ?? 0;    // absorption strength
+    const B   = SAT_COEFF[key] ?? 0;
+    tau += G * Math.pow(x, ALPHA) * Math.pow(pBar, BETA) / (1 + B * pBar);
   }
   return tau;
 }

@@ -149,8 +149,8 @@ const titanOverrides = {
       land: { initialValue : 8300000000 },
       ice: {initialValue: 15000000000000000 },
       dryIce : { initialValue: 0 }, // Explicitly set Dry Ice to 0 for Titan
-      // Add Titan-specific resources (these will be added, not merged, as they don't exist in defaults)
-      liquidHydrocarbons: { name: 'Liquid Hydrocarbons', initialValue: 4.5e12, unlocked: true },
+      liquidMethane: { name: 'Liquid Methane', initialValue: 4.5e12, unlocked: true },
+      hydrocarbonIce: { name: 'Hydrocarbon Ice', initialValue: 0, unlocked: true },
     },
     underground: {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
@@ -161,11 +161,24 @@ const titanOverrides = {
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       atmosphericWater: { initialValue: 1e4 },
-      // Add Titan-specific atmospheric resources
-      methane: { name: 'Methane (CH4)', initialValue: 5e14, unlocked: true }
+      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 1.3e14, unlocked: true }
     },
     special: {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
+    }
+  },
+  zonalHydrocarbons: {
+    tropical: {
+        liquid: 2.0e12,
+        ice: 0
+    },
+    temperate: {
+        liquid: 2.5e12,
+        ice: 0
+    },
+    polar: {
+        liquid: 0,
+        ice: 0
     }
   },
   fundingRate: 0, // Override funding rate
