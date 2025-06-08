@@ -88,7 +88,8 @@ function create() {
   }
 }
 
-function initializeGameState() {
+function initializeGameState(options = {}) {
+  const preserveManagers = options.preserveManagers || false;
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
@@ -121,10 +122,11 @@ function initializeGameState() {
   lifeManager = new LifeManager();
 
   milestonesManager = new MilestonesManager();
-  storyManager = new StoryManager(progressData);  // Pass the progressData object
-  storyManager.initializeStory();
-
-  spaceManager = new SpaceManager(planetParameters);
+  if (!preserveManagers) {
+    storyManager = new StoryManager(progressData);  // Pass the progressData object
+    storyManager.initializeStory();
+    spaceManager = new SpaceManager(planetParameters);
+  }
 
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
@@ -132,6 +134,11 @@ function initializeGameState() {
   createColonyButtons(colonies);
   initializeColonySlidersUI();
   initializeResearchUI(); // Reinitialize research UI as well
+  if (preserveManagers && typeof updateSpaceUI === 'function') {
+    updateSpaceUI();
+  } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
+    initializeSpaceUI(spaceManager);
+  }
 }
 
 function updateLogic(delta) {

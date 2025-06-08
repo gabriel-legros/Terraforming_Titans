@@ -89,6 +89,16 @@ class SpaceManager {
         return false;
     }
 
+    /**
+     * Public wrapper for setting the current planet.
+     * Allows external callers (like the UI) to change planets safely.
+     * @param {string} key - The planet key to switch to.
+     * @returns {boolean} - True if the planet was changed.
+     */
+    changeCurrentPlanet(key) {
+        return this._setCurrentPlanetKey(key);
+    }
+
     // --- Save/Load ---
     saveState() {
         return {
