@@ -14,6 +14,7 @@ class Building extends EffectableEntity {
 
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;
+    this.autoBuildPriority = false;
 
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
