@@ -66,6 +66,7 @@ class Terraforming extends EffectableEntity{
     this.totalCo2CondensationRate = 0;
     this.totalMeltRate = 0;
     this.totalFreezeRate = 0;
+    this.flowMeltAmount = 0;
 
     // Zonal Water Data - Replaces global this.water
     this.zonalWater = {};
@@ -535,6 +536,9 @@ class Terraforming extends EffectableEntity{
             totalFreezeAmount += freezeAmount;
         }
 
+        // Include melt from zonal water flow
+        totalMeltAmount += this.flowMeltAmount || 0;
+
         // --- 2. Aggregate global atmospheric changes and apply limits ---
         let totalPotentialAtmosphericWaterLoss = 0;
         let totalPotentialAtmosphericCO2Loss = 0;
@@ -721,6 +725,9 @@ class Terraforming extends EffectableEntity{
             resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
             resources.surface.dryIce.modifyRate(co2CondensationRate, 'CO2 Condensation', rateType);
         }
+
+        // reset stored melt from flow for next tick
+        this.flowMeltAmount = 0;
     }
 
     // Function to update luminosity properties
@@ -837,7 +844,7 @@ class Terraforming extends EffectableEntity{
       for (const z of ZONES) {
         tempMap[z] = this.temperature.zones[z].value;
       }
-      simulateSurfaceWaterFlow(this.zonalWater, deltaTime, tempMap); // Call for Step 4
+      this.flowMeltAmount = simulateSurfaceWaterFlow(this.zonalWater, deltaTime, tempMap); // Call for Step 4
 
       this.applyTerraformingEffects();
 
