@@ -112,6 +112,20 @@ function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
   return Math.max(0, E_sub);
 }
 
+// Calculate rapid sublimation rate of surface CO₂ ice when the temperature
+// rises well above the sublimation point. Modeled similar to water melting in
+// hydrology.js using a simple linear multiplier.
+function rapidSublimationRateCO2(temperature, availableDryIce) {
+    const sublimationPoint = 195; // K
+    const sublimationRateMultiplier = 0.00000001; // per K per second
+
+    if (temperature > sublimationPoint && availableDryIce > 0) {
+        const diff = temperature - sublimationPoint;
+        return availableDryIce * sublimationRateMultiplier * diff;
+    }
+    return 0;
+}
+
 // Calculate potential CO₂ condensation rate factor for a zone. The returned
 // value represents the rate (in tons/s) that would occur if the condensation
 // parameter were equal to 1.
@@ -162,7 +176,17 @@ if (typeof module !== 'undefined' && module.exports) {
         slopeSVPCO2,
         psychrometricConstantCO2,
         sublimationRateCO2,
+        rapidSublimationRateCO2,
         calculateCO2CondensationRateFactor,
         EQUILIBRIUM_CO2_PARAMETER
     };
+} else {
+    // Expose functions globally for browser usage
+    globalThis.calculateSaturationPressureCO2 = calculateSaturationPressureCO2;
+    globalThis.slopeSVPCO2 = slopeSVPCO2;
+    globalThis.psychrometricConstantCO2 = psychrometricConstantCO2;
+    globalThis.sublimationRateCO2 = sublimationRateCO2;
+    globalThis.rapidSublimationRateCO2 = rapidSublimationRateCO2;
+    globalThis.calculateCO2CondensationRateFactor = calculateCO2CondensationRateFactor;
+    globalThis.EQUILIBRIUM_CO2_PARAMETER = EQUILIBRIUM_CO2_PARAMETER;
 }

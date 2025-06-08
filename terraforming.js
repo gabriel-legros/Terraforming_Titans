@@ -10,6 +10,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const dryIceCycle = require('./dry-ice-cycle.js');
     var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
+    var rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
     ZONES = require('./zones.js').ZONES;
     if (typeof globalThis.ZONES === 'undefined') {
         globalThis.ZONES = ZONES;
@@ -534,6 +535,14 @@ class Terraforming extends EffectableEntity{
             // Accumulate totals for UI
             totalMeltAmount += meltAmount;
             totalFreezeAmount += freezeAmount;
+
+            // --- Rapid CO2 sublimation when temperatures are high ---
+            const remainingDryIce = Math.max(0, availableDryIce + zonalChanges[zone].dryIce);
+            const rapidRate = rapidSublimationRateCO2(zoneTemp, remainingDryIce);
+            const rapidAmount = Math.min(rapidRate * durationSeconds, remainingDryIce);
+            zonalChanges[zone].dryIce -= rapidAmount;
+            zonalChanges[zone].potentialAtmosphericCO2Change += rapidAmount;
+            totalCo2SublimationAmount += rapidAmount;
         }
 
         // Include melt from zonal water flow
