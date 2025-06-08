@@ -6,6 +6,35 @@ const lifeShopCategories = [
   { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' }
 ];
 
+const tempAttributes = [
+  'minTemperatureTolerance',
+  'maxTemperatureTolerance',
+  'minTemperatureGrowth',
+  'maxTemperatureGrowth',
+];
+
+function getConvertedDisplay(attributeName, attribute) {
+  if (tempAttributes.includes(attributeName)) {
+    let kelvin = 0;
+    switch (attributeName) {
+      case 'minTemperatureTolerance':
+        kelvin = baseTemperatureRanges.survival.min - attribute.value;
+        break;
+      case 'maxTemperatureTolerance':
+        kelvin = baseTemperatureRanges.survival.max + attribute.value;
+        break;
+      case 'minTemperatureGrowth':
+        kelvin = baseTemperatureRanges.growth.min - attribute.value;
+        break;
+      case 'maxTemperatureGrowth':
+        kelvin = baseTemperatureRanges.growth.max + attribute.value;
+        break;
+    }
+    return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
+  }
+  return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
+}
+
 
 // Function to initialize the life terraforming designer UI
 function initializeLifeTerraformingDesignerUI() {
@@ -133,6 +162,7 @@ function initializeLifeTerraformingDesignerUI() {
     const survivalMessageParagraph = document.getElementById('survival-message');
     const growthMessageParagraph = document.getElementById('growth-message');
   
+
     function generateAttributeRows() {
       let rows = '';
       const attributeOrder = [
@@ -147,7 +177,7 @@ function initializeLifeTerraformingDesignerUI() {
         if (!lifeDesigner.currentDesign[attributeName]) continue;
 
         const attribute = lifeDesigner.currentDesign[attributeName];
-        const convertedValue = attribute.getConvertedValue();
+        const convertedValue = getConvertedDisplay(attributeName, attribute);
         rows += `
           <tr>
             <td class="life-attribute-name">
@@ -383,7 +413,7 @@ function updateLifeUI() {
         // Use querySelector with data-attribute for reliability
         const currentValueDiv = document.querySelector(`div[data-attribute="${attributeName}"][id$="-current-value"]`);
         if (currentValueDiv && currentAttribute) {
-          currentValueDiv.textContent = `${currentAttribute.value} / ${currentAttribute.getConvertedValue() !== null ? currentAttribute.getConvertedValue() : '-'}`;
+          currentValueDiv.textContent = `${currentAttribute.value} / ${getConvertedDisplay(attributeName, currentAttribute)}`;
         } else if (currentValueDiv) {
             currentValueDiv.textContent = 'N/A'; // Handle case where attribute might not exist?
         }
@@ -398,7 +428,7 @@ function updateLifeUI() {
             if (lifeDesigner.tentativeDesign && tentativeAttribute && tentativeValueDiv) {
                 const tentativeValueDisplay = tentativeValueDiv.querySelector('.life-tentative-display');
                 if (tentativeValueDisplay) {
-                    tentativeValueDisplay.textContent = `${tentativeAttribute.value} / ${tentativeAttribute.getConvertedValue() !== null ? tentativeAttribute.getConvertedValue() : '-'}`;
+                    tentativeValueDisplay.textContent = `${tentativeAttribute.value} / ${getConvertedDisplay(attributeName, tentativeAttribute)}`;
                 }
                 tentativeCell.style.display = 'table-cell'; // Show the cell
             } else {
@@ -536,3 +566,7 @@ function updateLifeStatusTable() {
 }
 
 // Removed old updateZonalBiomassDensities function
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { getConvertedDisplay };
+}
