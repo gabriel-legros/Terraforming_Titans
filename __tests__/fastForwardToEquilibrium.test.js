@@ -53,22 +53,37 @@ describe('fastForwardToEquilibrium', () => {
     expect(Math.max(...steps)).toBeGreaterThan(Math.min(...steps));
   });
 
-  test('generateOverrideSnippet includes buried ice', () => {
+  test('generateOverrideSnippet includes hydrocarbon values', () => {
     const snippet = generateOverrideSnippet({
       global: {
         ice: 10,
         liquidWater: 5,
         dryIce: 2,
+        liquidMethane: 3,
+        hydrocarbonIce: 1,
         co2: 1,
         waterVapor: 1,
+        atmosphericMethane: 9,
         buriedIce: 7
       },
       zones: {
-        polar: { ice: 3, buriedIce: 4, liquidWater: 1, dryIce: 2 }
+        polar: {
+          ice: 3,
+          buriedIce: 4,
+          liquidWater: 1,
+          dryIce: 2,
+          liquidMethane: 5,
+          hydrocarbonIce: 6
+        }
       }
     });
 
     const obj = JSON.parse(snippet);
     expect(obj.zonalWater.polar.buriedIce).toBe(4);
+    expect(obj.resources.surface.liquidMethane.initialValue).toBe(3);
+    expect(obj.resources.surface.hydrocarbonIce.initialValue).toBe(1);
+    expect(obj.resources.atmospheric.atmosphericMethane.initialValue).toBe(9);
+    expect(obj.zonalHydrocarbons.polar.liquid).toBe(5);
+    expect(obj.zonalHydrocarbons.polar.ice).toBe(6);
   });
 });
