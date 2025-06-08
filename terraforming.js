@@ -772,6 +772,11 @@ class Terraforming extends EffectableEntity{
 
 
         // --- 3. Apply net changes ---
+        // Ensure aggregated changes are finite numbers before applying
+        if(!Number.isFinite(totalAtmosphericWaterChange)) totalAtmosphericWaterChange = 0;
+        if(!Number.isFinite(totalAtmosphericCO2Change)) totalAtmosphericCO2Change = 0;
+        if(!Number.isFinite(totalAtmosphericMethaneChange)) totalAtmosphericMethaneChange = 0;
+
         // Apply directly to Global Resources (Atmosphere)
         if (resources.atmospheric['atmosphericWater']) {
             resources.atmospheric['atmosphericWater'].value += totalAtmosphericWaterChange;

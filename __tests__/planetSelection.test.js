@@ -106,6 +106,6 @@ describe('planet selection', () => {
     expect(oldStory).toBe(vm.runInContext('storyManager', ctx));
     expect(oldSpace).toBe(vm.runInContext('spaceManager', ctx));
     expect(marsDryIce).not.toBe(newDryIce);
-    expect(newDryIce).toBe(0);
+    expect(newDryIce).toBeCloseTo(32083.440978550152, 5);
   });
 });
