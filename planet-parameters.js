@@ -67,7 +67,7 @@ const defaultPlanetParameters = {
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}, // Default (Mars)
-      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 1.3e14, unlocked: false }
+      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 0, unlocked: false }
     },
     special: {
       albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
@@ -150,13 +150,13 @@ const titanOverrides = {
   resources: {
     surface: {
       land: { initialValue : 8300000000 },
-      ice: {initialValue: 15000000000010068 },
-      dryIce : { initialValue: 32083.440978550152 },
+      ice: {initialValue: 15000000000010070 },
+      dryIce : { initialValue: 32083.440978549916 },
       "liquidMethane": {
-        "initialValue": 4499999731545.475, unlocked : true
+        "initialValue": 4499999731588.555, unlocked : true
       },
       "hydrocarbonIce": {
-        "initialValue": 268455.5002254921, unlocked : true
+        "initialValue": 268411.0742637397, unlocked : true
       }
     },
     underground: {
@@ -164,10 +164,10 @@ const titanOverrides = {
       geothermal: { initialValue: 2, maxDeposits: 83, areaTotal: 83000 },
     },
     atmospheric: {
-      carbonDioxide: { initialValue: 67916.55902144985 },
+      carbonDioxide: { initialValue: 67916.55902144962 },
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
-      atmosphericWater: { initialValue: 0.29798067521257016 },
+      atmosphericWater: { initialValue: 0 },
       "atmosphericMethane": {
         "initialValue": 130000000000000, unlocked : true
       }
@@ -176,15 +176,15 @@ const titanOverrides = {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
     }
   },
- "zonalWater": {
+"zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 3791.1290799490544,
+      "ice": 3791.2409230205194,
       "buriedIce": 150000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 4628.040355939032,
+      "ice": 4628.179160457752,
       "buriedIce": 1350000000000000
     },
     "polar": {
@@ -195,27 +195,27 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 12612.517734279125
+      "dryIce": 12612.517734279038
     },
     "temperate": {
-      "dryIce": 16622.511857819816
+      "dryIce": 16622.511857819663
     },
     "polar": {
-      "dryIce": 2848.411386451212
+      "dryIce": 2848.4113864512165
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 2249999854041.544,
+      "liquid": 2249999854064.2373,
       "ice": 0
     },
     "temperate": {
-      "liquid": 2249999869054.3467,
+      "liquid": 2249999869074.7334,
       "ice": 0
     },
     "polar": {
-      "liquid": 8449.448825612879,
-      "ice": 268455.63443106273
+      "liquid": 8449.448825612937,
+      "ice": 268411.2084693103
     }
   },
   
