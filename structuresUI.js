@@ -289,6 +289,13 @@ function createStructureControls(structure, toggleCallback) {
 
   if (structure.canBeToggled) {
 
+    zeroButton = document.createElement('button');
+    zeroButton.textContent = '0';
+    zeroButton.addEventListener('click', function () {
+      toggleCallback(structure, -structure.active);
+    });
+    structureControls.appendChild(zeroButton);
+
     decreaseButton = document.createElement('button');
     decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', function () {
@@ -305,13 +312,6 @@ function createStructureControls(structure, toggleCallback) {
 
     structureControls.appendChild(decreaseButton);
     structureControls.appendChild(increaseButton);
-
-    zeroButton = document.createElement('button');
-    zeroButton.textContent = '0';
-    zeroButton.addEventListener('click', function () {
-      toggleCallback(structure, -structure.active);
-    });
-    structureControls.appendChild(zeroButton);
 
     maxButton = document.createElement('button');
     maxButton.textContent = 'Max';
