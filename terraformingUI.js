@@ -557,11 +557,14 @@ function createCompleteTerraformingButton(container) {
 
   container.appendChild(button);
 
-    // Add an event listener for the button
-    button.addEventListener('click', () => {
-      if (!button.disabled) {
-          terraforming.completed = true;
-      }
+  // Add an event listener for the button
+  button.addEventListener('click', () => {
+    if (!button.disabled) {
+        terraforming.completed = true;
+        if (typeof spaceManager !== 'undefined') {
+            spaceManager.updateCurrentPlanetTerraformedStatus(true);
+        }
+    }
   });
 }
 
@@ -571,7 +574,7 @@ function updateCompleteTerraformingButton() {
 
   if (!button) return;
 
-  if (terraforming.getTerraformingStatus()) {
+  if (terraforming.readyForCompletion) {
       button.style.backgroundColor = 'green';
       button.style.cursor = 'pointer';
       button.disabled = false; // Enable the button
