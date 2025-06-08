@@ -53,7 +53,9 @@ const defaultPlanetParameters = {
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
       dryIce : {name : 'Dry Ice', initialValue: 30010169900060.594, unlocked: false}, // Default (Mars)
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false},
-      biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false}
+      biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false},
+      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false },
+      hydrocarbonIce: { name: 'Hydrocarbon Ice', initialValue: 0, unlocked: false },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
@@ -64,7 +66,8 @@ const defaultPlanetParameters = {
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false }, // Default (Mars) - Adjusted based on review
-      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false} // Default (Mars)
+      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}, // Default (Mars)
+      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 1.3e14, unlocked: false }
     },
     special: {
       albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
@@ -147,40 +150,75 @@ const titanOverrides = {
   resources: {
     surface: {
       land: { initialValue : 8300000000 },
-      ice: {initialValue: 15000000000000000 },
-      dryIce : { initialValue: 0 }, // Explicitly set Dry Ice to 0 for Titan
-      liquidMethane: { name: 'Liquid Methane', initialValue: 4.5e12, unlocked: true },
-      hydrocarbonIce: { name: 'Hydrocarbon Ice', initialValue: 0, unlocked: true },
+      ice: {initialValue: 15000000000010068 },
+      dryIce : { initialValue: 32083.440978550152 },
+      "liquidMethane": {
+        "initialValue": 4499999731545.475, unlocked : true
+      },
+      "hydrocarbonIce": {
+        "initialValue": 268455.5002254921, unlocked : true
+      }
     },
     underground: {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
       geothermal: { initialValue: 2, maxDeposits: 83, areaTotal: 83000 },
     },
     atmospheric: {
-      carbonDioxide: { initialValue: 1e5 },
+      carbonDioxide: { initialValue: 67916.55902144985 },
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
-      atmosphericWater: { initialValue: 1e4 },
-      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 1.3e14, unlocked: true }
+      atmosphericWater: { initialValue: 0.29798067521257016 },
+      "atmosphericMethane": {
+        "initialValue": 130000000000000, unlocked : true
+      }
     },
     special: {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
     }
   },
-  zonalHydrocarbons: {
-    tropical: {
-        liquid: 2.0e12,
-        ice: 0
+ "zonalWater": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 3791.1290799490544,
+      "buriedIce": 150000000000000
     },
-    temperate: {
-        liquid: 2.5e12,
-        ice: 0
+    "temperate": {
+      "liquid": 0,
+      "ice": 4628.040355939032,
+      "buriedIce": 1350000000000000
     },
-    polar: {
-        liquid: 0,
-        ice: 0
+    "polar": {
+      "liquid": 0,
+      "ice": 9450000000001650,
+      "buriedIce": 4050000000000000
     }
   },
+  "zonalSurface": {
+    "tropical": {
+      "dryIce": 12612.517734279125
+    },
+    "temperate": {
+      "dryIce": 16622.511857819816
+    },
+    "polar": {
+      "dryIce": 2848.411386451212
+    }
+  },
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 2249999854041.544,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 2249999869054.3467,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 8449.448825612879,
+      "ice": 268455.63443106273
+    }
+  },
+  
   fundingRate: 0, // Override funding rate
   celestialParameters : { // Override all celestial parameters
     distanceFromSun: 9.58,
