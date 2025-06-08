@@ -14,7 +14,14 @@ function getGasRangeString(gasName) {
   }
 }
 
+let terraformingTabsInitialized = false;
+let terraformingSummaryInitialized = false;
+
 function initializeTerraformingTabs() {
+  if (terraformingTabsInitialized) {
+    return;
+  }
+
   // Set up event listeners for terraforming sub-tabs
   document.querySelectorAll('.terraforming-subtab').forEach(subtab => {
       subtab.addEventListener('click', () => {
@@ -32,6 +39,8 @@ function initializeTerraformingTabs() {
 
   // Activate the 'energy' category
   activateTerraformingSubtab('summary-terraforming');
+
+  terraformingTabsInitialized = true;
 }
 
 function activateTerraformingSubtab(subtabId) {
@@ -45,16 +54,20 @@ function activateTerraformingSubtab(subtabId) {
 }
 
 function createTerraformingSummaryUI() {
+    if (terraformingSummaryInitialized) {
+      return;
+    }
+
     const terraformingContainer = document.getElementById('summary-terraforming');
-  
+
     // Create the first row of boxes
     const row1 = document.createElement('div');
     row1.classList.add('terraforming-row');
-  
+
     // Create the second row of boxes
     const row2 = document.createElement('div');
     row2.classList.add('terraforming-row');
-  
+
     // Create and append the boxes for each terraforming aspect
     createTemperatureBox(row1);
     createAtmosphereBox(row1);
@@ -62,13 +75,15 @@ function createTerraformingSummaryUI() {
     createLuminosityBox(row2);
     createLifeBox(row2);
     createMagnetosphereBox(row2);
-  
+
     // Append the rows to the terraforming container
     terraformingContainer.appendChild(row1);
     terraformingContainer.appendChild(row2);
 
     // Add the "Complete Terraforming" button below the rows
     createCompleteTerraformingButton(terraformingContainer);
+
+    terraformingSummaryInitialized = true;
   }
 
 // Function to update the terraforming UI elements
