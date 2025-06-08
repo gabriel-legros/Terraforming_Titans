@@ -564,6 +564,14 @@ function createCompleteTerraformingButton(container) {
         if (typeof spaceManager !== 'undefined') {
             spaceManager.updateCurrentPlanetTerraformedStatus(true);
         }
+        // Refresh the space UI so the new status is displayed immediately
+        if (typeof updateSpaceUI === 'function') {
+            updateSpaceUI();
+        }
+        // Re-evaluate the button state after completing terraforming
+        if (typeof updateCompleteTerraformingButton === 'function') {
+            updateCompleteTerraformingButton();
+        }
     }
   });
 }
