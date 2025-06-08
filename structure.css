@@ -129,3 +129,14 @@
     margin-top: 5px; /* Adds spacing above the target */
     font-size: 12px;
 }
+
+.auto-build-target-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.auto-build-priority {
+    margin-left: 5px;
+}

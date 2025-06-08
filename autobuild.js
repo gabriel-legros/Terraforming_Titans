@@ -25,8 +25,12 @@ function autoBuild(buildings) {
         }
     }
 
-    // Step 2: Sort buildable buildings by their current ratio (ascending)
-    buildableBuildings.sort((a, b) => a.currentRatio - b.currentRatio);
+    // Step 2: Sort buildable buildings by priority then current ratio (ascending)
+    buildableBuildings.sort((a, b) => {
+        if (a.building.autoBuildPriority && !b.building.autoBuildPriority) return -1;
+        if (!a.building.autoBuildPriority && b.building.autoBuildPriority) return 1;
+        return a.currentRatio - b.currentRatio;
+    });
 
     // Step 3: Efficiently allocate builds
     buildableBuildings.forEach(({ building, requiredAmount, canBuildFull, maxBuildable }) => {
@@ -37,4 +41,8 @@ function autoBuild(buildings) {
         }
         // Skip incremental building as it significantly impacts performance
     });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { autoBuild };
 }

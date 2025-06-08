@@ -266,11 +266,28 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildContainer.appendChild(autoBuildInputContainer);
 
   const autoBuildTarget = document.createElement('span');
+  const autoBuildTargetContainer = document.createElement('div');
+  autoBuildTargetContainer.classList.add('auto-build-target-container');
+
   autoBuildTarget.classList.add('auto-build-target');
   autoBuildTarget.id = `${structure.name}-auto-build-target`;
   autoBuildTarget.textContent = 'Target : 0';
+  autoBuildTargetContainer.appendChild(autoBuildTarget);
 
-  autoBuildContainer.appendChild(autoBuildTarget);
+  const autoBuildPriorityLabel = document.createElement('label');
+  autoBuildPriorityLabel.textContent = 'Prioritize';
+  const autoBuildPriority = document.createElement('input');
+  autoBuildPriority.type = 'checkbox';
+  autoBuildPriority.classList.add('auto-build-priority');
+  autoBuildPriority.id = `${structure.name}-auto-build-priority`;
+  autoBuildPriority.checked = structure.autoBuildPriority;
+  autoBuildPriority.addEventListener('change', () => {
+    structure.autoBuildPriority = autoBuildPriority.checked;
+  });
+  autoBuildPriorityLabel.prepend(autoBuildPriority);
+  autoBuildTargetContainer.appendChild(autoBuildPriorityLabel);
+
+  autoBuildContainer.appendChild(autoBuildTargetContainer);
 
   combinedStructureRow.append(autoBuildContainer);
 
@@ -470,6 +487,11 @@ function updateDecreaseButtonText(button, buildCount) {
         const autoBuildCheckbox = autoBuildContainer.querySelector('.auto-build-checkbox');
         if (autoBuildCheckbox) {
           autoBuildCheckbox.checked = structure.autoBuildEnabled;
+        }
+
+        const priorityCheckbox = autoBuildContainer.querySelector('.auto-build-priority');
+        if (priorityCheckbox) {
+          priorityCheckbox.checked = structure.autoBuildPriority;
         }
 
         const targetCount = Math.ceil((structure.autoBuildPercent * population) / 100);
