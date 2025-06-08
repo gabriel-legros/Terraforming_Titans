@@ -157,10 +157,10 @@ const titanOverrides = {
       geothermal: { initialValue: 2, maxDeposits: 83, areaTotal: 83000 },
     },
     atmospheric: {
-      carbonDioxide: { initialValue: 1e10 },
+      carbonDioxide: { initialValue: 1e5 },
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
-      atmosphericWater: { initialValue: 1e6 },
+      atmosphericWater: { initialValue: 1e4 },
       // Add Titan-specific atmospheric resources
       methane: { name: 'Methane (CH4)', initialValue: 5e14, unlocked: true },
       ethane: { name: 'Ethane (C2H6)', initialValue: 1e14, unlocked: true },
