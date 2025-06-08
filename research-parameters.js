@@ -329,26 +329,26 @@ const researchParameters = {
           },
         ],
       },
-      {
-        id: 'recycling',
-        name: 'Recycling',
-        description: 'Unlocks the recycling facility, which is capable of recycling all sorts of material lost to maintenance.',
-        cost: {research: 5000000},
-        prerequisites: [],
-        effects: [
-          {
-            target: 'building',
-            targetId: 'recyclingFacility',
-            type: 'enable',
-          },
-          {
-            target: 'resource',
-            resourceType: 'surface',
-            targetId: 'scrapMetal',
-            type: 'enable'
-          }
-        ]
-      }, 
+      //{
+      //  id: 'recycling',
+      //  name: 'Recycling',
+      //  description: 'Unlocks the recycling facility, which is capable of recycling all sorts of material lost to maintenance.',
+      //  cost: {research: 5000000},
+      //  prerequisites: [],
+      //  effects: [
+      //    {
+      //      target: 'building',
+      //      targetId: 'recyclingFacility',
+      //      type: 'enable',
+      //    },
+      //    {
+      //      target: 'resource',
+      //      resourceType: 'surface',
+      //      targetId: 'scrapMetal',
+      //      type: 'enable'
+      //    }
+      //  ]
+      //}, 
       {
         id: 'advanced_alloy',
         name: 'Advanced Alloys',

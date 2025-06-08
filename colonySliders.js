@@ -139,7 +139,7 @@ function setOreMineWorkerAssist(value) {
     sourceId: 'oreMineWorkers'
   });
 
-  const multiplier = value === 0 ? 1 : value * value;
+  const multiplier = value === 0 ? 1 : 1+value;
 
   addEffect({
     target: 'building',
@@ -159,7 +159,7 @@ function setOreMineWorkerAssist(value) {
     if (valueSpan && effectSpan) {
       const workers = value * 10;
       valueSpan.textContent = `${workers}`;
-      const mult = value === 0 ? 1 : value * value;
+      const mult = value === 0 ? 0 : value;
       const percent = (mult * 100).toFixed(0);
       effectSpan.textContent = `Boost: ${percent}%`;
     }
