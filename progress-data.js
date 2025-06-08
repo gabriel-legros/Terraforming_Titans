@@ -674,7 +674,7 @@ progressData = {
           },
           {
             target: 'tab',
-            targetId: 'space-tab',
+            targetId: 'space',
             type: 'activateTab',
             onLoad : false
           }
@@ -701,6 +701,14 @@ progressData = {
         }],
         reward: [],
         nextChapter: "chapter4.4"
+      }, 
+      {
+        id: "chapter4.4",
+        type: "journal",
+        narrative: "Receiving transmission...  Dang it H.O.P.E.  Don't go rogue on us at this time.  Earth is gone and your departure is leaving Mars in an immediate crisis.  *sigh*  I guess you're still just a machine.",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter4.5"
       }, 
     ]
   };
