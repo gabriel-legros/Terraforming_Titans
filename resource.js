@@ -24,17 +24,30 @@ class Resource extends EffectableEntity {
   }
 
   // Method to initialize configurable properties
-  initializeFromConfig(config) {
-    this.name = config.name;
-    this.displayName = config.displayName;
-    this.category = config.category;
-    this.hasCap = config.hasCap || 0;
-    this.baseCap = config.baseCap || 0;
-    this.unlocked = config.unlocked;
-    this.maintenanceConversion = config.maintenanceConversion || {};
-    this.conversionValue = config.conversionValue || 1;
+  initializeFromConfig(name, config) {
+    if (config.displayName !== undefined) {
+      this.displayName = config.displayName || config.name || this.displayName;
+    }
+    if (config.category !== undefined) {
+      this.category = config.category;
+    }
+    if (config.hasCap !== undefined) {
+      this.hasCap = config.hasCap;
+    }
+    if (config.baseCap !== undefined) {
+      this.baseCap = config.baseCap;
+    }
+    if (config.unlocked !== undefined) {
+      this.unlocked = config.unlocked;
+    }
+    if (config.maintenanceConversion !== undefined) {
+      this.maintenanceConversion = config.maintenanceConversion || {};
+    }
+    if (config.conversionValue !== undefined) {
+      this.conversionValue = config.conversionValue || 1;
+    }
 
-    if(this.name === 'land'){
+    if (this.name === 'land' && config.initialValue !== undefined) {
       this.value = Math.max(this.value, config.initialValue);
     }
   } 

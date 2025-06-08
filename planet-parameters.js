@@ -147,7 +147,7 @@ const titanOverrides = {
   resources: {
     surface: {
       land: { initialValue : 8300000000 },
-      ice: { name: 'Ice', initialValue: 15000000000000000 },
+      ice: {initialValue: 15000000000000000 },
       dryIce : { initialValue: 0 }, // Explicitly set Dry Ice to 0 for Titan
       // Add Titan-specific resources (these will be added, not merged, as they don't exist in defaults)
       liquidHydrocarbons: { name: 'Liquid Hydrocarbons', initialValue: 4.5e12, unlocked: true },
@@ -158,7 +158,7 @@ const titanOverrides = {
     },
     atmospheric: {
       carbonDioxide: { initialValue: 1e10 },
-      inertGas: { name: 'Inert Gas', initialValue: 9e15 }, // Override name and value
+      inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       atmosphericWater: { initialValue: 1e6 },
       // Add Titan-specific atmospheric resources
