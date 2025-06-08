@@ -99,11 +99,40 @@ function updateSpaceUI() {
             //    selectButton.disabled = true;
             //} else {
                 selectButton.textContent = `Select ${data.name}`;
-                selectButton.disabled = true; // Still disabled until selection implemented
-                selectButton.title = "Planet selection not yet implemented.";
+                selectButton.disabled = false; // Enable selection
+                selectButton.title = `Travel to ${data.name}`;
             //}
         }
         planetDiv.appendChild(selectButton);
         optionsContainer.appendChild(planetDiv);
     });
+}
+
+// Handle click events for selecting planets
+document.addEventListener('click', function(evt){
+    const btn = evt.target.closest('.select-planet-button');
+    if(btn){
+        const key = btn.dataset.planetKey;
+        selectPlanet(key);
+    }
+});
+
+/**
+ * Select a planet and reset the game state for it.
+ * @param {string} planetKey
+ */
+function selectPlanet(planetKey){
+    if(!_spaceManagerInstance) {
+        console.error('SpaceManager not initialized');
+        return;
+    }
+    if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
+
+    if(planetParameters[planetKey]){
+        defaultPlanet = planetKey;
+        currentPlanetParameters = planetParameters[planetKey];
+    }
+
+    initializeGameState({preserveManagers: true});
+    updateSpaceUI();
 }
