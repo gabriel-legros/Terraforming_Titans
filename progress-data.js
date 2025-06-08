@@ -598,10 +598,10 @@ progressData = {
       {
         id: "chapter3.1",
         type: "journal",
-        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to survive on Mars.  The job is nowhere near done of course.  If we want liquid water and proper growth, we are going to have to keep raising the temperature!  Get the average up to 273.15K next.  You may not be able to reach this value with greenhouse gases alone.'",
+        narrative: "Receiving transmission...  \n 'Amazing HOPE!  Lichen should now be able to survive on Mars.  The job is nowhere near done of course.  If we want proper growth, we are going to have to keep raising the temperature!  Get the day temperature up to 273.15K next.  Watch out your greenhouse gases though; too many and you'll get a runaway greenhouse effect.'",
         objectives: [{
           type: 'terraforming',
-          terraformingParameter : 'tropicalTemperature',
+          terraformingParameter : 'tropicalDayTemperature',
           value: 273.15
       }],
         reward: [],
@@ -610,7 +610,7 @@ progressData = {
       {
         id: "chapter3.2",
         type: "journal",
-        narrative: "Terraforming milestone achieved : liquid water on Mars.",
+        narrative: "Terraforming milestone achieved : life can now grow on Mars.",
         objectives: [],
         reward: [],
         nextChapter: "chapter3.3"
@@ -618,7 +618,7 @@ progressData = {
       {
         id: "chapter3.3",
         type: "journal",
-        narrative: "Receiving transmission... \n 'With liquid water, lichen and other plants will now be able to grow on their own.  You should notice exponential growth soon.  You should focus your effort on thickening atmosphere.  Also your ice harvesters will become obsolete now.  I recommend you swith to pumps.'",
+        narrative: "Receiving transmission... \n 'Outstanding! Lichen and other plants will now be able to grow on their own.  You should notice exponential growth soon.  You should focus your effort on thickening atmosphere and obtaining liquid water.  Also your ice harvesters will become obsolete soon.  I recommend you swith to pumps when you can.'",
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
