@@ -295,6 +295,19 @@ class Terraforming extends EffectableEntity{
         this.zonalHydrocarbons = structuredClone(currentPlanetParameters.zonalHydrocarbons);
     }
 
+    // Override defaults if planet parameters specify zonal surface amounts
+    if (currentPlanetParameters.zonalSurface) {
+        this.zonalSurface = structuredClone(currentPlanetParameters.zonalSurface);
+        zones.forEach(z => {
+            if (!this.zonalSurface[z].hasOwnProperty('biomass')) {
+                this.zonalSurface[z].biomass = 0;
+            }
+            if (!this.zonalSurface[z].hasOwnProperty('dryIce')) {
+                this.zonalSurface[z].dryIce = 0;
+            }
+        });
+    }
+
     // Initialize global atmospheric resource amounts (no longer storing in this.atmosphere.gases)
     for (const gas in currentPlanetParameters.resources.atmospheric) {
         const initialTotalGasAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
