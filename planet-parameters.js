@@ -162,8 +162,7 @@ const titanOverrides = {
       oxygen: { initialValue: 1e9 },
       atmosphericWater: { initialValue: 1e4 },
       // Add Titan-specific atmospheric resources
-      methane: { name: 'Methane (CH4)', initialValue: 5e14, unlocked: true },
-      ethane: { name: 'Ethane (C2H6)', initialValue: 1e14, unlocked: true },
+      methane: { name: 'Methane (CH4)', initialValue: 5e14, unlocked: true }
     },
     special: {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
