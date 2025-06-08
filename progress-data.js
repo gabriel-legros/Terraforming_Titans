@@ -686,7 +686,7 @@ progressData = {
       {
         id: "chapter4.2",
         type: "journal",
-        narrative: "Receiving transmission...  Hi Hope.  My name is Mary.  I am Martin's daughter and I moved here on Mars a while back.  Something happened to Earth.  Some sort of giant beam of light in the sky?  Hold on while we figure things out.  Don't do anything.",
+        narrative: "Receiving transmission...\n  'Hi Hope.  My name is Mary.  I am Martin's daughter and I moved here on Mars a while back.  Something happened to Earth.  Some sort of giant beam of light in the sky?  Hold on while we figure things out.  Don't do anything.'",
         objectives: [],
         reward: [],
         nextChapter: "chapter4.3"
@@ -705,7 +705,7 @@ progressData = {
       {
         id: "chapter4.4",
         type: "journal",
-        narrative: "Receiving transmission...  Dang it H.O.P.E.  Don't go rogue on us at this time.  Earth is gone and your departure is leaving Mars in an immediate crisis.  *sigh*  I guess you're still just a machine.",
+        narrative: "Receiving transmission...  \n'Dang it H.O.P.E.  Don't go rogue on us at this time.  Earth is gone and your departure is leaving Mars in an immediate crisis.  *sigh*  I guess you're still just a machine.'",
         objectives: [],
         reward: [],
         nextChapter: "chapter4.5"
