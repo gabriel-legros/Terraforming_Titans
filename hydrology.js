@@ -1,6 +1,7 @@
 function simulateSurfaceWaterFlow(zonalWater, deltaTime, zonalTemperatures = {}) {
     const flowRateCoefficient = 0.005; // Adjust to control flow speed (fraction per second)
     const secondsMultiplier = deltaTime / 1000;
+    let totalMelt = 0;
 
     const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
     // Define flow direction: Polar -> Temperate -> Tropical
@@ -44,12 +45,14 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime, zonalTemperatures = {})
                 if (totalIce > 0) {
                     const meltCoefficient = flowRateCoefficient * 0.01;
                     const meltAmount = Math.min(totalIce * meltCoefficient * secondsMultiplier, totalIce);
-                    let meltFromIce = Math.min(meltAmount, availableIce);
-                    let meltFromBuried = meltAmount - meltFromIce;
+                    const surfaceFraction = totalIce > 0 ? availableIce / totalIce : 0;
+                    const meltFromIce = meltAmount * surfaceFraction;
+                    const meltFromBuried = meltAmount - meltFromIce;
 
                     flowChanges[zone].ice -= meltFromIce;
                     flowChanges[zone].buriedIce -= meltFromBuried;
                     flowChanges[outflowTarget].liquid += meltAmount;
+                    totalMelt += meltAmount;
                 }
             }
         }
@@ -73,6 +76,8 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime, zonalTemperatures = {})
             zonalWater[zone].buriedIce = Math.max(0, zonalWater[zone].buriedIce || 0);
         }
     });
+
+    return totalMelt;
 }
 
 // Compute melting and freezing rates for a surface zone based on temperature

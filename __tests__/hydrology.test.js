@@ -20,16 +20,21 @@ describe('hydrology melting with buried ice', () => {
     expect(res.meltingRate).toBeCloseTo(expected);
   });
 
-  test('simulateSurfaceWaterFlow melts ice to warmer neighbour', () => {
+  test('simulateSurfaceWaterFlow melts ice proportionally to warmer neighbour', () => {
     const zonalWater = {
       polar: { liquid: 0, ice: 100, buriedIce: 50 },
       temperate: { liquid: 0, ice: 0, buriedIce: 0 },
       tropical: { liquid: 0, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 250, temperate: 274, tropical: 260 };
-    simulateSurfaceWaterFlow(zonalWater, 1000, temps);
+    const melt = simulateSurfaceWaterFlow(zonalWater, 1000, temps);
     const expectedMelt = (100 + 50) * 0.005 * 0.01 * 1;
-    expect(zonalWater.polar.ice).toBeCloseTo(100 - expectedMelt);
+    const surfaceFraction = 100 / (100 + 50);
+    const meltFromIce = expectedMelt * surfaceFraction;
+    const meltFromBuried = expectedMelt - meltFromIce;
+    expect(melt).toBeCloseTo(expectedMelt);
+    expect(zonalWater.polar.ice).toBeCloseTo(100 - meltFromIce);
+    expect(zonalWater.polar.buriedIce).toBeCloseTo(50 - meltFromBuried);
     expect(zonalWater.temperate.liquid).toBeCloseTo(expectedMelt);
   });
 });
