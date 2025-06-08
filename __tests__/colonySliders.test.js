@@ -99,7 +99,7 @@ describe('colony sliders', () => {
       target: 'building',
       targetId: 'oreMine',
       type: 'productionMultiplier',
-      value: 25
+      value: 6
     }));
   });
 
@@ -183,6 +183,6 @@ describe('colony sliders', () => {
     expect(waterVal).toBe('3.0x');
     expect(waterEffect).toBe('Growth: +2.0%');
     expect(oreWorkers).toBe('40');
-    expect(oreBoost).toBe('Boost: 1600%');
+    expect(oreBoost).toBe('Boost: 400%');
   });
 });
