@@ -51,6 +51,8 @@ function loadGame(slotOrCustomString) {
           defaultPlanet = key; // keep global consistent
           currentPlanetParameters = planetParameters[key];
         }
+        // Reinitialize game state using the loaded planet parameters
+        initializeGameState({preserveManagers: true});
       }
 
       // Restore day/night cycle progress
