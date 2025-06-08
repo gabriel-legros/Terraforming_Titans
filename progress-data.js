@@ -671,6 +671,12 @@ progressData = {
               target: 'tab',          // Target the TabManager
               targetId: 'space-tab',  // The ID of the tab button in index.html
               type: 'enable'          // Calls the 'enable' method in TabManager
+          },
+          {
+            target: 'tab',
+            targetId: 'space-tab',
+            type: 'activateTab',
+            onLoad : false
           }
           // You can add other rewards here if needed
       ],
