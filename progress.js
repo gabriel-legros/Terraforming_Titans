@@ -286,6 +286,21 @@ class StoryManager {
         });
     }
 
+    // Reapply stored effects to newly created game objects. Used when
+    // resetting the game state while keeping the existing story progress.
+    reapplyEffects() {
+        const uniqueEffectsToApply = new Map();
+        this.appliedEffects.forEach(effect => {
+            const effectKey = JSON.stringify(effect);
+            if (!effect.oneTimeFlag) {
+                uniqueEffectsToApply.set(effectKey, effect);
+            }
+        });
+        uniqueEffectsToApply.forEach(effect => {
+            addEffect(effect);
+        });
+    }
+
     saveState() { // Keep as is
         const state = {
             activeEventIds: Array.from(this.activeEventIds),

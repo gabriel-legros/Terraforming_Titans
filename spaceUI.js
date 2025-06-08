@@ -39,6 +39,7 @@ function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
 
     const optionsContainer = document.getElementById('planet-selection-options');
+    const statusContainer = document.getElementById('travel-status');
     if (!optionsContainer) return; // Guard clause
 
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
@@ -49,7 +50,13 @@ function updateSpaceUI() {
         return;
     }
 
+    const canChangePlanet = _spaceManagerInstance.isPlanetTerraformed(_spaceManagerInstance.getCurrentPlanetKey());
+
     optionsContainer.innerHTML = ''; // Clear
+    if (statusContainer) {
+        statusContainer.style.display = canChangePlanet ? 'none' : 'block';
+        statusContainer.textContent = canChangePlanet ? '' : 'Current planet must be fully terraformed before traveling.';
+    }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
         if (!data || !data.celestialParameters || !data.name) return; // Skip bad data
@@ -99,8 +106,8 @@ function updateSpaceUI() {
             //    selectButton.disabled = true;
             //} else {
                 selectButton.textContent = `Select ${data.name}`;
-                selectButton.disabled = false; // Enable selection
-                selectButton.title = `Travel to ${data.name}`;
+                selectButton.disabled = !canChangePlanet; // Enable only if current planet terraformed
+                selectButton.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
             //}
         }
         planetDiv.appendChild(selectButton);
@@ -124,6 +131,11 @@ document.addEventListener('click', function(evt){
 function selectPlanet(planetKey){
     if(!_spaceManagerInstance) {
         console.error('SpaceManager not initialized');
+        return;
+    }
+    const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
+    if(!_spaceManagerInstance.isPlanetTerraformed(currentKey)) {
+        console.warn('Cannot travel until current planet is terraformed.');
         return;
     }
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;

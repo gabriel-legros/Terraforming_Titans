@@ -139,6 +139,12 @@ function initializeGameState(options = {}) {
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
     initializeSpaceUI(spaceManager);
   }
+
+  // When keeping existing managers, reapplied story effects need to
+  // target the newly created game objects for this planet.
+  if (preserveManagers && storyManager && typeof storyManager.reapplyEffects === 'function') {
+    storyManager.reapplyEffects();
+  }
 }
 
 function updateLogic(delta) {
