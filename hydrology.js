@@ -1,4 +1,4 @@
-function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
+function simulateSurfaceWaterFlow(zonalWater, deltaTime, zonalTemperatures = {}) {
     const flowRateCoefficient = 0.005; // Adjust to control flow speed (fraction per second)
     const secondsMultiplier = deltaTime / 1000;
 
@@ -13,7 +13,7 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
     // Create a temporary structure to hold changes
     let flowChanges = {};
     zones.forEach(zone => {
-        flowChanges[zone] = { liquid: 0 };
+        flowChanges[zone] = { liquid: 0, ice: 0, buriedIce: 0 };
     });
 
     zones.forEach(zone => {
@@ -35,6 +35,23 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
                 flowChanges[zone].liquid -= potentialFlow;
                 flowChanges[outflowTarget].liquid += potentialFlow;
             }
+
+            const neighborTemp = zonalTemperatures[outflowTarget];
+            if (typeof neighborTemp === 'number' && neighborTemp > 273.15) {
+                const availableIce = zonalWater[zone].ice || 0;
+                const availableBuried = zonalWater[zone].buriedIce || 0;
+                const totalIce = availableIce + availableBuried;
+                if (totalIce > 0) {
+                    const meltCoefficient = flowRateCoefficient * 0.01;
+                    const meltAmount = Math.min(totalIce * meltCoefficient * secondsMultiplier, totalIce);
+                    let meltFromIce = Math.min(meltAmount, availableIce);
+                    let meltFromBuried = meltAmount - meltFromIce;
+
+                    flowChanges[zone].ice -= meltFromIce;
+                    flowChanges[zone].buriedIce -= meltFromBuried;
+                    flowChanges[outflowTarget].liquid += meltAmount;
+                }
+            }
         }
     });
 
@@ -42,7 +59,18 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime) {
     zones.forEach(zone => {
         if (flowChanges[zone].liquid !== 0) {
             zonalWater[zone].liquid += flowChanges[zone].liquid;
-            zonalWater[zone].liquid = Math.max(0, zonalWater[zone].liquid); // Ensure non-negative
+        }
+        if (flowChanges[zone].ice !== 0) {
+            zonalWater[zone].ice += flowChanges[zone].ice;
+        }
+        if (flowChanges[zone].buriedIce !== 0) {
+            zonalWater[zone].buriedIce += flowChanges[zone].buriedIce;
+        }
+
+        if (flowChanges[zone].liquid !== 0 || flowChanges[zone].ice !== 0 || flowChanges[zone].buriedIce !== 0) {
+            zonalWater[zone].liquid = Math.max(0, zonalWater[zone].liquid);
+            zonalWater[zone].ice = Math.max(0, zonalWater[zone].ice || 0);
+            zonalWater[zone].buriedIce = Math.max(0, zonalWater[zone].buriedIce || 0);
         }
     });
 }

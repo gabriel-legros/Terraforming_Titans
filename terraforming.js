@@ -833,7 +833,11 @@ class Terraforming extends EffectableEntity{
       // calculateCoverage function.
 
       // Simulate atmospheric and water flow between zones
-      simulateSurfaceWaterFlow(this.zonalWater, deltaTime); // Call for Step 4
+      const tempMap = {};
+      for (const z of ZONES) {
+        tempMap[z] = this.temperature.zones[z].value;
+      }
+      simulateSurfaceWaterFlow(this.zonalWater, deltaTime, tempMap); // Call for Step 4
 
       this.applyTerraformingEffects();
 
