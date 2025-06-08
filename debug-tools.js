@@ -4,8 +4,11 @@
       ice: resources.surface.ice?.value || 0,
       liquidWater: resources.surface.liquidWater?.value || 0,
       dryIce: resources.surface.dryIce?.value || 0,
+      liquidMethane: resources.surface.liquidMethane?.value || 0,
+      hydrocarbonIce: resources.surface.hydrocarbonIce?.value || 0,
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
+      atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
       buriedIce: 0
     };
     const zonalVals = {};
@@ -17,7 +20,9 @@
           ice: terraforming.zonalWater[zone]?.ice || 0,
           buriedIce: bIce,
           liquidWater: terraforming.zonalWater[zone]?.liquid || 0,
-          dryIce: terraforming.zonalSurface[zone]?.dryIce || 0
+          dryIce: terraforming.zonalSurface[zone]?.dryIce || 0,
+          liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
+          hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0
         };
       });
     }
@@ -25,12 +30,12 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice', 'buriedIce', 'liquidWater', 'dryIce', 'co2', 'waterVapor'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice', 'buriedIce', 'liquidWater', 'dryIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','liquidMethane','hydrocarbonIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }
@@ -41,14 +46,18 @@
     const surface = {
       ice: { initialValue: values.global.ice },
       liquidWater: { initialValue: values.global.liquidWater },
-      dryIce: { initialValue: values.global.dryIce }
+      dryIce: { initialValue: values.global.dryIce },
+      liquidMethane: { initialValue: values.global.liquidMethane },
+      hydrocarbonIce: { initialValue: values.global.hydrocarbonIce }
     };
     const atmospheric = {
       carbonDioxide: { initialValue: values.global.co2 },
-      atmosphericWater: { initialValue: values.global.waterVapor }
+      atmosphericWater: { initialValue: values.global.waterVapor },
+      atmosphericMethane: { initialValue: values.global.atmosphericMethane }
     };
     const zonalWater = {};
     const zonalSurface = {};
+    const zonalHydrocarbons = {};
     for (const zone in values.zones) {
       zonalWater[zone] = {
         liquid: values.zones[zone].liquidWater,
@@ -58,8 +67,12 @@
       zonalSurface[zone] = {
         dryIce: values.zones[zone].dryIce
       };
+      zonalHydrocarbons[zone] = {
+        liquid: values.zones[zone].liquidMethane,
+        ice: values.zones[zone].hydrocarbonIce
+      };
     }
-    return { resources: { surface, atmospheric }, zonalWater, zonalSurface };
+    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons };
   }
 
   function generateOverrideSnippet(values) {
