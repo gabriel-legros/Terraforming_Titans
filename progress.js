@@ -230,7 +230,10 @@ class StoryManager {
                  if (!terraforming) return false;
                  switch(objective.terraformingParameter){
                     case 'complete':
-                        return terraforming.completed;
+                        if (typeof spaceManager !== 'undefined') {
+                            return spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
+                        }
+                        return false;
                     case 'tropicalTemperature':
                          return terraforming.temperature?.zones?.tropical?.value >= objective.value;
                     case 'tropicalNightTemperature':

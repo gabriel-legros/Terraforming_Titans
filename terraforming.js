@@ -57,7 +57,10 @@ class Terraforming extends EffectableEntity{
     this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
     this.equilibriumCondensationParameter = EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
 
-    this.completed = false;
+      this.completed = false;
+      // Indicates whether all terraforming parameters are within target ranges
+      // but completion has not yet been confirmed by the player
+      this.readyForCompletion = false;
     // Add properties to store total rates for UI display
     this.totalEvaporationRate = 0;
     this.totalWaterSublimationRate = 0;
@@ -858,14 +861,9 @@ class Terraforming extends EffectableEntity{
       this.applyTerraformingEffects();
 
       // --- Check and Update Overall Status ---
-      const newStatus = this.getTerraformingStatus(); // Calculate based on current state
-
-      // Check if the status has changed compared to the last known status
-      if (newStatus !== this.completed) {
-            this.completed = newStatus; // Update the internal flag
-            // Notify SpaceManager about the status change for the CURRENT planet
-            spaceManager.updateCurrentPlanetTerraformedStatus(this.completed);
-      } // <-- Correct closing brace for the 'if' block
+      // Determine if all parameters meet completion conditions
+      // This value is used by the UI to enable the "Complete Terraforming" button
+      this.readyForCompletion = this.getTerraformingStatus();
 
       // --- End of Status Update Logic ---
 
