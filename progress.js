@@ -225,7 +225,7 @@ class StoryManager {
             case 'colony':
                  const colony = colonies[objective.buildingName];
                  return colony ? colony.count >= objective.quantity : false;
-            case 'terraforming':
+           case 'terraforming':
                  // Add checks to ensure terraforming object and properties exist
                  if (!terraforming) return false;
                  switch(objective.terraformingParameter){
@@ -245,6 +245,12 @@ class StoryManager {
                     // ... etc
                  }
                  return false; // Default for terraforming if parameter not matched
+            case 'currentPlanet':
+                 if (typeof spaceManager !== 'undefined' &&
+                     typeof spaceManager.getCurrentPlanetKey === 'function') {
+                     return spaceManager.getCurrentPlanetKey() === objective.planetId;
+                 }
+                 return false;
             default:
                  console.error(`Unknown objective type: ${objective.type}`);
                  return false;
