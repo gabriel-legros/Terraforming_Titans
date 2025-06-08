@@ -1,4 +1,4 @@
-const { calculateMeltingFreezingRates } = require('../hydrology.js');
+const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow } = require('../hydrology.js');
 const { calculateMeltingFreezingRates: zonalRates } = require('../terraforming-utils.js');
 
 describe('hydrology melting with buried ice', () => {
@@ -18,5 +18,18 @@ describe('hydrology melting with buried ice', () => {
     const res = zonalRates(terra, 'polar', T);
     const expected = (5 + 3) * 0.0000001 * diff;
     expect(res.meltingRate).toBeCloseTo(expected);
+  });
+
+  test('simulateSurfaceWaterFlow melts ice to warmer neighbour', () => {
+    const zonalWater = {
+      polar: { liquid: 0, ice: 100, buriedIce: 50 },
+      temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 0, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 250, temperate: 274, tropical: 260 };
+    simulateSurfaceWaterFlow(zonalWater, 1000, temps);
+    const expectedMelt = (100 + 50) * 0.005 * 0.01 * 1;
+    expect(zonalWater.polar.ice).toBeCloseTo(100 - expectedMelt);
+    expect(zonalWater.temperate.liquid).toBeCloseTo(expectedMelt);
   });
 });
