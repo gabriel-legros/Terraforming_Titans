@@ -43,7 +43,7 @@ function simulateSurfaceWaterFlow(zonalWater, deltaTime, zonalTemperatures = {})
                 const availableBuried = zonalWater[zone].buriedIce || 0;
                 const totalIce = availableIce + availableBuried;
                 if (totalIce > 0) {
-                    const meltCoefficient = flowRateCoefficient * 0.01;
+                    const meltCoefficient = flowRateCoefficient * 0.1;
                     const meltAmount = Math.min(totalIce * meltCoefficient * secondsMultiplier, totalIce);
                     const surfaceFraction = totalIce > 0 ? availableIce / totalIce : 0;
                     const meltFromIce = meltAmount * surfaceFraction;
