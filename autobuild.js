@@ -11,15 +11,10 @@ function autoBuild(buildings) {
             const requiredAmount = targetCount - building.count;
 
             if (requiredAmount > 0) {
-                // Pre-compute affordability to minimize redundant checks
-                const canBuildFull = building.canAfford(requiredAmount);
-                const maxBuildable = building.maxBuildable(); // Assume this method exists for efficiency
                 buildableBuildings.push({
                     building,
                     currentRatio,
                     requiredAmount,
-                    canBuildFull,
-                    maxBuildable,
                 });
             }
         }
@@ -33,11 +28,15 @@ function autoBuild(buildings) {
     });
 
     // Step 3: Efficiently allocate builds
-    buildableBuildings.forEach(({ building, requiredAmount, canBuildFull, maxBuildable }) => {
+    buildableBuildings.forEach(({ building, requiredAmount }) => {
+        const canBuildFull = building.canAfford(requiredAmount);
         if (canBuildFull) {
             building.build(requiredAmount); // Build all at once if affordable
-        } else if (maxBuildable > 0) {
-            building.build(maxBuildable); // Build the maximum number affordable
+        } else {
+            const maxBuildable = building.maxBuildable();
+            if (maxBuildable > 0) {
+                building.build(maxBuildable); // Build the maximum number affordable
+            }
         }
         // Skip incremental building as it significantly impacts performance
     });
