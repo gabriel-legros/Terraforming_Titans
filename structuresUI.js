@@ -284,6 +284,8 @@ function createStructureControls(structure, toggleCallback) {
 
   let increaseButton = null;
   let decreaseButton = null;
+  let zeroButton = null;
+  let maxButton = null;
 
   if (structure.canBeToggled) {
 
@@ -303,9 +305,23 @@ function createStructureControls(structure, toggleCallback) {
 
     structureControls.appendChild(decreaseButton);
     structureControls.appendChild(increaseButton);
+
+    zeroButton = document.createElement('button');
+    zeroButton.textContent = '0';
+    zeroButton.addEventListener('click', function () {
+      toggleCallback(structure, -structure.active);
+    });
+    structureControls.appendChild(zeroButton);
+
+    maxButton = document.createElement('button');
+    maxButton.textContent = 'Max';
+    maxButton.addEventListener('click', function () {
+      toggleCallback(structure, structure.count - structure.active);
+    });
+    structureControls.appendChild(maxButton);
   }
 
-  return { structureControls, increaseButton, decreaseButton };
+  return { structureControls, increaseButton, decreaseButton, zeroButton, maxButton };
 }
 
 // Update the text of the increase button based on the selected build count
