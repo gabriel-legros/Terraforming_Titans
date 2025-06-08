@@ -13,6 +13,9 @@ function calculateSaturationPressureMethane(temperature) {
     const C = -1.1514853;
     const D = -1.5163253;
 
+    if (temperature > Tc) {
+        return Infinity;
+    }
     // Calculate the reduced temperature (tau)
     const tau = 1 - (temperature / Tc);
 
@@ -37,6 +40,9 @@ function slopeSVPMethane(temperature) {
     const C = -1.1514853;
     const D = -1.5163253;
 
+    if (temperature > Tc) {
+        return 1e12; // Return a very large number for the slope
+    }
     const tau = 1 - (temperature / Tc);
     const T_inv = 1 - tau;
 
