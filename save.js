@@ -42,6 +42,16 @@ function loadGame(slotOrCustomString) {
 
       const gameState = JSON.parse(savedState);
 
+      // Load space state first so planet parameters are correct
+      if (gameState.spaceManager) {
+        spaceManager.loadState(gameState.spaceManager);
+        const key = spaceManager.getCurrentPlanetKey();
+        if (planetParameters[key]) {
+          defaultPlanet = key; // keep global consistent
+          currentPlanetParameters = planetParameters[key];
+        }
+      }
+
       // Restore day/night cycle progress
       if (gameState.dayNightCycle) {
           dayNightCycle.loadState(gameState.dayNightCycle);
@@ -141,10 +151,6 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.milestonesManager){
       milestonesManager.loadState(gameState.milestonesManager);
-    }
-
-    if(gameState.spaceManager){
-      spaceManager.loadState(gameState.spaceManager);
     }
 
     if(gameState.settings){
