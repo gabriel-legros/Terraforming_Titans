@@ -4,8 +4,8 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-describe('planet selection', () => {
-  test('selecting another planet preserves managers and loads new parameters', () => {
+describe('planet selection blocked when not terraformed', () => {
+  test('cannot change planet if current one not terraformed', () => {
     const htmlPath = path.join(__dirname, '..', 'index.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
@@ -81,17 +81,10 @@ describe('planet selection', () => {
     vm.runInContext(overrides, ctx);
     vm.runInContext('initializeGameState();', ctx);
 
-    // Mark the starting planet as terraformed so travel is allowed
-    vm.runInContext("spaceManager.updateCurrentPlanetTerraformedStatus(true);", ctx);
-
-    const oldStory = vm.runInContext('storyManager', ctx);
-    const oldSpace = vm.runInContext('spaceManager', ctx);
-    const marsDryIce = vm.runInContext('resources.surface.dryIce.value', ctx);
-
+    // Do NOT mark planet as terraformed
     vm.runInContext("selectPlanet('titan');", ctx);
 
-    const newName = vm.runInContext('currentPlanetParameters.name', ctx);
-    const newDryIce = vm.runInContext('resources.surface.dryIce.value', ctx);
+    const nameAfter = vm.runInContext('currentPlanetParameters.name', ctx);
 
     global.window = originalWindow;
     global.document = originalDocument;
@@ -102,10 +95,6 @@ describe('planet selection', () => {
       throw new Error('Script errors: ' + JSON.stringify(errors, null, 2));
     }
 
-    expect(newName).toBe('Titan');
-    expect(oldStory).toBe(vm.runInContext('storyManager', ctx));
-    expect(oldSpace).toBe(vm.runInContext('spaceManager', ctx));
-    expect(marsDryIce).not.toBe(newDryIce);
-    expect(newDryIce).toBe(0);
+    expect(nameAfter).toBe('Mars');
   });
 });
