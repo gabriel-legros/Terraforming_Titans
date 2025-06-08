@@ -541,6 +541,11 @@ function updateLifeBox() {
       luminosityBox.style.borderColor = 'red';
     }
 
+    const baseAlbedo = document.getElementById('base-albedo');
+    if (baseAlbedo) {
+      baseAlbedo.textContent = terraforming.celestialParameters.albedo.toFixed(2);
+    }
+
     const effectiveAlbedo = document.getElementById('effective-albedo');
     effectiveAlbedo.textContent = terraforming.luminosity.albedo.toFixed(2);
   
