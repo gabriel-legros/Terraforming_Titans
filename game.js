@@ -124,6 +124,8 @@ function initializeGameState() {
   storyManager = new StoryManager(progressData);  // Pass the progressData object
   storyManager.initializeStory();
 
+  spaceManager = new SpaceManager(planetParameters);
+
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
   createBuildingButtons(buildings);
