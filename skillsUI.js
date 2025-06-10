@@ -99,12 +99,12 @@ function drawSkillConnections() {
         const skill = skillManager.skills[id];
         const fromPos = skillLayout[id];
         if (!fromPos) continue;
-        const startX = fromPos.col * cell + margin + 50;
+        const startX = fromPos.col * cell + margin + 100;
         const startY = fromPos.row * cell + margin + 100;
         for (const unlock of skill.unlocks || []) {
             const toPos = skillLayout[unlock];
             if (!toPos) continue;
-            const endX = toPos.col * cell + margin + 50;
+            const endX = toPos.col * cell + margin + 100;
             const endY = toPos.row * cell + margin;
             const midY = (startY + endY) / 2;
             const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
