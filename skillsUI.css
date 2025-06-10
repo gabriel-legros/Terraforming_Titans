@@ -5,11 +5,30 @@
 }
 
 .skill-tree {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    position: relative;
+    width: 360px;
+    height: 520px;
 }
 
 .skill-button {
-    padding: 8px 12px;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    text-align: center;
+    padding: 4px;
+}
+
+#skill-lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.skill-connector {
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
 }
