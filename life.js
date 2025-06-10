@@ -357,6 +357,18 @@ class LifeDesigner extends EffectableEntity {
     this.enabled = false;
   }
 
+  replaceEffect(effect) {
+    const existingEffectIndex = this.activeEffects.findIndex(
+      (activeEffect) => activeEffect.effectId === effect.effectId
+    );
+    if (existingEffectIndex !== -1) {
+      this.activeEffects[existingEffectIndex] = effect;
+      this.applyActiveEffects(false);
+    } else {
+      super.replaceEffect(effect);
+    }
+  }
+
   enable(){
     this.enabled = true;
   }
