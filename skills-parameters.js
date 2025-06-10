@@ -11,7 +11,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    unlocks: ['pop_growth', 'research_boost']
+    requires: []
   },
   pop_growth: {
     id: 'pop_growth',
@@ -25,7 +25,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    unlocks: ['worker_reduction']
+    requires: ['build_cost']
   },
   worker_reduction: {
     id: 'worker_reduction',
@@ -39,7 +39,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    unlocks: ['maintenance_reduction']
+    requires: ['pop_growth']
   },
   research_boost: {
     id: 'research_boost',
@@ -53,7 +53,7 @@ const skillParameters = {
       baseValue: 0.2,
       perRank: true
     },
-    unlocks: ['scanning_speed']
+    requires: ['build_cost']
   },
   maintenance_reduction: {
     id: 'maintenance_reduction',
@@ -67,6 +67,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
+    requires: ['worker_reduction']
   },
   scanning_speed: {
     id: 'scanning_speed',
@@ -80,7 +81,7 @@ const skillParameters = {
       baseValue: 2,
       perRank: true
     },
-    unlocks: ['ship_efficiency']
+    requires: ['research_boost']
   },
   ship_efficiency: {
     id: 'ship_efficiency',
@@ -93,7 +94,8 @@ const skillParameters = {
       type: 'shipEfficiency',
       baseValue: 0.2,
       perRank: true
-    }
+    },
+    requires: ['scanning_speed']
   }
 };
 

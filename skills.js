@@ -6,7 +6,7 @@ class Skill {
     this.baseCost = config.cost; // base cost for rank 1
     this.maxRank = config.maxRank || 1;
     this.effect = config.effect || null;
-    this.unlocks = config.unlocks || [];
+    this.requires = config.requires || [];
     this.rank = 0;
     this.unlocked = false;
   }

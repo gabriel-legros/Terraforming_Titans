@@ -4,23 +4,15 @@ let skillPrereqs = {};
 function buildSkillPrereqs() {
     skillPrereqs = {};
     for (const id in skillManager.skills) {
-        skillPrereqs[id] = [];
-    }
-    for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
-        if (Array.isArray(skill.unlocks)) {
-            skill.unlocks.forEach(u => {
-                if (!skillPrereqs[u]) skillPrereqs[u] = [];
-                skillPrereqs[u].push(id);
-            });
-        }
+        skillPrereqs[id] = Array.isArray(skill.requires) ? skill.requires.slice() : [];
     }
 }
 
 function canUnlockSkill(id) {
     const prereqs = skillPrereqs[id];
     if (!prereqs || prereqs.length === 0) return true;
-    return prereqs.some(p => skillManager.skills[p] && skillManager.skills[p].unlocked);
+    return prereqs.every(p => skillManager.skills[p] && skillManager.skills[p].unlocked);
 }
 
 const skillLayout = {
@@ -97,15 +89,15 @@ function drawSkillConnections() {
     const margin = 10;
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
-        const fromPos = skillLayout[id];
-        if (!fromPos) continue;
-        const startX = fromPos.col * cell + margin + 100;
-        const startY = fromPos.row * cell + margin + 100;
-        for (const unlock of skill.unlocks || []) {
-            const toPos = skillLayout[unlock];
-            if (!toPos) continue;
-            const endX = toPos.col * cell + margin + 100;
-            const endY = toPos.row * cell + margin;
+        const toPos = skillLayout[id];
+        if (!toPos) continue;
+        const endX = toPos.col * cell + margin + 100;
+        const endY = toPos.row * cell + margin;
+        for (const prereq of skill.requires || []) {
+            const fromPos = skillLayout[prereq];
+            if (!fromPos) continue;
+            const startX = fromPos.col * cell + margin + 100;
+            const startY = fromPos.row * cell + margin + 100;
             const midY = (startY + endY) / 2;
             const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
             poly.setAttribute('points', `${startX},${startY} ${startX},${midY} ${endX},${midY} ${endX},${endY}`);
