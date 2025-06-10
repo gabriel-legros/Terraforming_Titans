@@ -38,6 +38,13 @@ function renderProjects() {
   });
 }
 
+function initializeProjectsUI() {
+  document.querySelectorAll('.projects-list').forEach(container => {
+    container.innerHTML = '';
+  });
+  projectElements = {};
+}
+
 function createProjectItem(project) {
   const projectItem = document.createElement('div');
   projectItem.classList.add('special-projects-item');
