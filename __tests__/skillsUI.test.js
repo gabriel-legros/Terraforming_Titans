@@ -18,8 +18,8 @@ describe('skillsUI createSkillTree', () => {
     ctx.initializeSkillsUI();
 
     const buildBtn = dom.window.document.getElementById('skill-build_cost');
-    const popBtn = dom.window.document.getElementById('skill-pop_growth');
+    const autoBtn = dom.window.document.getElementById('skill-worker_reduction');
     expect(buildBtn.innerHTML).toMatch(skillParams.build_cost.description);
-    expect(popBtn.disabled).toBe(true);
+    expect(autoBtn.disabled).toBe(true);
   });
 });
