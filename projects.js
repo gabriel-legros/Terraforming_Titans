@@ -620,6 +620,7 @@ class ProjectManager extends EffectableEntity {
   loadState(projectState) {
     this.activeEffects = [];
     this.booleanFlags = new Set();
+    projectElements = {};
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
