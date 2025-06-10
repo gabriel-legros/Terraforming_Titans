@@ -136,6 +136,12 @@ class EffectableEntity {
         case 'globalPopulationGrowth':
           this.applyGlobalPopulationGrowth(effect);
           break;
+        case 'globalWorkerReduction':
+          this.applyGlobalWorkerReduction(effect);
+          break;
+        case 'globalResearchBoost':
+          this.applyGlobalResearchBoost(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -231,6 +237,44 @@ class EffectableEntity {
         sourceId: effect.sourceId,
         onLoad: effect.onLoad
       });
+    }
+
+    applyGlobalWorkerReduction(effect) {
+      const multiplier = 1 - effect.value;
+      for (const id in buildings) {
+        const building = buildings[id];
+        if (!building) continue;
+        const effectId = `${effect.effectId}-${id}`;
+        building.addAndReplace({
+          type: 'workerMultiplier',
+          value: multiplier,
+          effectId,
+          sourceId: effect.sourceId
+        });
+      }
+    }
+
+    applyGlobalResearchBoost(effect) {
+      const multiplier = 1 + effect.value;
+      for (const id in colonies) {
+        const colony = colonies[id];
+        if (
+          colony &&
+          colony.production &&
+          colony.production.colony &&
+          colony.production.colony.research !== undefined
+        ) {
+          const effectId = `${effect.effectId}-${id}`;
+          colony.addAndReplace({
+            type: 'resourceProductionMultiplier',
+            resourceCategory: 'colony',
+            resourceTarget: 'research',
+            value: multiplier,
+            effectId,
+            sourceId: effect.sourceId
+          });
+        }
+      }
     }
 
     // Method to apply a boolean flag effect
