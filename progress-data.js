@@ -726,7 +726,7 @@ progressData = {
             resourceType: 'colony',
             targetId: 'funding',
             type: 'instantResourceGain',
-            quantity: 1000000,
+            quantity: 10000,
             oneTimeFlag: true
           }
         ],
@@ -741,7 +741,7 @@ progressData = {
           {
             target: 'fundingModule',
             type: 'setFundingRate',
-            value: 5000
+            value: 3
           }
         ],
         nextChapter: "chapter4.8"
