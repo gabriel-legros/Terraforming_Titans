@@ -63,13 +63,18 @@ class Project extends EffectableEntity {
   }
 
   getEffectiveDuration(){
-    const duration = this.duration;
+    const base = this.getBaseDuration();
+    const multiplier = (typeof projectManager !== 'undefined' && projectManager.durationMultiplier !== undefined) ? projectManager.durationMultiplier : 1;
+    return base * multiplier;
+  }
+
+  getBaseDuration(){
     if(this.isBooleanFlagSet('instantDuration')){
       return 1000;
     } else if(this.attributes.spaceMining || this.attributes.spaceExport){
       return this.calculateSpaceshipAdjustedDuration();
     } else {
-      return duration;
+      return this.duration;
     }
   }
 
@@ -552,6 +557,12 @@ class ProjectManager extends EffectableEntity {
     super({description: 'Manages all special projects'});
 
     this.projects = {};
+    this.durationMultiplier = 1;
+  }
+
+  applyActiveEffects(firstTime = true) {
+    this.durationMultiplier = 1;
+    super.applyActiveEffects(firstTime);
   }
 
   // New method to activate automation
@@ -606,6 +617,22 @@ class ProjectManager extends EffectableEntity {
       const project = this.projects[projectName];
       if(project.attributes.spaceMining || project.attributes.spaceExport || project.attributes.resourceChoiceGainCost){
         project.estimateProjectCostAndGain();
+      }
+    }
+  }
+
+  applyProjectDurationReduction(effect) {
+    this.durationMultiplier = 1 - effect.value;
+
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      const baseDuration = project.getBaseDuration ? project.getBaseDuration() : project.duration;
+      const newDuration = baseDuration * this.durationMultiplier;
+
+      if (project.isActive) {
+        const progressRatio = (project.startingDuration - project.remainingTime) / project.startingDuration;
+        project.startingDuration = newDuration;
+        project.remainingTime = newDuration * (1 - progressRatio);
       }
     }
   }
