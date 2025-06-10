@@ -7,10 +7,14 @@ class SpaceManager {
         }
         this.allPlanetsData = planetsData;
         this.currentPlanetKey = 'mars';
-        // <<< NEW: Store status per planet >>>
+        // Store status per planet including whether it's been visited
         this.planetStatuses = {};
 
         this._initializePlanetStatuses();
+        // Mark the starting planet as visited
+        if (this.planetStatuses[this.currentPlanetKey]) {
+            this.planetStatuses[this.currentPlanetKey].visited = true;
+        }
         console.log("SpaceManager initialized with planet statuses.");
     }
 
@@ -20,6 +24,7 @@ class SpaceManager {
         Object.keys(this.allPlanetsData).forEach(key => {
             this.planetStatuses[key] = {
                 terraformed: false,
+                visited: false,
                 // Add other statuses later if needed (e.g., colonized: false)
             };
         });
@@ -80,10 +85,10 @@ class SpaceManager {
             }
              // Ensure status object exists for the new current planet
              if (!this.planetStatuses[key]) {
-                  this.planetStatuses[key] = { terraformed: false };
+                  this.planetStatuses[key] = { terraformed: false, visited: false };
                   console.warn(`SpaceManager: Initialized missing status for planet ${key}.`);
              }
-            return true;
+           return true;
         }
         console.error(`SpaceManager: Attempted to set invalid or unavailable planet key: ${key}`);
         return false;
@@ -97,6 +102,30 @@ class SpaceManager {
      */
     changeCurrentPlanet(key) {
         return this._setCurrentPlanetKey(key);
+    }
+
+    /**
+     * Marks a planet as visited and returns true if this is the first visit.
+     * @param {string} key - The planet key being visited.
+     * @returns {boolean} - True if this is the first time visiting.
+     */
+    visitPlanet(key) {
+        const status = this.planetStatuses[key];
+        if (!status) return false;
+        if (!status.visited) {
+            status.visited = true;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if a planet has been visited before.
+     * @param {string} key
+     * @returns {boolean}
+     */
+    hasVisitedPlanet(key) {
+        return !!this.planetStatuses[key]?.visited;
     }
 
     // --- Save/Load ---
@@ -131,16 +160,23 @@ class SpaceManager {
         if (savedData.planetStatuses) {
             Object.keys(this.planetStatuses).forEach(planetKey => {
                 if (savedData.planetStatuses[planetKey]) {
-                    // Only update known properties (like 'terraformed')
+                    // Only update known properties (like 'terraformed' and 'visited')
                     if (typeof savedData.planetStatuses[planetKey].terraformed === 'boolean') {
                         this.planetStatuses[planetKey].terraformed = savedData.planetStatuses[planetKey].terraformed;
                     }
-                    // Add loading for other future status properties here
+                    if (typeof savedData.planetStatuses[planetKey].visited === 'boolean') {
+                        this.planetStatuses[planetKey].visited = savedData.planetStatuses[planetKey].visited;
+                    }
                 }
             });
             console.log("SpaceManager: Loaded planet statuses from save data.");
         } else {
             console.log("SpaceManager: No planet statuses found in save data, keeping defaults.");
+        }
+
+        // Ensure the loaded current planet is marked visited
+        if (this.planetStatuses[this.currentPlanetKey]) {
+            this.planetStatuses[this.currentPlanetKey].visited = true;
         }
 
          console.log("SpaceManager state loaded:", this.saveState());

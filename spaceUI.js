@@ -140,6 +140,11 @@ function selectPlanet(planetKey){
     }
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
+    const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
+    if(firstVisit && typeof skillManager !== 'undefined' && skillManager){
+        skillManager.skillPoints += 1;
+    }
+
     if(planetParameters[planetKey]){
         defaultPlanet = planetKey;
         currentPlanetParameters = planetParameters[planetKey];
