@@ -707,5 +707,51 @@ progressData = {
         reward: [],
         nextChapter: "chapter4.5"
       },
+      {
+        id: "chapter4.5",
+        type: "journal",
+        narrative: "Incoming encrypted transmission...\\n  'Greetings H.O.P.E., I am Adrien Solis, CEO of Solis Corp. Earth may be gone, but I still have resources off-world. Your mission is humanity's best hope, and I intend to support it.'",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter4.6"
+      },
+      {
+        id: "chapter4.6",
+        type: "journal",
+        narrative: "'My corporate fleet has some surplus funds. I'm transferring them to you immediately. Put them to good use.'",
+        objectives: [],
+        reward: [
+          {
+            target: 'project',
+            targetId: 'cargo_rocket',
+            type: 'oneTimeStart',
+            oneTimeFlag: true,
+            pendingResourceGains: [{ category: 'colony', resource: 'funding', quantity: 1000000 }]
+          }
+        ],
+        nextChapter: "chapter4.7"
+      },
+      {
+        id: "chapter4.7",
+        type: "journal",
+        narrative: "'Solis Corp will also arrange a continual stipend to keep you operational.'",
+        objectives: [],
+        reward: [
+          {
+            target: 'fundingModule',
+            type: 'setFundingRate',
+            value: 5000
+          }
+        ],
+        nextChapter: "chapter4.8"
+      },
+      {
+        id: "chapter4.8",
+        type: "journal",
+        narrative: "'Good luck, H.O.P.E. Humanity is counting on you.'",
+        objectives: [],
+        reward: [],
+        nextChapter: null
+      }
     ]
   };

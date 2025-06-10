@@ -124,6 +124,9 @@ class EffectableEntity {
         case 'oneTimeStart':
           this.applyOneTimeStart(effect);
           break;
+        case 'setFundingRate':
+          this.applySetFundingRate(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -166,6 +169,12 @@ class EffectableEntity {
 
     applyWorkerRatio(effect) {
 
+    }
+
+    applySetFundingRate(effect) {
+      if (typeof this.fundingRate !== 'undefined' && typeof effect.value === 'number') {
+        this.fundingRate = effect.value;
+      }
     }
 
     // Method to apply a boolean flag effect
