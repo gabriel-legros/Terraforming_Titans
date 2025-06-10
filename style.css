@@ -10,7 +10,8 @@ body {
 .buildings-subtabs,
 .research-subtabs,
 .projects-subtabs,
-.terraforming-subtabs
+.terraforming-subtabs,
+.hope-subtabs
  {
     display: flex;
     cursor: pointer;
@@ -24,7 +25,8 @@ body {
 .building-subtab,
 .research-subtab,
 .projects-subtab,
-.terraforming-subtab { /* Added projects-subtab */
+.terraforming-subtab,
+.hope-subtab { /* Added projects-subtab */
     flex: 1;
     padding: 10px;
     text-align: center;
@@ -43,7 +45,8 @@ body {
 .building-subtab.active,
 .research-subtab.active,
 .projects-subtab.active,
-.terraforming-subtab.active { /* Added projects-subtab.active */
+.terraforming-subtab.active,
+.hope-subtab.active { /* Added projects-subtab.active */
     background-color: #666;
     color: #fff; /* Consistent text color for active state */
 }
@@ -88,14 +91,16 @@ body {
 .building-subtab-content,
 .research-subtab-content,
 .projects-subtab-content,
-.terraforming-subtab-content { /* Added projects-subtab-content */
+.terraforming-subtab-content,
+.hope-subtab-content { /* Added projects-subtab-content */
     display: none;
 }
 
 .building-subtab-content.active,
 .research-subtab-content.active,
 .projects-subtab-content.active,
-.terraforming-subtab-content.active { /* Added projects-subtab-content.active */
+.terraforming-subtab-content.active,
+.hope-subtab-content.active { /* Added projects-subtab-content.active */
     display: block;
 }
 

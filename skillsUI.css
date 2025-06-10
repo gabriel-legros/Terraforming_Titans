@@ -1,0 +1,15 @@
+/* skillsUI.css - styles for the HOPE skills subtab */
+
+.hope-container {
+    padding: 15px;
+}
+
+.skill-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.skill-button {
+    padding: 8px 12px;
+}

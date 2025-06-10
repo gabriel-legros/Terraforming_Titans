@@ -84,6 +84,7 @@ function create() {
   createMilestonesUI();
 
   spaceManager = new SpaceManager(planetParameters);
+  initializeHopeUI();
   initializeSpaceUI(spaceManager);
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
@@ -140,6 +141,7 @@ function initializeGameState(options = {}) {
   createColonyButtons(colonies);
   initializeColonySlidersUI();
   initializeResearchUI(); // Reinitialize research UI as well
+  initializeHopeUI();
   if (preserveManagers && typeof updateSpaceUI === 'function') {
     updateSpaceUI();
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
@@ -202,6 +204,7 @@ function updateRender() {
   updateTerraformingUI();
   updateWarnings();
   updateMilestonesUI();
+  updateHopeUI();
 }
 
 function update(time, delta) {
