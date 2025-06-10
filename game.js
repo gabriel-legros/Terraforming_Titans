@@ -57,6 +57,9 @@ function create() {
   researchManager = new ResearchManager(researchParameters);
   initializeResearchUI();
 
+  // Initialize skills
+  skillManager = new SkillManager(skillParameters);
+
   //Initialize funding
   const fundingRate = currentPlanetParameters.fundingRate || 0;
   fundingModule = new FundingModule(resources, fundingRate);
@@ -108,6 +111,9 @@ function initializeGameState(options = {}) {
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
   researchManager = new ResearchManager(researchParameters);
+  if (!preserveManagers || !skillManager) {
+    skillManager = new SkillManager(skillParameters);
+  }
   const fundingRate = currentPlanetParameters.fundingRate || 0;
   fundingModule = new FundingModule(resources, fundingRate);
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
@@ -144,6 +150,9 @@ function initializeGameState(options = {}) {
   // target the newly created game objects for this planet.
   if (preserveManagers && storyManager && typeof storyManager.reapplyEffects === 'function') {
     storyManager.reapplyEffects();
+  }
+  if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
+    skillManager.reapplyEffects();
   }
 }
 

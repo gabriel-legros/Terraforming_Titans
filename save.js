@@ -15,6 +15,7 @@ function getGameState() {
     goldenAsteroid: goldenAsteroid.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
+    skills: skillManager.saveState(),
     spaceManager: spaceManager.saveState(),
     settings: gameSettings,
     colonySliderSettings: colonySliderSettings
@@ -154,6 +155,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.milestonesManager){
       milestonesManager.loadState(gameState.milestonesManager);
+    }
+
+    if(gameState.skills){
+      skillManager.loadState(gameState.skills);
     }
 
     if(gameState.settings){
