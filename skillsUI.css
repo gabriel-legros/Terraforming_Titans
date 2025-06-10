@@ -6,12 +6,12 @@
 
 .skill-tree {
     position: relative;
-    width: 360px;
-    height: 520px;
+    width: 800px;
+    height: 800px;
 }
 
 .skill-button {
-    width: 100px;
+    width: 200px;
     height: 100px;
     position: absolute;
     text-align: center;
