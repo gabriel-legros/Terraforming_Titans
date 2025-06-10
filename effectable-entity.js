@@ -130,6 +130,9 @@ class EffectableEntity {
         case 'setFundingRate':
           this.applySetFundingRate(effect);
           break;
+        case 'globalCostReduction':
+          this.applyGlobalCostReduction(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -186,6 +189,33 @@ class EffectableEntity {
     applySetFundingRate(effect) {
       if (typeof this.fundingRate !== 'undefined' && typeof effect.value === 'number') {
         this.fundingRate += effect.value;
+      }
+    }
+
+    applyGlobalCostReduction(effect) {
+      const multiplier = 1 - effect.value;
+
+      const costEntities = { building: buildings, colony: colonies };
+
+      for (const target in costEntities) {
+        const group = costEntities[target];
+        for (const id in group) {
+          const entity = group[id];
+          if (!entity || !entity.cost) continue;
+          for (const category in entity.cost) {
+            for (const resource in entity.cost[category]) {
+              const effectId = `${effect.effectId}-${id}-${category}-${resource}`;
+              group[id].addAndReplace({
+                type: 'resourceCostMultiplier',
+                resourceCategory: category,
+                resourceId: resource,
+                value: multiplier,
+                effectId,
+                sourceId: effect.sourceId
+              });
+            }
+          }
+        }
       }
     }
 
