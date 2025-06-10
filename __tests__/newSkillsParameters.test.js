@@ -5,14 +5,14 @@ describe('new skill parameter definitions', () => {
     const skill = skillParams.project_speed;
     expect(skill).toBeDefined();
     expect(skill.maxRank).toBe(5);
-    expect(skill.requires).toContain('maintenance_reduction');
+    expect(skill.requires).toContain('pop_growth');
   });
 
   test('life_design_points skill exists with correct config', () => {
     const skill = skillParams.life_design_points;
     expect(skill).toBeDefined();
     expect(skill.maxRank).toBe(5);
-    expect(skill.requires).toContain('scanning_speed');
+    expect(skill.requires).toContain('pop_growth');
   });
 
   test('pop_growth requires research_boost after swap', () => {

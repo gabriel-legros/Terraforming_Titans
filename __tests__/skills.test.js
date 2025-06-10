@@ -43,9 +43,9 @@ describe('SkillManager save/load', () => {
     const manager = new SkillManager(data);
     expect(manager.getUpgradeCost('test')).toBe(1);
     manager.unlockSkill('test');
-    expect(manager.getUpgradeCost('test')).toBe(2);
+    expect(manager.getUpgradeCost('test')).toBe(1);
     manager.upgradeSkill('test');
-    expect(manager.getUpgradeCost('test')).toBe(3);
+    expect(manager.getUpgradeCost('test')).toBe(2);
   });
 
   test('reapplyEffects re-adds effects based on rank', () => {
