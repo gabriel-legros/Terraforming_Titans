@@ -22,7 +22,9 @@ const skillLayout = {
     maintenance_reduction: { row: 2, col: 0 },
     scanning_speed: { row: 2, col: 2 },
     pop_growth: { row: 3, col: 0 },
-    ship_efficiency: { row: 3, col: 2 }
+    ship_efficiency: { row: 3, col: 2 },
+    project_speed: { row: 4, col: 0 },
+    life_design_points: { row: 4, col: 2 }
 };
 
 function updateSkillPointDisplay() {

@@ -96,6 +96,34 @@ const skillParameters = {
       perRank: true
     },
     requires: ['scanning_speed']
+  },
+  project_speed: {
+    id: 'project_speed',
+    name: 'Faster Projects',
+    description: 'Reduces project durations by 10% per rank',
+    cost: 1,
+    maxRank: 5,
+    effect: {
+      target: 'projects',
+      type: 'projectDurationReduction',
+      baseValue: 0.1,
+      perRank: true
+    },
+    requires: ['maintenance_reduction']
+  },
+  life_design_points: {
+    id: 'life_design_points',
+    name: 'More Life Design Points',
+    description: 'Grants 10 life design points per rank',
+    cost: 1,
+    maxRank: 5,
+    effect: {
+      target: 'lifeDesigner',
+      type: 'lifeDesignPointBonus',
+      baseValue: 10,
+      perRank: true
+    },
+    requires: ['scanning_speed']
   }
 };
 
