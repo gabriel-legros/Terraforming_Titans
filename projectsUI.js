@@ -446,12 +446,21 @@ function updateProjectUI(projectName) {
 
   if (project.attributes.spaceExport) {
     const elements = projectElements[project.name];
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
 
-    // Calculate the total disposal amount with scaling factor
-    const scalingFactor = project.assignedSpaceships > 100 ? project.assignedSpaceships / 100 : 1;
-    const totalDisposalAmount = project.attributes.disposalAmount * scalingFactor;
+    if (elements.disposalPerShipElement) {
+      const perShip = project.attributes.disposalAmount * efficiency;
+      elements.disposalPerShipElement.textContent = `Maximum Export per Ship: ${formatNumber(perShip, true)}`;
+    }
 
-    elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(totalDisposalAmount, true)}`;
+    const totalDisposal = project.calculateSpaceshipTotalDisposal();
+    let totalAmount = 0;
+    for (const category in totalDisposal) {
+      for (const resource in totalDisposal[category]) {
+        totalAmount += totalDisposal[category][resource];
+      }
+    }
+    elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(totalAmount, true)}`;
   }
 
   // Update Repeat Count if applicable
