@@ -265,21 +265,19 @@ class StoryManager {
         let effectiveIndex = 0; // Use separate index for delay timing if filtering rewards
 
         event.reward.forEach((effect) => {
-            // Basic check if effect seems valid
-             if(effect && effect.type && effect.targetId) {
-                 setTimeout(() => {
-                    // Check if storyManager still exists, e.g. during quick save/load/reset
-                     if (!window.storyManager) { // Assuming storyManager is global or accessible
-                          console.warn("StoryManager gone, skipping delayed reward application.");
-                          return;
-                     }
+            if (effect && effect.type) {
+                setTimeout(() => {
+                    if (!window.storyManager) {
+                        console.warn("StoryManager gone, skipping delayed reward application.");
+                        return;
+                    }
                     if (!effect.oneTimeFlag) {
                         this.appliedEffects.push(effect);
                     }
                     addEffect(effect);
-                    console.log(`Applied reward for ${event.id}: ${effect.type} to ${effect.targetId}`);
+                    console.log(`Applied reward for ${event.id}: ${effect.type}`);
                 }, effectiveIndex * delay);
-                 effectiveIndex++;
+                effectiveIndex++;
             } else {
                 console.warn(`Skipping invalid reward object for event ${event.id}:`, effect);
             }

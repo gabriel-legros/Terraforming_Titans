@@ -124,6 +124,9 @@ class EffectableEntity {
         case 'oneTimeStart':
           this.applyOneTimeStart(effect);
           break;
+        case 'instantResourceGain':
+          this.applyInstantResourceGain(effect);
+          break;
         case 'setFundingRate':
           this.applySetFundingRate(effect);
           break;
@@ -136,6 +139,15 @@ class EffectableEntity {
 
     applyOneTimeStart(effect) {
       //No logic needed for now
+    }
+
+    applyInstantResourceGain(effect) {
+      const amount = effect.quantity !== undefined ? effect.quantity : effect.value;
+      if (typeof amount === 'number' && typeof this.increase === 'function') {
+        this.increase(amount);
+      }
+      // Remove the effect immediately to prevent reapplication
+      this.activeEffects = this.activeEffects.filter(e => e !== effect);
     }
   
     // Placeholder for potential future use
@@ -173,7 +185,7 @@ class EffectableEntity {
 
     applySetFundingRate(effect) {
       if (typeof this.fundingRate !== 'undefined' && typeof effect.value === 'number') {
-        this.fundingRate = effect.value;
+        this.fundingRate += effect.value;
       }
     }
 
