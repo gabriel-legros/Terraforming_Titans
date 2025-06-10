@@ -27,23 +27,31 @@ function updateSpaceshipProjectCostAndGains(project, elements) {
   
     // Update Resource Gain per Ship display
     if (elements.resourceGainPerShipElement && project.attributes.resourceGainPerShip) {
-      const gainPerShipText = Object.entries(project.attributes.resourceGainPerShip)
-        .flatMap(([category, resourcesList]) => 
+      const gainPerShip = project.calculateSpaceshipTotalResourceGain();
+      const gainPerShipText = Object.entries(gainPerShip)
+        .flatMap(([category, resourcesList]) =>
           Object.entries(resourcesList)
             .filter(([, amount]) => amount > 0) // Only include non-zero gains
             .map(([resource, amount]) => {
-              const resourceDisplayName = resources[category][resource].displayName || 
+              const resourceDisplayName = resources[category][resource].displayName ||
                 resource.charAt(0).toUpperCase() + resource.slice(1);
               return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
-      
+
       elements.resourceGainPerShipElement.textContent = `Gain per Ship: ${gainPerShipText}`;
     }
-  
+
     // Update Total Resource Gain display
     if (elements.totalGainElement && project.assignedSpaceships != null) {
-      const totalGain = project.calculateSpaceshipTotalResourceGain();
+      const gainPerShip = project.calculateSpaceshipTotalResourceGain();
+      const totalGain = {};
+      for (const category in gainPerShip) {
+        totalGain[category] = {};
+        for (const resource in gainPerShip[category]) {
+          totalGain[category][resource] = gainPerShip[category][resource] * project.assignedSpaceships;
+        }
+      }
       elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain);
     }
   }
