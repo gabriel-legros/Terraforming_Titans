@@ -646,6 +646,13 @@ class ProjectManager extends EffectableEntity {
         }
       }
     }
+
+    if (typeof initializeProjectsUI === 'function') {
+      initializeProjectsUI();
+    }
+    if (typeof renderProjects === 'function') {
+      renderProjects();
+    }
   }
 }
 
