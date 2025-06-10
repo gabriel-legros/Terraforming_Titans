@@ -133,6 +133,9 @@ class EffectableEntity {
         case 'globalCostReduction':
           this.applyGlobalCostReduction(effect);
           break;
+        case 'globalPopulationGrowth':
+          this.applyGlobalPopulationGrowth(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -217,6 +220,17 @@ class EffectableEntity {
           }
         }
       }
+    }
+
+    applyGlobalPopulationGrowth(effect) {
+      const multiplier = 1 + effect.value;
+      this.addAndReplace({
+        type: 'growthMultiplier',
+        value: multiplier,
+        effectId: `${effect.effectId}-growthMultiplier`,
+        sourceId: effect.sourceId,
+        onLoad: effect.onLoad
+      });
     }
 
     // Method to apply a boolean flag effect
