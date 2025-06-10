@@ -25,7 +25,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    requires: ['maintenance_reduction']
+    requires: ['research_boost']
   },
   worker_reduction: {
     id: 'worker_reduction',
@@ -81,7 +81,7 @@ const skillParameters = {
       baseValue: 2,
       perRank: true
     },
-    requires: ['research_boost']
+    requires: ['maintenance_reduction']
   },
   ship_efficiency: {
     id: 'ship_efficiency',

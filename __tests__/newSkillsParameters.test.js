@@ -14,4 +14,14 @@ describe('new skill parameter definitions', () => {
     expect(skill.maxRank).toBe(5);
     expect(skill.requires).toContain('scanning_speed');
   });
+
+  test('pop_growth requires research_boost after swap', () => {
+    const skill = skillParams.pop_growth;
+    expect(skill.requires).toContain('research_boost');
+  });
+
+  test('scanning_speed requires maintenance_reduction after swap', () => {
+    const skill = skillParams.scanning_speed;
+    expect(skill.requires).toContain('maintenance_reduction');
+  });
 });
