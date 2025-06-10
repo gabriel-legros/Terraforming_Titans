@@ -37,6 +37,12 @@ const tabParameters = {
         isHidden: true   // Start hidden
       },
       {
+        id: "hope-tab",
+        label: "H.O.P.E.",
+        isActive: false,
+        isHidden: true // Hidden initially
+      },
+      {
         id: "settings-tab",
         label: "Settings",
         isActive: false,
