@@ -104,7 +104,7 @@ const skillParameters = {
     cost: 1,
     maxRank: 5,
     effect: {
-      target: 'projects',
+      target: 'projectManager',
       type: 'projectDurationReduction',
       baseValue: 0.1,
       perRank: true

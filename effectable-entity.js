@@ -151,6 +151,9 @@ class EffectableEntity {
         case 'shipEfficiency':
           this.applyShipEfficiency(effect);
           break;
+        case 'projectDurationReduction':
+          this.applyProjectDurationReduction(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -320,6 +323,30 @@ class EffectableEntity {
     applyShipEfficiency(effect) {
       if (typeof shipEfficiency !== 'undefined') {
         shipEfficiency = 1 + effect.value;
+      }
+    }
+
+    applyProjectDurationReduction(effect) {
+      if (!this.projects) return;
+
+      if (this.durationMultiplier === undefined) {
+        this.durationMultiplier = 1;
+      }
+
+      const newMultiplier = 1 - effect.value;
+      this.durationMultiplier = newMultiplier;
+
+      for (const name in this.projects) {
+        const project = this.projects[name];
+        if (!project) continue;
+        const base = project.getBaseDuration ? project.getBaseDuration() : project.duration;
+        const newDuration = base * newMultiplier;
+
+        if (project.isActive) {
+          const progressRatio = (project.startingDuration - project.remainingTime) / project.startingDuration;
+          project.startingDuration = newDuration;
+          project.remainingTime = newDuration * (1 - progressRatio);
+        }
       }
     }
 
