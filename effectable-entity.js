@@ -154,6 +154,9 @@ class EffectableEntity {
         case 'projectDurationReduction':
           this.applyProjectDurationReduction(effect);
           break;
+        case 'lifeDesignPointBonus':
+          this.applyLifeDesignPointBonus(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -347,6 +350,12 @@ class EffectableEntity {
           project.startingDuration = newDuration;
           project.remainingTime = newDuration * (1 - progressRatio);
         }
+      }
+    }
+
+    applyLifeDesignPointBonus(effect) {
+      if (typeof this.designPointBonus !== 'undefined') {
+        this.designPointBonus += effect.value;
       }
     }
 
