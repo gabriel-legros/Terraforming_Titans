@@ -95,7 +95,7 @@ const skillParameters = {
       baseValue: 0.2,
       perRank: true
     },
-    requires: ['scanning_speed']
+    requires: ['maintenance_reduction']
   },
   project_speed: {
     id: 'project_speed',
@@ -109,7 +109,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    requires: ['maintenance_reduction']
+    requires: ['pop_growth']
   },
   life_design_points: {
     id: 'life_design_points',
@@ -123,7 +123,7 @@ const skillParameters = {
       baseValue: 10,
       perRank: true
     },
-    requires: ['scanning_speed']
+    requires: ['pop_growth']
   }
 };
 
