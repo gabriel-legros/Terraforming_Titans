@@ -7,7 +7,7 @@ const skillParameters = {
     maxRank: 5,
     effect: {
       target: 'global',
-      type: 'costReduction',
+      type: 'globalCostReduction',
       baseValue: 0.1,
       perRank: true
     },
@@ -21,7 +21,7 @@ const skillParameters = {
     maxRank: 5,
     effect: {
       target: 'population',
-      type: 'populationGrowth',
+      type: 'globalPopulationGrowth',
       baseValue: 0.1,
       perRank: true
     }
@@ -34,7 +34,7 @@ const skillParameters = {
     maxRank: 5,
     effect: {
       target: 'building',
-      type: 'workerReduction',
+      type: 'globalWorkerReduction',
       baseValue: 0.1,
       perRank: true
     }
