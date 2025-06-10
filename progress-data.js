@@ -722,11 +722,12 @@ progressData = {
         objectives: [],
         reward: [
           {
-            target: 'project',
-            targetId: 'cargo_rocket',
-            type: 'oneTimeStart',
-            oneTimeFlag: true,
-            pendingResourceGains: [{ category: 'colony', resource: 'funding', quantity: 1000000 }]
+            target: 'resource',
+            resourceType: 'colony',
+            targetId: 'funding',
+            type: 'instantResourceGain',
+            quantity: 1000000,
+            oneTimeFlag: true
           }
         ],
         nextChapter: "chapter4.7"
