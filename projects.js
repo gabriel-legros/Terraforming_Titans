@@ -428,11 +428,12 @@ class Project extends EffectableEntity {
     const totalResourceGain = {};
     const resourceGainPerShip = this.attributes.resourceGainPerShip;
     const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
 
     for (const category in resourceGainPerShip) {
       totalResourceGain[category] = {};
       for (const resource in resourceGainPerShip[category]) {
-        totalResourceGain[category][resource] = resourceGainPerShip[category][resource] * scalingFactor;
+        totalResourceGain[category][resource] = resourceGainPerShip[category][resource] * scalingFactor * efficiency;
       }
     }
 
@@ -444,7 +445,8 @@ class Project extends EffectableEntity {
     const totalDisposal = {};
     const disposalAmount = this.attributes.disposalAmount;
     const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
-    const scaledDisposalAmount = disposalAmount * scalingFactor;
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+    const scaledDisposalAmount = disposalAmount * scalingFactor * efficiency;
 
     if (this.selectedDisposalResource) {
         const { category, resource } = this.selectedDisposalResource;

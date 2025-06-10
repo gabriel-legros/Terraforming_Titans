@@ -16,6 +16,12 @@ class OreScanning extends EffectableEntity {
       }
   
       this.loadFromConfig(planetParameters);
+      this.scanningSpeedMultiplier = 1;
+    }
+
+    applyActiveEffects(firstTime = true) {
+      this.scanningSpeedMultiplier = 1;
+      super.applyActiveEffects(firstTime);
     }
 
     // Method to save the current state of ore scanning
@@ -108,7 +114,7 @@ class OreScanning extends EffectableEntity {
         }
 
         // Update progress
-        const progressIncrement = deltaTime / scanData.remainingTime;
+        const progressIncrement = (deltaTime * this.scanningSpeedMultiplier) / scanData.remainingTime;
         scanData.currentScanProgress += progressIncrement;
 
         if (scanData.currentScanProgress >= 1) {
