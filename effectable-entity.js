@@ -241,7 +241,8 @@ function addOrRemoveEffect(effect, action) {
     'global': globalEffects,
     'terraforming': terraforming,
     'lifeDesigner': lifeDesigner,
-    'lifeManager': lifeManager
+    'lifeManager': lifeManager,
+    'oreScanner': oreScanner
   };
 
   if (effect.target in targetHandlers) {
