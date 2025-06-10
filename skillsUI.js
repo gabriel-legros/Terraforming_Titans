@@ -16,15 +16,15 @@ function canUnlockSkill(id) {
 }
 
 const skillLayout = {
-    build_cost: { row: 0, col: 1 },
-    worker_reduction: { row: 1, col: 0 },
-    research_boost: { row: 1, col: 2 },
-    maintenance_reduction: { row: 2, col: 0 },
-    scanning_speed: { row: 2, col: 2 },
+    build_cost: { row: 0, col: 3 },
+    worker_reduction: { row: 1, col: 2 },
+    research_boost: { row: 1, col: 4 },
+    maintenance_reduction: { row: 2, col: 2 },
+    scanning_speed: { row: 2, col: 4 },
     pop_growth: { row: 3, col: 0 },
     ship_efficiency: { row: 3, col: 2 },
-    project_speed: { row: 4, col: 0 },
-    life_design_points: { row: 4, col: 2 }
+    project_speed: { row: 3, col: 4 },
+    life_design_points: { row: 3, col: 6 }
 };
 
 function updateSkillPointDisplay() {
