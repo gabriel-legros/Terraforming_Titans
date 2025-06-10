@@ -12,7 +12,8 @@ class Skill {
   }
 
   getCostForRank(rank) {
-    return this.baseCost * rank;
+    const factor = Math.max(1, rank - 1);
+    return this.baseCost * factor;
   }
 }
 
