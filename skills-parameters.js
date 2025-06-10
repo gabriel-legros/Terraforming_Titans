@@ -49,7 +49,7 @@ const skillParameters = {
     maxRank: 5,
     effect: {
       target: 'global',
-      type: 'researchBoost',
+      type: 'globalResearchBoost',
       baseValue: 0.2,
       perRank: true
     },
@@ -63,7 +63,7 @@ const skillParameters = {
     maxRank: 5,
     effect: {
       target: 'global',
-      type: 'maintenanceReduction',
+      type: 'globalMaintenanceReduction',
       baseValue: 0.1,
       perRank: true
     },
