@@ -83,4 +83,34 @@ describe('shipEfficiency effect', () => {
     gain = project.calculateSpaceshipGainPerShip();
     expect(gain.colony.metal).toBeCloseTo(12);
   });
+
+  test('multiplies export amount', () => {
+    const exportConfig = {
+      name: 'ExportTest',
+      category: 'resources',
+      cost: {},
+      duration: 100,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceExport: true,
+        costPerShip: { colony: { metal: 1 } },
+        disposable: { colony: ['metal'] },
+        disposalAmount: 20,
+        fundingGainAmount: 1
+      }
+    };
+    const exportProject = new Project(exportConfig, 'exportTest');
+    exportProject.assignedSpaceships = 1;
+    exportProject.selectedDisposalResource = { category: 'colony', resource: 'metal' };
+
+    let disposal = exportProject.calculateSpaceshipTotalDisposal();
+    expect(disposal.colony.metal).toBeCloseTo(20);
+    global.globalEffects.addAndReplace({ type: 'shipEfficiency', value: 0.2, effectId: 'skill', sourceId: 'skill' });
+    context.shipEfficiency = global.shipEfficiency;
+    disposal = exportProject.calculateSpaceshipTotalDisposal();
+    expect(disposal.colony.metal).toBeCloseTo(24);
+  });
 });

@@ -264,7 +264,9 @@ function updateSpaceshipProjectCostAndGains(project, elements) {
     const disposalPerShipElement = document.createElement('p');
     disposalPerShipElement.id = `${project.name}-disposal-per-ship`;
     disposalPerShipElement.classList.add('project-disposal-per-ship');
-    disposalPerShipElement.textContent = `Maximum Export per Ship: ${formatNumber(project.attributes.disposalAmount, true)}`;
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+    const disposalPerShipAmount = project.attributes.disposalAmount * efficiency;
+    disposalPerShipElement.textContent = `Maximum Export per Ship: ${formatNumber(disposalPerShipAmount, true)}`;
     disposalContainer.appendChild(disposalPerShipElement);
 
     //Gain Amount
