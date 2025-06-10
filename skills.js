@@ -19,6 +19,7 @@ class Skill {
 class SkillManager {
   constructor(skillData) {
     this.skills = {};
+    this.skillPoints = 0;
     if (skillData) {
       for (const key in skillData) {
         this.skills[key] = new Skill(skillData[key]);
@@ -63,21 +64,23 @@ class SkillManager {
   }
 
   saveState() {
-    const state = {};
+    const state = { skillPoints: this.skillPoints, skills: {} };
     for (const id in this.skills) {
       const skill = this.skills[id];
-      state[id] = { rank: skill.rank, unlocked: skill.unlocked };
+      state.skills[id] = { rank: skill.rank, unlocked: skill.unlocked };
     }
     return state;
   }
 
   loadState(state) {
     if (!state) return;
-    for (const id in state) {
+    this.skillPoints = state.skillPoints || 0;
+    const skillData = state.skills || {};
+    for (const id in skillData) {
       const skill = this.skills[id];
       if (skill) {
-        skill.rank = state[id].rank || 0;
-        skill.unlocked = state[id].unlocked || false;
+        skill.rank = skillData[id].rank || 0;
+        skill.unlocked = skillData[id].unlocked || false;
         if (skill.unlocked && skill.rank > 0) {
           this.applySkillEffect(skill);
         }

@@ -156,7 +156,6 @@ function loadGame(slotOrCustomString) {
     if(gameState.milestonesManager){
       milestonesManager.loadState(gameState.milestonesManager);
     }
-
     if(gameState.skills){
       skillManager.loadState(gameState.skills);
     }

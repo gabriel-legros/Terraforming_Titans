@@ -25,7 +25,7 @@
     <!-- Add CSS for the new Space tab if needed -->
     <link rel="stylesheet" href="space.css">
     <!-- Add CSS for the new HOPE tab -->
-    <link rel="stylesheet" href="hope.css">
+    <link rel="stylesheet" href="skillsUI.css">
 
     <!-- Parameter Scripts -->
     <script src="planet-parameters.js"></script>
@@ -78,6 +78,7 @@
     <script src="lifeUI.js"></script>
     <script src="milestones.js"></script>
     <script src="milestonesUI.js"></script>
+    <script src="hopeUI.js"></script>
     <script src="zones.js"></script>
     <script src="globals.js"></script>
     <script src="autobuild.js"></script>
@@ -291,7 +292,15 @@
     <!-- *** NEW HOPE TAB CONTENT *** -->
     <div id="hope" class="tab-content">
         <div class="container hope-container">
-            <!-- Content will be added in future updates -->
+            <div class="hope-subtabs">
+                <div class="hope-subtab active" data-subtab="awakening-hope">Awakening</div>
+            </div>
+            <div class="hope-subtab-content-wrapper">
+                <div id="awakening-hope" class="hope-subtab-content active">
+                    <p id="skill-points-display">Skill Points: <span id="skill-points-value">0</span></p>
+                    <div id="skill-tree" class="skill-tree"></div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- ***************************** -->
