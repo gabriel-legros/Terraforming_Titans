@@ -1,5 +1,6 @@
-class OreScanning {
+class OreScanning extends EffectableEntity {
     constructor(planetParameters) {
+      super({ description: 'Ore Scanner' });
       this.underground = planetParameters.resources.underground;
       // Extract all deposit parameters from marsParameters
       // Track progress and scanning strength for each deposit type
@@ -158,4 +159,8 @@ class OreScanning {
       const scanData = this.scanData[depositType];
       return scanData ? scanData.D_current : null;
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = OreScanning;
 }
