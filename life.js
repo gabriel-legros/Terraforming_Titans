@@ -335,6 +335,9 @@ class LifeDesigner extends EffectableEntity {
     this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
     this.tentativeDesign = null;
 
+    this.baseMaxPoints = lifeDesignerConfig.maxPoints;
+    this.designPointBonus = 0;
+
     this.isActive = false;
     this.remainingTime = this.getTentativeDuration();
     this.totalTime = this.getTentativeDuration();
@@ -356,6 +359,15 @@ class LifeDesigner extends EffectableEntity {
 
   enable(){
     this.enabled = true;
+  }
+
+  applyActiveEffects(firstTime = true){
+    this.designPointBonus = 0;
+    super.applyActiveEffects(firstTime);
+  }
+
+  applyLifeDesignPointBonus(effect){
+    this.designPointBonus += effect.value;
   }
 
   createNewDesign(
@@ -455,7 +467,7 @@ class LifeDesigner extends EffectableEntity {
   maxLifeDesignPoints() {
     const totalPurchases = Object.values(this.purchaseCounts)
       .reduce((acc, val) => acc + val, 0);
-    return lifeDesignerConfig.maxPoints + totalPurchases;
+    return this.baseMaxPoints + this.designPointBonus + totalPurchases;
   }
 
   saveState() {
