@@ -67,7 +67,6 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    unlocks: ['ship_efficiency']
   },
   scanning_speed: {
     id: 'scanning_speed',

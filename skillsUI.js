@@ -30,7 +30,7 @@ const skillLayout = {
     worker_reduction: { row: 2, col: 0 },
     scanning_speed: { row: 2, col: 2 },
     maintenance_reduction: { row: 3, col: 0 },
-    ship_efficiency: { row: 3, col: 1 }
+    ship_efficiency: { row: 3, col: 2 }
 };
 
 function updateSkillPointDisplay() {
