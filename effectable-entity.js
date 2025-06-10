@@ -142,6 +142,15 @@ class EffectableEntity {
         case 'globalResearchBoost':
           this.applyGlobalResearchBoost(effect);
           break;
+        case 'globalMaintenanceReduction':
+          this.applyGlobalMaintenanceReduction(effect);
+          break;
+        case 'scanningSpeedMultiplier':
+          this.applyScanningSpeedMultiplier(effect);
+          break;
+        case 'shipEfficiency':
+          this.applyShipEfficiency(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -274,6 +283,43 @@ class EffectableEntity {
             sourceId: effect.sourceId
           });
         }
+      }
+    }
+
+    applyGlobalMaintenanceReduction(effect) {
+      const multiplier = 1 - effect.value;
+      const targets = { building: buildings, colony: colonies };
+      for (const groupName in targets) {
+        const group = targets[groupName];
+        for (const id in group) {
+          const entity = group[id];
+          if (!entity || !entity.cost) continue;
+          for (const category in entity.cost) {
+            for (const resource in entity.cost[category]) {
+              const effectId = `${effect.effectId}-${id}-${category}-${resource}`;
+              group[id].addAndReplace({
+                type: 'maintenanceCostMultiplier',
+                resourceCategory: category,
+                resourceId: resource,
+                value: multiplier,
+                effectId,
+                sourceId: effect.sourceId
+              });
+            }
+          }
+        }
+      }
+    }
+
+    applyScanningSpeedMultiplier(effect) {
+      if (this.scanningSpeedMultiplier !== undefined) {
+        this.scanningSpeedMultiplier = effect.value;
+      }
+    }
+
+    applyShipEfficiency(effect) {
+      if (typeof shipEfficiency !== 'undefined') {
+        shipEfficiency = 1 + effect.value;
       }
     }
 

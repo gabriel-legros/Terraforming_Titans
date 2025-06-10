@@ -4,6 +4,7 @@ let tabManager;
 let currentPlanetParameters = planetParameters[defaultPlanet];
 let resources = {};
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
+let shipEfficiency = 1;
 let dayNightCycle;
 let buildings = {};
 let colonies = {};
