@@ -74,4 +74,13 @@ describe('shipEfficiency effect', () => {
     gain = project.calculateSpaceshipTotalResourceGain();
     expect(gain.colony.metal).toBeCloseTo(12);
   });
+
+  test('calculates gain per ship with efficiency', () => {
+    let gain = project.calculateSpaceshipGainPerShip();
+    expect(gain.colony.metal).toBeCloseTo(10);
+    global.globalEffects.addAndReplace({ type: 'shipEfficiency', value: 0.2, effectId: 'skill', sourceId: 'skill' });
+    context.shipEfficiency = global.shipEfficiency;
+    gain = project.calculateSpaceshipGainPerShip();
+    expect(gain.colony.metal).toBeCloseTo(12);
+  });
 });

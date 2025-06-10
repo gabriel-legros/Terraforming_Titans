@@ -27,8 +27,9 @@ function updateSpaceshipProjectCostAndGains(project, elements) {
   
     // Update Resource Gain per Ship display
     if (elements.resourceGainPerShipElement && project.attributes.resourceGainPerShip) {
-      const gainPerShipText = Object.entries(project.attributes.resourceGainPerShip)
-        .flatMap(([category, resourcesList]) => 
+      const gainPerShip = project.calculateSpaceshipGainPerShip();
+      const gainPerShipText = Object.entries(gainPerShip)
+        .flatMap(([category, resourcesList]) =>
           Object.entries(resourcesList)
             .filter(([, amount]) => amount > 0) // Only include non-zero gains
             .map(([resource, amount]) => {
@@ -144,7 +145,18 @@ function updateSpaceshipProjectCostAndGains(project, elements) {
     const resourceGainPerShipElement = document.createElement('p');
     resourceGainPerShipElement.id = `${project.name}-resource-gain-per-ship`;
     resourceGainPerShipElement.classList.add('project-resource-gain-per-ship');
-    resourceGainPerShipElement.textContent = `Gain per Ship: ...`; // Initial text
+    const initialGain = project.calculateSpaceshipGainPerShip();
+    const initialGainText = Object.entries(initialGain)
+      .flatMap(([category, resourcesList]) =>
+        Object.entries(resourcesList)
+          .filter(([, amount]) => amount > 0)
+          .map(([resource, amount]) => {
+            const resourceDisplayName = resources[category][resource].displayName ||
+              resource.charAt(0).toUpperCase() + resource.slice(1);
+            return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+          })
+      ).join(', ');
+    resourceGainPerShipElement.textContent = `Gain per Ship: ${initialGainText}`;
   
     const totalGainElement = document.createElement('span');
     totalGainElement.id = `${project.name}-total-resource-gain`;

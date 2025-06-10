@@ -407,6 +407,21 @@ class Project extends EffectableEntity {
     return totalCost;
   }
 
+  calculateSpaceshipGainPerShip() {
+    const resourceGainPerShip = this.attributes.resourceGainPerShip;
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+    const gainPerShip = {};
+
+    for (const category in resourceGainPerShip) {
+      gainPerShip[category] = {};
+      for (const resource in resourceGainPerShip[category]) {
+        gainPerShip[category][resource] = resourceGainPerShip[category][resource] * efficiency;
+      }
+    }
+
+    return gainPerShip;
+  }
+
     // Calculates adjusted total cost based on assigned spaceships, scaling if assignedSpaceships > 100
     calculateSpaceshipTotalCost() {
     const totalCost = {};
