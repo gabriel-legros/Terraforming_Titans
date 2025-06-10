@@ -139,6 +139,8 @@ function initializeGameState(options = {}) {
   createResourceDisplay(resources); // Also need to update resource display
   createBuildingButtons(buildings);
   createColonyButtons(colonies);
+  initializeProjectsUI();
+  renderProjects();
   initializeColonySlidersUI();
   initializeResearchUI(); // Reinitialize research UI as well
   initializeHopeUI();
