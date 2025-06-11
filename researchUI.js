@@ -132,10 +132,7 @@ function loadResearchCategory(category) {
 
 function toggleCompletedResearch() {
     completedResearchHidden = !completedResearchHidden; // Toggle the state
-    const completedResearch = document.querySelectorAll('.completed-research');
-    completedResearch.forEach((research) => {
-        research.classList.toggle('hidden', completedResearchHidden);
-    });
+    updateAllResearchButtons(researchManager.researches); // Apply visibility changes
     updateCompletedResearchVisibility();
 }
 
