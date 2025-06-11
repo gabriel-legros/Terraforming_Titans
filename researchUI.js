@@ -48,17 +48,15 @@ function updateResearchButtonText(button, researchItem) {
 function initializeResearchTabs() {
     // Set up event listeners for research sub-tabs
     document.querySelectorAll('.research-subtab').forEach(subtab => {
-        subtab.addEventListener('click', () => {
+        subtab.onclick = () => {
             const subtabContentId = subtab.dataset.subtab;
             activateResearchSubtab(subtabContentId);
-        });
+        };
     });
 
     // Add event listeners for "Toggle Completed" buttons
     document.querySelectorAll('.toggle-completed-button').forEach(button => {
-        button.addEventListener('click', () => {
-            toggleCompletedResearch();
-        });
+        button.onclick = toggleCompletedResearch;
     });
 
     // Load all research categories
