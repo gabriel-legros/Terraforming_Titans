@@ -75,6 +75,8 @@ describe('planet selection', () => {
       initializeLifeUI=()=>{};
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class {};
       StoryManager = class { initializeStory(){} update(){} };
     `;

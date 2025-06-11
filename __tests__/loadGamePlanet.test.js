@@ -76,6 +76,8 @@ describe('load game planet initialization', () => {
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
       initializeSpaceUI=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class { activateTab(){} };
       StoryManager = class { initializeStory(){} update(){} saveState(){} };
     `;

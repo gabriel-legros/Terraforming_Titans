@@ -75,6 +75,8 @@ describe('skill point gained on first planet visit', () => {
       initializeLifeUI=()=>{};
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class {};
       StoryManager = class { initializeStory(){} update(){} };
     `;
