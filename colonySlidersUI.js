@@ -4,6 +4,8 @@ function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
   if (!container) return;
   container.innerHTML = '';
+  // Ensure sliders start hidden until unlocked via research
+  container.classList.add('hidden');
 
   const box = document.createElement('div');
   box.classList.add('sliders-box');

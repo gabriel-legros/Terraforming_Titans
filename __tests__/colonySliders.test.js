@@ -145,6 +145,51 @@ describe('colony sliders', () => {
     expect(oreBoost).toBe('Boost: 100%');
   });
 
+  test('initializeColonySlidersUI keeps container hidden', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
+
+    ctx.initializeColonySlidersUI();
+    const container = dom.window.document.getElementById('colony-sliders-container');
+    expect(container.classList.contains('hidden')).toBe(true);
+  });
+
+  test('new game reinitializes sliders as hidden', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
+
+    // Simulate unlocked state from previous game
+    const container = dom.window.document.getElementById('colony-sliders-container');
+    container.classList.remove('hidden');
+
+    // Starting a new game should hide sliders again
+    ctx.initializeColonySlidersUI();
+
+    expect(container.classList.contains('hidden')).toBe(true);
+  });
+
   test('slider functions update UI values', () => {
     const fs = require('fs');
     const path = require('path');
