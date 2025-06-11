@@ -115,6 +115,12 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !skillManager) {
     skillManager = new SkillManager(skillParameters);
   }
+  // Reset colony management sliders to their default values
+  // so a fresh game always starts from a clean state. Saved games
+  // will overwrite these values after loading.
+  if (typeof resetColonySliders === 'function') {
+    resetColonySliders();
+  }
   const fundingRate = currentPlanetParameters.fundingRate || 0;
   fundingModule = new FundingModule(resources, fundingRate);
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);

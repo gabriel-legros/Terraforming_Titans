@@ -76,6 +76,8 @@ describe('game update tick', () => {
       createMilestonesUI=()=>{};
       initializeSpaceUI=()=>{};
       updateDayNightDisplay=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class {};
       StoryManager = class { initializeStory(){} update(){} };
     `;

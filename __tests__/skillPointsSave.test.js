@@ -71,6 +71,8 @@ describe('skillPoints save/load', () => {
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
       initializeSpaceUI=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class { activateTab(){} };
     `;
     vm.runInContext(overrides, ctx);

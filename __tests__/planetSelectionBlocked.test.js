@@ -75,6 +75,8 @@ describe('planet selection blocked when not terraformed', () => {
       initializeLifeUI=()=>{};
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
+      addEffect=()=>{};
+      removeEffect=()=>{};
       TabManager = class {};
       StoryManager = class { initializeStory(){} update(){} };
     `;
