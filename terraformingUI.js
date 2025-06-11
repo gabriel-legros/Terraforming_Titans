@@ -30,13 +30,6 @@ function initializeTerraformingTabs() {
       });
   });
 
-  // Add event listeners for "Toggle Completed" buttons
-  document.querySelectorAll('.toggle-completed-button').forEach(button => {
-      button.addEventListener('click', () => {
-          toggleCompletedTesearch();
-      });
-  });
-
   // Activate the 'energy' category
   activateTerraformingSubtab('summary-terraforming');
 
