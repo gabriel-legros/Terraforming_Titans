@@ -59,7 +59,11 @@ class SkillManager {
       effectId: skill.id,
     });
     if (skill.effect.perRank) {
-      effect.value = skill.effect.baseValue * skill.rank;
+      if (skill.id === 'scanning_speed' && skill.effect.type === 'scanningSpeedMultiplier') {
+        effect.value = Math.pow(skill.effect.baseValue, skill.rank);
+      } else {
+        effect.value = skill.effect.baseValue * skill.rank;
+      }
     }
     addEffect(effect);
   }
