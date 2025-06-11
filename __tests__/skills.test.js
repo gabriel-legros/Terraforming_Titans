@@ -68,4 +68,26 @@ describe('SkillManager save/load', () => {
       expect.objectContaining({ value: 2, sourceId: 'test' })
     );
   });
+
+  test('scanning_speed scales exponentially', () => {
+    const skillParams = require('../skills-parameters.js');
+    const data = { scanning_speed: skillParams.scanning_speed };
+    const manager = new SkillManager(data);
+    manager.unlockSkill('scanning_speed');
+    expect(global.addEffect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ value: 2, sourceId: 'scanning_speed' })
+    );
+
+    global.addEffect.mockClear();
+    manager.upgradeSkill('scanning_speed');
+    expect(global.addEffect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ value: 4, sourceId: 'scanning_speed' })
+    );
+
+    global.addEffect.mockClear();
+    manager.upgradeSkill('scanning_speed');
+    expect(global.addEffect).toHaveBeenLastCalledWith(
+      expect.objectContaining({ value: 8, sourceId: 'scanning_speed' })
+    );
+  });
 });
