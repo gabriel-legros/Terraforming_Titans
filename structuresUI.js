@@ -391,10 +391,10 @@ function updateDecreaseButtonText(button, buildCount) {
       const workerText = `Workers: ${formatNumber(requiredWorkers, true)}`;
       let formattedWorkerText;
   
-      if (availableWorkers >= structure.getTotalWorkerNeed()) {
+      if (availableWorkers >= requiredWorkers) {
         formattedWorkerText = workerText;
       } else {
-        // Use yellow color if not enough workers are available
+        // Use orange color if not enough workers are available
         formattedWorkerText = `<span style="color: orange;">${workerText}</span>`;
       }
   
