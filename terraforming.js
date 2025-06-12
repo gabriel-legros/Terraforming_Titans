@@ -1156,6 +1156,14 @@ class Terraforming extends EffectableEntity{
       }
       addEffect(solarPanelEffect);
 
+      const lifeLuminosityEffect = {
+        effectId: 'luminosity',
+        target: 'lifeManager',
+        type: 'lifeGrowthMultiplier',
+        value: solarPanelMultiplier
+      };
+      addEffect(lifeLuminosityEffect);
+
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty()
       
       for (let i = 1; i <= 6; i++) {
