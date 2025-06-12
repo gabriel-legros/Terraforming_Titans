@@ -114,13 +114,13 @@ const skillParameters = {
   life_design_points: {
     id: 'life_design_points',
     name: 'More Life Design Points',
-    description: 'Grants 10 life design points per rank',
+    description: 'Grants 20 life design points per rank',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'lifeDesigner',
       type: 'lifeDesignPointBonus',
-      baseValue: 10,
+      baseValue: 20,
       perRank: true
     },
     requires: ['pop_growth']
