@@ -519,9 +519,10 @@ class Project extends EffectableEntity {
       }
 
       const totalGain = this.pendingResourceGains;
+      const rate = 1000 / this.getEffectiveDuration();
       totalGain.forEach((gain) => {
             resources[gain.category][gain.resource].modifyRate(
-              gain.quantity,
+              gain.quantity * rate,
               this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export',
               'project'
             );
