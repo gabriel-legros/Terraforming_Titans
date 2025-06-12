@@ -428,6 +428,7 @@ function createTemperatureBox(row) {
     lifeBox.innerHTML = `
       <h3>Life</h3> <!-- Static name -->
       <p>Life coverage: <span id="life-current">0.00</span>%</p>
+      <p>Photosynthesis multiplier: <span id="life-luminosity-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
       `;
 
     const targetSpan = document.createElement('span');
@@ -465,6 +466,11 @@ function updateLifeBox() {
     // Update life coverage display
     const lifeCoverageSpan = document.getElementById('life-current');
     lifeCoverageSpan.textContent = `${(avgBiomassCoverage * 100).toFixed(2)}`; // Display percentage
+
+    const lifeMultiplierSpan = document.getElementById('life-luminosity-multiplier');
+    if (lifeMultiplierSpan) {
+      lifeMultiplierSpan.textContent = `${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}`;
+    }
   }
   
   // Function to create the magnetosphere box, with conditional text based on boolean flag
