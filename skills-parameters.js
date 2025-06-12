@@ -16,13 +16,13 @@ const skillParameters = {
   pop_growth: {
     id: 'pop_growth',
     name: 'Population Boom',
-    description: 'Increases population growth by 10%',
+    description: 'Increases population growth by 20%',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'population',
       type: 'globalPopulationGrowth',
-      baseValue: 0.1,
+      baseValue: 0.2,
       perRank: true
     },
     requires: ['research_boost']
@@ -44,13 +44,13 @@ const skillParameters = {
   research_boost: {
     id: 'research_boost',
     name: 'Innovation Initiative',
-    description: 'Boosts research output by 20% per rank',
+    description: 'Boosts research output by 50% per rank',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'global',
       type: 'globalResearchBoost',
-      baseValue: 0.2,
+      baseValue: 0.5,
       perRank: true
     },
     requires: ['build_cost']
@@ -100,13 +100,13 @@ const skillParameters = {
   project_speed: {
     id: 'project_speed',
     name: 'Faster Projects',
-    description: 'Reduces project durations by 10% per rank',
+    description: 'Reduces project durations by 15% per rank',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'projectManager',
       type: 'projectDurationReduction',
-      baseValue: 0.1,
+      baseValue: 0.15,
       perRank: true
     },
     requires: ['pop_growth']
