@@ -355,7 +355,9 @@ function updateLifeUI() {
             showTentativeDesignCells();
             applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
             applyProgressBar.style.width = '0%';
-            applyBtn.disabled = false; // Ensure button is enabled when not active
+            const survivable = lifeDesigner.tentativeDesign && lifeDesigner.tentativeDesign.canSurviveAnywhere();
+            applyBtn.disabled = !survivable; // Disable if design cannot survive
+            applyBtn.title = survivable ? '' : 'Life cannot survive anywhere';
             applyBtn.style.background = ''; // Reset background
         }
     }
