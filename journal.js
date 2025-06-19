@@ -3,11 +3,11 @@ let journalCollapsed = false;
 let journalUnread = false;
 
 // --- New: queue management for sequential typing ---
-let journalQueue = [];      // queue of pending entry texts
+let journalQueue = [];      // queue of pending entry objects {text, eventId}
 let journalTyping = false;  // flag indicating an entry is currently being typed
-
-function addJournalEntry(text) {
-  journalQueue.push(text);
+let journalCurrentEventId = null; // id of the event whose text is typing
+function addJournalEntry(text, eventId = null) {
+  journalQueue.push({ text, eventId });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -16,11 +16,13 @@ function addJournalEntry(text) {
 function processNextJournalEntry() {
   if (journalQueue.length === 0) {
     journalTyping = false;
+    journalCurrentEventId = null;
     return;
   }
 
   journalTyping = true;
-  const text = journalQueue.shift();
+  const { text, eventId } = journalQueue.shift();
+  journalCurrentEventId = eventId;
   const journalEntries = document.getElementById('journal-entries');
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
@@ -44,7 +46,7 @@ function processNextJournalEntry() {
       journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
 
       console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
-      const storyEvent = new CustomEvent('storyJournalFinishedTyping');
+      const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
       document.dispatchEvent(storyEvent);
 
       // Start next entry if queued
@@ -65,6 +67,7 @@ function loadJournalEntries(entries) {
   journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
   journalTyping = false;
+  journalCurrentEventId = null;
 
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
@@ -92,6 +95,7 @@ function clearJournal() {
   journalEntriesData = []; // Clear the stored data array
   journalQueue = [];
   journalTyping = false;
+  journalCurrentEventId = null;
 }
 
 function updateJournalAlert() {

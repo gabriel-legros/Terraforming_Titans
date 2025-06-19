@@ -9,7 +9,7 @@ describe('chapter4 colonist milestone', () => {
     vm.createContext(ctx);
     vm.runInContext(code, ctx);
     const chapters = ctx.progressData.chapters;
-    const prev = chapters.find(c => c.id === 'chapter4.9');
+    const prev = chapters.find(c => c.id === 'chapter4.9b');
     const chapter = chapters.find(c => c.id === 'chapter4.10');
     expect(prev).toBeDefined();
     expect(chapter).toBeDefined();
