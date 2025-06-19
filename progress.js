@@ -382,12 +382,19 @@ class StoryManager {
 
         console.log(`StoryManager state loaded. Active: [${Array.from(this.activeEventIds).join(', ')}], Completed: [${Array.from(this.completedEventIds).join(', ')}], Waiting: ${this.waitingForJournalEventId}`);
 
-        // If loading while waiting, the journal animation likely won't restart,
-        // so the 'storyJournalFinishedTyping' event won't fire.
-        // We might need to immediately process completion if we load into a waiting state.
+        // If loading while waiting for a journal event, the typing animation
+        // will not resume. Immediately finalize the event so any rewards are
+        // applied without delay.
         if (this.waitingForJournalEventId !== null) {
-             console.warn(`Loaded game while waiting for journal event ${this.waitingForJournalEventId}. Assuming journal is finished and processing completion immediately.`);
-             this.handleJournalFinished(); // Manually trigger the handler
+            const pendingId = this.waitingForJournalEventId;
+            this.waitingForJournalEventId = null;
+
+            if (this.activeEventIds.has(pendingId)) {
+                console.warn(`Loaded game while waiting for journal event ${pendingId}. Completing it immediately.`);
+                this.processEventCompletion(pendingId);
+            } else {
+                console.warn(`Loaded waiting event ${pendingId}, but it is no longer active.`);
+            }
         }
 
     }
