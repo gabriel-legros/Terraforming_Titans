@@ -353,6 +353,7 @@ function updateDecreaseButtonText(button, buildCount) {
   
   function updateBuildingDisplay(buildings) {
     updateStructureDisplay(buildings);
+    updateEmptyBuildingMessages();
   }
   
   function updateStructureButtonText(button, structure, buildCount = 1) {
@@ -612,4 +613,36 @@ function formatStorageDetails(storageObject) {
     }
   }
   return storageDetails.slice(0, -2); // Remove trailing comma and space
+}
+
+function updateEmptyBuildingMessages() {
+  const containerIds = [
+    'resource-buildings-buttons',
+    'production-buildings-buttons',
+    'energy-buildings-buttons',
+    'storage-buildings-buttons',
+    'terraforming-buildings-buttons'
+  ];
+
+  containerIds.forEach(id => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const messageId = `${id}-empty-message`;
+    let message = document.getElementById(messageId);
+
+    const hasVisible = Array.from(container.getElementsByClassName('combined-building-row'))
+      .some(row => row.style.display !== 'none');
+
+    if (!hasVisible) {
+      if (!message) {
+        message = document.createElement('p');
+        message.id = messageId;
+        message.classList.add('empty-message');
+        message.textContent = 'Nothing available for now.';
+        container.appendChild(message);
+      }
+    } else if (message) {
+      message.remove();
+    }
+  });
 }

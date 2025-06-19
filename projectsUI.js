@@ -36,6 +36,8 @@ function renderProjects() {
   projectsArray.forEach(project => {
     updateProjectUI(project.name);
   });
+
+  updateEmptyProjectMessages();
 }
 
 function initializeProjectsUI() {
@@ -668,10 +670,32 @@ function formatTotalResourceGainDisplay(totalResourceGain) {
   const gainArray = [];
   for (const category in totalResourceGain) {
     for (const resource in totalResourceGain[category]) {
-      const resourceDisplayName = resources[category][resource].displayName || 
+      const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
       gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}`);
     }
   }
   return `Total Gain: ${gainArray.join(', ')}`;
+}
+
+function updateEmptyProjectMessages() {
+  document.querySelectorAll('.projects-list').forEach(container => {
+    const messageId = `${container.id}-empty-message`;
+    let message = document.getElementById(messageId);
+
+    const hasVisible = Array.from(container.getElementsByClassName('special-projects-item'))
+      .some(item => item.style.display !== 'none');
+
+    if (!hasVisible) {
+      if (!message) {
+        message = document.createElement('p');
+        message.id = messageId;
+        message.classList.add('empty-message');
+        message.textContent = 'Nothing available for now.';
+        container.appendChild(message);
+      }
+    } else if (message) {
+      message.remove();
+    }
+  });
 }
