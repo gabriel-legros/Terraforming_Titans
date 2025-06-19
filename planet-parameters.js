@@ -32,7 +32,7 @@ const defaultPlanetParameters = {
   name: 'Default Planet', // Will be overridden by specific planets
   resources: {
     colony: {
-      funding: { name: 'Funding', initialValue: 1000, unlocked: false },
+      funding: { name: 'Funding', initialValue: 0, unlocked: false },
       colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
       workers: { name: 'Workers', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
       energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
@@ -97,6 +97,9 @@ const defaultPlanetParameters = {
 const marsOverrides = {
   name: 'Mars',
 "resources": {
+    "colony" : {
+      "funding": {"initialvalue" : 1000}
+    },
     "surface": {
       "ice": {
         "initialValue": 10000000003490308
