@@ -35,7 +35,7 @@ const defaultPlanetParameters = {
       funding: { name: 'Funding', initialValue: 0, unlocked: false },
       colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
       workers: { name: 'Workers', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
-      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
+      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 50000000, unlocked:false },
       metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}},
       silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
       glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
