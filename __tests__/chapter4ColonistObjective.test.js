@@ -21,5 +21,6 @@ describe('chapter4 colonist milestone', () => {
       quantity: 100
     });
     expect(chapter.narrative).toMatch(/two beams of light.*giant asteroid/);
+    expect(chapter.nextChapter).toBe('chapter4.11');
   });
 });
