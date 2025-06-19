@@ -347,12 +347,28 @@ const projectParameters = {
   hyperionLantern: {
     name: "Hyperion Lantern",
     category: "infrastructure",
-    cost: {},
-    duration: 120000,
-    description: "A massive orbital facility designed to illuminate the planet. (Coming soon)",
+    cost: {
+      colony: {
+        metal: 1e9,
+        glass: 1e9,
+        electronics: 1e9,
+        components: 1e9
+      }
+    },
+    duration: 300000,
+    description: "A ridiculously huge lamp placed in orbit. It's basically the biggest flashlight ever built, capable of flooding the planet with artificial sunlight.",
     repeatable: false,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      completionEffect: [
+        {
+          type: 'booleanFlag',
+          target: 'terraforming',
+          flagId: 'hyperionLanternBuilt',
+          value: true
+        }
+      ]
+    }
   }
 };
 

@@ -184,6 +184,12 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
+    this.hyperionLantern = {
+      built: false,
+      investments: 1,
+      active: 0
+    };
+
     this.updateLuminosity();
     this.updateSurfaceTemperature();
   }
@@ -1104,8 +1110,17 @@ class Terraforming extends EffectableEntity{
     calculateModifiedSolarFlux(distanceFromSunInMeters){
       const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
       const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
+      const lanternFlux = this.calculateLanternFlux();
 
-      return baseFlux + mirrorFlux*buildings['spaceMirror'].active;
+      return baseFlux + mirrorFlux*buildings['spaceMirror'].active + lanternFlux;
+    }
+
+    calculateLanternFlux(){
+      if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
+        const power = this.hyperionLantern.active * 1e15;
+        return power / this.celestialParameters.surfaceArea;
+      }
+      return 0;
     }
 
     calculateSolarPanelMultiplier(){
@@ -1152,6 +1167,9 @@ class Terraforming extends EffectableEntity{
     }
 
     applyTerraformingEffects(){
+      if(this.isBooleanFlagSet('hyperionLanternBuilt')){
+        this.hyperionLantern.built = true;
+      }
       const solarPanelMultiplier = this.calculateSolarPanelMultiplier();
 
       const windTurbineMultiplier = this.calculateWindTurbineMultiplier();
@@ -1173,6 +1191,11 @@ class Terraforming extends EffectableEntity{
         value: windTurbineMultiplier
       }
       addEffect(windTurbineEffect);
+
+      if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
+        const power = this.hyperionLantern.active * 1e15;
+        resources.colony.energy.modifyRate(-power, 'Hyperion Lantern', 'terraforming');
+      }
 
       const lifeLuminosityEffect = {
         effectId: 'luminosity',
@@ -1401,6 +1424,7 @@ synchronizeGlobalResources() {
       equilibriumPrecipitationMultiplier: this.equilibriumPrecipitationMultiplier,
       equilibriumCondensationParameter: this.equilibriumCondensationParameter,
       equilibriumMethaneCondensationParameter: this.equilibriumMethaneCondensationParameter,
+      hyperionLantern: this.hyperionLantern,
       // NOTE: Stored rates (like totalEvaporationRate) are not saved, they are recalculated each tick.
       };
   }
@@ -1414,6 +1438,10 @@ synchronizeGlobalResources() {
       this.equilibriumPrecipitationMultiplier = terraformingState.equilibriumPrecipitationMultiplier ?? this.equilibriumPrecipitationMultiplier;
       this.equilibriumCondensationParameter = terraformingState.equilibriumCondensationParameter ?? this.equilibriumCondensationParameter;
       this.equilibriumMethaneCondensationParameter = terraformingState.equilibriumMethaneCondensationParameter ?? this.equilibriumMethaneCondensationParameter;
+
+      if (terraformingState.hyperionLantern) {
+        this.hyperionLantern = { ...this.hyperionLantern, ...terraformingState.hyperionLantern };
+      }
 
       // Load Temperature (including zonal)
       if (terraformingState.temperature) {
