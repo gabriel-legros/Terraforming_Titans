@@ -201,7 +201,7 @@ const buildingsParameters = {
     description: 'Produces energy consistently, unaffected by the day or night cycle, harnessing wind power.',
     cost: { colony: { metal: 95, components: 5 } },
     consumption: {},
-    production: { colony: { energy: 50000 } },
+    production: { colony: { energy: 300000 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
