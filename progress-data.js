@@ -710,7 +710,7 @@ progressData = {
       {
         id: "chapter4.5",
         type: "journal",
-        narrative: "Incoming encrypted transmission...\\n  'Greetings H.O.P.E., I am Adrien Solis, CEO of Solis Corp. Earth may be gone, but I still have resources off-world. Your mission is humanity's best hope, and I intend to support it.'",
+        narrative: "Incoming encrypted transmission...\n  'Greetings H.O.P.E., I am Adrien Solis, CEO of Solis Corp. Earth may be gone, but I still have resources off-world. Your mission is humanity's best hope, and I intend to support it.'",
         objectives: [],
         reward: [],
         nextChapter: "chapter4.6"
@@ -757,7 +757,7 @@ progressData = {
       {
         id: "chapter4.9",
         type: "journal",
-        narrative: "Receiving transmission...\\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
         objectives: [],
         reward: [
           {
