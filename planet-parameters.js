@@ -165,7 +165,7 @@ const titanOverrides = {
     },
     underground: {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
-      geothermal: { initialValue: 2, maxDeposits: 83, areaTotal: 83000 },
+      geothermal: { initialValue: 1, maxDeposits: 3, areaTotal: 83000 },
     },
     atmospheric: {
       carbonDioxide: { initialValue: 67916.55902144962 },
