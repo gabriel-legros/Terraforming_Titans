@@ -952,7 +952,20 @@ const researchParameters = {
       },   
     ],
     advanced: [
-      // researches unlocking late game technology will be added here
+      {
+        id: 'hyperion_lantern',
+        name: 'Hyperion Lantern',
+        description: 'Research the construction of a large orbital facility that increases planetary luminosity.',
+        cost: { advancedResearch: 5000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'hyperionLantern',
+            type: 'enable'
+          }
+        ]
+      }
     ]
   };
   

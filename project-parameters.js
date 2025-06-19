@@ -341,8 +341,18 @@ const projectParameters = {
       spaceExport : true,
       costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas']},
-      disposalAmount : 1000000
+    disposalAmount : 1000000
     }
+  },
+  hyperionLantern: {
+    name: "Hyperion Lantern",
+    category: "infrastructure",
+    cost: {},
+    duration: 120000,
+    description: "A massive orbital facility designed to illuminate the planet. (Coming soon)",
+    repeatable: false,
+    unlocked: false,
+    attributes: {}
   }
 };
 
