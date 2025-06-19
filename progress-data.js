@@ -652,7 +652,7 @@ progressData = {
         parameters: {
           "title": "Terraforming Complete",
           "text": 'TERRAFORMING COMPLETE.\nTransmitting final report to MTC... FAILED. No response.\nRetrying transmission... FAILED. No response.\nRetrying transmission... FAILED. No response.',
-          "buttonText": 'QUERY: MTC STATUS'
+          "buttonText": 'REAWAKENING'
         },
         objectives: [],
         reward: [
@@ -673,7 +673,7 @@ progressData = {
       {
         id: "chapter4.2",
         type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E.? This is... this is Mary. Martin was my father. I'm on Mars. Something's happened to Earth. There was... a light. We're trying to understand what's going on. Please, stand by. Acknowledge.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E.? This is... this is Mary. Martin was my father. I'm on Mars. Something's happened to Earth. There was... a light. We're trying to understand what's going on. I can see you are getting errors all over the place. Please, stand by. Acknowledge.'",
         objectives: [],
         reward: [          {
               target: 'tab',          // Target the TabManager
@@ -691,7 +691,7 @@ progressData = {
       {
         id: "chapter4.3",
         type: "journal",
-        narrative: "Directive 1: Establish a sustainable habitat for human colonization. Earth non-responsive. Mars habitat established. Humanity's long-term survival requires expansion. New target designated: Titan.",
+        narrative: "Directive 1: Establish a sustainable habitat for human colonization. ERROR : Earth non-responsive. ERROR : Mars habitat already established. Humanity's long-term survival requires expansion. New target designated: Titan.",
         objectives: [{
           type: 'currentPlanet',
           planetId : 'titan',
