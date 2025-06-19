@@ -108,6 +108,56 @@ function createProjectItem(project) {
     };
   }
 
+  if (project.name === 'hyperionLantern') {
+    const lanternControls = document.createElement('div');
+    lanternControls.classList.add('lantern-controls');
+
+    const decreaseButton = document.createElement('button');
+    decreaseButton.textContent = '-1';
+    decreaseButton.addEventListener('click', () => {
+      if (terraforming.hyperionLantern.active > 0) {
+        terraforming.hyperionLantern.active -= 1;
+        updateProjectUI(project.name);
+      }
+    });
+
+    const increaseButton = document.createElement('button');
+    increaseButton.textContent = '+1';
+    increaseButton.addEventListener('click', () => {
+      if (terraforming.hyperionLantern.active < terraforming.hyperionLantern.investments) {
+        terraforming.hyperionLantern.active += 1;
+        updateProjectUI(project.name);
+      }
+    });
+
+    const investButton = document.createElement('button');
+    investButton.textContent = 'Invest 1B Components & Electronics';
+    investButton.addEventListener('click', () => {
+      if (resources.colony.components.value >= 1e9 && resources.colony.electronics.value >= 1e9) {
+        resources.colony.components.value -= 1e9;
+        resources.colony.electronics.value -= 1e9;
+        terraforming.hyperionLantern.investments += 1;
+        updateProjectUI(project.name);
+      }
+    });
+
+    const capacityDisplay = document.createElement('p');
+    capacityDisplay.id = 'lantern-capacity';
+
+    lanternControls.appendChild(decreaseButton);
+    lanternControls.appendChild(increaseButton);
+    lanternControls.appendChild(investButton);
+    lanternControls.appendChild(capacityDisplay);
+    projectItem.appendChild(lanternControls);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      lanternDecrease: decreaseButton,
+      lanternIncrease: increaseButton,
+      lanternCapacity: capacityDisplay
+    };
+  }
+
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
@@ -619,6 +669,20 @@ function updateProjectUI(projectName) {
     elements.autoStartCheckboxContainer.classList.remove('hidden');
   } else {
     elements.autoStartCheckboxContainer.classList.add('hidden');
+  }
+
+  if(project.name === 'hyperionLantern'){
+    if(elements.lanternDecrease){
+      elements.lanternDecrease.disabled = terraforming.hyperionLantern.active <= 0;
+    }
+    if(elements.lanternIncrease){
+      elements.lanternIncrease.disabled = terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
+    }
+    if(elements.lanternCapacity){
+      const activePower = terraforming.hyperionLantern.active * 1e15;
+      const maxPower = terraforming.hyperionLantern.investments * 1e15;
+      elements.lanternCapacity.textContent = `Active: ${formatNumber(activePower, false, 2)} W / Capacity: ${formatNumber(maxPower, false, 2)} W`;
+    }
   }
 
   // Check if the auto-start checkbox is checked and attempt to start the project automatically
