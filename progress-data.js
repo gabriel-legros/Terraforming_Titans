@@ -758,12 +758,7 @@ progressData = {
         id: "chapter4.9",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
-        objectives: [{
-          type: 'collection',
-          resourceType: 'colony',
-          resource: 'colonists',
-          quantity: 100
-        }],
+        objectives: [],
         reward: [
           {
             target: 'tab',
@@ -777,6 +772,19 @@ progressData = {
             onLoad: false
           }
         ],
+        nextChapter: "chapter4.9b"
+      },
+      {
+        id: "chapter4.9b",
+        type: "journal",
+        narrative: "",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 100
+        }],
+        reward: [],
         nextChapter: "chapter4.10"
       },
       {
@@ -792,7 +800,7 @@ progressData = {
       {
         id: "chapter4.11",
         type: "journal",
-        narrative: "Receiving transmission...\\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Earth, others want to help however they can. The Mars Terraforming Committee has voted to support your mission with their best minds. Advanced research facilities are at your disposal.'",
+        narrative: "Receiving transmission...\\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
         objectives: [],
         reward: [
           {
