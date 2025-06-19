@@ -758,7 +758,12 @@ progressData = {
         id: "chapter4.9",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
-        objectives: [],
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 100
+        }],
         reward: [
           {
             target: 'tab',
@@ -772,6 +777,16 @@ progressData = {
             onLoad: false
           }
         ],
+        nextChapter: "chapter4.10"
+      },
+      {
+        id: "chapter4.10",
+        type: "journal",
+        narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is still in chaos and we still don't know what happened to Earth, but we've learned there were actually two beams of light and a giant asteroid, and they all hit Earth at the same time.'",
+        objectives: [],
+        reward: [
+        ],
+        special : 'clearJournal',
         nextChapter: null
       }
     ]

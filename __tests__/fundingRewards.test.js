@@ -55,14 +55,14 @@ describe('funding rewards', () => {
     context.fundingModule = new context.FundingModule(context.resources, 100);
   });
 
-  test('setFundingRate reward adds to funding rate', () => {
+  test('setFundingRate reward overrides funding rate', () => {
     const manager = new context.StoryManager({ chapters: [] });
     context.window.storyManager = manager;
     const event = { id: 'e1', reward: [{ target: 'fundingModule', type: 'setFundingRate', value: 50, oneTimeFlag: true }], rewardDelay: 0 };
 
     manager.applyRewards(event);
 
-    expect(context.fundingModule.fundingRate).toBe(150);
+    expect(context.fundingModule.fundingRate).toBe(50);
   });
 
   test('instantResourceGain increases resource immediately', () => {
