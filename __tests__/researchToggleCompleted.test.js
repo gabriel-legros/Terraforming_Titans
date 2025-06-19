@@ -13,8 +13,8 @@ describe('toggleCompletedResearch', () => {
     ctx.formatNumber = () => '';
     ctx.researchManager = { researches: {
       energy: [
-        { id: 'completed', name: 'Done', description: '', cost: 0, isResearched: true },
-        { id: 'unfinished', name: 'Not Done', description: '', cost: 0, isResearched: false }
+        { id: 'completed', name: 'Done', description: '', cost: { research: 0 }, isResearched: true },
+        { id: 'unfinished', name: 'Not Done', description: '', cost: { research: 0 }, isResearched: false }
       ],
       industry: [],
       colonization: [],
