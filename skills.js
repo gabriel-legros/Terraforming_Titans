@@ -101,6 +101,22 @@ class SkillManager {
       }
     }
   }
+
+  resetSkillTree() {
+    for (const id in this.skills) {
+      const skill = this.skills[id];
+      if (skill.unlocked && skill.effect) {
+        const effect = { target: skill.effect.target, sourceId: skill.id };
+        if (skill.effect.targetId) effect.targetId = skill.effect.targetId;
+        if (typeof removeEffect === 'function') {
+          removeEffect(effect);
+        }
+      }
+      skill.rank = 0;
+      skill.unlocked = false;
+    }
+    this.skillPoints = 0;
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
