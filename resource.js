@@ -331,6 +331,10 @@ function produceResources(deltaTime, buildings) {
     lifeManager.updateLife(deltaTime);
   }
 
+  if(researchManager && typeof researchManager.update === 'function'){
+    researchManager.update(deltaTime);
+  }
+
   if(projectManager){
     projectManager.estimateProjects();
   }
