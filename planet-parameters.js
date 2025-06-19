@@ -56,7 +56,7 @@ const defaultPlanetParameters = {
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false},
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false},
       liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false },
-      hydrocarbonIce: { name: 'Hydrocarbon Ice', initialValue: 0, unlocked: false },
+      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
@@ -68,7 +68,7 @@ const defaultPlanetParameters = {
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}, // Default (Mars)
-      atmosphericMethane: { name: 'Methane (CH4)', initialValue: 0, unlocked: false }
+      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false }
     },
     special: {
       albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
