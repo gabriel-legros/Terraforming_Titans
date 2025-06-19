@@ -162,3 +162,9 @@ body {
 .journal.collapsed {
     display: none;
 }
+
+.empty-message {
+    color: gray;
+    font-style: italic;
+    margin: 10px 0;
+}
