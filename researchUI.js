@@ -1,7 +1,7 @@
 let completedResearchHidden = false; // Initialize the toggle state
 
 function updateAllResearchButtons(researchData) {
-    const researchTabs = ['energy', 'industry', 'colonization', 'terraforming'];
+    const researchTabs = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
     researchTabs.forEach((tab) => {
         researchData[tab].forEach((researchItem) => {
             const button = document.getElementById(`research-${researchItem.id}`);
@@ -59,8 +59,10 @@ function initializeResearchTabs() {
         button.onclick = toggleCompletedResearch;
     });
 
+    updateAdvancedResearchVisibility();
+
     // Load all research categories
-    const researchCategories = ['energy', 'industry', 'colonization', 'terraforming'];
+    const researchCategories = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
     researchCategories.forEach(category => {
         loadResearchCategory(category);
     });
@@ -150,7 +152,23 @@ function updateCompletedResearchVisibility() {
     });
 }
 
+function updateAdvancedResearchVisibility() {
+    const visible = researchManager && researchManager.advancedResearchUnlocked;
+    const subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
+    const content = document.getElementById('advanced-research');
+    if (subtab && content) {
+        if (visible) {
+            subtab.classList.remove('hidden');
+            content.classList.remove('hidden');
+        } else {
+            subtab.classList.add('hidden');
+            content.classList.add('hidden');
+        }
+    }
+}
+
 function updateResearchUI() {
     updateAllResearchButtons(researchManager.researches); // Update research buttons display
     updateCompletedResearchVisibility();
+    updateAdvancedResearchVisibility();
 }

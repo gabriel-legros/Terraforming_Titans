@@ -18,7 +18,8 @@ describe('toggleCompletedResearch', () => {
       ],
       industry: [],
       colonization: [],
-      terraforming: []
+      terraforming: [],
+      advanced: []
     } };
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'researchUI.js'), 'utf8');

@@ -951,5 +951,8 @@ const researchParameters = {
         ],
       },   
     ],
+    advanced: [
+      // researches unlocking late game technology will be added here
+    ]
   };
   

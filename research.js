@@ -11,12 +11,14 @@ class Research {
       this.effects = effects;
       this.isResearched = false; // Flag indicating if the research has been completed
     }
-  }
-  
+}
+
   // Research Manager Class to manage all researches
-  class ResearchManager {
+  class ResearchManager extends EffectableEntity {
     constructor(researchData) {
+      super({ description: 'Manages all research' });
       this.researches = {};
+      this.advancedResearchUnlocked = false;
   
       // Load research data and create Research instances
       for (const category in researchData) {
@@ -135,4 +137,8 @@ class Research {
 function initializeResearchUI() {
     // Initializes the UI tabs for research
     initializeResearchTabs(); // Delegates the sub-tab event listeners and initial UI load to research-ui.js
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ResearchManager, Research };
 }
