@@ -55,7 +55,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceExport : true,
-      costPerShip : {colony : {metal : 100000, energy : 1000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {colony : ['metal']},
       defaultDisposal : {category : 'colony', resource : 'metal'},
       disposalAmount : 1000000,
@@ -69,7 +69,7 @@ const projectParameters = {
       colony: {
         metal: 50,
         electronics: 10,
-        energy: 50
+        energy: 500000
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
@@ -92,7 +92,7 @@ const projectParameters = {
       colony: {
         metal: 50,
         electronics: 10,
-        energy: 50
+        energy: 500000
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
@@ -172,7 +172,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {colony: {metal : 1000000}}
     }
   },
@@ -187,7 +187,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
     }
   },
@@ -202,7 +202,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {surface: {ice : 1000000}}
     }
   },
@@ -217,7 +217,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000}},
+      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {inertGas : 1000000}}
     }
   },
@@ -339,7 +339,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceExport : true,
-      costPerShip : {colony : {metal : 100000, energy : 1000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas']},
       disposalAmount : 1000000
     }
