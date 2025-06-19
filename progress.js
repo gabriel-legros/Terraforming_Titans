@@ -299,6 +299,56 @@ class StoryManager {
         });
     }
 
+    // Jump directly to a chapter by id, applying rewards of previous chapters
+    // without triggering their journal entries. This allows moving backward or
+    // forward in the story for debugging.
+    jumpToChapter(chapterId) {
+        const index = progressData.chapters.findIndex(ch => ch.id === chapterId);
+        if (index === -1) {
+            console.warn(`Chapter not found: ${chapterId}`);
+            return;
+        }
+
+        // Reset current state
+        this.activeEventIds.clear();
+        this.completedEventIds.clear();
+        this.waitingForJournalEventId = null;
+
+        // Remove previously applied effects
+        this.appliedEffects.forEach(effect => removeEffect(effect));
+        this.appliedEffects = [];
+
+        clearJournal();
+
+        // Apply rewards from earlier chapters so game state roughly matches
+        for (let i = 0; i < index; i++) {
+            const cfg = progressData.chapters[i];
+            const ev = this.findEventById(cfg.id);
+            if (!ev) continue;
+            if (ev.special === 'clearJournal') {
+                clearJournal();
+            }
+            if (ev.reward && ev.reward.length > 0) {
+                ev.reward.forEach(effect => {
+                    if (!effect.oneTimeFlag) {
+                        this.appliedEffects.push(effect);
+                    }
+                    addEffect(effect);
+                });
+            }
+            this.completedEventIds.add(ev.id);
+        }
+
+        const targetEvent = this.findEventById(chapterId);
+        if (targetEvent) {
+            if (targetEvent.special === 'clearJournal') {
+                clearJournal();
+            }
+            this.activeEventIds.add(targetEvent.id);
+            targetEvent.trigger();
+        }
+    }
+
     saveState() { // Keep as is
         const state = {
             activeEventIds: Array.from(this.activeEventIds),
@@ -385,4 +435,18 @@ class StoryEvent {
                 console.error(`Unknown event type: ${this.type}`);
         }
     }
+}
+
+// Expose jumpToChapter for browser console use
+if (typeof module !== 'undefined' && module.exports) {
+    // Node environment (tests) - export StoryManager class
+    module.exports = { StoryManager };
+} else {
+    globalThis.jumpToChapter = function(id) {
+        if (window.storyManager && typeof window.storyManager.jumpToChapter === 'function') {
+            window.storyManager.jumpToChapter(id);
+        } else {
+            console.warn('storyManager not initialized');
+        }
+    };
 }
