@@ -752,6 +752,26 @@ progressData = {
         narrative: "'Good luck, H.O.P.E. Humanity is counting on you.'",
         objectives: [],
         reward: [],
+        nextChapter: "chapter4.9"
+      },
+      {
+        id: "chapter4.9",
+        type: "journal",
+        narrative: "Receiving transmission...\\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
+        objectives: [],
+        reward: [
+          {
+            target: 'tab',
+            targetId: 'hope-tab',
+            type: 'enable'
+          },
+          {
+            target: 'tab',
+            targetId: 'hope',
+            type: 'activateTab',
+            onLoad: false
+          }
+        ],
         nextChapter: null
       }
     ]
