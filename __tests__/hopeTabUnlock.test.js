@@ -15,6 +15,6 @@ describe('HOPE tab unlock chapter', () => {
     expect(hopeChapter).toBeDefined();
     const effect = hopeChapter.reward.find(r => r.targetId === 'hope-tab' && r.type === 'enable');
     expect(effect).toBeDefined();
-    expect(hopeChapter.nextChapter).toBe('chapter4.10');
+    expect(hopeChapter.nextChapter).toBe('chapter4.9b');
   });
 });

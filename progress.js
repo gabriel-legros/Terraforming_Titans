@@ -14,22 +14,19 @@ class StoryManager {
     }
 
     // --- NEW: Event handler for journal completion ---
-    handleJournalFinished() {
+    handleJournalFinished(e) {
+        const finishedId = e && e.detail ? e.detail.eventId : null;
         console.log("StoryManager received storyJournalFinishedTyping event.");
-        if (this.waitingForJournalEventId !== null) {
+        if (this.waitingForJournalEventId !== null && this.waitingForJournalEventId === finishedId) {
             const completedEventId = this.waitingForJournalEventId;
             this.waitingForJournalEventId = null; // Clear the flag *before* processing
 
-            // Ensure the event is still active (it should be)
             if (this.activeEventIds.has(completedEventId)) {
                  console.log(`Journal finished for waiting event ${completedEventId}. Processing completion.`);
-                 // Now that the animation is done, process the completion
                  this.processEventCompletion(completedEventId);
             } else {
                  console.warn(`Journal finished, but event ${completedEventId} was no longer active?`);
             }
-        } else {
-             console.log("Journal finished, but StoryManager wasn't waiting for any specific journal event.");
         }
     }
 
@@ -101,21 +98,18 @@ class StoryManager {
         for (const [eventId, event] of eventsReadyToComplete.entries()) {
 
              // --- Check if we need to wait for journal animation ---
-             const isJournal = event.type === 'journal';
-             const hasNoObjectives = !event.objectives || event.objectives.length === 0;
+            const isJournal = event.type === 'journal';
+            const pendingQueue = (typeof journalQueue !== 'undefined' && Array.isArray(journalQueue)) ? journalQueue.some(q => q.eventId === eventId) : false;
+            const typingThisEvent = (typeof journalCurrentEventId !== 'undefined') && journalCurrentEventId === eventId;
 
-             if (isJournal && hasNoObjectives) {
-                 // This is a simple journal entry. Its "objectives" (none) are met.
-                 // Set the waiting flag and DO NOT add to newlyCompletedIds yet.
+            if (isJournal && (pendingQueue || typingThisEvent)) {
+                 // The journal text for this event is still typing or queued.
                  this.waitingForJournalEventId = eventId;
-                 console.log(`Event ${eventId} objectives met, now waiting for journal animation.`);
-                 // IMPORTANT: Since we found one to wait for, stop processing further completions in this frame
-                 return; // Exit update early to wait
-             } else {
-                 // Objectives met, and it's either not a journal, or it has objectives.
-                 // Add to the list to be fully completed now.
+                 console.log(`Event ${eventId} objectives met, waiting for journal text to finish.`);
+                 return; // Wait until typing done
+            } else {
                  newlyCompletedIds.push(eventId);
-             }
+            }
              // --- End of check ---
         }
 
@@ -426,9 +420,9 @@ class StoryEvent {
                 break;
             case "journal":
                  if (this.title) {
-                    addJournalEntry(`${this.title}:\n${this.narrative}`); // Combine if title exists
+                    addJournalEntry(`${this.title}:\n${this.narrative}`, this.id); // Combine if title exists
                  } else {
-                    addJournalEntry(this.narrative);
+                    addJournalEntry(this.narrative, this.id);
                  }
                 break;
             default:
