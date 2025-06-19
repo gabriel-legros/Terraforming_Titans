@@ -32,7 +32,7 @@ const projectParameters = {
     cost: {
     },
     duration: 180000,  // Duration of the project in milliseconds
-    description: "Use chemical rockets to import colonists from Earth",
+    description: "Use chemical rockets to import colonists",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
     unlocked: false,

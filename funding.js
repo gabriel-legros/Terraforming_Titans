@@ -35,7 +35,7 @@ class FundingModule extends EffectableEntity {
 
   applySetFundingRate(effect) {
     if (typeof effect.value === 'number') {
-      this.fundingRate += effect.value;
+      this.fundingRate = effect.value;
     }
   }
 }
