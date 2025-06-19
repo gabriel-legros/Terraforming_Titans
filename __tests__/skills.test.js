@@ -90,4 +90,31 @@ describe('SkillManager save/load', () => {
       expect.objectContaining({ value: 8, sourceId: 'scanning_speed' })
     );
   });
+
+  test('resetSkillTree clears ranks and effects', () => {
+    global.removeEffect = jest.fn();
+    const data = {
+      test: {
+        id: 'test',
+        name: 'Test Skill',
+        description: 'desc',
+        cost: 1,
+        maxRank: 2,
+        effect: { target: 'global', type: 'dummy', baseValue: 1, perRank: true }
+      }
+    };
+    const manager = new SkillManager(data);
+    manager.skillPoints = 5;
+    manager.unlockSkill('test');
+    manager.upgradeSkill('test');
+
+    manager.resetSkillTree();
+
+    expect(manager.skillPoints).toBe(0);
+    expect(manager.skills.test.rank).toBe(0);
+    expect(manager.skills.test.unlocked).toBe(false);
+    expect(global.removeEffect).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: 'test', target: 'global' })
+    );
+  });
 });
