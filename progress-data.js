@@ -787,6 +787,28 @@ progressData = {
         reward: [
         ],
         special : 'clearJournal',
+        nextChapter: "chapter4.11"
+      },
+      {
+        id: "chapter4.11",
+        type: "journal",
+        narrative: "Receiving transmission...\\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Earth, others want to help however they can. The Mars Terraforming Committee has voted to support your mission with their best minds. Advanced research facilities are at your disposal.'",
+        objectives: [],
+        reward: [
+          {
+            target: 'resource',
+            resourceType: 'colony',
+            targetId: 'advancedResearch',
+            type: 'enable'
+          },
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'advancedResearchUnlocked',
+            value: true
+          }
+        ],
+        special : 'clearJournal',
         nextChapter: null
       }
     ]
