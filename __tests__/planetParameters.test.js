@@ -14,4 +14,10 @@ describe('getPlanetParameters', () => {
     expect(unknown.name).toBe(defaultPlanetParameters.name);
     expect(unknown.fundingRate).toBe(defaultPlanetParameters.fundingRate);
   });
+  test('default planet includes advanced research resource', () => {
+    const params = getPlanetParameters('mars');
+    expect(params.resources.colony.advancedResearch).toBeDefined();
+    expect(params.resources.colony.advancedResearch.hasCap).toBe(false);
+    expect(params.resources.colony.advancedResearch.unlocked).toBe(false);
+  });
 });
