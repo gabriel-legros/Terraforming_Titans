@@ -45,6 +45,9 @@ class EffectableEntity {
         effectsToRemove.forEach(effect => {
           if (effect.type === 'booleanFlag') {
             this.booleanFlags.delete(effect.flagId);
+            if (typeof this[effect.flagId] === 'boolean') {
+              this[effect.flagId] = false;
+            }
           }
         });
     
@@ -359,16 +362,22 @@ class EffectableEntity {
       }
     }
 
+
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
       const { flagId, value } = effect;
       if (value) {
-        this.booleanFlags.add(flagId); // Add the flag to the Set
-        console.log(`Boolean flag "${flagId}" set to true for ${this.name}.`);
+        this.booleanFlags.add(flagId);
       } else {
-        this.booleanFlags.delete(flagId); // Remove the flag from the Set
-        console.log(`Boolean flag "${flagId}" set to false for ${this.name}.`);
+        this.booleanFlags.delete(flagId);
       }
+
+      if (typeof this[flagId] === 'boolean') {
+        this[flagId] = value;
+      }
+
+
+      console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
     }
 
     // Method to check if a boolean flag is set
