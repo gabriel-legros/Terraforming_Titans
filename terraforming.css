@@ -47,3 +47,7 @@
   .terraforming-target {
     font-size: 14px;
   }
+
+  .no-margin {
+    margin: 0;
+  }
