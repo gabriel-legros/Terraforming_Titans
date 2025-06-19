@@ -6,7 +6,8 @@ class Research {
       this.id = id;
       this.name = name;
       this.description = description;
-      this.cost = cost.research;
+      // store the entire cost object so researches can use different resources
+      this.cost = cost;
       this.prerequisites = prerequisites;
       this.effects = effects;
       this.isResearched = false; // Flag indicating if the research has been completed
@@ -95,7 +96,12 @@ class Research {
       const research = this.getResearchById(id);
       if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
         research.isResearched = true;
-        resources.colony.research.value -= research.cost; // Deduct the research cost
+        if (research.cost.research) {
+          resources.colony.research.value -= research.cost.research;
+        }
+        if (research.cost.advancedResearch) {
+          resources.colony.advancedResearch.value -= research.cost.advancedResearch;
+        }
         console.log(`Research "${research.name}" has been completed.`);
         this.applyResearchEffects(research); // Apply the effects of the research
       } else {
@@ -130,7 +136,13 @@ class Research {
 
   // Helper Functions
   function canAffordResearch(researchItem) {
-    return resources.colony.research.value >= researchItem.cost;
+    if (researchItem.cost.research && resources.colony.research.value < researchItem.cost.research) {
+      return false;
+    }
+    if (researchItem.cost.advancedResearch && resources.colony.advancedResearch.value < researchItem.cost.advancedResearch) {
+      return false;
+    }
+    return true;
   }
   
 // Initializes the research system

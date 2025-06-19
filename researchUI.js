@@ -1,5 +1,16 @@
 let completedResearchHidden = false; // Initialize the toggle state
 
+function formatResearchCost(cost) {
+    const parts = [];
+    if (cost.research) {
+        parts.push(`${formatNumber(cost.research, true)} Research Points`);
+    }
+    if (cost.advancedResearch) {
+        parts.push(`${formatNumber(cost.advancedResearch, true)} Advanced Research`);
+    }
+    return parts.join(' + ');
+}
+
 function updateAllResearchButtons(researchData) {
     const researchTabs = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
     researchTabs.forEach((tab) => {
@@ -118,7 +129,7 @@ function loadResearchCategory(category) {
 
         const researchCost = document.createElement('p');
         researchCost.classList.add('research-cost');
-        researchCost.textContent = `Cost: ${formatNumber(research.cost, true)} Research Points`;
+        researchCost.textContent = `Cost: ${formatResearchCost(research.cost)}`;
 
         // Append button, cost, and description to the research container
         researchContainer.appendChild(researchButton);
