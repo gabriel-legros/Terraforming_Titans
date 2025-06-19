@@ -63,6 +63,8 @@ function processNextJournalEntry() {
 function loadJournalEntries(entries) {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Clear existing journal entries
+  journalQueue = [];
+  journalTyping = false;
 
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
@@ -88,6 +90,8 @@ function clearJournal() {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Remove all entries from the display
   journalEntriesData = []; // Clear the stored data array
+  journalQueue = [];
+  journalTyping = false;
 }
 
 function updateJournalAlert() {
