@@ -219,6 +219,7 @@ function createTemperatureBox(row) {
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
       <p>Emissivity: <span id="emissivity"></span></p>
+      <p>Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
       <table>
         <thead>
           <tr>
@@ -267,6 +268,11 @@ function createTemperatureBox(row) {
 
     const emissivity = document.getElementById('emissivity');
     emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
+
+    const windMultiplier = document.getElementById('wind-turbine-multiplier');
+    if (windMultiplier) {
+      windMultiplier.textContent = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
+    }
   
     // Iterate through gases defined in the global resources (which the UI table expects)
     for (const gas in resources.atmospheric) {

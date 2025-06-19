@@ -26,6 +26,7 @@ describe('terraforming summary UI creation', () => {
       life: { name: 'Life' }, magnetosphere: { name: 'Mag' },
       celestialParameters: { albedo: 0, gravity: 1, radius: 1 },
       calculateSolarPanelMultiplier: () => 1,
+      calculateWindTurbineMultiplier: () => 1,
       getAtmosphereStatus: () => true,
       getLuminosityStatus: () => true,
       getMagnetosphereStatus: () => true,

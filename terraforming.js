@@ -35,6 +35,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
+const KPA_PER_ATM = 101.325;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.0007815298782079626;
 const EQUILIBRIUM_METHANE_PARAMETER = 1.465091239311071e-11;
@@ -1111,6 +1112,12 @@ class Terraforming extends EffectableEntity{
       return this.luminosity.modifiedSolarFlux / SOLAR_PANEL_BASE_LUMINOSITY;
     }
 
+    calculateWindTurbineMultiplier(){
+      const pressureKPa = this.calculateTotalPressure();
+      const pressureAtm = pressureKPa / KPA_PER_ATM;
+      return Math.sqrt(pressureAtm);
+    }
+
     calculateColonyEnergyPenalty() {
       const zones = this.temperature.zones;
       const baseTemperature = BASE_COMFORTABLE_TEMPERATURE;
@@ -1147,6 +1154,8 @@ class Terraforming extends EffectableEntity{
     applyTerraformingEffects(){
       const solarPanelMultiplier = this.calculateSolarPanelMultiplier();
 
+      const windTurbineMultiplier = this.calculateWindTurbineMultiplier();
+
       const solarPanelEffect = {
         effectId : 'luminosity',
         target: 'building',
@@ -1155,6 +1164,15 @@ class Terraforming extends EffectableEntity{
         value: solarPanelMultiplier
       }
       addEffect(solarPanelEffect);
+
+      const windTurbineEffect = {
+        effectId: 'atmosphere',
+        target: 'building',
+        targetId: 'windTurbine',
+        type: 'productionMultiplier',
+        value: windTurbineMultiplier
+      }
+      addEffect(windTurbineEffect);
 
       const lifeLuminosityEffect = {
         effectId: 'luminosity',
