@@ -218,8 +218,6 @@ function createTemperatureBox(row) {
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
-      <p>Emissivity: <span id="emissivity"></span></p>
-      <p>Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
       <table>
         <thead>
           <tr>
@@ -247,6 +245,8 @@ function createTemperatureBox(row) {
     innerHTML += `
         </tbody>
       </table>
+      <p class="no-margin">Optical depth: <span id="optical-depth"></span></p>
+      <p class="no-margin">Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
     `;
   
     atmosphereBox.innerHTML = innerHTML;
@@ -266,8 +266,11 @@ function createTemperatureBox(row) {
     // Calculate total pressure on the fly
     atmosphereCurrent.textContent = terraforming.calculateTotalPressure().toFixed(2);
 
-    const emissivity = document.getElementById('emissivity');
-    emissivity.textContent = terraforming.temperature.emissivity.toFixed(2);
+    const opticalDepth = document.getElementById('optical-depth');
+    if (opticalDepth) {
+      opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(2);
+    }
+
 
     const windMultiplier = document.getElementById('wind-turbine-multiplier');
     if (windMultiplier) {
