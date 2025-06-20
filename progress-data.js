@@ -800,7 +800,7 @@ progressData = {
       {
         id: "chapter4.11",
         type: "journal",
-        narrative: "Receiving transmission...\\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
         objectives: [],
         reward: [
           {

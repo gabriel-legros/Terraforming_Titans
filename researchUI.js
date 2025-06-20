@@ -164,7 +164,7 @@ function updateCompletedResearchVisibility() {
 }
 
 function updateAdvancedResearchVisibility() {
-    const visible = researchManager && researchManager.advancedResearchUnlocked;
+    const visible = researchManager && researchManager.isBooleanFlagSet('advancedResearchUnlocked');
     const subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
     const content = document.getElementById('advanced-research');
     if (subtab && content) {

@@ -433,7 +433,8 @@ function addOrRemoveEffect(effect, action) {
     'terraforming': terraforming,
     'lifeDesigner': lifeDesigner,
     'lifeManager': lifeManager,
-    'oreScanner': oreScanner
+    'oreScanner': oreScanner,
+    'researchManager' : researchManager
   };
 
   if (effect.target in targetHandlers) {
