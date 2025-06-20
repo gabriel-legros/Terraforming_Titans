@@ -222,3 +222,9 @@ function update(time, delta) {
 
   autosave(delta);      // Call the autosave function
 }
+
+function startNewGame() {
+  defaultPlanet = 'mars';
+  currentPlanetParameters = planetParameters.mars;
+  initializeGameState();
+}
