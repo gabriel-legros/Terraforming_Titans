@@ -723,7 +723,13 @@ class LifeManager extends EffectableEntity {
       // --- Geological Burial Step (after growth/decay) ---
       const burialValue = design.geologicalBurial.value;
       if (burialValue > 0 && secondsMultiplier > 0) {
-          const burialRatePerDay = burialValue * 0.0001; // 0.01% per point per day
+          // Base burial rate is 0.01% per point per day
+          let burialRatePerDay = burialValue * 0.0001;
+          // If CO2 has run out, slow burial drastically as life recycles more efficiently
+          const co2Amount = resources.atmospheric['carbonDioxide']?.value || 0;
+          if (co2Amount <= 0) {
+              burialRatePerDay /= 10000; // 10,000 times slower without CO2
+          }
 
           for (const zoneName of ['tropical', 'temperate', 'polar']) {
               let currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
