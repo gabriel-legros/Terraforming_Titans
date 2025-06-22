@@ -782,7 +782,7 @@ progressData = {
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
-          quantity: 100
+          quantity: 10
         }],
         reward: [],
         nextChapter: "chapter4.10"
