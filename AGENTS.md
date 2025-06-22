@@ -24,6 +24,16 @@ Each planet is divided into tropical, temperate and polar zones via **zones.js**
 which maintain their own temperature and surface conditions.  Various CSS and UI
 scripts implement the tabs, pop-ups and other interface elements.
 
+# Additional Gameplay Systems
+
+- **skills.js** and **skillsUI.js** implement the H.O.P.E. skill tree which grants global bonuses as skill points are earned.
+- **life.js** with **lifeUI.js** lets players design custom lifeforms by spending design points on attributes like temperature tolerance and radiation resistance.
+- **space.js** and **spaceUI.js** provide interplanetary travel once a planet is fully terraformed. The SpaceManager keeps per-planet status.
+- **gold-asteroid.js** spawns a temporary event that awards large production multipliers when clicked.
+- **autobuild.js** automatically constructs buildings based on population ratios when auto-build is enabled.
+- **milestones.js** and **milestonesUI.js** track long term objectives and unlock rewards.
+- **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
+
 # Effectable Entities Design
 
 Gameplay objects that can receive temporary or permanent modifiers extend
