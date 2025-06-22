@@ -158,11 +158,11 @@ const titanOverrides = {
       dryIce : { initialValue: 32083.440978549916 },
       "liquidMethane": {
         "initialValue": 4499999731588.555,
-        "unlocked": false
+        "unlocked": true
       },
       "hydrocarbonIce": {
         "initialValue": 268411.0742637397,
-        "unlocked": false
+        "unlocked": true
       }
     },
     underground: {
@@ -176,7 +176,7 @@ const titanOverrides = {
       atmosphericWater: { initialValue: 0 },
       "atmosphericMethane": {
         "initialValue": 130000000000000,
-        "unlocked": false
+        "unlocked": true
       }
     },
     special: {
