@@ -15,7 +15,11 @@ describe('advanced research unlock chapter', () => {
     expect(ch4_11).toBeDefined();
     const resEffect = ch4_11.reward.find(r => r.target === 'resource' && r.resourceType === 'colony' && r.targetId === 'advancedResearch' && r.type === 'enable');
     const flagEffect = ch4_11.reward.find(r => r.target === 'researchManager' && r.type === 'booleanFlag' && r.flagId === 'advancedResearchUnlocked' && r.value === true);
+    const tabEffect = ch4_11.reward.find(r => r.target === 'tab' && r.type === 'activateTab' && r.targetId === 'research');
+    const subtabEffect = ch4_11.reward.find(r => r.target === 'researchManager' && r.type === 'activateResearchSubtab' && r.targetId === 'advanced-research');
     expect(resEffect).toBeDefined();
     expect(flagEffect).toBeDefined();
+    expect(tabEffect).toBeDefined();
+    expect(subtabEffect).toBeDefined();
   });
 });

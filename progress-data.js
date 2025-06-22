@@ -814,6 +814,18 @@ progressData = {
             type: 'booleanFlag',
             flagId: 'advancedResearchUnlocked',
             value: true
+          },
+          {
+            target: 'tab',
+            targetId: 'research',
+            type: 'activateTab',
+            onLoad: false
+          },
+          {
+            target: 'researchManager',
+            type: 'activateResearchSubtab',
+            targetId: 'advanced-research',
+            onLoad: false
           }
         ],
         nextChapter: null
