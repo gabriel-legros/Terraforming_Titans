@@ -20,6 +20,7 @@ class Research {
       super({ description: 'Manages all research' });
       this.researches = {};
       this.advancedResearchUnlocked = false;
+      this.orderDirty = false;
   
       // Load research data and create Research instances
       for (const category in researchData) {
@@ -35,6 +36,9 @@ class Research {
             )
         );
       }
+
+      this.sortAllResearches();
+      this.orderDirty = false;
     }
 
     update(deltaTime) {
@@ -75,6 +79,7 @@ class Research {
           }
         });
       }
+      this.sortAllResearches();
     }
   
     // Get a specific research by its ID
@@ -91,6 +96,19 @@ class Research {
     // Get all researches within a category
     getResearchesByCategory(category) {
       return this.researches[category] || [];
+    }
+
+    calculateResearchTotalCost(research) {
+      return Object.values(research.cost || {}).reduce((sum, val) => sum + val, 0);
+    }
+
+    sortAllResearches() {
+      for (const category in this.researches) {
+        this.researches[category].sort((a, b) =>
+          this.calculateResearchTotalCost(a) - this.calculateResearchTotalCost(b)
+        );
+      }
+      this.orderDirty = true;
     }
   
     // Check if a research is available (i.e., prerequisites are met)

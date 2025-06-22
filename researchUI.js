@@ -179,6 +179,11 @@ function updateAdvancedResearchVisibility() {
 }
 
 function updateResearchUI() {
+    if (researchManager.orderDirty) {
+        const categories = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
+        categories.forEach(category => loadResearchCategory(category));
+        researchManager.orderDirty = false;
+    }
     updateAllResearchButtons(researchManager.researches); // Update research buttons display
     updateCompletedResearchVisibility();
     updateAdvancedResearchVisibility();

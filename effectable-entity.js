@@ -376,6 +376,10 @@ class EffectableEntity {
           research.cost[key] *= effect.value;
         }
       }
+
+      if (typeof this.sortAllResearches === 'function') {
+        this.sortAllResearches();
+      }
     }
 
     applyLifeDesignPointBonus(effect) {
