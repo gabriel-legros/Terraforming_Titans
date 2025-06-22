@@ -816,7 +816,6 @@ progressData = {
             value: true
           }
         ],
-        special : 'clearJournal',
         nextChapter: null
       }
     ]
