@@ -792,18 +792,7 @@ progressData = {
         type: "journal",
         narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is still in chaos and we still don't know what happened to Earth, but we've learned there were actually two beams of light and a giant asteroid, and they all hit Earth at the same time.'",
         objectives: [],
-        reward: [
-        ],
-        special : 'clearJournal',
-        nextChapter: "chapter4.11"
-      },
-      {
-        id: "chapter4.11",
-        type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
-        objectives: [],
-        reward: [
-          {
+        reward: [          {
             target: 'resource',
             resourceType: 'colony',
             targetId: 'advancedResearch',
@@ -828,18 +817,27 @@ progressData = {
             onLoad: false
           }
         ],
-        nextChapter: "chapter4.12"
+        special : 'clearJournal',
+        nextChapter: "chapter4.11"
       },
       {
-        id: "chapter4.12",
+        id: "chapter4.11",
         type: "journal",
-        narrative: "Receiving transmission...\\n  'H.O.P.E., Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        narrative: "'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 100
         }],
+        reward: [],
+        nextChapter: "chapter4.12"
+      },
+      {
+        id: "chapter4.12",
+        type: "journal",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        objectives: [],
         reward: [
           {
             target: 'project',
@@ -858,7 +856,7 @@ progressData = {
       {
         id: "chapter4.13",
         type: "journal",
-        narrative: "Launch the Earth Recon Probe special project to continue investigating Earth's fate.",
+        narrative: "Complete the Earth Recon Probe special project to investigate Earth's fate.",
         reward: [],
         nextChapter: null
       }
