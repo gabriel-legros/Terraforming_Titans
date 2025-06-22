@@ -91,18 +91,25 @@ class GoldenAsteroid {
           this.active = true;
           this.duration = duration;
           this.spawnTime = Date.now();
-    
+
           this.element = document.createElement('img');
           this.element.className = 'golden-asteroid';
           this.element.src = 'images/asteroid.png';
           this.element.addEventListener('click', this.onClick.bind(this));
-    
+
           const gameContainer = document.getElementById('game-container');
-          const x = Math.random() * (gameContainer.clientWidth - this.element.width);
-          const y = Math.random() * (Math.min(gameContainer.clientHeight, 800) - this.element.height);
-          this.element.style.left = `${x}px`;
-          this.element.style.top = `${y}px`;
-    
+
+          this.element.onload = () => {
+            const width = this.element.width;
+            const height = this.element.height;
+            const containerWidth = gameContainer.clientWidth;
+            const containerHeight = Math.min(gameContainer.clientHeight, 800);
+            const x = Math.random() * (containerWidth - width);
+            const y = Math.random() * (containerHeight - height);
+            this.element.style.left = `${x}px`;
+            this.element.style.top = `${y}px`;
+          };
+
           gameContainer.appendChild(this.element);
         }
       }
