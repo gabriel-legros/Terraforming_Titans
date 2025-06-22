@@ -953,6 +953,57 @@ const researchParameters = {
     ],
     advanced: [
       {
+        id: 'modular_nuclear_reactor',
+        name: 'Modular Nuclear Reactor',
+        description: 'Miniaturizes fission reactors and makes their research affordable.',
+        cost: { advancedResearch: 1000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            targetId: 'fission_plant1',
+            type: 'researchCostMultiplier',
+            value: 0.01
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'productionMultiplier',
+            value: 0.01
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'consumptionMultiplier',
+            value: 0.01
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: 'metal',
+            value: 0.01
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: 'components',
+            value: 0.01
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'resourceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: 'electronics',
+            value: 0.01
+          }
+        ]
+      },
+      {
         id: 'hyperion_lantern',
         name: 'Hyperion Lantern',
         description: 'Research the construction of a large orbital facility that increases planetary luminosity.',

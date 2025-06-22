@@ -157,6 +157,9 @@ class EffectableEntity {
         case 'projectDurationReduction':
           this.applyProjectDurationReduction(effect);
           break;
+        case 'researchCostMultiplier':
+          this.applyResearchCostMultiplier(effect);
+          break;
         case 'lifeDesignPointBonus':
           this.applyLifeDesignPointBonus(effect);
           break;
@@ -352,6 +355,25 @@ class EffectableEntity {
           const progressRatio = (project.startingDuration - project.remainingTime) / project.startingDuration;
           project.startingDuration = newDuration;
           project.remainingTime = newDuration * (1 - progressRatio);
+        }
+      }
+    }
+
+    applyResearchCostMultiplier(effect) {
+      if (!this.researches) return;
+
+      for (const category in this.researches) {
+        const research = this.researches[category].find(r => r.id === effect.targetId);
+        if (!research) continue;
+
+        if (!research.originalCost) {
+          research.originalCost = JSON.parse(JSON.stringify(research.cost));
+        } else {
+          research.cost = JSON.parse(JSON.stringify(research.originalCost));
+        }
+
+        for (const key in research.cost) {
+          research.cost[key] *= effect.value;
         }
       }
     }
