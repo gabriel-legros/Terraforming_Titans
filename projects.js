@@ -81,6 +81,17 @@ class Project extends EffectableEntity {
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
     const cost = this.getEffectiveCost();
+    if (this.attributes.costDoubling) {
+      const multiplier = Math.pow(2, this.repeatCount);
+      const scaledCost = {};
+      for (const resourceCategory in cost) {
+        scaledCost[resourceCategory] = {};
+        for (const resource in cost[resourceCategory]) {
+          scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
+        }
+      }
+      return scaledCost;
+    }
     if (this.attributes.costScaling) {
       const multiplier = this.repeatCount + 1;
       const scaledCost = {};
@@ -253,6 +264,13 @@ class Project extends EffectableEntity {
     // Apply completion effect if applicable
     if (this.attributes && this.attributes.completionEffect) {
       this.applyCompletionEffect();
+    }
+
+    if (this.attributes && Array.isArray(this.attributes.storySteps)) {
+      const step = this.attributes.storySteps[this.repeatCount - 1];
+      if (step && typeof addJournalEntry === 'function') {
+        addJournalEntry(step);
+      }
     }
 
   }

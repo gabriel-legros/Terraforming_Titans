@@ -828,6 +828,38 @@ progressData = {
             onLoad: false
           }
         ],
+        nextChapter: "chapter4.12"
+      },
+      {
+        id: "chapter4.12",
+        type: "journal",
+        narrative: "Receiving transmission...\\n  'H.O.P.E., Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 100
+        }],
+        reward: [
+          {
+            target: 'project',
+            targetId: 'earthProbe',
+            type: 'enable'
+          },
+          {
+            target: 'projectManager',
+            type: 'activateProjectSubtab',
+            targetId: 'special-projects',
+            onLoad: false
+          }
+        ],
+        nextChapter: "chapter4.13"
+      },
+      {
+        id: "chapter4.13",
+        type: "journal",
+        narrative: "Launch the Earth Recon Probe special project to continue investigating Earth's fate.",
+        reward: [],
         nextChapter: null
       }
     ]

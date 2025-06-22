@@ -344,6 +344,38 @@ const projectParameters = {
     disposalAmount : 1000000
     }
   },
+  earthProbe : {
+    name : "Earth Recon Probe",
+    category : "special",
+    cost : {
+      colony : {
+        components : 10,
+        electronics : 10,
+        energy : 10000
+      }
+    },
+    duration : 72000,
+    description : "Send an automated probe back to Earth to search for clues.",
+    repeatable : true,
+    maxRepeatCount : 10,
+    unlocked : false,
+    attributes : {
+      planet : 'titan',
+      costDoubling : true,
+      storySteps : [
+        'Probe launched. Earth is shattered into enormous fragments.',
+        'Vast seas of molten rock glow across the debris.',
+        'No continents remain—only swirling magma clouds.',
+        'Radiation saturates the wreckage of former cities.',
+        'Scorched fragments show traces of precision energy beams.',
+        'Spectral data hints at positron annihilation on a planetary scale.',
+        'Cratered pieces reveal an impact from a colossal asteroid.',
+        'All signs indicate these cataclysms struck within minutes.',
+        'The debris now spreads out like a newborn asteroid belt.',
+        'There is no surface left to land on—only scattered remnants.'
+      ]
+    }
+  },
   hyperionLantern: {
     name: "Hyperion Lantern",
     category: "infrastructure",
