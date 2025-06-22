@@ -18,7 +18,7 @@ describe('chapter4 colonist milestone', () => {
       type: 'collection',
       resourceType: 'colony',
       resource: 'colonists',
-      quantity: 100
+      quantity: 10
     });
     expect(chapter.narrative).toMatch(/two beams of light.*giant asteroid/);
     expect(chapter.nextChapter).toBe('chapter4.11');
