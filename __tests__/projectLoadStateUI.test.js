@@ -6,7 +6,7 @@ const vm = require('vm');
 
 describe('ProjectManager loadState', () => {
   test('clears and rerenders project UI', () => {
-    const dom = new JSDOM(`<!DOCTYPE html><div id="resources-projects-list" class="projects-list"></div><div id="infrastructure-projects-list" class="projects-list"></div>`, { runScripts: 'outside-only' });
+    const dom = new JSDOM(`<!DOCTYPE html><div id="resources-projects-list" class="projects-list"></div><div id="infrastructure-projects-list" class="projects-list"></div><div id="special-projects-list" class="projects-list"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
     ctx.initializeProjectsUI = function() {

@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(category).classList.add('active');
     });
   });
+  updateSpecialProjectsVisibility();
 });
 
 function renderProjects() {
@@ -38,6 +39,7 @@ function renderProjects() {
   });
 
   updateEmptyProjectMessages();
+  updateSpecialProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -456,7 +458,10 @@ function updateProjectUI(projectName) {
   // Update the project item's visibility based on the unlocked state
   const projectItem = elements.projectItem;
   if (projectItem) {
-    if (project.unlocked) {
+    const planetOk = !project.attributes.planet ||
+      (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+       spaceManager.getCurrentPlanetKey() === project.attributes.planet);
+    if (project.unlocked && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
@@ -762,4 +767,42 @@ function updateEmptyProjectMessages() {
       message.remove();
     }
   });
+}
+
+function updateSpecialProjectsVisibility() {
+  const subtab = document.querySelector('.projects-subtab[data-subtab="special-projects"]');
+  const content = document.getElementById('special-projects');
+  if (!subtab || !content) return;
+
+  let visible = false;
+  if (projectManager && projectManager.projects) {
+    visible = Object.values(projectManager.projects).some(p => {
+      const planetOk = !p.attributes.planet ||
+        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
+      return p.category === 'special' && p.unlocked && planetOk;
+    });
+  }
+
+  if (visible) {
+    subtab.classList.remove('hidden');
+    content.classList.remove('hidden');
+  } else {
+    subtab.classList.add('hidden');
+    content.classList.add('hidden');
+  }
+}
+
+function activateProjectSubtab(subtabId) {
+  document.querySelectorAll('.projects-subtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.projects-subtab-content').forEach(c => c.classList.remove('active'));
+
+  const subtab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
+  const content = document.getElementById(subtabId);
+  if (subtab && content) {
+    subtab.classList.remove('hidden');
+    content.classList.remove('hidden');
+    subtab.classList.add('active');
+    content.classList.add('active');
+  }
 }
