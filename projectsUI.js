@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(category).classList.add('active');
     });
   });
+  updateStoryProjectsVisibility();
 });
 
 function renderProjects() {
@@ -38,6 +39,7 @@ function renderProjects() {
   });
 
   updateEmptyProjectMessages();
+  updateStoryProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -49,7 +51,7 @@ function initializeProjectsUI() {
 
 function createProjectItem(project) {
   const projectItem = document.createElement('div');
-  projectItem.classList.add('special-projects-item');
+  projectItem.classList.add('story-projects-item');
 
   // Project Name
   const nameElement = document.createElement('h3'); // Use h3 or other heading tag to display the name
@@ -456,7 +458,10 @@ function updateProjectUI(projectName) {
   // Update the project item's visibility based on the unlocked state
   const projectItem = elements.projectItem;
   if (projectItem) {
-    if (project.unlocked) {
+    const planetOk = !project.attributes.planet ||
+      (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+       spaceManager.getCurrentPlanetKey() === project.attributes.planet);
+    if (project.unlocked && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
@@ -747,7 +752,7 @@ function updateEmptyProjectMessages() {
     const messageId = `${container.id}-empty-message`;
     let message = document.getElementById(messageId);
 
-    const hasVisible = Array.from(container.getElementsByClassName('special-projects-item'))
+    const hasVisible = Array.from(container.getElementsByClassName('story-projects-item'))
       .some(item => item.style.display !== 'none');
 
     if (!hasVisible) {
@@ -762,4 +767,42 @@ function updateEmptyProjectMessages() {
       message.remove();
     }
   });
+}
+
+function updateStoryProjectsVisibility() {
+  const subtab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');
+  const content = document.getElementById('story-projects');
+  if (!subtab || !content) return;
+
+  let visible = false;
+  if (projectManager && projectManager.projects) {
+    visible = Object.values(projectManager.projects).some(p => {
+      const planetOk = !p.attributes.planet ||
+        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
+      return p.category === 'story' && p.unlocked && planetOk;
+    });
+  }
+
+  if (visible) {
+    subtab.classList.remove('hidden');
+    content.classList.remove('hidden');
+  } else {
+    subtab.classList.add('hidden');
+    content.classList.add('hidden');
+  }
+}
+
+function activateProjectSubtab(subtabId) {
+  document.querySelectorAll('.projects-subtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.projects-subtab-content').forEach(c => c.classList.remove('active'));
+
+  const subtab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
+  const content = document.getElementById(subtabId);
+  if (subtab && content) {
+    subtab.classList.remove('hidden');
+    content.classList.remove('hidden');
+    subtab.classList.add('active');
+    content.classList.add('active');
+  }
 }

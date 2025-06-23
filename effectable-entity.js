@@ -126,6 +126,11 @@ class EffectableEntity {
             activateResearchSubtab(effect.targetId);
           }
           break;
+        case 'activateProjectSubtab':
+          if (typeof activateProjectSubtab === 'function') {
+            activateProjectSubtab(effect.targetId);
+          }
+          break;
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
