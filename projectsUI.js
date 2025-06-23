@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(category).classList.add('active');
     });
   });
-  updateSpecialProjectsVisibility();
+  updateStoryProjectsVisibility();
 });
 
 function renderProjects() {
@@ -39,7 +39,7 @@ function renderProjects() {
   });
 
   updateEmptyProjectMessages();
-  updateSpecialProjectsVisibility();
+  updateStoryProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -769,9 +769,9 @@ function updateEmptyProjectMessages() {
   });
 }
 
-function updateSpecialProjectsVisibility() {
-  const subtab = document.querySelector('.projects-subtab[data-subtab="special-projects"]');
-  const content = document.getElementById('special-projects');
+function updateStoryProjectsVisibility() {
+  const subtab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');
+  const content = document.getElementById('story-projects');
   if (!subtab || !content) return;
 
   let visible = false;
@@ -780,7 +780,7 @@ function updateSpecialProjectsVisibility() {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
-      return p.category === 'special' && p.unlocked && planetOk;
+      return p.category === 'story' && p.unlocked && planetOk;
     });
   }
 

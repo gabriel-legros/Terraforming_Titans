@@ -346,7 +346,7 @@ const projectParameters = {
   },
   earthProbe : {
     name : "Earth Recon Probe",
-    category : "special",
+    category : "story",
     cost : {
       colony : {
         components : 10,

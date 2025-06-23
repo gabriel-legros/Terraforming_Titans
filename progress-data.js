@@ -847,7 +847,7 @@ progressData = {
           {
             target: 'projectManager',
             type: 'activateProjectSubtab',
-            targetId: 'special-projects',
+            targetId: 'story-projects',
             onLoad: false
           }
         ],
