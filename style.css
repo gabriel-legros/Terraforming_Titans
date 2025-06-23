@@ -133,6 +133,11 @@ body {
     color: #333;
 }
 
+#current-objective {
+    margin: 5px 0;
+    font-weight: bold;
+}
+
 #special-messages {
     min-height: 65px;
 }

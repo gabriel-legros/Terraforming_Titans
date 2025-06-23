@@ -131,6 +131,9 @@ class StoryManager {
                 }
             }
         }
+
+        // Update the displayed objective after processing events
+        this.updateCurrentObjectiveUI();
     }
 
     activateEvent(event) { // Keep as is
@@ -246,9 +249,76 @@ class StoryManager {
                  }
                  return false;
             default:
-                 console.error(`Unknown objective type: ${objective.type}`);
-                 return false;
-         }
+                console.error(`Unknown objective type: ${objective.type}`);
+                return false;
+        }
+    }
+
+    // Convert an objective object into a progress string
+    describeObjective(objective) {
+        if (!objective) return '';
+        switch (objective.type) {
+            case 'collection': {
+                const resCat = resources[objective.resourceType] || {};
+                const current = resCat[objective.resource]?.value || 0;
+                return `${objective.resource}: ${Math.floor(current)}/${objective.quantity}`;
+            }
+            case 'building': {
+                const b = buildings[objective.buildingName];
+                const current = b ? b.count : 0;
+                return `${objective.buildingName}: ${current}/${objective.quantity}`;
+            }
+            case 'colony': {
+                const c = colonies[objective.buildingName];
+                const current = c ? c.count : 0;
+                return `${objective.buildingName}: ${current}/${objective.quantity}`;
+            }
+            case 'terraforming': {
+                if (!terraforming) return '';
+                let current = 0;
+                switch (objective.terraformingParameter) {
+                    case 'tropicalTemperature':
+                        current = terraforming.temperature?.zones?.tropical?.value || 0;
+                        break;
+                    case 'tropicalNightTemperature':
+                        current = terraforming.temperature?.zones?.tropical?.night || 0;
+                        break;
+                    case 'tropicalDayTemperature':
+                        current = terraforming.temperature?.zones?.tropical?.day || 0;
+                        break;
+                    case 'pressure':
+                        current = terraforming.calculateTotalPressure ? terraforming.calculateTotalPressure() : 0;
+                        break;
+                    default:
+                        return '';
+                }
+                return `${objective.terraformingParameter}: ${current.toFixed(2)}/${objective.value}`;
+            }
+            default:
+                return '';
+        }
+    }
+
+    // Determine the first incomplete objective from active events
+    getCurrentObjectiveText() {
+        for (const id of this.activeEventIds) {
+            const ev = this.findEventById(id);
+            if (!ev || !ev.objectives) continue;
+            for (const obj of ev.objectives) {
+                if (!this.isObjectiveComplete(obj)) {
+                    return this.describeObjective(obj);
+                }
+            }
+        }
+        return '';
+    }
+
+    updateCurrentObjectiveUI() {
+        if (typeof document === 'undefined') return;
+        const el = document.getElementById('current-objective');
+        if (!el) return;
+        const text = this.getCurrentObjectiveText();
+        el.textContent = text ? `Objective: ${text}` : '';
     }
 
     applyRewards(event) { // Keep as is
