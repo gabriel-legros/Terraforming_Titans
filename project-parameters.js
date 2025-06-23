@@ -354,7 +354,7 @@ const projectParameters = {
         energy : 10000
       }
     },
-    duration : 72000,
+    duration : 300000,
     description : "Send an automated probe back to Earth to search for clues.",
     repeatable : true,
     maxRepeatCount : 10,
