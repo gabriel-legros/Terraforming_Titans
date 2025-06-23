@@ -15,7 +15,7 @@ describe('Earth Recon Probe project', () => {
     expect(project.maxRepeatCount).toBe(10);
     expect(project.attributes.costDoubling).toBe(true);
     expect(project.attributes.planet).toBe('titan');
-    expect(project.category).toBe('special');
+    expect(project.category).toBe('story');
   });
 
   test('cost doubles with repeat count', () => {
