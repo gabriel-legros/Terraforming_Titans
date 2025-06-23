@@ -260,22 +260,33 @@ class StoryManager {
         switch (objective.type) {
             case 'collection': {
                 const resCat = resources[objective.resourceType] || {};
-                const current = resCat[objective.resource]?.value || 0;
-                return `${objective.resource}: ${Math.floor(current)}/${objective.quantity}`;
+                const resObj = resCat[objective.resource] || {};
+                const current = resObj.value || 0;
+                const name = resObj.displayName || objective.resource;
+                return `${name}: ${Math.floor(current)}/${objective.quantity}`;
             }
             case 'building': {
                 const b = buildings[objective.buildingName];
                 const current = b ? b.count : 0;
-                return `${objective.buildingName}: ${current}/${objective.quantity}`;
+                const name = b ? b.displayName : objective.buildingName;
+                return `${name}: ${current}/${objective.quantity}`;
             }
             case 'colony': {
                 const c = colonies[objective.buildingName];
                 const current = c ? c.count : 0;
-                return `${objective.buildingName}: ${current}/${objective.quantity}`;
+                const name = c ? c.displayName : objective.buildingName;
+                return `${name}: ${current}/${objective.quantity}`;
             }
             case 'terraforming': {
                 if (!terraforming) return '';
                 let current = 0;
+                const names = {
+                    tropicalTemperature: 'Equatorial Temp',
+                    tropicalNightTemperature: 'Equatorial Night Temp',
+                    tropicalDayTemperature: 'Equatorial Day Temp',
+                    pressure: 'Atmospheric Pressure',
+                    complete: 'All Terraforming Parameters Stable'
+                };
                 switch (objective.terraformingParameter) {
                     case 'tropicalTemperature':
                         current = terraforming.temperature?.zones?.tropical?.value || 0;
@@ -289,10 +300,13 @@ class StoryManager {
                     case 'pressure':
                         current = terraforming.calculateTotalPressure ? terraforming.calculateTotalPressure() : 0;
                         break;
+                    case 'complete':
+                        return names.complete;
                     default:
                         return '';
                 }
-                return `${objective.terraformingParameter}: ${current.toFixed(2)}/${objective.value}`;
+                const name = names[objective.terraformingParameter] || objective.terraformingParameter;
+                return `${name}: ${current.toFixed(2)}/${objective.value}`;
             }
             default:
                 return '';
