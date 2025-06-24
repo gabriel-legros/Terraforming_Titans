@@ -1,4 +1,5 @@
 function createPopup(title, text, buttonText) {
+  window.popupActive = true; // Flag that a popup is active
   game.scene.pause('mainScene');
   // Create the overlay div
   const overlay = document.createElement('div');
@@ -30,6 +31,7 @@ function createPopup(title, text, buttonText) {
   // Close button event listener
   closeButton.addEventListener('click', () => {
     document.body.removeChild(overlay); // Remove the pop-up
+    window.popupActive = false; // Clear popup flag
     game.scene.resume('mainScene');  // Resume the 'mainScene' scene
   });
 
