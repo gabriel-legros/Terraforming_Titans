@@ -28,4 +28,19 @@ describe('Solis funding upgrade', () => {
     manager.purchaseUpgrade('funding');
     expect(fundingModule.fundingRate).toBe(7);
   });
+
+  test('setFundingRate effect persists when purchasing upgrades', () => {
+    const fundingModule = new FundingModule({}, 0);
+    global.fundingModule = fundingModule;
+    global.addEffect = (effect) => fundingModule.addAndReplace(effect);
+
+    // Apply story effect that sets funding rate to 3
+    addEffect({ target: 'fundingModule', type: 'setFundingRate', value: 3 });
+
+    const manager = new SolisManager();
+    manager.solisPoints = 1;
+
+    manager.purchaseUpgrade('funding');
+    expect(fundingModule.fundingRate).toBe(4);
+  });
 });
