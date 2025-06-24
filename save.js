@@ -154,6 +154,9 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.solisManager){
       solisManager.loadState(gameState.solisManager);
+      if (typeof solisManager.reapplyEffects === 'function') {
+        solisManager.reapplyEffects();
+      }
     }
 
     if(gameState.lifeDesigner){

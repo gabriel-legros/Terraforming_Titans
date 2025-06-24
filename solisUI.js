@@ -51,6 +51,14 @@ function initializeSolisUI() {
       updateSolisUI();
     });
   }
+
+  const fundingBtn = document.getElementById('solis-shop-funding-button');
+  if (fundingBtn) {
+    fundingBtn.addEventListener('click', () => {
+      solisManager.purchaseUpgrade('funding');
+      updateSolisUI();
+    });
+  }
   
   // New: Set initial button text
   if (multBtn) multBtn.textContent = '+';
@@ -118,6 +126,13 @@ function updateSolisUI() {
       cooldownDiv.innerHTML = '';
     }
   }
+
+  const fundingCost = document.getElementById('solis-shop-funding-cost');
+  const fundingCount = document.getElementById('solis-shop-funding-count');
+  const fundingBtn = document.getElementById('solis-shop-funding-button');
+  if (fundingCost) fundingCost.textContent = solisManager.getUpgradeCost('funding');
+  if (fundingCount) fundingCount.textContent = solisManager.shopUpgrades.funding.purchases;
+  if (fundingBtn) fundingBtn.disabled = solisManager.solisPoints < solisManager.getUpgradeCost('funding');
 }
 
 if (typeof module !== 'undefined' && module.exports) {

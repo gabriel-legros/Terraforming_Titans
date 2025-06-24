@@ -15,6 +15,17 @@ class SolisManager {
     this.postCompletionCooldownUntil = 0;
     this.questInterval = 15 * 60 * 1000; // 15 minutes
     this.refreshCooldown = 5 * 60 * 1000; // 5 minutes
+
+    // Purchasable upgrades for the Solis shop
+    this.shopUpgrades = {
+      funding: { baseCost: 1, purchases: 0 },
+      metal: { baseCost: 1, purchases: 0 },
+      components: { baseCost: 1, purchases: 0 },
+      electronics: { baseCost: 1, purchases: 0 },
+      glass: { baseCost: 1, purchases: 0 },
+      water: { baseCost: 1, purchases: 0 },
+      androids: { baseCost: 10, purchases: 0 }
+    };
   }
 
   availableResources() {
@@ -85,6 +96,43 @@ class SolisManager {
     }
   }
 
+  getUpgradeCost(key) {
+    const up = this.shopUpgrades[key];
+    return up ? up.baseCost * (up.purchases + 1) : 0;
+  }
+
+  purchaseUpgrade(key) {
+    const up = this.shopUpgrades[key];
+    if (!up) return false;
+    const cost = this.getUpgradeCost(key);
+    if (this.solisPoints < cost) return false;
+    this.solisPoints -= cost;
+    up.purchases += 1;
+    if (key === 'funding' && typeof addEffect === 'function') {
+      addEffect({
+        target: 'fundingModule',
+        type: 'fundingBonus',
+        value: up.purchases,
+        effectId: 'solisFunding',
+        sourceId: 'solisShop'
+      });
+    }
+    return true;
+  }
+
+  reapplyEffects() {
+    const count = this.shopUpgrades.funding.purchases;
+    if (count > 0 && typeof addEffect === 'function') {
+      addEffect({
+        target: 'fundingModule',
+        type: 'fundingBonus',
+        value: count,
+        effectId: 'solisFunding',
+        sourceId: 'solisShop'
+      });
+    }
+  }
+
   update(delta) {
     const now = Date.now();
     if (!this.currentQuest) {
@@ -106,7 +154,11 @@ class SolisManager {
       currentQuest: this.currentQuest,
       lastQuestTime: this.lastQuestTime,
       lastRefreshTime: this.lastRefreshTime,
-      postCompletionCooldownUntil: this.postCompletionCooldownUntil
+      postCompletionCooldownUntil: this.postCompletionCooldownUntil,
+      upgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
+        o[k] = this.shopUpgrades[k].purchases;
+        return o;
+      }, {})
     };
   }
 
@@ -117,6 +169,13 @@ class SolisManager {
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
     this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
+    if (data.upgrades) {
+      for (const k in data.upgrades) {
+        if (this.shopUpgrades[k]) {
+          this.shopUpgrades[k].purchases = data.upgrades[k];
+        }
+      }
+    }
   }
 }
 

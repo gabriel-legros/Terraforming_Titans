@@ -1,0 +1,31 @@
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const { SolisManager } = require('../solis.js');
+const EffectableEntity = require('../effectable-entity.js');
+
+describe('Solis funding upgrade', () => {
+  let FundingModule;
+  beforeAll(() => {
+    const fundingCode = fs.readFileSync(path.join(__dirname, '..', 'funding.js'), 'utf8');
+    const context = { EffectableEntity };
+    vm.createContext(context);
+    vm.runInContext(fundingCode + '; this.FundingModule = FundingModule;', context);
+    FundingModule = context.FundingModule;
+  });
+
+  test('increases funding rate with each purchase', () => {
+    const fundingModule = new FundingModule({}, 5);
+    global.fundingModule = fundingModule;
+    global.addEffect = (effect) => fundingModule.addAndReplace(effect);
+
+    const manager = new SolisManager();
+    manager.solisPoints = 5;
+
+    manager.purchaseUpgrade('funding');
+    expect(fundingModule.fundingRate).toBe(6);
+
+    manager.purchaseUpgrade('funding');
+    expect(fundingModule.fundingRate).toBe(7);
+  });
+});

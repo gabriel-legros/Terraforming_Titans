@@ -4,7 +4,9 @@ class FundingModule extends EffectableEntity {
     super({config : 'Funding Module'});
 
     this.resources = resources;
-    this.fundingRate = fundingRate; // Set the funding rate from planet parameters
+    this.baseFundingRate = fundingRate; // store the starting funding rate
+    this.fundingBonus = 0; // additional funding from effects
+    this.fundingRate = fundingRate; // effective funding rate
   }
 
   // Method to get the effective production multiplier
@@ -36,6 +38,14 @@ class FundingModule extends EffectableEntity {
   applySetFundingRate(effect) {
     if (typeof effect.value === 'number') {
       this.fundingRate = effect.value;
+    }
+  }
+
+  // New effect handler for additive funding bonuses
+  applyFundingBonus(effect) {
+    if (typeof effect.value === 'number') {
+      this.fundingBonus = effect.value;
+      this.fundingRate = this.baseFundingRate + this.fundingBonus;
     }
   }
 }
