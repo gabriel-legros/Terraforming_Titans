@@ -293,7 +293,7 @@ class MilestonesManager {
     
         // Calculate happiness bonus
         const happinessBonus = totalMilestones > 0 
-            ? 5 * (completedMilestones / totalMilestones) 
+            ? 10 * (completedMilestones / totalMilestones) 
             : 0;
     
         return happinessBonus; // Return as a percentage with 2 decimal places

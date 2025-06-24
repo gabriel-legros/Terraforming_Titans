@@ -171,7 +171,7 @@ class Colony extends Building {
     const nonLuxuryHappiness = Math.min(foodNeed, energyNeed) * 50;
   
     // Calculate happiness from comfort
-    const comfortHappiness = this.baseComfort * 25;
+    const comfortHappiness = this.baseComfort * 20;
   
     // Calculate total luxury happiness
     let totalLuxuryHappiness = 0;
