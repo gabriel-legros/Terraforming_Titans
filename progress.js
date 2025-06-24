@@ -73,6 +73,10 @@ class StoryManager {
     }
 
     update() {
+        // If a pop-up is active, pause story updates until it is closed
+        if (typeof window !== 'undefined' && window.popupActive) {
+            return;
+        }
         // --- Prevent processing completions while waiting for a journal ---
         if (this.waitingForJournalEventId !== null) {
              // console.log(`StoryManager update paused: Waiting for journal event ${this.waitingForJournalEventId}`);
