@@ -131,6 +131,16 @@ class EffectableEntity {
             activateProjectSubtab(effect.targetId);
           }
           break;
+        case 'activateHopeSubtab':
+          if (typeof activateHopeSubtab === 'function') {
+            activateHopeSubtab(effect.targetId);
+          }
+          break;
+        case 'showSolisTab':
+          if (typeof showSolisTab === 'function') {
+            showSolisTab();
+          }
+          break;
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
