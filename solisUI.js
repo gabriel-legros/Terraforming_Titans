@@ -1,4 +1,5 @@
 let solisTabVisible = true;
+let solisUIInitialized = false;
 
 function showSolisTab() {
   solisTabVisible = true;
@@ -17,6 +18,9 @@ function hideSolisTab() {
 }
 
 function initializeSolisUI() {
+  if (solisUIInitialized) {
+    return;
+  }
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
   const multBtn = document.getElementById('solis-multiply-button');
@@ -47,6 +51,8 @@ function initializeSolisUI() {
       updateSolisUI();
     });
   }
+
+  solisUIInitialized = true;
 }
 
 function updateSolisUI() {
@@ -55,6 +61,7 @@ function updateSolisUI() {
   const completeBtn = document.getElementById('solis-complete-button');
   const pointsSpan = document.getElementById('solis-points-value');
   const rewardSpan = document.getElementById('solis-reward');
+  const cooldownDiv = document.getElementById('solis-cooldown');
 
   if (pointsSpan) {
     pointsSpan.textContent = solisManager.solisPoints;
@@ -72,7 +79,9 @@ function updateSolisUI() {
   }
   const now = Date.now();
   if (refreshBtn) {
-    const remaining = solisManager.refreshCooldown - (now - solisManager.lastRefreshTime);
+    const remainingRefresh = solisManager.refreshCooldown - (now - solisManager.lastRefreshTime);
+    const remainingComplete = solisManager.postCompletionCooldownUntil - now;
+    const remaining = Math.max(remainingRefresh, remainingComplete);
     if (remaining > 0) {
       refreshBtn.disabled = true;
       refreshBtn.textContent = `Refresh (${Math.ceil(remaining / 1000)}s)`;
@@ -86,6 +95,16 @@ function updateSolisUI() {
       completeBtn.disabled = false;
     } else {
       completeBtn.disabled = true;
+    }
+  }
+  if (cooldownDiv) {
+    const remainingComplete = solisManager.postCompletionCooldownUntil - now;
+    if (!quest && remainingComplete > 0) {
+      cooldownDiv.classList.remove('hidden');
+      cooldownDiv.textContent = `Next quest in ${Math.ceil(remainingComplete / 1000)}s`;
+    } else {
+      cooldownDiv.classList.add('hidden');
+      cooldownDiv.textContent = '';
     }
   }
 }
