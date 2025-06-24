@@ -51,6 +51,10 @@ function initializeSolisUI() {
       updateSolisUI();
     });
   }
+  
+  // New: Set initial button text
+  if (multBtn) multBtn.textContent = '+';
+  if (divBtn) divBtn.textContent = '-';
 
   solisUIInitialized = true;
 }
@@ -72,9 +76,9 @@ function updateSolisUI() {
   const quest = solisManager.currentQuest;
   if (questText) {
     if (quest) {
-      questText.textContent = `Deliver ${quest.quantity} ${quest.resource}`;
+      questText.innerHTML = `Deliver <span class="solis-quest-quantity">${quest.quantity}</span> units of <span class="solis-quest-resource">${quest.resource}</span>`;
     } else {
-      questText.textContent = 'No quest available';
+      questText.textContent = 'No new quest available at this time.';
     }
   }
   const now = Date.now();
@@ -101,10 +105,17 @@ function updateSolisUI() {
     const remainingComplete = solisManager.postCompletionCooldownUntil - now;
     if (!quest && remainingComplete > 0) {
       cooldownDiv.classList.remove('hidden');
-      cooldownDiv.textContent = `Next quest in ${Math.ceil(remainingComplete / 1000)}s`;
+      const totalCooldown = solisManager.questInterval;
+      const progress = Math.max(0, 1 - remainingComplete / totalCooldown);
+      cooldownDiv.innerHTML = `
+        <span>Next quest in ${Math.ceil(remainingComplete / 1000)}s</span>
+        <div class="solis-progress-bar-container">
+          <div class="solis-progress-bar" style="width: ${progress * 100}%"></div>
+        </div>
+      `;
     } else {
       cooldownDiv.classList.add('hidden');
-      cooldownDiv.textContent = '';
+      cooldownDiv.innerHTML = '';
     }
   }
 }

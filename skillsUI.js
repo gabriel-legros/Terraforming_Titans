@@ -46,65 +46,92 @@ function formatSkillButtonText(skill) {
 function updateSkillButton(skill) {
     const button = document.getElementById(`skill-${skill.id}`);
     if (!button) return;
+
     button.innerHTML = formatSkillButtonText(skill);
-    const locked = !skill.unlocked && !canUnlockSkill(skill.id);
-    button.disabled = locked || skill.rank >= skill.maxRank || skillManager.getUpgradeCost(skill.id) > skillManager.skillPoints;
+
+    const cost = skillManager.getUpgradeCost(skill.id);
+    const canAfford = skillManager.skillPoints >= cost;
+    const isMaxRank = skill.rank >= skill.maxRank;
+    const canUnlock = canUnlockSkill(skill.id);
+
+    button.disabled = (!skill.unlocked && !canUnlock) || isMaxRank || !canAfford;
+
+    button.classList.toggle('unlocked', skill.unlocked && !isMaxRank);
+    button.classList.toggle('max-rank', isMaxRank);
+    button.classList.toggle('can-purchase', canAfford && !isMaxRank && (skill.unlocked || canUnlock));
+    button.classList.toggle('locked', !skill.unlocked && !canUnlock);
 }
 
 function createSkillTree() {
     buildSkillPrereqs();
     const container = document.getElementById('skill-tree');
     if (!container) return;
-    container.innerHTML = '';
-    container.style.position = 'relative';
+
+    container.innerHTML = ''; // Clear previous content
+
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'skill-lines';
-    svg.style.position = 'absolute';
-    svg.style.left = '0';
-    svg.style.top = '0';
-    svg.style.width = '100%';
-    svg.style.height = '100%';
-    svg.style.pointerEvents = 'none';
     container.appendChild(svg);
 
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
+        const pos = skillLayout[id];
+        if (!pos) continue;
+
         const button = document.createElement('button');
         button.id = `skill-${id}`;
         button.classList.add('skill-button');
-        const pos = skillLayout[id] || { row: 0, col: 0 };
-        button.style.position = 'absolute';
-        button.style.left = `${pos.col * 120 + 10}px`;
-        button.style.top = `${pos.row * 120 + 10}px`;
+        button.style.gridRow = pos.row + 1;
+        button.style.gridColumn = pos.col + 1;
+
         button.addEventListener('click', () => purchaseSkill(id));
         container.appendChild(button);
         updateSkillButton(skill);
     }
-    drawSkillConnections();
+
+    // Defer drawing connections to ensure buttons are in the DOM and have dimensions
+    requestAnimationFrame(drawSkillConnections);
 }
 
 function drawSkillConnections() {
     const svg = document.getElementById('skill-lines');
-    if (!svg) return;
-    svg.innerHTML = '';
-    const cell = 120;
-    const margin = 10;
+    const container = document.getElementById('skill-tree');
+    if (!svg || !container) return;
+
+    svg.innerHTML = ''; // Clear existing lines
+
+    const containerRect = container.getBoundingClientRect();
+
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
-        const toPos = skillLayout[id];
-        if (!toPos) continue;
-        const endX = toPos.col * cell + margin + 100;
-        const endY = toPos.row * cell + margin;
-        for (const prereq of skill.requires || []) {
-            const fromPos = skillLayout[prereq];
-            if (!fromPos) continue;
-            const startX = fromPos.col * cell + margin + 100;
-            const startY = fromPos.row * cell + margin + 100;
-            const midY = (startY + endY) / 2;
-            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-            poly.setAttribute('points', `${startX},${startY} ${startX},${midY} ${endX},${midY} ${endX},${endY}`);
-            poly.setAttribute('class', 'skill-connector');
-            svg.appendChild(poly);
+        if (!skill.requires || skill.requires.length === 0) continue;
+
+        const toButton = document.getElementById(`skill-${id}`);
+        if (!toButton) continue;
+
+        const toRect = toButton.getBoundingClientRect();
+        const toX = toRect.left - containerRect.left + toRect.width / 2;
+        const toY = toRect.top - containerRect.top;
+
+        for (const prereqId of skill.requires) {
+            const fromButton = document.getElementById(`skill-${prereqId}`);
+            if (!fromButton) continue;
+
+            const fromRect = fromButton.getBoundingClientRect();
+            const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+            const fromY = fromRect.top - containerRect.top + fromRect.height;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const d = `M ${fromX},${fromY} C ${fromX},${fromY + 40} ${toX},${toY - 40} ${toX},${toY}`;
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'skill-connector');
+            
+            const prereqSkill = skillManager.skills[prereqId];
+            if (prereqSkill && prereqSkill.unlocked) {
+                path.classList.add('unlocked');
+            }
+            
+            svg.appendChild(path);
         }
     }
 }

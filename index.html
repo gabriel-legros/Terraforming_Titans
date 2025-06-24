@@ -319,14 +319,27 @@
                     <div id="skill-tree" class="skill-tree"></div>
                 </div>
                 <div id="solis-hope" class="hope-subtab-content">
-                    <div id="solis-points-display">Solis Points: <span id="solis-points-value">0</span></div>
-                    <div id="solis-quest-text">No quest available</div>
-                    <div>Reward: <span id="solis-reward">1</span> point(s)</div>
-                    <button id="solis-complete-button">Complete Quest</button>
-                    <button id="solis-refresh-button">Refresh</button>
-                    <div id="solis-cooldown" class="hidden"></div>
-                    <button id="solis-multiply-button">x10</button>
-                    <button id="solis-divide-button">/10</button>
+                    <div class="solis-container">
+                        <div class="solis-header">
+                            <h2>Solis Quests</h2>
+                            <div id="solis-points-display">Solis Points: <span id="solis-points-value">0</span></div>
+                        </div>
+                        <div class="solis-quest-area">
+                            <div id="solis-quest-text">No quest available</div>
+                            <div id="solis-cooldown" class="hidden"></div>
+                        </div>
+                        <div class="solis-controls">
+                            <div class="solis-reward-control">
+                                <span>Reward: <span id="solis-reward">1</span> point(s)</span>
+                                <button id="solis-multiply-button" class="solis-multiplier-button">+</button>
+                                <button id="solis-divide-button" class="solis-multiplier-button">-</button>
+                            </div>
+                            <div class="solis-buttons">
+                                <button id="solis-refresh-button">Refresh</button>
+                                <button id="solis-complete-button">Complete Quest</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

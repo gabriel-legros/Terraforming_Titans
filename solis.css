@@ -1,22 +1,135 @@
-#solis-hope {
-  padding: 15px;
+/* Solis Tab General Styling */
+.solis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background-color: #f0f0f0; /* Light grey background */
+    border-radius: 8px;
+    color: #333; /* Dark text */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.solis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ccc; /* Lighter border */
+    padding-bottom: 10px;
+}
+
+.solis-header h2 {
+    margin: 0;
+    color: #c2185b; /* Darker, vibrant color */
 }
 
 #solis-points-display {
-  font-size: 1.2em;
-  margin-bottom: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.solis-quest-area {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff; /* White background for quest area */
+    border-radius: 6px;
+    border: 1px solid #ddd;
 }
 
 #solis-quest-text {
-  margin: 10px 0;
+    font-size: 1.1em;
+    margin-bottom: 10px;
 }
 
-#solis-hope button {
-  margin-right: 5px;
-  padding: 6px 12px;
+.solis-quest-quantity,
+.solis-quest-resource {
+    color: #2196f3; /* Blue for emphasis */
+    font-weight: bold;
 }
 
 #solis-cooldown {
-  margin-top: 5px;
-  color: #888;
+    color: #f57c00; /* Orange for cooldown text */
+    margin-top: 15px;
+}
+
+.solis-progress-bar-container {
+    width: 100%;
+    background-color: #e0e0e0; /* Lighter progress bar background */
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.solis-progress-bar {
+    height: 10px;
+    background-color: #2196f3; /* Blue progress bar */
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+}
+
+.solis-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.solis-reward-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.solis-multiplier-button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.solis-multiplier-button:hover {
+    background-color: #45a049;
+}
+
+.solis-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+#solis-refresh-button,
+#solis-complete-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+#solis-refresh-button {
+    background-color: #2196f3;
+    color: white;
+}
+
+#solis-refresh-button:disabled {
+    background-color: #e0e0e0;
+    color: #aaa;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#solis-complete-button {
+    background-color: #ffc107;
+    color: #1a1a1a;
+}
+
+#solis-complete-button:disabled {
+    background-color: #e0e0e0;
+    color: #aaa;
+    opacity: 0.7;
+    cursor: not-allowed;
 }
