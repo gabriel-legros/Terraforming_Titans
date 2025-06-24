@@ -32,3 +32,4 @@ let colonySliderSettings = {
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
+let solisManager;

@@ -76,6 +76,8 @@ function create() {
 
   goldenAsteroid = new GoldenAsteroid();
 
+  solisManager = new SolisManager();
+
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
   initializeLifeUI();
@@ -130,6 +132,8 @@ function initializeGameState(options = {}) {
   terraforming.initializeTerraforming();
 
   goldenAsteroid = new GoldenAsteroid();
+
+  solisManager = new SolisManager();
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -189,6 +193,10 @@ function updateLogic(delta) {
   oreScanner.updateScan(delta);  // Update ore scanning progress
 
   goldenAsteroid.update(delta);
+
+  if (solisManager) {
+    solisManager.update(delta);
+  }
 
   lifeDesigner.update(delta);
 
