@@ -39,9 +39,12 @@ function getConvertedDisplay(attributeName, attribute) {
 // Function to initialize the life terraforming designer UI
 function initializeLifeTerraformingDesignerUI() {
     const lifeTerraformingDiv = document.getElementById('life-terraforming');
-  
+
     // Generate the HTML content
     lifeTerraformingDiv.innerHTML = `
+      <p id="life-designer-locked-message" class="empty-message" style="display:none;">
+        Complete the "Life Designing and Production" research to unlock the Life Designer.
+      </p>
       <div id="life-terraforming-content">
         <h2>Life Designer</h2>
         <div id="life-designer-main-area" style="display: flex; gap: 20px; align-items: stretch;">
@@ -312,10 +315,13 @@ function initializeLifeTerraformingDesignerUI() {
 function updateLifeUI() {
   // Toggle the visibility of the life-terraforming div
   const lifeTerraformingDiv = document.getElementById('life-terraforming-content');
+  const lockedMessage = document.getElementById('life-designer-locked-message');
   if (lifeDesigner.enabled) {
     lifeTerraformingDiv.style.display = 'block';
+    if (lockedMessage) lockedMessage.style.display = 'none';
   } else {
     lifeTerraformingDiv.style.display = 'none';
+    if (lockedMessage) lockedMessage.style.display = 'block';
   }
 
     updateDesignValues();
