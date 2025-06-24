@@ -1,0 +1,22 @@
+#solis-hope {
+  padding: 15px;
+}
+
+#solis-points-display {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+#solis-quest-text {
+  margin: 10px 0;
+}
+
+#solis-hope button {
+  margin-right: 5px;
+  padding: 6px 12px;
+}
+
+#solis-cooldown {
+  margin-top: 5px;
+  color: #888;
+}

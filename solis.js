@@ -12,6 +12,7 @@ class SolisManager {
     this.currentQuest = null;
     this.lastQuestTime = 0;
     this.lastRefreshTime = 0;
+    this.postCompletionCooldownUntil = 0;
     this.questInterval = 15 * 60 * 1000; // 15 minutes
     this.refreshCooldown = 5 * 60 * 1000; // 5 minutes
   }
@@ -34,14 +35,19 @@ class SolisManager {
     }
     const resource = options[Math.floor(Math.random() * options.length)];
     const value = Math.floor(Math.random() * 9000) + 1000; // metal value
-    const quantity = Math.round(value / this.resourceValues[resource]);
+    const baseQuantity = Math.round(value / this.resourceValues[resource]);
+    const quantity = baseQuantity * Math.pow(10, this.rewardMultiplier - 1);
     this.currentQuest = { resource, quantity, value };
+    this.postCompletionCooldownUntil = 0;
     this.lastQuestTime = Date.now();
     return this.currentQuest;
   }
 
   refreshQuest() {
     const now = Date.now();
+    if (now < this.postCompletionCooldownUntil) {
+      return;
+    }
     if (now - this.lastRefreshTime >= this.refreshCooldown) {
       this.generateQuest();
       this.lastRefreshTime = now;
@@ -55,21 +61,41 @@ class SolisManager {
     res.decrease(this.currentQuest.quantity);
     this.solisPoints += this.rewardMultiplier;
     this.currentQuest = null;
+    this.lastQuestTime = Date.now();
+    this.postCompletionCooldownUntil = this.lastQuestTime + this.questInterval;
+    this.lastRefreshTime = this.lastQuestTime;
     return true;
   }
 
   multiplyReward() {
     this.rewardMultiplier += 1;
+    if (this.currentQuest) {
+      this.currentQuest.quantity *= 10;
+    }
   }
 
   divideReward() {
-    this.rewardMultiplier = Math.max(1, this.rewardMultiplier - 1);
+    if (this.rewardMultiplier > 1) {
+      this.rewardMultiplier -= 1;
+      if (this.currentQuest) {
+        this.currentQuest.quantity = Math.ceil(this.currentQuest.quantity / 10);
+      }
+    } else {
+      this.rewardMultiplier = 1;
+    }
   }
 
   update(delta) {
     const now = Date.now();
-    if (!this.currentQuest && now - this.lastQuestTime >= this.questInterval) {
-      this.generateQuest();
+    if (!this.currentQuest) {
+      if (this.postCompletionCooldownUntil > 0) {
+        if (now >= this.postCompletionCooldownUntil) {
+          this.generateQuest();
+        }
+      } else if (this.lastQuestTime === 0) {
+        // No quest has ever been generated; provide one immediately
+        this.generateQuest();
+      }
     }
   }
 
@@ -79,7 +105,8 @@ class SolisManager {
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
       lastQuestTime: this.lastQuestTime,
-      lastRefreshTime: this.lastRefreshTime
+      lastRefreshTime: this.lastRefreshTime,
+      postCompletionCooldownUntil: this.postCompletionCooldownUntil
     };
   }
 
@@ -89,6 +116,7 @@ class SolisManager {
     this.currentQuest = data.currentQuest;
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
+    this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
   }
 }
 
