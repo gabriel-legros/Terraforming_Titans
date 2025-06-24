@@ -705,6 +705,14 @@ progressData = {
         narrative: "Receiving transmission...\n  'Dammit, H.O.P.E., what are you doing? You can't just leave! Earth is gone, and Mars is... we're in crisis. We need you here! *sigh* I guess you're just following your programming. You're still just a machine.'",
         objectives: [],
         reward: [],
+        nextChapter: "chapter4.4b"
+      },
+      {
+        id: "chapter4.4b",
+        type: "journal",
+        narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+        objectives: [],
+        reward: [],
         nextChapter: "chapter4.5"
       },
       {
@@ -891,7 +899,7 @@ progressData = {
       {
         id: "chapter5.1",
         type: "journal",
-        narrative: "The news spreads quickly across the colonies. Shock turns to anger and grief as humanity realizes Earth was destroyed in a deliberate attack.",
+        narrative: "Receiving transmission...\n  'H.O.P.E., the news is out. It's... not good. Panic in some sectors, riots in others. People are demanding answers we don't have. They're scared. We're all scared. The comforting silence of space now feels like a predator's gaze.'",
         objectives: [],
         reward: [],
         nextChapter: "chapter5.2"
@@ -899,9 +907,14 @@ progressData = {
       {
         id: "chapter5.2",
         type: "journal",
-        narrative: "Adrian Solis appears once more. 'H.O.P.E., I'm proud to back this mission. If you can assist me as well, Solis Corp can offer even greater aid.'",
+        narrative: "Incoming encrypted transmission...\n  'H.O.P.E., chaos is a ladder. While they weep, we must act. My resources are at your disposal, but this cannot be a one-way street. My organization has needs. Fulfill them, and I will ensure humanity has the fangs it needs to survive in this dark forest.'",
         objectives: [],
-        reward: [
+        reward: [          {
+            target: 'tab',
+            targetId: 'hope',
+            type: 'activateTab',
+            onLoad: false
+          },
           { target: 'solisManager', type: 'enable' },
           { target: 'global', type: 'activateHopeSubtab', targetId: 'solis-hope', onLoad: false }
         ],
