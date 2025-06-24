@@ -170,6 +170,9 @@ class EffectableEntity {
         case 'researchCostMultiplier':
           this.applyResearchCostMultiplier(effect);
           break;
+        case 'completeResearch':
+          this.applyCompleteResearch(effect);
+          break;
         case 'lifeDesignPointBonus':
           this.applyLifeDesignPointBonus(effect);
           break;
@@ -389,6 +392,12 @@ class EffectableEntity {
 
       if (typeof this.sortAllResearches === 'function') {
         this.sortAllResearches();
+      }
+    }
+
+    applyCompleteResearch(effect) {
+      if (typeof this.completeResearchInstant === 'function') {
+        this.completeResearchInstant(effect.targetId);
       }
     }
 

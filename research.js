@@ -141,6 +141,15 @@ class Research {
       }
     }
 
+    // Instantly mark a research as completed without cost or prerequisite checks
+    completeResearchInstant(id) {
+      const research = this.getResearchById(id);
+      if (research && !research.isResearched) {
+        research.isResearched = true;
+        this.applyResearchEffects(research);
+      }
+    }
+
   // Apply research effects to the target
   applyResearchEffects(research) {
     research.effects.forEach((effect) => {
