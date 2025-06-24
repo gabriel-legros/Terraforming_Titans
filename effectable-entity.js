@@ -121,19 +121,14 @@ class EffectableEntity {
         case 'activateTab':
           this.activateTab(effect.targetId)
           break;
-        case 'activateResearchSubtab':
-          if (typeof activateResearchSubtab === 'function') {
-            activateResearchSubtab(effect.targetId);
-          }
-          break;
-        case 'activateProjectSubtab':
-          if (typeof activateProjectSubtab === 'function') {
-            activateProjectSubtab(effect.targetId);
-          }
-          break;
-        case 'activateHopeSubtab':
-          if (typeof activateHopeSubtab === 'function') {
-            activateHopeSubtab(effect.targetId);
+        case 'activateSubtab':
+          if (typeof activateSubtab === 'function') {
+            activateSubtab(
+              effect.subtabClass,
+              effect.contentClass,
+              effect.targetId,
+              effect.unhide
+            );
           }
           break;
         case 'booleanFlag':  // New effect type to handle boolean flags

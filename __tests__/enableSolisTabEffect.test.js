@@ -8,6 +8,7 @@ const effectCode = fs.readFileSync(path.join(__dirname, '..', 'effectable-entity
 const solisUICode = fs.readFileSync(path.join(__dirname, '..', 'solisUI.js'), 'utf8');
 const solisCode = fs.readFileSync(path.join(__dirname, '..', 'solis.js'), 'utf8');
 const hopeUICode = fs.readFileSync(path.join(__dirname, '..', 'hopeUI.js'), 'utf8');
+const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'ui-utils.js'), 'utf8');
 
 describe('enable effect with SolisManager and activateHopeSubtab', () => {
   test('reveals and activates the Solis tab', () => {
@@ -20,7 +21,7 @@ describe('enable effect with SolisManager and activateHopeSubtab', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     vm.createContext(ctx);
-    vm.runInContext(`${effectCode}\n${solisUICode}\n${solisCode}\n${hopeUICode}; this.EffectableEntity = EffectableEntity; this.SolisManager = SolisManager;`, ctx);
+    vm.runInContext(`${uiUtilsCode}\n${effectCode}\n${solisUICode}\n${solisCode}\n${hopeUICode}; this.EffectableEntity = EffectableEntity; this.SolisManager = SolisManager;`, ctx);
     ctx.globalEffects = new ctx.EffectableEntity({ description: 'global' });
     ctx.solisManager = new ctx.SolisManager();
     ctx.solisManager.addAndReplace({
@@ -31,8 +32,11 @@ describe('enable effect with SolisManager and activateHopeSubtab', () => {
     });
     ctx.globalEffects.addAndReplace({
       target: 'global',
-      type: 'activateHopeSubtab',
+      type: 'activateSubtab',
+      subtabClass: 'hope-subtab',
+      contentClass: 'hope-subtab-content',
       targetId: 'solis-hope',
+      unhide: true,
       effectId: 't2',
       sourceId: 't2'
     });

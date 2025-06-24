@@ -91,13 +91,7 @@ function initializeResearchTabs() {
 }
 
 function activateResearchSubtab(subtabId) {
-    // Remove active class from all subtabs and subtab-contents
-    document.querySelectorAll('.research-subtab').forEach((t) => t.classList.remove('active'));
-    document.querySelectorAll('.research-subtab-content').forEach((t) => t.classList.remove('active'));
-    
-    // Add active class to the clicked subtab and corresponding content
-    document.querySelector(`[data-subtab="${subtabId}"]`).classList.add('active');
-    document.getElementById(subtabId).classList.add('active');
+    activateSubtab('research-subtab', 'research-subtab-content', subtabId);
 }
 
 function loadResearchCategory(category) {
