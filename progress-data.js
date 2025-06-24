@@ -837,11 +837,7 @@ progressData = {
         id: "chapter4.12",
         type: "journal",
         narrative: "Receiving transmission...\n  'Hi it's Mary again. Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
-        objectives: [{
-          type: 'project',
-          projectId: 'earthProbe',
-          repeatCount: 10
-        }],
+        objectives: [],
         reward: [
           {
             target: 'project',
@@ -855,12 +851,25 @@ progressData = {
             onLoad: false
           }
         ],
-        nextChapter: "chapter4.13"
+        nextChapter: "chapter4.12b"
       },
+      {
+        id: "chapter4.12b",
+        type: "journal",
+        narrative: "",
+        objectives: [{
+          type: 'project',
+          projectId: 'earthProbe',
+          repeatCount: 10
+        }],
+        reward: [
+        ],
+        nextChapter: "chapter4.13"
+      },      
       {
         id: "chapter4.13",
         type: "journal",
-        narrative: "Results received. Forwarding complete dataset to Mars for review.",
+        narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
         reward: [],
         nextChapter: "chapter5.0"
       },
@@ -876,6 +885,7 @@ progressData = {
           quantity: 1000000
         }],
         reward: [],
+        special : 'clearJournal',
         nextChapter: null
       }
     ]
