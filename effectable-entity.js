@@ -421,6 +421,9 @@ class EffectableEntity {
         this[flagId] = value;
       }
 
+      if (typeof this.sortAllResearches === 'function') {
+        this.sortAllResearches();
+      }
 
       console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
     }
