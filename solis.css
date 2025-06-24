@@ -134,13 +134,79 @@
     cursor: not-allowed;
 }
 
+.solis-shop-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.solis-shop-container h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    color: #c2185b;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
 .solis-shop-item {
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.3s;
+}
+
+.solis-shop-item:last-child {
+    border-bottom: none;
+}
+
+.solis-shop-item:hover {
+    background-color: #f9f9f9;
+}
+
+.solis-shop-item-label {
+    font-size: 1em;
+    color: #333;
+}
+
+.solis-shop-item-cost {
+    font-weight: bold;
+    color: #555;
+}
+
+.solis-shop-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .solis-shop-item button {
-    padding: 5px 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #2196f3;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+.solis-shop-item button:hover {
+    background-color: #1976d2;
+}
+
+.solis-shop-item button:disabled {
+    background-color: #e0e0e0;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.solis-shop-item-count {
+    font-size: 0.9em;
+    color: #555;
+    min-width: 100px; /* Ensure alignment */
+    text-align: left;
 }

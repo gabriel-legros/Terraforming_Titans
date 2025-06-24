@@ -32,8 +32,12 @@ function createShopItem(key) {
   item.classList.add('solis-shop-item');
 
   const label = document.createElement('span');
-  label.innerHTML = `${shopDescriptions[key]} (Cost: <span id="solis-shop-${key}-cost"></span>)`;
+  label.classList.add('solis-shop-item-label');
+  label.innerHTML = `${shopDescriptions[key]} <span class="solis-shop-item-cost">(Cost: <span id="solis-shop-${key}-cost"></span>)</span>`;
   item.appendChild(label);
+
+  const actions = document.createElement('div');
+  actions.classList.add('solis-shop-item-actions');
 
   const button = document.createElement('button');
   button.id = `solis-shop-${key}-button`;
@@ -42,11 +46,14 @@ function createShopItem(key) {
     solisManager.purchaseUpgrade(key);
     updateSolisUI();
   });
-  item.appendChild(button);
+  actions.appendChild(button);
 
   const purchased = document.createElement('span');
+  purchased.classList.add('solis-shop-item-count');
   purchased.innerHTML = `Purchased: <span id="solis-shop-${key}-count">0</span>`;
-  item.appendChild(purchased);
+  actions.appendChild(purchased);
+
+  item.appendChild(actions);
 
   const costSpan = label.querySelector(`#solis-shop-${key}-cost`);
   const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
@@ -92,6 +99,13 @@ function initializeSolisUI() {
 
   const container = document.getElementById('solis-shop-items');
   if (container) {
+    const shopContainer = container.parentElement;
+    shopContainer.classList.add('solis-shop-container');
+
+    const title = document.createElement('h3');
+    title.textContent = 'Solis Shop';
+    shopContainer.insertBefore(title, container);
+    
     ['funding', 'metal', 'components', 'electronics', 'glass', 'water', 'androids'].forEach(key => {
       container.appendChild(createShopItem(key));
     });
