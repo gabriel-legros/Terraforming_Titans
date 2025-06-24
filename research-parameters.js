@@ -1051,6 +1051,22 @@ const researchParameters = {
             value: true
           }
         ]
+      },
+      {
+        id: 'infrared_vision',
+        name: 'Infrared Vision',
+        description: 'Equips ice harvesters with infrared sensors to operate around the clock.',
+        cost: { advancedResearch: 20000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'iceHarvester',
+            type: 'booleanFlag',
+            flagId: 'dayNightActivity',
+            value: false
+          }
+        ]
       }
     ]
   };
