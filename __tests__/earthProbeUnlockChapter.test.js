@@ -25,7 +25,7 @@ describe('earth probe unlock chapter', () => {
     const subtabEffect = ch412.reward.find(r => r.target === 'projectManager' && r.type === 'activateProjectSubtab' && r.targetId === 'story-projects');
     expect(reward).toBeDefined();
     expect(subtabEffect).toBeDefined();
-    expect(ch412.nextChapter).toBe('chapter4.13');
+    expect(ch412.nextChapter).toBe('chapter4.12b');
     expect(ch413).toBeDefined();
   });
 });

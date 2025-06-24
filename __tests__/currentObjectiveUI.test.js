@@ -3,6 +3,7 @@ const path = require('path');
 const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
+const numbers = require('../numbers.js');
 
 describe('current objective UI', () => {
   test('updates element with progress text', () => {
@@ -13,6 +14,7 @@ describe('current objective UI', () => {
 
     ctx.console = console;
     ctx.document = dom.window.document;
+    ctx.formatNumber = numbers.formatNumber;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -48,6 +50,7 @@ describe('current objective UI', () => {
 
     ctx.console = console;
     ctx.document = dom.window.document;
+    ctx.formatNumber = numbers.formatNumber;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -83,6 +86,7 @@ describe('current objective UI', () => {
 
     ctx.console = console;
     ctx.document = dom.window.document;
+    ctx.formatNumber = numbers.formatNumber;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -110,6 +114,6 @@ describe('current objective UI', () => {
     manager.update();
 
     const text = dom.window.document.getElementById('current-objective').textContent;
-    expect(text).toBe('Objective: Equatorial Temp: 220.00/238');
+    expect(text).toBe('Objective: Equatorial Temp: 220.00/238.00');
   });
 });
