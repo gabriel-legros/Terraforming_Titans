@@ -868,7 +868,7 @@ progressData = {
         id: "chapter5.0",
         type: "journal",
         title: "Lamb Among Wolves",
-        narrative: "Mary pores over the probe telemetry and grimly summarizes the devastation. She insists expansion must continue, but we need far more people.",
+        narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
