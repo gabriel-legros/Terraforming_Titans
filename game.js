@@ -76,7 +76,9 @@ function create() {
 
   goldenAsteroid = new GoldenAsteroid();
 
-  solisManager = new SolisManager();
+  if (!preserveManagers || !solisManager) {
+    solisManager = new SolisManager();
+  }
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -133,7 +135,9 @@ function initializeGameState(options = {}) {
 
   goldenAsteroid = new GoldenAsteroid();
 
-  solisManager = new SolisManager();
+  if (!preserveManagers || !solisManager) {
+    solisManager = new SolisManager();
+  }
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -167,6 +171,9 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
+  }
+  if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
+    solisManager.reapplyEffects();
   }
 }
 

@@ -143,6 +143,9 @@ class EffectableEntity {
         case 'setFundingRate':
           this.applySetFundingRate(effect);
           break;
+        case 'fundingBonus':
+          this.applyFundingBonus(effect);
+          break;
         case 'globalCostReduction':
           this.applyGlobalCostReduction(effect);
           break;
@@ -232,6 +235,12 @@ class EffectableEntity {
     applySetFundingRate(effect) {
       if (typeof this.fundingRate !== 'undefined' && typeof effect.value === 'number') {
         this.fundingRate += effect.value;
+      }
+    }
+
+    applyFundingBonus(effect) {
+      if (typeof this.fundingRate !== 'undefined' && typeof this.baseFundingRate !== 'undefined') {
+        this.fundingRate = this.baseFundingRate + effect.value;
       }
     }
 

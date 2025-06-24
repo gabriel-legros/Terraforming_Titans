@@ -65,7 +65,7 @@ function updateSkillButton(skill) {
 function createSkillTree() {
     buildSkillPrereqs();
     const container = document.getElementById('skill-tree');
-    if (!container) return;
+    if (!container || container.nodeType !== 1) return;
 
     container.innerHTML = ''; // Clear previous content
 
@@ -90,13 +90,17 @@ function createSkillTree() {
     }
 
     // Defer drawing connections to ensure buttons are in the DOM and have dimensions
-    requestAnimationFrame(drawSkillConnections);
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(drawSkillConnections);
+    } else {
+        drawSkillConnections();
+    }
 }
 
 function drawSkillConnections() {
     const svg = document.getElementById('skill-lines');
     const container = document.getElementById('skill-tree');
-    if (!svg || !container) return;
+    if (!svg || !container || container.nodeType !== 1) return;
 
     svg.innerHTML = ''; // Clear existing lines
 
@@ -155,7 +159,11 @@ function updateSkillTreeUI() {
     for (const id in skillManager.skills) {
         updateSkillButton(skillManager.skills[id]);
     }
-    drawSkillConnections();
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(drawSkillConnections);
+    } else {
+        drawSkillConnections();
+    }
 }
 
 function initializeSkillsUI() {
