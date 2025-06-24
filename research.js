@@ -2,15 +2,15 @@
 
 // Research Class
 class Research {
-    constructor(id, name, description, cost, prerequisites, effects) {
+    constructor(id, name, description, cost, prerequisites, effects, extra = {}) {
       this.id = id;
       this.name = name;
       this.description = description;
-      // store the entire cost object so researches can use different resources
       this.cost = cost;
       this.prerequisites = prerequisites;
       this.effects = effects;
-      this.isResearched = false; // Flag indicating if the research has been completed
+      Object.assign(this, extra);
+      this.isResearched = false;
     }
 }
 
@@ -32,7 +32,8 @@ class Research {
               research.description,
               research.cost,
               research.prerequisites,
-              research.effects
+              research.effects,
+              research
             )
         );
       }

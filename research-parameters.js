@@ -173,6 +173,22 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'hydrocarbon_generator',
+        name: 'Hydrocarbon Generator',
+        description: 'Allows construction of generators burning methane and oxygen for power.',
+        cost: { research: 10000 },
+        prerequisites: [],
+        requiredFlags: ['hydrocarbonResearchUnlocked'],
+        requiresMethane: true,
+        effects: [
+          {
+            target: 'building',
+            targetId: 'hydrocarbonGenerator',
+            type: 'enable',
+          }
+        ],
+      },
     ],
     industry: [
       {
@@ -1018,6 +1034,21 @@ const researchParameters = {
             target: 'project',
             targetId: 'hyperionLantern',
             type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'hydrocarbon_research',
+        name: 'Hydrocarbon Combustion Concept',
+        description: 'Opens research into burning methane for power.',
+        cost: { advancedResearch: 1000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'hydrocarbonResearchUnlocked',
+            value: true
           }
         ]
       }

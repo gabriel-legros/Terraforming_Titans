@@ -109,7 +109,21 @@ function loadResearchCategory(category) {
         return;
     }
 
+    const planetHasMethane = () => {
+        const surf = currentPlanetParameters.resources.surface;
+        const atm = currentPlanetParameters.resources.atmospheric;
+        return (surf.liquidMethane?.initialValue || 0) > 0 ||
+               (surf.hydrocarbonIce?.initialValue || 0) > 0 ||
+               (atm.atmosphericMethane?.initialValue || 0) > 0;
+    };
+
     researches.forEach((research) => {
+        if (research.requiresMethane && !planetHasMethane()) {
+            return;
+        }
+        if (research.requiredFlags && !research.requiredFlags.every(f => researchManager.isBooleanFlagSet(f))) {
+            return;
+        }
         const researchContainer = document.createElement('div');
         researchContainer.classList.add('research-item');
 

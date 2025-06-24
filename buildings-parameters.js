@@ -226,6 +226,24 @@ const buildingsParameters = {
     maintenanceFactor: 0,
     unlocked: false
   },
+  hydrocarbonGenerator: {
+    name: 'Hydrocarbon Generator',
+    category: 'energy',
+    description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
+    cost: { colony: { metal: 1000, components: 50, electronics: 20 } },
+    consumption: { atmospheric: { atmosphericMethane: 1, oxygen: 4 } },
+    production: {
+      colony: { energy: 50000000 },
+      atmospheric: { carbonDioxide: 2.75, atmosphericWater: 2.25 }
+    },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   nuclearPowerPlant: {
     name: 'Nuclear Power Plant',
     category: 'energy',
