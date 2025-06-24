@@ -1,3 +1,12 @@
+const RESOURCE_UPGRADE_AMOUNTS = {
+  metal: 100,
+  components: 100,
+  electronics: 100,
+  glass: 100,
+  water: 1000000,
+  androids: 100
+};
+
 class SolisManager {
   constructor(resourceValues = {}) {
     this.resourceValues = Object.assign({
@@ -116,6 +125,10 @@ class SolisManager {
         effectId: 'solisFunding',
         sourceId: 'solisShop'
       });
+    } else if (resources && resources.colony && resources.colony[key] &&
+               typeof resources.colony[key].increase === 'function') {
+      const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
+      resources.colony[key].increase(amount);
     }
     return true;
   }
@@ -130,6 +143,14 @@ class SolisManager {
         effectId: 'solisFunding',
         sourceId: 'solisShop'
       });
+    }
+
+    for (const key in RESOURCE_UPGRADE_AMOUNTS) {
+      const upgrade = this.shopUpgrades[key];
+      if (upgrade && upgrade.purchases > 0 && resources && resources.colony &&
+          resources.colony[key] && typeof resources.colony[key].increase === 'function') {
+        resources.colony[key].increase(RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases);
+      }
     }
   }
 
