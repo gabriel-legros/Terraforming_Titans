@@ -7,6 +7,7 @@ const vm = require('vm');
 const effectCode = fs.readFileSync(path.join(__dirname, '..', 'effectable-entity.js'), 'utf8');
 const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'projects.js'), 'utf8');
 const projectsUICode = fs.readFileSync(path.join(__dirname, '..', 'projectsUI.js'), 'utf8');
+const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'ui-utils.js'), 'utf8');
 
 describe('activateProjectSubtab effect', () => {
   test('switches to story projects subtab', () => {
@@ -19,12 +20,15 @@ describe('activateProjectSubtab effect', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     vm.createContext(ctx);
-    vm.runInContext(effectCode + projectsUICode + projectsCode + '; this.EffectableEntity = EffectableEntity; this.ProjectManager = ProjectManager; this.activateProjectSubtab = activateProjectSubtab;', ctx);
+    vm.runInContext(uiUtilsCode + effectCode + projectsUICode + projectsCode + '; this.EffectableEntity = EffectableEntity; this.ProjectManager = ProjectManager;', ctx);
 
     ctx.projectManager = new ctx.ProjectManager();
     ctx.projectManager.addAndReplace({
-      type: 'activateProjectSubtab',
+      type: 'activateSubtab',
+      subtabClass: 'projects-subtab',
+      contentClass: 'projects-subtab-content',
       targetId: 'story-projects',
+      unhide: true,
       effectId: 'test',
       sourceId: 'test'
     });

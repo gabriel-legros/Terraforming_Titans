@@ -794,15 +794,5 @@ function updateStoryProjectsVisibility() {
 }
 
 function activateProjectSubtab(subtabId) {
-  document.querySelectorAll('.projects-subtab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.projects-subtab-content').forEach(c => c.classList.remove('active'));
-
-  const subtab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
-  const content = document.getElementById(subtabId);
-  if (subtab && content) {
-    subtab.classList.remove('hidden');
-    content.classList.remove('hidden');
-    subtab.classList.add('active');
-    content.classList.add('active');
-  }
+  activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
 }

@@ -812,8 +812,11 @@ progressData = {
           },
           {
             target: 'researchManager',
-            type: 'activateResearchSubtab',
+            type: 'activateSubtab',
+            subtabClass: 'research-subtab',
+            contentClass: 'research-subtab-content',
             targetId: 'advanced-research',
+            unhide: false,
             onLoad: false
           }
         ],
@@ -846,8 +849,11 @@ progressData = {
           },
           {
             target: 'projectManager',
-            type: 'activateProjectSubtab',
+            type: 'activateSubtab',
+            subtabClass: 'projects-subtab',
+            contentClass: 'projects-subtab-content',
             targetId: 'story-projects',
+            unhide: true,
             onLoad: false
           }
         ],
@@ -903,7 +909,15 @@ progressData = {
         objectives: [],
         reward: [
           { target: 'solisManager', type: 'enable' },
-          { target: 'global', type: 'activateHopeSubtab', targetId: 'solis-hope', onLoad: false }
+          {
+            target: 'global',
+            type: 'activateSubtab',
+            subtabClass: 'hope-subtab',
+            contentClass: 'hope-subtab-content',
+            targetId: 'solis-hope',
+            unhide: true,
+            onLoad: false
+          }
         ],
         nextChapter: null
       }

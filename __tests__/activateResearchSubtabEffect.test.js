@@ -7,6 +7,7 @@ const vm = require('vm');
 const effectCode = fs.readFileSync(path.join(__dirname, '..', 'effectable-entity.js'), 'utf8');
 const researchCode = fs.readFileSync(path.join(__dirname, '..', 'research.js'), 'utf8');
 const researchUICode = fs.readFileSync(path.join(__dirname, '..', 'researchUI.js'), 'utf8');
+const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'ui-utils.js'), 'utf8');
 
 describe('activateResearchSubtab effect', () => {
   test('switches to advanced research subtab', () => {
@@ -20,12 +21,15 @@ describe('activateResearchSubtab effect', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     vm.createContext(ctx);
-    vm.runInContext(effectCode + researchUICode + researchCode + '; this.EffectableEntity = EffectableEntity; this.ResearchManager = ResearchManager;', ctx);
+    vm.runInContext(uiUtilsCode + effectCode + researchUICode + researchCode + '; this.EffectableEntity = EffectableEntity; this.ResearchManager = ResearchManager;', ctx);
 
     ctx.researchManager = new ctx.ResearchManager({ advanced: [] });
     ctx.researchManager.addAndReplace({
-      type: 'activateResearchSubtab',
+      type: 'activateSubtab',
+      subtabClass: 'research-subtab',
+      contentClass: 'research-subtab-content',
       targetId: 'advanced-research',
+      unhide: false,
       effectId: 'test',
       sourceId: 'test'
     });
