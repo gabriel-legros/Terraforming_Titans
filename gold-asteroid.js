@@ -125,13 +125,12 @@ class GoldenAsteroid {
 
     startCountdown(duration) {
       this.countdownRemainingTime = duration;
-      if(!this.countdownActive){
-        this.countdownActive = true;
-    
+      if(!this.countdownElement){
         this.countdownElement = document.createElement('div');
         this.countdownElement.className = 'gold-asteroid-countdown';
         document.getElementById('gold-asteroid-container').appendChild(this.countdownElement);
       }
+      this.countdownActive = true;
     }
   
     despawn() {
