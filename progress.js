@@ -242,17 +242,23 @@ class StoryManager {
                     // ... etc
                  }
                  return false; // Default for terraforming if parameter not matched
-            case 'currentPlanet':
-                 if (typeof spaceManager !== 'undefined' &&
-                     typeof spaceManager.getCurrentPlanetKey === 'function') {
-                     return spaceManager.getCurrentPlanetKey() === objective.planetId;
+           case 'currentPlanet':
+                if (typeof spaceManager !== 'undefined' &&
+                    typeof spaceManager.getCurrentPlanetKey === 'function') {
+                    return spaceManager.getCurrentPlanetKey() === objective.planetId;
+                }
+                return false;
+           case 'project':
+                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
+                     const proj = projectManager.projects[objective.projectId];
+                     return proj ? proj.repeatCount >= objective.repeatCount : false;
                  }
                  return false;
-            default:
+           default:
                 console.error(`Unknown objective type: ${objective.type}`);
                 return false;
-        }
-    }
+       }
+   }
 
     // Convert an objective object into a progress string
     describeObjective(objective) {
@@ -277,7 +283,7 @@ class StoryManager {
                 const name = c ? c.displayName : objective.buildingName;
                 return `${name}: ${current}/${objective.quantity}`;
             }
-            case 'terraforming': {
+           case 'terraforming': {
                 if (!terraforming) return '';
                 let current = 0;
                 const names = {
@@ -305,13 +311,22 @@ class StoryManager {
                     default:
                         return '';
                 }
-                const name = names[objective.terraformingParameter] || objective.terraformingParameter;
-                return `${name}: ${current.toFixed(2)}/${objective.value}`;
-            }
-            default:
+               const name = names[objective.terraformingParameter] || objective.terraformingParameter;
+               return `${name}: ${current.toFixed(2)}/${objective.value}`;
+           }
+            case 'project': {
+                if (typeof projectManager !== 'undefined' && projectManager.projects) {
+                    const proj = projectManager.projects[objective.projectId];
+                    const current = proj ? proj.repeatCount : 0;
+                    const name = proj ? proj.displayName : objective.projectId;
+                    return `${name}: ${current}/${objective.repeatCount}`;
+                }
                 return '';
-        }
-    }
+            }
+           default:
+                return '';
+       }
+   }
 
     // Determine the first incomplete objective from active events
     getCurrentObjectiveText() {
