@@ -955,15 +955,19 @@ const researchParameters = {
       {
         id: 'modular_nuclear_reactor',
         name: 'Modular Nuclear Reactor',
-        description: 'Miniaturizes fission reactors and makes their research affordable.',
+        description: 'Miniaturizes fission reactors and automatically completes their research.',
         cost: { advancedResearch: 1000 },
         prerequisites: [],
         effects: [
           {
             target: 'researchManager',
             targetId: 'fission_plant1',
-            type: 'researchCostMultiplier',
-            value: 0.01
+            type: 'completeResearch'
+          },
+          {
+            target: 'building',
+            targetId: 'nuclearPowerPlant',
+            type: 'enable'
           },
           {
             target: 'building',

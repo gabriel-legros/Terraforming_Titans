@@ -14,8 +14,10 @@ describe('Modular Nuclear Reactor research', () => {
     const research = advanced.find(r => r.id === 'modular_nuclear_reactor');
     expect(research).toBeDefined();
     expect(research.cost.advancedResearch).toBe(1000);
-    const costEffect = research.effects.find(e => e.target === 'researchManager' && e.type === 'researchCostMultiplier');
-    expect(costEffect).toBeDefined();
+    const completeEffect = research.effects.find(e => e.target === 'researchManager' && e.type === 'completeResearch');
+    expect(completeEffect).toBeDefined();
+    const enableEffect = research.effects.find(e => e.target === 'building' && e.targetId === 'nuclearPowerPlant' && e.type === 'enable');
+    expect(enableEffect).toBeDefined();
     const prodEffect = research.effects.find(e => e.target === 'building' && e.targetId === 'nuclearPowerPlant' && e.type === 'productionMultiplier');
     expect(prodEffect).toBeDefined();
     const consEffect = research.effects.find(e => e.target === 'building' && e.targetId === 'nuclearPowerPlant' && e.type === 'consumptionMultiplier');
