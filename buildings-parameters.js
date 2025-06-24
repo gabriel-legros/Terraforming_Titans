@@ -80,7 +80,7 @@ const buildingsParameters = {
     category: 'production',
     description: 'Uses high heat to turn silicon into glass.',
     cost: { colony: { metal: 100, components: 10 } },
-    consumption: { colony: { energy: 500000, silicon: 1} },
+    consumption: { colony: { energy: 100000, silicon: 1} },
     production: { colony: { glass: 1 } },
     storage: {},
     dayNightActivity: false,
