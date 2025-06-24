@@ -230,10 +230,10 @@ const buildingsParameters = {
     name: 'Hydrocarbon Generator',
     category: 'energy',
     description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
-    cost: { colony: { metal: 1000, components: 50, electronics: 20 } },
+    cost: { colony: { metal: 50, components: 2} },
     consumption: { atmospheric: { atmosphericMethane: 1, oxygen: 4 } },
     production: {
-      colony: { energy: 50000000 },
+      colony: { energy: 600000 },
       atmospheric: { carbonDioxide: 2.75, atmosphericWater: 2.25 }
     },
     storage: {},
