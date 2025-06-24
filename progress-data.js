@@ -360,13 +360,7 @@ progressData = {
             target: 'building',
             targetId: 'iceHarvester',
             type: 'enable'
-        },
-        {
-          target: 'building',
-          targetId: 'waterPump',
-          type: 'enable'
-      }
-      ],
+        }],
         nextChapter: "chapter1.18"
       },
       {
@@ -612,7 +606,11 @@ progressData = {
         type: "journal",
         narrative: "Milestone Achievement: Liquid water is now stable at the equator.",
         objectives: [],
-        reward: [],
+        reward: [{
+          target: 'building',
+          targetId: 'waterPump',
+          type: 'enable'
+        }],
         nextChapter: "chapter3.3"
       },
       {
