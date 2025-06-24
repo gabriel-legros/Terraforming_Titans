@@ -359,8 +359,15 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateStructureButtonText(button, structure, buildCount = 1) {
     const canAfford = structure.canAfford(buildCount);
     const countSpan = `<span class="build-button-count">${formatNumber(buildCount, true)}</span>`;
-    button.innerHTML = `Build ${countSpan} ${structure.displayName}`;
-    button.style.color = canAfford ? 'inherit' : 'red';
+    const newHTML = `Build ${countSpan} ${structure.displayName}`;
+    if (button.innerHTML !== newHTML) {
+      button.innerHTML = newHTML;
+    }
+
+    const newColor = canAfford ? 'inherit' : 'red';
+    if (button.style.color !== newColor) {
+      button.style.color = newColor;
+    }
   }
   
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
