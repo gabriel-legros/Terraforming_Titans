@@ -158,6 +158,10 @@ body {
     padding: 5px 10px;
 }
 
+.journal-history {
+    padding: 5px 10px;
+}
+
 .journal-alert {
     color: red;
     font-weight: bold;
@@ -172,4 +176,36 @@ body {
     color: gray;
     font-style: italic;
     margin: 10px 0;
+}
+
+/* Journal history overlay */
+.history-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.history-window {
+    width: 60%;
+    max-height: 80%;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 10px;
+    overflow-y: auto;
+}
+
+.history-window h2 {
+    margin-top: 0;
+}
+
+.history-close-button {
+    margin-top: 10px;
+    padding: 5px 15px;
 }
