@@ -263,25 +263,26 @@ class StoryManager {
     // Convert an objective object into a progress string
     describeObjective(objective) {
         if (!objective) return '';
+        const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
         switch (objective.type) {
             case 'collection': {
                 const resCat = resources[objective.resourceType] || {};
                 const resObj = resCat[objective.resource] || {};
                 const current = resObj.value || 0;
                 const name = resObj.displayName || objective.resource;
-                return `${name}: ${Math.floor(current)}/${objective.quantity}`;
+                return `${name}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`;
             }
             case 'building': {
                 const b = buildings[objective.buildingName];
                 const current = b ? b.count : 0;
                 const name = b ? b.displayName : objective.buildingName;
-                return `${name}: ${current}/${objective.quantity}`;
+                return `${name}: ${format(current, true)}/${format(objective.quantity, true)}`;
             }
             case 'colony': {
                 const c = colonies[objective.buildingName];
                 const current = c ? c.count : 0;
                 const name = c ? c.displayName : objective.buildingName;
-                return `${name}: ${current}/${objective.quantity}`;
+                return `${name}: ${format(current, true)}/${format(objective.quantity, true)}`;
             }
            case 'terraforming': {
                 if (!terraforming) return '';
@@ -311,15 +312,15 @@ class StoryManager {
                     default:
                         return '';
                 }
-               const name = names[objective.terraformingParameter] || objective.terraformingParameter;
-               return `${name}: ${current.toFixed(2)}/${objective.value}`;
+                const name = names[objective.terraformingParameter] || objective.terraformingParameter;
+               return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
            }
             case 'project': {
                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
                     const proj = projectManager.projects[objective.projectId];
                     const current = proj ? proj.repeatCount : 0;
                     const name = proj ? proj.displayName : objective.projectId;
-                    return `${name}: ${current}/${objective.repeatCount}`;
+                    return `${name}: ${format(current, true)}/${format(objective.repeatCount, true)}`;
                 }
                 return '';
             }

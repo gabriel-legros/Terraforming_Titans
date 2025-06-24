@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const numbers = require('../numbers.js');
 
 describe('earth probe objective', () => {
   test('checks repeat count and describes progress', () => {
@@ -13,6 +14,7 @@ describe('earth probe objective', () => {
       addJournalEntry: () => {},
       addEffect: () => {},
       removeEffect: () => {},
+      formatNumber: numbers.formatNumber,
       resources: {},
       buildings: {},
       colonies: {},
