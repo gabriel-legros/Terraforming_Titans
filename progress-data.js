@@ -886,6 +886,25 @@ progressData = {
         }],
         reward: [],
         special : 'clearJournal',
+        nextChapter: "chapter5.1"
+      },
+      {
+        id: "chapter5.1",
+        type: "journal",
+        narrative: "The news spreads quickly across the colonies. Shock turns to anger and grief as humanity realizes Earth was destroyed in a deliberate attack.",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter5.2"
+      },
+      {
+        id: "chapter5.2",
+        type: "journal",
+        narrative: "Adrian Solis appears once more. 'H.O.P.E., I'm proud to back this mission. If you can assist me as well, Solis Corp can offer even greater aid.'",
+        objectives: [],
+        reward: [
+          { target: 'solisManager', type: 'enable' },
+          { target: 'global', type: 'activateHopeSubtab', targetId: 'solis-hope', onLoad: false }
+        ],
         nextChapter: null
       }
     ]

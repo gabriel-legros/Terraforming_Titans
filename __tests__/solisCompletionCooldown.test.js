@@ -1,3 +1,5 @@
+const EffectableEntity = require('../effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
 const { SolisManager } = require('../solis.js');
 
 describe('SolisManager completion cooldown', () => {

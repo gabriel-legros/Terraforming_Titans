@@ -1,4 +1,4 @@
-let solisTabVisible = true;
+let solisTabVisible = false;
 let solisUIInitialized = false;
 const shopElements = {};
 const shopDescriptions = {
@@ -66,6 +66,7 @@ function initializeSolisUI() {
   if (solisUIInitialized) {
     return;
   }
+  hideSolisTab();
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
   const multBtn = document.getElementById('solis-multiply-button');

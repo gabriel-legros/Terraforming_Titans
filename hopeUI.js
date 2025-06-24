@@ -10,6 +10,19 @@ function initializeHopeTabs() {
     });
 }
 
+function activateHopeSubtab(subtabId) {
+    document.querySelectorAll('.hope-subtab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.hope-subtab-content').forEach(c => c.classList.remove('active'));
+    const tab = document.querySelector(`.hope-subtab[data-subtab="${subtabId}"]`);
+    const content = document.getElementById(subtabId);
+    if (tab && content) {
+        tab.classList.remove('hidden');
+        content.classList.remove('hidden');
+        tab.classList.add('active');
+        content.classList.add('active');
+    }
+}
+
 function initializeHopeUI() {
     initializeHopeTabs();
     if (typeof initializeSkillsUI === 'function') {
