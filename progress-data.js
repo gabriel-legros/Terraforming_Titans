@@ -876,7 +876,7 @@ progressData = {
       {
         id: "chapter5.0",
         type: "journal",
-        title: "Lamb Among Wolves",
+        title: "Chapter 5: Lamb Among Wolves",
         narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
         objectives: [{
           type: 'collection',

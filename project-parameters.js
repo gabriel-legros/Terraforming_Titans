@@ -363,16 +363,16 @@ const projectParameters = {
       planet : 'titan',
       costDoubling : true,
       storySteps : [
-        'Probe launched. Earth is shattered into enormous fragments.',
-        'Vast seas of molten rock glow across the debris.',
-        'No continents remain—only swirling magma clouds.',
-        'Radiation saturates the wreckage of former cities.',
-        'Scorched fragments show traces of precision energy beams.',
-        'Spectral data hints at positron annihilation on a planetary scale.',
-        'Cratered pieces reveal an impact from a colossal asteroid.',
-        'All signs indicate these cataclysms struck within minutes.',
-        'The debris now spreads out like a newborn asteroid belt.',
-        'There is no surface left to land on—only scattered remnants.'
+        "Probe telemetry confirmed: Earth fragmented into massive tectonic shards.",
+        "Expansive oceans of molten silicates illuminate the planetary remains.",
+        "No continental structures persist; only turbulent magma storms detected.",
+        "Residual gamma radiation permeates ruins of former metropolitan zones.",
+        "Carbonized debris displays signatures of precision-directed energy pulses.",
+        "Spectroscopic analysis indicates widespread positron annihilation events.",
+        "Impact cratering consistent with a colossal asteroid collision identified.",
+        "Chronometric data reveals catastrophic events unfolded within minutes.",
+        "Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.",
+        "Surface integrity nullified—analysis confirms simultaneous laser, antimatter, and asteroid offensive."
       ]
     }
   },
