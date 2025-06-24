@@ -1,4 +1,6 @@
-let completedResearchHidden = false; // Initialize the toggle state
+let completedResearchHidden =
+    (typeof gameSettings !== 'undefined' && gameSettings.hideCompletedResearch) ||
+    false; // Initialize the toggle state
 
 function formatResearchCost(cost) {
     const parts = [];
@@ -57,6 +59,9 @@ function updateResearchButtonText(button, researchItem) {
 }
 
 function initializeResearchTabs() {
+    if (typeof gameSettings !== 'undefined') {
+        completedResearchHidden = gameSettings.hideCompletedResearch || false;
+    }
     // Set up event listeners for research sub-tabs
     document.querySelectorAll('.research-subtab').forEach(subtab => {
         subtab.onclick = () => {
@@ -77,6 +82,9 @@ function initializeResearchTabs() {
     researchCategories.forEach(category => {
         loadResearchCategory(category);
     });
+
+    updateAllResearchButtons(researchManager.researches);
+    updateCompletedResearchVisibility();
 
     // Activate the 'energy' category
     activateResearchSubtab('energy-research');
@@ -157,6 +165,9 @@ function loadResearchCategory(category) {
 
 function toggleCompletedResearch() {
     completedResearchHidden = !completedResearchHidden; // Toggle the state
+    if (typeof gameSettings !== 'undefined') {
+        gameSettings.hideCompletedResearch = completedResearchHidden;
+    }
     updateAllResearchButtons(researchManager.researches); // Apply visibility changes
     updateCompletedResearchVisibility();
 }

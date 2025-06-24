@@ -18,7 +18,10 @@ let lifeDesigner;
 let lifeManager;
 let fundingModule;
 
-let gameSettings = { useCelsius: false };
+let gameSettings = {
+  useCelsius: false,
+  hideCompletedResearch: false,
+};
 
 let colonySliderSettings = {
   workerRatio: 0.5,

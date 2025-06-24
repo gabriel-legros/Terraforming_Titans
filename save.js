@@ -168,6 +168,13 @@ function loadGame(slotOrCustomString) {
       if(toggle){
         toggle.checked = gameSettings.useCelsius;
       }
+      if (typeof completedResearchHidden !== 'undefined') {
+        completedResearchHidden = gameSettings.hideCompletedResearch || false;
+        if (typeof updateAllResearchButtons === 'function') {
+          updateAllResearchButtons(researchManager.researches);
+          updateCompletedResearchVisibility();
+        }
+      }
     }
 
     if(gameState.colonySliderSettings){
