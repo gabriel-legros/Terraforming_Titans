@@ -14,6 +14,7 @@ function getGameState() {
     journalEntries: journalEntriesData,
     journalHistory: journalHistoryData,
     goldenAsteroid: goldenAsteroid.saveState(),
+    solisManager: solisManager.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
     skills: skillManager.saveState(),
@@ -149,6 +150,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.goldenAsteroid){
       goldenAsteroid.loadState(gameState.goldenAsteroid);
+    }
+
+    if(gameState.solisManager){
+      solisManager.loadState(gameState.solisManager);
     }
 
     if(gameState.lifeDesigner){

@@ -32,6 +32,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 - **gold-asteroid.js** spawns a temporary event that awards large production multipliers when clicked.
 - **autobuild.js** automatically constructs buildings based on population ratios when auto-build is enabled.
 - **milestones.js** and **milestonesUI.js** track long term objectives and unlock rewards.
+- **solis.js** and **solisUI.js** manage the Solis shop and quest system which grants Solis points for completing delivery quests.
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
 
 # Effectable Entities Design

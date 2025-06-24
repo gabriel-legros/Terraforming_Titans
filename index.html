@@ -80,6 +80,8 @@
     <script src="milestones.js"></script>
     <script src="milestonesUI.js"></script>
     <script src="hopeUI.js"></script>
+    <script src="solis.js"></script>
+    <script src="solisUI.js"></script>
     <script src="zones.js"></script>
     <script src="globals.js"></script>
     <script src="autobuild.js"></script>
@@ -308,11 +310,21 @@
         <div class="container hope-container">
             <div class="hope-subtabs">
                 <div class="hope-subtab active" data-subtab="awakening-hope">Awakening</div>
+                <div class="hope-subtab" data-subtab="solis-hope">Solis</div>
             </div>
             <div class="hope-subtab-content-wrapper">
                 <div id="awakening-hope" class="hope-subtab-content active">
                     <div id="skill-points-display">Skill Points: <span id="skill-points-value">0</span></div>
                     <div id="skill-tree" class="skill-tree"></div>
+                </div>
+                <div id="solis-hope" class="hope-subtab-content">
+                    <div id="solis-points-display">Solis Points: <span id="solis-points-value">0</span></div>
+                    <div id="solis-quest-text">No quest available</div>
+                    <div>Reward: <span id="solis-reward">1</span> point(s)</div>
+                    <button id="solis-complete-button">Complete Quest</button>
+                    <button id="solis-refresh-button">Refresh</button>
+                    <button id="solis-multiply-button">x10</button>
+                    <button id="solis-divide-button">/10</button>
                 </div>
             </div>
         </div>
