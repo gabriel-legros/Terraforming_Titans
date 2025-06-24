@@ -3,6 +3,8 @@ const path = require('path');
 const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
+const EffectableEntity = require('../effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
 const { SolisManager } = require('../solis.js');
 
 describe('HOPE tab alert for Solis quests', () => {

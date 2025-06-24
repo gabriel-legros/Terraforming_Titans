@@ -7,8 +7,9 @@ const RESOURCE_UPGRADE_AMOUNTS = {
   androids: 100
 };
 
-class SolisManager {
+class SolisManager extends EffectableEntity {
   constructor(resourceValues = {}) {
+    super({ description: 'Solis Manager' });
     this.resourceValues = Object.assign({
       metal: 1,
       components: 10,
@@ -196,6 +197,12 @@ class SolisManager {
           this.shopUpgrades[k].purchases = data.upgrades[k];
         }
       }
+    }
+  }
+
+  enable() {
+    if (typeof showSolisTab === 'function') {
+      showSolisTab();
     }
   }
 }

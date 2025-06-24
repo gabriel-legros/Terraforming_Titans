@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { SolisManager } = require('../solis.js');
 const EffectableEntity = require('../effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
+const { SolisManager } = require('../solis.js');
 
 describe('Solis funding upgrade', () => {
   let FundingModule;

@@ -136,11 +136,6 @@ class EffectableEntity {
             activateHopeSubtab(effect.targetId);
           }
           break;
-        case 'showSolisTab':
-          if (typeof showSolisTab === 'function') {
-            showSolisTab();
-          }
-          break;
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
@@ -501,7 +496,8 @@ function addOrRemoveEffect(effect, action) {
     'lifeDesigner': lifeDesigner,
     'lifeManager': lifeManager,
     'oreScanner': oreScanner,
-    'researchManager' : researchManager
+    'researchManager' : researchManager,
+    'solisManager' : solisManager
   };
 
   if (effect.target in targetHandlers) {

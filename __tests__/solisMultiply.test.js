@@ -5,6 +5,8 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
+const EffectableEntity = require('../effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
 const { SolisManager } = require('../solis.js');
 
 describe('Solis UI multiply button', () => {

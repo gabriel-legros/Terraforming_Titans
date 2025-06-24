@@ -902,7 +902,7 @@ progressData = {
         narrative: "Adrian Solis appears once more. 'H.O.P.E., I'm proud to back this mission. If you can assist me as well, Solis Corp can offer even greater aid.'",
         objectives: [],
         reward: [
-          { target: 'global', type: 'showSolisTab' },
+          { target: 'solisManager', type: 'enable' },
           { target: 'global', type: 'activateHopeSubtab', targetId: 'solis-hope', onLoad: false }
         ],
         nextChapter: null

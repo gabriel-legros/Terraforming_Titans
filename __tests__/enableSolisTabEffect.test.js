@@ -6,9 +6,10 @@ const vm = require('vm');
 
 const effectCode = fs.readFileSync(path.join(__dirname, '..', 'effectable-entity.js'), 'utf8');
 const solisUICode = fs.readFileSync(path.join(__dirname, '..', 'solisUI.js'), 'utf8');
+const solisCode = fs.readFileSync(path.join(__dirname, '..', 'solis.js'), 'utf8');
 const hopeUICode = fs.readFileSync(path.join(__dirname, '..', 'hopeUI.js'), 'utf8');
 
-describe('showSolisTab and activateHopeSubtab effects', () => {
+describe('enable effect with SolisManager and activateHopeSubtab', () => {
   test('reveals and activates the Solis tab', () => {
     const dom = new JSDOM(`<!DOCTYPE html>
       <div class="hope-subtab" data-subtab="awakening-hope"></div>
@@ -19,11 +20,12 @@ describe('showSolisTab and activateHopeSubtab effects', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     vm.createContext(ctx);
-    vm.runInContext(`${solisUICode}\n${hopeUICode}\n${effectCode}; this.EffectableEntity = EffectableEntity;`, ctx);
+    vm.runInContext(`${effectCode}\n${solisUICode}\n${solisCode}\n${hopeUICode}; this.EffectableEntity = EffectableEntity; this.SolisManager = SolisManager;`, ctx);
     ctx.globalEffects = new ctx.EffectableEntity({ description: 'global' });
-    ctx.globalEffects.addAndReplace({
-      target: 'global',
-      type: 'showSolisTab',
+    ctx.solisManager = new ctx.SolisManager();
+    ctx.solisManager.addAndReplace({
+      target: 'solisManager',
+      type: 'enable',
       effectId: 't1',
       sourceId: 't1'
     });
