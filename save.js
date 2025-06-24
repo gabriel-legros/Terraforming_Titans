@@ -12,6 +12,7 @@ function getGameState() {
     terraforming: terraforming.saveState(),
     story: storyManager.saveState(),
     journalEntries: journalEntriesData,
+    journalHistory: journalHistoryData,
     goldenAsteroid: goldenAsteroid.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
@@ -131,7 +132,8 @@ function loadGame(slotOrCustomString) {
     }
 
       if (gameState.journalEntries) {
-        loadJournalEntries(gameState.journalEntries); // Restore journal entries
+        const history = gameState.journalHistory || gameState.journalEntries;
+        loadJournalEntries(gameState.journalEntries, history); // Restore journal
       }
 
       // Restore research progress

@@ -1,4 +1,5 @@
-let journalEntriesData = []; // Array to store journal entries
+let journalEntriesData = []; // Array to store entries currently shown
+let journalHistoryData = []; // Array to store all journal history
 let journalCollapsed = false;
 let journalUnread = false;
 
@@ -28,6 +29,7 @@ function processNextJournalEntry() {
   journalEntries.appendChild(entry); // Append the empty paragraph first
 
   journalEntriesData.push(text); // Store the journal entry in the array
+  journalHistoryData.push(text); // Also keep it in the full history
 
   let index = 0;
 
@@ -62,7 +64,7 @@ function processNextJournalEntry() {
   }
 }
 
-function loadJournalEntries(entries) {
+function loadJournalEntries(entries, history = null) {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
@@ -84,6 +86,11 @@ function loadJournalEntries(entries) {
 
   journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
   journalEntriesData = entries; // Restore the journalEntriesData array
+  if (history) {
+    journalHistoryData = history.slice();
+  } else {
+    journalHistoryData = entries.slice();
+  }
 }
 
 /**
@@ -92,7 +99,7 @@ function loadJournalEntries(entries) {
 function clearJournal() {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Remove all entries from the display
-  journalEntriesData = []; // Clear the stored data array
+  journalEntriesData = []; // Clear the stored data array but keep history
   journalQueue = [];
   journalTyping = false;
   journalCurrentEventId = null;
@@ -120,9 +127,52 @@ function toggleJournal() {
   }
 }
 
+function showJournalHistory() {
+  const overlay = document.createElement('div');
+  overlay.classList.add('history-overlay');
+
+  const windowDiv = document.createElement('div');
+  windowDiv.classList.add('history-window');
+
+  const title = document.createElement('h2');
+  title.textContent = 'Journal History';
+
+  const entriesContainer = document.createElement('div');
+  entriesContainer.classList.add('history-entries');
+  journalHistoryData.forEach(text => {
+    const entry = document.createElement('p');
+    const lines = text.split('\n');
+    lines.forEach((line, idx) => {
+      entry.appendChild(document.createTextNode(line));
+      if (idx < lines.length - 1) {
+        entry.appendChild(document.createElement('br'));
+      }
+    });
+    entriesContainer.appendChild(entry);
+  });
+
+  const closeBtn = document.createElement('button');
+  closeBtn.classList.add('history-close-button');
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+
+  windowDiv.appendChild(title);
+  windowDiv.appendChild(entriesContainer);
+  windowDiv.appendChild(closeBtn);
+
+  overlay.appendChild(windowDiv);
+  document.body.appendChild(overlay);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const toggleButton = document.getElementById('toggle-journal-button');
   if (toggleButton) {
     toggleButton.addEventListener('click', toggleJournal);
+  }
+  const historyButton = document.getElementById('show-history-button');
+  if (historyButton) {
+    historyButton.addEventListener('click', showJournalHistory);
   }
 });
