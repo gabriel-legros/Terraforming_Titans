@@ -76,9 +76,7 @@ function create() {
 
   goldenAsteroid = new GoldenAsteroid();
 
-  if (!preserveManagers || !solisManager) {
-    solisManager = new SolisManager();
-  }
+  solisManager = new SolisManager();
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
