@@ -227,14 +227,14 @@ const buildingsParameters = {
     unlocked: false
   },
   hydrocarbonGenerator: {
-    name: 'Hydrocarbon Generator',
+    name: 'Methane Flare',
     category: 'energy',
     description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
-    cost: { colony: { metal: 50, components: 2} },
-    consumption: { atmospheric: { atmosphericMethane: 1, oxygen: 4 } },
+    cost: { colony: { metal: 15, components: 2} },
+    consumption: { atmospheric: { atmosphericMethane: 5, oxygen: 19.95 } },
     production: {
-      colony: { energy: 600000 },
-      atmospheric: { carbonDioxide: 2.75, atmosphericWater: 2.25 }
+      colony: { energy: 1000000 },
+      atmospheric: { carbonDioxide: 13.7, atmosphericWater: 11.25 }
     },
     storage: {},
     dayNightActivity: false,
