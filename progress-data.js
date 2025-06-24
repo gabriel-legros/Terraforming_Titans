@@ -286,11 +286,11 @@ progressData = {
       {
         id: "chapter1.12",
         type: "journal",
-        narrative: "Power requirement detected for Ore Mine. Objective: Construct a Wind Turbine.",
+        narrative: "Power requirement detected for Ore Mine. Objective: Construct two Wind Turbines.",
         objectives: [{
             type: 'building',
             buildingName: 'windTurbine',
-            quantity: 1
+            quantity: 2
         }
         ],
         reward: [
