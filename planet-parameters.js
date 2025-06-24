@@ -46,7 +46,7 @@ const defaultPlanetParameters = {
       superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} },
       androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
       research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
-      advancedResearch: { name: 'Advanced Research', initialValue: 0, hasCap: false, unlocked:false },
+      advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false },
     },
     surface: {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
@@ -60,7 +60,7 @@ const defaultPlanetParameters = {
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
-      geothermal: { name: 'Geothermal vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
+      geothermal: { name: 'Geo. vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
     },
     atmospheric: {
       carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23157704873578.164, unlocked:false }, // Default (Mars)
