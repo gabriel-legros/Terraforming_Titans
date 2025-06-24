@@ -1,5 +1,15 @@
 let solisTabVisible = true;
 let solisUIInitialized = false;
+const shopElements = {};
+const shopDescriptions = {
+  funding: 'Increase funding by 1',
+  metal: 'Increase starting metal by 100',
+  components: 'Increase starting components by 100',
+  electronics: 'Increase starting electronics by 100',
+  glass: 'Increase starting glass by 100',
+  water: 'Increase starting water by 1M',
+  androids: 'Increase starting androids by 100'
+};
 
 function showSolisTab() {
   solisTabVisible = true;
@@ -15,6 +25,34 @@ function hideSolisTab() {
   const content = document.getElementById('solis-hope');
   if (tab) tab.classList.add('hidden');
   if (content) content.classList.add('hidden');
+}
+
+function createShopItem(key) {
+  const item = document.createElement('div');
+  item.classList.add('solis-shop-item');
+
+  const label = document.createElement('span');
+  label.innerHTML = `${shopDescriptions[key]} (Cost: <span id="solis-shop-${key}-cost"></span>)`;
+  item.appendChild(label);
+
+  const button = document.createElement('button');
+  button.id = `solis-shop-${key}-button`;
+  button.textContent = 'Buy';
+  button.addEventListener('click', () => {
+    solisManager.purchaseUpgrade(key);
+    updateSolisUI();
+  });
+  item.appendChild(button);
+
+  const purchased = document.createElement('span');
+  purchased.innerHTML = `Purchased: <span id="solis-shop-${key}-count">0</span>`;
+  item.appendChild(purchased);
+
+  const costSpan = label.querySelector(`#solis-shop-${key}-cost`);
+  const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
+
+  shopElements[key] = { button, cost: costSpan, count: countSpan };
+  return item;
 }
 
 function initializeSolisUI() {
@@ -52,11 +90,10 @@ function initializeSolisUI() {
     });
   }
 
-  const fundingBtn = document.getElementById('solis-shop-funding-button');
-  if (fundingBtn) {
-    fundingBtn.addEventListener('click', () => {
-      solisManager.purchaseUpgrade('funding');
-      updateSolisUI();
+  const container = document.getElementById('solis-shop-items');
+  if (container) {
+    ['funding', 'metal', 'components', 'electronics', 'glass', 'water', 'androids'].forEach(key => {
+      container.appendChild(createShopItem(key));
     });
   }
   
@@ -127,12 +164,13 @@ function updateSolisUI() {
     }
   }
 
-  const fundingCost = document.getElementById('solis-shop-funding-cost');
-  const fundingCount = document.getElementById('solis-shop-funding-count');
-  const fundingBtn = document.getElementById('solis-shop-funding-button');
-  if (fundingCost) fundingCost.textContent = solisManager.getUpgradeCost('funding');
-  if (fundingCount) fundingCount.textContent = solisManager.shopUpgrades.funding.purchases;
-  if (fundingBtn) fundingBtn.disabled = solisManager.solisPoints < solisManager.getUpgradeCost('funding');
+  for (const key in shopElements) {
+    const el = shopElements[key];
+    if (!el) continue;
+    if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
+    if (el.count) el.count.textContent = solisManager.shopUpgrades[key].purchases;
+    if (el.button) el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
