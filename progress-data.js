@@ -836,7 +836,7 @@ progressData = {
       {
         id: "chapter4.12",
         type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E., Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        narrative: "Receiving transmission...\n  'Hi it's Mary again. Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
         objectives: [{
           type: 'project',
           projectId: 'earthProbe',
