@@ -837,7 +837,11 @@ progressData = {
         id: "chapter4.12",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
-        objectives: [],
+        objectives: [{
+          type: 'project',
+          projectId: 'earthProbe',
+          repeatCount: 10
+        }],
         reward: [
           {
             target: 'project',
@@ -856,7 +860,21 @@ progressData = {
       {
         id: "chapter4.13",
         type: "journal",
-        narrative: "Complete the Earth Recon Probe special project to investigate Earth's fate.",
+        narrative: "Results received. Forwarding complete dataset to Mars for review.",
+        reward: [],
+        nextChapter: "chapter5.0"
+      },
+      {
+        id: "chapter5.0",
+        type: "journal",
+        title: "Lamb Among Wolves",
+        narrative: "Mary pores over the probe telemetry and grimly summarizes the devastation. She insists expansion must continue, but we need far more people.",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 1000000
+        }],
         reward: [],
         nextChapter: null
       }
