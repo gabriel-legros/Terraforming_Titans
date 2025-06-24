@@ -604,7 +604,7 @@ progressData = {
       {
         id: "chapter3.2",
         type: "journal",
-        narrative: "Milestone Achievement: Liquid water is now stable at the equator.",
+        narrative: "Milestone Achievement: Liquid water is now stable at the equator.  Processing blueprint : waterPump.btb...",
         objectives: [],
         reward: [{
           target: 'building',
