@@ -1027,7 +1027,7 @@ const researchParameters = {
         id: 'hyperion_lantern',
         name: 'Hyperion Lantern',
         description: 'Research the construction of a large orbital facility that increases planetary luminosity.',
-        cost: { advancedResearch: 5000 },
+        cost: { advancedResearch: 10000 },
         prerequisites: [],
         effects: [
           {

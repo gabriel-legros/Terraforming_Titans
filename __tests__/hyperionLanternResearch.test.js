@@ -13,7 +13,7 @@ describe('Hyperion Lantern research', () => {
     const advanced = ctx.researchParameters.advanced;
     const research = advanced.find(r => r.id === 'hyperion_lantern');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(5000);
+    expect(research.cost.advancedResearch).toBe(10000);
     const enable = research.effects.find(e => e.target === 'project' && e.targetId === 'hyperionLantern');
     expect(enable).toBeDefined();
   });
