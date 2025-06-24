@@ -199,7 +199,7 @@ const buildingsParameters = {
     name: 'Wind Turbine Array',
     category: 'energy',
     description: 'Produces energy consistently, unaffected by the day or night cycle, harnessing wind power.',
-    cost: { colony: { metal: 95, components: 5 } },
+    cost: { colony: { metal: 25, components: 5 } },
     consumption: {},
     production: { colony: { energy: 300000 } },
     storage: {},
