@@ -20,6 +20,16 @@ function initializeHopeUI() {
     }
 }
 
+function updateHopeAlert() {
+    const alertEl = document.getElementById('hope-alert');
+    if (!alertEl) return;
+    if (typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible) {
+        alertEl.style.display = 'inline';
+    } else {
+        alertEl.style.display = 'none';
+    }
+}
+
 function updateHopeUI() {
     if (typeof updateSkillTreeUI === 'function') {
         updateSkillTreeUI();
@@ -27,5 +37,6 @@ function updateHopeUI() {
     if (typeof updateSolisUI === 'function') {
         updateSolisUI();
     }
+    updateHopeAlert();
 }
 

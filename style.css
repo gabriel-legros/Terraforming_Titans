@@ -167,6 +167,13 @@ body {
     display: none;
 }
 
+.hope-alert {
+    color: red;
+    font-weight: bold;
+    display: none;
+    margin-left: 4px;
+}
+
 .journal.collapsed {
     display: none;
 }
