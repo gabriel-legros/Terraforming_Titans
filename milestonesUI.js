@@ -9,7 +9,7 @@ function createMilestonesUI() {
 
     // Add a short description below the header
     const description = document.createElement('p');
-    description.textContent = 'Track your progress and unlock up to 5% colony happiness as you achieve these terraforming milestones.  Each milestone completed will also start a festival.';
+    description.textContent = 'Track your progress and unlock up to 10% colony happiness as you achieve these terraforming milestones.  Each milestone completed will also start a festival.';
     milestonesContainer.appendChild(description);
 
     // Add total bonuses display
