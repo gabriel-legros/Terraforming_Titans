@@ -8,6 +8,7 @@ class PopulationModule extends EffectableEntity {
       this.workerRatio = this.baseWorkerRatio; // Current ratio of colonists that become workers
       this.growthRate = 0; // Population growth rate, e.g., 0.01 for 1% per second
       this.totalWorkersRequired = 0;
+      this.lastGrowthPerSecond = 0; // Tracks actual population change per second
     }
 
   getEffectiveGrowthMultiplier(){
@@ -28,6 +29,16 @@ class PopulationModule extends EffectableEntity {
       }
     });
     return ratio;
+  }
+
+  getCurrentGrowthPerSecond(){
+    return this.lastGrowthPerSecond;
+  }
+
+  getCurrentGrowthPercent(){
+    const currentPopulation = this.populationResource.value;
+    if(currentPopulation === 0) return 0;
+    return (this.lastGrowthPerSecond / currentPopulation) * 100;
   }
   
     calculateGrowthRate() {
@@ -69,15 +80,20 @@ class PopulationModule extends EffectableEntity {
       if (this.growthRate > 0 && populationCap > 0) {
         // Logistic growth formula: dP/dt = r * P * (1 - P / K)
         const logisticGrowth = this.growthRate * currentPopulation * (1 - currentPopulation / populationCap) * this.getEffectiveGrowthMultiplier();
+        this.lastGrowthPerSecond = logisticGrowth;
         populationChange = logisticGrowth * (deltaTime / 1000);
       } else if (this.growthRate < 0) {
         // Decay even if population is above the cap
         const decayRate = this.growthRate * currentPopulation;
+        this.lastGrowthPerSecond = decayRate;
         populationChange = decayRate * (deltaTime / 1000);
       } else if (currentPopulation > populationCap && currentPopulation > 0) {
         // Decay when cap is 0
         const decayRate = -0.1 * currentPopulation;
+        this.lastGrowthPerSecond = decayRate;
         populationChange = decayRate * (deltaTime / 1000);
+      } else {
+        this.lastGrowthPerSecond = 0;
       }
   
       // Apply the population change and update production/consumption rates

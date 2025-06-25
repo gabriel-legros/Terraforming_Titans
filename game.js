@@ -220,6 +220,9 @@ function updateRender() {
   updateResourceDisplay(resources);
   updateBuildingDisplay(buildings);  // Render building information
   updateColonyDisplay(colonies);     // Render colony information
+  if (typeof updateGrowthRateDisplay === 'function') {
+    updateGrowthRateDisplay();
+  }
   renderProjects();                  // Render project information (handled in projects.js)
   updateResearchUI();
   updateTerraformingUI();

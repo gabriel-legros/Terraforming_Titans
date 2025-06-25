@@ -1,5 +1,38 @@
 let showObsoleteBuildings = false;
 
+function createGrowthRateDisplay(){
+  const header = document.querySelector('.colonies-container .header-container');
+  if(!header || document.getElementById('growth-rate-container')) return;
+
+  const container = document.createElement('div');
+  container.id = 'growth-rate-container';
+  container.classList.add('growth-rate');
+
+  const label = document.createElement('span');
+  label.textContent = 'Growth:';
+  container.appendChild(label);
+
+  const value = document.createElement('span');
+  value.id = 'growth-rate-value';
+  value.textContent = '0%/s';
+  container.appendChild(value);
+
+  const info = document.createElement('span');
+  info.classList.add('info-tooltip-icon');
+  info.title = 'Population growth uses logistic growth: rate \u00d7 population \u00d7 (1 - population / capacity). The rate is (happiness - 50%) / 300. Food and energy each provide up to 50 happiness when satisfied. Comfort adds 20 times its rating. Each luxury good can add 10 happiness if food and energy are met. Milestones provide additional happiness. Happiness above 50% increases growth, while below 50% causes decay.';
+  info.innerHTML = '\u9432';
+  container.appendChild(info);
+
+  header.appendChild(container);
+}
+
+function updateGrowthRateDisplay(){
+  const el = document.getElementById('growth-rate-value');
+  if(!el || typeof populationModule === 'undefined') return;
+  const rate = populationModule.getCurrentGrowthPercent();
+  el.textContent = `${rate >= 0 ? '+' : ''}${formatNumber(rate, false, 2)}%/s`;
+}
+
 // Create the colony-specific details display
 function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
@@ -127,4 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateColonyDisplay(colonies); // Re-render to show the unhidden buildings
     });
   }
+
+  createGrowthRateDisplay();
 });
