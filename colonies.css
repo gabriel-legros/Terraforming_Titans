@@ -19,6 +19,15 @@
     background-color: #45a049;
   }
 
+  /* Growth rate display */
+  #growth-rate-container {
+    margin-left: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
 /* Style the need boxes */
 .need-box {
   width: 120px;
