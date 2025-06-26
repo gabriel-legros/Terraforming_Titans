@@ -69,16 +69,17 @@ const skillParameters = {
     },
     requires: ['pop_growth']
   },
-  scanning_speed: {
-    id: 'scanning_speed',
-    name: 'Rapid Prospecting',
-    description: 'Doubles ore scanning speed each rank',
+  android_efficiency: {
+    id: 'android_efficiency',
+    name: 'Androids Efficiency',
+    description: 'Increases android factory production by 40% per rank',
     cost: 1,
     maxRank: 5,
     effect: {
-      target: 'oreScanner',
-      type: 'scanningSpeedMultiplier',
-      baseValue: 2,
+      target: 'building',
+      targetId: 'androidFactory',
+      type: 'productionMultiplier',
+      baseValue: 0.4,
       perRank: true
     },
     requires: ['project_speed']
