@@ -67,7 +67,7 @@ const skillParameters = {
       baseValue: 0.1,
       perRank: true
     },
-    requires: ['worker_reduction']
+    requires: ['pop_growth']
   },
   scanning_speed: {
     id: 'scanning_speed',
@@ -81,7 +81,7 @@ const skillParameters = {
       baseValue: 2,
       perRank: true
     },
-    requires: ['maintenance_reduction']
+    requires: ['project_speed']
   },
   ship_efficiency: {
     id: 'ship_efficiency',
@@ -95,7 +95,7 @@ const skillParameters = {
       baseValue: 0.2,
       perRank: true
     },
-    requires: ['maintenance_reduction']
+    requires: ['project_speed']
   },
   project_speed: {
     id: 'project_speed',
@@ -109,7 +109,7 @@ const skillParameters = {
       baseValue: 0.15,
       perRank: true
     },
-    requires: ['pop_growth']
+    requires: ['worker_reduction']
   },
   life_design_points: {
     id: 'life_design_points',
