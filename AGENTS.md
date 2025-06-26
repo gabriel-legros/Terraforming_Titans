@@ -34,6 +34,13 @@ scripts implement the tabs, pop-ups and other interface elements.
 - **milestones.js** and **milestonesUI.js** track long term objectives and unlock rewards.
 - **solis.js** and **solisUI.js** manage the Solis shop and quest system which grants Solis points for completing delivery quests.
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
+- **projects.js** and **projectsUI.js** handle special missions such as asteroid mining, cargo exports and other repeatable tasks.
+- **spaceship.js** with **spaceshipUI.js** allows producing spaceships and assigning them to projects.
+- **day-night-cycle.js** updates a UI progress bar showing planetary time and affects building productivity.
+- **journal.js** maintains a log of story messages with typing effects and history display.
+- **population.js** together with colony modules controls growth, worker allocation and happiness.
+- **ore-scanning.js** searches for underground resource deposits using adjustable scanning strength.
+- **warning.js** displays urgent alerts like colonist deaths or extreme greenhouse conditions.
 
 # Effectable Entities Design
 
