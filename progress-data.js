@@ -930,6 +930,32 @@ progressData = {
             onLoad: false
           }
         ],
+        nextChapter: "chapter5.3"
+      },
+      {
+        id: "chapter5.3",
+        type: "journal",
+        narrative: "Solis Corp requests a demonstration of cooperation. Complete a trade to prove your usefulness.",
+        objectives: [
+          { type: 'solisPoints', points: 1 }
+        ],
+        reward: [],
+        nextChapter: "chapter5.4"
+      },
+      {
+        id: "chapter5.4",
+        type: "journal",
+        narrative: "Receiving transmission...\\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
+        objectives: [],
+        reward: [],
+        nextChapter: "chapter5.5"
+      },
+      {
+        id: "chapter5.5",
+        type: "journal",
+        narrative: "System Message: New Interpretation of 2nd Primary directive : Protect all of Humanity's from harm",
+        objectives: [],
+        reward: [],
         nextChapter: null
       }
     ]
