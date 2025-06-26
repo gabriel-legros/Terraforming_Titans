@@ -71,6 +71,7 @@ function initializeSolisUI() {
   const completeBtn = document.getElementById('solis-complete-button');
   const multBtn = document.getElementById('solis-multiply-button');
   const divBtn = document.getElementById('solis-divide-button');
+  const silenceToggle = document.getElementById('solis-silence-toggle');
 
   if (refreshBtn) {
     refreshBtn.addEventListener('click', () => {
@@ -95,6 +96,20 @@ function initializeSolisUI() {
     divBtn.addEventListener('click', () => {
       solisManager.divideReward();
       updateSolisUI();
+    });
+  }
+
+  if (silenceToggle) {
+    if (typeof gameSettings !== 'undefined') {
+      silenceToggle.checked = gameSettings.silenceSolisAlert || false;
+    }
+    silenceToggle.addEventListener('change', () => {
+      if (typeof gameSettings !== 'undefined') {
+        gameSettings.silenceSolisAlert = silenceToggle.checked;
+      }
+      if (typeof updateHopeAlert === 'function') {
+        updateHopeAlert();
+      }
     });
   }
 
