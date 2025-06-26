@@ -253,11 +253,16 @@ class StoryManager {
                 }
                 return false;
            case 'project':
-                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
+                if (typeof projectManager !== 'undefined' && projectManager.projects) {
                      const proj = projectManager.projects[objective.projectId];
                      return proj ? proj.repeatCount >= objective.repeatCount : false;
-                 }
-                 return false;
+                }
+                return false;
+          case 'solisPoints':
+               if (typeof solisManager !== 'undefined') {
+                   return solisManager.solisPoints >= (objective.points || 0);
+               }
+               return false;
            default:
                 console.error(`Unknown objective type: ${objective.type}`);
                 return false;
@@ -319,7 +324,7 @@ class StoryManager {
                 const name = names[objective.terraformingParameter] || objective.terraformingParameter;
                return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
            }
-            case 'project': {
+           case 'project': {
                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
                     const proj = projectManager.projects[objective.projectId];
                     const current = proj ? proj.repeatCount : 0;
@@ -327,6 +332,10 @@ class StoryManager {
                     return `${name}: ${format(current, true)}/${format(objective.repeatCount, true)}`;
                 }
                 return '';
+            }
+           case 'solisPoints': {
+                const current = solisManager ? solisManager.solisPoints || 0 : 0;
+                return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
             }
            default:
                 return '';
