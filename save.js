@@ -176,6 +176,10 @@ function loadGame(slotOrCustomString) {
       if(toggle){
         toggle.checked = gameSettings.useCelsius;
       }
+      const silenceToggle = document.getElementById('solis-silence-toggle');
+      if(silenceToggle){
+        silenceToggle.checked = gameSettings.silenceSolisAlert;
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {

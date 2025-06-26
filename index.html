@@ -344,6 +344,11 @@
                                 <button id="solis-complete-button">Complete Quest</button>
                             </div>
                         </div>
+                        <div class="solis-options">
+                            <label>
+                                <input type="checkbox" id="solis-silence-toggle"> Silence quest alert
+                            </label>
+                        </div>
                         <div class="solis-shop">
                             <div id="solis-shop-items"></div>
                         </div>
@@ -529,6 +534,15 @@
         celsiusToggle.addEventListener('change', () => {
             gameSettings.useCelsius = celsiusToggle.checked;
             updateTerraformingUI();
+        });
+    }
+
+    const silenceToggle = document.getElementById('solis-silence-toggle');
+    if (silenceToggle) {
+        silenceToggle.checked = gameSettings.silenceSolisAlert;
+        silenceToggle.addEventListener('change', () => {
+            gameSettings.silenceSolisAlert = silenceToggle.checked;
+            updateHopeAlert();
         });
     }
 

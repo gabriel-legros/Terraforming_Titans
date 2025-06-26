@@ -21,6 +21,7 @@ let fundingModule;
 let gameSettings = {
   useCelsius: false,
   hideCompletedResearch: false,
+  silenceSolisAlert: false,
 };
 
 let colonySliderSettings = {

@@ -27,6 +27,10 @@ function initializeHopeUI() {
 function updateHopeAlert() {
     const alertEl = document.getElementById('hope-alert');
     if (!alertEl) return;
+    if (typeof gameSettings !== 'undefined' && gameSettings.silenceSolisAlert) {
+        alertEl.style.display = 'none';
+        return;
+    }
     if (typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible) {
         alertEl.style.display = 'inline';
     } else {
