@@ -61,6 +61,8 @@ class SkillManager {
     if (skill.effect.perRank) {
       if (skill.id === 'scanning_speed' && skill.effect.type === 'scanningSpeedMultiplier') {
         effect.value = Math.pow(skill.effect.baseValue, skill.rank);
+      } else if (skill.id === 'android_efficiency' && skill.effect.type === 'productionMultiplier') {
+        effect.value = 1 + skill.effect.baseValue * skill.rank;
       } else {
         effect.value = skill.effect.baseValue * skill.rank;
       }

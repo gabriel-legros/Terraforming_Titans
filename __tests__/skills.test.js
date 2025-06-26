@@ -69,25 +69,25 @@ describe('SkillManager save/load', () => {
     );
   });
 
-  test('scanning_speed scales exponentially', () => {
+  test('android_efficiency scales linearly', () => {
     const skillParams = require('../skills-parameters.js');
-    const data = { scanning_speed: skillParams.scanning_speed };
+    const data = { android_efficiency: skillParams.android_efficiency };
     const manager = new SkillManager(data);
-    manager.unlockSkill('scanning_speed');
+    manager.unlockSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 2, sourceId: 'scanning_speed' })
+      expect.objectContaining({ value: 1.4, sourceId: 'android_efficiency' })
     );
 
     global.addEffect.mockClear();
-    manager.upgradeSkill('scanning_speed');
+    manager.upgradeSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 4, sourceId: 'scanning_speed' })
+      expect.objectContaining({ value: 1.8, sourceId: 'android_efficiency' })
     );
 
     global.addEffect.mockClear();
-    manager.upgradeSkill('scanning_speed');
+    manager.upgradeSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 8, sourceId: 'scanning_speed' })
+      expect.objectContaining({ value: 2.2, sourceId: 'android_efficiency' })
     );
   });
 

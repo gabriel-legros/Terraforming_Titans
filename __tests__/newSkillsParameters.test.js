@@ -20,8 +20,8 @@ describe('new skill parameter definitions', () => {
     expect(skill.requires).toContain('research_boost');
   });
 
-  test('scanning_speed requires project_speed after swap', () => {
-    const skill = skillParams.scanning_speed;
+  test('android_efficiency requires project_speed', () => {
+    const skill = skillParams.android_efficiency;
     expect(skill.requires).toContain('project_speed');
   });
 });
