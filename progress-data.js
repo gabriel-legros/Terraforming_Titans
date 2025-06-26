@@ -945,7 +945,7 @@ progressData = {
       {
         id: "chapter5.4",
         type: "journal",
-        narrative: "Receiving transmission...\\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
         objectives: [],
         reward: [],
         nextChapter: "chapter5.5"
