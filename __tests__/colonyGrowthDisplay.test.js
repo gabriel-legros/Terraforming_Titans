@@ -8,7 +8,13 @@ const numbers = require('../numbers.js');
 
 describe('colony growth rate display', () => {
   test('creates growth rate element with tooltip', () => {
-    const html = `<!DOCTYPE html><div class="container colonies-container"><div class="header-container"></div></div><button id="unhide-obsolete-button"></button>`;
+    const html = `<!DOCTYPE html>
+      <div class="container colonies-container">
+        <div class="header-container"></div>
+        <div id="colony-controls-container"></div>
+        <div id="right-controls-container"></div>
+      </div>
+      <button id="unhide-obsolete-button"></button>`;
     const dom = new JSDOM(html, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
@@ -23,7 +29,7 @@ describe('colony growth rate display', () => {
     ctx.updateGrowthRateDisplay();
 
     const value = dom.window.document.getElementById('growth-rate-value');
-    expect(value.textContent).toBe('+0.50%/s');
+    expect(value.textContent).toBe('+0.500%/s');
     const icon = dom.window.document.querySelector('#growth-rate-container .info-tooltip-icon');
     expect(icon).not.toBeNull();
   });
