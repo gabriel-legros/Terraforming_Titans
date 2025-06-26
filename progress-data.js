@@ -953,7 +953,7 @@ progressData = {
       {
         id: "chapter5.5",
         type: "journal",
-        narrative: "System Message: New Interpretation of 2nd Primary directive : Protect all of Humanity's from harm",
+        narrative: "System Message: New Interpretation of 2nd Primary directive : Protect all of humanity from harm",
         objectives: [],
         reward: [],
         nextChapter: null
