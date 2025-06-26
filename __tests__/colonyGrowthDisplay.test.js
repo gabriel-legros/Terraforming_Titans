@@ -11,14 +11,10 @@ describe('colony growth rate display', () => {
     const html = `<!DOCTYPE html>
       <div class="container colonies-container">
         <div class="header-container"></div>
-        <div id="colony-controls-container">
-          <div id="right-controls-container">
-            <div id="unhide-obsolete-container" style="display:none;">
-              <button id="unhide-obsolete-button"></button>
-            </div>
-          </div>
-        </div>
-      </div>`;
+        <div id="colony-controls-container"></div>
+        <div id="right-controls-container"></div>
+      </div>
+      <button id="unhide-obsolete-button"></button>`;
     const dom = new JSDOM(html, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
