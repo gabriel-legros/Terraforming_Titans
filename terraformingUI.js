@@ -335,14 +335,6 @@ function createTemperatureBox(row) {
         </thead>
         <tbody>
           <tr>
-            <td>Water coverage (%)</td>
-            <td colspan="2"><span id="water-current">0.00</span></td>
-          </tr>
-          <tr>
-            <td>Ice coverage (%)</td>
-            <td colspan="2"><span id="ice-current">0.00</span></td>
-          </tr>
-          <tr>
             <td>Evaporation rate</td>
             <td><span id="evaporation-rate">N/A</span></td>
             <td><span id="evaporation-rate-kg">N/A</span></td>
@@ -374,6 +366,8 @@ function createTemperatureBox(row) {
           </tr>
         </tbody>
       </table>
+      <p class="no-margin">Water coverage: <span id="water-current">0.00</span>%</p>
+      <p class="no-margin">Ice coverage: <span id="ice-current">0.00</span>%</p>
     `;
 
     const targetSpan = document.createElement('span');
