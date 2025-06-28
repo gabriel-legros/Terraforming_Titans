@@ -303,7 +303,7 @@ const researchParameters = {
       {
         id: 'android_factory',
         name: 'Android Manufacturing',
-        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.  Androids require their own housing.',
+        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.  Androids require their own housing.  They may also be purchased using cargo rockets.',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -638,7 +638,7 @@ const researchParameters = {
       {
         id: 'trading',
         name: 'Ship trading',
-        description: 'Allows the export of metal and purchase of ships via special projects.  Also significantly reduces the duration of cargo rockets.',
+        description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Also significantly reduces the duration of cargo rockets.',
         cost: { research: 1000000 },
         prerequisites: [],
         effects: [
