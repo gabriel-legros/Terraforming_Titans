@@ -243,7 +243,49 @@ function updateResourceRateDisplay(resource){
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
   if (tooltipElement) {
     let tooltipContent = '';
-    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`
+    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
+
+    // Add zonal breakdown for surface resources if available
+    if (typeof terraforming !== 'undefined') {
+      const zoneValues = {};
+      ['tropical', 'temperate', 'polar'].forEach(zone => {
+        let val;
+        switch (resource.name) {
+          case 'liquidWater':
+            val = terraforming.zonalWater?.[zone]?.liquid;
+            break;
+          case 'ice':
+            const iceObj = terraforming.zonalWater?.[zone];
+            if (iceObj) val = (iceObj.ice || 0) + (iceObj.buriedIce || 0);
+            break;
+          case 'dryIce':
+            val = terraforming.zonalSurface?.[zone]?.dryIce;
+            break;
+          case 'biomass':
+            val = terraforming.zonalSurface?.[zone]?.biomass;
+            break;
+          case 'liquidMethane':
+            val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
+            break;
+          case 'hydrocarbonIce':
+            val = terraforming.zonalHydrocarbons?.[zone]?.ice;
+            break;
+          default:
+            val = undefined;
+        }
+        if (typeof val === 'number') {
+          zoneValues[zone] = val;
+        }
+      });
+      if (Object.keys(zoneValues).length > 0) {
+        tooltipContent += '<br><strong>Zonal Amounts:</strong><br>';
+        ['tropical', 'temperate', 'polar'].forEach(zone => {
+          if (zoneValues[zone] !== undefined) {
+            tooltipContent += `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}${resource.unit ? ' ' + resource.unit : ''}<br>`;
+          }
+        });
+      }
+    }
 
     // Generate the production content
     const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
