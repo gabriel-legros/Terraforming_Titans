@@ -329,6 +329,13 @@ class StoryManager {
                     const targetDisp = format(toDisplayTemperature(objective.value), false, 2);
                     return `${name}: ${currentDisp}${unit}/${targetDisp}${unit}`;
                 }
+
+                if (objective.terraformingParameter === 'pressure') {
+                    const currentDisp = format(current, false, 2);
+                    const targetDisp = format(objective.value, false, 2);
+                    return `${name}: ${currentDisp} kPa/${targetDisp} kPa`;
+                }
+
                 return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
            }
            case 'project': {

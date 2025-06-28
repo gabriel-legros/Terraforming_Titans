@@ -177,4 +177,46 @@ describe('current objective UI', () => {
     const text = dom.window.document.getElementById('current-objective').textContent;
     expect(text).toBe('Objective: Equatorial Temp: -53.15°C/-35.15°C');
   });
+
+  test('describes atmospheric pressure objective with units', () => {
+    const dom = new JSDOM(`<!DOCTYPE html><div id="current-objective"></div>`, {
+      runScripts: 'outside-only'
+    });
+    const ctx = dom.getInternalVMContext();
+
+    ctx.console = console;
+    ctx.document = dom.window.document;
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.addJournalEntry = () => {};
+    ctx.createPopup = () => {};
+    ctx.clearJournal = () => {};
+    ctx.addEffect = () => {};
+    ctx.removeEffect = () => {};
+
+    ctx.resources = { colony: {} };
+    ctx.buildings = {};
+    ctx.colonies = {};
+    ctx.terraforming = {
+      calculateTotalPressure: () => 5
+    };
+    ctx.spaceManager = {};
+
+    const code = fs.readFileSync(path.join(__dirname, '..', 'progress.js'), 'utf8');
+    vm.runInContext(`${code}; this.StoryManager = StoryManager;`, ctx);
+
+    const progressData = {
+      chapters: [
+        { id: 'c1', type: 'journal', narrative: '', objectives: [ { type: 'terraforming', terraformingParameter: 'pressure', value: 20 } ] }
+      ]
+    };
+    const manager = new ctx.StoryManager(progressData);
+    ctx.storyManager = manager;
+
+    const event = manager.findEventById('c1');
+    manager.activateEvent(event);
+    manager.update();
+
+    const text = dom.window.document.getElementById('current-objective').textContent;
+    expect(text).toBe('Objective: Atmospheric Pressure: 5.00 kPa/20.00 kPa');
+  });
 });
