@@ -958,7 +958,8 @@ class Terraforming extends EffectableEntity{
 
         const surfaceFractions = {
           ocean: calculateAverageCoverage(this, 'liquidWater'),
-          ice: calculateAverageCoverage(this, 'ice')
+          ice: calculateAverageCoverage(this, 'ice'),
+          biomass: calculateAverageCoverage(this, 'biomass')
         };
 
       const baseParams = {
@@ -988,17 +989,22 @@ class Terraforming extends EffectableEntity{
         const baseAlbedo = this.celestialParameters.albedo;
         const oceanAlbedo = 0.06;
         const upgradeAlbedo = 0.05;
+        const biomassAlbedo = 0.20;
         const surfaceArea = this.celestialParameters.surfaceArea;
 
-        // Use the new helper function to get water coverage ratio
+        // Use helper functions to get coverage ratios
         const waterRatio = calculateAverageCoverage(this, 'liquidWater');
+        const lifeRatio = calculateAverageCoverage(this, 'biomass');
 
         const albedoUpgrades = resources.special.albedoUpgrades.value;
         // Calculate ratios, ensuring they don't exceed available land area
-        const albedoUpgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1 - waterRatio) : 0;
-        const untouchedRatio = Math.max(1 - waterRatio - albedoUpgradeRatio, 0);
+        const albedoUpgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1 - waterRatio - lifeRatio) : 0;
+        const untouchedRatio = Math.max(1 - waterRatio - albedoUpgradeRatio - lifeRatio, 0);
 
-        const effectiveAlbedo = oceanAlbedo * waterRatio + upgradeAlbedo * albedoUpgradeRatio + untouchedRatio * baseAlbedo;
+        const effectiveAlbedo = oceanAlbedo * waterRatio +
+                               upgradeAlbedo * albedoUpgradeRatio +
+                               lifeRatio * biomassAlbedo +
+                               untouchedRatio * baseAlbedo;
         return effectiveAlbedo;
     }
 

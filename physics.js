@@ -91,7 +91,8 @@ const DEFAULT_SURFACE_ALBEDO = {
   ice: 0.65,
   snow: 0.85,
   co2_ice: 0.50,
-  hydrocarbon: 0.10
+  hydrocarbon: 0.10,
+  biomass: 0.20
 };
 
 function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, g = 9.81, kappaSoil = 7e-7, rhoCSoil = 1.4e6) {
