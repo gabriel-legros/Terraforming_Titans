@@ -81,12 +81,12 @@
 
   function fastForwardToEquilibrium(options = {}) {
     let stepMs = options.stepMs || 1000;
-    const maxSteps = options.maxSteps || 100000;
+    const maxSteps = options.maxSteps || 1000;
     const stableSteps = options.stableSteps || 10;
     const threshold = options.threshold ?? 1;
     const refineFactor = options.refineFactor || 0.5;
     const minStepMs = options.minStepMs || 1;
-    const accelerateFactor = options.accelerateFactor || 2;
+    const accelerateFactor = options.accelerateFactor || 1.001;
     const accelerateThreshold = options.accelerateThreshold || 100;
     const maxStepMs = options.maxStepMs || Infinity;
 

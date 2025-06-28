@@ -102,38 +102,47 @@ const marsOverrides = {
     },
     "surface": {
       "ice": {
-        "initialValue": 10000000003490308
+        "initialValue": 9999998491643878
       },
       "liquidWater": {
         "initialValue": 0
       },
       "dryIce": {
-        "initialValue": 30010155358834.945
+        "initialValue": 41602394775150.08
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
       }
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 23157719414803.75
+        "initialValue": 11565479998462.102
       },
       "atmosphericWater": {
-        "initialValue": 9996314386.369434
+        "initialValue": 11508160985.626724
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
       }
     }
   },
   "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 29654963008.267323,
+      "ice": 80580927727.16302,
       "buriedIce": 100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 47845297047.22314,
+      "ice": 622401250174.4773,
       "buriedIce": 900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 6299922503230253,
+      "ice": 6299295509465977,
       "buriedIce": 2700000000000000
     }
   },
@@ -145,9 +154,22 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 30010155358834.945
+      "dryIce": 41602394775150.08
     }
-  }};
+  },
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }  }};
 
 const titanOverrides = {
   name: 'Titan',
