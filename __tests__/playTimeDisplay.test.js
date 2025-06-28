@@ -15,7 +15,7 @@ describe('updatePlayTimeDisplay', () => {
     vm.runInContext(code, ctx);
     ctx.updatePlayTimeDisplay();
     const text = dom.window.document.getElementById('play-time-display').textContent;
-    expect(text).toBe('2 years 0 days');
+    expect(text).toBe('Time since awakening : 2 years 0 days');
   });
 
   test('handles less than one year', () => {
@@ -27,6 +27,6 @@ describe('updatePlayTimeDisplay', () => {
     vm.runInContext(code, ctx);
     ctx.updatePlayTimeDisplay();
     const text = dom.window.document.getElementById('play-time-display').textContent;
-    expect(text).toBe('40 days');
+    expect(text).toBe('Time since awakening : 40 days');
   });
 });
