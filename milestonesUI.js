@@ -97,7 +97,7 @@ function updateMilestonesUI() {
             document.getElementById('festival-container').appendChild(milestonesManager.countdownElement);
         }
         const seconds = Math.ceil(milestonesManager.countdownRemainingTime / 1000);
-        milestonesManager.countdownElement.textContent = `Festival 2x multiplier! ${seconds}s`;
+        milestonesManager.countdownElement.textContent = `Festival 3x multiplier! ${seconds}s`;
     } else {
         if(milestonesManager.countdownElement){
             milestonesManager.countdownElement.remove();
