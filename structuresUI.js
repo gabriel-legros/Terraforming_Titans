@@ -234,6 +234,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildContainer.classList.add('auto-build-container');
 
   const autoBuildInputContainer = document.createElement('div');
+  autoBuildInputContainer.classList.add('auto-build-input-container');
 
   // Checkbox for enabling/disabling auto-build
   const autoBuildCheckbox = document.createElement('input');
@@ -288,6 +289,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildPriorityLabel.prepend(autoBuildPriority);
   autoBuildTargetContainer.appendChild(autoBuildPriorityLabel);
 
+  autoBuildContainer.appendChild(autoBuildTargetContainer);
+
   if(structure.name === 'ghgFactory') {
     const tempControl = document.createElement('div');
     tempControl.id = `${structure.name}-temp-control`;
@@ -323,10 +326,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     unitSpan.textContent = getTemperatureUnit();
     tempControl.appendChild(unitSpan);
 
-    autoBuildTargetContainer.appendChild(tempControl);
+    autoBuildContainer.appendChild(tempControl);
   }
-
-  autoBuildContainer.appendChild(autoBuildTargetContainer);
 
   combinedStructureRow.append(autoBuildContainer);
 

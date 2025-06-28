@@ -100,6 +100,11 @@ function loadGame(slotOrCustomString) {
             building.initializeFromConfig(newConfig, buildingName);
             // Reset effects applied from research
             building.activeEffects = [];
+            if (building.booleanFlags && Array.isArray(building.booleanFlags)) {
+              building.booleanFlags = new Set(building.booleanFlags);
+            } else {
+              building.booleanFlags = new Set();
+            }
           }
         }
       }

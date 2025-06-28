@@ -118,25 +118,36 @@
     align-items: flex-end; /* Aligns items to the right */
     gap: 5px; /* Adds spacing between elements */
     text-align: right;
+    font-size: 0.85em;
 }
 
-.auto-build-input {
-    width: 80px;
+.auto-build-input,
+.ghg-temp-input {
+    width: 60px;
     text-align: right;
 }
 
 .auto-build-target {
     margin-top: 5px; /* Adds spacing above the target */
-    font-size: 12px;
 }
 
-.auto-build-target-container {
+.auto-build-input-container,
+.auto-build-target-container,
+.ghg-temp-control {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 5px;
+    width: 100%;
 }
 
 .auto-build-priority {
     margin-left: 5px;
+}
+
+.ghg-temp-control {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
 }
