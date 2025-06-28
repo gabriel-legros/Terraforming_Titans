@@ -4,6 +4,8 @@ const { getZonePercentage } = require('../zones.js');
 
 global.getZonePercentage = getZonePercentage;
 
+const zoneElevations = { tropical: 0, temperate: 0.5, polar: 1 };
+
 function makeTerraforming(zonalWater) {
   return { zonalWater, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
 }
@@ -34,8 +36,8 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 0, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 250, temperate: 274, tropical: 260 };
-    const melt = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
-    const slopeFactor = 1 + (1 - 0.5);
+    const melt = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
     const expectedMelt = (100 + 50) * 0.01 * slopeFactor;
     const surfaceFraction = 100 / (100 + 50);
     const meltFromIce = expectedMelt * surfaceFraction;
@@ -53,7 +55,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 20, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    const moved = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    const moved = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     expect(moved).toBeCloseTo(0); // no melting expected
     expect(zonalWater.polar.liquid).toBeCloseTo(5, 5);
     expect(zonalWater.temperate.liquid).toBeCloseTo(50, 5);
@@ -66,7 +68,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 40, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     expect(zonalWater.temperate.liquid).toBeCloseTo(43.547, 3);
     expect(zonalWater.polar.liquid).toBeCloseTo(6.453, 3);
   });
@@ -78,7 +80,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 0, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     expect(zonalWater.tropical.liquid).toBeCloseTo(0, 5);
   });
 });
