@@ -325,40 +325,55 @@ function createTemperatureBox(row) {
     waterBox.id = 'water-box';
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
-      <h3>Water</h3> <!-- Static name -->
-      <p>Water coverage: <span id="water-current">0.00</span>%</p>
-      <p>Ice coverage: <span id="ice-current">0.00</span>%</p>
+      <h3>Water</h3>
       <table>
-        <tr>
-          <td>Evaporation rate:</td>
-          <td><span id="evaporation-rate">N/A</span> /s</td>
-          <td><span id="evaporation-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
-        <tr>
-          <td>Sublimation rate:</td>
-          <td><span id="sublimation-rate">N/A</span> /s</td>
-          <td><span id="sublimation-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
-        <tr>
-          <td>Rainfall rate:</td>
-          <td><span id="rainfall-rate">N/A</span> /s</td>
-          <td><span id="rainfall-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
-        <tr>
-          <td>Snowfall rate:</td>
-          <td><span id="snowfall-rate">N/A</span> /s</td>
-          <td><span id="snowfall-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
-        <tr>
-          <td>Melting rate:</td>
-          <td><span id="melting-rate">N/A</span> /s</td>
-          <td><span id="melting-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
-        <tr>
-          <td>Freezing rate:</td>
-          <td><span id="freezing-rate">N/A</span> /s</td>
-          <td><span id="freezing-rate-kg">N/A</span> kg/m²/s</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value (t/s)</th>
+            <th>Rate (kg/m²/s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Water coverage (%)</td>
+            <td colspan="2"><span id="water-current">0.00</span></td>
+          </tr>
+          <tr>
+            <td>Ice coverage (%)</td>
+            <td colspan="2"><span id="ice-current">0.00</span></td>
+          </tr>
+          <tr>
+            <td>Evaporation rate</td>
+            <td><span id="evaporation-rate">N/A</span></td>
+            <td><span id="evaporation-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Sublimation rate</td>
+            <td><span id="sublimation-rate">N/A</span></td>
+            <td><span id="sublimation-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Rainfall rate</td>
+            <td><span id="rainfall-rate">N/A</span></td>
+            <td><span id="rainfall-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Snowfall rate</td>
+            <td><span id="snowfall-rate">N/A</span></td>
+            <td><span id="snowfall-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Melting rate</td>
+            <td><span id="melting-rate">N/A</span></td>
+            <td><span id="melting-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Freezing rate</td>
+            <td><span id="freezing-rate">N/A</span></td>
+            <td><span id="freezing-rate-kg">N/A</span></td>
+          </tr>
+        </tbody>
       </table>
     `;
 
