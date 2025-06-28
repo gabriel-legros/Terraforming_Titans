@@ -108,6 +108,10 @@ function createTemperatureBox(row) {
     const temperatureBox = document.createElement('div');
     temperatureBox.classList.add('terraforming-box');
     temperatureBox.id = 'temperature-box';
+    const tempInfo = document.createElement('span');
+    tempInfo.classList.add('info-tooltip-icon');
+    tempInfo.title = 'The temperature box displays the planet\'s current average temperatures across all climate zones along with day and night extremes. These values feed into building efficiency calculations, colonist comfort and survival checks, and directly drive the hydrological cycles that determine water and ice coverage.';
+    tempInfo.innerHTML = '&#9432;';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>Current average: <span id="temperature-current"></span><span class="temp-unit"></span></p>
@@ -147,6 +151,7 @@ function createTemperatureBox(row) {
         </tbody>
       </table>
     `;
+    temperatureBox.prepend(tempInfo);
 
     const tempPenaltySpan = document.createElement('p');
     tempPenaltySpan.id = 'temperature-energy-penalty';
@@ -223,7 +228,11 @@ function createTemperatureBox(row) {
     const atmosphereBox = document.createElement('div');
     atmosphereBox.classList.add('terraforming-box');
     atmosphereBox.id = 'atmosphere-box';
-  
+    const atmInfo = document.createElement('span');
+    atmInfo.classList.add('info-tooltip-icon');
+    atmInfo.title = 'This box tracks total atmospheric pressure and individual gas composition. Atmospheric density affects optical depth which modifies surface temperature, wind power generation and the sustainability of life support systems.';
+    atmInfo.innerHTML = '&#9432;';
+
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -259,6 +268,7 @@ function createTemperatureBox(row) {
     `;
   
     atmosphereBox.innerHTML = innerHTML;
+    atmosphereBox.prepend(atmInfo);
 
     row.appendChild(atmosphereBox);
   }
@@ -322,6 +332,10 @@ function createTemperatureBox(row) {
     const waterBox = document.createElement('div');
     waterBox.classList.add('terraforming-box');
     waterBox.id = 'water-box';
+    const waterInfo = document.createElement('span');
+    waterInfo.classList.add('info-tooltip-icon');
+    waterInfo.title = 'The water box summarizes the planetary hydrological cycle, listing evaporation, sublimation, precipitation and melting rates. Water coverage impacts colonist hydration, certain building requirements and directly contributes to life growth and atmospheric humidity.';
+    waterInfo.innerHTML = '&#9432;';
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
       <h3>Water</h3>
@@ -369,6 +383,8 @@ function createTemperatureBox(row) {
       <p class="no-margin">Water coverage: <span id="water-current">0.00</span>%</p>
       <p class="no-margin">Ice coverage: <span id="ice-current">0.00</span>%</p>
     `;
+
+    waterBox.prepend(waterInfo);
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Water coverage > 20%.";
@@ -451,12 +467,18 @@ function createTemperatureBox(row) {
     const lifeBox = document.createElement('div');
     lifeBox.classList.add('terraforming-box');
     lifeBox.id = 'life-box';
+    const lifeInfo = document.createElement('span');
+    lifeInfo.classList.add('info-tooltip-icon');
+    lifeInfo.title = 'Life coverage measures how much biomass has successfully colonised the surface. A higher percentage accelerates terraforming progress, increases available food sources and unlocks advanced biological projects.';
+    lifeInfo.innerHTML = '&#9432;';
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
       <h3>Life</h3> <!-- Static name -->
       <p>Life coverage: <span id="life-current">0.00</span>%</p>
       <p>Photosynthesis multiplier: <span id="life-luminosity-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
       `;
+
+    lifeBox.prepend(lifeInfo);
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Life coverage above 50%.";
@@ -505,16 +527,21 @@ function updateLifeBox() {
     const magnetosphereBox = document.createElement('div');
     magnetosphereBox.classList.add('terraforming-box');
     magnetosphereBox.id = 'magnetosphere-box';
+    const magInfo = document.createElement('span');
+    magInfo.classList.add('info-tooltip-icon');
+    magInfo.title = 'The magnetosphere indicator shows whether a planetary magnetic shield is active. A functional shield reduces atmospheric loss and increases life growth rates by protecting organisms from solar radiation.';
+    magInfo.innerHTML = '&#9432;';
 
-    const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield') 
-      ? 'The planet is sufficiently protected, providing a 50% boost to life growth' 
+    const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
+      ? 'The planet is sufficiently protected, providing a 50% boost to life growth'
       : 'No magnetosphere';
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
       <p>Status: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
     `;
-    
+    magnetosphereBox.prepend(magInfo);
+
     row.appendChild(magnetosphereBox);
   }
 
@@ -542,6 +569,10 @@ function updateLifeBox() {
     const luminosityBox = document.createElement('div');
     luminosityBox.classList.add('terraforming-box');
     luminosityBox.id = 'luminosity-box';
+    const lumInfo = document.createElement('span');
+    lumInfo.classList.add('info-tooltip-icon');
+    lumInfo.title = 'Luminosity represents the stellar energy reaching the surface after accounting for distance and albedo. It dictates solar panel output and interacts with life forms that rely on photosynthesis.';
+    lumInfo.innerHTML = '&#9432;';
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
       <table>
@@ -567,6 +598,7 @@ function updateLifeBox() {
       </table>
       <p>Solar panel multiplier: <span id="solar-panel-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
     `;
+    luminosityBox.prepend(lumInfo);
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
