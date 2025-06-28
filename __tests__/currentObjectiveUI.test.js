@@ -15,6 +15,14 @@ describe('current objective UI', () => {
     ctx.console = console;
     ctx.document = dom.window.document;
     ctx.formatNumber = numbers.formatNumber;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -51,6 +59,12 @@ describe('current objective UI', () => {
     ctx.console = console;
     ctx.document = dom.window.document;
     ctx.formatNumber = numbers.formatNumber;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -87,6 +101,8 @@ describe('current objective UI', () => {
     ctx.console = console;
     ctx.document = dom.window.document;
     ctx.formatNumber = numbers.formatNumber;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.addJournalEntry = () => {};
     ctx.createPopup = () => {};
     ctx.clearJournal = () => {};
@@ -101,6 +117,8 @@ describe('current objective UI', () => {
       calculateTotalPressure: () => 15
     };
     ctx.spaceManager = {};
+    ctx.gameSettings = { useCelsius: false };
+    global.gameSettings = ctx.gameSettings;
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'progress.js'), 'utf8');
     vm.runInContext(`${code}; this.StoryManager = StoryManager;`, ctx);
@@ -114,6 +132,49 @@ describe('current objective UI', () => {
     manager.update();
 
     const text = dom.window.document.getElementById('current-objective').textContent;
-    expect(text).toBe('Objective: Equatorial Temp: 220.00/238.00');
+    expect(text).toBe('Objective: Equatorial Temp: 220.00K/238.00K');
+  });
+
+  test('describes terraforming objective using Celsius when enabled', () => {
+    const dom = new JSDOM(`<!DOCTYPE html><div id="current-objective"></div>`, {
+      runScripts: 'outside-only'
+    });
+    const ctx = dom.getInternalVMContext();
+
+    ctx.console = console;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.document = dom.window.document;
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.addJournalEntry = () => {};
+    ctx.createPopup = () => {};
+    ctx.clearJournal = () => {};
+    ctx.addEffect = () => {};
+    ctx.removeEffect = () => {};
+
+    ctx.resources = { colony: {} };
+    ctx.buildings = {};
+    ctx.colonies = {};
+    ctx.terraforming = {
+      temperature: { zones: { tropical: { value: 220, night: 210, day: 230 } } },
+      calculateTotalPressure: () => 15
+    };
+    ctx.spaceManager = {};
+    ctx.gameSettings = { useCelsius: true };
+    global.gameSettings = ctx.gameSettings;
+
+    const code = fs.readFileSync(path.join(__dirname, '..', 'progress.js'), 'utf8');
+    vm.runInContext(`${code}; this.StoryManager = StoryManager;`, ctx);
+
+    const progressData = { chapters: [ { id: 'c1', type: 'journal', narrative: '', objectives: [ { type: 'terraforming', terraformingParameter: 'tropicalTemperature', value: 238 } ] } ] };
+    const manager = new ctx.StoryManager(progressData);
+    ctx.storyManager = manager;
+
+    const event = manager.findEventById('c1');
+    manager.activateEvent(event);
+    manager.update();
+
+    const text = dom.window.document.getElementById('current-objective').textContent;
+    expect(text).toBe('Objective: Equatorial Temp: -53.15°C/-35.15°C');
   });
 });

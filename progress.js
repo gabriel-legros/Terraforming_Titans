@@ -322,7 +322,14 @@ class StoryManager {
                         return '';
                 }
                 const name = names[objective.terraformingParameter] || objective.terraformingParameter;
-               return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
+                const isTemp = ['tropicalTemperature','tropicalNightTemperature','tropicalDayTemperature'].includes(objective.terraformingParameter);
+                if (isTemp && typeof toDisplayTemperature === 'function' && typeof getTemperatureUnit === 'function') {
+                    const unit = getTemperatureUnit();
+                    const currentDisp = format(toDisplayTemperature(current), false, 2);
+                    const targetDisp = format(toDisplayTemperature(objective.value), false, 2);
+                    return `${name}: ${currentDisp}${unit}/${targetDisp}${unit}`;
+                }
+                return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
            }
            case 'project': {
                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
