@@ -5,7 +5,7 @@ const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
 describe('terraforming box tooltips', () => {
-  test('all terraforming boxes include info tooltips', () => {
+  test('all terraforming boxes include info tooltips in headings', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="summary-terraforming"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     const numbers = require('../numbers.js');
@@ -52,7 +52,12 @@ describe('terraforming box tooltips', () => {
 
     ctx.createTerraformingSummaryUI();
 
-    const icons = dom.window.document.querySelectorAll('.terraforming-box .info-tooltip-icon');
-    expect(icons.length).toBe(6);
+    const boxes = dom.window.document.querySelectorAll('.terraforming-box');
+    expect(boxes.length).toBe(6);
+    boxes.forEach(box => {
+      const heading = box.querySelector('h3');
+      const icon = heading && heading.querySelector('.info-tooltip-icon');
+      expect(icon).not.toBeNull();
+    });
   });
 });

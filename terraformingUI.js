@@ -151,7 +151,10 @@ function createTemperatureBox(row) {
         </tbody>
       </table>
     `;
-    temperatureBox.prepend(tempInfo);
+    const temperatureHeading = temperatureBox.querySelector('h3');
+    if (temperatureHeading) {
+      temperatureHeading.appendChild(tempInfo);
+    }
 
     const tempPenaltySpan = document.createElement('p');
     tempPenaltySpan.id = 'temperature-energy-penalty';
@@ -268,7 +271,10 @@ function createTemperatureBox(row) {
     `;
   
     atmosphereBox.innerHTML = innerHTML;
-    atmosphereBox.prepend(atmInfo);
+    const atmosphereHeading = atmosphereBox.querySelector('h3');
+    if (atmosphereHeading) {
+      atmosphereHeading.appendChild(atmInfo);
+    }
 
     row.appendChild(atmosphereBox);
   }
@@ -384,7 +390,10 @@ function createTemperatureBox(row) {
       <p class="no-margin">Ice coverage: <span id="ice-current">0.00</span>%</p>
     `;
 
-    waterBox.prepend(waterInfo);
+    const waterHeading = waterBox.querySelector('h3');
+    if (waterHeading) {
+      waterHeading.appendChild(waterInfo);
+    }
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Water coverage > 20%.";
@@ -478,7 +487,10 @@ function createTemperatureBox(row) {
       <p>Photosynthesis multiplier: <span id="life-luminosity-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
       `;
 
-    lifeBox.prepend(lifeInfo);
+    const lifeHeading = lifeBox.querySelector('h3');
+    if (lifeHeading) {
+      lifeHeading.appendChild(lifeInfo);
+    }
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Life coverage above 50%.";
@@ -540,7 +552,10 @@ function updateLifeBox() {
       <h3>${terraforming.magnetosphere.name}</h3>
       <p>Status: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
     `;
-    magnetosphereBox.prepend(magInfo);
+    const magnetosphereHeading = magnetosphereBox.querySelector('h3');
+    if (magnetosphereHeading) {
+      magnetosphereHeading.appendChild(magInfo);
+    }
 
     row.appendChild(magnetosphereBox);
   }
@@ -598,7 +613,10 @@ function updateLifeBox() {
       </table>
       <p>Solar panel multiplier: <span id="solar-panel-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
     `;
-    luminosityBox.prepend(lumInfo);
+    const luminosityHeading = luminosityBox.querySelector('h3');
+    if (luminosityHeading) {
+      luminosityHeading.appendChild(lumInfo);
+    }
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
