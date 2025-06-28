@@ -225,9 +225,13 @@ function initializeLifeTerraformingDesignerUI() {
       updateLifeUI();
     });
   
-    // Event listener for the "Revert" button
+    // Event listener for the "Revert"/"Cancel" button
     revertBtn.addEventListener('click', () => {
-      lifeDesigner.discardTentativeDesign();
+      if (lifeDesigner.isActive) {
+        lifeDesigner.cancelDeployment();
+      } else {
+        lifeDesigner.discardTentativeDesign();
+      }
       updateLifeUI();
     });
   
@@ -348,7 +352,7 @@ function updateLifeUI() {
         if (lifeDesigner.isActive) {
             tentativeDesignHeader.style.display = 'table-cell';
             lifePointsRemainingDisplay.style.display = 'inline'; // Keep visible even when deploying
-            revertBtn.style.display = 'none';
+            revertBtn.style.display = 'inline-block';
             createBtn.style.display = 'none';
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
