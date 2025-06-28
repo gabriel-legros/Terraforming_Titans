@@ -334,7 +334,7 @@ function createTemperatureBox(row) {
     }
   }
   
-  function createWaterBox(row) {
+function createWaterBox(row) {
     const waterBox = document.createElement('div');
     waterBox.classList.add('terraforming-box');
     waterBox.id = 'water-box';
@@ -403,6 +403,10 @@ function createTemperatureBox(row) {
 
     row.appendChild(waterBox);
   }
+
+  function formatWaterRate(value) {
+    return formatNumber(Math.abs(value) < 1e-4 ? 0 : value);
+  }
   
   function updateWaterBox() {
     const waterBox = document.getElementById('water-box');
@@ -445,31 +449,31 @@ function createTemperatureBox(row) {
     iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
 
     // Update rates (displaying total tons/s from terraforming object)
-    document.getElementById('evaporation-rate').textContent = formatNumber(terraforming.totalEvaporationRate);
-    document.getElementById('sublimation-rate').textContent = formatNumber(terraforming.totalWaterSublimationRate); // Corrected property name
-    document.getElementById('rainfall-rate').textContent = formatNumber(terraforming.totalRainfallRate);
-    document.getElementById('snowfall-rate').textContent = formatNumber(terraforming.totalSnowfallRate);
-    document.getElementById('melting-rate').textContent = formatNumber(terraforming.totalMeltRate); // Corrected property name
-    document.getElementById('freezing-rate').textContent = formatNumber(terraforming.totalFreezeRate); // Corrected property name
+    document.getElementById('evaporation-rate').textContent = formatWaterRate(terraforming.totalEvaporationRate);
+    document.getElementById('sublimation-rate').textContent = formatWaterRate(terraforming.totalWaterSublimationRate); // Corrected property name
+    document.getElementById('rainfall-rate').textContent = formatWaterRate(terraforming.totalRainfallRate);
+    document.getElementById('snowfall-rate').textContent = formatWaterRate(terraforming.totalSnowfallRate);
+    document.getElementById('melting-rate').textContent = formatWaterRate(terraforming.totalMeltRate); // Corrected property name
+    document.getElementById('freezing-rate').textContent = formatWaterRate(terraforming.totalFreezeRate); // Corrected property name
 
     // Update rates (displaying kg/m²/s average)
     const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1; // Avoid division by zero
-    document.getElementById('evaporation-rate-kg').textContent = formatNumber(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
+    document.getElementById('evaporation-rate-kg').textContent = formatWaterRate(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
     // Use the stored total rates from terraforming object for kg/m²/s display
     const sublimationRateKg = document.getElementById('sublimation-rate-kg');
-    sublimationRateKg.textContent = formatNumber(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea); // Corrected property name
+    sublimationRateKg.textContent = formatWaterRate(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea); // Corrected property name
 
     const rainfallRateKg = document.getElementById('rainfall-rate-kg');
-    rainfallRateKg.textContent = formatNumber(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
+    rainfallRateKg.textContent = formatWaterRate(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
 
     const snowfallRateKg = document.getElementById('snowfall-rate-kg');
-    snowfallRateKg.textContent = formatNumber(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
+    snowfallRateKg.textContent = formatWaterRate(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
 
     const meltingRateKg = document.getElementById('melting-rate-kg');
-    meltingRateKg.textContent = formatNumber(terraforming.totalMeltRate * 1000 / safeSurfaceArea); // Corrected property name
+    meltingRateKg.textContent = formatWaterRate(terraforming.totalMeltRate * 1000 / safeSurfaceArea); // Corrected property name
 
     const freezingRateKg = document.getElementById('freezing-rate-kg');
-    freezingRateKg.textContent = formatNumber(terraforming.totalFreezeRate * 1000 / safeSurfaceArea); // Corrected property name
+    freezingRateKg.textContent = formatWaterRate(terraforming.totalFreezeRate * 1000 / safeSurfaceArea); // Corrected property name
   }
 
   function createLifeBox(row) {
