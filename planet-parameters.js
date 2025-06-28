@@ -35,40 +35,40 @@ const defaultPlanetParameters = {
       funding: { name: 'Funding', initialValue: 0, unlocked: false },
       colonists: { name: 'Colonists', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
       workers: { name: 'Workers', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false },
-      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 50000000, unlocked:false },
-      metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}},
-      silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
-      glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
-      water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}}, // Default (Mars)
-      food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false },
-      components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}  },
-      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, conversionValue : 0.2},
-      superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} },
+      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 50000000, unlocked:false , unit: 'Watt-day' },
+      metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton'},
+      silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
+      glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
+      water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}, unit: 'ton'}, // Default (Mars)
+      food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
+      components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
+      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},
+      superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
       research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false },
       advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false },
     },
     surface: {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
-      ice: { name: 'Ice', initialValue: 0, unlocked:false }, // Default (Mars)
-      liquidWater: { name: 'Water', initialValue: 0, unlocked:false },
-      dryIce : {name : 'Dry Ice', initialValue: 30010169900060.594, unlocked: false}, // Default (Mars)
-      scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false},
-      biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false},
-      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false },
-      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false },
+      ice: { name: 'Ice', initialValue: 0, unlocked:false , unit: 'ton' }, // Default (Mars)
+      liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
+      dryIce : {name : 'Dry Ice', initialValue: 30010169900060.594, unlocked: false, unit: 'ton' }, // Default (Mars)
+      scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
+      biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
+      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false , unit: 'ton' },
+      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false , unit: 'ton' },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
       geothermal: { name: 'Geo. vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
     },
     atmospheric: {
-      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23157704873578.164, unlocked:false }, // Default (Mars)
-      inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false }, // Default (Mars) - Adjusted based on review
-      oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false }, // Default (Mars) - Adjusted based on review
-      atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false }, // Default (Mars) - Adjusted based on review
-      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false}, // Default (Mars)
-      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false }
+      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23157704873578.164, unlocked:false , unit: 'ton' }, // Default (Mars)
+      inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
+      oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
+      atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
+      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton' }, // Default (Mars)
+      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton' }
     },
     special: {
       albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)

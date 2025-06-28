@@ -243,7 +243,7 @@ function updateResourceRateDisplay(resource){
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
   if (tooltipElement) {
     let tooltipContent = '';
-    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}</div>`
+    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`
 
     // Generate the production content
     const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
@@ -254,7 +254,7 @@ function updateResourceRateDisplay(resource){
         tooltipContent += `
           <div style="display: table-row;">
             <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s</div>
           </div>`;
       });
       tooltipContent += '</div>';
@@ -269,7 +269,7 @@ function updateResourceRateDisplay(resource){
         tooltipContent += `
           <div style="display: table-row;">
             <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s</div>
           </div>`;
       });
       tooltipContent += '</div>';
