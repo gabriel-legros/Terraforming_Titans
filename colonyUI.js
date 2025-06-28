@@ -30,6 +30,17 @@ function createGrowthRateDisplay(){
   baseLine.appendChild(baseInfo);
   container.appendChild(baseLine);
 
+  // Other multipliers line
+  const otherLine = document.createElement('div');
+  otherLine.classList.add('growth-rate-line');
+  otherLine.innerHTML = '<span>Other multipliers:</span> <span id="growth-other-value">100%</span>';
+  const otherInfo = document.createElement('span');
+  otherInfo.classList.add('info-tooltip-icon');
+  otherInfo.title = 'Multipliers from colony sliders, skills, research and events that modify population growth.';
+  otherInfo.innerHTML = '&#9432;';
+  otherLine.appendChild(otherInfo);
+  container.appendChild(otherLine);
+
   // Final growth line
   const growthLine = document.createElement('div');
   growthLine.classList.add('growth-rate-line');
@@ -49,14 +60,18 @@ function updateGrowthRateDisplay(){
   if(typeof populationModule === 'undefined') return;
   const growthEl = document.getElementById('growth-rate-value');
   const baseEl = document.getElementById('growth-base-value');
+  const otherEl = document.getElementById('growth-other-value');
   const capEl = document.getElementById('growth-capacity-value');
-  if(!growthEl || !baseEl || !capEl) return;
+  if(!growthEl || !baseEl || !capEl || !otherEl) return;
 
   const rate = populationModule.getCurrentGrowthPercent();
   growthEl.textContent = `${rate >= 0 ? '+' : ''}${formatNumber(rate, false, 3)}%/s`;
 
   const baseRate = populationModule.growthRate * 100;
   baseEl.textContent = `${baseRate >= 0 ? '+' : ''}${formatNumber(baseRate, false, 3)}%/s`;
+
+  const otherMult = populationModule.getEffectiveGrowthMultiplier() * 100;
+  otherEl.textContent = `${formatNumber(otherMult, false, 1)}%`;
 
   const pop = populationModule.populationResource.value;
   const cap = populationModule.populationResource.cap;
