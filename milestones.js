@@ -2,30 +2,30 @@ const festivalEffects = [
     {
         target: 'fundingModule',
         type: 'productionMultiplier',
-        value : 2
+        value : 3
     },
     {
         target: 'building',
         targetId: 'oreMine',
         type: 'productionMultiplier',
-        value: 2
+        value: 3
     },
     {
         target: 'building',
         targetId: 'componentFactory',
         type: 'productionMultiplier',
-        value: 2
+        value: 3
     },
     {
         target: 'building',
         targetId: 'electronicsFactory',
         type: 'productionMultiplier',
-        value: 2
+        value: 3
     },
     {
       target: 'population',
       type: 'growthMultiplier',
-      value: 2
+      value: 3
   },
     {
         type: 'booleanFlag',
@@ -274,7 +274,7 @@ class MilestonesManager {
             milestone.canBeCompleted = false;
         }
         this.addEffects();
-        this.startCountdown(10000);
+        this.startCountdown(30000);
     }
 
     // Get milestones that can be completed
@@ -300,9 +300,11 @@ class MilestonesManager {
     }
 
     startCountdown(duration) {
-        this.countdownRemainingTime = duration;
-        if(!this.countdownActive){
-          this.countdownActive = true;
+        if (this.countdownActive) {
+            this.countdownRemainingTime += duration;
+        } else {
+            this.countdownRemainingTime = duration;
+            this.countdownActive = true;
         }
     }
 
