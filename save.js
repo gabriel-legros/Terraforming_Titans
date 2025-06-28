@@ -20,7 +20,8 @@ function getGameState() {
     skills: skillManager.saveState(),
     spaceManager: spaceManager.saveState(),
     settings: gameSettings,
-    colonySliderSettings: colonySliderSettings
+    colonySliderSettings: colonySliderSettings,
+    playTimeSeconds: playTimeSeconds
   };
 }
 
@@ -195,6 +196,10 @@ function loadGame(slotOrCustomString) {
       setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
       setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
       setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
+    }
+
+    if(gameState.playTimeSeconds !== undefined){
+      playTimeSeconds = gameState.playTimeSeconds;
     }
 
     tabManager.activateTab('buildings');

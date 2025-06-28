@@ -53,6 +53,8 @@ function createTerraformingSummaryUI() {
 
     const terraformingContainer = document.getElementById('summary-terraforming');
 
+
+
     // Create the first row of boxes
     const row1 = document.createElement('div');
     row1.classList.add('terraforming-row');
@@ -81,6 +83,7 @@ function createTerraformingSummaryUI() {
 
 // Function to update the terraforming UI elements
 function updateTerraformingUI() {
+    updatePlayTimeDisplay();
     updateTemperatureBox();
     updateAtmosphereBox();
     updateWaterBox();
@@ -92,6 +95,13 @@ function updateTerraformingUI() {
     // Update the button state
     updateCompleteTerraformingButton();
   }
+
+function updatePlayTimeDisplay() {
+    const el = document.getElementById('play-time-display');
+    if (!el) return;
+    const years = playTimeSeconds / 365;
+    el.textContent = `Year ${years.toFixed(1)}`;
+}
 
 // Functions to create and update each terraforming aspect box
 
