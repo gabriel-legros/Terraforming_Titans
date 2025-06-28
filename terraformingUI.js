@@ -99,7 +99,7 @@ function updateTerraformingUI() {
 function updatePlayTimeDisplay() {
     const el = document.getElementById('play-time-display');
     if (!el) return;
-    el.textContent = formatPlayTime(playTimeSeconds);
+    el.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
 }
 
 // Functions to create and update each terraforming aspect box
@@ -110,7 +110,7 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     const tempInfo = document.createElement('span');
     tempInfo.classList.add('info-tooltip-icon');
-    tempInfo.title = 'The temperature box displays the planet\'s current average temperatures across all climate zones along with day and night extremes. These values feed into building efficiency calculations, colonist comfort and survival checks, and directly drive the hydrological cycles that determine water and ice coverage.';
+    tempInfo.title = 'Temperature is a critical factor for terraforming. It\'s determined by a complex interplay of factors:\n\n- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere\'s optical depth, and the day-night temperature variation is calculated based on the planet\'s heat capacity and rotation speed.\n- Solar Flux: The base energy received from the star, which can be augmented by structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A high albedo (from ice and clouds) reflects more light, cooling the planet. A low albedo (from oceans and dark rock) absorbs more light, warming it.\n- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere\'s optical depth, which depends on the partial pressures of these gases and the total atmospheric pressure.\n- Rotation Speed: A slower rotation leads to more extreme temperature differences between day and night.\n- Heat Capacity: The planet\'s ability to store and release heat, influenced by its surface composition (rock, ocean, ice) and atmospheric density.\n\nTemperature directly impacts:\n- Water Cycle: Driving evaporation, sublimation, melting, and freezing.\n- Life: Each species has specific temperature ranges for survival and growth.\n- Colonist Comfort: Extreme temperatures increase energy consumption for life support.';
     tempInfo.innerHTML = '&#9432;';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
@@ -233,7 +233,7 @@ function createTemperatureBox(row) {
     atmosphereBox.id = 'atmosphere-box';
     const atmInfo = document.createElement('span');
     atmInfo.classList.add('info-tooltip-icon');
-    atmInfo.title = 'This box tracks total atmospheric pressure and individual gas composition. Atmospheric density affects optical depth which modifies surface temperature, wind power generation and the sustainability of life support systems.';
+    atmInfo.title = 'The atmosphere is the gaseous envelope of the planet, critical for life and climate.\n\n- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.\n- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.\n- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It\'s also necessary to maintain liquid water on the surface and for colonists\' life support.\n- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases.';
     atmInfo.innerHTML = '&#9432;';
 
     let innerHTML = `
@@ -340,7 +340,7 @@ function createTemperatureBox(row) {
     waterBox.id = 'water-box';
     const waterInfo = document.createElement('span');
     waterInfo.classList.add('info-tooltip-icon');
-    waterInfo.title = 'The water box summarizes the planetary hydrological cycle, listing evaporation, sublimation, precipitation and melting rates. Water coverage impacts colonist hydration, certain building requirements and directly contributes to life growth and atmospheric humidity.';
+    waterInfo.title = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point (273.15K).\n- Surface Flow: Liquid water flows between climate zones, from areas of higher concentration to lower, and ice can melt and flow from colder to warmer zones.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
     waterInfo.innerHTML = '&#9432;';
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
@@ -478,7 +478,7 @@ function createTemperatureBox(row) {
     lifeBox.id = 'life-box';
     const lifeInfo = document.createElement('span');
     lifeInfo.classList.add('info-tooltip-icon');
-    lifeInfo.title = 'Life coverage measures how much biomass has successfully colonised the surface. A higher percentage accelerates terraforming progress, increases available food sources and unlocks advanced biological projects.';
+    lifeInfo.title = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.';
     lifeInfo.innerHTML = '&#9432;';
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
@@ -541,7 +541,7 @@ function updateLifeBox() {
     magnetosphereBox.id = 'magnetosphere-box';
     const magInfo = document.createElement('span');
     magInfo.classList.add('info-tooltip-icon');
-    magInfo.title = 'The magnetosphere indicator shows whether a planetary magnetic shield is active. A functional shield reduces atmospheric loss and increases life growth rates by protecting organisms from solar radiation.';
+    magInfo.title = 'The magnetosphere is a planet\'s magnetic shield against harmful solar wind and cosmic radiation.\n\n- Protection: A strong magnetosphere prevents the solar wind from stripping away the planet\'s atmosphere over time, making long-term habitability possible.\n- Life Support: It shields surface life from damaging radiation, which is essential for complex organisms to thrive. Activating the magnetic shield provides a significant boost to life growth rates.\n- Terraforming Goal: Establishing a magnetosphere is a critical step for securing a planet\'s atmosphere and biosphere, making it a key terraforming objective.';
     magInfo.innerHTML = '&#9432;';
 
     const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
@@ -586,7 +586,7 @@ function updateLifeBox() {
     luminosityBox.id = 'luminosity-box';
     const lumInfo = document.createElement('span');
     lumInfo.classList.add('info-tooltip-icon');
-    lumInfo.title = 'Luminosity represents the stellar energy reaching the surface after accounting for distance and albedo. It dictates solar panel output and interacts with life forms that rely on photosynthesis.';
+    lumInfo.title = 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice) and cloud cover. A lower albedo means more energy is absorbed.\n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.';
     lumInfo.innerHTML = '&#9432;';
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
