@@ -355,6 +355,8 @@ function updateLifeUI() {
             lifePointsRemainingDisplay.style.display = 'inline'; // Keep visible even when deploying
             revertBtn.style.display = 'inline-block';
             createBtn.style.display = 'none';
+            createBtn.disabled = true; // Disable create while deploying
+            revertBtn.disabled = true; // Disable revert while deploying
             modifyButtons.forEach(btn => btn.disabled = true);
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
@@ -381,6 +383,7 @@ function updateLifeUI() {
       document.getElementById('modify-header').style.display = 'none';
       lifePointsRemainingDisplay.style.display = 'inline'; // Ensure it's visible when no tentative design
       createBtn.style.display = 'inline-block';
+      createBtn.disabled = false; // Re-enable create after deployment
       applyProgressContainer.style.display = 'none';
       applyBtn.style.display = 'none';
       applyBtn.disabled = true;
