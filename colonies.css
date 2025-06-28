@@ -20,6 +20,12 @@
   #growth-rate-container {
     font-size: 14px;
     display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .growth-rate-line {
+    display: flex;
     align-items: center;
     gap: 4px;
   }

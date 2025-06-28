@@ -8,30 +8,63 @@ function createGrowthRateDisplay(){
   container.id = 'growth-rate-container';
   container.classList.add('growth-rate');
 
-  const label = document.createElement('span');
-  label.textContent = 'Growth:';
-  container.appendChild(label);
+  // Capacity multiplier line
+  const capLine = document.createElement('div');
+  capLine.classList.add('growth-rate-line');
+  capLine.innerHTML = '<span>Capacity:</span> <span id="growth-capacity-value">0%</span>';
+  const capInfo = document.createElement('span');
+  capInfo.classList.add('info-tooltip-icon');
+  capInfo.title = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.';
+  capInfo.innerHTML = '&#9432;';
+  capLine.appendChild(capInfo);
+  container.appendChild(capLine);
 
-  const value = document.createElement('span');
-  value.id = 'growth-rate-value';
-  value.textContent = '0%/s';
-  container.appendChild(value);
+  // Base rate line
+  const baseLine = document.createElement('div');
+  baseLine.classList.add('growth-rate-line');
+  baseLine.innerHTML = '<span>Base rate:</span> <span id="growth-base-value">0%/s</span>';
+  const baseInfo = document.createElement('span');
+  baseInfo.classList.add('info-tooltip-icon');
+  baseInfo.title = 'Base growth rate derived from happiness: (happiness - 50%) / 300. Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating. Each luxury resource can add 10 happiness if food and energy are met, and milestones ready to claim or claimed provide 10 more. Happiness above 50% increases growth while below 50% causes decay.';
+  baseInfo.innerHTML = '&#9432;';
+  baseLine.appendChild(baseInfo);
+  container.appendChild(baseLine);
 
-  const info = document.createElement('span');
-  info.classList.add('info-tooltip-icon');
-  info.title = 'Population growth uses logistic growth: rate \u00d7 population \u00d7 (1 - population / capacity). The rate is (happiness - 50%) / 300. Food and energy each provide up to 25 happiness when satisfied, for a total of 50. Comfort adds 20 times its rating. Each luxury good can add 10 happiness if food and energy are met. Milestones that are ready to claim or claimed provide an additional 10 happiness. Happiness above 50% increases growth, while below 50% causes decay.  There are other sources of growth rate, such as colony sliders, and they act as multipliers.';
-  info.innerHTML = '&#9432';
-  container.appendChild(info);
+  // Final growth line
+  const growthLine = document.createElement('div');
+  growthLine.classList.add('growth-rate-line');
+  growthLine.innerHTML = '<span>Growth:</span> <span id="growth-rate-value">0%/s</span>';
+  const growthInfo = document.createElement('span');
+  growthInfo.classList.add('info-tooltip-icon');
+  growthInfo.title = 'Final growth rate after applying all multipliers. Population grows at base rate × population × capacity multiplier, further modified by colony sliders and other effects.';
+  growthInfo.innerHTML = '&#9432;';
+  growthLine.appendChild(growthInfo);
+  container.appendChild(growthLine);
 
   const rightControlsContainer = document.getElementById('right-controls-container');
   rightControlsContainer.appendChild(container);
 }
 
 function updateGrowthRateDisplay(){
-  const el = document.getElementById('growth-rate-value');
-  if(!el || typeof populationModule === 'undefined') return;
+  if(typeof populationModule === 'undefined') return;
+  const growthEl = document.getElementById('growth-rate-value');
+  const baseEl = document.getElementById('growth-base-value');
+  const capEl = document.getElementById('growth-capacity-value');
+  if(!growthEl || !baseEl || !capEl) return;
+
   const rate = populationModule.getCurrentGrowthPercent();
-  el.textContent = `${rate >= 0 ? '+' : ''}${formatNumber(rate, false, 3)}%/s`;
+  growthEl.textContent = `${rate >= 0 ? '+' : ''}${formatNumber(rate, false, 3)}%/s`;
+
+  const baseRate = populationModule.growthRate * 100;
+  baseEl.textContent = `${baseRate >= 0 ? '+' : ''}${formatNumber(baseRate, false, 3)}%/s`;
+
+  const pop = populationModule.populationResource.value;
+  const cap = populationModule.populationResource.cap;
+  let capMult = 0;
+  if(cap > 0){
+    capMult = 1 - pop / cap;
+  }
+  capEl.textContent = `${formatNumber(capMult * 100, false, 1)}%`;
 }
 
 // Create the colony-specific details display
