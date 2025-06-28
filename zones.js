@@ -83,24 +83,49 @@ function sphericalSegmentArea(phi1, phi2) {
     }
   }
 
+/**
+ * Estimate fractional coverage given an amount and zone area.
+ * The curve is:
+ *   – linear with slope 10 up to r0 = 1/49  (≈0.020408)
+ *   – logarithmic afterwards, chosen so value AND slope match at r0
+ *     and the curve passes through (1, 1).
+ *
+ * The piece-wise form is continuous and differentiable (C¹) at r0.
+ */
 function estimateCoverage(amount, zoneArea, scale = 0.0001) {
-  const resourceRatio = scale * amount / zoneArea;
+  const resourceRatio = (scale * amount) / zoneArea;
+
+  // --- constants that define the curve -------------------------
+  const R0            = 1 / 49;              // exact breakpoint  ≈0.020408
+  const LINEAR_SLOPE  = 10;                  // m
+  const LOG_A         = LINEAR_SLOPE * R0;   // a = m·R0  = 10/49
+  const LOG_B         = 1;                   // b forces (1,1)
+  // -------------------------------------------------------------
+
   let coverage;
   if (resourceRatio <= 0) {
     coverage = 0;
-  } else if (resourceRatio <= 0.001) {
-    coverage = 10 * resourceRatio;
+  } else if (resourceRatio <= R0) {
+    // Linear branch: C(x) = 10·x
+    coverage = LINEAR_SLOPE * resourceRatio;
   } else if (resourceRatio < 1) {
-    coverage = 0.143317 * Math.log(resourceRatio) + 1;
-    const linearEndCoverage = 10 * 0.001;
-    coverage = Math.max(linearEndCoverage, Math.min(coverage, 1.0));
+    // Log branch: C(x) = a·ln(x) + b
+    coverage = LOG_A * Math.log(resourceRatio) + LOG_B;
   } else {
     coverage = 1;
   }
-  return Math.max(0, Math.min(coverage, 1.0));
+
+  // Clamp to [0, 1] for safety
+  return Math.max(0, Math.min(coverage, 1));
 }
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { ZONES, getZoneRatio, getZonePercentage, estimateCoverage };
+  module.exports = {
+    ZONES,
+    getZoneRatio,
+    getZonePercentage,
+    estimateCoverage
+  };
 } else {
   // Expose constants and helpers on the global object for browser usage
   globalThis.ZONES = ZONES;
