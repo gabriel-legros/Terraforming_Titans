@@ -36,7 +36,7 @@ function createGrowthRateDisplay(){
   otherLine.innerHTML = '<span>Other multipliers:</span> <span id="growth-other-value">100%</span>';
   const otherInfo = document.createElement('span');
   otherInfo.classList.add('info-tooltip-icon');
-  otherInfo.title = 'Multipliers from colony sliders, skills, research and events that modify population growth.';
+  otherInfo.title = 'Multipliers from colony sliders, and other effects.';
   otherInfo.innerHTML = '&#9432;';
   otherLine.appendChild(otherInfo);
   container.appendChild(otherLine);
