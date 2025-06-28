@@ -42,8 +42,19 @@ function formatBigInteger(number) {
     return useC ? kelvin - 273.15 : kelvin;
   }
 
-  function getTemperatureUnit() {
+function getTemperatureUnit() {
     return (typeof gameSettings !== 'undefined' && gameSettings.useCelsius) ? '°C' : 'K';
+  }
+
+  function formatPlayTime(days) {
+    const years = Math.floor(days / 365);
+    const remainingDays = Math.floor(days % 365);
+    const parts = [];
+    if (years > 0) {
+      parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+    }
+    parts.push(`${remainingDays} day${remainingDays !== 1 ? 's' : ''}`);
+    return parts.join(' ');
   }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -52,5 +63,6 @@ function formatBigInteger(number) {
       formatBigInteger,
       toDisplayTemperature,
       getTemperatureUnit,
+      formatPlayTime,
     };
   }

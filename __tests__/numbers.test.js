@@ -1,4 +1,4 @@
-const { formatNumber, formatBigInteger } = require('../numbers.js');
+const { formatNumber, formatBigInteger, formatPlayTime } = require('../numbers.js');
 
 describe('formatNumber', () => {
   test('formats thousands with suffix k', () => {
@@ -13,5 +13,12 @@ describe('formatNumber', () => {
 describe('formatBigInteger', () => {
   test('adds commas', () => {
     expect(formatBigInteger(1234567)).toBe('1,234,567');
+  });
+});
+
+describe('formatPlayTime', () => {
+  test('converts days to years and days string', () => {
+    expect(formatPlayTime(730)).toBe('2 years 0 days');
+    expect(formatPlayTime(40)).toBe('40 days');
   });
 });
