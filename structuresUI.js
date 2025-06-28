@@ -288,6 +288,44 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildPriorityLabel.prepend(autoBuildPriority);
   autoBuildTargetContainer.appendChild(autoBuildPriorityLabel);
 
+  if(structure.name === 'ghgFactory') {
+    const tempControl = document.createElement('div');
+    tempControl.id = `${structure.name}-temp-control`;
+    tempControl.classList.add('ghg-temp-control');
+    tempControl.style.display = structure.isBooleanFlagSet('terraformingBureauFeature') ? 'flex' : 'none';
+
+    const tempCheckbox = document.createElement('input');
+    tempCheckbox.type = 'checkbox';
+    tempCheckbox.classList.add('ghg-temp-checkbox');
+    tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+    tempCheckbox.addEventListener('change', () => {
+      ghgFactorySettings.autoDisableAboveTemp = tempCheckbox.checked;
+    });
+    tempControl.appendChild(tempCheckbox);
+
+    const tempLabel = document.createElement('span');
+    tempLabel.textContent = 'Disable if avg T > ';
+    tempControl.appendChild(tempLabel);
+
+    const tempInput = document.createElement('input');
+    tempInput.type = 'number';
+    tempInput.step = 1;
+    tempInput.classList.add('ghg-temp-input');
+    tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+    tempInput.addEventListener('input', () => {
+      const val = parseFloat(tempInput.value);
+      ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+    });
+    tempControl.appendChild(tempInput);
+
+    const unitSpan = document.createElement('span');
+    unitSpan.classList.add('ghg-temp-unit');
+    unitSpan.textContent = getTemperatureUnit();
+    tempControl.appendChild(unitSpan);
+
+    autoBuildTargetContainer.appendChild(tempControl);
+  }
+
   autoBuildContainer.appendChild(autoBuildTargetContainer);
 
   combinedStructureRow.append(autoBuildContainer);
@@ -511,6 +549,24 @@ function updateDecreaseButtonText(button, buildCount) {
         const targetCount = Math.ceil((structure.autoBuildPercent * population) / 100);
         const autoBuildTarget = document.getElementById(`${structure.name}-auto-build-target`);
         autoBuildTarget.textContent = `Target : ${formatBigInteger(targetCount)}`;
+
+        const tempControl = autoBuildContainer.querySelector('.ghg-temp-control');
+        if(tempControl){
+          const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
+          tempControl.style.display = enabled ? 'flex' : 'none';
+          const tempCheckbox = tempControl.querySelector('.ghg-temp-checkbox');
+          if(tempCheckbox){
+            tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+          }
+          const tempInput = tempControl.querySelector('.ghg-temp-input');
+          if(tempInput){
+            tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+          }
+          const unitSpan = tempControl.querySelector('.ghg-temp-unit');
+          if(unitSpan){
+            unitSpan.textContent = getTemperatureUnit();
+          }
+        }
       }
   
       const productivityElement = document.getElementById(`${structureName}-productivity`);

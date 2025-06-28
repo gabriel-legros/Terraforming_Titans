@@ -689,7 +689,23 @@ const researchParameters = {
             type: 'enable',
           },
         ],
-      },   
+      },
+      {
+        id: 'terraforming_bureau',
+        name: 'Terraforming Bureau',
+        description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature.',
+        cost: { research: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'ghgFactory',
+            type: 'booleanFlag',
+            flagId: 'terraformingBureauFeature',
+            value: true
+          }
+        ],
+      },
     ],
     terraforming: [
       {
