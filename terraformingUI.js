@@ -526,10 +526,27 @@ function updateLifeBox() {
     luminosityBox.id = 'luminosity-box';
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
-      <p>Base Albedo: <span id="base-albedo">${terraforming.celestialParameters.albedo}</span></p>
-      <p>Effective Albedo: <span id="effective-albedo">${terraforming.luminosity.albedo.toFixed(2)}</span></p>
-      <p>Base Solar Flux: <span id="solar-flux">${terraforming.luminosity.solarFlux.toFixed(1)}</span> W/m²</p>
-      <p>Modified Solar Flux: <span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span> W/m²</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>Delta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Albedo</td>
+            <td><span id="effective-albedo">${terraforming.luminosity.albedo.toFixed(2)}</span></td>
+            <td><span id="albedo-delta"></span></td>
+          </tr>
+          <tr>
+            <td>Solar Flux (W/m²)</td>
+            <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span></td>
+            <td><span id="solar-flux-delta"></span></td>
+          </tr>
+        </tbody>
+      </table>
       <p>Solar panel multiplier: <span id="solar-panel-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
     `;
     row.appendChild(luminosityBox);
@@ -549,19 +566,27 @@ function updateLifeBox() {
       luminosityBox.style.borderColor = 'red';
     }
 
-    const baseAlbedo = document.getElementById('base-albedo');
-    if (baseAlbedo) {
-      baseAlbedo.textContent = terraforming.celestialParameters.albedo.toFixed(2);
+    const effectiveAlbedo = document.getElementById('effective-albedo');
+    if (effectiveAlbedo) {
+      effectiveAlbedo.textContent = terraforming.luminosity.albedo.toFixed(2);
     }
 
-    const effectiveAlbedo = document.getElementById('effective-albedo');
-    effectiveAlbedo.textContent = terraforming.luminosity.albedo.toFixed(2);
-  
-    const solarFlux = document.getElementById('solar-flux');
-    solarFlux.textContent = terraforming.luminosity.solarFlux.toFixed(1);
-  
+    const albedoDeltaEl = document.getElementById('albedo-delta');
+    if (albedoDeltaEl) {
+      const deltaA = terraforming.luminosity.albedo - terraforming.celestialParameters.albedo;
+      albedoDeltaEl.textContent = `${deltaA >= 0 ? '+' : ''}${deltaA.toFixed(2)}`;
+    }
+
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');
-    modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
+    if (modifiedSolarFlux) {
+      modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
+    }
+
+    const solarFluxDeltaEl = document.getElementById('solar-flux-delta');
+    if (solarFluxDeltaEl) {
+      const deltaF = terraforming.luminosity.modifiedSolarFlux - terraforming.luminosity.solarFlux;
+      solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${deltaF.toFixed(1)}`;
+    }
 
     const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');
     solarPanelMultiplier.textContent = `${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}`;

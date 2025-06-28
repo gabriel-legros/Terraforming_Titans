@@ -4,14 +4,18 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
+const numbers = require('../numbers.js');
+
 describe('updateLuminosityBox', () => {
-  test('updates base albedo from celestial parameters', () => {
+  test('updates albedo and solar flux deltas', () => {
     const dom = new JSDOM('<!DOCTYPE html><div class="row"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
+    ctx.formatNumber = numbers.formatNumber;
+
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0 },
-      celestialParameters: { albedo: 0.25 },
+      luminosity: { name: 'Luminosity', albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
     };
@@ -22,10 +26,14 @@ describe('updateLuminosityBox', () => {
     const row = dom.window.document.querySelector('.row');
     ctx.createLuminosityBox(row);
 
-    ctx.terraforming.celestialParameters.albedo = 0.37;
+    ctx.terraforming.luminosity.albedo = 0.35;
+    ctx.terraforming.luminosity.modifiedSolarFlux = 1100;
     ctx.updateLuminosityBox();
 
-    const text = dom.window.document.getElementById('base-albedo').textContent;
-    expect(text).toBe('0.37');
+    const albedoDelta = dom.window.document.getElementById('albedo-delta').textContent;
+    expect(albedoDelta).toBe('+0.05');
+
+    const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
+    expect(fluxDelta).toBe('+100.0');
   });
 });
