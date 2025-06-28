@@ -111,19 +111,24 @@ function loadGame(slotOrCustomString) {
       createBuildingButtons(buildings);
   
       // Restore colonies
-      if (gameState.colonies) {
-        for (const colonyName in gameState.colonies) {
-          const colonyState = gameState.colonies[colonyName];
-          const colony = colonies[colonyName];
-          if (colony) {
-            Object.assign(colony, colonyState);
-            const newConfig = colonyParameters[colonyName];
-            colony.initializeFromConfig(newConfig, colonyName);
-            // Reset effects applied from research
-            colony.activeEffects = [];
+        if (gameState.colonies) {
+          for (const colonyName in gameState.colonies) {
+            const colonyState = gameState.colonies[colonyName];
+            const colony = colonies[colonyName];
+            if (colony) {
+              Object.assign(colony, colonyState);
+              const newConfig = colonyParameters[colonyName];
+              colony.initializeFromConfig(newConfig, colonyName);
+              // Reset effects applied from research
+              colony.activeEffects = [];
+              if (colony.booleanFlags && Array.isArray(colony.booleanFlags)) {
+                colony.booleanFlags = new Set(colony.booleanFlags);
+              } else {
+                colony.booleanFlags = new Set();
+              }
+            }
           }
         }
-      }
       createColonyButtons(colonies);
 
       if (gameState.selectedBuildCounts) {
