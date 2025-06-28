@@ -16,6 +16,7 @@ class Project extends EffectableEntity {
     this.assignedSpaceships = 0;
     this.autoStart = false;
     this.autoAssignSpaceships = false;
+    this.waitForCapacity = true;
     this.selectedDisposalResource = null || this.attributes.defaultDisposal;
   }
 
@@ -127,11 +128,27 @@ class Project extends EffectableEntity {
       if (this.assignedSpaceships === 0) {
         return false;  // No spaceships assigned
       }
+
       const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
       for (const category in totalSpaceshipCost) {
         for (const resource in totalSpaceshipCost[category]) {
           if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
             return false; // Not enough resources for spaceship costs
+          }
+        }
+      }
+
+      if (this.attributes.spaceExport && this.waitForCapacity && this.selectedDisposalResource) {
+        const totalDisposal = this.calculateSpaceshipTotalDisposal();
+        for (const category in totalDisposal) {
+          for (const resource in totalDisposal[category]) {
+            const required =
+              totalDisposal[category][resource] +
+              (totalSpaceshipCost[category]?.[resource] || 0) +
+              (cost[category]?.[resource] || 0);
+            if (resources[category][resource].value < required) {
+              return false;
+            }
           }
         }
       }
@@ -671,7 +688,8 @@ class ProjectManager extends EffectableEntity {
         assignedSpaceships: project.assignedSpaceships,
         autoStart : project.autoStart,
         autoAssignSpaceships : project.autoAssignSpaceships,
-        selectedDisposalResource : project.selectedDisposalResource
+        selectedDisposalResource : project.selectedDisposalResource,
+        waitForCapacity : project.waitForCapacity
       };
     }
     return projectState;
@@ -701,7 +719,10 @@ class ProjectManager extends EffectableEntity {
         project.assignedSpaceships = savedProject.assignedSpaceships;
         project.autoStart = savedProject.autoStart;
         project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
-        project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal; 
+        project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal;
+        if(savedProject.waitForCapacity !== undefined){
+          project.waitForCapacity = savedProject.waitForCapacity;
+        }
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();
         }
