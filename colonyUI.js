@@ -19,7 +19,7 @@ function createGrowthRateDisplay(){
 
   const info = document.createElement('span');
   info.classList.add('info-tooltip-icon');
-  info.title = 'Population growth uses logistic growth: rate \u00d7 population \u00d7 (1 - population / capacity). The rate is (happiness - 50%) / 300. Food and energy each provide up to 25 happiness when satisfied, for a total of 50. Comfort adds 20 times its rating. Each luxury good can add 10 happiness if food and energy are met. Milestones provide an additional 10 happiness. Happiness above 50% increases growth, while below 50% causes decay.  There are other sources of growth rate, such as colony sliders, and they act as multipliers.';
+  info.title = 'Population growth uses logistic growth: rate \u00d7 population \u00d7 (1 - population / capacity). The rate is (happiness - 50%) / 300. Food and energy each provide up to 25 happiness when satisfied, for a total of 50. Comfort adds 20 times its rating. Each luxury good can add 10 happiness if food and energy are met. Milestones that are ready to claim or claimed provide an additional 10 happiness. Happiness above 50% increases growth, while below 50% causes decay.  There are other sources of growth rate, such as colony sliders, and they act as multipliers.';
   info.innerHTML = '&#9432';
   container.appendChild(info);
 
