@@ -443,6 +443,15 @@ class LifeDesigner extends EffectableEntity {
     }
   }
 
+  cancelDeployment() {
+    if (this.isActive) {
+      this.isActive = false;
+      this.remainingTime = this.getTentativeDuration();
+      this.totalTime = this.getTentativeDuration();
+      this.elapsedTime = 0;
+    }
+  }
+
   discardTentativeDesign() {
     this.tentativeDesign = null;
   }
