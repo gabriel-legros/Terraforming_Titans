@@ -60,7 +60,8 @@ function expectedTemperature(terra, params, resources) {
 
   const surfaceFractions = {
     ocean: calculateAverageCoverage(terra, 'liquidWater'),
-    ice: calculateAverageCoverage(terra, 'ice')
+    ice: calculateAverageCoverage(terra, 'ice'),
+    biomass: calculateAverageCoverage(terra, 'biomass')
   };
 
   const temps = physics.dayNightTemperaturesModel({

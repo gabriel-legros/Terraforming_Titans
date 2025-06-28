@@ -1,5 +1,12 @@
 const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow } = require('../hydrology.js');
 const { calculateMeltingFreezingRates: zonalRates } = require('../terraforming-utils.js');
+const { getZonePercentage } = require('../zones.js');
+
+global.getZonePercentage = getZonePercentage;
+
+function makeTerraforming(zonalWater) {
+  return { zonalWater, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
+}
 
 describe('hydrology melting with buried ice', () => {
   test('calculateMeltingFreezingRates melts buried ice', () => {
@@ -27,8 +34,9 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 0, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 250, temperate: 274, tropical: 260 };
-    const melt = simulateSurfaceWaterFlow(zonalWater, 1000, temps);
-    const expectedMelt = (100 + 50) * 0.005 * 0.1 * 1;
+    const melt = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    const slopeFactor = 1 + (1 - 0.5);
+    const expectedMelt = (100 + 50) * 0.005 * 0.1 * slopeFactor;
     const surfaceFraction = 100 / (100 + 50);
     const meltFromIce = expectedMelt * surfaceFraction;
     const meltFromBuried = expectedMelt - meltFromIce;
@@ -36,5 +44,41 @@ describe('hydrology melting with buried ice', () => {
     expect(zonalWater.polar.ice).toBeCloseTo(100 - meltFromIce);
     expect(zonalWater.polar.buriedIce).toBeCloseTo(50 - meltFromBuried);
     expect(zonalWater.temperate.liquid).toBeCloseTo(expectedMelt);
+  });
+
+  test('flow occurs from temperate to polar when polar has less water', () => {
+    const zonalWater = {
+      polar: { liquid: 5, ice: 0, buriedIce: 0 },
+      temperate: { liquid: 50, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 20, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 260, temperate: 260, tropical: 260 };
+    const moved = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    expect(moved).toBeCloseTo(0); // no melting expected
+    expect(zonalWater.polar.liquid).toBeCloseTo(5.157, 3);
+    expect(zonalWater.temperate.liquid).toBeCloseTo(49.243, 3);
+  });
+
+  test('flow uses total water level difference including ice', () => {
+    const zonalWater = {
+      polar: { liquid: 10, ice: 50, buriedIce: 0 },
+      temperate: { liquid: 40, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 40, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 260, temperate: 260, tropical: 260 };
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    expect(zonalWater.temperate.liquid).toBeCloseTo(46.889, 3);
+    expect(zonalWater.polar.liquid).toBeCloseTo(3.211, 3);
+  });
+
+  test('flow does not move directly from polar to tropical', () => {
+    const zonalWater = {
+      polar: { liquid: 50, ice: 0, buriedIce: 0 },
+      temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 0, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 260, temperate: 260, tropical: 260 };
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps);
+    expect(zonalWater.tropical.liquid).toBeCloseTo(0, 5);
   });
 });
