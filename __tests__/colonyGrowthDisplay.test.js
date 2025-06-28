@@ -19,7 +19,11 @@ describe('colony growth rate display', () => {
     const ctx = dom.getInternalVMContext();
 
     ctx.formatNumber = numbers.formatNumber;
-    ctx.populationModule = { getCurrentGrowthPercent: () => 0.5 };
+    ctx.populationModule = {
+      getCurrentGrowthPercent: () => 0.05,
+      growthRate: 0.001,
+      populationResource: { value: 100, cap: 200 }
+    };
     ctx.colonies = {};
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'colonyUI.js'), 'utf8');
@@ -28,9 +32,13 @@ describe('colony growth rate display', () => {
     dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
     ctx.updateGrowthRateDisplay();
 
+    const cap = dom.window.document.getElementById('growth-capacity-value');
+    expect(cap.textContent).toBe('50.0%');
+    const base = dom.window.document.getElementById('growth-base-value');
+    expect(base.textContent).toBe('+0.100%/s');
     const value = dom.window.document.getElementById('growth-rate-value');
-    expect(value.textContent).toBe('+0.500%/s');
-    const icon = dom.window.document.querySelector('#growth-rate-container .info-tooltip-icon');
-    expect(icon).not.toBeNull();
+    expect(value.textContent).toBe('+0.050%/s');
+    const icons = dom.window.document.querySelectorAll('#growth-rate-container .info-tooltip-icon');
+    expect(icons.length).toBe(3);
   });
 });
