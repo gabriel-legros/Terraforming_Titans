@@ -104,6 +104,8 @@ function initializeGameState(options = {}) {
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
+  playTimeSeconds = 0;
+
   dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
   resources = {};
   resources = createResources(currentPlanetParameters.resources);
@@ -176,6 +178,7 @@ function initializeGameState(options = {}) {
 }
 
 function updateLogic(delta) {
+  playTimeSeconds += delta / 1000;
   dayNightCycle.update(delta);
 
   const allStructures = {...buildings, ...colonies};
