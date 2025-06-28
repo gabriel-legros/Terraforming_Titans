@@ -600,7 +600,7 @@ function updateLifeBox() {
         </thead>
         <tbody>
           <tr>
-            <td>Albedo</td>
+            <td>Albedo <span class="info-tooltip-icon" title="Albedo is the measure of reflectivity. Key values:\n- Rock (Base): Varies by planet\n- Ocean: 0.06\n- Water Ice: 0.6\n- Dry Ice: 0.6\n- Biomass: 0.20\n- Black Dust: 0.05\n- Methane Ocean: 0.1">&#9432;</span></td>
             <td><span id="effective-albedo">${terraforming.luminosity.albedo.toFixed(2)}</span></td>
             <td><span id="albedo-delta"></span></td>
           </tr>
