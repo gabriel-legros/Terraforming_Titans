@@ -9,7 +9,7 @@ if (isNodeHydro) {
 
 function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElevationsInput, config) {
     const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey } = config;
-    const flowRateCoefficient = 0.005; // fraction per second
+    const flowRateCoefficient = 0.1; // Tuned for sqrt relationship
     const secondsMultiplier = deltaTime / 1000;
     let totalMelt = 0;
 
@@ -69,7 +69,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
             if (slopeFactor < 0.1) slopeFactor = 0.1;
 
             if (diff > 0) {
-                const potentialFlow = diff * flowRateCoefficient * slopeFactor * secondsMultiplier;
+                const potentialFlow = Math.sqrt(diff) * flowRateCoefficient * slopeFactor * secondsMultiplier;
                 flows[source][target] = potentialFlow;
                 outflow[source] += potentialFlow;
             } else {
