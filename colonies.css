@@ -22,6 +22,9 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    grid-column: 1;
+    justify-self: end;
+    margin-right: 50px;
   }
 
   .growth-rate-line {
