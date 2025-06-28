@@ -584,7 +584,7 @@ function updateLifeBox() {
     const albedoDeltaEl = document.getElementById('albedo-delta');
     if (albedoDeltaEl) {
       const deltaA = terraforming.luminosity.albedo - terraforming.celestialParameters.albedo;
-      albedoDeltaEl.textContent = `${deltaA >= 0 ? '+' : ''}${deltaA.toFixed(2)}`;
+      albedoDeltaEl.textContent = `${deltaA >= 0 ? '+' : ''}${formatNumber(deltaA, false, 2)}`;
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');
@@ -595,7 +595,7 @@ function updateLifeBox() {
     const solarFluxDeltaEl = document.getElementById('solar-flux-delta');
     if (solarFluxDeltaEl) {
       const deltaF = terraforming.luminosity.modifiedSolarFlux - terraforming.luminosity.solarFlux;
-      solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${deltaF.toFixed(1)}`;
+      solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 
     const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');

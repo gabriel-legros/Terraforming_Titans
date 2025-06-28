@@ -34,6 +34,6 @@ describe('updateLuminosityBox', () => {
     expect(albedoDelta).toBe('+0.05');
 
     const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
-    expect(fluxDelta).toBe('+100.0');
+    expect(fluxDelta).toBe('+100.00');
   });
 });
