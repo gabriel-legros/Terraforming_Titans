@@ -52,8 +52,13 @@ function createGrowthRateDisplay(){
   growthLine.appendChild(growthInfo);
   container.appendChild(growthLine);
 
-  const rightControlsContainer = document.getElementById('right-controls-container');
-  rightControlsContainer.appendChild(container);
+  // Insert to the left of the sliders
+  const firstChild = controlsContainer.firstChild;
+  if(firstChild){
+    controlsContainer.insertBefore(container, firstChild);
+  } else {
+    controlsContainer.appendChild(container);
+  }
 }
 
 function updateGrowthRateDisplay(){
