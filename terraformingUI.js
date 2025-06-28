@@ -487,7 +487,20 @@ function createWaterBox(row) {
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
       <h3>Life</h3> <!-- Static name -->
-      <p>Life coverage: <span id="life-current">0.00</span>%</p>
+      <table id="life-coverage-table">
+        <thead>
+          <tr>
+            <th>Region</th>
+            <th>Coverage (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Overall</td><td id="life-coverage-overall">0.00</td></tr>
+          <tr><td>Polar</td><td id="life-coverage-polar">0.00</td></tr>
+          <tr><td>Temperate</td><td id="life-coverage-temperate">0.00</td></tr>
+          <tr><td>Tropical</td><td id="life-coverage-tropical">0.00</td></tr>
+        </tbody>
+      </table>
       <p>Photosynthesis multiplier: <span id="life-luminosity-multiplier">${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}</span>%</p>
       `;
 
@@ -528,9 +541,20 @@ function updateLifeBox() {
         lifeBox.style.borderColor = 'red';
     }
 
+    // Calculate zonal coverage percentages
+    const polarCov = calculateZonalCoverage(terraforming, 'polar', 'biomass');
+    const temperateCov = calculateZonalCoverage(terraforming, 'temperate', 'biomass');
+    const tropicalCov = calculateZonalCoverage(terraforming, 'tropical', 'biomass');
+
     // Update life coverage display
-    const lifeCoverageSpan = document.getElementById('life-current');
-    lifeCoverageSpan.textContent = `${(avgBiomassCoverage * 100).toFixed(2)}`; // Display percentage
+    const overallEl = document.getElementById('life-coverage-overall');
+    if (overallEl) overallEl.textContent = (avgBiomassCoverage * 100).toFixed(2);
+    const polarEl = document.getElementById('life-coverage-polar');
+    if (polarEl) polarEl.textContent = (polarCov * 100).toFixed(2);
+    const temperateEl = document.getElementById('life-coverage-temperate');
+    if (temperateEl) temperateEl.textContent = (temperateCov * 100).toFixed(2);
+    const tropicalEl = document.getElementById('life-coverage-tropical');
+    if (tropicalEl) tropicalEl.textContent = (tropicalCov * 100).toFixed(2);
 
     const lifeMultiplierSpan = document.getElementById('life-luminosity-multiplier');
     if (lifeMultiplierSpan) {
