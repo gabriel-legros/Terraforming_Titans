@@ -246,6 +246,35 @@ function createProjectItem(project) {
   autoStartCheckboxContainer.appendChild(autoStartLabel);
   checkboxRowContainer.appendChild(autoStartCheckboxContainer);
 
+  if (project.attributes.spaceExport) {
+    const waitCheckboxContainer = document.createElement('div');
+    waitCheckboxContainer.classList.add('checkbox-container');
+
+    const waitCheckbox = document.createElement('input');
+    waitCheckbox.type = 'checkbox';
+    waitCheckbox.checked = project.waitForCapacity !== false; // default true
+    waitCheckbox.id = `${project.name}-wait-capacity`;
+    waitCheckbox.classList.add('wait-capacity-checkbox');
+
+    waitCheckbox.addEventListener('change', (event) => {
+      project.waitForCapacity = event.target.checked;
+    });
+
+    const waitLabel = document.createElement('label');
+    waitLabel.htmlFor = `${project.name}-wait-capacity`;
+    waitLabel.textContent = 'Wait for full capacity';
+
+    waitCheckboxContainer.appendChild(waitCheckbox);
+    waitCheckboxContainer.appendChild(waitLabel);
+    checkboxRowContainer.appendChild(waitCheckboxContainer);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      waitCapacityCheckbox: waitCheckbox,
+      waitCapacityCheckboxContainer: waitCheckboxContainer,
+    };
+  }
+
   // Store UI elements for updating later
   projectElements[project.name] = {
     ...projectElements[project.name],
@@ -535,6 +564,10 @@ function updateProjectUI(projectName) {
     elements.autoAssignCheckbox.checked = project.autoAssignSpaceships || false;
   }
 
+  if (elements.waitCapacityCheckbox) {
+    elements.waitCapacityCheckbox.checked = project.waitForCapacity !== false;
+  }
+
     // For spaceExport projects, set the saved disposal resource in the dropdown if it exists
     if (project.attributes.spaceExport && project.selectedDisposalResource) {
       const { category, resource } = project.selectedDisposalResource;
@@ -616,9 +649,15 @@ function updateProjectUI(projectName) {
     // Show the auto-start checkbox if the project can be repeated
     if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects')) {
       elements.autoStartCheckboxContainer.style.display = 'block';
+      if (elements.waitCapacityCheckboxContainer) {
+        elements.waitCapacityCheckboxContainer.style.display = 'block';
+      }
     }
     else {
-      elements.autoStartCheckboxContainer.style.display = 'none';      
+      elements.autoStartCheckboxContainer.style.display = 'none';
+      if (elements.waitCapacityCheckboxContainer) {
+        elements.waitCapacityCheckboxContainer.style.display = 'none';
+      }
     }
   }
 }
