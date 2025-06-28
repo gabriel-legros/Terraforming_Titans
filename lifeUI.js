@@ -340,7 +340,8 @@ function updateLifeUI() {
     const revertBtn = document.getElementById('life-revert-btn');
     const applyProgressContainer = document.getElementById('life-apply-progress-container');
     const applyProgressBar = document.getElementById('life-apply-progress');
-  
+    const modifyButtons = document.querySelectorAll('.life-tentative-btn');
+
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
         document.getElementById('modify-header').style.display = 'table-cell';
@@ -354,6 +355,7 @@ function updateLifeUI() {
             lifePointsRemainingDisplay.style.display = 'inline'; // Keep visible even when deploying
             revertBtn.style.display = 'inline-block';
             createBtn.style.display = 'none';
+            modifyButtons.forEach(btn => btn.disabled = true);
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);
             const progressPercent = lifeDesigner.getProgress();
@@ -369,6 +371,9 @@ function updateLifeUI() {
             applyBtn.disabled = !survivable; // Disable if design cannot survive
             applyBtn.title = survivable ? '' : 'Life cannot survive anywhere';
             applyBtn.style.background = ''; // Reset background
+            revertBtn.disabled = false;
+            createBtn.disabled = false;
+            modifyButtons.forEach(btn => btn.disabled = false);
         }
     }
     else {
