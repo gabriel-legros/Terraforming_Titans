@@ -103,6 +103,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const buildCountDisplay = document.createElement('span');
   buildCountDisplay.classList.add('build-count-display');
+  buildCountDisplay.id = `${structure.name}-build-count`;
   buildCountDisplay.textContent = formatNumber(selectedBuildCount, true);
   buildCountButtons.appendChild(buildCountDisplay);
 
@@ -460,6 +461,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const structureRow = document.getElementById(`build-${structureName}`).closest('.building-row');
       const countElement = document.getElementById(`${structureName}-count`);
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
+      const buildDisplay = document.getElementById(`${structureName}-build-count`);
   
       // Update visibility based on unlocked state
       if (structure.unlocked && structureRow && !structure.isHidden) {
@@ -472,6 +474,10 @@ function updateDecreaseButtonText(button, buildCount) {
         countElement.textContent = structure.count;
       } else if (countActiveElement) {
         countActiveElement.textContent = `${formatBigInteger(structure.active)}/${formatBigInteger(structure.count)}`;
+      }
+
+      if (buildDisplay) {
+        buildDisplay.textContent = formatNumber(selectedBuildCounts[structureName], true);
       }
 
       // Toggle visibility of the "Hide" button based on conditions

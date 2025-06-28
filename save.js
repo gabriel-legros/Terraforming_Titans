@@ -19,6 +19,7 @@ function getGameState() {
     milestonesManager: milestonesManager.saveState(),
     skills: skillManager.saveState(),
     spaceManager: spaceManager.saveState(),
+    selectedBuildCounts: selectedBuildCounts,
     settings: gameSettings,
     colonySliderSettings: colonySliderSettings,
     playTimeSeconds: playTimeSeconds
@@ -118,6 +119,18 @@ function loadGame(slotOrCustomString) {
         }
       }
       createColonyButtons(colonies);
+
+      if (gameState.selectedBuildCounts) {
+        for (const key in gameState.selectedBuildCounts) {
+          if (selectedBuildCounts.hasOwnProperty(key)) {
+            selectedBuildCounts[key] = gameState.selectedBuildCounts[key];
+          }
+        }
+        if (typeof updateBuildingDisplay === 'function') {
+          updateBuildingDisplay(buildings);
+          updateBuildingDisplay(colonies);
+        }
+      }
     
       // Restore projects
       if (gameState.projects) {
