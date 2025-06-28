@@ -99,8 +99,7 @@ function updateTerraformingUI() {
 function updatePlayTimeDisplay() {
     const el = document.getElementById('play-time-display');
     if (!el) return;
-    const years = playTimeSeconds / 365;
-    el.textContent = `Year ${years.toFixed(1)}`;
+    el.textContent = formatPlayTime(playTimeSeconds);
 }
 
 // Functions to create and update each terraforming aspect box
