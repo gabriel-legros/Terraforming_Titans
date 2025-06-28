@@ -21,6 +21,7 @@ function getGameState() {
     spaceManager: spaceManager.saveState(),
     settings: gameSettings,
     colonySliderSettings: colonySliderSettings,
+    ghgFactorySettings: ghgFactorySettings,
     playTimeSeconds: playTimeSeconds
   };
 }
@@ -196,6 +197,10 @@ function loadGame(slotOrCustomString) {
       setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
       setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
       setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
+    }
+
+    if(gameState.ghgFactorySettings){
+      Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
     }
 
     if(gameState.playTimeSeconds !== undefined){

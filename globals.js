@@ -31,6 +31,11 @@ let colonySliderSettings = {
   oreMineWorkers: 0
 };
 
+let ghgFactorySettings = {
+  autoDisableAboveTemp: false,
+  disableTempThreshold: 283.15 // Kelvin
+};
+
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;

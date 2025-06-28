@@ -396,7 +396,20 @@ class Building extends EffectableEntity {
     if(this.active === 0){
       this.productivity = 0;
     } else{
-      const targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+      let targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+
+      // Automatically disable GHG factory if temperature exceeds threshold
+      if(
+        this.name === 'ghgFactory' &&
+        this.isBooleanFlagSet('terraformingBureauFeature') &&
+        ghgFactorySettings.autoDisableAboveTemp &&
+        terraforming && terraforming.temperature
+      ){
+        if(terraforming.temperature.value > ghgFactorySettings.disableTempThreshold){
+          targetProductivity = 0;
+        }
+      }
+
       if(Math.abs(targetProductivity - this.productivity) < 0.001){
         this.productivity = targetProductivity;
       }

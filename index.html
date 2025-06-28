@@ -535,6 +535,9 @@
         celsiusToggle.addEventListener('change', () => {
             gameSettings.useCelsius = celsiusToggle.checked;
             updateTerraformingUI();
+            if (typeof updateBuildingDisplay === 'function') {
+                updateBuildingDisplay(buildings);
+            }
         });
     }
 
