@@ -23,8 +23,9 @@
     flex-direction: column;
     gap: 2px;
     grid-column: 1;
-    justify-self: end;
-    margin-right: 50px;
+    margin-left: 50px;
+    margin-top: 50px;
+    margin-bottom: 20px;
   }
 
   .growth-rate-line {
@@ -170,9 +171,10 @@
 
 #colony-controls-container {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   gap: 20px;
   align-items: start;
+  justify-items: start;
 }
 
 #right-controls-container {
