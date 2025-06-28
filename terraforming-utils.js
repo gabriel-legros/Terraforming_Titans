@@ -1,13 +1,14 @@
 // Utility functions for terraforming calculations
 
 const isNode = (typeof module !== 'undefined' && module.exports);
-let ZONES_NODE, getZonePercentageNode;
-let baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
+var ZONES_NODE, getZonePercentageNode, estimateCoverageFn;
+var baseCalculateEvapSubl, baseCalculatePrecipFactor, baseCalculateMeltFreeze;
 
 if (isNode) {
   const zonesMod = require('./zones.js');
   ZONES_NODE = zonesMod.ZONES;
   getZonePercentageNode = zonesMod.getZonePercentage;
+  estimateCoverageFn = zonesMod.estimateCoverage;
   const waterCycle = require('./water-cycle.js');
   baseCalculateEvapSubl = waterCycle.calculateEvaporationSublimationRates;
   baseCalculatePrecipFactor = waterCycle.calculatePrecipitationRateFactor;
@@ -18,6 +19,7 @@ if (isNode) {
   baseCalculatePrecipFactor = globalThis.calculatePrecipitationRateFactor;
   // capture the base implementation from hydrology before defining our wrapper
   baseCalculateMeltFreeze = globalThis.calculateMeltingFreezingRates;
+  estimateCoverageFn = globalThis.estimateCoverage;
 }
 
 function getZones() {
@@ -49,26 +51,14 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
     return 0;
   }
 
-  let resourceRatio = 0.0001 * zonalAmount / zoneArea;
+  let scale = 0.0001;
   if (resourceType === 'dryIce') {
-    resourceRatio *= 100;
+    scale *= 100;
   } else if (resourceType === 'biomass') {
-    resourceRatio *= 1000;
+    scale *= 1000;
   }
 
-  let coverage;
-  if (resourceRatio <= 0) {
-    coverage = 0;
-  } else if (resourceRatio <= 0.001) {
-    coverage = 10 * resourceRatio;
-  } else if (resourceRatio < 1) {
-    coverage = 0.143317 * Math.log(resourceRatio) + 1;
-    const linearEndCoverage = 10 * 0.001;
-    coverage = Math.max(linearEndCoverage, Math.min(coverage, 1.0));
-  } else {
-    coverage = 1;
-  }
-  return Math.max(0, Math.min(coverage, 1.0));
+  return estimateCoverageFn(zonalAmount, zoneArea, scale);
 }
 
 function calculateAverageCoverage(terraforming, resourceType) {
@@ -120,6 +110,8 @@ const calculateZonalMeltingFreezingRates = (terraforming, zone, temperature) => 
 
 if (!isNode) {
   // expose wrappers for browser usage without overwriting the captured bases
+  globalThis.calculateAverageCoverage = calculateAverageCoverage;
+  globalThis.calculateZonalCoverage = calculateZonalCoverage;
   globalThis.calculateEvaporationSublimationRates = calculateZonalEvaporationSublimationRates;
   globalThis.calculatePrecipitationRateFactor = calculateZonalPrecipitationRateFactor;
   globalThis.calculateMeltingFreezingRates = calculateZonalMeltingFreezingRates;

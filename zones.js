@@ -82,12 +82,30 @@ function sphericalSegmentArea(phi1, phi2) {
           return 0; // Return 0 instead of throwing error
     }
   }
+
+function estimateCoverage(amount, zoneArea, scale = 0.0001) {
+  const resourceRatio = scale * amount / zoneArea;
+  let coverage;
+  if (resourceRatio <= 0) {
+    coverage = 0;
+  } else if (resourceRatio <= 0.001) {
+    coverage = 10 * resourceRatio;
+  } else if (resourceRatio < 1) {
+    coverage = 0.143317 * Math.log(resourceRatio) + 1;
+    const linearEndCoverage = 10 * 0.001;
+    coverage = Math.max(linearEndCoverage, Math.min(coverage, 1.0));
+  } else {
+    coverage = 1;
+  }
+  return Math.max(0, Math.min(coverage, 1.0));
+}
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { ZONES, getZoneRatio, getZonePercentage };
+  module.exports = { ZONES, getZoneRatio, getZonePercentage, estimateCoverage };
 } else {
   // Expose constants and helpers on the global object for browser usage
   globalThis.ZONES = ZONES;
   globalThis.getZoneRatio = getZoneRatio;
   globalThis.getZonePercentage = getZonePercentage;
+  globalThis.estimateCoverage = estimateCoverage;
 }
 

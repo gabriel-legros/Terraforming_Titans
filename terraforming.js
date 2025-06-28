@@ -1034,7 +1034,7 @@ class Terraforming extends EffectableEntity{
       for (const z of ZONES) {
         tempMap[z] = this.temperature.zones[z].value;
       }
-      this.flowMeltAmount = simulateSurfaceWaterFlow(this.zonalWater, deltaTime, tempMap); // Call for Step 4
+      this.flowMeltAmount = simulateSurfaceWaterFlow(this, deltaTime, tempMap); // Call for Step 4
       this.flowMethaneMeltAmount = simulateSurfaceHydrocarbonFlow(this.zonalHydrocarbons, deltaTime, tempMap);
 
       this.applyTerraformingEffects();
