@@ -6,6 +6,7 @@ class Resource extends EffectableEntity {
     this.name = resourceData.name || '';
     this.category = resourceData.category;
     this.displayName = resourceData.displayName || resourceData.name || '';
+    this.unit = resourceData.unit || null;
     this.value = resourceData.initialValue || 0;
     this.hasCap = resourceData.hasCap || false;
     this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
@@ -39,6 +40,9 @@ class Resource extends EffectableEntity {
     }
     if (config.unlocked !== undefined) {
       this.unlocked = config.unlocked;
+    }
+    if (config.unit !== undefined) {
+      this.unit = config.unit;
     }
     if (config.maintenanceConversion !== undefined) {
       this.maintenanceConversion = config.maintenanceConversion || {};
