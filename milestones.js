@@ -289,7 +289,7 @@ class MilestonesManager {
 
     getHappinessBonus() {
         const totalMilestones = this.milestones.length;
-        const completedMilestones = this.milestones.filter(milestone => milestone.isCompleted).length;
+        const completedMilestones = this.milestones.filter(milestone => milestone.isCompleted || milestone.canBeCompleted).length;
     
         // Calculate happiness bonus
         const happinessBonus = totalMilestones > 0 
