@@ -79,7 +79,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
 
             const neighborTemp = zonalTemperatures[target];
             if (typeof neighborTemp === 'number' && neighborTemp > meltingPoint && totalIceAvail[source] > 0 && diff > 0) {
-                const meltCoefficient = flowRateCoefficient * 0.01;
+                const meltCoefficient = flowRateCoefficient * 0.01 * Math.min(diff, 1);
                 const meltAmount = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
                 melts[source][target] = meltAmount;
                 meltOut[source] += meltAmount;
