@@ -1,5 +1,6 @@
 class SpaceExportBaseProject extends SpaceshipProject {
   renderUI(container) {
+    super.renderUI(container);
     if (this.attributes.disposable) {
       this.createResourceDisposalUI(container);
     }

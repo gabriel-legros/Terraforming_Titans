@@ -65,21 +65,6 @@ function createProjectItem(project) {
   descriptionElement.classList.add('project-description');
   projectItem.appendChild(descriptionElement);
 
-  // Spaceship Assignment Section
-  if (project.attributes.spaceMining || project.attributes.spaceExport) {
-    createSpaceshipAssignmentUI(project, projectItem);
-  }
-
-  // Cost Per Ship and Total Cost Display
-  if (project.attributes.costPerShip) {
-    createCostPerShipAndTotalCostUI(project, projectItem);
-  }
-
-
-  // Resource Gain Per Ship and Total Gain Display
-  if (project.attributes.resourceGainPerShip) {
-    createResourceGainPerShipAndTotalGainUI(project, projectItem);
-  }
 
   if (typeof project.renderUI === 'function') {
     project.renderUI(projectItem);

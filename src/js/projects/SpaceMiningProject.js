@@ -1,6 +1,6 @@
 class SpaceMiningProject extends SpaceshipProject {
   renderUI(container) {
-    // Uses default UI elements from projectsUI.js
+    super.renderUI(container);
   }
 
   updateUI() {
