@@ -47,7 +47,7 @@ const projectParameters = {
     }
   },
   exportResources: {
-    type: 'Project',
+    type: 'SpaceExportProject',
     name : "Metal Exportation",
     category : "resources",
     cost: {},
@@ -342,7 +342,7 @@ const projectParameters = {
     }
   },
   disposeResources : {
-    type: 'Project',
+    type: 'SpaceDisposalProject',
     name : "Resource Disposal",
     category : "resources",
     cost: {},
