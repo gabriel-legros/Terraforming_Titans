@@ -1,7 +1,7 @@
 class SpaceExportBaseProject extends Project {
   renderUI(container) {
-    if (typeof createResourceDisposalUI === 'function') {
-      createResourceDisposalUI(this, container);
+    if (this.attributes.disposable) {
+      this.createResourceDisposalUI(container);
     }
 
     const elements = projectElements[this.name] || {};
@@ -33,6 +33,65 @@ class SpaceExportBaseProject extends Project {
         waitCapacityCheckboxContainer: waitCheckboxContainer,
       };
     }
+  }
+
+  createResourceDisposalUI(projectItem) {
+    const disposalContainer = document.createElement('div');
+    disposalContainer.classList.add('disposal-container');
+
+    const disposalLabel = document.createElement('label');
+    disposalLabel.textContent = 'Select Resource to Export:';
+    disposalContainer.appendChild(disposalLabel);
+
+    const disposalSelect = document.createElement('select');
+    disposalSelect.classList.add('disposal-select');
+    disposalSelect.id = `${this.name}-disposal-select`;
+
+    for (const [category, resourceList] of Object.entries(this.attributes.disposable)) {
+      resourceList.forEach(resource => {
+        const option = document.createElement('option');
+        option.value = `${category}:${resource}`;
+        option.textContent = resources[category][resource].displayName || resource;
+        disposalSelect.appendChild(option);
+      });
+    }
+
+    disposalSelect.addEventListener('change', (event) => {
+      const [category, resource] = event.target.value.split(':');
+      this.selectedDisposalResource = { category, resource };
+    });
+
+    disposalContainer.appendChild(disposalSelect);
+    projectItem.appendChild(disposalContainer);
+
+    const disposalPerShipElement = document.createElement('p');
+    disposalPerShipElement.id = `${this.name}-disposal-per-ship`;
+    disposalPerShipElement.classList.add('project-disposal-per-ship');
+    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+    const disposalPerShipAmount = this.attributes.disposalAmount * efficiency;
+    disposalPerShipElement.textContent = `Maximum Export per Ship: ${formatNumber(disposalPerShipAmount, true)}`;
+    disposalContainer.appendChild(disposalPerShipElement);
+
+    if (this.attributes.fundingGainAmount) {
+      const gainElement = document.createElement('span');
+      gainElement.id = `${this.name}-gain-per-ship`;
+      gainElement.classList.add('project-disposal-per-ship');
+      gainElement.textContent = `Gain per Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`;
+      disposalContainer.appendChild(gainElement);
+    }
+
+    const totalDisposalElement = document.createElement('span');
+    totalDisposalElement.id = `${this.name}-total-disposal`;
+    totalDisposalElement.classList.add('project-total-disposal');
+    totalDisposalElement.textContent = 'Total Export: 0';
+    disposalContainer.appendChild(totalDisposalElement);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      disposalSelect,
+      disposalPerShipElement,
+      totalDisposalElement,
+    };
   }
 
   updateUI() {
