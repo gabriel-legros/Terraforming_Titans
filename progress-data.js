@@ -954,6 +954,34 @@ progressData = {
         id: "chapter5.5",
         type: "journal",
         narrative: "System Message: New Interpretation of 2nd Primary directive : Protect all of humanity from harm",
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 10000000
+        }],
+        reward: [],
+        nextChapter: "chapter5.6"
+      },
+      {
+        id: "chapter5.6",
+        type: "journal",
+        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is starting to recover. We're managing to keep the terraforming untouched. But we're still blind. We need to know who attacked Earth, and if they're coming back. I'm asking for your help directly. We need to find the origin of the attacks.'",
+        objectives: [],
+        reward: [
+          {
+            target: 'project',
+            targetId: 'triangulate_attack',
+            type: 'enable'
+          }
+        ],
+        special : 'clearJournal',
+        nextChapter: "chapter5.7"
+      },
+      {
+        id: "chapter5.7",
+        type: "journal",
+        narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
         objectives: [],
         reward: [],
         nextChapter: null

@@ -401,6 +401,34 @@ const projectParameters = {
         }
       ]
     }
+  },
+  triangulate_attack: {
+    name: "Triangulate Attack Origin",
+    category: "story",
+    cost: {
+      colony: {
+        components: 100000,
+        electronics: 100000,
+        research: 5000000,
+        energy: 100000
+      }
+    },
+    duration: 300000,
+    description: "Analyze the data from the Earth probes and cross-reference it with historical astronomical data to triangulate the origin of the three attacks.",
+    repeatable: true,
+    maxRepeatCount: 5,
+    unlocked: false,
+    attributes: {
+      planet: 'titan',
+      costDoubling: true,
+      storySteps: [
+        "Cross-referencing probe data with deep space telescope archives.",
+        "Initial analysis suggests the energy signatures do not match any known human or terrestrial phenomena.",
+        "The asteroid's trajectory appears to have been deliberately altered. The course correction was too precise for a natural event.",
+        "The two energy beams originated from different points in space, but their timing was perfectly synchronized.",
+        "A faint gravitational anomaly has been detected along the projected path of one of the energy beams. It could be a cloaked object or a previously unknown spatial distortion."
+      ]
+    }
   }
 };
 
