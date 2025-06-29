@@ -66,7 +66,7 @@ const projectParameters = {
     }
   },
   satellite: {
-    type: 'Project',
+    type: 'ScannerProject',
     name: "Ore satellite",
     category :"infrastructure",
     cost: {
@@ -90,7 +90,7 @@ const projectParameters = {
     }
   },
   geo_satellite: {
-    type: 'Project',
+    type: 'ScannerProject',
     name: "Geothermal satellite",
     category :"infrastructure",
     cost: {
