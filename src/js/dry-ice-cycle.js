@@ -3,6 +3,17 @@ const STEFAN_BOLTZMANN = 5.67e-8; // W/m²·K⁴
 const L_S_CO2 = 574000; // J/kg (latent heat of sublimation for CO2)
 const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
+const isNodeDryIce = (typeof module !== 'undefined' && module.exports);
+var penmanRate = globalThis.penmanRate;
+var psychrometricConstant = globalThis.psychrometricConstant;
+if (isNodeDryIce) {
+  try {
+    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+  } catch (e) {
+    // fall back to globals if require fails
+  }
+}
+
 // Default equilibrium parameter for CO₂ condensation. This value is used until
 // a more accurate one can be calculated from in-game conditions.
 const EQUILIBRIUM_CO2_PARAMETER = 6.204831258884265e-8;
@@ -75,41 +86,24 @@ function slopeSVPCO2(temperature) {
 
 // Function to calculate psychrometric constant (gamma_s)
 function psychrometricConstantCO2(atmPressure) {
-  return (C_P_AIR * atmPressure) / (EPSILON * L_S_CO2); // Pa/K
+  return psychrometricConstant(atmPressure, L_S_CO2); // Pa/K
 }
 
 // Function to calculate sublimation rate (E_sub) using the modified Penman equation
 function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
-  // T: Temperature in °C
-  // solarFlux: Incoming solar radiation (W/m²)
-  // atmPressure: Atmospheric pressure (Pa)
-  // e_a: Actual vapor pressure of CO2 (Pa)
-  // r_a: Aerodynamic resistance (s/m)
-  
-  const albedo = 0.6; // Typical albedo for dry ice
-  
-  // Calculate net radiation (simplified to net shortwave)
-  const R_n = (1 - albedo) * solarFlux; // W/m²
-  
-  // Calculate slope of SVP curve
   const Delta_s = slopeSVPCO2(T); // Pa/K
-  
-  // Calculate psychrometric constant
-  const gamma_s = psychrometricConstantCO2(atmPressure); // Pa/K
-  
-  // Calculate air density
-  const rho_a_val = airDensity(atmPressure, T); // kg/m³
-  
-  // Calculate saturation vapor pressure
   const e_s = calculateSaturationPressureCO2(T); // Pa
-  
-  // Calculate sublimation rate
-  const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-  const denominator = (Delta_s + gamma_s) * L_S_CO2;
-  const E_sub = numerator / denominator; // kg/m²/s
-  
-  // Ensure sublimation rate is non-negative (Penman can be negative if e_a > e_s)
-  return Math.max(0, E_sub);
+  return penmanRate({
+    T,
+    solarFlux,
+    atmPressure,
+    e_a,
+    latentHeat: L_S_CO2,
+    albedo: 0.6,
+    r_a,
+    Delta_s,
+    e_s,
+  });
 }
 
 // Calculate rapid sublimation rate of surface CO₂ ice when the temperature

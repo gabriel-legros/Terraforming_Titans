@@ -2,6 +2,17 @@
 const L_V_METHANE = 5.1e5; // Latent heat of vaporization for methane (J/kg)
 const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
 
+const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
+var penmanRate = globalThis.penmanRate;
+var psychrometricConstant = globalThis.psychrometricConstant;
+if (isNodeHydrocarbon) {
+  try {
+    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+  } catch (e) {
+    // fall back to globals if require fails
+  }
+}
+
 // Function to calculate saturation vapor pressure of methane using the Wagner equation
 function calculateSaturationPressureMethane(temperature) {
     // Critical properties of Methane
@@ -62,46 +73,46 @@ function slopeSVPMethane(temperature) {
 
 // Function to calculate psychrometric constant for methane
 function psychrometricConstantMethane(atmPressure) {
-  return (C_P_AIR * atmPressure) / (EPSILON * L_V_METHANE); // Pa/K
+  return psychrometricConstant(atmPressure, L_V_METHANE); // Pa/K
 }
 
 // Function to calculate evaporation rate for methane using the modified Penman equation
 function evaporationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    const albedo = 0.1; // Typical albedo for liquid methane
-
-    const R_n = (1 - albedo) * solarFlux;
     const Delta_s = slopeSVPMethane(T);
-    const gamma_s = psychrometricConstantMethane(atmPressure);
-    const rho_a_val = airDensity(atmPressure, T);
     const e_s = calculateSaturationPressureMethane(T);
-
-    const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-    const denominator = (Delta_s + gamma_s) * L_V_METHANE;
-    const E_evp = numerator / denominator;
-
-    return Math.max(0, E_evp); // kg/m²/s
+    return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: L_V_METHANE,
+        albedo: 0.1,
+        r_a,
+        Delta_s,
+        e_s,
+    });
 }
 
 // Function to calculate psychrometric constant for methane sublimation
 function psychrometricConstantMethaneSublimation(atmPressure) {
-  return (C_P_AIR * atmPressure) / (EPSILON * L_S_METHANE); // Pa/K
+  return psychrometricConstant(atmPressure, L_S_METHANE); // Pa/K
 }
 
 // Function to calculate sublimation rate for methane using the modified Penman equation
 function sublimationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    const albedo = 0.6; // Typical albedo for methane ice
-
-    const R_n = (1 - albedo) * solarFlux;
     const Delta_s = slopeSVPMethane(T);
-    const gamma_s = psychrometricConstantMethaneSublimation(atmPressure);
-    const rho_a_val = airDensity(atmPressure, T);
     const e_s = calculateSaturationPressureMethane(T);
-
-    const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-    const denominator = (Delta_s + gamma_s) * L_S_METHANE;
-    const E_sub = numerator / denominator;
-
-    return Math.max(0, E_sub); // kg/m²/s
+    return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: L_S_METHANE,
+        albedo: 0.6,
+        r_a,
+        Delta_s,
+        e_s,
+    });
 }
 
 function rapidSublimationRateMethane(temperature, availableMethaneIce) {

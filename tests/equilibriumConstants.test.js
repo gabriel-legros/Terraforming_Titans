@@ -19,6 +19,9 @@ global.airDensity = physics.airDensity;
 global.C_P_AIR = 1004;
 global.EPSILON = 0.622;
 global.R_AIR = 287;
+const phaseUtils = require('../src/js/phase-change-utils.js');
+global.penmanRate = phaseUtils.penmanRate;
+global.psychrometricConstant = phaseUtils.psychrometricConstant;
 // water-cycle functions
 const fs = require('fs');
 eval(fs.readFileSync(require.resolve('../src/js/water-cycle.js'), 'utf8'));
