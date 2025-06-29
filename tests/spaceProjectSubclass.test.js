@@ -11,6 +11,8 @@ describe('space project subclasses', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager; this.Project = Project;', ctx);
+    const spaceship = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceship + '; this.SpaceshipProject = SpaceshipProject;', ctx);
     const exportBase = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceExportBaseProject.js'), 'utf8');
     vm.runInContext(exportBase + '; this.SpaceExportBaseProject = SpaceExportBaseProject;', ctx);
     const exportSubclass = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceExportProject.js'), 'utf8');

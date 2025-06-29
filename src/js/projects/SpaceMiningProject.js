@@ -1,4 +1,4 @@
-class SpaceMiningProject extends Project {
+class SpaceMiningProject extends SpaceshipProject {
   renderUI(container) {
     // Uses default UI elements from projectsUI.js
   }
