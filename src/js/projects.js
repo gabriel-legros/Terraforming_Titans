@@ -610,7 +610,10 @@ class ProjectManager extends EffectableEntity {
   initializeProjects(projectParameters) {
     for (const projectName in projectParameters) {
       const projectData = projectParameters[projectName];
-      this.projects[projectName] = new Project(projectData, projectName);
+      const type = projectData.type || 'Project';
+      const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+      const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
+      this.projects[projectName] = new Ctor(projectData, projectName);
     }
   }
 

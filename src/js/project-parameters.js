@@ -1,5 +1,6 @@
 const projectParameters = {
   cargo_rocket: {
+    type: 'Project',
     name: "Cargo Rocket",
     category :"resources",
     cost: {
@@ -27,6 +28,7 @@ const projectParameters = {
     }
   },
   import_colonists_1: {
+    type: 'Project',
     name: "Import colonists",
     category :"resources",
     cost: {
@@ -45,6 +47,7 @@ const projectParameters = {
     }
   },
   exportResources: {
+    type: 'Project',
     name : "Metal Exportation",
     category : "resources",
     cost: {},
@@ -63,6 +66,7 @@ const projectParameters = {
     }
   },
   satellite: {
+    type: 'Project',
     name: "Ore satellite",
     category :"infrastructure",
     cost: {
@@ -86,6 +90,7 @@ const projectParameters = {
     }
   },
   geo_satellite: {
+    type: 'Project',
     name: "Geothermal satellite",
     category :"infrastructure",
     cost: {
@@ -109,6 +114,7 @@ const projectParameters = {
     }
   },
   spaceMirrorFacility: {
+    type: 'SpaceMirrorFacilityProject',
     name: "Space mirror facility",
     category :"infrastructure",
     cost: {
@@ -134,6 +140,7 @@ const projectParameters = {
     }
   },
   deeperMining: {
+    type: 'Project',
     name: "Deeper mining",
     category : "infrastructure",
     cost: {
@@ -162,6 +169,7 @@ const projectParameters = {
     }
   },
   oreSpaceMining: {
+    type: 'SpaceMiningProject',
     name: "Metal Asteroid Mining",
     category :"resources",
     cost: {},
@@ -176,7 +184,8 @@ const projectParameters = {
       resourceGainPerShip : {colony: {metal : 1000000}}
     }
   },
-    carbonSpaceMining: {
+  carbonSpaceMining: {
+    type: 'SpaceMiningProject',
     name: "Carbon Asteroid Mining",
     category :"resources",
     cost: {},
@@ -192,6 +201,7 @@ const projectParameters = {
     }
   },
   waterSpaceMining: {
+    type: 'SpaceMiningProject',
     name: "Ice and Water importation",
     category :"resources",
     cost: {},
@@ -207,6 +217,7 @@ const projectParameters = {
     }
   },
   nitrogenSpaceMining: {
+    type: 'SpaceMiningProject',
     name: "Nitrogen harvesting",
     category :"resources",
     cost: {},
@@ -222,6 +233,7 @@ const projectParameters = {
     }
   },
   spaceElevator: {
+    type: 'Project',
     name: "Space Elevator",
     category :"infrastructure",
     cost: {
@@ -297,6 +309,7 @@ const projectParameters = {
     }
   },  
   magneticShield : {
+    type: 'Project',
     name : 'Magnetic Shield',
     category :"infrastructure",
     cost: {
@@ -329,6 +342,7 @@ const projectParameters = {
     }
   },
   disposeResources : {
+    type: 'Project',
     name : "Resource Disposal",
     category : "resources",
     cost: {},
@@ -345,6 +359,7 @@ const projectParameters = {
     }
   },
   earthProbe : {
+    type: 'Project',
     name : "Earth Recon Probe",
     category : "story",
     cost : {
@@ -377,14 +392,15 @@ const projectParameters = {
     }
   },
   hyperionLantern: {
+    type: 'HyperionLanternProject',
     name: "Hyperion Lantern",
     category: "infrastructure",
     cost: {
       colony: {
-        metal: 1e6,
-        glass: 1e6,
-        electronics: 1e6,
-        components: 1e6
+        metal: 1e9,
+        glass: 1e9,
+        electronics: 1e9,
+        components: 1e9
       }
     },
     duration: 300000,
@@ -403,16 +419,17 @@ const projectParameters = {
       // Cost to add additional power modules to the lantern
       investmentCost: {
         colony: {
-          components: 1e6,
-          electronics: 1e6,
+          components: 1e9,
+          electronics: 1e9,
           glass: 1e6
         }
       },
       // Power output provided by each investment (in watts)
-      powerPerInvestment: 1e12
+      powerPerInvestment: 1e15
     }
   },
   triangulate_attack: {
+    type: 'Project',
     name: "Triangulate Attack Origin",
     category: "story",
     cost: {
