@@ -14,7 +14,7 @@ describe('Hyperion Lantern research', () => {
     const research = advanced.find(r => r.id === 'hyperion_lantern');
     expect(research).toBeDefined();
     expect(research.cost.advancedResearch).toBe(10000);
-    const enable = research.effects.find(e => e.target === 'project' && e.targetId === 'hyperionLantern');
+    const enable = research.effects.find(e => e.target === 'building' && e.targetId === 'hyperionLantern');
     expect(enable).toBeDefined();
   });
 });

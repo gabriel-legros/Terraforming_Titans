@@ -62,6 +62,7 @@ class Building extends EffectableEntity {
       this.surfaceArea = surfaceArea;
       this.requiresProductivity = typeof requiresProductivity !== 'undefined' ? requiresProductivity : true;
       this.requiresLand = requiresLand;
+      this.powerPerBuilding = config.powerPerBuilding;
 
       this.updateResourceStorage();
     }

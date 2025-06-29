@@ -380,6 +380,22 @@ const buildingsParameters = {
     unlocked: false,
     surfaceArea: 500
   },
+  hyperionLantern: {
+    name: 'Hyperion Lantern',
+    category: 'terraforming',
+    description: 'Orbital array that beams artificial sunlight onto the planet.',
+    cost: { colony: { metal: 1e6, glass: 1e6, electronics: 1e6, components: 1e6 } },
+    consumption: { colony: { energy: 1e9 } },
+    production: {},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false,
+    powerPerBuilding: 1e12
+  },
   ghgFactory: {
     name: 'Greenhouse Gas factory',
     category: 'terraforming',

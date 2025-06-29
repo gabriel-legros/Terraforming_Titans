@@ -391,43 +391,6 @@ const projectParameters = {
       ]
     }
   },
-  hyperionLantern: {
-    type: 'HyperionLanternProject',
-    name: "Hyperion Lantern",
-    category: "infrastructure",
-    cost: {
-      colony: {
-        metal: 1e6,
-        glass: 1e6,
-        electronics: 1e6,
-        components: 1e6
-      }
-    },
-    duration: 300000,
-    description: "A ridiculously huge lamp placed in orbit. It's basically the biggest flashlight ever built, capable of flooding the planet with artificial sunlight.  The energy must be provided.",
-    repeatable: false,
-    unlocked: false,
-    attributes: {
-      completionEffect: [
-        {
-          type: 'booleanFlag',
-          target: 'terraforming',
-          flagId: 'hyperionLanternBuilt',
-          value: true
-        }
-      ],
-      // Cost to add additional power modules to the lantern
-      investmentCost: {
-        colony: {
-          components: 1e6,
-          electronics: 1e6,
-          glass: 1e6
-        }
-      },
-      // Power output provided by each investment (in watts)
-      powerPerInvestment: 1e12
-    }
-  },
   triangulate_attack: {
     type: 'Project',
     name: "Triangulate Attack Origin",

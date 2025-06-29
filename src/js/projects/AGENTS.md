@@ -7,5 +7,4 @@ This folder contains classes for repeatable projects. Any new module here should
 - **SpaceExportProject** – inherits from SpaceExportBaseProject and represents exporting goods to earn funding.
 - **SpaceDisposalProject** – also extends SpaceExportBaseProject but dumps unwanted materials into space.
 - **SpaceMiningProject** – sends ships to mine asteroids for metal, water, carbon or other resources.
-- **HyperionLanternProject** – manages the enormous Hyperion Lantern which beams light and warms the planet. Additional investments increase its power.
 - **SpaceMirrorFacilityProject** – displays the effect of space mirrors in orbit, updating mirror count and power output.
