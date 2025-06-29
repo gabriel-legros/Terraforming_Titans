@@ -1047,7 +1047,7 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'project',
+            target: 'building',
             targetId: 'hyperionLantern',
             type: 'enable'
           }
