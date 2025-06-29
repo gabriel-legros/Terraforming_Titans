@@ -21,7 +21,7 @@ describe('SpaceMirrorFacilityProject', () => {
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
-    vm.runInContext(projectsCode + '; this.Project = Project; this.projectElements = projectElements;', ctx);
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const mirrorCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceMirrorFacilityProject.js'), 'utf8');
     vm.runInContext(mirrorCode + '; this.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');

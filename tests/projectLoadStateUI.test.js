@@ -26,7 +26,7 @@ describe('ProjectManager loadState', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(code + '; this.EffectableEntity = EffectableEntity;', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
-    vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager; this.Project = Project; this.projectElements = projectElements;', ctx);
+    vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager; this.Project = Project;', ctx);
 
     ctx.projectManager = new ctx.ProjectManager();
     const params = { test: { name: 'Test', duration: 1, description: '', cost: {}, category: 'resources', unlocked: true } };

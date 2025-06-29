@@ -1,3 +1,5 @@
+let projectElements = {};
+
 document.addEventListener('DOMContentLoaded', () => {
   // Subtab functionality to show/hide project categories
   document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
