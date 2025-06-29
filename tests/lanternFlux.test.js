@@ -10,10 +10,17 @@ Terraforming.prototype.updateLuminosity = function(){};
 Terraforming.prototype.updateSurfaceTemperature = function(){};
 
 describe('Hyperion Lantern flux calculation', () => {
-  test('uses cross section area', () => {
+  test('uses cross section area when productivity unspecified', () => {
     const terra = new Terraforming({}, { radius: 1 });
     global.buildings = { hyperionLantern: { active: 1, powerPerBuilding: 100 } };
     const expected = 100 / (Math.PI * 1000 * 1000);
+    expect(terra.calculateLanternFlux()).toBeCloseTo(expected, 5);
+  });
+
+  test('scales with productivity', () => {
+    const terra = new Terraforming({}, { radius: 1 });
+    global.buildings = { hyperionLantern: { active: 2, powerPerBuilding: 100, productivity: 0.5 } };
+    const expected = 100 * 2 * 0.5 / (Math.PI * 1000 * 1000);
     expect(terra.calculateLanternFlux()).toBeCloseTo(expected, 5);
   });
 });
