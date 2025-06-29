@@ -110,97 +110,30 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
-    if(this.isActive){
+    if (this.isActive) {
       return false;
     }
-    // Check the standard scaled cost
+
     const cost = this.getScaledCost();
-    for (const resourceCategory in cost) {
-      for (const resource in cost[resourceCategory]) {
-        if (resources[resourceCategory][resource].value < cost[resourceCategory][resource]) {
-          return false;  // Not enough resources for basic costs
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resources[category][resource].value < cost[category][resource]) {
+          return false;
         }
       }
     }
-  
-    // Check spaceship costs for space mining or export projects
-    if (this.attributes.spaceMining || this.attributes.spaceExport) {
-      if (this.assignedSpaceships === 0) {
-        return false;  // No spaceships assigned
-      }
 
-      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
-      for (const category in totalSpaceshipCost) {
-        for (const resource in totalSpaceshipCost[category]) {
-          if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
-            return false; // Not enough resources for spaceship costs
-          }
-        }
-      }
-
-      if (this.attributes.spaceExport && this.waitForCapacity && this.selectedDisposalResource) {
-        const totalDisposal = this.calculateSpaceshipTotalDisposal();
-        for (const category in totalDisposal) {
-          for (const resource in totalDisposal[category]) {
-            const required =
-              totalDisposal[category][resource] +
-              (totalSpaceshipCost[category]?.[resource] || 0) +
-              (cost[category]?.[resource] || 0);
-            if (resources[category][resource].value < required) {
-              return false;
-            }
-          }
-        }
-      }
-    }
-  
-    // Check funding for resource choice if applicable
-    if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalFundingCost = 0;
-      this.selectedResources.forEach(({ category, resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
-        totalFundingCost += pricePerUnit * quantity;
-      });
-  
-      if (resources.colony.funding.value < totalFundingCost) {
-        return false; // Not enough funding for selected resources
-      }
-    }
-  
-    return true;  // All resources are available
+    return true;
   }
 
   deductResources(resources) {
     const cost = this.getScaledCost();
-  
-    // Deduct the base scaled costs
-    for (const resourceCategory in cost) {
-      for (const resource in cost[resourceCategory]) {
-        resources[resourceCategory][resource].decrease(cost[resourceCategory][resource]);
-      }
-    }
-  
-    // Deduct spaceship costs if applicable
-    if (this.attributes.spaceMining || this.attributes.spaceExport) {
-      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
-      for (const category in totalSpaceshipCost) {
-        for (const resource in totalSpaceshipCost[category]) {
-          resources[category][resource].decrease(totalSpaceshipCost[category][resource]);
-        }
-      }
-    }
 
-    // Deduct scaled disposal resource amount if applicable
-    if (this.attributes.spaceExport && this.selectedDisposalResource) {
-      const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
-      const { category, resource } = this.selectedDisposalResource;
-      const actualAmount = Math.min(scaledDisposalAmount[category][resource], resources[category][resource].value);
-      resources[category][resource].decrease(scaledDisposalAmount[category][resource]);
-      this.pendingResourceGains = [{category : 'colony', resource : 'funding', quantity : actualAmount * this.attributes.fundingGainAmount}];
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        resources[category][resource].decrease(cost[category][resource]);
+      }
     }
-  
-    // Deduct funding for selected resources if applicable
-    resources.colony.funding.decrease(this.getResourceChoiceGainCost());
   }
 
   start(resources) {
@@ -264,21 +197,6 @@ class Project extends EffectableEntity {
       this.applyScannerEffect();
     }
 
-    // Apply spaceship resource gains
-    if (this.pendingResourceGains && this.attributes.spaceMining) {
-      this.applySpaceshipResourceGain();
-    }
-
-    if(this.pendingResourceGains && this.attributes.spaceExport){
-      this.applySpaceshipResourceGain();
-    }
-
-    // Apply resource choice gain effect if applicable
-    if (this.pendingResourceGains && this.attributes.resourceChoiceGainCost) {
-      this.applyResourceChoiceGain();
-    }
-
-    // Apply completion effect if applicable
     if (this.attributes && this.attributes.completionEffect) {
       this.applyCompletionEffect();
     }
@@ -408,61 +326,7 @@ class Project extends EffectableEntity {
 
 
   estimateProjectCostAndGain() {
-    if(this.isActive && this.autoStart){
-      if(this.attributes.spaceMining || this.attributes.spaceExport) {
-      const totalCost = this.calculateSpaceshipTotalCost();
-      for (const category in totalCost) {
-        for (const resource in totalCost[category]){
-          resources[category][resource].modifyRate(
-            -1000 * totalCost[category][resource] / this.getEffectiveDuration(),
-            'Spaceship Cost',
-            'project'
-          );
-        }
-      }
-
-      const totalDisposal = this.calculateSpaceshipTotalDisposal();
-      for (const category in totalDisposal) {
-        for (const resource in totalDisposal[category]){
-          resources[category][resource].modifyRate(
-            -1000 * totalDisposal[category][resource] / this.getEffectiveDuration(),
-            'Spaceship Export',
-            'project'
-          );
-        }
-      }
-
-      const totalGain = this.pendingResourceGains;
-      const rate = 1000 / this.getEffectiveDuration();
-      totalGain.forEach((gain) => {
-            resources[gain.category][gain.resource].modifyRate(
-              gain.quantity * rate,
-              this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export',
-              'project'
-            );
-        });
-      }
-
-      if(this.attributes.resourceChoiceGainCost){
-        const totalGain = this.pendingResourceGains;
-        if(totalGain){
-        totalGain.forEach((gain) => {
-              resources[gain.category][gain.resource].modifyRate(
-                1000 * gain.quantity / this.getEffectiveDuration(),
-                'Cargo Rockets',
-                'project'
-              );
-          });
-        }
-
-        const fundingCost = 1000*this.getResourceChoiceGainCost() / this.getEffectiveDuration();
-        resources.colony.funding.modifyRate(
-          -fundingCost,
-          'Cargo Rockets',
-          'project'
-        );
-        }
-    }
+    // Default implementation intentionally left blank
   }
   
 }

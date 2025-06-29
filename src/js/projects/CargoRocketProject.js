@@ -143,6 +143,58 @@ class CargoRocketProject extends Project {
     // Update the total cost display
     updateTotalCostDisplay(this);
   }
+
+  canStart() {
+    if (!super.canStart()) return false;
+
+    if (this.selectedResources && this.selectedResources.length > 0) {
+      let totalFundingCost = 0;
+      this.selectedResources.forEach(({ category, resource, quantity }) => {
+        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
+        totalFundingCost += pricePerUnit * quantity;
+      });
+
+      if (resources.colony.funding.value < totalFundingCost) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  deductResources(resources) {
+    super.deductResources(resources);
+    resources.colony.funding.decrease(this.getResourceChoiceGainCost());
+  }
+
+  complete() {
+    super.complete();
+    if (this.pendingResourceGains && this.attributes.resourceChoiceGainCost) {
+      this.applyResourceChoiceGain();
+    }
+  }
+
+  estimateProjectCostAndGain() {
+    if (this.isActive && this.autoStart) {
+      const totalGain = this.pendingResourceGains;
+      if (totalGain) {
+        totalGain.forEach((gain) => {
+          resources[gain.category][gain.resource].modifyRate(
+            1000 * gain.quantity / this.getEffectiveDuration(),
+            'Cargo Rockets',
+            'project'
+          );
+        });
+      }
+
+      const fundingCost = 1000 * this.getResourceChoiceGainCost() / this.getEffectiveDuration();
+      resources.colony.funding.modifyRate(
+        -fundingCost,
+        'Cargo Rockets',
+        'project'
+      );
+    }
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
