@@ -46,13 +46,17 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
     zonalAmount = terraforming.zonalSurface[zone]?.biomass || 0;
   } else if (resourceType === 'dryIce') {
     zonalAmount = terraforming.zonalSurface[zone]?.dryIce || 0;
+  } else if (resourceType === 'liquidMethane') {
+    zonalAmount = terraforming.zonalHydrocarbons[zone]?.liquid || 0;
+  } else if (resourceType === 'hydrocarbonIce') {
+    zonalAmount = terraforming.zonalHydrocarbons[zone]?.ice || 0;
   } else {
     console.warn(`calculateZonalCoverage called with invalid resourceType: ${resourceType}`);
     return 0;
   }
 
   let scale = 0.0001;
-  if (resourceType === 'dryIce' || resourceType === 'ice') {
+  if (resourceType === 'dryIce' || resourceType === 'ice' || resourceType === 'hydrocarbonIce') {
     scale *= 100;
   } else if (resourceType === 'biomass') {
     scale *= 1000;

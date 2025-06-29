@@ -175,14 +175,10 @@ const titanOverrides = {
   resources: {
     surface: {
       land: { initialValue : 8300000000 },
-      ice: {initialValue: 15000000000010070 },
-      dryIce : { initialValue: 32083.440978549916 },
       "liquidMethane": {
-        "initialValue": 4499999731588.555,
         "unlocked": true
       },
       "hydrocarbonIce": {
-        "initialValue": 268411.0742637397,
         "unlocked": true
       }
     },
@@ -191,12 +187,12 @@ const titanOverrides = {
       geothermal: { initialValue: 1, maxDeposits: 3, areaTotal: 83000 },
     },
     atmospheric: {
-      carbonDioxide: { initialValue: 67916.55902144962 },
+      carbonDioxide: { initialValue: 92953.25579868264 },
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
-      atmosphericWater: { initialValue: 0 },
+      atmosphericWater: { initialValue: 2.5747212189600314e-12 },
       "atmosphericMethane": {
-        "initialValue": 130000000000000,
+        "initialValue": 127763832569289.27,
         "unlocked": true
       }
     },
@@ -204,7 +200,7 @@ const titanOverrides = {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
     }
   },
-"zonalWater": {
+ "zonalWater": {
     "tropical": {
       "liquid": 0,
       "ice": 3791.2409230205194,
@@ -223,27 +219,27 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 12612.517734279038
+      "dryIce": 2769.7310334254494
     },
     "temperate": {
-      "dryIce": 16622.511857819663
+      "dryIce": 3650.988294346526
     },
     "polar": {
-      "dryIce": 2848.4113864512165
+      "dryIce": 626.0248735245049
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 2249999854064.2373,
+      "liquid": 453.3368498513123,
       "ice": 0
     },
     "temperate": {
-      "liquid": 2249999869074.7334,
+      "liquid": 4889834797808.507,
       "ice": 0
     },
     "polar": {
-      "liquid": 8449.448825612937,
-      "ice": 268411.2084693103
+      "liquid": 0,
+      "ice": 1846332632468.0261
     }
   },
   
