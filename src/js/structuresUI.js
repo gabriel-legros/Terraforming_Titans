@@ -612,10 +612,24 @@ function updateDecreaseButtonText(button, buildCount) {
     let detailsText = '';
     const effectiveMultiplier = structure.getEffectiveProductionMultiplier();
 
+    const providesParts = [];
+
     // Update storage details if the building provides any
     const storageText = formatStorageDetails(structure.getModifiedStorage());
     if (storageText) {
-      detailsText += `<strong>Provides:</strong> ${storageText}`;
+      providesParts.push(storageText);
+    }
+
+    // Include solar flux for buildings with powerPerBuilding
+    if (structure.powerPerBuilding) {
+      const area = (terraforming && terraforming.celestialParameters) ?
+        (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea) : 1;
+      const flux = (structure.powerPerBuilding * structure.active * structure.productivity) / area;
+      providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
+    }
+
+    if (providesParts.length > 0) {
+      detailsText += `<strong>Provides:</strong> ${providesParts.join(', ')}`;
     }
   
     // Update production details with modified values
