@@ -147,18 +147,6 @@ class Project extends EffectableEntity {
       this.remainingTime = this.getEffectiveDuration(); // Default duration for other projects
       this.startingDuration = this.remainingTime;
   
-      // If the project involves space mining, calculate spaceship resource gains
-      if (this.attributes.spaceMining) {
-        const spaceshipResourceGain = this.calculateSpaceshipTotalResourceGain();
-        this.pendingResourceGains = this.pendingResourceGains || []; // Initialize if undefined
-  
-        for (const category in spaceshipResourceGain) {
-          for (const resource in spaceshipResourceGain[category]) {
-            const quantity = spaceshipResourceGain[category][resource];
-            this.pendingResourceGains.push({ category, resource, quantity });
-          }
-        }
-      }
   
       console.log(`Project ${this.name} started.`);
       return true;
