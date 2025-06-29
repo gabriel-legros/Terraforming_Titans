@@ -52,11 +52,11 @@ const defaultPlanetParameters = {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
       ice: { name: 'Ice', initialValue: 0, unlocked:false , unit: 'ton' }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
-      dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton' }, // Default (Mars)
+      dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
-      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false , unit: 'ton' },
-      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false , unit: 'ton' },
+      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false , unit: 'ton', hideWhenSmall: true },
+      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false , unit: 'ton', hideWhenSmall: true },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
@@ -67,8 +67,8 @@ const defaultPlanetParameters = {
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
-      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton' }, // Default (Mars)
-      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton' }
+      greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
+      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
     special: {
       albedoUpgrades: {name : 'Albedo upgrades', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
