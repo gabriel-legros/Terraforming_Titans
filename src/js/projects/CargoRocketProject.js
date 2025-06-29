@@ -219,6 +219,10 @@ class CargoRocketProject extends Project {
       );
     }
   }
+
+  estimateCostAndGain() {
+    this.estimateProjectCostAndGain();
+  }
 }
 
 if (typeof globalThis !== 'undefined') {

@@ -58,6 +58,18 @@ class SpaceshipProject extends Project {
     updateSpaceshipProjectCostAndGains(this, elements);
   }
 
+  autoAssign() {
+    if (!this.autoAssignSpaceships) return;
+    const availableSpaceships = Math.floor(resources.special.spaceships.value);
+    if (availableSpaceships > 0) {
+      assignSpaceshipsToProject(
+        this,
+        availableSpaceships,
+        document.getElementById(`${this.name}-assigned-spaceships`)
+      );
+    }
+  }
+
   calculateSpaceshipTotalCost() {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
@@ -235,6 +247,10 @@ class SpaceshipProject extends Project {
         });
       }
     }
+  }
+
+  estimateCostAndGain() {
+    this.estimateProjectCostAndGain();
   }
 }
 

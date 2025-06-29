@@ -76,7 +76,7 @@ describe('space mining rate scaling', () => {
     project.start(context.resources);
     project.autoStart = true;
 
-    project.estimateProjectCostAndGain();
+    project.estimateCostAndGain();
 
     expect(global.resources.colony.metal.modifyRate).toHaveBeenCalledWith(
       20,
