@@ -166,6 +166,12 @@
   padding: 0;
 }
 
+.lantern-investment-container {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Adjust the gap as needed */
+}
+
 /* Style for total disposal, similar to total gain */
 .project-total-disposal {
   white-space: nowrap;

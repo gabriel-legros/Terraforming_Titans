@@ -143,13 +143,18 @@ function createProjectItem(project) {
       }
     });
 
+    const investmentContainer = document.createElement('div');
+    investmentContainer.classList.add('lantern-investment-container');
+    investmentContainer.appendChild(decreaseButton);
+    investmentContainer.appendChild(increaseButton);
+    investmentContainer.appendChild(investButton);
+
+    lanternControls.appendChild(investmentContainer);
+
     const capacityDisplay = document.createElement('p');
     capacityDisplay.id = 'lantern-capacity';
-
-    lanternControls.appendChild(decreaseButton);
-    lanternControls.appendChild(increaseButton);
-    lanternControls.appendChild(investButton);
     lanternControls.appendChild(capacityDisplay);
+
     projectItem.appendChild(lanternControls);
 
     projectElements[project.name] = {
