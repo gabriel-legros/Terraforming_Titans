@@ -41,7 +41,21 @@ class SpaceshipProject extends Project {
       if (this.attributes.resourceGainPerShip) {
         createResourceGainPerShipAndTotalGainUI(this, container);
       }
+      const row = projectElements[this.name]?.checkboxRowContainer;
+      if (row && !projectElements[this.name].autoAssignCheckbox) {
+        createAutoAssignSpaceshipsCheckbox(this, row);
+      }
+      updateSpaceshipProjectCostAndGains(this, projectElements[this.name]);
     }
+  }
+
+  updateUI() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+    if (elements.autoAssignCheckbox) {
+      elements.autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
+    }
+    updateSpaceshipProjectCostAndGains(this, elements);
   }
 
   calculateSpaceshipTotalCost() {

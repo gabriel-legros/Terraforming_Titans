@@ -96,6 +96,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
   }
 
   updateUI() {
+    super.updateUI();
     const elements = projectElements[this.name];
     if (!elements) return;
 

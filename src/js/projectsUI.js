@@ -66,9 +66,6 @@ function createProjectItem(project) {
   projectItem.appendChild(descriptionElement);
 
 
-  if (typeof project.renderUI === 'function') {
-    project.renderUI(projectItem);
-  }
 
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
@@ -162,9 +159,8 @@ function createProjectItem(project) {
   // Append the combined container to the project item
   projectItem.appendChild(checkboxRowContainer);
 
-  // Auto Assign Spaceships Checkbox (Only for space mining projects)
-  if (project.attributes.spaceMining || project.attributes.spaceExport) {
-    createAutoAssignSpaceshipsCheckbox(project, checkboxRowContainer);
+  if (typeof project.renderUI === 'function') {
+    project.renderUI(projectItem);
   }
 
 
@@ -299,9 +295,6 @@ function updateProjectUI(projectName) {
     elements.availableSpaceshipsDisplay.textContent = `Available: ${formatBigInteger(Math.floor(resources.special.spaceships.value))}`;
   }
 
-  if (project.attributes.spaceMining || project.attributes.spaceExport){
-    updateSpaceshipProjectCostAndGains(project, elements); // Helper function for cost and gain
-  }
 
 
   // Update Repeat Count if applicable
@@ -314,10 +307,6 @@ function updateProjectUI(projectName) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
   }
 
-  // Check if the auto-assign spaceships checkbox should be checked
-  if (elements.autoAssignCheckbox) {
-    elements.autoAssignCheckbox.checked = project.autoAssignSpaceships || false;
-  }
 
   if (elements.waitCapacityCheckbox) {
     elements.waitCapacityCheckbox.checked = project.waitForCapacity !== false;
