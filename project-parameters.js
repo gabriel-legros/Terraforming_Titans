@@ -399,7 +399,16 @@ const projectParameters = {
           flagId: 'hyperionLanternBuilt',
           value: true
         }
-      ]
+      ],
+      // Cost to add additional power modules to the lantern
+      investmentCost: {
+        colony: {
+          components: 1e9,
+          electronics: 1e9
+        }
+      },
+      // Power output provided by each investment (in watts)
+      powerPerInvestment: 1e15
     }
   },
   triangulate_attack: {

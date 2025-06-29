@@ -133,11 +133,24 @@ function createProjectItem(project) {
     });
 
     const investButton = document.createElement('button');
-    investButton.textContent = 'Invest 1B Components & Electronics';
+    const investCost = project.attributes.investmentCost?.colony || {};
+    const investTextParts = [];
+    if (investCost.components) {
+      investTextParts.push(`${formatNumber(investCost.components, true)} Components`);
+    }
+    if (investCost.electronics) {
+      investTextParts.push(`${formatNumber(investCost.electronics, true)} Electronics`);
+    }
+    investButton.textContent = `Invest ${investTextParts.join(' & ')}`;
     investButton.addEventListener('click', () => {
-      if (resources.colony.components.value >= 1e9 && resources.colony.electronics.value >= 1e9) {
-        resources.colony.components.value -= 1e9;
-        resources.colony.electronics.value -= 1e9;
+      if (resources.colony.components.value >= (investCost.components || 0) &&
+          resources.colony.electronics.value >= (investCost.electronics || 0)) {
+        if(investCost.components){
+          resources.colony.components.value -= investCost.components;
+        }
+        if(investCost.electronics){
+          resources.colony.electronics.value -= investCost.electronics;
+        }
         terraforming.hyperionLantern.investments += 1;
         updateProjectUI(project.name);
       }
@@ -728,8 +741,9 @@ function updateProjectUI(projectName) {
       elements.lanternIncrease.disabled = terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
     }
     if(elements.lanternCapacity){
-      const activePower = terraforming.hyperionLantern.active * 1e15;
-      const maxPower = terraforming.hyperionLantern.investments * 1e15;
+      const powerPerInvestment = project.attributes.powerPerInvestment || 0;
+      const activePower = terraforming.hyperionLantern.active * powerPerInvestment;
+      const maxPower = terraforming.hyperionLantern.investments * powerPerInvestment;
       elements.lanternCapacity.textContent = `Active: ${formatNumber(activePower, false, 2)} W / Capacity: ${formatNumber(maxPower, false, 2)} W`;
     }
   }

@@ -189,10 +189,16 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
+    const defaultLanternPower = 1e15;
+    const lanternPower = (typeof projectParameters !== 'undefined' &&
+      projectParameters.hyperionLantern?.attributes?.powerPerInvestment) ?
+      projectParameters.hyperionLantern.attributes.powerPerInvestment : defaultLanternPower;
+
     this.hyperionLantern = {
       built: false,
       investments: 1,
-      active: 0
+      active: 0,
+      powerPerInvestment: lanternPower
     };
 
     this.updateLuminosity();
@@ -1046,7 +1052,7 @@ class Terraforming extends EffectableEntity{
 
     calculateLanternFlux(){
       if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
-        const power = this.hyperionLantern.active * 1e15;
+        const power = this.hyperionLantern.active * this.hyperionLantern.powerPerInvestment;
         return power / this.celestialParameters.surfaceArea;
       }
       return 0;
@@ -1122,7 +1128,7 @@ class Terraforming extends EffectableEntity{
       addEffect(windTurbineEffect);
 
       if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
-        const power = this.hyperionLantern.active * 1e15;
+        const power = this.hyperionLantern.active * this.hyperionLantern.powerPerInvestment;
         resources.colony.energy.modifyRate(-power, 'Hyperion Lantern', 'terraforming');
       }
 
