@@ -5,9 +5,11 @@ const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
+var condensationRateFactorUtil = globalThis.condensationRateFactor;
 if (isNodeHydrocarbon) {
   try {
     ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+    condensationRateFactorUtil = require('./condensation-utils.js').condensationRateFactor;
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -197,37 +199,20 @@ function calculateMethaneCondensationRateFactor({
     dayTemperature,
     nightTemperature
 }) {
-    const freezingPointMethane = 90.7; // K
-    const transitionRange = 2.0; // K range over which liquid transitions to ice
-
-    const calculatePotential = (temp) => {
-        let liquid = 0, ice = 0;
-        if (zoneArea > 0 && typeof temp === 'number' && methaneVaporPressure > 0) {
-            const saturationPressure = calculateSaturationPressureMethane(temp);
-            if (methaneVaporPressure > saturationPressure) {
-                const excessPressure = methaneVaporPressure - saturationPressure;
-                const baseRate = (excessPressure / 1000) * zoneArea / 86400; // tons/s
-                if (!isNaN(baseRate) && baseRate > 0) {
-                    const diff = freezingPointMethane - temp;
-                    const maxDiff = 10.0;
-                    const intensityScale = temp < freezingPointMethane ? Math.min(diff / maxDiff, 1.0) : 1.0;
-                    const rate = baseRate * intensityScale;
-
-                    const mix = Math.min(Math.max((temp - (freezingPointMethane - transitionRange)) / (2 * transitionRange), 0), 1);
-                    liquid = rate * mix;
-                    ice = rate - liquid;
-                }
-            }
-        }
-        return { liquid, ice };
-    };
-
-    const nightPotential = calculatePotential(nightTemperature);
-    const dayPotential = calculatePotential(dayTemperature);
-
+    const res = condensationRateFactorUtil({
+        zoneArea,
+        vaporPressure: methaneVaporPressure,
+        gravity: 1,
+        dayTemp: dayTemperature,
+        nightTemp: nightTemperature,
+        saturationFn: calculateSaturationPressureMethane,
+        freezePoint: 90.7,
+        transitionRange: 2,
+        maxDiff: 10
+    });
     return {
-        liquidRateFactor: (nightPotential.liquid + dayPotential.liquid) / 2,
-        iceRateFactor: (nightPotential.ice + dayPotential.ice) / 2
+        liquidRateFactor: res.liquidRate,
+        iceRateFactor: res.iceRate
     };
 }
 

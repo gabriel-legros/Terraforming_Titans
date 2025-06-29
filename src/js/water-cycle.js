@@ -4,9 +4,11 @@ const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
+var condensationRateFactorUtil = globalThis.condensationRateFactor;
 if (isNodeWaterCycle) {
   try {
     ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+    condensationRateFactorUtil = require('./condensation-utils.js').condensationRateFactor;
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -225,42 +227,18 @@ function calculatePrecipitationRateFactor({
     dayTemperature,
     nightTemperature
 }) {
-    const freezingPoint = 273.15;
-    const transitionRange = 2.0; // K range over which rain transitions to snow
-    let potentialRain = 0;
-    let potentialSnow = 0;
-
-    const calc = (temp) => {
-        let rain = 0, snow = 0;
-        if (zoneArea > 0 && typeof temp === 'number') {
-            const saturationPressure = saturationVaporPressureBuck(temp);
-            if (waterVaporPressure > saturationPressure) {
-                const excessPressure = waterVaporPressure - saturationPressure;
-                const excessMassKg = (excessPressure * zoneArea) / gravity;
-                const excessMassTons = excessMassKg / 1000;
-                const baseRate = excessMassTons / 86400;
-                if (!isNaN(baseRate) && baseRate > 0) {
-                    const diff = freezingPoint - temp;
-                    const maxDiff = 10.0;
-                    const intensityScale = temp < freezingPoint ? Math.min(diff / maxDiff, 1.0) : 1.0;
-                    const rate = baseRate * intensityScale;
-
-                    const mix = Math.min(Math.max((temp - (freezingPoint - transitionRange)) / (2 * transitionRange), 0), 1);
-                    rain = rate * mix;
-                    snow = rate - rain;
-                }
-            }
-        }
-        return { rain, snow };
-    };
-
-    const night = calc(nightTemperature);
-    const day = calc(dayTemperature);
-
-    potentialRain = (night.rain + day.rain) / 2;
-    potentialSnow = (night.snow + day.snow) / 2;
-
-    return { rainfallRateFactor: potentialRain, snowfallRateFactor: potentialSnow };
+    const res = condensationRateFactorUtil({
+        zoneArea,
+        vaporPressure: waterVaporPressure,
+        gravity,
+        dayTemp: dayTemperature,
+        nightTemp: nightTemperature,
+        saturationFn: saturationVaporPressureBuck,
+        freezePoint: 273.15,
+        transitionRange: 2,
+        maxDiff: 10
+    });
+    return { rainfallRateFactor: res.liquidRate, snowfallRateFactor: res.iceRate };
 }
 
 if (typeof module !== 'undefined' && module.exports) {
