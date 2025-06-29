@@ -18,7 +18,7 @@ describe('Hyperion Lantern controls disabled before completion', () => {
     ctx.projectElements = {};
     ctx.resources = { colony: { components: { value: 0 }, electronics: { value: 0 } }, special: { spaceships: { value: 0 } } };
     ctx.buildings = { spaceMirror: { active: 0 } };
-    ctx.terraforming = { hyperionLantern: { built: false, investments: 1, active: 0 } };
+    ctx.terraforming = { calculateLanternFlux: () => 0 };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);

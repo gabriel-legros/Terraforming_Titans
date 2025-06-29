@@ -1,4 +1,12 @@
 class HyperionLanternProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    const defaultPower = 1e15;
+    this.investments = 1;
+    this.active = 0;
+    this.amount = 1;
+    this.powerPerInvestment = this.attributes.powerPerInvestment || defaultPower;
+  }
   renderUI(container) {
     const lanternControls = document.createElement('div');
     lanternControls.classList.add('lantern-controls');
@@ -16,16 +24,16 @@ class HyperionLanternProject extends Project {
     const multiplyButton = document.createElement('button');
     multiplyButton.textContent = 'x10';
     multiplyButton.addEventListener('click', () => {
-      lanternAmount = multiplyByTen(lanternAmount);
-      updateLanternButtonTexts(this.name);
+      this.amount = multiplyByTen(this.amount);
+      this.updateLanternButtonTexts();
     });
     amountContainer.appendChild(multiplyButton);
 
     const divideButton = document.createElement('button');
     divideButton.textContent = '/10';
     divideButton.addEventListener('click', () => {
-      lanternAmount = divideByTen(lanternAmount);
-      updateLanternButtonTexts(this.name);
+      this.amount = divideByTen(this.amount);
+      this.updateLanternButtonTexts();
     });
     amountContainer.appendChild(divideButton);
 
@@ -33,8 +41,8 @@ class HyperionLanternProject extends Project {
 
     const decreaseButton = document.createElement('button');
     decreaseButton.addEventListener('click', () => {
-      if (terraforming.hyperionLantern.active > 0) {
-        terraforming.hyperionLantern.active = Math.max(0, terraforming.hyperionLantern.active - lanternAmount);
+      if (this.active > 0) {
+        this.active = Math.max(0, this.active - this.amount);
         updateProjectUI(this.name);
       }
     });
@@ -42,8 +50,8 @@ class HyperionLanternProject extends Project {
 
     const increaseButton = document.createElement('button');
     increaseButton.addEventListener('click', () => {
-      if (terraforming.hyperionLantern.active < terraforming.hyperionLantern.investments) {
-        terraforming.hyperionLantern.active = Math.min(terraforming.hyperionLantern.investments, terraforming.hyperionLantern.active + lanternAmount);
+      if (this.active < this.investments) {
+        this.active = Math.min(this.investments, this.active + this.amount);
         updateProjectUI(this.name);
       }
     });
@@ -52,8 +60,9 @@ class HyperionLanternProject extends Project {
     const investButton = document.createElement('button');
     const investCost = this.attributes.investmentCost?.colony || {};
     investButton.addEventListener('click', () => {
-      const reqComponents = (investCost.components || 0) * lanternAmount;
-      const reqElectronics = (investCost.electronics || 0) * lanternAmount;
+      const amount = this.amount;
+      const reqComponents = (investCost.components || 0) * amount;
+      const reqElectronics = (investCost.electronics || 0) * amount;
       if (resources.colony.components.value >= reqComponents &&
           resources.colony.electronics.value >= reqElectronics) {
         if(investCost.components){
@@ -62,7 +71,7 @@ class HyperionLanternProject extends Project {
         if(investCost.electronics){
           resources.colony.electronics.value -= reqElectronics;
         }
-        terraforming.hyperionLantern.investments += lanternAmount;
+        this.investments += amount;
         updateProjectUI(this.name);
       }
     });
@@ -97,7 +106,33 @@ class HyperionLanternProject extends Project {
       lanternMultiply: multiplyButton,
       lanternDivide: divideButton
     };
-    updateLanternButtonTexts(this.name);
+    this.updateLanternButtonTexts();
+  }
+
+  updateLanternButtonTexts() {
+    const elements = projectElements[this.name];
+    if(!elements) return;
+    const amount = this.amount;
+    if(elements.lanternIncrease){
+      elements.lanternIncrease.textContent = `+${formatNumber(amount, true)}`;
+    }
+    if(elements.lanternDecrease){
+      elements.lanternDecrease.textContent = `-${formatNumber(amount, true)}`;
+    }
+    if(elements.lanternInvest){
+      const investCost = this.attributes.investmentCost?.colony || {};
+      const parts = [];
+      if(investCost.components){
+        parts.push(`${formatNumber(investCost.components * amount, true)} Components`);
+      }
+      if(investCost.electronics){
+        parts.push(`${formatNumber(investCost.electronics * amount, true)} Electronics`);
+      }
+      elements.lanternInvest.textContent = `Invest ${parts.join(' & ')}`;
+    }
+    if(elements.lanternAmountDisplay){
+      elements.lanternAmountDisplay.textContent = formatNumber(amount, true);
+    }
   }
 
   updateUI() {
@@ -105,25 +140,25 @@ class HyperionLanternProject extends Project {
     if(!elements) return;
     const completed = this.isCompleted;
     if(elements.lanternDecrease){
-      elements.lanternDecrease.disabled = !completed || terraforming.hyperionLantern.active <= 0;
+      elements.lanternDecrease.disabled = !completed || this.active <= 0;
     }
     if(elements.lanternIncrease){
-      elements.lanternIncrease.disabled = !completed || terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
+      elements.lanternIncrease.disabled = !completed || this.active >= this.investments;
     }
     if(elements.lanternInvest){
       elements.lanternInvest.disabled = !completed;
     }
     if(elements.lanternCapacity){
       const powerPerInvestment = this.attributes.powerPerInvestment || 0;
-      const activePower = terraforming.hyperionLantern.active * powerPerInvestment;
-      const maxPower = terraforming.hyperionLantern.investments * powerPerInvestment;
+      const activePower = this.active * powerPerInvestment;
+      const maxPower = this.investments * powerPerInvestment;
       elements.lanternCapacity.textContent = `Active: ${formatNumber(activePower, false, 2)} W / Capacity: ${formatNumber(maxPower, false, 2)} W`;
     }
     if(elements.lanternFlux){
       const flux = terraforming.calculateLanternFlux();
       elements.lanternFlux.textContent = `Flux: ${formatNumber(flux, false, 2)} W/m²`;
     }
-    updateLanternButtonTexts(this.name);
+    this.updateLanternButtonTexts();
   }
 }
 

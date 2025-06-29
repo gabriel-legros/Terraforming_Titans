@@ -1,5 +1,3 @@
-let lanternAmount = 1;
-
 document.addEventListener('DOMContentLoaded', () => {
   // Subtab functionality to show/hide project categories
   document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
@@ -600,30 +598,6 @@ function updateEmptyProjectMessages() {
   });
 }
 
-function updateLanternButtonTexts(projectName) {
-  const elements = projectElements[projectName];
-  if(!elements) return;
-  if(elements.lanternIncrease){
-    elements.lanternIncrease.textContent = `+${formatNumber(lanternAmount, true)}`;
-  }
-  if(elements.lanternDecrease){
-    elements.lanternDecrease.textContent = `-${formatNumber(lanternAmount, true)}`;
-  }
-  if(elements.lanternInvest){
-    const investCost = projectManager.projects[projectName].attributes.investmentCost?.colony || {};
-    const parts = [];
-    if(investCost.components){
-      parts.push(`${formatNumber(investCost.components * lanternAmount, true)} Components`);
-    }
-    if(investCost.electronics){
-      parts.push(`${formatNumber(investCost.electronics * lanternAmount, true)} Electronics`);
-    }
-    elements.lanternInvest.textContent = `Invest ${parts.join(' & ')}`;
-  }
-  if(elements.lanternAmountDisplay){
-    elements.lanternAmountDisplay.textContent = formatNumber(lanternAmount, true);
-  }
-}
 
 function updateStoryProjectsVisibility() {
   const subtab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');

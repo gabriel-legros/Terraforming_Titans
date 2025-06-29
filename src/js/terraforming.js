@@ -191,17 +191,7 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
-    const defaultLanternPower = 1e15;
-    const lanternPower = (typeof projectParameters !== 'undefined' &&
-      projectParameters.hyperionLantern?.attributes?.powerPerInvestment) ?
-      projectParameters.hyperionLantern.attributes.powerPerInvestment : defaultLanternPower;
 
-    this.hyperionLantern = {
-      built: false,
-      investments: 1,
-      active: 0,
-      powerPerInvestment: lanternPower
-    };
 
     this.updateLuminosity();
     this.updateSurfaceTemperature();
@@ -1053,8 +1043,10 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateLanternFlux(){
-      if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
-        const power = this.hyperionLantern.active * this.hyperionLantern.powerPerInvestment;
+      const project = (typeof projectManager !== 'undefined' && projectManager.projects)
+        ? projectManager.projects.hyperionLantern : null;
+      if(project && project.isCompleted && project.active > 0){
+        const power = project.active * project.powerPerInvestment;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }
@@ -1105,9 +1097,6 @@ class Terraforming extends EffectableEntity{
     }
 
     applyTerraformingEffects(){
-      if(this.isBooleanFlagSet('hyperionLanternBuilt')){
-        this.hyperionLantern.built = true;
-      }
       const solarPanelMultiplier = this.calculateSolarPanelMultiplier();
 
       const windTurbineMultiplier = this.calculateWindTurbineMultiplier();
@@ -1130,8 +1119,10 @@ class Terraforming extends EffectableEntity{
       }
       addEffect(windTurbineEffect);
 
-      if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
-        const power = this.hyperionLantern.active * this.hyperionLantern.powerPerInvestment;
+      const lantern = (typeof projectManager !== 'undefined' && projectManager.projects)
+        ? projectManager.projects.hyperionLantern : null;
+      if(lantern && lantern.isCompleted && lantern.active > 0){
+        const power = lantern.active * lantern.powerPerInvestment;
         resources.colony.energy.modifyRate(-power, 'Hyperion Lantern', 'terraforming');
       }
 
@@ -1362,7 +1353,6 @@ synchronizeGlobalResources() {
       equilibriumPrecipitationMultiplier: this.equilibriumPrecipitationMultiplier,
       equilibriumCondensationParameter: this.equilibriumCondensationParameter,
       equilibriumMethaneCondensationParameter: this.equilibriumMethaneCondensationParameter,
-      hyperionLantern: this.hyperionLantern,
       // NOTE: Stored rates (like totalEvaporationRate) are not saved, they are recalculated each tick.
       };
   }
@@ -1377,9 +1367,6 @@ synchronizeGlobalResources() {
       this.equilibriumCondensationParameter = terraformingState.equilibriumCondensationParameter ?? this.equilibriumCondensationParameter;
       this.equilibriumMethaneCondensationParameter = terraformingState.equilibriumMethaneCondensationParameter ?? this.equilibriumMethaneCondensationParameter;
 
-      if (terraformingState.hyperionLantern) {
-        this.hyperionLantern = { ...this.hyperionLantern, ...terraformingState.hyperionLantern };
-      }
 
       // Load Temperature (including zonal)
       if (terraformingState.temperature) {
