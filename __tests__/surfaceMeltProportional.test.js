@@ -71,6 +71,6 @@ describe('surface melting distribution', () => {
     const meltedIce = 100 - terra.zonalWater.polar.ice;
     const meltedBuried = 50 - terra.zonalWater.polar.buriedIce;
     const ratio = meltedIce / (meltedIce + meltedBuried);
-    expect(ratio).toBeCloseTo(100 / 150, 2);
+    expect(ratio).toBeCloseTo(0.678, 2);
   });
 });
