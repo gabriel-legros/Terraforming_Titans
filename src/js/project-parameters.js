@@ -421,7 +421,7 @@ const projectParameters = {
         colony: {
           components: 1e6,
           electronics: 1e6,
-          glass: 1000
+          glass: 1e6
         }
       },
       // Power output provided by each investment (in watts)
