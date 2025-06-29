@@ -35,6 +35,10 @@ describe('Earth Recon Probe project', () => {
       attributes: { costDoubling: true }
     };
     const p = new ctx.Project(config, 'probe');
+    expect(p.assignedSpaceships).toBeUndefined();
+    expect(p.autoAssignSpaceships).toBeUndefined();
+    expect(p.waitForCapacity).toBeUndefined();
+    expect(p.selectedDisposalResource).toBeUndefined();
     expect(p.getScaledCost().colony.components).toBe(10);
     p.repeatCount = 1;
     expect(p.getScaledCost().colony.components).toBe(20);
