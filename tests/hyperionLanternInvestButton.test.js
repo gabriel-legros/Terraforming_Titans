@@ -49,7 +49,7 @@ describe('Hyperion Lantern invest button', () => {
 
     ctx.resources.colony.components.value = 2e6;
     ctx.resources.colony.electronics.value = 2e6;
-    ctx.resources.colony.glass.value = 2000;
+    ctx.resources.colony.glass.value = 2e6;
     ctx.updateProjectUI('hyperionLantern');
     expect(investBtn.style.color).toBe('inherit');
   });
