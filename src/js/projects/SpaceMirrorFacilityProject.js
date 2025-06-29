@@ -38,6 +38,11 @@ class SpaceMirrorFacilityProject extends Project {
   }
 }
 
+// Expose constructor globally for browser usage
+if (typeof globalThis !== 'undefined') {
+  globalThis.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SpaceMirrorFacilityProject;
 }

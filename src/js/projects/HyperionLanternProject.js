@@ -127,6 +127,11 @@ class HyperionLanternProject extends Project {
   }
 }
 
+// Expose constructor globally for browser usage
+if (typeof globalThis !== 'undefined') {
+  globalThis.HyperionLanternProject = HyperionLanternProject;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = HyperionLanternProject;
 }
