@@ -134,11 +134,6 @@ function createProjectItem(project) {
     projectItem.appendChild(resourceGainElement);
   }
 
-  // Create a resource selection UI for projects with resource choice
-  if (project.attributes && project.attributes.resourceChoiceGainCost) {
-    const resourceSelectionUI = createResourceSelectionUI(project);
-    projectItem.appendChild(resourceSelectionUI);
-  }
 
   // Unified Progress Button
   const progressButtonContainer = document.createElement('div');
@@ -428,24 +423,7 @@ function updateProjectUI(projectName) {
     }
   }
 
-  // Update resource rows visibility based on unlocked state
-  if (project.attributes.resourceChoiceGainCost) {
-    updateTotalCostDisplay(project);
-    for (const category in project.attributes.resourceChoiceGainCost) {
-      for (const resourceId in project.attributes.resourceChoiceGainCost[category]) {
-        const resource = resources[category][resourceId];
-        const resourceRowId = `${project.name}-${category}-${resourceId}-row`;
-        const resourceRow = document.getElementById(resourceRowId);
-        if (resourceRow) {
-          if (resource.unlocked) {
-            resourceRow.style.display = 'flex'; // Set display to 'flex' if resource is unlocked
-          } else {
-            resourceRow.style.display = 'none'; // Hide the resource row if it's not unlocked
-          }
-        }
-      }
-    }
-  }
+
 
   // Update Spaceships Assigned display if applicable
   if (elements?.assignedSpaceshipsDisplay && project.assignedSpaceships != null) {
@@ -597,31 +575,7 @@ function updateProjectUI(projectName) {
     project.updateUI();
   }
 
-  if(project.attributes.resourceChoiceGainCost && project.oneTimeResourceGainsDisplay){
-    // Update the visible entered amount in the resource selection UI
-    project.oneTimeResourceGainsDisplay.forEach(({ resource, quantity }) => {
-    const inputElement = document.querySelector(`.resource-selection-${project.name}[data-resource="${resource}"]`);
-    if (inputElement) {
-      inputElement.value = quantity;
-      }
-    });
-    project.oneTimeResourceGainsDisplay = null;
-  }
 
-  // If the project has resource choice gain cost, calculate total cost and update display
-  if (project.attributes.resourceChoiceGainCost) {
-    // Update the total cost display for selected resources
-    const selectedResources = [];
-    document.querySelectorAll(`.resource-selection-${project.name}`).forEach((element) => {
-      const category = element.dataset.category;
-      const resource = element.dataset.resource;
-      const quantity = parseInt(element.value, 10);
-      if (quantity > 0) {
-        selectedResources.push({ category, resource, quantity });
-      }
-    });
-    project.selectedResources = selectedResources;
-  }
 
   // Show or hide the auto start checkbox based on automation flag in projectManager
   if (projectManager.isBooleanFlagSet('automateSpecialProjects')) {

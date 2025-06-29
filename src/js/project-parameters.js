@@ -1,6 +1,6 @@
 const projectParameters = {
   cargo_rocket: {
-    type: 'Project',
+    type: 'CargoRocketProject',
     name: "Cargo Rocket",
     category :"resources",
     cost: {
