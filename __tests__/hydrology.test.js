@@ -74,6 +74,18 @@ describe('hydrology melting with buried ice', () => {
     expect(zonalWater.polar.liquid).toBeCloseTo(6.453, 3);
   });
 
+  test('buried ice does not affect water level difference', () => {
+    const zonalWater = {
+      polar: { liquid: 10, ice: 0, buriedIce: 50 },
+      temperate: { liquid: 10, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 10, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 260, temperate: 260, tropical: 260 };
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    expect(zonalWater.polar.liquid).toBeCloseTo(10, 5);
+    expect(zonalWater.temperate.liquid).toBeCloseTo(10, 5);
+  });
+
   test('flow does not move directly from polar to tropical', () => {
     const zonalWater = {
       polar: { liquid: 50, ice: 0, buriedIce: 0 },
