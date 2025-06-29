@@ -99,7 +99,8 @@ class GoldenAsteroid {
 
           const gameContainer = document.getElementById('game-container');
 
-          this.element.onload = () => {
+        this.element.onload = () => {
+            if (!this.element) return; // Element may have been removed before load
             const width = this.element.width;
             const height = this.element.height;
             const containerWidth = gameContainer.clientWidth;
