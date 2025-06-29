@@ -135,7 +135,9 @@ class EffectableEntity {
           this.applyBooleanFlag(effect);
           break;
         case 'oneTimeStart':
-          this.applyOneTimeStart(effect);
+          if (typeof CargoRocketProject !== 'undefined' && this instanceof CargoRocketProject) {
+            this.applyOneTimeStart(effect);
+          }
           break;
         case 'instantResourceGain':
           this.applyInstantResourceGain(effect);
