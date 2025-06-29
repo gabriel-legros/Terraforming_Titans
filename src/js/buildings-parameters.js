@@ -385,7 +385,7 @@ const buildingsParameters = {
     category: 'terraforming',
     description: 'Orbital array that beams artificial sunlight onto the planet.',
     cost: { colony: { metal: 1e6, glass: 1e6, electronics: 1e6, components: 1e6 } },
-    consumption: { colony: { energy: 1e9 } },
+    consumption: { colony: { energy: 1e12 } },
     production: {},
     storage: {},
     dayNightActivity: false,
