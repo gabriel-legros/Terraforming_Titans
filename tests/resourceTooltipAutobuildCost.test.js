@@ -1,0 +1,47 @@
+const fs = require('fs');
+const path = require('path');
+
+const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+const { JSDOM } = require(jsdomPath);
+const vm = require('vm');
+const numbers = require('../src/js/numbers.js');
+
+describe('resource tooltip autobuild cost', () => {
+  test('shows last second autobuild cost', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="resources-container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.oreScanner = { scanData: {} };
+
+    let code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'autobuild.js'), 'utf8');
+    vm.runInContext(code, ctx);
+    code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resourceUI.js'), 'utf8');
+    vm.runInContext(code, ctx);
+
+    const resource = {
+      name: 'metal',
+      displayName: 'Metal',
+      category: 'colony',
+      value: 100,
+      cap: 1000,
+      hasCap: true,
+      reserved: 0,
+      unlocked: true,
+      productionRate: 0,
+      consumptionRate: 0,
+      productionRateBySource: {},
+      consumptionRateBySource: {},
+      unit: 'ton'
+    };
+
+    ctx.createResourceDisplay({ colony: { metal: resource } });
+    ctx.autobuildCostTracker.recordCost({ colony: { metal: 5 } });
+    ctx.autobuildCostTracker.update(1000);
+
+    ctx.updateResourceRateDisplay(resource);
+
+    const html = dom.window.document.getElementById('metal-tooltip').innerHTML;
+    expect(html).toContain('Autobuild Cost');
+    expect(html).toContain(numbers.formatNumber(5, false, 2));
+  });
+});
