@@ -615,8 +615,16 @@ class Terraforming extends EffectableEntity{
 
             // Apply melt/freeze changes to surface stores (adjusting the net change)
             zonalChanges[zone].liquidWater += meltAmount - freezeAmount;
-            const meltFromIce = Math.min(meltAmount, availableIce + zonalChanges[zone].ice);
-            const meltFromBuried = meltAmount - meltFromIce;
+            const currentSurfaceIce = availableIce + zonalChanges[zone].ice;
+            const currentBuriedIce = availableBuriedIce + zonalChanges[zone].buriedIce;
+            const totalZoneIce = currentSurfaceIce + currentBuriedIce;
+            let meltFromIce = 0;
+            let meltFromBuried = 0;
+            if (totalZoneIce > 0) {
+                const surfaceFraction = currentSurfaceIce / totalZoneIce;
+                meltFromIce = Math.min(meltAmount * surfaceFraction, currentSurfaceIce);
+                meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuriedIce);
+            }
             zonalChanges[zone].ice += freezeAmount - meltFromIce;
             zonalChanges[zone].buriedIce -= meltFromBuried;
             // Accumulate totals for UI
