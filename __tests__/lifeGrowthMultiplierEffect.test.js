@@ -13,18 +13,20 @@ describe('lifeGrowthMultiplier effect', () => {
     ctx.lifeManager = new ctx.LifeManager();
   });
 
-  test('adds multiplier to life growth', () => {
+  test('stacks multipliers from different sources', () => {
     const manager = ctx.lifeManager;
     expect(manager.getEffectiveLifeGrowthMultiplier()).toBe(1);
-    manager.addAndReplace({ type: 'lifeGrowthMultiplier', value: 1.5, effectId: 'test', sourceId: 'test' });
-    expect(manager.getEffectiveLifeGrowthMultiplier()).toBeCloseTo(1.5);
+    manager.addAndReplace({ type: 'lifeGrowthMultiplier', value: 2, effectId: 'a', sourceId: 'a' });
+    expect(manager.getEffectiveLifeGrowthMultiplier()).toBeCloseTo(2);
+    manager.addAndReplace({ type: 'lifeGrowthMultiplier', value: 1.5, effectId: 'b', sourceId: 'b' });
+    expect(manager.getEffectiveLifeGrowthMultiplier()).toBeCloseTo(3);
   });
 
   test('replacing multiplier effect does not stack', () => {
     const manager = ctx.lifeManager;
     manager.addAndReplace({ type: 'lifeGrowthMultiplier', value: 2, effectId: 'skill', sourceId: 'skill' });
-    expect(manager.getEffectiveLifeGrowthMultiplier()).toBe(2);
+    expect(manager.getEffectiveLifeGrowthMultiplier()).toBeCloseTo(2);
     manager.addAndReplace({ type: 'lifeGrowthMultiplier', value: 3, effectId: 'skill', sourceId: 'skill' });
-    expect(manager.getEffectiveLifeGrowthMultiplier()).toBe(3);
+    expect(manager.getEffectiveLifeGrowthMultiplier()).toBeCloseTo(3);
   });
 });

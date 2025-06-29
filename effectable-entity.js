@@ -420,9 +420,7 @@ class EffectableEntity {
       }
 
       applyLifeGrowthMultiplier(effect) {
-        if (typeof this.lifeGrowthMultiplier !== 'undefined') {
-          this.lifeGrowthMultiplier *= effect.value;
-        }
+        // multiplier effects are computed on demand in LifeManager
       }
 
 
