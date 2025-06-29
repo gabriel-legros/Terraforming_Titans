@@ -547,7 +547,7 @@ progressData = {
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
-          value: 238
+          value: 232
       }],
         reward: [],
         nextChapter: "chapter2.4"
@@ -555,7 +555,7 @@ progressData = {
       {
         id: "chapter2.4",
         type: "journal",
-        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 238K.",
+        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 232K.",
         objectives: [],
         reward: [],
         nextChapter: "chapter2.5"
