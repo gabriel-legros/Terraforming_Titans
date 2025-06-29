@@ -1,6 +1,17 @@
 const L_S_WATER = 2.83e6; // Latent heat of sublimation for water (J/kg)
 const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 
+const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
+var penmanRate = globalThis.penmanRate;
+var psychrometricConstant = globalThis.psychrometricConstant;
+if (isNodeWaterCycle) {
+  try {
+    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+  } catch (e) {
+    // fall back to globals if require fails
+  }
+}
+
 // Function to calculate saturation vapor pressure using the Buck Equation for water
 function saturationVaporPressureBuck(T) {
     // T: Temperature in Kelvin (K)
@@ -92,8 +103,7 @@ function slopeSaturationVaporPressureWater(T) {
   
 // Function to calculate psychrometric constant (gamma_s) for water evaporation
 function psychrometricConstantWater(atmPressure) {
-    // atmPressure: Atmospheric pressure in Pa
-    return (C_P_AIR * atmPressure) / (EPSILON * L_V_WATER); // Pa/K
+    return psychrometricConstant(atmPressure, L_V_WATER); // Pa/K
 }
   
 // Function to calculate sublimation rate for water ice using the modified Penman equation
@@ -104,30 +114,19 @@ function sublimationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     // e_a: Actual vapor pressure of water in the atmosphere (Pa)
     // r_a: Aerodynamic resistance (s/m), default is 100 s/m
   
-    const albedo = 0.6; // Typical albedo for water ice
-  
-    // Calculate net radiation (simplified to net shortwave)
-    const R_n = (1 - albedo) * solarFlux; // W/m²
-  
-    // Calculate slope of saturation vapor pressure curve (Delta_s) at temperature T
     const Delta_s = slopeSaturationVaporPressureWater(T); // Pa/K
-  
-    // Calculate psychrometric constant (gamma_s)
-    const gamma_s = (C_P_AIR * atmPressure) / (EPSILON * L_S_WATER); // Pa/K
-  
-    // Calculate air density (rho_a)
-    const rho_a_val = atmPressure / (R_AIR * T); // kg/m³
-  
-    // Calculate saturation vapor pressure at temperature T
     const e_s = saturationVaporPressureBuck(T); // Pa
-  
-    // Calculate sublimation rate (kg/m²/s) using the modified Penman equation
-    const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-    const denominator = (Delta_s + gamma_s) * L_S_WATER;
-    const E_sub = numerator / denominator; // kg/m²/s
-  
-    // Ensure sublimation rate is non-negative (Penman can be negative if e_a > e_s)
-    return Math.max(0, E_sub); // kg/m²/s
+    return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: L_S_WATER,
+        albedo: 0.6,
+        r_a,
+        Delta_s,
+        e_s,
+    });
 }
 
 // Function to calculate evaporation rate for water using the modified Penman equation
@@ -138,30 +137,19 @@ function evaporationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     // e_a: Actual vapor pressure of water in the atmosphere (Pa)
     // r_a: Aerodynamic resistance (s/m), default is 100 s/m
   
-    const albedo = 0.3; // Typical albedo for liquid water (varies between 0.1-0.3 depending on conditions)
-  
-    // Calculate net radiation (simplified to net shortwave)
-    const R_n = (1 - albedo) * solarFlux; // W/m²
-  
-    // Calculate slope of saturation vapor pressure curve (Delta_s) at temperature T
     const Delta_s = slopeSaturationVaporPressureWater(T); // Pa/K
-  
-    // Calculate psychrometric constant (gamma_s)
-    const gamma_s = psychrometricConstantWater(atmPressure); // Pa/K
-  
-    // Calculate air density (rho_a)
-    const rho_a_val = airDensity(atmPressure, T); // kg/m³
-  
-    // Calculate saturation vapor pressure at temperature T
     const e_s = saturationVaporPressureBuck(T); // Pa
-  
-    // Calculate evaporation rate (kg/m²/s) using the modified Penman equation
-    const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-    const denominator = (Delta_s + gamma_s) * L_V_WATER;
-    const E_evp = numerator / denominator; // kg/m²/s
-  
-    // Ensure evaporation rate is non-negative (Penman can be negative if e_a > e_s)
-    return Math.max(0, E_evp); // kg/m²/s
+    return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: L_V_WATER,
+        albedo: 0.3,
+        r_a,
+        Delta_s,
+        e_s,
+    });
 }
 
 // Calculate average evaporation and sublimation rates for a surface zone
