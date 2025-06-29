@@ -142,7 +142,7 @@ describe('colony sliders', () => {
     expect(foodEffect).toBe('Growth: +0.0%');
     expect(waterEffect).toBe('Growth: +0.0%');
     expect(oreWorkers).toBe('0');
-    expect(oreBoost).toBe('Boost: 100%');
+    expect(oreBoost).toBe('Boost: 0%');
   });
 
   test('initializeColonySlidersUI keeps container hidden', () => {
