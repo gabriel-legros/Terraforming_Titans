@@ -19,6 +19,6 @@ describe('Hyperion Lantern project', () => {
     expect(project.cost.colony.glass).toBe(1e6);
     expect(project.attributes.investmentCost.colony.components).toBe(1e6);
     expect(project.attributes.investmentCost.colony.electronics).toBe(1e6);
-    expect(project.attributes.powerPerInvestment).toBe(1e15);
+    expect(project.attributes.powerPerInvestment).toBe(1e12);
   });
 });
