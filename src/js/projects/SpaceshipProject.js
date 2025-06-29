@@ -148,6 +148,26 @@ class SpaceshipProject extends Project {
     }
   }
 
+  start(resources) {
+    const started = super.start(resources);
+    if (!started) return false;
+
+    if (this.attributes.spaceMining) {
+      const gain = this.calculateSpaceshipTotalResourceGain();
+      this.pendingResourceGains = this.pendingResourceGains || [];
+      for (const category in gain) {
+        for (const resource in gain[category]) {
+          this.pendingResourceGains.push({
+            category,
+            resource,
+            quantity: gain[category][resource]
+          });
+        }
+      }
+    }
+    return true;
+  }
+
   complete() {
     super.complete();
     if (this.pendingResourceGains && (this.attributes.spaceMining || this.attributes.spaceExport)) {

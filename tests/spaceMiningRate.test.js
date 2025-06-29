@@ -72,10 +72,9 @@ describe('space mining rate scaling', () => {
     };
     const project = new SpaceshipProject(config, 'test');
     project.assignedSpaceships = 1;
-    project.pendingResourceGains = [{ category: 'colony', resource: 'metal', quantity: 10 }];
-    project.autoStart = true;
-    project.isActive = true;
     project.getEffectiveDuration = () => 500;
+    project.start(context.resources);
+    project.autoStart = true;
 
     project.estimateProjectCostAndGain();
 
