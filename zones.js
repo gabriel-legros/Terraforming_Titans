@@ -85,36 +85,34 @@ function sphericalSegmentArea(phi1, phi2) {
 
 /**
  * Estimate fractional coverage.
- * Curve:
- *   – Linear:   C(x) = 25 x                  for 0 ≤ x ≤ r0
- *   – Log:      C(x) = a ln x + b            for r0 < x < 1
- *     with      a = 25 · r0,  b = 1,
- *     giving C¹ continuity at r0 and exact match at (1, 1).
+ * Linear branch:  C(x) = 50 x                for 0 ≤ x ≤ R0
+ * Log branch:     C(x) = A ln x + 1          for R0 < x < 1
+ *   with A = 50 · R0 and R0 ≈ 0.00292658,
+ * giving a C¹-smooth curve that passes through (0,0) and (1,1).
  */
 function estimateCoverage(amount, zoneArea, scale = 0.0001) {
   const resourceRatio = (scale * amount) / zoneArea;
 
-  // ---- curve parameters (slope 25) ---------------------------------
-  const R0           = 0.006652519381332437;   // breakpoint (solves 25·r0·(1-ln r0)=1)
-  const LINEAR_SLOPE = 25;                     // m
-  const LOG_A        = LINEAR_SLOPE * R0;      // a ≈ 0.1663129845
-  const LOG_B        = 1;                      // forces (1,1)
-  // ------------------------------------------------------------------
+  // ---- curve parameters for slope 50 ----
+  const R0           = 0.002926577381;    // breakpoint (solves 50·R0·(1-ln R0)=1)
+  const LINEAR_SLOPE = 50;                // m
+  const LOG_A        = LINEAR_SLOPE * R0; // ≈ 0.146328864
+  const LOG_B        = 1;                 // forces point (1,1)
+  // ---------------------------------------
 
   let coverage;
   if (resourceRatio <= 0) {
     coverage = 0;
   } else if (resourceRatio <= R0) {
-    // Linear branch
+    // Linear segment
     coverage = LINEAR_SLOPE * resourceRatio;
   } else if (resourceRatio < 1) {
-    // Log branch
+    // Log segment
     coverage = LOG_A * Math.log(resourceRatio) + LOG_B;
   } else {
     coverage = 1;
   }
 
-  // Clamp numerically to [0, 1]
   return Math.max(0, Math.min(coverage, 1));
 }
 
@@ -126,8 +124,9 @@ if (typeof module !== "undefined" && module.exports) {
     estimateCoverage,
   };
 } else {
-  globalThis.ZONES            = ZONES;
-  globalThis.getZoneRatio     = getZoneRatio;
+  globalThis.ZONES             = ZONES;
+  globalThis.getZoneRatio      = getZoneRatio;
   globalThis.getZonePercentage = getZonePercentage;
-  globalThis.estimateCoverage = estimateCoverage;
+  globalThis.estimateCoverage  = estimateCoverage;
 }
+
