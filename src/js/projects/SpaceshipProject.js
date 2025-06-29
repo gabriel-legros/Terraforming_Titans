@@ -32,6 +32,18 @@ class SpaceshipProject extends Project {
     return gainPerShip;
   }
 
+  renderUI(container) {
+    if (this.attributes.spaceMining || this.attributes.spaceExport) {
+      createSpaceshipAssignmentUI(this, container);
+      if (this.attributes.costPerShip) {
+        createCostPerShipAndTotalCostUI(this, container);
+      }
+      if (this.attributes.resourceGainPerShip) {
+        createResourceGainPerShipAndTotalGainUI(this, container);
+      }
+    }
+  }
+
   calculateSpaceshipTotalCost() {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
