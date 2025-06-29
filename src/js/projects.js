@@ -1,6 +1,5 @@
 // projects.js
 
-let projectElements = {};
 
 class Project extends EffectableEntity {
   constructor(config, name) {
@@ -378,7 +377,6 @@ class ProjectManager extends EffectableEntity {
   loadState(projectState) {
     this.activeEffects = [];
     this.booleanFlags = new Set();
-    projectElements = {};
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
