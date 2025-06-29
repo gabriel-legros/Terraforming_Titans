@@ -356,7 +356,8 @@ function updateLifeUI() {
             revertBtn.style.display = 'inline-block';
             createBtn.style.display = 'none';
             createBtn.disabled = true; // Disable create while deploying
-            revertBtn.disabled = true; // Disable revert while deploying
+            // Keep revert enabled so deployment can be cancelled
+            revertBtn.disabled = false;
             modifyButtons.forEach(btn => btn.disabled = true);
             showTentativeDesignCells();
             const timeRemaining = Math.max(0, lifeDesigner.remainingTime / 1000).toFixed(2);

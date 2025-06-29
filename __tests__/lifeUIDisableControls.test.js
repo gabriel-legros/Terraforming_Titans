@@ -58,6 +58,7 @@ describe('lifeUI controls disable during deployment', () => {
     const revertBtn = dom.window.document.getElementById('life-revert-btn');
     expect(modifyBtn.disabled).toBe(true);
     expect(createBtn.disabled).toBe(true);
-    expect(revertBtn.disabled).toBe(true);
+    // Revert/cancel button should remain enabled to allow cancelling
+    expect(revertBtn.disabled).toBe(false);
   });
 });
