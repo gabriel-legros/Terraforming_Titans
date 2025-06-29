@@ -1,6 +1,84 @@
 class CargoRocketProject extends Project {
+  createResourceSelectionUI() {
+    const selectionContainer = document.createElement('div');
+    selectionContainer.classList.add('resource-selection-container');
+
+    for (const category in this.attributes.resourceChoiceGainCost) {
+      for (const resourceId in this.attributes.resourceChoiceGainCost[category]) {
+        const resource = resources[category][resourceId];
+
+        const resourceRow = document.createElement('div');
+        resourceRow.classList.add('project-resource-row');
+        resourceRow.id = `${this.name}-${category}-${resourceId}-row`;
+
+        if (!resource.unlocked) {
+          resourceRow.style.display = 'none';
+        } else {
+          resourceRow.style.display = 'flex';
+        }
+
+        const label = document.createElement('label');
+        label.textContent = `${resource.displayName}: `;
+        label.classList.add('resource-label');
+
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.min = 0;
+        quantityInput.value = 0;
+        quantityInput.classList.add('resource-selection-input', `resource-selection-${this.name}`);
+        quantityInput.dataset.category = category;
+        quantityInput.dataset.resource = resourceId;
+
+        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
+        const pricePerUnitDisplay = document.createElement('span');
+        pricePerUnitDisplay.classList.add('price-per-unit');
+        pricePerUnitDisplay.textContent = `Price per unit: ${pricePerUnit} Funding`;
+
+        const buttonValues = [0, 1, 10, 100, 1000, 10000, 100000, 1000000];
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.classList.add('buttons-container');
+
+        buttonValues.forEach((value) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.classList.add('increment-button');
+          button.textContent = value === 0 ? 'Clear' : `+${formatNumber(value, true)}`;
+
+          button.addEventListener('click', () => {
+            if (value === 0) {
+              quantityInput.value = 0;
+            } else {
+              const currentValue = parseInt(quantityInput.value, 10);
+              const newValue = currentValue + value;
+              quantityInput.value = newValue;
+            }
+
+            updateTotalCostDisplay(this);
+          });
+
+          buttonsContainer.appendChild(button);
+        });
+
+        resourceRow.appendChild(label);
+        resourceRow.appendChild(quantityInput);
+        resourceRow.appendChild(pricePerUnitDisplay);
+        resourceRow.appendChild(buttonsContainer);
+
+        selectionContainer.appendChild(resourceRow);
+      }
+    }
+
+    const totalCostDisplay = document.createElement('p');
+    totalCostDisplay.classList.add('total-cost-display');
+    totalCostDisplay.id = `${this.name}-total-cost-display`;
+    totalCostDisplay.textContent = 'Total Cost: 0 Funding';
+    selectionContainer.appendChild(totalCostDisplay);
+
+    return selectionContainer;
+  }
+
   renderUI(container) {
-    const selectionContainer = createResourceSelectionUI(this);
+    const selectionContainer = this.createResourceSelectionUI();
     container.appendChild(selectionContainer);
 
     projectElements[this.name] = {
