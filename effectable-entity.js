@@ -179,6 +179,9 @@ class EffectableEntity {
         case 'lifeDesignPointBonus':
           this.applyLifeDesignPointBonus(effect);
           break;
+        case 'lifeGrowthMultiplier':
+          this.applyLifeGrowthMultiplier(effect);
+          break;
         // Add other effect types here as needed
         default:
           console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
@@ -410,11 +413,15 @@ class EffectableEntity {
       }
     }
 
-    applyLifeDesignPointBonus(effect) {
-      if (typeof this.designPointBonus !== 'undefined') {
-        this.designPointBonus += effect.value;
+      applyLifeDesignPointBonus(effect) {
+        if (typeof this.designPointBonus !== 'undefined') {
+          this.designPointBonus += effect.value;
+        }
       }
-    }
+
+      applyLifeGrowthMultiplier(effect) {
+        // multiplier effects are computed on demand in LifeManager
+      }
 
 
     // Method to apply a boolean flag effect
