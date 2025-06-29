@@ -64,7 +64,12 @@ class so that the same effect system works across the game.  Helper functions
 `addEffect` and `removeEffect` route an effect to the correct target instance
 based on its `target` field, enabling data-driven gameplay adjustments.
 
-Tests covering helper utilities and physics functions reside in the `__tests__`
+All JavaScript sources now live under `src/js` while stylesheets are in
+`src/css`.  Game assets such as images have moved to `assets/images`.  Tests
+reside in the `tests` directory.  `index.html` loads files from these paths so
+place any new code in the appropriate folder.
+
+Tests covering helper utilities and physics functions reside in the `tests`
 directory and run under Jest.
 
 # Resource Flow
