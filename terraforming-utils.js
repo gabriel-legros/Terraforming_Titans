@@ -52,7 +52,7 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
   }
 
   let scale = 0.0001;
-  if (resourceType === 'dryIce') {
+  if (resourceType === 'dryIce' || resourceType === 'ice') {
     scale *= 100;
   } else if (resourceType === 'biomass') {
     scale *= 1000;

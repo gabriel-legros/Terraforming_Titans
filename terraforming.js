@@ -470,8 +470,8 @@ class Terraforming extends EffectableEntity{
         }
 
         // Optional: Clamp values
-        // this.equilibriumPrecipitationMultiplier = Math.max(1e-6, Math.min(1, this.equilibriumPrecipitationMultiplier));
-        // this.equilibriumCondensationParameter = Math.max(1e-10, Math.min(1e-5, this.equilibriumCondensationParameter));
+        this.equilibriumPrecipitationMultiplier = this.equilibriumPrecipitationMultiplier;
+        this.equilibriumCondensationParameter = this.equilibriumCondensationParameter;
 
         console.log(`Calculated Equilibrium Precipitation Multiplier (Rate-Based): ${this.equilibriumPrecipitationMultiplier}`);
         console.log(`Calculated Equilibrium Condensation Parameter (Rate-Based): ${this.equilibriumCondensationParameter}`);

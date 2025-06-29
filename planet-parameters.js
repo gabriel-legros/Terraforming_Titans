@@ -52,7 +52,7 @@ const defaultPlanetParameters = {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
       ice: { name: 'Ice', initialValue: 0, unlocked:false , unit: 'ton' }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
-      dryIce : {name : 'Dry Ice', initialValue: 30010169900060.594, unlocked: false, unit: 'ton' }, // Default (Mars)
+      dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton' }, // Default (Mars)
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
       liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false , unit: 'ton' },
@@ -63,7 +63,7 @@ const defaultPlanetParameters = {
       geothermal: { name: 'Geo. vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
     },
     atmospheric: {
-      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23157704873578.164, unlocked:false , unit: 'ton' }, // Default (Mars)
+      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.4e13, unlocked:false , unit: 'ton' }, // Default (Mars)
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
@@ -108,7 +108,7 @@ const marsOverrides = {
         "initialValue": 0
       },
       "dryIce": {
-        "initialValue": 41602394775150.08
+        "initialValue": 2e13
       },
       "liquidMethane": {
         "initialValue": 0
@@ -119,7 +119,7 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 11565479998462.102
+        "initialValue": 2.4e13
       },
       "atmosphericWater": {
         "initialValue": 11508160985.626724
@@ -154,7 +154,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 41602394775150.08
+      "dryIce": 2e13
     }
   },
   "zonalHydrocarbons": {
