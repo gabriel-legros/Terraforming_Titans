@@ -155,6 +155,19 @@ class SpaceshipProject extends Project {
     }
   }
 
+  autoAssign() {
+    if (this.autoAssignSpaceships && (this.attributes.spaceMining || this.attributes.spaceExport)) {
+      const available = Math.floor(resources.special.spaceships.value);
+      if (available > 0 && typeof assignSpaceshipsToProject === 'function') {
+        assignSpaceshipsToProject(this, available, document.getElementById(`${this.name}-assigned-spaceships`));
+      }
+    }
+  }
+
+  estimateCostAndGain() {
+    this.estimateProjectCostAndGain();
+  }
+
   estimateProjectCostAndGain() {
     if (this.isActive && this.autoStart) {
       const totalCost = this.calculateSpaceshipTotalCost();

@@ -77,7 +77,7 @@ describe('space mining rate scaling', () => {
     project.isActive = true;
     project.getEffectiveDuration = () => 500;
 
-    project.estimateProjectCostAndGain();
+    project.estimateCostAndGain();
 
     expect(global.resources.colony.metal.modifyRate).toHaveBeenCalledWith(
       20,

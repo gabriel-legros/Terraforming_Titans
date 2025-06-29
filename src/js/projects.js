@@ -358,16 +358,11 @@ class ProjectManager extends EffectableEntity {
   updateProjects(deltaTime) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
-  
-      // Auto-assign spaceships if the project has autoAssignSpaceships set to true and is a space mining project
-      if ((project.attributes.spaceMining  || project.attributes.spaceExport) && project.autoAssignSpaceships) {
-        const availableSpaceships = Math.floor(resources.special.spaceships.value);
-        if (availableSpaceships > 0) {
-          // Use the existing function to assign all available spaceships to this project
-          assignSpaceshipsToProject(project, availableSpaceships, document.getElementById(`${project.name}-assigned-spaceships`));
-        }
+
+      if (typeof project.autoAssign === 'function') {
+        project.autoAssign();
       }
-  
+
       // Update each project if it is active
       if (project.isActive) {
         project.update(deltaTime);
@@ -382,7 +377,9 @@ class ProjectManager extends EffectableEntity {
   estimateProjects() {
     for (const projectName in this.projects){
       const project = this.projects[projectName];
-      if(project.attributes.spaceMining || project.attributes.spaceExport || project.attributes.resourceChoiceGainCost){
+      if (typeof project.estimateCostAndGain === 'function') {
+        project.estimateCostAndGain();
+      } else if (typeof project.estimateProjectCostAndGain === 'function') {
         project.estimateProjectCostAndGain();
       }
     }
