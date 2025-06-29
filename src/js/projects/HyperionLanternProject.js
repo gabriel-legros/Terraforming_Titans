@@ -82,13 +82,18 @@ class HyperionLanternProject extends Project {
       const amount = this.amount;
       const reqComponents = (investCost.components || 0) * amount;
       const reqElectronics = (investCost.electronics || 0) * amount;
+      const reqGlass = (investCost.glass || 0) * amount;
       if (resources.colony.components.value >= reqComponents &&
-          resources.colony.electronics.value >= reqElectronics) {
+          resources.colony.electronics.value >= reqElectronics &&
+          resources.colony.glass.value >= reqGlass) {
         if(investCost.components){
           resources.colony.components.value -= reqComponents;
         }
         if(investCost.electronics){
           resources.colony.electronics.value -= reqElectronics;
+        }
+        if(investCost.glass){
+          resources.colony.glass.value -= reqGlass;
         }
         this.investments += amount;
         updateProjectUI(this.name);
@@ -102,11 +107,10 @@ class HyperionLanternProject extends Project {
     investmentContainer.appendChild(increaseButton);
     investmentContainer.appendChild(investButton);
 
-    lanternControls.appendChild(investmentContainer);
-
     const capacityDisplay = document.createElement('p');
     capacityDisplay.id = 'lantern-capacity';
     lanternControls.appendChild(capacityDisplay);
+    lanternControls.appendChild(investmentContainer);
 
     const fluxDisplay = document.createElement('p');
     fluxDisplay.id = 'lantern-flux';
@@ -147,7 +151,18 @@ class HyperionLanternProject extends Project {
       if(investCost.electronics){
         parts.push(`${formatNumber(investCost.electronics * amount, true)} Electronics`);
       }
+      if(investCost.glass){
+        parts.push(`${formatNumber(investCost.glass * amount, true)} Glass`);
+      }
       elements.lanternInvest.textContent = `Invest ${parts.join(' & ')}`;
+      const haveComponents = resources.colony.components.value;
+      const haveElectronics = resources.colony.electronics.value;
+      const haveGlass = resources.colony.glass.value;
+      const reqComponents = (investCost.components || 0) * amount;
+      const reqElectronics = (investCost.electronics || 0) * amount;
+      const reqGlass = (investCost.glass || 0) * amount;
+      const canAfford = haveComponents >= reqComponents && haveElectronics >= reqElectronics && haveGlass >= reqGlass;
+      elements.lanternInvest.style.color = canAfford ? 'inherit' : 'red';
     }
     if(elements.lanternAmountDisplay){
       elements.lanternAmountDisplay.textContent = formatNumber(amount, true);
