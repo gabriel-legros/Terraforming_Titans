@@ -404,7 +404,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: "A ridiculously huge lamp placed in orbit. It's basically the biggest flashlight ever built, capable of flooding the planet with artificial sunlight.",
+    description: "A ridiculously huge lamp placed in orbit. It's basically the biggest flashlight ever built, capable of flooding the planet with artificial sunlight.  The energy must be provided.",
     repeatable: false,
     unlocked: false,
     attributes: {
