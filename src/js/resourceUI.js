@@ -297,7 +297,7 @@ function updateResourceRateDisplay(resource){
         tooltipContent += `
           <div style="display: table-row;">
             <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
           </div>`;
       });
       tooltipContent += '</div>';
@@ -312,7 +312,7 @@ function updateResourceRateDisplay(resource){
         tooltipContent += `
           <div style="display: table-row;">
             <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
           </div>`;
       });
       tooltipContent += '</div>';
