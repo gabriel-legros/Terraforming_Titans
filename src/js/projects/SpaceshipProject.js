@@ -1,4 +1,12 @@
 class SpaceshipProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.assignedSpaceships = 0;
+    this.autoAssignSpaceships = false;
+    this.waitForCapacity = true;
+    this.selectedDisposalResource = this.attributes.defaultDisposal;
+  }
+
   calculateSpaceshipCost() {
     const costPerShip = this.attributes.costPerShip;
     const totalCost = {};
