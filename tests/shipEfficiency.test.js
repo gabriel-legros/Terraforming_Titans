@@ -5,7 +5,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 
-let Project;
+let SpaceshipProject;
 let context;
 
 describe('shipEfficiency effect', () => {
@@ -31,7 +31,9 @@ describe('shipEfficiency effect', () => {
     vm.createContext(context);
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectCode + '; this.Project = Project;', context);
-    Project = context.Project;
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', context);
+    SpaceshipProject = context.SpaceshipProject;
 
     global.buildings = {};
     global.colonies = {};
@@ -62,7 +64,7 @@ describe('shipEfficiency effect', () => {
         resourceGainPerShip: { colony: { metal: 10 } }
       }
     };
-    project = new Project(config, 'test');
+    project = new SpaceshipProject(config, 'test');
     project.assignedSpaceships = 1;
   });
 
@@ -102,7 +104,7 @@ describe('shipEfficiency effect', () => {
         fundingGainAmount: 1
       }
     };
-    const exportProject = new Project(exportConfig, 'exportTest');
+    const exportProject = new SpaceshipProject(exportConfig, 'exportTest');
     exportProject.assignedSpaceships = 1;
     exportProject.selectedDisposalResource = { category: 'colony', resource: 'metal' };
 

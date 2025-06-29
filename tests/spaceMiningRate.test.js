@@ -3,7 +3,7 @@ const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
-let Project;
+let SpaceshipProject;
 let context;
 
 describe('space mining rate scaling', () => {
@@ -28,7 +28,9 @@ describe('space mining rate scaling', () => {
     vm.createContext(context);
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectCode + '; this.Project = Project;', context);
-    Project = context.Project;
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', context);
+    SpaceshipProject = context.SpaceshipProject;
 
     global.buildings = {};
     global.colonies = {};
@@ -68,7 +70,7 @@ describe('space mining rate scaling', () => {
         resourceGainPerShip: { colony: { metal: 10 } }
       }
     };
-    const project = new Project(config, 'test');
+    const project = new SpaceshipProject(config, 'test');
     project.assignedSpaceships = 1;
     project.pendingResourceGains = [{ category: 'colony', resource: 'metal', quantity: 10 }];
     project.autoStart = true;

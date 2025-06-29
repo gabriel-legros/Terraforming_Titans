@@ -1,4 +1,4 @@
-class SpaceExportBaseProject extends Project {
+class SpaceExportBaseProject extends SpaceshipProject {
   renderUI(container) {
     if (typeof createResourceDisposalUI === 'function') {
       createResourceDisposalUI(this, container);

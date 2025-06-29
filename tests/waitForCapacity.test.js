@@ -4,7 +4,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('waitForCapacity flag', () => {
-  let Project;
+  let SpaceshipProject;
   let context;
   beforeEach(() => {
     context = {
@@ -27,7 +27,9 @@ describe('waitForCapacity flag', () => {
     vm.createContext(context);
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectCode + '; this.Project = Project;', context);
-    Project = context.Project;
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', context);
+    SpaceshipProject = context.SpaceshipProject;
 
     global.buildings = {};
     global.colonies = {};
@@ -70,7 +72,7 @@ describe('waitForCapacity flag', () => {
         fundingGainAmount: 1
       }
     };
-    const project = new Project(config, 'export');
+    const project = new SpaceshipProject(config, 'export');
     project.assignedSpaceships = 1;
     project.selectedDisposalResource = { category: 'colony', resource: 'metal' };
     return project;
