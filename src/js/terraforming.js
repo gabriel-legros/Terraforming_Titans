@@ -1045,7 +1045,8 @@ class Terraforming extends EffectableEntity{
     calculateLanternFlux(){
       const lantern = (typeof buildings !== 'undefined') ? buildings['hyperionLantern'] : null;
       if(lantern && lantern.active > 0){
-        const power = (lantern.powerPerBuilding || 0) * lantern.active;
+        const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
+        const power = (lantern.powerPerBuilding || 0) * lantern.active * productivity;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }
