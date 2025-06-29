@@ -425,7 +425,7 @@ const projectParameters = {
         }
       },
       // Power output provided by each investment (in watts)
-      powerPerInvestment: 1e15
+      powerPerInvestment: 1e12
     }
   },
   triangulate_attack: {
