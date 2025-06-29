@@ -22,6 +22,7 @@ class Resource extends EffectableEntity {
     this.unlocked = resourceData.unlocked;
     this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
+    this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
   }
 
   // Method to initialize configurable properties
@@ -49,6 +50,9 @@ class Resource extends EffectableEntity {
     }
     if (config.conversionValue !== undefined) {
       this.conversionValue = config.conversionValue || 1;
+    }
+    if (config.hideWhenSmall !== undefined) {
+      this.hideWhenSmall = config.hideWhenSmall;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {

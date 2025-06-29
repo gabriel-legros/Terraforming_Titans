@@ -38,8 +38,8 @@ describe('hydrology melting with buried ice', () => {
     const temps = { polar: 250, temperate: 274, tropical: 260 };
     const melt = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
-    // Melt coefficient updated in hydrology to 0.0001
-    const expectedMelt = (100 + 50) * 0.0001 * slopeFactor;
+    // Melt coefficient updated in hydrology to 0.001
+    const expectedMelt = (100 + 50) * 0.001 * slopeFactor;
     const surfaceFraction = 100 / (100 + 50);
     const meltFromIce = expectedMelt * surfaceFraction;
     const meltFromBuried = expectedMelt - meltFromIce;

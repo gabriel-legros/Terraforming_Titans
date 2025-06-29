@@ -130,8 +130,9 @@ function updateResourceDisplay(resources) {
       const resourceElement = document.getElementById(`${resourceName}-container`);
       const resourceNameElement = document.getElementById(`${resourceName}-name`);
 
-      // Reveal resource if unlocked
-      if (resourceObj.unlocked) {
+      const showResource = resourceObj.unlocked && (!resourceObj.hideWhenSmall || resourceObj.value >= 1e-4);
+
+      if (showResource) {
         hasUnlockedResources = true;
         if (resourceElement) resourceElement.style.display = 'block';
       } else {
