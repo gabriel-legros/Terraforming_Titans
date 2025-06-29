@@ -97,18 +97,15 @@ const defaultPlanetParameters = {
 const marsOverrides = {
   name: 'Mars',
 "resources": {
-    "colony" : {
-      "funding": {"initialvalue" : 1000}
-    },
     "surface": {
       "ice": {
-        "initialValue": 9999998491643878
+        "initialValue": 8199999826709445
       },
       "liquidWater": {
         "initialValue": 0
       },
       "dryIce": {
-        "initialValue": 2e13
+        "initialValue": 20000036381099.133
       },
       "liquidMethane": {
         "initialValue": 0
@@ -119,10 +116,10 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 2.4e13
+        "initialValue": 23999963618900.867
       },
       "atmosphericWater": {
-        "initialValue": 11508160985.626724
+        "initialValue": 8173290599.353094
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -132,17 +129,17 @@ const marsOverrides = {
   "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 80580927727.16302,
+      "ice": 145590549.1339006,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 622401250174.4773,
+      "ice": 240373101.84902662,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 6299295509465977,
+      "ice": 4499999440745793.5,
       "buriedIce": 700000000000000
     }
   },
@@ -154,7 +151,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 2e13
+      "dryIce": 20000036381099.133
     }
   },
   "zonalHydrocarbons": {
@@ -169,7 +166,9 @@ const marsOverrides = {
     "polar": {
       "liquid": 0,
       "ice": 0
-    }  }};
+    }
+  }
+};
 
 const titanOverrides = {
   name: 'Titan',
