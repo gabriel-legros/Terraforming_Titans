@@ -1045,10 +1045,8 @@ class Terraforming extends EffectableEntity{
     calculateLanternFlux(){
       const project = (typeof projectManager !== 'undefined' && projectManager.projects)
         ? projectManager.projects.hyperionLantern : null;
-      if(project && project.isCompleted && project.active > 0){
-        const power = project.active * project.powerPerInvestment;
-        const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
-        return power / area;
+      if(project && typeof project.calculateFlux === 'function'){
+        return project.calculateFlux(this.celestialParameters);
       }
       return 0;
     }
@@ -1121,9 +1119,11 @@ class Terraforming extends EffectableEntity{
 
       const lantern = (typeof projectManager !== 'undefined' && projectManager.projects)
         ? projectManager.projects.hyperionLantern : null;
-      if(lantern && lantern.isCompleted && lantern.active > 0){
-        const power = lantern.active * lantern.powerPerInvestment;
-        resources.colony.energy.modifyRate(-power, 'Hyperion Lantern', 'terraforming');
+      if(lantern && typeof lantern.calculateEnergyUsage === 'function'){
+        const power = lantern.calculateEnergyUsage();
+        if(power > 0){
+          resources.colony.energy.modifyRate(-power, 'Hyperion Lantern', 'terraforming');
+        }
       }
 
       const lifeLuminosityEffect = {

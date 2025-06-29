@@ -7,6 +7,25 @@ class HyperionLanternProject extends Project {
     this.amount = 1;
     this.powerPerInvestment = this.attributes.powerPerInvestment || defaultPower;
   }
+
+  calculateEnergyUsage(){
+    if(!this.isCompleted){
+      return 0;
+    }
+    return this.active * this.powerPerInvestment;
+  }
+
+  calculateFlux(celestialParameters){
+    if(!celestialParameters){
+      return 0;
+    }
+    const power = this.calculateEnergyUsage();
+    if(power <= 0){
+      return 0;
+    }
+    const area = celestialParameters.crossSectionArea || celestialParameters.surfaceArea;
+    return power / area;
+  }
   renderUI(container) {
     const lanternControls = document.createElement('div');
     lanternControls.classList.add('lantern-controls');
