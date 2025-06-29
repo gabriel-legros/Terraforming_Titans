@@ -61,7 +61,9 @@ class Terraforming extends EffectableEntity{
 
     this.resources = resources;
     this.celestialParameters = celestialParameters;
-    this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(this.celestialParameters.radius * 1000, 2);
+    const radiusMeters = this.celestialParameters.radius * 1000;
+    this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
+    this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
 
     this.lifeParameters = lifeParameters; // Load external life parameters
 
@@ -1053,7 +1055,8 @@ class Terraforming extends EffectableEntity{
     calculateLanternFlux(){
       if(this.hyperionLantern.built && this.hyperionLantern.active > 0){
         const power = this.hyperionLantern.active * this.hyperionLantern.powerPerInvestment;
-        return power / this.celestialParameters.surfaceArea;
+        const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
+        return power / area;
       }
       return 0;
     }

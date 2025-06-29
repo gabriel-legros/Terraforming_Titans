@@ -1,3 +1,5 @@
+let lanternAmount = 1;
+
 document.addEventListener('DOMContentLoaded', () => {
   // Subtab functionality to show/hide project categories
   document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
@@ -114,21 +116,47 @@ function createProjectItem(project) {
     const lanternControls = document.createElement('div');
     lanternControls.classList.add('lantern-controls');
 
+    const amountContainer = document.createElement('div');
+    amountContainer.classList.add('build-count-buttons');
+    const amountLabel = document.createElement('span');
+    amountLabel.textContent = 'Amount: ';
+    const amountDisplay = document.createElement('span');
+    amountDisplay.id = 'lantern-amount';
+    amountDisplay.classList.add('build-count-display');
+    amountContainer.appendChild(amountLabel);
+    amountContainer.appendChild(amountDisplay);
+
+    const multiplyButton = document.createElement('button');
+    multiplyButton.textContent = 'x10';
+    multiplyButton.addEventListener('click', () => {
+      lanternAmount = multiplyByTen(lanternAmount);
+      updateLanternButtonTexts(project.name);
+    });
+    amountContainer.appendChild(multiplyButton);
+
+    const divideButton = document.createElement('button');
+    divideButton.textContent = '/10';
+    divideButton.addEventListener('click', () => {
+      lanternAmount = divideByTen(lanternAmount);
+      updateLanternButtonTexts(project.name);
+    });
+    amountContainer.appendChild(divideButton);
+
+    lanternControls.appendChild(amountContainer);
+
     const decreaseButton = document.createElement('button');
-    decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', () => {
       if (terraforming.hyperionLantern.active > 0) {
-        terraforming.hyperionLantern.active -= 1;
+        terraforming.hyperionLantern.active = Math.max(0, terraforming.hyperionLantern.active - lanternAmount);
         updateProjectUI(project.name);
       }
     });
     decreaseButton.disabled = !project.isCompleted;
 
     const increaseButton = document.createElement('button');
-    increaseButton.textContent = '+1';
     increaseButton.addEventListener('click', () => {
       if (terraforming.hyperionLantern.active < terraforming.hyperionLantern.investments) {
-        terraforming.hyperionLantern.active += 1;
+        terraforming.hyperionLantern.active = Math.min(terraforming.hyperionLantern.investments, terraforming.hyperionLantern.active + lanternAmount);
         updateProjectUI(project.name);
       }
     });
@@ -136,24 +164,18 @@ function createProjectItem(project) {
 
     const investButton = document.createElement('button');
     const investCost = project.attributes.investmentCost?.colony || {};
-    const investTextParts = [];
-    if (investCost.components) {
-      investTextParts.push(`${formatNumber(investCost.components, true)} Components`);
-    }
-    if (investCost.electronics) {
-      investTextParts.push(`${formatNumber(investCost.electronics, true)} Electronics`);
-    }
-    investButton.textContent = `Invest ${investTextParts.join(' & ')}`;
     investButton.addEventListener('click', () => {
-      if (resources.colony.components.value >= (investCost.components || 0) &&
-          resources.colony.electronics.value >= (investCost.electronics || 0)) {
+      const reqComponents = (investCost.components || 0) * lanternAmount;
+      const reqElectronics = (investCost.electronics || 0) * lanternAmount;
+      if (resources.colony.components.value >= reqComponents &&
+          resources.colony.electronics.value >= reqElectronics) {
         if(investCost.components){
-          resources.colony.components.value -= investCost.components;
+          resources.colony.components.value -= reqComponents;
         }
         if(investCost.electronics){
-          resources.colony.electronics.value -= investCost.electronics;
+          resources.colony.electronics.value -= reqElectronics;
         }
-        terraforming.hyperionLantern.investments += 1;
+        terraforming.hyperionLantern.investments += lanternAmount;
         updateProjectUI(project.name);
       }
     });
@@ -171,6 +193,10 @@ function createProjectItem(project) {
     capacityDisplay.id = 'lantern-capacity';
     lanternControls.appendChild(capacityDisplay);
 
+    const fluxDisplay = document.createElement('p');
+    fluxDisplay.id = 'lantern-flux';
+    lanternControls.appendChild(fluxDisplay);
+
     projectItem.appendChild(lanternControls);
 
     projectElements[project.name] = {
@@ -178,8 +204,13 @@ function createProjectItem(project) {
       lanternDecrease: decreaseButton,
       lanternIncrease: increaseButton,
       lanternInvest: investButton,
-      lanternCapacity: capacityDisplay
+      lanternCapacity: capacityDisplay,
+      lanternFlux: fluxDisplay,
+      lanternAmountDisplay: amountDisplay,
+      lanternMultiply: multiplyButton,
+      lanternDivide: divideButton
     };
+    updateLanternButtonTexts(project.name);
   }
 
   if (project.cost && Object.keys(project.cost).length > 0) {
@@ -754,6 +785,11 @@ function updateProjectUI(projectName) {
       const maxPower = terraforming.hyperionLantern.investments * powerPerInvestment;
       elements.lanternCapacity.textContent = `Active: ${formatNumber(activePower, false, 2)} W / Capacity: ${formatNumber(maxPower, false, 2)} W`;
     }
+    if(elements.lanternFlux){
+      const flux = terraforming.calculateLanternFlux();
+      elements.lanternFlux.textContent = `Flux: ${formatNumber(flux, false, 2)} W/m²`;
+    }
+    updateLanternButtonTexts(project.name);
   }
 
   // Check if the auto-start checkbox is checked and attempt to start the project automatically
@@ -833,6 +869,31 @@ function updateEmptyProjectMessages() {
       message.remove();
     }
   });
+}
+
+function updateLanternButtonTexts(projectName) {
+  const elements = projectElements[projectName];
+  if(!elements) return;
+  if(elements.lanternIncrease){
+    elements.lanternIncrease.textContent = `+${formatNumber(lanternAmount, true)}`;
+  }
+  if(elements.lanternDecrease){
+    elements.lanternDecrease.textContent = `-${formatNumber(lanternAmount, true)}`;
+  }
+  if(elements.lanternInvest){
+    const investCost = projectManager.projects[projectName].attributes.investmentCost?.colony || {};
+    const parts = [];
+    if(investCost.components){
+      parts.push(`${formatNumber(investCost.components * lanternAmount, true)} Components`);
+    }
+    if(investCost.electronics){
+      parts.push(`${formatNumber(investCost.electronics * lanternAmount, true)} Electronics`);
+    }
+    elements.lanternInvest.textContent = `Invest ${parts.join(' & ')}`;
+  }
+  if(elements.lanternAmountDisplay){
+    elements.lanternAmountDisplay.textContent = formatNumber(lanternAmount, true);
+  }
 }
 
 function updateStoryProjectsVisibility() {
