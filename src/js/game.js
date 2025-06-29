@@ -195,7 +195,7 @@ function updateLogic(delta) {
 
   populationModule.updatePopulation(delta);
 
-  autoBuild(allStructures);
+  autoBuild(allStructures, delta);
 
   projectManager.updateProjects(delta); 
   oreScanner.updateScan(delta);  // Update ore scanning progress
