@@ -238,10 +238,9 @@ function calculatePrecipitationRateFactor({
     nightTemperature
 }) {
     const freezingPoint = 273.15;
+    const transitionRange = 2.0; // K range over which rain transitions to snow
     let potentialRain = 0;
     let potentialSnow = 0;
-
-    const avgTemp = (dayTemperature + nightTemperature) / 2;
 
     const calc = (temp) => {
         let rain = 0, snow = 0;
@@ -253,21 +252,16 @@ function calculatePrecipitationRateFactor({
                 const excessMassTons = excessMassKg / 1000;
                 const baseRate = excessMassTons / 86400;
                 if (!isNaN(baseRate) && baseRate > 0) {
-                    if (temp > freezingPoint) {
-                        rain = baseRate;
-                    } else {
-                        const diff = freezingPoint - temp;
-                        const maxDiff = 10.0;
-                        const scale = Math.min(diff / maxDiff, 1.0);
-                        snow = baseRate * scale;
-                    }
+                    const diff = freezingPoint - temp;
+                    const maxDiff = 10.0;
+                    const intensityScale = temp < freezingPoint ? Math.min(diff / maxDiff, 1.0) : 1.0;
+                    const rate = baseRate * intensityScale;
+
+                    const mix = Math.min(Math.max((temp - (freezingPoint - transitionRange)) / (2 * transitionRange), 0), 1);
+                    rain = rate * mix;
+                    snow = rate - rain;
                 }
             }
-        }
-
-        if (avgTemp <= freezingPoint && rain > 0) {
-            snow += rain;
-            rain = 0;
         }
         return { rain, snow };
     };
