@@ -113,7 +113,7 @@ function createProjectItem(project) {
   }
 
 
-  // Unified Progress Button
+  // Unified Progress Button (created here but appended later so it appears at the bottom)
   const progressButtonContainer = document.createElement('div');
   progressButtonContainer.classList.add('progress-button-container');
   const progressButton = document.createElement('button');
@@ -122,9 +122,8 @@ function createProjectItem(project) {
   progressButton.textContent = `Start ${project.displayName}`; // Default button text
   progressButton.disabled = false; // Enable or disable based on project state
   progressButtonContainer.appendChild(progressButton);
-  projectItem.appendChild(progressButtonContainer);
 
-  // Create a container for both checkboxes on the same row
+  // Create a container for both checkboxes on the same row (also appended later)
   const checkboxRowContainer = document.createElement('div');
   checkboxRowContainer.classList.add('checkbox-row-container');
 
@@ -158,13 +157,14 @@ function createProjectItem(project) {
     autoStartCheckboxContainer: autoStartCheckboxContainer,
     checkboxRowContainer: checkboxRowContainer
   };
-  // Append the combined container to the project item
-  projectItem.appendChild(checkboxRowContainer);
 
   if (typeof project.renderUI === 'function') {
     project.renderUI(projectItem);
   }
 
+  // Append the combined container and progress button at the bottom
+  projectItem.appendChild(progressButtonContainer);
+  projectItem.appendChild(checkboxRowContainer);
 
   // Store the progress button for later updates
   projectElements[project.name] = {
