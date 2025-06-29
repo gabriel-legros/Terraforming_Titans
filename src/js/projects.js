@@ -1,6 +1,5 @@
 // projects.js
 
-let projectElements = {};
 
 class Project extends EffectableEntity {
   constructor(config, name) {
@@ -13,11 +12,7 @@ class Project extends EffectableEntity {
     this.isActive = false; // Whether the project is currently active
     this.isCompleted = false; // Whether the project has been completed
     this.repeatCount = 0; // Track the current number of times the project has been repeated
-    this.assignedSpaceships = 0;
     this.autoStart = false;
-    this.autoAssignSpaceships = false;
-    this.waitForCapacity = true;
-    this.selectedDisposalResource = null || this.attributes.defaultDisposal;
   }
 
   initializeFromConfig(config, name) {
@@ -357,19 +352,24 @@ class ProjectManager extends EffectableEntity {
     const projectState = {};
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
-      projectState[projectName] = {
+      const state = {
         isActive: project.isActive,
         isCompleted: project.isCompleted,
         remainingTime: project.remainingTime,
         startingDuration: project.startingDuration,
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
-        assignedSpaceships: project.assignedSpaceships,
         autoStart : project.autoStart,
-        autoAssignSpaceships : project.autoAssignSpaceships,
-        selectedDisposalResource : project.selectedDisposalResource,
-        waitForCapacity : project.waitForCapacity
       };
+
+      if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
+        state.assignedSpaceships = project.assignedSpaceships;
+        state.autoAssignSpaceships = project.autoAssignSpaceships;
+        state.selectedDisposalResource = project.selectedDisposalResource;
+        state.waitForCapacity = project.waitForCapacity;
+      }
+
+      projectState[projectName] = state;
     }
     return projectState;
   }
@@ -378,7 +378,6 @@ class ProjectManager extends EffectableEntity {
   loadState(projectState) {
     this.activeEffects = [];
     this.booleanFlags = new Set();
-    projectElements = {};
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
@@ -395,12 +394,14 @@ class ProjectManager extends EffectableEntity {
           project.oneTimeResourceGainsDisplay = project.pendingResourceGains;
         }
         project.effects = [];
-        project.assignedSpaceships = savedProject.assignedSpaceships;
         project.autoStart = savedProject.autoStart;
-        project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
-        project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal;
-        if(savedProject.waitForCapacity !== undefined){
-          project.waitForCapacity = savedProject.waitForCapacity;
+        if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
+          project.assignedSpaceships = savedProject.assignedSpaceships;
+          project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
+          project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal;
+          if(savedProject.waitForCapacity !== undefined){
+            project.waitForCapacity = savedProject.waitForCapacity;
+          }
         }
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
           project.applyCompletionEffect();

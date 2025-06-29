@@ -1,11 +1,21 @@
 class SpaceshipProject extends Project {
-  assignSpaceships(count) {
+
+  constructor(config, name) {
+    super(config, name);
+    this.assignedSpaceships = 0;
+    this.autoAssignSpaceships = false;
+    this.waitForCapacity = true;
+    this.selectedDisposalResource = this.attributes.defaultDisposal;
+  }
+
+ assignSpaceships(count) {
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
     this.assignedSpaceships = this.assignedSpaceships || 0;
     const adjustedCount = Math.max(-this.assignedSpaceships, Math.min(count, availableSpaceships));
     this.assignedSpaceships += adjustedCount;
     resources.special.spaceships.value -= adjustedCount;
   }
+
   calculateSpaceshipCost() {
     const costPerShip = this.attributes.costPerShip;
     const totalCost = {};
