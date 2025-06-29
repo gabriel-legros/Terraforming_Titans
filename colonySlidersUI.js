@@ -256,7 +256,7 @@ function initializeColonySlidersUI() {
     if (oreValue && oreEffect) {
       const workers = val * 10;
       oreValue.textContent = `${workers}`;
-      const mult = val === 0 ? 1 : val * val;
+      const mult = val === 0 ? 0 : val;
       const percent = (mult * 100).toFixed(0);
       oreEffect.textContent = `Boost: ${percent}%`;
     }
