@@ -4,7 +4,7 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   updateUI() {
-    // No additional UI updates
+    super.updateUI();
   }
 }
 
