@@ -525,16 +525,30 @@ function initializeLifeUI() {
 class LifeManager extends EffectableEntity {
   constructor() {
     super({description : 'Life Manager'})
+    this.lifeGrowthMultiplier = 1;
+  }
+
+  replaceEffect(effect){
+    const index = this.activeEffects.findIndex(e => e.effectId === effect.effectId);
+    if(index !== -1){
+      this.activeEffects[index] = effect;
+      this.applyActiveEffects(false);
+    }else{
+      super.replaceEffect(effect);
+    }
+  }
+
+  applyActiveEffects(firstTime = true){
+    this.lifeGrowthMultiplier = 1;
+    super.applyActiveEffects(firstTime);
+  }
+
+  applyLifeGrowthMultiplier(effect){
+    this.lifeGrowthMultiplier *= effect.value;
   }
 
   getEffectiveLifeGrowthMultiplier(){
-    let multiplier = 1; // Start with default multiplier
-    this.activeEffects.forEach(effect => {
-      if (effect.type === 'lifeGrowthMultiplier') {
-        multiplier *= effect.value;
-      }
-    });
-    return multiplier;
+    return this.lifeGrowthMultiplier;
   }
 
   // Method to update life growth/decay based on zonal environmental conditions
