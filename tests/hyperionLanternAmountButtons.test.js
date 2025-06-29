@@ -26,6 +26,8 @@ describe('Hyperion Lantern amount controls', () => {
     vm.runInContext(buildCountCode + '; this.multiplyByTen = multiplyByTen; this.divideByTen = divideByTen;', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager;', ctx);
+    const lanternSubclass = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'HyperionLanternProject.js'), 'utf8');
+    vm.runInContext(lanternSubclass + '; this.HyperionLanternProject = HyperionLanternProject;', ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.initializeProjectsUI = initializeProjectsUI; this.projectElements = projectElements;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');

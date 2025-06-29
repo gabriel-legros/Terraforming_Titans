@@ -87,130 +87,8 @@ function createProjectItem(project) {
     createResourceGainPerShipAndTotalGainUI(project, projectItem);
   }
 
-  // Mirror-related calculations and text boxes
-  if (project.name === 'spaceMirrorFacility') {
-    const mirrorDetails = document.createElement('div');
-    mirrorDetails.classList.add('mirror-details');
-    mirrorDetails.innerHTML = `
-      <p>Mirrors: <span id="num-mirrors">0</span></p>
-      <p>Power/Mirror: <span id="power-per-mirror">0</span>W | Per m²: <span id="power-per-mirror-area">0</span>W/m²</p>
-      <p>Total Power: <span id="total-power">0</span>W | Per m²: <span id="total-power-area">0</span>W/m²</p>
-    `;
-
-    projectItem.appendChild(mirrorDetails);
-
-    // Store the mirror details element for future updates
-    projectElements[project.name] = {
-      ...projectElements[project.name],
-      mirrorDetails: {
-        numMirrors: mirrorDetails.querySelector('#num-mirrors'),
-        powerPerMirror: mirrorDetails.querySelector('#power-per-mirror'),
-        powerPerMirrorArea: mirrorDetails.querySelector('#power-per-mirror-area'),
-        totalPower: mirrorDetails.querySelector('#total-power'),
-        totalPowerArea: mirrorDetails.querySelector('#total-power-area'),
-      },
-    };
-  }
-
-  if (project.name === 'hyperionLantern') {
-    const lanternControls = document.createElement('div');
-    lanternControls.classList.add('lantern-controls');
-
-    const amountContainer = document.createElement('div');
-    amountContainer.classList.add('build-count-buttons');
-    const amountLabel = document.createElement('span');
-    amountLabel.textContent = 'Amount: ';
-    const amountDisplay = document.createElement('span');
-    amountDisplay.id = 'lantern-amount';
-    amountDisplay.classList.add('build-count-display');
-    amountContainer.appendChild(amountLabel);
-    amountContainer.appendChild(amountDisplay);
-
-    const multiplyButton = document.createElement('button');
-    multiplyButton.textContent = 'x10';
-    multiplyButton.addEventListener('click', () => {
-      lanternAmount = multiplyByTen(lanternAmount);
-      updateLanternButtonTexts(project.name);
-    });
-    amountContainer.appendChild(multiplyButton);
-
-    const divideButton = document.createElement('button');
-    divideButton.textContent = '/10';
-    divideButton.addEventListener('click', () => {
-      lanternAmount = divideByTen(lanternAmount);
-      updateLanternButtonTexts(project.name);
-    });
-    amountContainer.appendChild(divideButton);
-
-    lanternControls.appendChild(amountContainer);
-
-    const decreaseButton = document.createElement('button');
-    decreaseButton.addEventListener('click', () => {
-      if (terraforming.hyperionLantern.active > 0) {
-        terraforming.hyperionLantern.active = Math.max(0, terraforming.hyperionLantern.active - lanternAmount);
-        updateProjectUI(project.name);
-      }
-    });
-    decreaseButton.disabled = !project.isCompleted;
-
-    const increaseButton = document.createElement('button');
-    increaseButton.addEventListener('click', () => {
-      if (terraforming.hyperionLantern.active < terraforming.hyperionLantern.investments) {
-        terraforming.hyperionLantern.active = Math.min(terraforming.hyperionLantern.investments, terraforming.hyperionLantern.active + lanternAmount);
-        updateProjectUI(project.name);
-      }
-    });
-    increaseButton.disabled = !project.isCompleted;
-
-    const investButton = document.createElement('button');
-    const investCost = project.attributes.investmentCost?.colony || {};
-    investButton.addEventListener('click', () => {
-      const reqComponents = (investCost.components || 0) * lanternAmount;
-      const reqElectronics = (investCost.electronics || 0) * lanternAmount;
-      if (resources.colony.components.value >= reqComponents &&
-          resources.colony.electronics.value >= reqElectronics) {
-        if(investCost.components){
-          resources.colony.components.value -= reqComponents;
-        }
-        if(investCost.electronics){
-          resources.colony.electronics.value -= reqElectronics;
-        }
-        terraforming.hyperionLantern.investments += lanternAmount;
-        updateProjectUI(project.name);
-      }
-    });
-    investButton.disabled = !project.isCompleted;
-
-    const investmentContainer = document.createElement('div');
-    investmentContainer.classList.add('lantern-investment-container');
-    investmentContainer.appendChild(decreaseButton);
-    investmentContainer.appendChild(increaseButton);
-    investmentContainer.appendChild(investButton);
-
-    lanternControls.appendChild(investmentContainer);
-
-    const capacityDisplay = document.createElement('p');
-    capacityDisplay.id = 'lantern-capacity';
-    lanternControls.appendChild(capacityDisplay);
-
-    const fluxDisplay = document.createElement('p');
-    fluxDisplay.id = 'lantern-flux';
-    lanternControls.appendChild(fluxDisplay);
-
-    projectItem.appendChild(lanternControls);
-
-    projectElements[project.name] = {
-      ...projectElements[project.name],
-      lanternDecrease: decreaseButton,
-      lanternIncrease: increaseButton,
-      lanternInvest: investButton,
-      lanternCapacity: capacityDisplay,
-      lanternFlux: fluxDisplay,
-      lanternAmountDisplay: amountDisplay,
-      lanternMultiply: multiplyButton,
-      lanternDivide: divideButton
-    };
-    updateLanternButtonTexts(project.name);
+  if (typeof project.renderUI === 'function') {
+    project.renderUI(projectItem);
   }
 
   if (project.cost && Object.keys(project.cost).length > 0) {
@@ -715,24 +593,8 @@ function updateProjectUI(projectName) {
   }
 }
 
-  // Update mirror-related calculations and text boxes
-  if (project.name === 'spaceMirrorFacility') {
-    const numMirrors = buildings['spaceMirror'].active;
-
-    const mirrorEffect = terraforming.calculateMirrorEffect();
-    const powerPerMirror = mirrorEffect.interceptedPower;
-    const powerPerMirrorArea = mirrorEffect.powerPerUnitArea;
-    const totalPower = powerPerMirror * numMirrors;
-    const totalPowerArea = powerPerMirrorArea * numMirrors;
-
-    const mirrorDetails = projectElements[project.name].mirrorDetails;
-    if (mirrorDetails) {
-      mirrorDetails.numMirrors.textContent = formatNumber(numMirrors, false, 2);
-      mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror, false, 2);
-      mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea, false, 2);
-      mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
-      mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea, false, 2);
-    }
+  if (typeof project.updateUI === 'function') {
+    project.updateUI();
   }
 
   if(project.attributes.resourceChoiceGainCost && project.oneTimeResourceGainsDisplay){
@@ -768,29 +630,6 @@ function updateProjectUI(projectName) {
     elements.autoStartCheckboxContainer.classList.add('hidden');
   }
 
-  if(project.name === 'hyperionLantern'){
-    const completed = project.isCompleted;
-    if(elements.lanternDecrease){
-      elements.lanternDecrease.disabled = !completed || terraforming.hyperionLantern.active <= 0;
-    }
-    if(elements.lanternIncrease){
-      elements.lanternIncrease.disabled = !completed || terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
-    }
-    if(elements.lanternInvest){
-      elements.lanternInvest.disabled = !completed;
-    }
-    if(elements.lanternCapacity){
-      const powerPerInvestment = project.attributes.powerPerInvestment || 0;
-      const activePower = terraforming.hyperionLantern.active * powerPerInvestment;
-      const maxPower = terraforming.hyperionLantern.investments * powerPerInvestment;
-      elements.lanternCapacity.textContent = `Active: ${formatNumber(activePower, false, 2)} W / Capacity: ${formatNumber(maxPower, false, 2)} W`;
-    }
-    if(elements.lanternFlux){
-      const flux = terraforming.calculateLanternFlux();
-      elements.lanternFlux.textContent = `Flux: ${formatNumber(flux, false, 2)} W/m²`;
-    }
-    updateLanternButtonTexts(project.name);
-  }
 
   // Check if the auto-start checkbox is checked and attempt to start the project automatically
   if (elements.autoStartCheckbox?.checked && !project.isActive && !project.isCompleted && project.canStart()) {
