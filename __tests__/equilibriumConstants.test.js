@@ -32,6 +32,8 @@ global.sublimationRateCO2 = sublimationRateCO2;
 global.buildings = { spaceMirror: { surfaceArea: 0, active: 0 } };
 
 const Terraforming = require('../terraforming.js');
+global.Terraforming = Terraforming;
+require('../debug-tools.js');
 
 function createResources(config) {
   const res = {};
