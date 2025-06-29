@@ -30,8 +30,6 @@ describe('ProjectManager autoAssign uses method', () => {
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager; this.Project = Project;', context);
     const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
     vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', context);
-    const shipUtils = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'spaceship.js'), 'utf8');
-    vm.runInContext(shipUtils + '; this.assignSpaceshipsToProject = assignSpaceshipsToProject;', context);
     context.projectManager = new context.ProjectManager();
     global.resources = context.resources;
   });

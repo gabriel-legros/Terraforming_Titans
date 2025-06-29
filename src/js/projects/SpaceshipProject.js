@@ -1,4 +1,11 @@
 class SpaceshipProject extends Project {
+  assignSpaceships(count) {
+    const availableSpaceships = Math.floor(resources.special.spaceships.value);
+    this.assignedSpaceships = this.assignedSpaceships || 0;
+    const adjustedCount = Math.max(-this.assignedSpaceships, Math.min(count, availableSpaceships));
+    this.assignedSpaceships += adjustedCount;
+    resources.special.spaceships.value -= adjustedCount;
+  }
   calculateSpaceshipCost() {
     const costPerShip = this.attributes.costPerShip;
     const totalCost = {};
@@ -32,20 +39,218 @@ class SpaceshipProject extends Project {
     return gainPerShip;
   }
 
+  updateCostAndGains(elements) {
+    if (elements.costPerShipElement && this.attributes.costPerShip) {
+      const costPerShip = this.calculateSpaceshipCost();
+      const costPerShipText = Object.entries(costPerShip)
+        .flatMap(([category, resourcesList]) =>
+          Object.entries(resourcesList)
+            .filter(([, adjustedCost]) => adjustedCost > 0)
+            .map(([resource, adjustedCost]) => {
+              const resourceDisplayName = resources[category][resource].displayName ||
+                resource.charAt(0).toUpperCase() + resource.slice(1);
+              return `${resourceDisplayName}: ${formatNumber(adjustedCost, true)}`;
+            })
+        )
+        .join(', ');
+      elements.costPerShipElement.textContent = `Cost per Ship: ${costPerShipText}`;
+    }
+
+    if (elements.totalCostElement && this.assignedSpaceships != null) {
+      const totalCost = this.calculateSpaceshipTotalCost();
+      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost);
+    }
+
+    if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
+      const gainPerShip = this.calculateSpaceshipGainPerShip();
+      const gainPerShipText = Object.entries(gainPerShip)
+        .flatMap(([category, resourcesList]) =>
+          Object.entries(resourcesList)
+            .filter(([, amount]) => amount > 0)
+            .map(([resource, amount]) => {
+              const resourceDisplayName = resources[category][resource].displayName ||
+                resource.charAt(0).toUpperCase() + resource.slice(1);
+              return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+            })
+        ).join(', ');
+      elements.resourceGainPerShipElement.textContent = `Gain per Ship: ${gainPerShipText}`;
+    }
+
+    if (elements.totalGainElement && this.assignedSpaceships != null) {
+      const totalGain = this.calculateSpaceshipTotalResourceGain();
+      elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain);
+    }
+  }
+
+  createSpaceshipAssignmentUI(container) {
+    const spaceshipAssignmentContainer = document.createElement('div');
+    spaceshipAssignmentContainer.classList.add('spaceship-assignment-container');
+
+    const spaceshipInfoContainer = document.createElement('div');
+    spaceshipInfoContainer.classList.add('spaceship-info-container');
+
+    const assignedSpaceshipsDisplay = document.createElement('p');
+    assignedSpaceshipsDisplay.id = `${this.name}-assigned-spaceships`;
+    assignedSpaceshipsDisplay.classList.add('assigned-spaceships-display');
+    assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: 0`;
+    spaceshipInfoContainer.appendChild(assignedSpaceshipsDisplay);
+
+    const availableSpaceshipsDisplay = document.createElement('span');
+    availableSpaceshipsDisplay.id = `${this.name}-available-spaceships`;
+    availableSpaceshipsDisplay.classList.add('available-spaceships-display');
+    availableSpaceshipsDisplay.textContent = `Available: ${Math.floor(resources.special.spaceships.value)}`;
+    spaceshipInfoContainer.appendChild(availableSpaceshipsDisplay);
+
+    spaceshipAssignmentContainer.appendChild(spaceshipInfoContainer);
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('buttons-container');
+
+    const buildCounts = ["-Max", -1000000, -100000, -10000, -1000, -100, -10, -1, 1, 10, 100, 1000, 10000, 100000, 1000000, "+Max"];
+    buildCounts.forEach((count) => {
+      const button = document.createElement('button');
+      button.textContent = typeof count === "string" ? count : (count > 0 ? `+${formatNumber(count, true)}` : `${formatNumber(count, true)}`);
+      button.addEventListener('click', () => {
+        let spaceshipCount;
+        if (count === "+Max") {
+          spaceshipCount = Math.floor(resources.special.spaceships.value);
+        } else if (count === "-Max") {
+          spaceshipCount = -this.assignedSpaceships;
+        } else {
+          spaceshipCount = count;
+        }
+        this.assignSpaceships(spaceshipCount);
+      });
+      buttonsContainer.appendChild(button);
+    });
+
+    spaceshipAssignmentContainer.appendChild(buttonsContainer);
+    container.appendChild(spaceshipAssignmentContainer);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      assignedSpaceshipsDisplay,
+      availableSpaceshipsDisplay,
+    };
+  }
+
+  createCostPerShipAndTotalCostUI(container) {
+    const costPerShipElement = document.createElement('p');
+    costPerShipElement.id = `${this.name}-cost-per-ship`;
+    costPerShipElement.classList.add('project-cost-per-ship');
+    costPerShipElement.textContent = `Cost per Ship: ...`;
+
+    const totalCostElement = document.createElement('span');
+    totalCostElement.id = `${this.name}-total-cost`;
+    totalCostElement.classList.add('project-total-cost');
+    totalCostElement.textContent = `Total Cost: ...`;
+
+    const costContainer = document.createElement('div');
+    costContainer.classList.add('cost-container');
+    costContainer.appendChild(costPerShipElement);
+    costContainer.appendChild(totalCostElement);
+
+    container.appendChild(costContainer);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      costPerShipElement,
+      totalCostElement,
+    };
+  }
+
+  createResourceGainPerShipAndTotalGainUI(container) {
+    const resourceGainPerShipElement = document.createElement('p');
+    resourceGainPerShipElement.id = `${this.name}-resource-gain-per-ship`;
+    resourceGainPerShipElement.classList.add('project-resource-gain-per-ship');
+    const initialGain = this.calculateSpaceshipGainPerShip();
+    const initialGainText = Object.entries(initialGain)
+      .flatMap(([category, resourcesList]) =>
+        Object.entries(resourcesList)
+          .filter(([, amount]) => amount > 0)
+          .map(([resource, amount]) => {
+            const resourceDisplayName = resources[category][resource].displayName ||
+              resource.charAt(0).toUpperCase() + resource.slice(1);
+            return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+          })
+      ).join(', ');
+    resourceGainPerShipElement.textContent = `Gain per Ship: ${initialGainText}`;
+
+    const totalGainElement = document.createElement('span');
+    totalGainElement.id = `${this.name}-total-resource-gain`;
+    totalGainElement.classList.add('project-total-resource-gain');
+    totalGainElement.textContent = formatTotalResourceGainDisplay(this.calculateSpaceshipTotalResourceGain());
+
+    const gainContainer = document.createElement('div');
+    gainContainer.classList.add('gain-container');
+    gainContainer.appendChild(resourceGainPerShipElement);
+    gainContainer.appendChild(totalGainElement);
+
+    container.appendChild(gainContainer);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      resourceGainPerShipElement,
+      totalGainElement,
+    };
+  }
+
+  createAutoAssignSpaceshipsCheckbox(checkboxRowContainer) {
+    const autoAssignCheckboxContainer = document.createElement('div');
+    autoAssignCheckboxContainer.classList.add('checkbox-container');
+
+    const autoAssignCheckbox = document.createElement('input');
+    autoAssignCheckbox.type = 'checkbox';
+    autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
+    autoAssignCheckbox.id = `${this.name}-auto-assign-spaceships`;
+    autoAssignCheckbox.classList.add('auto-assign-checkbox');
+
+    autoAssignCheckbox.addEventListener('change', (event) => {
+      if (event.target.checked) {
+        this.autoAssignSpaceships = true;
+        Object.keys(projectElements).forEach(otherProjectName => {
+          if (otherProjectName !== this.name && projectElements[otherProjectName].autoAssignCheckbox) {
+            const otherCheckbox = projectElements[otherProjectName].autoAssignCheckbox;
+            if (otherCheckbox.checked) {
+              otherCheckbox.checked = false;
+              otherCheckbox.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+      } else {
+        this.autoAssignSpaceships = false;
+      }
+    });
+
+    const autoAssignLabel = document.createElement('label');
+    autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
+    autoAssignLabel.textContent = 'Auto assign spaceships';
+
+    autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
+    autoAssignCheckboxContainer.appendChild(autoAssignLabel);
+    checkboxRowContainer.appendChild(autoAssignCheckboxContainer);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      autoAssignCheckbox,
+      autoAssignCheckboxContainer,
+    };
+  }
+
   renderUI(container) {
     if (this.attributes.spaceMining || this.attributes.spaceExport) {
-      createSpaceshipAssignmentUI(this, container);
+      this.createSpaceshipAssignmentUI(container);
       if (this.attributes.costPerShip) {
-        createCostPerShipAndTotalCostUI(this, container);
+        this.createCostPerShipAndTotalCostUI(container);
       }
       if (this.attributes.resourceGainPerShip) {
-        createResourceGainPerShipAndTotalGainUI(this, container);
+        this.createResourceGainPerShipAndTotalGainUI(container);
       }
       const row = projectElements[this.name]?.checkboxRowContainer;
       if (row && !projectElements[this.name].autoAssignCheckbox) {
-        createAutoAssignSpaceshipsCheckbox(this, row);
+        this.createAutoAssignSpaceshipsCheckbox(row);
       }
-      updateSpaceshipProjectCostAndGains(this, projectElements[this.name]);
+      this.updateCostAndGains(projectElements[this.name]);
     }
   }
 
@@ -55,18 +260,14 @@ class SpaceshipProject extends Project {
     if (elements.autoAssignCheckbox) {
       elements.autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
     }
-    updateSpaceshipProjectCostAndGains(this, elements);
+    this.updateCostAndGains(elements);
   }
 
   autoAssign() {
     if (!this.autoAssignSpaceships) return;
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
     if (availableSpaceships > 0) {
-      assignSpaceshipsToProject(
-        this,
-        availableSpaceships,
-        document.getElementById(`${this.name}-assigned-spaceships`)
-      );
+      this.assignSpaceships(availableSpaceships);
     }
   }
 
