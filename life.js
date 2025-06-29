@@ -736,7 +736,7 @@ class LifeManager extends EffectableEntity {
           let burialRatePerDay = burialValue * 0.0001;
           // If CO2 has run out, slow burial drastically as life recycles more efficiently
           const co2Amount = resources.atmospheric['carbonDioxide']?.value || 0;
-          if (co2Amount <= 0) {
+          if (co2Amount <= 1e-4) {
               burialRatePerDay /= 10000; // 10,000 times slower without CO2
           }
 
