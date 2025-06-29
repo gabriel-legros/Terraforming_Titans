@@ -4,8 +4,8 @@ const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_m
 const vm = require('vm');
 const numbers = require('../src/js/numbers.js');
 
-describe('Hyperion Lantern controls disabled before completion', () => {
-  test('buttons disabled until project completed', () => {
+describe('Hyperion Lantern button order', () => {
+  test('increase/decrease below capacity display', () => {
     const dom = new JSDOM(`<!DOCTYPE html>
       <div class="projects-subtab-content-wrapper">
         <div id="infrastructure-projects-list" class="projects-list"></div>
@@ -16,7 +16,7 @@ describe('Hyperion Lantern controls disabled before completion', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.formatBigInteger = numbers.formatBigInteger;
     ctx.projectElements = {};
-    ctx.resources = { colony: { components: { value: 0 }, electronics: { value: 0 }, glass: { value: 0 } }, special: { spaceships: { value: 0 } } };
+    ctx.resources = { colony: { components: { value: Infinity }, electronics: { value: Infinity }, glass: { value: Infinity } }, special: { spaceships: { value: 0 } } };
     ctx.buildings = { spaceMirror: { active: 0 } };
     ctx.terraforming = { calculateLanternFlux: () => 0 };
 
@@ -33,7 +33,7 @@ describe('Hyperion Lantern controls disabled before completion', () => {
 
     ctx.projectManager = new ctx.ProjectManager();
     ctx.projectManager.initializeProjects({ hyperionLantern: ctx.projectParameters.hyperionLantern });
-    ctx.projectManager.projects.hyperionLantern.isCompleted = false;
+    ctx.projectManager.projects.hyperionLantern.isCompleted = true;
     ctx.projectManager.isBooleanFlagSet = () => false;
 
     ctx.initializeProjectsUI();
@@ -42,8 +42,10 @@ describe('Hyperion Lantern controls disabled before completion', () => {
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
     const elements = ctx.projectElements.hyperionLantern;
-    expect(elements.lanternDecrease.disabled).toBe(true);
-    expect(elements.lanternIncrease.disabled).toBe(true);
-    expect(elements.lanternInvest.disabled).toBe(true);
+    const container = elements.lanternCapacity.parentElement;
+    const children = Array.from(container.children);
+    const capacityIndex = children.indexOf(elements.lanternCapacity);
+    const toggleIndex = children.indexOf(elements.lanternDecrease.parentElement);
+    expect(toggleIndex).toBeGreaterThan(capacityIndex);
   });
 });

@@ -16,7 +16,7 @@ describe('Hyperion Lantern amount controls', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.formatBigInteger = numbers.formatBigInteger;
     ctx.projectElements = {};
-    ctx.resources = { colony: { components: { value: Infinity }, electronics: { value: Infinity } }, special: { spaceships: { value: 0 } } };
+    ctx.resources = { colony: { components: { value: Infinity }, electronics: { value: Infinity }, glass: { value: Infinity } }, special: { spaceships: { value: 0 } } };
     ctx.buildings = { spaceMirror: { active: 0 } };
     ctx.terraforming = { calculateLanternFlux: () => 0 };
 

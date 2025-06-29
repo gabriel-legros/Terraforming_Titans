@@ -13,12 +13,12 @@ describe('Hyperion Lantern project', () => {
     const project = ctx.projectParameters.hyperionLantern;
     expect(project).toBeDefined();
     expect(project.duration).toBe(300000);
-    expect(project.cost.colony.components).toBe(1e9);
-    expect(project.cost.colony.electronics).toBe(1e9);
-    expect(project.cost.colony.metal).toBe(1e9);
-    expect(project.cost.colony.glass).toBe(1e9);
-    expect(project.attributes.investmentCost.colony.components).toBe(1e9);
-    expect(project.attributes.investmentCost.colony.electronics).toBe(1e9);
+    expect(project.cost.colony.components).toBe(1e6);
+    expect(project.cost.colony.electronics).toBe(1e6);
+    expect(project.cost.colony.metal).toBe(1e6);
+    expect(project.cost.colony.glass).toBe(1e6);
+    expect(project.attributes.investmentCost.colony.components).toBe(1e6);
+    expect(project.attributes.investmentCost.colony.electronics).toBe(1e6);
     expect(project.attributes.powerPerInvestment).toBe(1e15);
   });
 });

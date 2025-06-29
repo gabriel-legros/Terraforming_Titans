@@ -4,8 +4,8 @@ const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_m
 const vm = require('vm');
 const numbers = require('../src/js/numbers.js');
 
-describe('Hyperion Lantern controls disabled before completion', () => {
-  test('buttons disabled until project completed', () => {
+describe('Hyperion Lantern invest button', () => {
+  test('shows glass cost and color reflects affordability', () => {
     const dom = new JSDOM(`<!DOCTYPE html>
       <div class="projects-subtab-content-wrapper">
         <div id="infrastructure-projects-list" class="projects-list"></div>
@@ -22,6 +22,8 @@ describe('Hyperion Lantern controls disabled before completion', () => {
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
+    const buildCountCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildCount.js'), 'utf8');
+    vm.runInContext(buildCountCode + '; this.multiplyByTen = multiplyByTen; this.divideByTen = divideByTen;', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager;', ctx);
     const lanternSubclass = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'HyperionLanternProject.js'), 'utf8');
@@ -33,7 +35,7 @@ describe('Hyperion Lantern controls disabled before completion', () => {
 
     ctx.projectManager = new ctx.ProjectManager();
     ctx.projectManager.initializeProjects({ hyperionLantern: ctx.projectParameters.hyperionLantern });
-    ctx.projectManager.projects.hyperionLantern.isCompleted = false;
+    ctx.projectManager.projects.hyperionLantern.isCompleted = true;
     ctx.projectManager.isBooleanFlagSet = () => false;
 
     ctx.initializeProjectsUI();
@@ -41,9 +43,14 @@ describe('Hyperion Lantern controls disabled before completion', () => {
     ctx.createProjectItem(ctx.projectManager.projects.hyperionLantern);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    const elements = ctx.projectElements.hyperionLantern;
-    expect(elements.lanternDecrease.disabled).toBe(true);
-    expect(elements.lanternIncrease.disabled).toBe(true);
-    expect(elements.lanternInvest.disabled).toBe(true);
+    const investBtn = ctx.projectElements.hyperionLantern.lanternInvest;
+    expect(investBtn.textContent).toMatch(/Glass/);
+    expect(investBtn.style.color).toBe('red');
+
+    ctx.resources.colony.components.value = 2e6;
+    ctx.resources.colony.electronics.value = 2e6;
+    ctx.resources.colony.glass.value = 2000;
+    ctx.updateProjectUI('hyperionLantern');
+    expect(investBtn.style.color).toBe('inherit');
   });
 });

@@ -397,10 +397,10 @@ const projectParameters = {
     category: "infrastructure",
     cost: {
       colony: {
-        metal: 1e9,
-        glass: 1e9,
-        electronics: 1e9,
-        components: 1e9
+        metal: 1e6,
+        glass: 1e6,
+        electronics: 1e6,
+        components: 1e6
       }
     },
     duration: 300000,
@@ -419,9 +419,9 @@ const projectParameters = {
       // Cost to add additional power modules to the lantern
       investmentCost: {
         colony: {
-          components: 1e9,
-          electronics: 1e9,
-          glass: 1e6
+          components: 1e6,
+          electronics: 1e6,
+          glass: 1000
         }
       },
       // Power output provided by each investment (in watts)
