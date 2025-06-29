@@ -14,4 +14,19 @@ describe('Cargo Rocket project', () => {
     expect(project.repeatable).toBe(true);
     expect(project.attributes.resourceChoiceGainCost).toBeDefined();
   });
+
+  test('CargoRocketProject defines resource choice methods', () => {
+    const ctx = { console };
+    vm.createContext(ctx);
+
+    const effCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
+    vm.runInContext(effCode + '; this.EffectableEntity = EffectableEntity;', ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'CargoRocketProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.CargoRocketProject = CargoRocketProject;', ctx);
+
+    expect(typeof ctx.CargoRocketProject.prototype.getResourceChoiceGainCost).toBe('function');
+    expect(typeof ctx.CargoRocketProject.prototype.applyResourceChoiceGain).toBe('function');
+  });
 });
