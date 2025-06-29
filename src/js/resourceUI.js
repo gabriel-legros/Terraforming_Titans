@@ -321,7 +321,7 @@ function updateResourceRateDisplay(resource){
     if (typeof autobuildCostTracker !== 'undefined') {
       const cost = autobuildCostTracker.getLastSecondCost(resource.category, resource.name);
       if (cost > 0) {
-        tooltipContent += `<br><strong>Autobuild Cost (1s):</strong> ${formatNumber(cost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+        tooltipContent += `<br><strong>Autobuild Cost (last 1s):</strong> ${formatNumber(cost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
       }
     }
 
