@@ -239,29 +239,6 @@ class Project extends EffectableEntity {
     return effectiveResourceGain;
   }
 
-  getResourceChoiceGainCost() {
-    // Deduct funding for selected resources if applicable
-    if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalFundingCost = 0;
-      this.pendingResourceGains = [];  // Track resources that will be gained later
-      this.selectedResources.forEach(({ category, resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
-        totalFundingCost += pricePerUnit * quantity;
-        this.pendingResourceGains.push({ category, resource, quantity });
-        });
-      return totalFundingCost;
-    }
-      return 0;
-  }
-
-  applyResourceChoiceGain() {
-    // Apply resource gain based on the selected resources and their quantities
-    this.pendingResourceGains.forEach(({ category, resource, quantity }) => {
-      resources[category][resource].increase(quantity);
-      console.log(`Increased ${resource} by ${quantity}`);
-    });
-    this.pendingResourceGains = false;
-  }
 
   // New method to handle spaceship resource gain application
   applySpaceshipResourceGain() {
