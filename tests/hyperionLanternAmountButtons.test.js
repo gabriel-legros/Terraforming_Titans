@@ -18,7 +18,7 @@ describe('Hyperion Lantern amount controls', () => {
     ctx.projectElements = {};
     ctx.resources = { colony: { components: { value: Infinity }, electronics: { value: Infinity } }, special: { spaceships: { value: 0 } } };
     ctx.buildings = { spaceMirror: { active: 0 } };
-    ctx.terraforming = { hyperionLantern: { built: true, investments: 10, active: 0 } };
+    ctx.terraforming = { calculateLanternFlux: () => 0 };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
