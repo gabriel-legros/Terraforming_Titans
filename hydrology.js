@@ -51,7 +51,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
             coveredArea = zoneArea * (coverage > 0 ? coverage : 1);
         }
 
-        const totalSubstance = (zonalData[zone][liquidProp] || 0) + totalIceAvail[zone];
+        const totalSubstance = (zonalData[zone][liquidProp] || 0) + (zonalData[zone][iceProp] || 0);
         levels[zone] = coveredArea > 0 ? totalSubstance / coveredArea : 0;
     });
 
