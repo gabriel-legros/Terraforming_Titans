@@ -11,8 +11,12 @@ items from parameter files.
 
 Planet definitions and default resources live in **planet-parameters.js**.
 Weather and surface modelling are implemented in **terraforming.js** with helper
-calculations from **physics.js**, **hydrology.js**, **water-cycle.js** and
-**dry-ice-cycle.js**.
+calculations from **physics.js**, **hydrology.js**, **water-cycle.js**,
+**dry-ice-cycle.js** and **hydrocarbon-cycle.js**.
+
+The hydrocarbon cycle models methane in its liquid, ice and vapor forms.  It
+uses Penman-based equations for evaporation and sublimation alongside flow and
+melting logic in **hydrology.js**.
 
 Economy and colony management rely on **resource.js**, **building.js** and
 **colony.js** plus corresponding UI modules.  Story progression is configured in
