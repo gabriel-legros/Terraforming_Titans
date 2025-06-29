@@ -228,18 +228,6 @@ class Project extends EffectableEntity {
   }
 
 
-  // New method to handle spaceship resource gain application
-  applySpaceshipResourceGain() {
-    this.pendingResourceGains.forEach(({ category, resource, quantity }) => {
-      if (resources[category] && resources[category][resource]) {
-        resources[category][resource].increase(quantity);
-        console.log(`Gained ${quantity} ${resource} in category ${category} from spaceship assignments.`);
-      }
-    });
-    this.pendingResourceGains = []; // Clear pending gains after applying them
-  }
-
-
   applyCompletionEffect() {
     this.attributes.completionEffect.forEach((effect) => {
       const scaledEffect = { ...effect };
