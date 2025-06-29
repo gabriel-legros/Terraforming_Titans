@@ -122,6 +122,7 @@ function createProjectItem(project) {
         updateProjectUI(project.name);
       }
     });
+    decreaseButton.disabled = !project.isCompleted;
 
     const increaseButton = document.createElement('button');
     increaseButton.textContent = '+1';
@@ -131,6 +132,7 @@ function createProjectItem(project) {
         updateProjectUI(project.name);
       }
     });
+    increaseButton.disabled = !project.isCompleted;
 
     const investButton = document.createElement('button');
     investButton.textContent = 'Invest 1B Components & Electronics';
@@ -142,6 +144,7 @@ function createProjectItem(project) {
         updateProjectUI(project.name);
       }
     });
+    investButton.disabled = !project.isCompleted;
 
     const investmentContainer = document.createElement('div');
     investmentContainer.classList.add('lantern-investment-container');
@@ -161,6 +164,7 @@ function createProjectItem(project) {
       ...projectElements[project.name],
       lanternDecrease: decreaseButton,
       lanternIncrease: increaseButton,
+      lanternInvest: investButton,
       lanternCapacity: capacityDisplay
     };
   }
@@ -721,11 +725,15 @@ function updateProjectUI(projectName) {
   }
 
   if(project.name === 'hyperionLantern'){
+    const completed = project.isCompleted;
     if(elements.lanternDecrease){
-      elements.lanternDecrease.disabled = terraforming.hyperionLantern.active <= 0;
+      elements.lanternDecrease.disabled = !completed || terraforming.hyperionLantern.active <= 0;
     }
     if(elements.lanternIncrease){
-      elements.lanternIncrease.disabled = terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
+      elements.lanternIncrease.disabled = !completed || terraforming.hyperionLantern.active >= terraforming.hyperionLantern.investments;
+    }
+    if(elements.lanternInvest){
+      elements.lanternInvest.disabled = !completed;
     }
     if(elements.lanternCapacity){
       const activePower = terraforming.hyperionLantern.active * 1e15;
