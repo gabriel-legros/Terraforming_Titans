@@ -187,26 +187,28 @@ function calculateMethaneCondensationRateFactor({
     nightTemperature
 }) {
     const freezingPointMethane = 90.7; // K
+    const transitionRange = 2.0; // K range over which liquid transitions to ice
 
     const calculatePotential = (temp) => {
-        if (zoneArea <= 0 || typeof temp !== 'number' || methaneVaporPressure <= 0) {
-            return { liquid: 0, ice: 0 };
-        }
+        let liquid = 0, ice = 0;
+        if (zoneArea > 0 && typeof temp === 'number' && methaneVaporPressure > 0) {
+            const saturationPressure = calculateSaturationPressureMethane(temp);
+            if (methaneVaporPressure > saturationPressure) {
+                const excessPressure = methaneVaporPressure - saturationPressure;
+                const baseRate = (excessPressure / 1000) * zoneArea / 86400; // tons/s
+                if (!isNaN(baseRate) && baseRate > 0) {
+                    const diff = freezingPointMethane - temp;
+                    const maxDiff = 10.0;
+                    const intensityScale = temp < freezingPointMethane ? Math.min(diff / maxDiff, 1.0) : 1.0;
+                    const rate = baseRate * intensityScale;
 
-        const saturationPressure = calculateSaturationPressureMethane(temp);
-        if (methaneVaporPressure <= saturationPressure) {
-            return { liquid: 0, ice: 0 };
+                    const mix = Math.min(Math.max((temp - (freezingPointMethane - transitionRange)) / (2 * transitionRange), 0), 1);
+                    liquid = rate * mix;
+                    ice = rate - liquid;
+                }
+            }
         }
-
-        const excessPressure = methaneVaporPressure - saturationPressure;
-        // Simplified model: condensation rate is proportional to excess pressure
-        const baseRate = (excessPressure / 1000) * zoneArea / 86400; // tons/s
-
-        if (temp < freezingPointMethane) {
-            return { liquid: 0, ice: baseRate }; // Condenses as ice
-        } else {
-            return { liquid: baseRate, ice: 0 }; // Condenses as liquid
-        }
+        return { liquid, ice };
     };
 
     const nightPotential = calculatePotential(nightTemperature);
