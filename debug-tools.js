@@ -1,4 +1,41 @@
 (function(){
+  const isNode = typeof module !== 'undefined' && module.exports;
+  const Terraforming = globalThis.Terraforming;
+  let calculateEvaporationSublimationRates,
+      calculatePrecipitationRateFactor,
+      calculateZonalCoverage,
+      calculateCO2CondensationRateFactor,
+      calculateMethaneCondensationRateFactor,
+      calculateMethaneEvaporationRate,
+      getZonePercentage,
+      getZoneRatio;
+  if (isNode) {
+    const utils = require('./terraforming-utils.js');
+    calculateEvaporationSublimationRates = utils.calculateEvaporationSublimationRates;
+    calculatePrecipitationRateFactor = utils.calculatePrecipitationRateFactor;
+    calculateZonalCoverage = utils.calculateZonalCoverage;
+
+    const dryIceCycle = require('./dry-ice-cycle.js');
+    calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
+
+    const hydrocarbonCycle = require('./hydrocarbon-cycle.js');
+    calculateMethaneCondensationRateFactor = hydrocarbonCycle.calculateMethaneCondensationRateFactor;
+    calculateMethaneEvaporationRate = hydrocarbonCycle.calculateMethaneEvaporationRate;
+
+    const zonesMod = require('./zones.js');
+    getZonePercentage = zonesMod.getZonePercentage;
+    getZoneRatio = zonesMod.getZoneRatio;
+    globalThis.ZONES = zonesMod.ZONES;
+  } else {
+    calculateEvaporationSublimationRates = globalThis.calculateEvaporationSublimationRates;
+    calculatePrecipitationRateFactor = globalThis.calculatePrecipitationRateFactor;
+    calculateZonalCoverage = globalThis.calculateZonalCoverage;
+    calculateCO2CondensationRateFactor = globalThis.calculateCO2CondensationRateFactor;
+    calculateMethaneCondensationRateFactor = globalThis.calculateMethaneCondensationRateFactor;
+    calculateMethaneEvaporationRate = globalThis.calculateMethaneEvaporationRate;
+    getZonePercentage = globalThis.getZonePercentage;
+    getZoneRatio = globalThis.getZoneRatio;
+  }
   function captureValues() {
     const globalVals = {
       ice: resources.surface.ice?.value || 0,
@@ -135,10 +172,157 @@
     return prev;
   }
 
+  function calculateEquilibriumConstants() {
+    if (!this.initialValuesCalculated) {
+      console.error("Cannot calculate equilibrium constants before initial values are set.");
+      return;
+    }
+
+    const gravity = this.celestialParameters.gravity;
+    let initialTotalPressurePa = 0;
+    let initialWaterPressurePa = 0;
+    let initialCo2PressurePa = 0;
+    let initialMethanePressurePa = 0;
+    for (const gas in resources.atmospheric) {
+      const amount = resources.atmospheric[gas]?.value || 0;
+      const pressure = calculateAtmosphericPressure(amount, gravity, this.celestialParameters.radius);
+      initialTotalPressurePa += pressure;
+      if (gas === 'atmosphericWater') initialWaterPressurePa = pressure;
+      if (gas === 'carbonDioxide') initialCo2PressurePa = pressure;
+      if (gas === 'atmosphericMethane') initialMethanePressurePa = pressure;
+    }
+    const solarFlux = this.luminosity.modifiedSolarFlux;
+
+    let initialTotalWaterEvapSublRate = 0;
+    let initialTotalCO2SublRate = 0;
+    let initialTotalMethaneEvapRate = 0;
+    let potentialPrecipitationRateFactor = 0;
+    let potentialCondensationRateFactor = 0;
+    let potentialMethaneCondensationRateFactor = 0;
+
+    const zones = ZONES;
+    for (const zone of zones) {
+      const dayTemp = this.temperature.zones[zone].day;
+      const nightTemp = this.temperature.zones[zone].night;
+      const zonalSolarFlux = solarFlux * getZoneRatio(zone);
+      const evapSublRates = calculateEvaporationSublimationRates(
+        this,
+        zone,
+        dayTemp,
+        nightTemp,
+        initialWaterPressurePa,
+        initialCo2PressurePa,
+        initialTotalPressurePa,
+        zonalSolarFlux
+      );
+      initialTotalWaterEvapSublRate +=
+        evapSublRates.evaporationRate + evapSublRates.waterSublimationRate;
+      initialTotalCO2SublRate += evapSublRates.co2SublimationRate;
+
+      const precipRateFactors = calculatePrecipitationRateFactor(
+        this,
+        zone,
+        initialWaterPressurePa,
+        gravity,
+        dayTemp,
+        nightTemp
+      );
+      potentialPrecipitationRateFactor +=
+        precipRateFactors.rainfallRateFactor + precipRateFactors.snowfallRateFactor;
+
+      const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+      const co2CondRateFactor = calculateCO2CondensationRateFactor({
+        zoneArea,
+        co2VaporPressure: initialCo2PressurePa,
+        dayTemperature: dayTemp,
+        nightTemperature: nightTemp
+      });
+      potentialCondensationRateFactor += co2CondRateFactor;
+
+      const liquidMethaneCoverage = calculateZonalCoverage(this, zone, 'liquidMethane');
+      const methaneEvaporationRateValue = calculateMethaneEvaporationRate({
+        zoneArea,
+        liquidMethaneCoverage,
+        dayTemperature: dayTemp,
+        nightTemperature: nightTemp,
+        methaneVaporPressure: initialMethanePressurePa,
+        avgAtmPressure: initialTotalPressurePa,
+        zonalSolarFlux
+      });
+      initialTotalMethaneEvapRate += methaneEvaporationRateValue;
+
+      const methaneCondRateFactors = calculateMethaneCondensationRateFactor({
+        zoneArea,
+        methaneVaporPressure: initialMethanePressurePa,
+        dayTemperature: dayTemp,
+        nightTemperature: nightTemp
+      });
+      potentialMethaneCondensationRateFactor +=
+        methaneCondRateFactors.liquidRateFactor + methaneCondRateFactors.iceRateFactor;
+    }
+
+    if (potentialPrecipitationRateFactor > 1e-12) {
+      this.equilibriumPrecipitationMultiplier =
+        initialTotalWaterEvapSublRate / potentialPrecipitationRateFactor;
+    } else if (initialTotalWaterEvapSublRate < 1e-12) {
+      this.equilibriumPrecipitationMultiplier = 0.0001;
+    } else {
+      console.warn(
+        'Initial state has upward water flux but no potential precipitation. Using default multiplier.'
+      );
+      this.equilibriumPrecipitationMultiplier = 0.0001;
+    }
+
+    const defaultCondensationParameter = 1.7699e-7;
+    if (potentialCondensationRateFactor > 1e-12) {
+      this.equilibriumCondensationParameter =
+        initialTotalCO2SublRate / potentialCondensationRateFactor;
+    } else if (initialTotalCO2SublRate < 1e-12) {
+      this.equilibriumCondensationParameter = defaultCondensationParameter;
+    } else {
+      console.warn(
+        'Initial state has upward CO2 flux but no potential condensation. Using default parameter.'
+      );
+      this.equilibriumCondensationParameter = defaultCondensationParameter;
+    }
+
+    const defaultMethaneCondensationParameter = 0.1;
+    if (potentialMethaneCondensationRateFactor > 1e-12) {
+      this.equilibriumMethaneCondensationParameter =
+        initialTotalMethaneEvapRate / potentialMethaneCondensationRateFactor;
+    } else if (initialTotalMethaneEvapRate < 1e-12) {
+      this.equilibriumMethaneCondensationParameter =
+        defaultMethaneCondensationParameter;
+    } else {
+      console.warn(
+        'Initial state has upward Methane flux but no potential condensation. Using default parameter.'
+      );
+      this.equilibriumMethaneCondensationParameter =
+        defaultMethaneCondensationParameter;
+    }
+
+    console.log(
+      `Calculated Equilibrium Precipitation Multiplier (Rate-Based): ${this.equilibriumPrecipitationMultiplier}`
+    );
+    console.log(
+      `Calculated Equilibrium Condensation Parameter (Rate-Based): ${this.equilibriumCondensationParameter}`
+    );
+    console.log(
+      `Calculated Equilibrium Methane Condensation Parameter (Rate-Based): ${this.equilibriumMethaneCondensationParameter}`
+    );
+  }
+
+  if (typeof Terraforming !== 'undefined') {
+    Terraforming.prototype.calculateEquilibriumConstants = calculateEquilibriumConstants;
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, calculateEquilibriumConstants };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
+    if (typeof Terraforming !== 'undefined') {
+      globalThis.calculateEquilibriumConstants = calculateEquilibriumConstants;
+    }
   }
 })();
