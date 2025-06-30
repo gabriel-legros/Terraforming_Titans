@@ -319,9 +319,21 @@ function updateResourceRateDisplay(resource){
     }
 
     if (typeof autobuildCostTracker !== 'undefined') {
-      const cost = autobuildCostTracker.getLastSecondCost(resource.category, resource.name);
-      if (cost > 0) {
-        tooltipContent += `<br><strong>Autobuild Cost (last 1s):</strong> ${formatNumber(cost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+      const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
+      if (avgCost > 0) {
+        tooltipContent += `<br><strong>Autobuild Cost (avg 10s):</strong> ${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+        const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
+        if (breakdown.length > 0) {
+          tooltipContent += '<div style="display: table; width: 100%;">';
+          breakdown.forEach(([building, cost]) => {
+            tooltipContent += `
+          <div style="display: table-row;">
+            <div style="display: table-cell; text-align: left; padding-right: 10px;">${building}</div>
+            <div style="display: table-cell; text-align: right;">${formatNumber(cost, false, 2)}/s</div>
+          </div>`;
+          });
+          tooltipContent += '</div>';
+        }
       }
     }
 

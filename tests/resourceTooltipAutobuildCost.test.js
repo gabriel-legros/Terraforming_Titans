@@ -7,7 +7,7 @@ const vm = require('vm');
 const numbers = require('../src/js/numbers.js');
 
 describe('resource tooltip autobuild cost', () => {
-  test('shows last second autobuild cost', () => {
+  test('shows averaged autobuild cost with breakdown', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="resources-container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.formatNumber = numbers.formatNumber;
@@ -35,7 +35,7 @@ describe('resource tooltip autobuild cost', () => {
     };
 
     ctx.createResourceDisplay({ colony: { metal: resource } });
-    ctx.autobuildCostTracker.recordCost({ colony: { metal: 5 } });
+    ctx.autobuildCostTracker.recordCost('Habitat', { colony: { metal: 5 } });
     ctx.autobuildCostTracker.update(1000);
 
     ctx.updateResourceRateDisplay(resource);
@@ -43,5 +43,6 @@ describe('resource tooltip autobuild cost', () => {
     const html = dom.window.document.getElementById('metal-tooltip').innerHTML;
     expect(html).toContain('Autobuild Cost');
     expect(html).toContain(numbers.formatNumber(5, false, 2));
+    expect(html).toContain('Habitat');
   });
 });
