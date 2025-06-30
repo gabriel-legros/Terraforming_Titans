@@ -1,5 +1,6 @@
 #Instructions
 All imports and exports need to be done with the fact this game will be run in a browser from index.html in mind.
+- Story projects added in **progress-data.js** must be placed close to the chapter where they unlock.
 
 #Overview of code
 This repository hosts a browser‑based incremental game written in JavaScript.
