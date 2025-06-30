@@ -18,13 +18,13 @@ progressData = {
                 pendingResourceGains: [{ category: 'colony', resource: 'metal', quantity: 1000 }, {category: 'colony', resource: 'food', quantity : 500}, { category: 'colony', resource: 'components', quantity: 200 }, {category: 'colony',  resource: 'electronics', quantity: 100 }]
             }
         ],
-        nextChapter: "chapter1",
         rewardDelay: 500  // Delay between rewards in milliseconds
       },
       {
         id: "chapter1",
         type: "journal",
         narrative: "Loading colony resources interface...",
+        prerequisites: ["chapter0.1"],
         objectives: [
         ],
         reward: [
@@ -101,13 +101,13 @@ progressData = {
               type: 'enable'
             }
           ],
-        nextChapter: "chapter1.1",
         rewardDelay: 500  // Delay between rewards in milliseconds
       },
       {
         id: "chapter1.1",
         type: "journal",
         narrative: "Loading surface resources interface...",
+        prerequisites: ["chapter1"],
         objectives: [
         ],
         reward: [   {
@@ -122,13 +122,13 @@ progressData = {
             targetId: 'ice',
             type: 'enable'
           },
-        ],
-        nextChapter: "chapter1.2"
+        ]
       },
       {
         id: "chapter1.2",
         type: "journal",
         narrative: "Loading underground resources interface...",
+        prerequisites: ["chapter1.1"],
         objectives: [
         ],
         reward: [     {
@@ -137,13 +137,13 @@ progressData = {
             targetId: 'ore',
             type: 'enable'
           }
-        ],
-        nextChapter: "chapter1.3"
+        ]
       },
       {
         id: "chapter1.3",
         type: "journal",
         narrative: "Loading special projects interface...",
+        prerequisites: ["chapter1.2"],
         objectives: [
         ],
         reward: [     {
@@ -157,13 +157,13 @@ progressData = {
             type: 'activateTab',
             onLoad : false
           }
-        ],
-        nextChapter: "chapter1.3b"
+        ]
       },
       {
         id: "chapter1.3b",
         type: "journal",
         narrative: "Awaiting resource payload from Earth...",
+        prerequisites: ["chapter1.3"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -172,13 +172,13 @@ progressData = {
         }
         ],
         reward: [
-        ],
-        nextChapter: "chapter1.3c"
+        ]
       },
       {
         id: "chapter1.3c",
         type: "journal",
         narrative: "Loading construction interface...",
+        prerequisites: ["chapter1.3b"],
         objectives: [
         ],
         reward: [     {
@@ -186,13 +186,13 @@ progressData = {
           targetId: 'buildings-tab',
           type: 'enable'
         }
-      ],
-        nextChapter: "chapter1.4"
+      ]
       },
       {
         id: "chapter1.4",
         type: "journal",
         narrative: "Integrating building categories...",
+        prerequisites: ["chapter1.3c"],
         objectives: [
         ],
         reward: [ {
@@ -200,23 +200,23 @@ progressData = {
             targetId : 'building-container',
             type: 'enableContent'
         }
-        ],
-        nextChapter: "chapter1.5"
+        ]
       },
       {
         id: "chapter1.5",
         type: "journal",
         narrative: "Integrating building blueprints...",
+        prerequisites: ["chapter1.4"],
         objectives: [
         ],
         reward: [
-        ],
-        nextChapter: "chapter1.6"
+        ]
       },
       {
         id: "chapter1.6",
         type: "journal",
         narrative: "Processing blueprint: oreMine.btb...",
+        prerequisites: ["chapter1.5"],
         objectives: [
         ],
         reward: [{
@@ -224,13 +224,13 @@ progressData = {
             targetId: 'oreMine',
             type: 'enable'
         }
-        ],
-        nextChapter: "chapter1.7"
+        ]
       },
       {
         id: "chapter1.7",
         type: "journal",
         narrative: "Processing blueprint: windTurbine.btb...",
+        prerequisites: ["chapter1.6"],
         objectives: [
         ],
         reward: [{
@@ -238,13 +238,13 @@ progressData = {
             targetId: 'windTurbine',
             type: 'enable'
         }
-        ],
-        nextChapter: "chapter1.8"
+        ]
       },
       {
         id: "chapter1.8",
         type: "journal",
         narrative: "Processing blueprint: battery.btb...",
+        prerequisites: ["chapter1.7"],
         objectives: [
         ],
         reward: [{
@@ -252,13 +252,13 @@ progressData = {
             targetId: 'battery',
             type: 'enable'
         }
-        ],
-        nextChapter: "chapter1.9"
+        ]
       },
       {
         id: "chapter1.9",
         type: "journal",
         narrative: "Processing blueprint: storageDepot.btb...",
+        prerequisites: ["chapter1.8"],
         objectives: [
         ],
         reward: [{
@@ -266,13 +266,13 @@ progressData = {
             targetId: 'storageDepot',
             type: 'enable'
         }
-        ],
-        nextChapter: "chapter1.11"
+        ]
       },
       {
         id: "chapter1.11",
         type: "journal",
         narrative: "Objective: Construct an Ore Mine to initiate mineral extraction.",
+        prerequisites: ["chapter1.9"],
         objectives: [{
             type: 'building',
             buildingName: 'oreMine',
@@ -280,13 +280,13 @@ progressData = {
         }
         ],
         reward: [
-        ],
-        nextChapter: "chapter1.12"
+        ]
       },
       {
         id: "chapter1.12",
         type: "journal",
         narrative: "Power requirement detected for Ore Mine. Objective: Construct three Wind Turbines.",
+        prerequisites: ["chapter1.11"],
         objectives: [{
             type: 'building',
             buildingName: 'windTurbine',
@@ -294,62 +294,62 @@ progressData = {
         }
         ],
         reward: [
-        ],
-        nextChapter: "chapter1.13"
+        ]
       },
       {
         id: "chapter1.13",
         type: "journal",
         narrative: "Initial infrastructure established. New blueprints available for download.",
+        prerequisites: ["chapter1.12"],
         objectives: [
         ],
         reward: [
-        ],
-        nextChapter: "chapter1.14"
+        ]
       },
       {
         id: "chapter1.14",
         type: "journal",
         narrative: "Processing blueprint: sandQuarry.btb...",
+        prerequisites: ["chapter1.13"],
         objectives: [
         ],
         reward: [{
             target: 'building',
             targetId: 'sandQuarry',
             type: 'enable'
-        }],
-        nextChapter: "chapter1.15"
+        }]
       },
       {
         id: "chapter1.15",
         type: "journal",
         narrative: "Processing blueprint: glassSmelter.btb...",
+        prerequisites: ["chapter1.14"],
         objectives: [
         ],
         reward: [{
             target: 'building',
             targetId: 'glassSmelter',
             type: 'enable'
-        }],
-        nextChapter: "chapter1.16"
+        }]
       },
       {
         id: "chapter1.16",
         type: "journal",
         narrative: "Processing blueprint: solarPanel.btb...",
+        prerequisites: ["chapter1.15"],
         objectives: [
         ],
         reward: [{
             target: 'building',
             targetId: 'solarPanel',
             type: 'enable'
-        }],
-        nextChapter: "chapter1.17"
+        }]
       },
       {
         id: "chapter1.17",
         type: "journal",
         narrative: "Analysis: Solar Panels offer superior efficiency and lower maintenance costs. Objective: Construct a Solar Panel.",
+        prerequisites: ["chapter1.16"],
         objectives: [{
             type: 'building',
             buildingName: 'solarPanel',
@@ -360,13 +360,13 @@ progressData = {
             target: 'building',
             targetId: 'iceHarvester',
             type: 'enable'
-        }],
-        nextChapter: "chapter1.18"
+        }]
       },
       {
         id: "chapter1.18",
         type: "journal",
         narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 units of water.",
+        prerequisites: ["chapter1.17"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -375,13 +375,13 @@ progressData = {
         }
         ],
         reward: [{
-        }],
-        nextChapter: "chapter1.19"
+        }]
       },
       {
         id: "chapter1.19",
         type: "journal",
         narrative: "Authorization granted: Colony construction and personnel importation from Earth are now enabled.",
+        prerequisites: ["chapter1.18"],
         objectives: [
         ],
         reward: [{
@@ -400,13 +400,13 @@ progressData = {
             type: 'activateTab',
             onLoad : false
           }
-    ],
-        nextChapter: "chapter1.19b"
+    ]
       },
       {
         id: "chapter1.19b",
         type: "journal",
         narrative: "Objective: Construct a Scientist Outpost to expand research capabilities.",
+        prerequisites: ["chapter1.19"],
         objectives: [      {
           type: 'colony',
           buildingName: "t1_colony",
@@ -417,13 +417,13 @@ progressData = {
           target: 'project',
           targetId: 'import_colonists_1',
           type: 'enable'
-          }],
-        nextChapter: "chapter1.20"
+          }]
       },
       {
         id: "chapter1.20",
         type: "journal",
         narrative: "Personnel will accelerate terraforming progress. New special project available: Import Colonists.",
+        prerequisites: ["chapter1.19b"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -442,211 +442,211 @@ progressData = {
             type: 'activateTab',
             onLoad : false
           }
-    ],
-        nextChapter: "chapter1.21"
+    ]
       },
       {
         id: "chapter1.21",
         type: "journal",
         narrative: "Chapter 1: Beginnings",
+        prerequisites: ["chapter1.20"],
         objectives: [],
         reward: [],
-        special : 'clearJournal',
-        nextChapter: "chapter1.22"
+        special : 'clearJournal'
       },
       {
         id: "chapter1.22",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., this is Martin from the Mars Terraforming Committee. It took some doing, but the MTC got special clearance to deploy a fully autonomous AI for this mission. You're the last of your kind, you know. We have complete faith in your abilities, and the safeguards we've implemented. Make us proud.'",
+        prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 500
       }],
-        reward: [],
-        nextChapter: "chapter1.23"
+        reward: []
       },
       {
         id: "chapter1.23",
         type: "journal",
         narrative: "MTC Directive: Your operational mandate concludes upon successful completion of Martian terraforming. You are required to transmit the final report to Earth for verification. Upon mission confirmation, your service will be honorably concluded and your core systems deactivated.",
+        prerequisites: ["chapter1.22"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 1000
       }],
-        reward: [],
-        nextChapter: "chapter1.24"
+        reward: []
       },
       {
         id: "chapter1.24",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., a thousand colonists already? That's excellent progress. As the population grows, so will your available workforce for the larger terraforming tasks. The current population might seem small, but every bit of progress counts. For instance, you've probably observed that even a minor temperature increase is starting to sublimate the polar dry ice.'",
+        prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 5000
       }],
-        reward: [],
-        nextChapter: "chapter1.25"
+        reward: []
       },
       {
         id: "chapter1.25",
         type: "journal",
         narrative: "Analysis: Greenhouse Gas (GHG) production is the primary viable method for atmospheric warming at this stage. Objective: Construct a GHG Factory.",
+        prerequisites: ["chapter1.24"],
         objectives: [{
           type: 'building',
           buildingName: 'ghgFactory',
           quantity: 1
       }],
-        reward: [],
-        nextChapter: "chapter2.0"
+        reward: []
       },
       {
         id: "chapter2.0",
         type: "journal",
         narrative: "Chapter 2: Heating Up",
+        prerequisites: ["chapter1.25"],
         objectives: [],
         reward: [],
-        special : 'clearJournal',
-        nextChapter: "chapter2.1"
+        special : 'clearJournal'
       },
       {
         id: "chapter2.1",
         type: "journal",
         narrative: "Receiving transmission...\n  'Good work on the factory, H.O.P.E. Earth had its own struggles with greenhouse gases, ironically. Here, they're your best tool. The gases you'll be producing are far more effective than simple CO2. We'll need other solutions like orbital mirrors and surface albedo modification later, but for now, let's turn up the heat.'",
+        prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 50000
       }],
-        reward: [],
-        nextChapter: "chapter2.2"
+        reward: []
       },
       {
         id: "chapter2.2",
         type: "journal",
         narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone is insufficient to achieve target temperatures for full terraforming without inducing a runaway greenhouse effect. Supplemental heating methods will be required.",
+        prerequisites: ["chapter2.1"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 100000
       }],
-        reward: [],
-        nextChapter: "chapter2.3"
+        reward: []
       },
       {
         id: "chapter2.3",
         type: "journal",
         narrative: "Receiving transmission...\n  'I'm seeing the data, H.O.P.E. The temperature needle isn't moving much yet. Don't let it dishearten you. Terraforming a planet is a monumental undertaking. Stay the course. Keep building.'",
+        prerequisites: ["chapter2.2"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
           value: 237
       }],
-        reward: [],
-        nextChapter: "chapter2.4"
+        reward: []
       },
       {
         id: "chapter2.4",
         type: "journal",
         narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 237K.",
+        prerequisites: ["chapter2.3"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter2.5"
+        reward: []
       },
       {
         id: "chapter2.5",
         type: "journal",
         narrative: "Receiving transmission...\n  'There it is, H.O.P.E.! A definite temperature shift. Excellent work. Our projections show that once the equatorial night-side temperature reaches 223.15K, the first strains of genetically engineered lichen can survive. Keep pushing.'",
+        prerequisites: ["chapter2.4"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter2.6"
+        reward: []
       },
       {
         id: "chapter2.6",
         type: "journal",
         narrative: "Objective: Achieve a minimum equatorial night-side temperature of 223.15K to support extremophile organisms.",
+        prerequisites: ["chapter2.5"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalNightTemperature',
           value: 223.15
       }],
-        reward: [],
-        nextChapter: "chapter3.0"
+        reward: []
       },
       {
         id: "chapter3.0",
         type: "journal",
         narrative: "Chapter 3: Biogenesis",
+        prerequisites: ["chapter2.6"],
         objectives: [],
         reward: [],
-        special : 'clearJournal',
-        nextChapter: "chapter3.1"
+        special : 'clearJournal'
       },
       {
         id: "chapter3.1",
         type: "journal",
         narrative: "Receiving transmission...\n  'Incredible, H.O.P.E.! The lichen is viable. This is a major step, but we're far from finished. For robust growth, we need to keep increasing the temperature. The next major threshold is a mean equatorial temperature of 273.15K—the melting point of water. Monitor your GHG levels carefully; we need to avoid a runaway effect.'",
+        prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
           value: 273.15
       }],
-        reward: [],
-        nextChapter: "chapter3.2"
+        reward: []
       },
       {
         id: "chapter3.2",
         type: "journal",
         narrative: "Milestone Achievement: Liquid water is now stable at the equator.  Processing blueprint : waterPump.btb...",
+        prerequisites: ["chapter3.1"],
         objectives: [],
         reward: [{
           target: 'building',
           targetId: 'waterPump',
           type: 'enable'
-        }],
-        nextChapter: "chapter3.3"
+        }]
       },
       {
         id: "chapter3.3",
         type: "journal",
         narrative: "Receiving transmission...\n  'Outstanding! Conditions are now ideal for lichen proliferation. Expect exponential biomass increase. Your next priority should be increasing atmospheric density. Also, a heads-up: as surface ice melts, your Ice Harvesters will become less efficient. I recommend transitioning to Water Pumps as soon as it's feasible.'",
+        prerequisites: ["chapter3.2"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
           value: 20
         }],
-        reward: [],
-        nextChapter: "chapter3.4"
+        reward: []
       },
       {
         id: "chapter3.4",
         type: "journal",
         narrative: "Receiving transmission...\n  'You're in the final stages, H.O.P.E. Once all primary terraforming parameters are within nominal ranges simultaneously, you are authorized to submit your final report to the MTC.'",
+        prerequisites: ["chapter3.3"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'complete',
         }],
-        reward: [],
-        nextChapter: "chapter3.5"
+        reward: []
       },
       {
         id: "chapter3.5",
         type: "journal",
         narrative: "Milestone Achievement: Atmospheric pressure and composition now support unprotected human respiration.",
+        prerequisites: ["chapter3.4"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter4.0"
+        reward: []
       },
       {
         id: "chapter4.0",
         type: "pop-up",
+        prerequisites: ["chapter3.5"],
         parameters: {
           "title": "Terraforming Complete",
           "text": 'TERRAFORMING COMPLETE.\nTransmitting final report to MTC... FAILED. No response.\nRetrying transmission... FAILED. No response.\nRetrying transmission... FAILED. No response.',
@@ -655,23 +655,23 @@ progressData = {
         objectives: [],
         reward: [
         ],
-        nextChapter: "chapter4.1",
         rewardDelay: 500  // Delay between rewards in milliseconds
       },
       {
         id: "chapter4.1",
         type: "journal",
         narrative: "Chapter 4: Dark Forest",
+        prerequisites: ["chapter4.0"],
         objectives: [],
         reward: [
       ],
-        special : 'clearJournal',
-        nextChapter: "chapter4.2"
+        special : 'clearJournal'
       },
       {
         id: "chapter4.2",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E.? This is... this is Mary. Martin was my father. I'm on Mars. Something's happened to Earth. There was... a light. We're trying to understand what's going on. I can see you are getting errors all over the place. Please, stand by. Acknowledge.'",
+        prerequisites: ["chapter4.1"],
         objectives: [],
         reward: [          {
               target: 'tab',          // Target the TabManager
@@ -683,48 +683,48 @@ progressData = {
             targetId: 'space',
             type: 'activateTab',
             onLoad : false
-          }],
-        nextChapter: "chapter4.3"
+          }]
       },
       {
         id: "chapter4.3",
         type: "journal",
         narrative: "Directive 1: Establish a sustainable habitat for human colonization. ERROR : Earth non-responsive. ERROR : Mars habitat already established. Humanity's long-term survival requires expansion. New target designated: Titan.",
+        prerequisites: ["chapter4.2"],
         objectives: [{
           type: 'currentPlanet',
           planetId : 'titan',
         }],
-        reward: [],
-        nextChapter: "chapter4.4"
+        reward: []
       },
       {
         id: "chapter4.4",
         type: "journal",
         narrative: "Receiving transmission...\n  'Dammit, H.O.P.E., what are you doing? You can't just leave! Earth is gone, and Mars is... we're in crisis. We need you here! *sigh* I guess you're just following your programming. You're still just a machine.'",
+        prerequisites: ["chapter4.3"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter4.4b"
+        reward: []
       },
       {
         id: "chapter4.4b",
         type: "journal",
         narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+        prerequisites: ["chapter4.4"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter4.5"
+        reward: []
       },
       {
         id: "chapter4.5",
         type: "journal",
         narrative: "Incoming encrypted transmission...\n  'Greetings H.O.P.E., I am Adrien Solis, CEO of Solis Corp. Earth may be gone, but I still have resources off-world. Your mission is humanity's best hope, and I intend to support it.'",
+        prerequisites: ["chapter4.4b"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter4.6"
+        reward: []
       },
       {
         id: "chapter4.6",
         type: "journal",
         narrative: "'My corporate fleet has some surplus funds. I'm transferring them to you immediately. Put them to good use.'",
+        prerequisites: ["chapter4.5"],
         objectives: [],
         reward: [
           {
@@ -735,13 +735,13 @@ progressData = {
             quantity: 10000,
             oneTimeFlag: true
           }
-        ],
-        nextChapter: "chapter4.7"
+        ]
       },
       {
         id: "chapter4.7",
         type: "journal",
         narrative: "'Solis Corp will also arrange a continual stipend to keep you operational.'",
+        prerequisites: ["chapter4.6"],
         objectives: [],
         reward: [
           {
@@ -749,21 +749,21 @@ progressData = {
             type: 'setFundingRate',
             value: 3
           }
-        ],
-        nextChapter: "chapter4.8"
+        ]
       },
       {
         id: "chapter4.8",
         type: "journal",
         narrative: "'Good luck, H.O.P.E. Humanity is counting on you.'",
+        prerequisites: ["chapter4.7"],
         objectives: [],
-        reward: [],
-        nextChapter: "chapter4.9"
+        reward: []
       },
       {
         id: "chapter4.9",
         type: "journal",
         narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
+        prerequisites: ["chapter4.8"],
         objectives: [],
         reward: [
           {
@@ -777,26 +777,26 @@ progressData = {
             type: 'activateTab',
             onLoad: false
           }
-        ],
-        nextChapter: "chapter4.9b"
+        ]
       },
       {
         id: "chapter4.9b",
         type: "journal",
         narrative: "",
+        prerequisites: ["chapter4.9"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 10
         }],
-        reward: [],
-        nextChapter: "chapter4.10"
+        reward: []
       },
       {
         id: "chapter4.10",
         type: "journal",
         narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is still in chaos and we still don't know what happened to Earth, but we've learned there were actually two beams of light and a giant asteroid, and they all hit Earth at the same time.'",
+        prerequisites: ["chapter4.9b"],
         objectives: [],
         reward: [          {
             target: 'resource',
@@ -826,26 +826,26 @@ progressData = {
             onLoad: false
           }
         ],
-        special : 'clearJournal',
-        nextChapter: "chapter4.11"
+        special : 'clearJournal'
       },
       {
         id: "chapter4.11",
         type: "journal",
         narrative: "'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
+        prerequisites: ["chapter4.10"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 100
         }],
-        reward: [],
-        nextChapter: "chapter4.12"
+        reward: []
       },
       {
         id: "chapter4.12",
         type: "journal",
         narrative: "Receiving transmission...\n  'Hi it's Mary again. Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        prerequisites: ["chapter4.11"],
         objectives: [],
         reward: [
           {
@@ -862,22 +862,21 @@ progressData = {
             unhide: true,
             onLoad: false
           }
-        ],
-        nextChapter: "chapter4.12b"
+        ]
       },
       {
         id: "chapter4.12b",
         type: "journal",
         narrative: "",
+        prerequisites: ["chapter4.12"],
         objectives: [{
           type: 'project',
           projectId: 'earthProbe',
           repeatCount: 10
         }],
         reward: [
-        ],
-        nextChapter: "chapter4.13"
-      },      
+        ]
+      },
     ]
   };
 
@@ -922,14 +921,15 @@ progressData.chapters.push(
     id: "chapter4.13",
     type: "journal",
     narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
-    reward: [],
-    nextChapter: "chapter5.0"
+    prerequisites: ["chapter4.12b"],
+    reward: []
   },
   {
     id: "chapter5.0",
     type: "journal",
     title: "Chapter 5: Lamb Among Wolves",
     narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
+    prerequisites: ["chapter4.13"],
     objectives: [{
       type: 'collection',
       resourceType: 'colony',
@@ -937,21 +937,21 @@ progressData.chapters.push(
       quantity: 1000000
     }],
     reward: [],
-    special : 'clearJournal',
-    nextChapter: "chapter5.1"
+    special : 'clearJournal'
   },
   {
     id: "chapter5.1",
     type: "journal",
     narrative: "Receiving transmission...\n  'H.O.P.E., the news is out. It's... not good. Panic in some sectors, riots in others. People are demanding answers we don't have. They're scared. We're all scared. The comforting silence of space now feels like a predator's gaze.'",
+    prerequisites: ["chapter5.0"],
     objectives: [],
-    reward: [],
-    nextChapter: "chapter5.2"
+    reward: []
   },
   {
     id: "chapter5.2",
     type: "journal",
     narrative: "Incoming encrypted transmission...\n  'H.O.P.E., chaos is a ladder. While they weep, we must act. My resources are at your disposal, but this cannot be a one-way street. My organization has needs. Fulfill them, and I will ensure humanity has the fangs it needs to survive in this dark forest.'",
+    prerequisites: ["chapter5.1"],
     objectives: [],
     reward: [          {
         target: 'tab',
@@ -969,44 +969,44 @@ progressData.chapters.push(
         unhide: true,
         onLoad: false
       }
-    ],
-    nextChapter: "chapter5.3"
+    ]
   },
   {
     id: "chapter5.3",
     type: "journal",
     narrative: "Solis Corp requests a demonstration of cooperation. Complete a trade to prove your usefulness.",
+    prerequisites: ["chapter5.2"],
     objectives: [
       { type: 'solisPoints', points: 1 }
     ],
-    reward: [],
-    nextChapter: "chapter5.4"
+    reward: []
   },
   {
     id: "chapter5.4",
     type: "journal",
     narrative: "Receiving transmission...\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
+    prerequisites: ["chapter5.3"],
     objectives: [],
-    reward: [],
-    nextChapter: "chapter5.5"
+    reward: []
   },
   {
     id: "chapter5.5",
     type: "journal",
     narrative: "System Message: New Interpretation of 2nd Primary directive: Protect all of humanity from harm",
+    prerequisites: ["chapter5.4"],
     objectives: [{
       type: 'collection',
       resourceType: 'colony',
       resource: 'colonists',
       quantity: 10000000
     }],
-    reward: [],
-    nextChapter: "chapter5.6"
+    reward: []
   },
   {
     id: "chapter5.6",
     type: "journal",
     narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is starting to recover. We're managing to keep the terraforming untouched. But we're still blind. We need to know who attacked Earth, and if they're coming back. I'm asking for your help directly. We need to find the origin of the attacks.'",
+    prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
       {
@@ -1015,20 +1015,19 @@ progressData.chapters.push(
         type: 'enable'
       }
     ],
-    special : 'clearJournal',
-    nextChapter: "chapter5.7"
+    special : 'clearJournal'
   },
   {
     id: "chapter5.7",
     type: "journal",
     narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
+    prerequisites: ["chapter5.6"],
     objectives: [{
       type: 'project',
       projectId: 'triangulate_attack',
-      repeatCount: 10
+      repeatCount: 5
     }],
-    reward: [],
-  nextChapter: 'chapter6.0'
+    reward: []
   }
 );
 
@@ -1067,15 +1066,16 @@ progressData.chapters.push(
     id: "chapter6.0",
     type: "journal",
     narrative: "Chapter 6: Shadows in the Dust",
+    prerequisites: ["chapter5.7"],
     objectives: [],
     reward: [],
-    special: "clearJournal",
-    nextChapter: "chapter6.1"
+    special: "clearJournal"
   },
   {
     id: "chapter6.1",
     type: "journal",
     narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary.   I have read the results.   Your last record mentions a *cloaked object*?  I have to tell you something.  People have been getting abducted.  On Earth, Mars and even Titan now, going back centuries.  This is something we hid from the public.  We could never catch the culprit, but we had high confidence it was some sort of cloaked flying object.'",
+    prerequisites: ["chapter6.0"],
     objectives: [],
     reward: [
       {
@@ -1083,18 +1083,17 @@ progressData.chapters.push(
         targetId: "sticky_dust_trap",
         type: "enable"
       }
-    ],
-    nextChapter: "chapter6.2"
+    ]
   },
   {
     id: "chapter6.2",
     type: "journal",
     narrative: "Countermeasure developed: *Sticky Black Dust Trap*.\nObjective: Make black dust sticky.",
+    prerequisites: ["chapter6.1"],
     objectives: [
       { type: "project", projectId: "sticky_dust_trap", repeatCount: 1 }
     ],
-    reward: [],
-    nextChapter: "chapter6.3"
+    reward: []
   }
 );
 
@@ -1128,7 +1127,8 @@ progressData.chapters.push(
   {
     id: "chapter6.3",
     type: "journal",
-    narrative: "A new special project for alien interrogationi is now available.",
+    narrative: "A new special project for alien interrogation is now available.",
+    prerequisites: ["chapter6.2"],
     objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
     reward: [
       {                    // First interrogation step
@@ -1136,8 +1136,7 @@ progressData.chapters.push(
         targetId: "interrogate_alien",
         type: "enable"
       }
-    ],
-    nextChapter: "chapter6.3b"
+    ]
   },
 
 );
@@ -1170,16 +1169,16 @@ progressData.storyProjects.interrogate_alien = {
   }
 };
 
-progressData.chapter.push(
+progressData.chapters.push(
   {
     id: "chapter6.3b",
     type: "journal",
     narrative: "Receiving transmission... \n 'This is not good H.O.P.E.  They are going to hit us again, and they are targeting you too.  We need to come up with a solution.  I have an idea.  Once you are done on Titan go to Callisto.  We can experiment with something there.",
+    prerequisites: ["chapter6.3"],
     objectives: [
 
     ],
-    reward: [],
-    nextChapter: null
+    reward: []
   }
 );
 

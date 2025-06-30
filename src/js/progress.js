@@ -424,50 +424,72 @@ class StoryManager {
     // without triggering their journal entries. This allows moving backward or
     // forward in the story for debugging.
     jumpToChapter(chapterId) {
-        const index = progressData.chapters.findIndex(ch => ch.id === chapterId);
-        if (index === -1) {
+        const targetEvent = this.findEventById(chapterId);
+        if (!targetEvent) {
             console.warn(`Chapter not found: ${chapterId}`);
             return;
         }
 
-        // Reset current state
+        // --- New Logic ---
+
+        // 1. Find all recursive prerequisites for the target chapter
+        const requiredChapterIds = new Set();
+        const findPrereqsRecursive = (eventId) => {
+            if (requiredChapterIds.has(eventId)) return; // Avoid cycles and redundant checks
+            requiredChapterIds.add(eventId);
+
+            const event = this.findEventById(eventId);
+            if (event && event.prerequisites) {
+                event.prerequisites.forEach(prereqId => {
+                    findPrereqsRecursive(prereqId);
+                });
+            }
+        };
+
+        // Start the recursion from the target chapter's prerequisites
+        if (targetEvent.prerequisites) {
+            targetEvent.prerequisites.forEach(prereqId => findPrereqsRecursive(prereqId));
+        }
+
+
+        // 2. Reset state
         this.activeEventIds.clear();
         this.completedEventIds.clear();
         this.waitingForJournalEventId = null;
-
-        // Remove previously applied effects
-        this.appliedEffects.forEach(effect => removeEffect(effect));
-        this.appliedEffects = [];
-
         clearJournal();
 
-        // Apply rewards from earlier chapters so game state roughly matches
-        for (let i = 0; i < index; i++) {
-            const cfg = progressData.chapters[i];
-            const ev = this.findEventById(cfg.id);
-            if (!ev) continue;
-            if (ev.special === 'clearJournal') {
-                clearJournal();
+        // 3. Remove all previously applied effects from the game state
+        this.appliedEffects.forEach(effect => removeEffect(effect));
+        this.appliedEffects = []; // Clear our tracking array
+
+        // 4. Re-apply rewards ONLY for the required (completed) chapters
+        for (const id of requiredChapterIds) {
+            const event = this.findEventById(id);
+            if (event) {
+                // Mark as completed
+                this.completedEventIds.add(id);
+
+                // Apply its rewards and track them
+                if (event.reward && event.reward.length > 0) {
+                    event.reward.forEach(effect => {
+                        if (!effect.oneTimeFlag) {
+                            this.appliedEffects.push(effect); // Track for reapplication on load
+                        }
+                        addEffect(effect); // Apply to current game state
+                    });
+                }
+                 if (event.special === 'clearJournal') {
+                    clearJournal();
+                }
             }
-            if (ev.reward && ev.reward.length > 0) {
-                ev.reward.forEach(effect => {
-                    if (!effect.oneTimeFlag) {
-                        this.appliedEffects.push(effect);
-                    }
-                    addEffect(effect);
-                });
-            }
-            this.completedEventIds.add(ev.id);
         }
 
-        const targetEvent = this.findEventById(chapterId);
-        if (targetEvent) {
-            if (targetEvent.special === 'clearJournal') {
-                clearJournal();
-            }
-            this.activeEventIds.add(targetEvent.id);
-            targetEvent.trigger();
-        }
+        // 5. Activate the target chapter
+        console.log(`Jumping to ${chapterId}. Required completed chapters:`, Array.from(requiredChapterIds));
+        this.activateEvent(targetEvent);
+
+        // 6. Update UI
+        this.updateCurrentObjectiveUI();
     }
 
     saveState() { // Keep as is
