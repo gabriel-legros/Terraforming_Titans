@@ -1093,7 +1093,11 @@ progressData.chapters.push(
     objectives: [
       { type: "project", projectId: "sticky_dust_trap", repeatCount: 1 }
     ],
-    reward: []
+    reward: [      {                    // First interrogation step
+        target: "project",
+        targetId: "interrogate_alien",
+        type: "enable"
+      }]
   }
 );
 
@@ -1128,11 +1132,6 @@ progressData.chapters.push(
     prerequisites: ["chapter6.2"],
     objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
     reward: [
-      {                    // First interrogation step
-        target: "project",
-        targetId: "interrogate_alien",
-        type: "enable"
-      }
     ]
   },
 
