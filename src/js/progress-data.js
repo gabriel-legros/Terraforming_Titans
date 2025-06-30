@@ -1028,18 +1028,9 @@ progressData.chapters.push(
       repeatCount: 10
     }],
     reward: [],
-  nextChapter: null
+  nextChapter: 'chapter6.0'
   }
 );
-
-
-
-
-
-
-
-
-
 
 progressData.storyProjects.triangulate_attack = {
   type: 'Project',
@@ -1104,68 +1095,6 @@ progressData.chapters.push(
     ],
     reward: [],
     nextChapter: "chapter6.3"
-  },
-  {
-    id: "chapter6.3",
-    type: "journal",
-    narrative: "Mission Log: Dust net deployed and detonated.   Target disabled.   Recovery drones en-route.\n\nSensor feed shows a matte ovoid, 7m across, covered in the tar-like residue. An access hatch has been ruptured; one occupant located, alive and restrained.",
-    objectives: [],
-    reward: [
-      {                    // First interrogation step
-        target: "project",
-        targetId: "interrogate_alien",
-        type: "enable"
-      }
-    ],
-    nextChapter: "chapter6.3b"
-  },
-  {
-    id: "chapter6.3b",
-    type: "journal",
-    narrative: "Objective: Initiate *Interrogation Protocol I – Bio‑scan*.",
-    objectives: [
-      { type: "project", projectId: "interrogate_alien", repeatCount: 1 }
-    ],
-    reward: [],
-    nextChapter: "chapter6.4"
-  },
-  {
-    id: "chapter6.4",
-    type: "journal",
-    narrative: "Bio‑scan complete.  Subject physiology tolerates 0.4 bar CO₂ but is *photosensitive* and reliant on high‑frequency acoustics.   Mary believes we can exploit the latter.\n\nObjective: Proceed to *Interrogation Protocol II – Sensory Deprivation & Acoustic Stimuli*.",
-    objectives: [
-      { type: "project", projectId: "interrogate_alien", repeatCount: 2 }
-    ],
-    reward: [],
-    nextChapter: "chapter6.5"
-  },
-  {
-    id: "chapter6.5",
-    type: "journal",
-    narrative: "Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a *tri‑vector attack timetable*.\n\nObjective: Execute *Interrogation Protocol III – Linguistic Cross‑correlation* to translate the data burst.",
-    objectives: [
-      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }
-    ],
-    reward: [],
-    nextChapter: "chapter6.6"
-  },
-  {
-    id: "chapter6.6",
-    type: "journal",
-    narrative: "Translation uplink complete.\n  '…FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'",
-    objectives: [],
-    reward: [],
-    nextChapter: "chapter6.7"
-  },
-  {
-    id: "chapter6.7",
-    type: "journal",
-    narrative: "Receiving transmission... \n 'This is not good H.O.P.E.  They are going to hit us again, and they are targeting you too.  We need to come up with a solution.  I have an idea.  Once you are done on Titan go to Callisto.  We can experiment with something there.",
-    objectives: [
-
-    ],
-    reward: [],
-    nextChapter: null
   }
 );
 
@@ -1182,7 +1111,7 @@ progressData.storyProjects.sticky_dust_trap = {
     }
   },
   duration: 120000,
-  description: 'Create and deploy adhesive black dust to ensnare the cloaked craft.',
+  description: 'Create and deploy adhesive black dust to reveal the cloaked craft.',
   repeatable: true,
   maxRepeatCount: 1,
   unlocked: false,
@@ -1190,10 +1119,28 @@ progressData.storyProjects.sticky_dust_trap = {
     planet: 'titan',
     costDoubling: false,
     storySteps: [
-      'Mission Log: Dust net deployed and detonated.   Target disabled.   Recovery drones en-route.\n\nSensor feed shows a matte ovoid, 7m across, covered in the tar-like residue. An access hatch has been ruptured; one occupant located, alive and restrained.'
+      'Mission Log: Dust net deployed.   Target was revealed then struck down by colonists surface-to-air defenses.   Recovery drones en-route.\n\nSensor feed shows a matte ovoid, 7m across, covered in the tar-like residue. An access hatch has been ruptured; one occupant located, alive and restrained.'
     ]
   }
 };
+
+progressData.chapters.push(
+  {
+    id: "chapter6.3",
+    type: "journal",
+    narrative: "A new special project for alien interrogationi is now available.",
+    objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
+    reward: [
+      {                    // First interrogation step
+        target: "project",
+        targetId: "interrogate_alien",
+        type: "enable"
+      }
+    ],
+    nextChapter: "chapter6.3b"
+  },
+
+);
 
 progressData.storyProjects.interrogate_alien = {
   type: 'Project',
@@ -1222,6 +1169,19 @@ progressData.storyProjects.interrogate_alien = {
     ]
   }
 };
+
+progressData.chapter.push(
+  {
+    id: "chapter6.3b",
+    type: "journal",
+    narrative: "Receiving transmission... \n 'This is not good H.O.P.E.  They are going to hit us again, and they are targeting you too.  We need to come up with a solution.  I have an idea.  Once you are done on Titan go to Callisto.  We can experiment with something there.",
+    objectives: [
+
+    ],
+    reward: [],
+    nextChapter: null
+  }
+);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
