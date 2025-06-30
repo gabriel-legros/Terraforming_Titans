@@ -229,7 +229,9 @@ function updateCostDisplay(project) {
         const requiredAmount = cost[category][resource];
         const availableAmount = resources[category]?.[resource]?.value || 0;
 
-        const resourceText = `${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${formatNumber(requiredAmount, true)}`;
+        const resourceDisplayName = resources[category]?.[resource]?.displayName ||
+          resource.charAt(0).toUpperCase() + resource.slice(1);
+        const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const formattedResourceText = availableAmount >= requiredAmount
           ? resourceText
           : `<span style="color: red;">${resourceText}</span>`;
