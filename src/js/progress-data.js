@@ -982,7 +982,11 @@ progressData = {
         id: "chapter5.7",
         type: "journal",
         narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
-        objectives: [],
+        objectives: [{
+          type: 'project',
+          projectId: 'triangulate_attack',
+          repeatCount: 10
+        }],
         reward: [],
         nextChapter: null
       }
