@@ -10,11 +10,12 @@ describe('HOPE tab unlock chapter', () => {
     vm.runInContext(code, ctx);
     const chapters = ctx.progressData.chapters;
     const last = chapters[chapters.length - 1];
-    expect(last.id).toBe('chapter6.7');
+    expect(last.id).toBe('chapter6.3b');
     const hopeChapter = chapters.find(c => c.id === 'chapter4.9');
     expect(hopeChapter).toBeDefined();
     const effect = hopeChapter.reward.find(r => r.targetId === 'hope-tab' && r.type === 'enable');
     expect(effect).toBeDefined();
-    expect(hopeChapter.nextChapter).toBe('chapter4.9b');
+    const next = chapters.find(c => c.prerequisites && c.prerequisites.includes('chapter4.9'));
+    expect(next && next.id).toBe('chapter4.9b');
   });
 });

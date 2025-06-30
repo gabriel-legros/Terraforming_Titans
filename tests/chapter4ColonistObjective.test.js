@@ -21,6 +21,7 @@ describe('chapter4 colonist milestone', () => {
       quantity: 10
     });
     expect(chapter.narrative).toMatch(/two beams of light.*giant asteroid/);
-    expect(chapter.nextChapter).toBe('chapter4.11');
+    const ch411 = chapters.find(c => c.id === 'chapter4.11');
+    expect(ch411.prerequisites).toContain('chapter4.10');
   });
 });

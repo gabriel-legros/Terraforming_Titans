@@ -12,7 +12,7 @@ describe('earth probe unlock chapter', () => {
     const ch411 = chapters.find(c => c.id === 'chapter4.11');
     const ch412 = chapters.find(c => c.id === 'chapter4.12');
     const ch413 = chapters.find(c => c.id === 'chapter4.13');
-    expect(ch411.nextChapter).toBe('chapter4.12');
+    expect(ch412.prerequisites).toContain('chapter4.11');
     expect(ch412).toBeDefined();
     const obj = ch411.objectives && ch411.objectives[0];
     expect(obj).toEqual({
@@ -25,7 +25,7 @@ describe('earth probe unlock chapter', () => {
     const subtabEffect = ch412.reward.find(r => r.target === 'projectManager' && r.type === 'activateSubtab' && r.targetId === 'story-projects');
     expect(reward).toBeDefined();
     expect(subtabEffect).toBeDefined();
-    expect(ch412.nextChapter).toBe('chapter4.12b');
+    expect(ch413.prerequisites).toContain('chapter4.12b');
     expect(ch413).toBeDefined();
   });
 });
