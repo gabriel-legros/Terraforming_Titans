@@ -1,26 +1,62 @@
 const autobuildCostTracker = {
     elapsed: 0,
     currentCosts: {},
-    lastSecondCosts: {},
-    recordCost(costObj) {
+    currentBuildingCosts: {},
+    costQueue: [],
+    buildingCostQueue: [],
+    recordCost(buildingName, costObj) {
         for (const category in costObj) {
             if (!this.currentCosts[category]) this.currentCosts[category] = {};
             for (const resource in costObj[category]) {
                 if (!this.currentCosts[category][resource]) this.currentCosts[category][resource] = 0;
                 this.currentCosts[category][resource] += costObj[category][resource];
+
+                if (!this.currentBuildingCosts[buildingName]) this.currentBuildingCosts[buildingName] = {};
+                if (!this.currentBuildingCosts[buildingName][category]) this.currentBuildingCosts[buildingName][category] = {};
+                if (!this.currentBuildingCosts[buildingName][category][resource]) this.currentBuildingCosts[buildingName][category][resource] = 0;
+                this.currentBuildingCosts[buildingName][category][resource] += costObj[category][resource];
             }
         }
     },
     update(delta) {
         this.elapsed += delta;
         if (this.elapsed >= 1000) {
-            this.lastSecondCosts = this.currentCosts;
+            this.costQueue.push(this.currentCosts);
+            this.buildingCostQueue.push(this.currentBuildingCosts);
+            if (this.costQueue.length > 10) this.costQueue.shift();
+            if (this.buildingCostQueue.length > 10) this.buildingCostQueue.shift();
             this.currentCosts = {};
+            this.currentBuildingCosts = {};
             this.elapsed = 0;
         }
     },
+    getAverageCost(category, resource) {
+        if (this.costQueue.length === 0) return 0;
+        let sum = 0;
+        for (const costs of this.costQueue) {
+            sum += costs[category]?.[resource] || 0;
+        }
+        return sum / this.costQueue.length;
+    },
+    getAverageCostBreakdown(category, resource) {
+        if (this.buildingCostQueue.length === 0) return [];
+        const totals = {};
+        for (const buildCosts of this.buildingCostQueue) {
+            for (const building in buildCosts) {
+                const val = buildCosts[building]?.[category]?.[resource] || 0;
+                if (!totals[building]) totals[building] = 0;
+                totals[building] += val;
+            }
+        }
+        const len = this.buildingCostQueue.length;
+        return Object.entries(totals)
+            .map(([building, total]) => [building, total / len])
+            .sort((a, b) => b[1] - a[1]);
+    },
     getLastSecondCost(category, resource) {
-        return this.lastSecondCosts[category]?.[resource] || 0;
+        if (this.costQueue.length === 0) return 0;
+        const last = this.costQueue[this.costQueue.length - 1];
+        return last[category]?.[resource] || 0;
     }
 };
 
@@ -83,7 +119,7 @@ function autoBuild(buildings, delta = 0) {
             if (typeof building.build === 'function') {
                 building.build(buildCount);
             }
-            autobuildCostTracker.recordCost(cost);
+            autobuildCostTracker.recordCost(building.displayName, cost);
         }
         // Skip incremental building as it significantly impacts performance
     });
