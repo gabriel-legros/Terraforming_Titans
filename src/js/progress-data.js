@@ -1028,9 +1028,18 @@ progressData.chapters.push(
       repeatCount: 10
     }],
     reward: [],
-    nextChapter: null
+  nextChapter: null
   }
 );
+
+
+
+
+
+
+
+
+
 
 progressData.storyProjects.triangulate_attack = {
   type: 'Project',
@@ -1060,6 +1069,7 @@ progressData.storyProjects.triangulate_attack = {
     'A faint gravitational anomaly detected along the positron beam trajectory hints at a cloaked object or unknown spatial anomaly masking its true source.'    ]
   }
 };
+
 
 progressData.chapters.push(
   {
@@ -1103,7 +1113,7 @@ progressData.chapters.push(
     reward: [
       {                    // First interrogation step
         target: "project",
-        targetId: "interrogate_alien_step",
+        targetId: "interrogate_alien",
         type: "enable"
       }
     ],
@@ -1114,11 +1124,9 @@ progressData.chapters.push(
     type: "journal",
     narrative: "Objective: Initiate *Interrogation Protocol I – Bio‑scan*.",
     objectives: [
-      { type: "project", projectId: "interrogate_alien_step1", repeatCount: 1 }
+      { type: "project", projectId: "interrogate_alien", repeatCount: 1 }
     ],
-    reward: [
-      { target: "project", targetId: "interrogate_alien_step2", type: "enable" }
-    ],
+    reward: [],
     nextChapter: "chapter6.4"
   },
   {
@@ -1126,11 +1134,9 @@ progressData.chapters.push(
     type: "journal",
     narrative: "Bio‑scan complete.  Subject physiology tolerates 0.4 bar CO₂ but is *photosensitive* and reliant on high‑frequency acoustics.   Mary believes we can exploit the latter.\n\nObjective: Proceed to *Interrogation Protocol II – Sensory Deprivation & Acoustic Stimuli*.",
     objectives: [
-      { type: "project", projectId: "interrogate_alien_step2", repeatCount: 1 }
+      { type: "project", projectId: "interrogate_alien", repeatCount: 2 }
     ],
-    reward: [
-      { target: "project", targetId: "interrogate_alien_step3", type: "enable" }
-    ],
+    reward: [],
     nextChapter: "chapter6.5"
   },
   {
@@ -1138,7 +1144,7 @@ progressData.chapters.push(
     type: "journal",
     narrative: "Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a *tri‑vector attack timetable*.\n\nObjective: Execute *Interrogation Protocol III – Linguistic Cross‑correlation* to translate the data burst.",
     objectives: [
-      { type: "project", projectId: "interrogate_alien_step3", repeatCount: 1 }
+      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }
     ],
     reward: [],
     nextChapter: "chapter6.6"
@@ -1162,6 +1168,60 @@ progressData.chapters.push(
     nextChapter: null
   }
 );
+
+progressData.storyProjects.sticky_dust_trap = {
+  type: 'Project',
+  name: 'Sticky Dust Trap',
+  category: 'story',
+  cost: {
+    colony: {
+      components: 1000,
+      electronics: 1000,
+      research: 50000,
+      energy: 50000
+    }
+  },
+  duration: 120000,
+  description: 'Create and deploy adhesive black dust to ensnare the cloaked craft.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'titan',
+    costDoubling: false,
+    storySteps: [
+      'Mission Log: Dust net deployed and detonated.   Target disabled.   Recovery drones en-route.\n\nSensor feed shows a matte ovoid, 7m across, covered in the tar-like residue. An access hatch has been ruptured; one occupant located, alive and restrained.'
+    ]
+  }
+};
+
+progressData.storyProjects.interrogate_alien = {
+  type: 'Project',
+  name: 'Interrogate Alien',
+  category: 'story',
+  cost: {
+    colony: {
+      components: 1000,
+      electronics: 1000,
+      research: 100000,
+      energy: 50000
+    }
+  },
+  duration: 120000,
+  description: 'Conduct a series of interrogation protocols on the captured alien.',
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'titan',
+    costDoubling: true,
+    storySteps: [
+      'Bio\u2011scan complete.  Subject physiology tolerates 0.4\u202Fbar CO\u2082 but is photosensitive and reliant on high\u2011frequency acoustics.   Mary believes we can exploit the latter.',
+      'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a tri\u2011vector attack timetable.',
+      "Translation uplink complete.\\n  '\u2026FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'"
+    ]
+  }
+};
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
