@@ -1149,7 +1149,7 @@ progressData.storyProjects.interrogate_alien = {
       energy: 50000
     }
   },
-  duration: 120000,
+  duration: 600000,
   description: 'Conduct a series of interrogation protocols on the captured alien.',
   repeatable: true,
   maxRepeatCount: 3,
