@@ -1146,24 +1146,15 @@ progressData.chapters.push(
   {
     id: "chapter6.6",
     type: "journal",
-    narrative: "Translation uplink complete.\n  '…FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'\n\nMary: 'H.O.P.E., they're coming *here* next, and they'll hit all three colonies at once.'",
+    narrative: "Translation uplink complete.\n  '…FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'",
     objectives: [],
-    reward: [
-      {              // Unlock defensive research & projects
-        target: "researchManager",
-        type: "booleanFlag",
-        flagId: "planetaryDefenceUnlocked",
-        value: true
-      },
-      { target: "project", targetId: "planetary_defense_grid", type: "enable" },
-      { target: "project", targetId: "titan_defense_grid", type: "enable" }
-    ],
+    reward: [],
     nextChapter: "chapter6.7"
   },
   {
     id: "chapter6.7",
     type: "journal",
-    narrative: "System Directive Update: Protect *all* human settlements from imminent hostile incursion.\n\nNew Global Objective: Complete a planetary defence grid on Mars *and* Titan, and establish at least one shield array on your next target world.",
+    narrative: "Receiving transmission... \n 'This is not good H.O.P.E.  They are going to hit us again, and they are targeting you too.  We need to come up with a solution.  I have an idea.  Once you are done on Titan go to Callisto.  We can experiment with something there.",
     objectives: [
 
     ],
