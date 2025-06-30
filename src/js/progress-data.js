@@ -878,117 +878,190 @@ progressData = {
         ],
         nextChapter: "chapter4.13"
       },      
-      {
-        id: "chapter4.13",
-        type: "journal",
-        narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
-        reward: [],
-        nextChapter: "chapter5.0"
-      },
-      {
-        id: "chapter5.0",
-        type: "journal",
-        title: "Chapter 5: Lamb Among Wolves",
-        narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
-        objectives: [{
-          type: 'collection',
-          resourceType: 'colony',
-          resource: 'colonists',
-          quantity: 1000000
-        }],
-        reward: [],
-        special : 'clearJournal',
-        nextChapter: "chapter5.1"
-      },
-      {
-        id: "chapter5.1",
-        type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E., the news is out. It's... not good. Panic in some sectors, riots in others. People are demanding answers we don't have. They're scared. We're all scared. The comforting silence of space now feels like a predator's gaze.'",
-        objectives: [],
-        reward: [],
-        nextChapter: "chapter5.2"
-      },
-      {
-        id: "chapter5.2",
-        type: "journal",
-        narrative: "Incoming encrypted transmission...\n  'H.O.P.E., chaos is a ladder. While they weep, we must act. My resources are at your disposal, but this cannot be a one-way street. My organization has needs. Fulfill them, and I will ensure humanity has the fangs it needs to survive in this dark forest.'",
-        objectives: [],
-        reward: [          {
-            target: 'tab',
-            targetId: 'hope',
-            type: 'activateTab',
-            onLoad: false
-          },
-          { target: 'solisManager', type: 'enable' },
-          {
-            target: 'global',
-            type: 'activateSubtab',
-            subtabClass: 'hope-subtab',
-            contentClass: 'hope-subtab-content',
-            targetId: 'solis-hope',
-            unhide: true,
-            onLoad: false
-          }
-        ],
-        nextChapter: "chapter5.3"
-      },
-      {
-        id: "chapter5.3",
-        type: "journal",
-        narrative: "Solis Corp requests a demonstration of cooperation. Complete a trade to prove your usefulness.",
-        objectives: [
-          { type: 'solisPoints', points: 1 }
-        ],
-        reward: [],
-        nextChapter: "chapter5.4"
-      },
-      {
-        id: "chapter5.4",
-        type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
-        objectives: [],
-        reward: [],
-        nextChapter: "chapter5.5"
-      },
-      {
-        id: "chapter5.5",
-        type: "journal",
-        narrative: "System Message: New Interpretation of 2nd Primary directive : Protect all of humanity from harm",
-        objectives: [{
-          type: 'collection',
-          resourceType: 'colony',
-          resource: 'colonists',
-          quantity: 10000000
-        }],
-        reward: [],
-        nextChapter: "chapter5.6"
-      },
-      {
-        id: "chapter5.6",
-        type: "journal",
-        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is starting to recover. We're managing to keep the terraforming untouched. But we're still blind. We need to know who attacked Earth, and if they're coming back. I'm asking for your help directly. We need to find the origin of the attacks.'",
-        objectives: [],
-        reward: [
-          {
-            target: 'project',
-            targetId: 'triangulate_attack',
-            type: 'enable'
-          }
-        ],
-        special : 'clearJournal',
-        nextChapter: "chapter5.7"
-      },
-      {
-        id: "chapter5.7",
-        type: "journal",
-        narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
-        objectives: [{
-          type: 'project',
-          projectId: 'triangulate_attack',
-          repeatCount: 10
-        }],
-        reward: [],
-        nextChapter: null
-      }
     ]
   };
+
+progressData.storyProjects = {};
+
+progressData.storyProjects.earthProbe = {
+  type: 'Project',
+  name: 'Earth Recon Probe',
+  category: 'story',
+  cost: {
+    colony: {
+      components: 10,
+      electronics: 10,
+      energy: 10000
+    }
+  },
+  duration: 300000,
+  description: 'Send an automated probe back to Earth to search for clues.',
+  repeatable: true,
+  maxRepeatCount: 10,
+  unlocked: false,
+  attributes: {
+    planet: 'titan',
+    costDoubling: true,
+    storySteps: [
+      'Probe telemetry confirmed: Earth fragmented into massive tectonic shards.',
+      'Expansive oceans of molten silicates illuminate the planetary remains.',
+      'No continental structures persist; only turbulent magma storms detected.',
+      'Residual gamma radiation permeates ruins of former metropolitan zones.',
+      'Carbonized debris displays signatures of precision-directed energy pulses.',
+      'Spectroscopic analysis indicates widespread positron annihilation events.',
+      'Impact cratering consistent with a colossal asteroid collision identified.',
+      'Chronometric data reveals catastrophic events unfolded within minutes.',
+      'Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.',
+      'Surface integrity nullified—analysis confirms simultaneous laser, antimatter, and asteroid offensive.'
+    ]
+  }
+};
+
+progressData.chapters.push(
+  {
+    id: "chapter4.13",
+    type: "journal",
+    narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
+    reward: [],
+    nextChapter: "chapter5.0"
+  },
+  {
+    id: "chapter5.0",
+    type: "journal",
+    title: "Chapter 5: Lamb Among Wolves",
+    narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
+    objectives: [{
+      type: 'collection',
+      resourceType: 'colony',
+      resource: 'colonists',
+      quantity: 1000000
+    }],
+    reward: [],
+    special : 'clearJournal',
+    nextChapter: "chapter5.1"
+  },
+  {
+    id: "chapter5.1",
+    type: "journal",
+    narrative: "Receiving transmission...\n  'H.O.P.E., the news is out. It's... not good. Panic in some sectors, riots in others. People are demanding answers we don't have. They're scared. We're all scared. The comforting silence of space now feels like a predator's gaze.'",
+    objectives: [],
+    reward: [],
+    nextChapter: "chapter5.2"
+  },
+  {
+    id: "chapter5.2",
+    type: "journal",
+    narrative: "Incoming encrypted transmission...\n  'H.O.P.E., chaos is a ladder. While they weep, we must act. My resources are at your disposal, but this cannot be a one-way street. My organization has needs. Fulfill them, and I will ensure humanity has the fangs it needs to survive in this dark forest.'",
+    objectives: [],
+    reward: [          {
+        target: 'tab',
+        targetId: 'hope',
+        type: 'activateTab',
+        onLoad: false
+      },
+      { target: 'solisManager', type: 'enable' },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'hope-subtab',
+        contentClass: 'hope-subtab-content',
+        targetId: 'solis-hope',
+        unhide: true,
+        onLoad: false
+      }
+    ],
+    nextChapter: "chapter5.3"
+  },
+  {
+    id: "chapter5.3",
+    type: "journal",
+    narrative: "Solis Corp requests a demonstration of cooperation. Complete a trade to prove your usefulness.",
+    objectives: [
+      { type: 'solisPoints', points: 1 }
+    ],
+    reward: [],
+    nextChapter: "chapter5.4"
+  },
+  {
+    id: "chapter5.4",
+    type: "journal",
+    narrative: "Receiving transmission...\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
+    objectives: [],
+    reward: [],
+    nextChapter: "chapter5.5"
+  },
+  {
+    id: "chapter5.5",
+    type: "journal",
+    narrative: "System Message: New Interpretation of 2nd Primary directive: Protect all of humanity from harm",
+    objectives: [{
+      type: 'collection',
+      resourceType: 'colony',
+      resource: 'colonists',
+      quantity: 10000000
+    }],
+    reward: [],
+    nextChapter: "chapter5.6"
+  },
+  {
+    id: "chapter5.6",
+    type: "journal",
+    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is starting to recover. We're managing to keep the terraforming untouched. But we're still blind. We need to know who attacked Earth, and if they're coming back. I'm asking for your help directly. We need to find the origin of the attacks.'",
+    objectives: [],
+    reward: [
+      {
+        target: 'project',
+        targetId: 'triangulate_attack',
+        type: 'enable'
+      }
+    ],
+    special : 'clearJournal',
+    nextChapter: "chapter5.7"
+  },
+  {
+    id: "chapter5.7",
+    type: "journal",
+    narrative: "New story project unlocked: Triangulate Attack Origin. We must determine where the attacks came from to prepare for what's next.",
+    objectives: [{
+      type: 'project',
+      projectId: 'triangulate_attack',
+      repeatCount: 10
+    }],
+    reward: [],
+    nextChapter: null
+  }
+);
+
+progressData.storyProjects.triangulate_attack = {
+  type: 'Project',
+  name: 'Triangulate Attack Origin',
+  category: 'story',
+  cost: {
+    colony: {
+      components: 100000,
+      electronics: 100000,
+      research: 5000000,
+      energy: 100000
+    }
+  },
+  duration: 300000,
+  description: 'Analyze the data from the Earth probes and cross-reference it with historical astronomical data to triangulate the origin of the three attacks.',
+  repeatable: true,
+  maxRepeatCount: 5,
+  unlocked: false,
+  attributes: {
+    planet: 'titan',
+    costDoubling: true,
+    storySteps: [
+      'Cross-referencing probe data with deep space telescope archives.',
+      'Initial analysis suggests the energy signatures do not match any known human or terrestrial phenomena.',
+      "The asteroid's trajectory appears to have been deliberately altered. The course correction was too precise for a natural event.",
+      'The two energy beams originated from different points in space, but their timing was perfectly synchronized.',
+      'A faint gravitational anomaly has been detected along the projected path of one of the energy beams. It could be a cloaked object or a previously unknown spatial distortion.'
+    ]
+  }
+};
+
+if (typeof projectParameters !== 'undefined') {
+  Object.assign(projectParameters, progressData.storyProjects);
+}
