@@ -1102,14 +1102,11 @@ progressData.storyProjects.sticky_dust_trap = {
   name: 'Sticky Dust Trap',
   category: 'story',
   cost: {
-    colony: {
-      components: 1000,
-      electronics: 1000,
-      research: 50000,
-      energy: 50000
+    special: {
+      albedoUpgrades : 1e12
     }
   },
-  duration: 120000,
+  duration: 600000,
   description: 'Create and deploy adhesive black dust to reveal the cloaked craft.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -1147,9 +1144,9 @@ progressData.storyProjects.interrogate_alien = {
   category: 'story',
   cost: {
     colony: {
-      components: 1000,
-      electronics: 1000,
-      research: 100000,
+      components: 1,
+      electronics: 1,
+      research: 1e3,
       energy: 50000
     }
   },
@@ -1160,7 +1157,7 @@ progressData.storyProjects.interrogate_alien = {
   unlocked: false,
   attributes: {
     planet: 'titan',
-    costDoubling: true,
+    costDoubling: false,
     storySteps: [
       'Bio\u2011scan complete.  Subject physiology tolerates 0.4\u202Fbar CO\u2082 but is photosensitive and reliant on high\u2011frequency acoustics.   Mary believes we can exploit the latter.',
       'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a tri\u2011vector attack timetable.',

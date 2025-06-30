@@ -16,16 +16,23 @@ class StoryManager {
     // --- NEW: Event handler for journal completion ---
     handleJournalFinished(e) {
         const finishedId = e && e.detail ? e.detail.eventId : null;
-        console.log("StoryManager received storyJournalFinishedTyping event.");
-        if (this.waitingForJournalEventId !== null && this.waitingForJournalEventId === finishedId) {
+        if (!finishedId) {
+            return;
+        } // Ignore events without a specific ID
+
+        // Only process this event if it corresponds to a known chapter event
+        // that the story manager is actively waiting for. This prevents
+        // journal entries from other systems (like story projects) from
+        // prematurely completing a chapter.
+        if (this.allEvents.has(finishedId) && this.waitingForJournalEventId === finishedId) {
             const completedEventId = this.waitingForJournalEventId;
             this.waitingForJournalEventId = null; // Clear the flag *before* processing
 
             if (this.activeEventIds.has(completedEventId)) {
-                 console.log(`Journal finished for waiting event ${completedEventId}. Processing completion.`);
-                 this.processEventCompletion(completedEventId);
+                console.log(`Journal finished for waiting event ${completedEventId}. Processing completion.`);
+                this.processEventCompletion(completedEventId);
             } else {
-                 console.warn(`Journal finished, but event ${completedEventId} was no longer active?`);
+                console.warn(`Journal finished, but event ${completedEventId} was no longer active?`);
             }
         }
     }
@@ -73,70 +80,51 @@ class StoryManager {
     }
 
     update() {
-        // If a pop-up is active, pause story updates until it is closed
-        if (typeof window !== 'undefined' && window.popupActive) {
+        // If a pop-up is active or the journal is busy typing, pause all story progression.
+        if ((typeof window !== 'undefined' && window.popupActive) || (typeof journalTyping !== 'undefined' && journalTyping)) {
             return;
         }
-        // --- Prevent processing completions while waiting for a journal ---
-        if (this.waitingForJournalEventId !== null) {
-             // console.log(`StoryManager update paused: Waiting for journal event ${this.waitingForJournalEventId}`);
-             return; // Don't process completions or activations while waiting
-        }
-        // --- End of addition ---
-
 
         // 1. Check completion conditions for currently active events
-        const eventsReadyToComplete = new Map(); // Use a map to store event objects
-
+        const eventsToComplete = [];
         for (const eventId of this.activeEventIds) {
             const event = this.findEventById(eventId);
-            // Make sure we aren't already waiting for this specific event
             if (event && this.checkObjectives(event)) {
-                eventsReadyToComplete.set(eventId, event); // Store the event object itself
-            }
-        }
-
-
-        // 2. Process events ready for completion
-        const newlyCompletedIds = [];
-        for (const [eventId, event] of eventsReadyToComplete.entries()) {
-
-             // --- Check if we need to wait for journal animation ---
-            const isJournal = event.type === 'journal';
-            const pendingQueue = (typeof journalQueue !== 'undefined' && Array.isArray(journalQueue)) ? journalQueue.some(q => q.eventId === eventId) : false;
-            const typingThisEvent = (typeof journalCurrentEventId !== 'undefined') && journalCurrentEventId === eventId;
-
-            if (isJournal && (pendingQueue || typingThisEvent)) {
-                 // The journal text for this event is still typing or queued.
-                 this.waitingForJournalEventId = eventId;
-                 console.log(`Event ${eventId} objectives met, waiting for journal text to finish.`);
-                 return; // Wait until typing done
-            } else {
-                 newlyCompletedIds.push(eventId);
-            }
-             // --- End of check ---
-        }
-
-        // 3. Process the events that are *actually* completed (not waiting)
-        for (const completedId of newlyCompletedIds) {
-             // Ensure it wasn't set to wait in the loop above (shouldn't happen with the 'return' added)
-             if (this.waitingForJournalEventId !== completedId) {
-                 this.processEventCompletion(completedId);
-             }
-        }
-
-        // 4. Check activation conditions for inactive events (only if not waiting)
-        if (this.waitingForJournalEventId === null) { // Check again in case completion happened via handler
-            for (const [eventId, event] of this.allEvents.entries()) {
-                if (!this.activeEventIds.has(eventId) && !this.completedEventIds.has(eventId)) {
-                    if (this.checkActivationConditions(event)) {
-                        this.activateEvent(event);
+                // For journal events without other objectives, we need to ensure they have had a chance
+                // to trigger their typing animation before we complete them in this same tick.
+                // We add a 'completedThisTick' flag to handle this.
+                if (event.type === 'journal' && (!event.objectives || event.objectives.length === 0)) {
+                    if (event.completedThisTick) {
+                        // If the flag is already set, it means we've waited a tick, so it's safe to complete.
+                        eventsToComplete.push(eventId);
+                        delete event.completedThisTick; // Clean up the flag
+                    } else {
+                        // If the flag is not set, we set it and wait for the next tick.
+                        // This gives the journal time to start typing.
+                        event.completedThisTick = true;
                     }
+                } else {
+                    // For all other events, complete them immediately if objectives are met.
+                    eventsToComplete.push(eventId);
                 }
             }
         }
 
-        // Update the displayed objective after processing events
+        // 2. Process completions
+        for (const eventId of eventsToComplete) {
+            this.processEventCompletion(eventId);
+        }
+
+        // 3. Check activation conditions for inactive events
+        for (const [eventId, event] of this.allEvents.entries()) {
+            if (!this.activeEventIds.has(eventId) && !this.completedEventIds.has(eventId)) {
+                if (this.checkActivationConditions(event)) {
+                    this.activateEvent(event);
+                }
+            }
+        }
+
+        // 4. Update the displayed objective after processing events
         this.updateCurrentObjectiveUI();
     }
 
