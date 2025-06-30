@@ -1061,6 +1061,117 @@ progressData.storyProjects.triangulate_attack = {
   }
 };
 
+progressData.chapters.push(
+  {
+    id: "chapter6.0",
+    type: "journal",
+    narrative: "Chapter 6: Shadows in the Dust",
+    objectives: [],
+    reward: [],
+    special: "clearJournal",
+    nextChapter: "chapter6.1"
+  },
+  {
+    id: "chapter6.1",
+    type: "journal",
+    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary.   I have read the results.   Your last record mentions a *cloaked object*?  I have to tell you something.  People have been getting abducted.  On Earth, Mars and even Titan now, going back centuries.  This is something we hid from the public.  We could never catch the culprit, but we had high confidence it was some sort of cloaked flying object.'",
+    objectives: [],
+    reward: [
+      {
+        target: "project",
+        targetId: "sticky_dust_trap",
+        type: "enable"
+      }
+    ],
+    nextChapter: "chapter6.2"
+  },
+  {
+    id: "chapter6.2",
+    type: "journal",
+    narrative: "Countermeasure developed: *Sticky Black Dust Trap*.\nObjective: Make black dust sticky.",
+    objectives: [
+      { type: "project", projectId: "sticky_dust_trap", repeatCount: 1 }
+    ],
+    reward: [],
+    nextChapter: "chapter6.3"
+  },
+  {
+    id: "chapter6.3",
+    type: "journal",
+    narrative: "Mission Log: Dust net deployed and detonated.   Target disabled.   Recovery drones en-route.\n\nSensor feed shows a matte ovoid, 7m across, covered in the tar-like residue. An access hatch has been ruptured; one occupant located, alive and restrained.",
+    objectives: [],
+    reward: [
+      {                    // First interrogation step
+        target: "project",
+        targetId: "interrogate_alien_step",
+        type: "enable"
+      }
+    ],
+    nextChapter: "chapter6.3b"
+  },
+  {
+    id: "chapter6.3b",
+    type: "journal",
+    narrative: "Objective: Initiate *Interrogation Protocol I – Bio‑scan*.",
+    objectives: [
+      { type: "project", projectId: "interrogate_alien_step1", repeatCount: 1 }
+    ],
+    reward: [
+      { target: "project", targetId: "interrogate_alien_step2", type: "enable" }
+    ],
+    nextChapter: "chapter6.4"
+  },
+  {
+    id: "chapter6.4",
+    type: "journal",
+    narrative: "Bio‑scan complete.  Subject physiology tolerates 0.4 bar CO₂ but is *photosensitive* and reliant on high‑frequency acoustics.   Mary believes we can exploit the latter.\n\nObjective: Proceed to *Interrogation Protocol II – Sensory Deprivation & Acoustic Stimuli*.",
+    objectives: [
+      { type: "project", projectId: "interrogate_alien_step2", repeatCount: 1 }
+    ],
+    reward: [
+      { target: "project", targetId: "interrogate_alien_step3", type: "enable" }
+    ],
+    nextChapter: "chapter6.5"
+  },
+  {
+    id: "chapter6.5",
+    type: "journal",
+    narrative: "Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a *tri‑vector attack timetable*.\n\nObjective: Execute *Interrogation Protocol III – Linguistic Cross‑correlation* to translate the data burst.",
+    objectives: [
+      { type: "project", projectId: "interrogate_alien_step3", repeatCount: 1 }
+    ],
+    reward: [],
+    nextChapter: "chapter6.6"
+  },
+  {
+    id: "chapter6.6",
+    type: "journal",
+    narrative: "Translation uplink complete.\n  '…FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'\n\nMary: 'H.O.P.E., they're coming *here* next, and they'll hit all three colonies at once.'",
+    objectives: [],
+    reward: [
+      {              // Unlock defensive research & projects
+        target: "researchManager",
+        type: "booleanFlag",
+        flagId: "planetaryDefenceUnlocked",
+        value: true
+      },
+      { target: "project", targetId: "planetary_defense_grid", type: "enable" },
+      { target: "project", targetId: "titan_defense_grid", type: "enable" }
+    ],
+    nextChapter: "chapter6.7"
+  },
+  {
+    id: "chapter6.7",
+    type: "journal",
+    narrative: "System Directive Update: Protect *all* human settlements from imminent hostile incursion.\n\nNew Global Objective: Complete a planetary defence grid on Mars *and* Titan, and establish at least one shield array on your next target world.",
+    objectives: [
+
+    ],
+    reward: [],
+    nextChapter: null
+  }
+);
+
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
 }
