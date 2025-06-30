@@ -151,7 +151,9 @@ function updateSolisUI() {
   const quest = solisManager.currentQuest;
   if (questText) {
     if (quest) {
-      questText.innerHTML = `Deliver <span class="solis-quest-quantity">${quest.quantity}</span> units of <span class="solis-quest-resource">${quest.resource}</span>`;
+      const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
+      const qty = format(quest.quantity, true);
+      questText.innerHTML = `Deliver <span class="solis-quest-quantity">${qty}</span> units of <span class="solis-quest-resource">${quest.resource}</span>`;
     } else {
       questText.textContent = 'No new quest available at this time.';
     }
