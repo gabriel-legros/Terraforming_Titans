@@ -11,7 +11,7 @@ describe('advanced research unlock chapter', () => {
     const chapters = ctx.progressData.chapters;
     const ch4_10 = chapters.find(c => c.id === 'chapter4.10');
     const ch4_11 = chapters.find(c => c.id === 'chapter4.11');
-    expect(ch4_10.nextChapter).toBe('chapter4.11');
+    expect(ch4_11.prerequisites).toContain('chapter4.10');
     expect(ch4_10.reward).toBeDefined();
     const resEffect = ch4_10.reward.find(r => r.target === 'resource' && r.resourceType === 'colony' && r.targetId === 'advancedResearch' && r.type === 'enable');
     const flagEffect = ch4_10.reward.find(r => r.target === 'researchManager' && r.type === 'booleanFlag' && r.flagId === 'advancedResearchUnlocked' && r.value === true);

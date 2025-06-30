@@ -9,7 +9,11 @@ describe('StoryManager jumpToChapter', () => {
       console,
       setTimeout: (fn) => fn(),
       clearTimeout: () => {},
-      document: { addEventListener: () => {}, removeEventListener: () => {} },
+      document: { 
+        addEventListener: () => {}, 
+        removeEventListener: () => {},
+        getElementById: () => null 
+      },
       addEffect: jest.fn(),
       removeEffect: jest.fn(),
       clearJournal: jest.fn(),
@@ -21,8 +25,8 @@ describe('StoryManager jumpToChapter', () => {
       terraforming: {},
       progressData: {
         chapters: [
-          { id: 'c1', type: 'journal', narrative: 'one', reward: [{ target: 'global', type: 'dummy' }], nextChapter: 'c2' },
-          { id: 'c2', type: 'journal', narrative: 'two', reward: [] }
+          { id: 'c1', type: 'journal', narrative: 'one', reward: [{ target: 'global', type: 'dummy' }] },
+          { id: 'c2', type: 'journal', narrative: 'two', reward: [], prerequisites: ['c1'] }
         ]
       }
     };
