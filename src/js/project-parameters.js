@@ -357,69 +357,7 @@ const projectParameters = {
       disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas']},
     disposalAmount : 1000000
     }
-  },
-  earthProbe : {
-    type: 'Project',
-    name : "Earth Recon Probe",
-    category : "story",
-    cost : {
-      colony : {
-        components : 10,
-        electronics : 10,
-        energy : 10000
-      }
-    },
-    duration : 300000,
-    description : "Send an automated probe back to Earth to search for clues.",
-    repeatable : true,
-    maxRepeatCount : 10,
-    unlocked : false,
-    attributes : {
-      planet : 'titan',
-      costDoubling : true,
-      storySteps : [
-        "Probe telemetry confirmed: Earth fragmented into massive tectonic shards.",
-        "Expansive oceans of molten silicates illuminate the planetary remains.",
-        "No continental structures persist; only turbulent magma storms detected.",
-        "Residual gamma radiation permeates ruins of former metropolitan zones.",
-        "Carbonized debris displays signatures of precision-directed energy pulses.",
-        "Spectroscopic analysis indicates widespread positron annihilation events.",
-        "Impact cratering consistent with a colossal asteroid collision identified.",
-        "Chronometric data reveals catastrophic events unfolded within minutes.",
-        "Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.",
-        "Surface integrity nullified—analysis confirms simultaneous laser, antimatter, and asteroid offensive."
-      ]
-    }
-  },
-  triangulate_attack: {
-    type: 'Project',
-    name: "Triangulate Attack Origin",
-    category: "story",
-    cost: {
-      colony: {
-        components: 100000,
-        electronics: 100000,
-        research: 5000000,
-        energy: 100000
-      }
-    },
-    duration: 300000,
-    description: "Analyze the data from the Earth probes and cross-reference it with historical astronomical data to triangulate the origin of the three attacks.",
-    repeatable: true,
-    maxRepeatCount: 5,
-    unlocked: false,
-    attributes: {
-      planet: 'titan',
-      costDoubling: true,
-      storySteps: [
-        "Cross-referencing probe data with deep space telescope archives.",
-        "Initial analysis suggests the energy signatures do not match any known human or terrestrial phenomena.",
-        "The asteroid's trajectory appears to have been deliberately altered. The course correction was too precise for a natural event.",
-        "The two energy beams originated from different points in space, but their timing was perfectly synchronized.",
-        "A faint gravitational anomaly has been detected along the projected path of one of the energy beams. It could be a cloaked object or a previously unknown spatial distortion."
-      ]
-    }
   }
-};
+}; 
 
 
