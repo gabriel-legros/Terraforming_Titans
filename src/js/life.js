@@ -671,14 +671,18 @@ class LifeManager extends EffectableEntity {
 
               const globalOxygen = resources.atmospheric['oxygen']?.value || 0;
               const maxDecayByOxygen = (globalOxygen / oxygenRatio) * biomassRatio;
-              
-              // Final decay is limited by target amount, oxygen, and available biomass
-              biomassChange = -Math.min(targetDecayAmount, maxDecayByOxygen, zonalBiomass);
 
-              // Calculate resource changes based on actual decay (biomassChange is negative)
-              waterChange = -(biomassChange / biomassRatio) * waterRatio; // Decay RELEASES water
-              co2Change = -(biomassChange / biomassRatio) * co2Ratio;     // Decay RELEASES CO2
-              oxygenChange = (biomassChange / biomassRatio) * oxygenRatio; // Decay CONSUMES O2 (oxygenChange is negative)
+              const totalDecay = Math.min(targetDecayAmount, zonalBiomass);
+              const oxygenDecay = Math.min(maxDecayByOxygen, totalDecay);
+              const deletedBiomass = totalDecay - oxygenDecay;
+
+              // Biomass removed from the zone (both decayed and deleted)
+              biomassChange = -(oxygenDecay + deletedBiomass);
+
+              // Resource changes only from the portion that had oxygen to decay
+              waterChange = (oxygenDecay / biomassRatio) * waterRatio; // Decay RELEASES water
+              co2Change = (oxygenDecay / biomassRatio) * co2Ratio;     // Decay RELEASES CO2
+              oxygenChange = -(oxygenDecay / biomassRatio) * oxygenRatio; // Decay CONSUMES O2
 
               // Add modifyRate calls for Decay
               if (secondsMultiplier > 0 && biomassChange < -1e-9) { // Only track rates if decay happened
