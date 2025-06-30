@@ -1053,12 +1053,11 @@ progressData.storyProjects.triangulate_attack = {
     planet: 'titan',
     costDoubling: true,
     storySteps: [
-      'Cross-referencing probe data with deep space telescope archives.',
-      'Initial analysis suggests the energy signatures do not match any known human or terrestrial phenomena.',
-      "The asteroid's trajectory appears to have been deliberately altered. The course correction was too precise for a natural event.",
-      'The two energy beams originated from different points in space, but their timing was perfectly synchronized.',
-      'A faint gravitational anomaly has been detected along the projected path of one of the energy beams. It could be a cloaked object or a previously unknown spatial distortion.'
-    ]
+    'Cross-referencing asteroid trajectory data points toward the vicinity of Barnard\'s Star, suggesting deliberate manipulation from a known stellar system.',
+    'Initial spectral analysis of the laser beam indicates no match with known astronomical sources or human technologies, but aligns closely with energetic events in the Crab Nebula (Messier 1).',
+    'The positron beam emission aligns precisely with Cygnus X-1, a stellar-mass black hole previously catalogued for anomalous energetic outputs.',
+    'Timing and coordination analysis confirm that the asteroid and energy beams originated from distinctly separate astronomical locations, suggesting strategic coordination.',
+    'A faint gravitational anomaly detected along the positron beam trajectory hints at a cloaked object or unknown spatial anomaly masking its true source.'    ]
   }
 };
 
