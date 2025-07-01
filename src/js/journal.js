@@ -56,6 +56,13 @@ function updateJournalNavArrows() {
   const prev = document.getElementById('journal-prev');
   const next = document.getElementById('journal-next');
   const groups = getJournalChapterGroups();
+  // Clamp index to valid range so new games don't start at -1
+  if (groups.length === 0) {
+    journalChapterIndex = 0;
+  } else {
+    journalChapterIndex = Math.min(Math.max(journalChapterIndex, 0), groups.length - 1);
+  }
+
   if (prev && next) {
     prev.classList.toggle('disabled', journalChapterIndex <= 0);
     next.classList.toggle('disabled', journalChapterIndex >= groups.length - 1);
