@@ -157,8 +157,17 @@ body {
     padding: 5px 10px;
 }
 
-.journal-history {
-    padding: 5px 10px;
+
+.journal-nav {
+    cursor: pointer;
+    margin-left: 5px;
+    user-select: none;
+}
+
+.journal-nav.disabled {
+    color: gray;
+    cursor: default;
+    pointer-events: none;
 }
 
 .journal-alert {

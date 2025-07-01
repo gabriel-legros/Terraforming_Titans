@@ -10,6 +10,49 @@ let journalQueue = [];      // queue of pending entry objects {text, eventId, so
 let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
 let journalUserScrolling = false;
+let journalChapterIndex = 0;
+
+function getJournalChapterGroups() {
+  const groups = [];
+  let current = null;
+  for (let i = 0; i < journalHistoryData.length; i++) {
+    const src = journalHistorySources[i];
+    const text = journalHistoryData[i];
+    if (src && src.type === 'chapter') {
+      if (!current || current.chapterId !== src.id) {
+        current = { chapterId: src.id, entries: [], sources: [] };
+        groups.push(current);
+      }
+    } else if (!current) {
+      current = { chapterId: null, entries: [], sources: [] };
+      groups.push(current);
+    }
+    if (current) {
+      current.entries.push(text);
+      current.sources.push(src);
+    }
+  }
+  return groups;
+}
+
+function updateJournalNavArrows() {
+  const prev = document.getElementById('journal-prev');
+  const next = document.getElementById('journal-next');
+  const groups = getJournalChapterGroups();
+  if (prev && next) {
+    prev.classList.toggle('disabled', journalChapterIndex <= 0);
+    next.classList.toggle('disabled', journalChapterIndex >= groups.length - 1);
+  }
+}
+
+function displayJournalChapter(index) {
+  const groups = getJournalChapterGroups();
+  const group = groups[index];
+  if (!group) return;
+  loadJournalEntries(group.entries, journalHistoryData, group.sources, journalHistorySources);
+  journalChapterIndex = index;
+  updateJournalNavArrows();
+}
 function addJournalEntry(text, eventId = null, source = null) {
   journalQueue.push({ text, eventId, source });
   if (!journalTyping) {
@@ -36,6 +79,7 @@ function processNextJournalEntry() {
   journalHistoryData.push(text); // Also keep it in the full history
   journalEntrySources.push(srcObj);
   journalHistorySources.push(srcObj);
+  updateJournalNavArrows();
 
   let index = 0;
 
@@ -104,6 +148,8 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
     journalHistoryData = entries.slice();
     journalHistorySources = journalEntrySources.slice();
   }
+  journalChapterIndex = getJournalChapterGroups().length - 1;
+  updateJournalNavArrows();
 }
 
 /**
@@ -119,6 +165,8 @@ function clearJournal() {
   journalCurrentEventId = null;
   journalUserScrolling = false;
   journalEntries.scrollTop = 0;
+  journalChapterIndex = getJournalChapterGroups().length - 1;
+  updateJournalNavArrows();
 }
 
 function updateJournalAlert() {
@@ -211,9 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toggleButton) {
     toggleButton.addEventListener('click', toggleJournal);
   }
-  const historyButton = document.getElementById('show-history-button');
-  if (historyButton) {
-    historyButton.addEventListener('click', showJournalHistory);
+  const prevArrow = document.getElementById('journal-prev');
+  if (prevArrow) {
+    prevArrow.addEventListener('click', () => {
+      if (journalChapterIndex > 0) {
+        displayJournalChapter(journalChapterIndex - 1);
+      }
+    });
+  }
+  const nextArrow = document.getElementById('journal-next');
+  if (nextArrow) {
+    nextArrow.addEventListener('click', () => {
+      const groups = getJournalChapterGroups();
+      if (journalChapterIndex < groups.length - 1) {
+        displayJournalChapter(journalChapterIndex + 1);
+      }
+    });
   }
   const entriesDiv = document.getElementById('journal-entries');
   if (entriesDiv) {
@@ -222,4 +283,5 @@ document.addEventListener('DOMContentLoaded', () => {
       journalUserScrolling = !atBottom;
     });
   }
+  updateJournalNavArrows();
 });
