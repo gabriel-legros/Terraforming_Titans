@@ -627,7 +627,7 @@ progressData = {
       {
         id: "chapter3.4",
         type: "journal",
-        narrative: "Receiving transmission...\n  'You're in the final stages, H.O.P.E. Once all primary terraforming parameters are within nominal ranges simultaneously, you are authorized to submit your final report to the MTC.'",
+        narrative: "Receiving transmission...\n  'You're in the final stages, H.O.P.E. Once all primary terraforming parameters are within nominal ranges simultaneously, you are authorized to submit your final report to the MTC.  If you need more nitrogen, crank those shipyards up!  If you need more oxygen, get some more carbon in here, and accelerate the geological burial process.'",
         prerequisites: ["chapter3.3"],
         objectives: [{
           type: 'terraforming',
