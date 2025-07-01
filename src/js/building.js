@@ -414,7 +414,7 @@ class Building extends EffectableEntity {
           if(ghgFactorySettings.restartCap < 1){
             ghgFactorySettings.restartTimer += deltaTime;
             const progress = Math.min(ghgFactorySettings.restartTimer, 5000);
-            ghgFactorySettings.restartCap = Math.log1p(progress) / Math.log1p(5000);
+            ghgFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log1p(2);
           } else {
             ghgFactorySettings.restartCap = 1;
           }
