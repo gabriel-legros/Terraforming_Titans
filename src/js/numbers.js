@@ -57,10 +57,18 @@ function getTemperatureUnit() {
     return parts.join(' ');
   }
 
+function formatBuildingCount(value) {
+  if (Math.abs(value) > 1e6) {
+    return formatNumber(value, false, 3);
+  }
+  return formatBigInteger(value);
+}
+
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       formatNumber,
       formatBigInteger,
+      formatBuildingCount,
       toDisplayTemperature,
       getTemperatureUnit,
       formatPlayTime,

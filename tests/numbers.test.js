@@ -1,4 +1,4 @@
-const { formatNumber, formatBigInteger, formatPlayTime } = require('../src/js/numbers.js');
+const { formatNumber, formatBigInteger, formatBuildingCount, formatPlayTime } = require('../src/js/numbers.js');
 
 describe('formatNumber', () => {
   test('formats thousands with suffix k', () => {
@@ -13,6 +13,16 @@ describe('formatNumber', () => {
 describe('formatBigInteger', () => {
   test('adds commas', () => {
     expect(formatBigInteger(1234567)).toBe('1,234,567');
+  });
+});
+
+describe('formatBuildingCount', () => {
+  test('uses comma formatting below a million', () => {
+    expect(formatBuildingCount(500000)).toBe('500,000');
+  });
+
+  test('uses abbreviated format above a million', () => {
+    expect(formatBuildingCount(2500000)).toBe('2.500M');
   });
 });
 
