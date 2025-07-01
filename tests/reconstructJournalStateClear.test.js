@@ -1,7 +1,7 @@
 const debugTools = require('../src/js/debug-tools.js');
 
 describe('reconstructJournalState chapter handling', () => {
-  test('keeps only entries from the current chapter', () => {
+  test('keeps only entries from the current chapter but returns full history', () => {
     const data = {
       chapters: [
         { id: 'c1', type: 'journal', chapter: 1, narrative: 'first' },
@@ -15,6 +15,13 @@ describe('reconstructJournalState chapter handling', () => {
     const res = debugTools.reconstructJournalState(sm, pm, data);
     expect(res.entries).toEqual(['reset','after','step2']);
     expect(res.sources).toEqual([
+      { type: 'chapter', id: 'c2' },
+      { type: 'chapter', id: 'c3' },
+      { type: 'project', id: 'p1', step: 1 }
+    ]);
+    expect(res.historyEntries).toEqual(['first','reset','after','step2']);
+    expect(res.historySources).toEqual([
+      { type: 'chapter', id: 'c1' },
       { type: 'chapter', id: 'c2' },
       { type: 'chapter', id: 'c3' },
       { type: 'project', id: 'p1', step: 1 }

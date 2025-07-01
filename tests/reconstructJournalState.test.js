@@ -20,5 +20,12 @@ describe('reconstructJournalState', () => {
       { type:'project', id:'p1', step:0 },
       { type:'project', id:'p1', step:1 }
     ]);
+    expect(res.historyEntries).toEqual(['intro','quest','s1','s2']);
+    expect(res.historySources).toEqual([
+      { type:'chapter', id:'c1' },
+      { type:'chapter', id:'c2' },
+      { type:'project', id:'p1', step:0 },
+      { type:'project', id:'p1', step:1 }
+    ]);
   });
 });
