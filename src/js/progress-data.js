@@ -826,7 +826,6 @@ progressData = {
             onLoad: false
           }
         ],
-        special : 'clearJournal'
       },
       {
         id: "chapter4.11",
@@ -1015,7 +1014,6 @@ progressData.chapters.push(
         type: 'enable'
       }
     ],
-    special : 'clearJournal'
   },
   {
     id: "chapter5.7",
