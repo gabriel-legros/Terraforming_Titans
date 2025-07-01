@@ -23,6 +23,7 @@ class Resource extends EffectableEntity {
     this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
+    this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
   }
 
   // Method to initialize configurable properties
@@ -178,6 +179,7 @@ class Resource extends EffectableEntity {
       this.consumptionRateByType = {};
       this.productionRateBySource = {}; // Also reset the aggregated source map
       this.consumptionRateBySource = {}; // Also reset the aggregated source map
+      this.overflowRate = 0;
   }
 
   enable() {
@@ -354,19 +356,40 @@ function produceResources(deltaTime, buildings) {
       const previousValue = resource.value; // Track the previous value before changes
 
       // Apply the accumulated changes
-      resource.value += accumulatedChanges[category][resourceName];
+      const newValue = resource.value + accumulatedChanges[category][resourceName];
+      let finalValue = newValue;
+      let overflow = 0;
 
       // If the resource was at the cap, flatten back to cap but allow temporary excess
       if (resource.hasCap) {
-        if (previousValue >= resource.cap) {
-          resource.value = Math.min(resource.value, previousValue); // Flatten back to previous capped value
-        } else {
-          resource.value = Math.min(resource.value, resource.cap); // Otherwise, just apply the cap normally
-        }
+        const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+        if (newValue > limit) overflow = newValue - limit;
+        finalValue = Math.min(newValue, limit);
       }
 
-      // Ensure the resource value doesn't drop below zero
-      resource.value = Math.max(resource.value, 0);
+      resource.value = Math.max(finalValue, 0); // Ensure non-negative
+
+      if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
+        const zones = ['tropical', 'temperate', 'polar'];
+        const anyAboveZero = zones.some(z => (terraforming.temperature?.zones?.[z]?.value || 0) > 273.15);
+        zones.forEach(zone => {
+          const proportion = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+          if (anyAboveZero) {
+            terraforming.zonalWater[zone].liquid += overflow * proportion;
+          } else {
+            terraforming.zonalWater[zone].ice += overflow * proportion;
+          }
+        });
+
+        // Record overflow rate for tooltips
+        const rate = overflow / (deltaTime / 1000);
+        resource.overflowRate = rate;
+        if (anyAboveZero && resources.surface?.liquidWater) {
+          resources.surface.liquidWater.overflowRate = (resources.surface.liquidWater.overflowRate || 0) + rate;
+        } else if (resources.surface?.ice) {
+          resources.surface.ice.overflowRate = (resources.surface.ice.overflowRate || 0) + rate;
+        }
+      }
     }
   }
 
