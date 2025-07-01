@@ -1,14 +1,16 @@
-let journalEntriesData = []; // Array to store entries currently shown
-let journalHistoryData = []; // Array to store all journal history
+let journalEntriesData = []; // Array to store entry text currently shown
+let journalEntrySources = []; // Matching array of entry sources
+let journalHistoryData = []; // Array to store all journal history text
+let journalHistorySources = []; // Matching array of history entry sources
 let journalCollapsed = false;
 let journalUnread = false;
 
 // --- New: queue management for sequential typing ---
-let journalQueue = [];      // queue of pending entry objects {text, eventId}
+let journalQueue = [];      // queue of pending entry objects {text, eventId, source}
 let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
-function addJournalEntry(text, eventId = null) {
-  journalQueue.push({ text, eventId });
+function addJournalEntry(text, eventId = null, source = null) {
+  journalQueue.push({ text, eventId, source });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -22,14 +24,17 @@ function processNextJournalEntry() {
   }
 
   journalTyping = true;
-  const { text, eventId } = journalQueue.shift();
+  const { text, eventId, source } = journalQueue.shift();
   journalCurrentEventId = eventId;
   const journalEntries = document.getElementById('journal-entries');
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
 
+  const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
   journalEntriesData.push(text); // Store the journal entry in the array
   journalHistoryData.push(text); // Also keep it in the full history
+  journalEntrySources.push(srcObj);
+  journalHistorySources.push(srcObj);
 
   let index = 0;
 
@@ -64,7 +69,7 @@ function processNextJournalEntry() {
   }
 }
 
-function loadJournalEntries(entries, history = null) {
+function loadJournalEntries(entries, history = null, entrySources = null, historySourcesParam = null) {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
@@ -85,11 +90,14 @@ function loadJournalEntries(entries, history = null) {
   });
 
   journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
-  journalEntriesData = entries; // Restore the journalEntriesData array
+  journalEntriesData = entries;
+  journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
   if (history) {
     journalHistoryData = history.slice();
+    journalHistorySources = historySourcesParam ? historySourcesParam.slice() : journalEntrySources.slice();
   } else {
     journalHistoryData = entries.slice();
+    journalHistorySources = journalEntrySources.slice();
   }
 }
 
@@ -100,6 +108,7 @@ function clearJournal() {
   const journalEntries = document.getElementById('journal-entries');
   journalEntries.innerHTML = ''; // Remove all entries from the display
   journalEntriesData = []; // Clear the stored data array but keep history
+  journalEntrySources = [];
   journalQueue = [];
   journalTyping = false;
   journalCurrentEventId = null;
@@ -164,6 +173,30 @@ function showJournalHistory() {
 
   overlay.appendChild(windowDiv);
   document.body.appendChild(overlay);
+}
+
+function getJournalTextFromSource(source) {
+  if (!source) return '';
+  if (typeof source === 'string') {
+    source = { type: 'chapter', id: source };
+  }
+  if (source.type === 'chapter') {
+    const ch = (progressData && progressData.chapters || []).find(c => c.id === source.id);
+    if (ch) {
+      return ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
+    }
+  } else if (source.type === 'project') {
+    const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
+    const steps = proj && proj.attributes && proj.attributes.storySteps;
+    if (steps && steps[source.step] !== undefined) {
+      return steps[source.step];
+    }
+  }
+  return '';
+}
+
+function mapSourcesToText(sources) {
+  return (sources || []).map(getJournalTextFromSource);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

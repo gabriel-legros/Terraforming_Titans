@@ -564,9 +564,9 @@ class StoryEvent {
                 break;
             case "journal":
                  if (this.title) {
-                    addJournalEntry(`${this.title}:\n${this.narrative}`, this.id); // Combine if title exists
+                    addJournalEntry(`${this.title}:\n${this.narrative}`, this.id, { type: 'chapter', id: this.id });
                  } else {
-                    addJournalEntry(this.narrative, this.id);
+                    addJournalEntry(this.narrative, this.id, { type: 'chapter', id: this.id });
                  }
                 break;
             default:
