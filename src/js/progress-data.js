@@ -620,7 +620,7 @@ progressData = {
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
-          value: 20
+          value: 10
         }],
         reward: []
       },
