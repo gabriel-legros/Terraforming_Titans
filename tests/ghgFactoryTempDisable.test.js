@@ -2,7 +2,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
 
-global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 283.15 };
+global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 283.15, restartCap: 1, restartTimer: 0 };
 
 function createFactory() {
   const config = {
@@ -51,6 +51,24 @@ describe('GHG factory temperature disabling', () => {
     ghgFactorySettings.disableTempThreshold = 285;
     terraforming.temperature.value = 280;
     fac.updateProductivity(global.resources, 1000);
+    expect(fac.productivity).toBeGreaterThan(0);
+  });
+
+  test('gradual reactivation after high temp shutdown', () => {
+    const fac = createFactory();
+    fac.active = 1;
+    fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
+    ghgFactorySettings.autoDisableAboveTemp = true;
+    ghgFactorySettings.disableTempThreshold = 280;
+    terraforming.temperature.value = 285;
+    fac.updateProductivity(global.resources, 1000);
+    expect(ghgFactorySettings.restartCap).toBe(0);
+
+    terraforming.temperature.value = 275;
+    for(let i=0;i<5;i++){
+      fac.updateProductivity(global.resources, 1000);
+    }
+    expect(ghgFactorySettings.restartCap).toBeGreaterThan(0.9);
     expect(fac.productivity).toBeGreaterThan(0);
   });
 });
