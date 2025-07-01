@@ -331,9 +331,15 @@
 
     data.chapters.forEach(ch => {
       if (completed.has(ch.id)) {
+        if (ch.special === 'clearJournal') {
+          entries.length = 0;
+          sources.length = 0;
+        }
         const text = ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
-        entries.push(text);
-        sources.push({ type: 'chapter', id: ch.id });
+        if (text != null) {
+          entries.push(text);
+          sources.push({ type: 'chapter', id: ch.id });
+        }
         if (ch.objectives) {
           ch.objectives.forEach(obj => {
             if (obj.type === 'project') {
@@ -343,8 +349,11 @@
               const needed = obj.repeatCount || steps.length;
               const count = Math.min(repeat, needed, steps.length);
               for (let i = 0; i < count; i++) {
-                entries.push(steps[i]);
-                sources.push({ type: 'project', id: obj.projectId, step: i });
+                const stepText = steps[i];
+                if (stepText != null) {
+                  entries.push(stepText);
+                  sources.push({ type: 'project', id: obj.projectId, step: i });
+                }
               }
             }
           });
