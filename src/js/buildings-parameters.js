@@ -51,7 +51,7 @@ const buildingsParameters = {
     description: 'A pump for liquid water.  Requires liquid water to actually exist.',
     cost: { colony: { metal: 10, components: 1 } },
     consumption: { colony : {energy : 10000}, surface: {liquidWater: 10 } },
-    production: { colony: { water: 10 } },
+    production: { colony: { water: 1000 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
