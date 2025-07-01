@@ -119,7 +119,7 @@ body {
     padding: 15px; /* Adds padding to the journal text */
     box-sizing: border-box; /* Ensures padding is inside the element width */
     overflow-y: auto; /* Allows scrolling if content exceeds height */
-    max-height: 90vh; /* Limit to one screen height */
+    max-height: 87vh; /* Limit to one screen height */
 }
 
 /* Journal entries */
