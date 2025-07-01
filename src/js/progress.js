@@ -147,9 +147,6 @@ class StoryManager {
         }
         console.log(`Activating event: ${event.id}`);
         this.activeEventIds.add(event.id);
-        if (event.special === 'clearJournal') {
-            clearJournal();
-        }
         event.trigger(); // Calls addJournalEntry if it's a journal type
     }
 
@@ -478,9 +475,6 @@ class StoryManager {
                         }
                         addEffect(effect); // Apply to current game state
                     });
-                }
-                 if (event.special === 'clearJournal') {
-                    clearJournal();
                 }
             }
         }

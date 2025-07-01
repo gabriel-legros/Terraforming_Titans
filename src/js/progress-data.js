@@ -476,7 +476,6 @@ progressData = {
         prerequisites: ["chapter1.20"],
         objectives: [],
         reward: [],
-        special : 'clearJournal'
       },
       {
         id: "chapter1.22",
@@ -540,8 +539,7 @@ progressData = {
         narrative: "Chapter 2: Heating Up",
         prerequisites: ["chapter1.25"],
         objectives: [],
-        reward: [],
-        special : 'clearJournal'
+        reward: []
       },
       {
         id: "chapter2.1",
@@ -622,8 +620,7 @@ progressData = {
         narrative: "Chapter 3: Biogenesis",
         prerequisites: ["chapter2.6"],
         objectives: [],
-        reward: [],
-        special : 'clearJournal'
+        reward: []
       },
       {
         id: "chapter3.1",
@@ -708,8 +705,7 @@ progressData = {
         prerequisites: ["chapter4.0"],
         objectives: [],
         reward: [
-      ],
-        special : 'clearJournal'
+      ]
       },
       {
         id: "chapter4.2",
@@ -996,8 +992,7 @@ progressData.chapters.push(
       resource: 'colonists',
       quantity: 1000000
     }],
-    reward: [],
-    special : 'clearJournal'
+    reward: []
   },
   {
     id: "chapter5.1",
@@ -1136,8 +1131,7 @@ progressData.chapters.push(
     narrative: "Chapter 6: Shadows in the Dust",
     prerequisites: ["chapter5.7"],
     objectives: [],
-    reward: [],
-    special: "clearJournal"
+    reward: []
   },
   {
     id: "chapter6.1",

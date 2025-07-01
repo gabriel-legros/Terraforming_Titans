@@ -1,12 +1,12 @@
 const debugTools = require('../src/js/debug-tools.js');
 
-describe('reconstructJournalState clearJournal handling', () => {
-  test('skips entries before clearJournal and ignores null steps', () => {
+describe('reconstructJournalState chapter handling', () => {
+  test('keeps only entries from the current chapter', () => {
     const data = {
       chapters: [
-        { id: 'c1', type: 'journal', narrative: 'first' },
-        { id: 'c2', type: 'journal', narrative: 'reset', special: 'clearJournal' },
-        { id: 'c3', type: 'journal', narrative: 'after', objectives: [ { type: 'project', projectId: 'p1', repeatCount: 2 } ] }
+        { id: 'c1', type: 'journal', chapter: 1, narrative: 'first' },
+        { id: 'c2', type: 'journal', chapter: 2, narrative: 'reset' },
+        { id: 'c3', type: 'journal', chapter: 2, narrative: 'after', objectives: [ { type: 'project', projectId: 'p1', repeatCount: 2 } ] }
       ],
       storyProjects: { p1: { attributes: { storySteps: [null, 'step2'] } } }
     };
