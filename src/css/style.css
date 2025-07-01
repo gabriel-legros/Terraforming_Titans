@@ -170,6 +170,12 @@ body {
     pointer-events: none;
 }
 
+#journal-nav-container {
+    position: absolute;
+    right: 10px;
+    top: 0;
+}
+
 .journal-alert {
     color: red;
     font-weight: bold;

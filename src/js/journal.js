@@ -12,20 +12,37 @@ let journalCurrentEventId = null; // id of the event whose text is typing
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 
+function getChapterNumber(id) {
+  const m = /^chapter(\d+)/.exec(id);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function getChapterNumberFromSource(src) {
+  if (src && src.type === 'chapter') {
+    const ch = (progressData && progressData.chapters || []).find(c => c.id === src.id);
+    return ch && ch.chapter !== undefined ? ch.chapter : getChapterNumber(src.id);
+  }
+  return null;
+}
+
 function getJournalChapterGroups() {
   const groups = [];
   let current = null;
+  let currentNum = null;
   for (let i = 0; i < journalHistoryData.length; i++) {
     const src = journalHistorySources[i];
     const text = journalHistoryData[i];
-    if (src && src.type === 'chapter') {
-      if (!current || current.chapterId !== src.id) {
-        current = { chapterId: src.id, entries: [], sources: [] };
-        groups.push(current);
+    const chNum = getChapterNumberFromSource(src);
+    if (chNum !== null) {
+      if (chNum !== currentNum) {
+        currentNum = chNum;
+        current = chNum > 0 ? { chapterId: src.id, chapterNum: chNum, entries: [], sources: [] } : null;
+        if (current) groups.push(current);
       }
     } else if (!current) {
-      current = { chapterId: null, entries: [], sources: [] };
-      groups.push(current);
+      currentNum = null;
+      current = { chapterId: null, chapterNum: null, entries: [], sources: [] };
+      // group without chapter number is not shown when navigating but keep for completeness
     }
     if (current) {
       current.entries.push(text);
