@@ -33,7 +33,9 @@ let colonySliderSettings = {
 
 let ghgFactorySettings = {
   autoDisableAboveTemp: false,
-  disableTempThreshold: 283.15 // Kelvin
+  disableTempThreshold: 283.15, // Kelvin
+  restartCap: 1,
+  restartTimer: 0
 };
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});

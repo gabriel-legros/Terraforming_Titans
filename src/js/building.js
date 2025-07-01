@@ -408,6 +408,17 @@ class Building extends EffectableEntity {
       ){
         if(terraforming.temperature.value > ghgFactorySettings.disableTempThreshold){
           targetProductivity = 0;
+          ghgFactorySettings.restartCap = 0;
+          ghgFactorySettings.restartTimer = 0;
+        } else {
+          if(ghgFactorySettings.restartCap < 1){
+            ghgFactorySettings.restartTimer += deltaTime;
+            const progress = Math.min(ghgFactorySettings.restartTimer, 5000);
+            ghgFactorySettings.restartCap = Math.log1p(progress) / Math.log1p(5000);
+          } else {
+            ghgFactorySettings.restartCap = 1;
+          }
+          targetProductivity *= ghgFactorySettings.restartCap;
         }
       }
 
