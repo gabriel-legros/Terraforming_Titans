@@ -100,6 +100,10 @@ function initializeGameState(options = {}) {
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
 
+  if (typeof resetJournal === 'function') {
+    resetJournal();
+  }
+
   gameSettings.useCelsius = false;
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});

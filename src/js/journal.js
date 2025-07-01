@@ -186,6 +186,15 @@ function clearJournal() {
   updateJournalNavArrows();
 }
 
+/**
+ * Completely resets the journal, clearing both current entries and history.
+ */
+function resetJournal() {
+  clearJournal();
+  journalHistoryData = [];
+  journalHistorySources = [];
+}
+
 function updateJournalAlert() {
   const alertEl = document.getElementById('journal-alert');
   if (alertEl) {
