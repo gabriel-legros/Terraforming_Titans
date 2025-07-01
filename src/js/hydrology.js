@@ -71,7 +71,8 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
             if (slopeFactor < 0.1) slopeFactor = 0.1;
 
             if (diff > 0) {
-                const potentialFlow = Math.sqrt(diff) * flowRateCoefficient * slopeFactor * secondsMultiplier;
+                const flowCoefficient = flowRateCoefficient * 0.01;
+                const potentialFlow = (zonalData[source][liquidProp] || 0) * flowCoefficient * Math.min(Math.sqrt(diff), 1) * slopeFactor * secondsMultiplier;
                 flows[source][target] = potentialFlow;
                 outflow[source] += potentialFlow;
             } else {
