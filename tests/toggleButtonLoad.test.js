@@ -12,6 +12,7 @@ describe('toggle button count after load', () => {
     // minimal stubs required by structuresUI.js
     ctx.formatNumber = n => n;
     ctx.formatBigInteger = n => String(n);
+    ctx.formatBuildingCount = n => String(n);
     ctx.multiplyByTen = n => n * 10;
     ctx.divideByTen = n => Math.max(1, Math.floor(n / 10));
     ctx.resources = { colony: { colonists: { value: 0 }, workers: { value: 0 } } };

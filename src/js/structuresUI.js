@@ -175,11 +175,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   if (structure.canBeToggled) {
     constructedCountElement.innerHTML = `
-      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${structure.active}/${structure.count}</span>
+      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}</span>
     `;
   } else {
     constructedCountElement.innerHTML = `
-      <strong>Constructed:</strong> <span id="${structure.name}-count">${structure.count}</span>
+      <strong>Constructed:</strong> <span id="${structure.name}-count">${formatBuildingCount(structure.count)}</span>
     `;
   }
 
@@ -513,9 +513,9 @@ function updateDecreaseButtonText(button, buildCount) {
       }
   
       if (countElement) {
-        countElement.textContent = structure.count;
+        countElement.textContent = formatBuildingCount(structure.count);
       } else if (countActiveElement) {
-        countActiveElement.textContent = `${formatBigInteger(structure.active)}/${formatBigInteger(structure.count)}`;
+        countActiveElement.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
       }
 
       if (buildDisplay) {
