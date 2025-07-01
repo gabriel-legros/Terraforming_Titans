@@ -186,7 +186,7 @@ class Project extends EffectableEntity {
       const stepIndex = this.repeatCount - 1;
       const step = this.attributes.storySteps[stepIndex];
       if (step && typeof addJournalEntry === 'function' && !this.shownStorySteps.has(stepIndex)) {
-        addJournalEntry(step);
+        addJournalEntry(step, null, { type: 'project', id: this.name, step: stepIndex });
         this.shownStorySteps.add(stepIndex);
       }
     }

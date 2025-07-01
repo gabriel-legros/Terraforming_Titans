@@ -11,8 +11,8 @@ function getGameState() {
     oreScanning: oreScanner.saveState(),
     terraforming: terraforming.saveState(),
     story: storyManager.saveState(),
-    journalEntries: journalEntriesData,
-    journalHistory: journalHistoryData,
+    journalEntrySources: journalEntrySources,
+    journalHistorySources: journalHistorySources,
     goldenAsteroid: goldenAsteroid.saveState(),
     solisManager: solisManager.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
@@ -157,9 +157,14 @@ function loadGame(slotOrCustomString) {
       terraforming.loadState(gameState.terraforming);
     }
 
-      if (gameState.journalEntries) {
+      if (gameState.journalEntrySources) {
+        const entries = mapSourcesToText(gameState.journalEntrySources);
+        const historySources = gameState.journalHistorySources || gameState.journalEntrySources;
+        const history = mapSourcesToText(historySources);
+        loadJournalEntries(entries, history, gameState.journalEntrySources, historySources);
+      } else if (gameState.journalEntries) {
         const history = gameState.journalHistory || gameState.journalEntries;
-        loadJournalEntries(gameState.journalEntries, history); // Restore journal
+        loadJournalEntries(gameState.journalEntries, history);
       }
 
       // Restore research progress
