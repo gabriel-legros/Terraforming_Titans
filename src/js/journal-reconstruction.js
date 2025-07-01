@@ -2,7 +2,9 @@
   function reconstructJournalState(sm, pm, data = progressData, updateJournal = true) {
     const entries = [];
     const sources = [];
-    if (!sm || !data) return { entries, sources };
+    const historyEntries = [];
+    const historySources = [];
+    if (!sm || !data) return { entries, sources, historyEntries, historySources };
 
     const completed = new Set([
       ...(sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || []),
@@ -24,6 +26,8 @@
         if (text != null) {
           entries.push(text);
           sources.push({ type: 'chapter', id: ch.id });
+          historyEntries.push(text);
+          historySources.push({ type: 'chapter', id: ch.id });
         }
         if (ch.objectives) {
           ch.objectives.forEach(obj => {
@@ -38,6 +42,8 @@
                 if (stepText != null) {
                   entries.push(stepText);
                   sources.push({ type: 'project', id: obj.projectId, step: i });
+                  historyEntries.push(stepText);
+                  historySources.push({ type: 'project', id: obj.projectId, step: i });
                 }
               }
             }
@@ -47,10 +53,10 @@
     });
 
     if (updateJournal && typeof loadJournalEntries === 'function') {
-      loadJournalEntries(entries, null, sources);
+      loadJournalEntries(entries, historyEntries, sources, historySources);
     }
 
-    return { entries, sources };
+    return { entries, sources, historyEntries, historySources };
   }
 
   if (typeof module !== 'undefined' && module.exports) {
