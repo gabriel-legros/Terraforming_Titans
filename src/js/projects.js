@@ -12,6 +12,7 @@ class Project extends EffectableEntity {
     this.isActive = false; // Whether the project is currently active
     this.isCompleted = false; // Whether the project has been completed
     this.repeatCount = 0; // Track the current number of times the project has been repeated
+    this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
   }
 
@@ -182,9 +183,11 @@ class Project extends EffectableEntity {
     }
 
     if (this.attributes && Array.isArray(this.attributes.storySteps)) {
-      const step = this.attributes.storySteps[this.repeatCount - 1];
-      if (step && typeof addJournalEntry === 'function') {
+      const stepIndex = this.repeatCount - 1;
+      const step = this.attributes.storySteps[stepIndex];
+      if (step && typeof addJournalEntry === 'function' && !this.shownStorySteps.has(stepIndex)) {
         addJournalEntry(step);
+        this.shownStorySteps.add(stepIndex);
       }
     }
 
