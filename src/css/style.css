@@ -113,13 +113,13 @@ body {
 /* Journal container on the right side of the screen */
 .journal {
     position: relative;
-    min-height: 800;
     flex: 0 0 300px; /* Fixed width of 300px */
     background-color: #f4f4f4;
     border-left: 2px solid #ccc;
     padding: 15px; /* Adds padding to the journal text */
     box-sizing: border-box; /* Ensures padding is inside the element width */
     overflow-y: auto; /* Allows scrolling if content exceeds height */
+    max-height: 90vh; /* Limit to one screen height */
 }
 
 /* Journal entries */
