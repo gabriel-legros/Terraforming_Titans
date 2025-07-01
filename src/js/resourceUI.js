@@ -318,6 +318,10 @@ function updateResourceRateDisplay(resource){
       tooltipContent += '</div>';
     }
 
+    if (resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
+      tooltipContent += `<br><strong>Overflow:</strong> ${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    }
+
     if (typeof autobuildCostTracker !== 'undefined') {
       const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
       if (avgCost > 0) {
