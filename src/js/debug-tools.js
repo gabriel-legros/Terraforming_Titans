@@ -316,7 +316,7 @@
     Terraforming.prototype.calculateEquilibriumConstants = calculateEquilibriumConstants;
   }
 
-  function reconstructJournalState(sm, pm, data = progressData) {
+  function reconstructJournalState(sm, pm, data = progressData, updateJournal = true) {
     const entries = [];
     const sources = [];
     if (!sm || !data) return { entries, sources };
@@ -351,6 +351,10 @@
         }
       }
     });
+
+    if (updateJournal && typeof loadJournalEntries === 'function') {
+      loadJournalEntries(entries, null, sources);
+    }
 
     return { entries, sources };
   }
