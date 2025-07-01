@@ -316,13 +316,53 @@
     Terraforming.prototype.calculateEquilibriumConstants = calculateEquilibriumConstants;
   }
 
+  function reconstructJournalState(sm, pm, data = progressData) {
+    const entries = [];
+    const sources = [];
+    if (!sm || !data) return { entries, sources };
+
+    const completed = new Set([
+      ...(sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || []),
+      ...(sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [])
+    ]);
+
+    const projects = pm && pm.projects ? pm.projects : {};
+    const storyProjects = data.storyProjects || {};
+
+    data.chapters.forEach(ch => {
+      if (completed.has(ch.id)) {
+        const text = ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
+        entries.push(text);
+        sources.push({ type: 'chapter', id: ch.id });
+        if (ch.objectives) {
+          ch.objectives.forEach(obj => {
+            if (obj.type === 'project') {
+              const proj = projects[obj.projectId] || {};
+              const repeat = proj.repeatCount || 0;
+              const steps = storyProjects[obj.projectId]?.attributes?.storySteps || [];
+              const needed = obj.repeatCount || steps.length;
+              const count = Math.min(repeat, needed, steps.length);
+              for (let i = 0; i < count; i++) {
+                entries.push(steps[i]);
+                sources.push({ type: 'project', id: obj.projectId, step: i });
+              }
+            }
+          });
+        }
+      }
+    });
+
+    return { entries, sources };
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, calculateEquilibriumConstants };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, calculateEquilibriumConstants, reconstructJournalState };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
     if (typeof Terraforming !== 'undefined') {
       globalThis.calculateEquilibriumConstants = calculateEquilibriumConstants;
     }
+    globalThis.reconstructJournalState = reconstructJournalState;
   }
 })();
