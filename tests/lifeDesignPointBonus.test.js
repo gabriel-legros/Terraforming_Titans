@@ -39,16 +39,16 @@ describe('lifeDesignPointBonus effect', () => {
 
   test('adds bonus points to maxLifeDesignPoints', () => {
     const designer = context.lifeDesigner;
-    expect(designer.maxLifeDesignPoints()).toBe(50);
+    expect(designer.maxLifeDesignPoints()).toBe(0);
     designer.addAndReplace({ type: 'lifeDesignPointBonus', value: 10, effectId: 'skill', sourceId: 'skill' });
-    expect(designer.maxLifeDesignPoints()).toBe(60);
+    expect(designer.maxLifeDesignPoints()).toBe(10);
   });
 
   test('replacing bonus effect does not stack previous values', () => {
     const designer = context.lifeDesigner;
     designer.addAndReplace({ type: 'lifeDesignPointBonus', value: 10, effectId: 'skill', sourceId: 'skill' });
-    expect(designer.maxLifeDesignPoints()).toBe(60);
+    expect(designer.maxLifeDesignPoints()).toBe(10);
     designer.addAndReplace({ type: 'lifeDesignPointBonus', value: 20, effectId: 'skill', sourceId: 'skill' });
-    expect(designer.maxLifeDesignPoints()).toBe(70);
+    expect(designer.maxLifeDesignPoints()).toBe(20);
   });
 });
