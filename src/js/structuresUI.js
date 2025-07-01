@@ -347,6 +347,7 @@ function createStructureControls(structure, toggleCallback) {
   if (structure.canBeToggled) {
 
     zeroButton = document.createElement('button');
+    zeroButton.id = `${structure.name}-zero-button`;
     zeroButton.textContent = '0';
     zeroButton.addEventListener('click', function () {
       toggleCallback(structure, -structure.active);
@@ -354,6 +355,7 @@ function createStructureControls(structure, toggleCallback) {
     structureControls.appendChild(zeroButton);
 
     decreaseButton = document.createElement('button');
+    decreaseButton.id = `${structure.name}-decrease-button`;
     decreaseButton.textContent = '-1';
     decreaseButton.addEventListener('click', function () {
       toggleCallback(structure, -selectedBuildCounts[structure.name]);
@@ -361,6 +363,7 @@ function createStructureControls(structure, toggleCallback) {
     });
 
     increaseButton = document.createElement('button');
+    increaseButton.id = `${structure.name}-increase-button`;
     increaseButton.textContent = '+1';
     increaseButton.addEventListener('click', function () {
       toggleCallback(structure, selectedBuildCounts[structure.name]);
@@ -517,6 +520,15 @@ function updateDecreaseButtonText(button, buildCount) {
 
       if (buildDisplay) {
         buildDisplay.textContent = formatNumber(selectedBuildCounts[structureName], true);
+      }
+
+      const incBtn = document.getElementById(`${structureName}-increase-button`);
+      if (incBtn) {
+        updateIncreaseButtonText(incBtn, selectedBuildCounts[structureName]);
+      }
+      const decBtn = document.getElementById(`${structureName}-decrease-button`);
+      if (decBtn) {
+        updateDecreaseButtonText(decBtn, selectedBuildCounts[structureName]);
       }
 
       // Toggle visibility of the "Hide" button based on conditions
