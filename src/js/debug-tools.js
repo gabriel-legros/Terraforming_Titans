@@ -8,7 +8,8 @@
       calculateMethaneCondensationRateFactor,
       calculateMethaneEvaporationRate,
       getZonePercentage,
-      getZoneRatio;
+      getZoneRatio,
+      reconstructJournalState;
   if (isNode) {
     const utils = require('./terraforming-utils.js');
     calculateEvaporationSublimationRates = utils.calculateEvaporationSublimationRates;
@@ -26,6 +27,8 @@
     getZonePercentage = zonesMod.getZonePercentage;
     getZoneRatio = zonesMod.getZoneRatio;
     globalThis.ZONES = zonesMod.ZONES;
+
+    reconstructJournalState = require('./journal-reconstruction.js');
   } else {
     calculateEvaporationSublimationRates = globalThis.calculateEvaporationSublimationRates;
     calculatePrecipitationRateFactor = globalThis.calculatePrecipitationRateFactor;
@@ -35,6 +38,7 @@
     calculateMethaneEvaporationRate = globalThis.calculateMethaneEvaporationRate;
     getZonePercentage = globalThis.getZonePercentage;
     getZoneRatio = globalThis.getZoneRatio;
+    reconstructJournalState = globalThis.reconstructJournalState;
   }
   function captureValues() {
     const globalVals = {
@@ -316,59 +320,6 @@
     Terraforming.prototype.calculateEquilibriumConstants = calculateEquilibriumConstants;
   }
 
-  function reconstructJournalState(sm, pm, data = progressData, updateJournal = true) {
-    const entries = [];
-    const sources = [];
-    if (!sm || !data) return { entries, sources };
-
-    const completed = new Set([
-      ...(sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || []),
-      ...(sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [])
-    ]);
-
-    const projects = pm && pm.projects ? pm.projects : {};
-    const storyProjects = data.storyProjects || {};
-
-    let currentChapter = null;
-    data.chapters.forEach(ch => {
-      if (completed.has(ch.id)) {
-        if (currentChapter === null || ch.chapter !== currentChapter) {
-          currentChapter = ch.chapter;
-          entries.length = 0;
-          sources.length = 0;
-        }
-        const text = ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
-        if (text != null) {
-          entries.push(text);
-          sources.push({ type: 'chapter', id: ch.id });
-        }
-        if (ch.objectives) {
-          ch.objectives.forEach(obj => {
-            if (obj.type === 'project') {
-              const proj = projects[obj.projectId] || {};
-              const repeat = proj.repeatCount || 0;
-              const steps = storyProjects[obj.projectId]?.attributes?.storySteps || [];
-              const needed = obj.repeatCount || steps.length;
-              const count = Math.min(repeat, needed, steps.length);
-              for (let i = 0; i < count; i++) {
-                const stepText = steps[i];
-                if (stepText != null) {
-                  entries.push(stepText);
-                  sources.push({ type: 'project', id: obj.projectId, step: i });
-                }
-              }
-            }
-          });
-        }
-      }
-    });
-
-    if (updateJournal && typeof loadJournalEntries === 'function') {
-      loadJournalEntries(entries, null, sources);
-    }
-
-    return { entries, sources };
-  }
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, calculateEquilibriumConstants, reconstructJournalState };

@@ -12,6 +12,8 @@ describe('reconstructJournalState UI update', () => {
     const ctx = dom.getInternalVMContext();
     const journalCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'journal.js'), 'utf8');
     vm.runInContext(journalCode, ctx);
+    const reconCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'journal-reconstruction.js'), 'utf8');
+    vm.runInContext(reconCode, ctx);
     const debugCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'debug-tools.js'), 'utf8');
     vm.runInContext(debugCode, ctx);
 

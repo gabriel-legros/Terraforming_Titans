@@ -74,6 +74,7 @@
     <script src="src/js/population.js"></script>
     <script src="src/js/pop-up.js"></script>
     <script src="src/js/journal.js"></script>
+    <script src="src/js/journal-reconstruction.js"></script>
     <script src="src/js/progress.js"></script>
     <script src="src/js/physics.js"></script>
     <script src="src/js/hydrology.js"></script>
@@ -129,7 +130,6 @@
       <div id="day-night-progress-bar" class="day-night-progress-bar"></div>
     </div>
     <button id="toggle-journal-button" class="journal-toggle">Hide Journal</button>
-    <button id="show-history-button" class="journal-history">Show History</button>
     <span id="journal-alert" class="journal-alert">!</span>
   </div>
 
@@ -464,7 +464,7 @@
 
     <!-- Journal Section -->
     <div id="journal" class="journal">
-        <h3>Journal</h3>
+        <h3>Journal <span id="journal-prev" class="journal-nav">&#9664;</span><span id="journal-next" class="journal-nav">&#9654;</span></h3>
         <div id="current-objective" class="current-objective"></div>
         <div id="journal-entries">
             <!-- Journal entries will be dynamically inserted here -->
