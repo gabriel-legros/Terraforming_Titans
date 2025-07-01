@@ -266,7 +266,8 @@ function initializeLifeTerraformingDesignerUI() {
       
         // Add button
         const button = document.createElement('button');
-        button.textContent = `Buy with ${category.name} Point`;
+        const initialCost = lifeDesigner.getPointCost(category.name);
+        button.textContent = `Buy with ${category.name} (${formatNumber(initialCost, true)})`;
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);

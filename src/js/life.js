@@ -10,7 +10,7 @@ const baseTemperatureRanges = {
 };
 
 const lifeDesignerConfig = {
-  maxPoints : 50
+  maxPoints : 0
 }
 
 const BASE_MAX_BIOMASS_DENSITY = 0.1; // Base max biomass in tons per m^2
@@ -343,8 +343,8 @@ class LifeDesigner extends EffectableEntity {
     this.totalTime = this.getTentativeDuration();
     this.elapsedTime = 0;
 
-    this.basePointCost = 1000;
-    this.pointCostMultiplier = 10;
+    this.basePointCost = 100;
+    this.pointCostMultiplier = 2;
 
     this.purchaseCounts = {
       research: 0,
