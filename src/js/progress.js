@@ -1,5 +1,10 @@
 // progress.js (contains StoryManager)
 
+function getChapterNumber(id) {
+    const m = /^chapter(\d+)/.exec(id);
+    return m ? parseInt(m[1], 10) : null;
+}
+
 class StoryManager {
     constructor(progressData) {
         this.allEvents = this.loadEvents(progressData);
@@ -7,6 +12,7 @@ class StoryManager {
         this.completedEventIds = new Set();
         this.appliedEffects = [];
         this.waitingForJournalEventId = null; // <<< NEW: Track the ID of the journal event we're waiting for
+        this.currentChapter = null;
 
         // --- Add event listener for journal completion ---
         document.addEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
@@ -131,6 +137,13 @@ class StoryManager {
     activateEvent(event) { // Keep as is
         if (!event || this.activeEventIds.has(event.id) || this.completedEventIds.has(event.id)) {
             return;
+        }
+        const eventChapter = event.chapter;
+        if (this.currentChapter === null) {
+            this.currentChapter = eventChapter;
+        } else if (eventChapter !== this.currentChapter) {
+            clearJournal();
+            this.currentChapter = eventChapter;
         }
         console.log(`Activating event: ${event.id}`);
         this.activeEventIds.add(event.id);
@@ -541,6 +554,7 @@ class StoryManager {
 class StoryEvent {
     constructor(config) {
         this.id = config.id;
+        this.chapter = config.chapter !== undefined ? config.chapter : getChapterNumber(config.id);
         this.type = config.type;
         this.parameters = config.parameters || {};
         this.title = config.title || '';

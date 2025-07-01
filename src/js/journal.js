@@ -9,6 +9,7 @@ let journalUnread = false;
 let journalQueue = [];      // queue of pending entry objects {text, eventId, source}
 let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
+let journalUserScrolling = false;
 function addJournalEntry(text, eventId = null, source = null) {
   journalQueue.push({ text, eventId, source });
   if (!journalTyping) {
@@ -50,7 +51,9 @@ function processNextJournalEntry() {
       let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 250 : 50;
       setTimeout(typeLetter, delay);
     } else {
-      journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+      if (!journalUserScrolling) {
+        journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+      }
 
       console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
       const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
@@ -89,7 +92,9 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
     journalEntries.appendChild(entry);
   });
 
-  journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+  if (!journalUserScrolling) {
+    journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+  }
   journalEntriesData = entries;
   journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
   if (history) {
@@ -112,6 +117,8 @@ function clearJournal() {
   journalQueue = [];
   journalTyping = false;
   journalCurrentEventId = null;
+  journalUserScrolling = false;
+  journalEntries.scrollTop = 0;
 }
 
 function updateJournalAlert() {
@@ -207,5 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const historyButton = document.getElementById('show-history-button');
   if (historyButton) {
     historyButton.addEventListener('click', showJournalHistory);
+  }
+  const entriesDiv = document.getElementById('journal-entries');
+  if (entriesDiv) {
+    entriesDiv.addEventListener('scroll', () => {
+      const atBottom = entriesDiv.scrollHeight - entriesDiv.scrollTop <= entriesDiv.clientHeight + 5;
+      journalUserScrolling = !atBottom;
+    });
   }
 });

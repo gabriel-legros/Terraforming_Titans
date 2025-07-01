@@ -826,7 +826,6 @@ progressData = {
             onLoad: false
           }
         ],
-        special : 'clearJournal'
       },
       {
         id: "chapter4.11",
@@ -1015,7 +1014,6 @@ progressData.chapters.push(
         type: 'enable'
       }
     ],
-    special : 'clearJournal'
   },
   {
     id: "chapter5.7",
@@ -1180,4 +1178,14 @@ progressData.chapters.push(
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
+}
+
+// Assign parent chapter numbers if missing
+if (progressData && Array.isArray(progressData.chapters)) {
+  progressData.chapters.forEach(ch => {
+    if (ch.chapter === undefined && typeof ch.id === 'string') {
+      const m = ch.id.match(/^chapter(\d+)/);
+      if (m) ch.chapter = parseInt(m[1], 10);
+    }
+  });
 }
