@@ -403,17 +403,38 @@ const researchParameters = {
             targetId : 'oreSpaceMining',
             type: 'enable'
           },
-          {
-            target : 'project',
-            targetId : 'disposeResources',
-            type: 'enable'
-          }
-        ],
-      },   
-      {
-        id: 'robotics_3',
-        name: 'Precision Assembly Lines',
-        description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+        {
+          target : 'project',
+          targetId : 'disposeResources',
+          type: 'enable'
+        }
+      ],
+    },
+    {
+      id: 'efficient_shipyards',
+      name: 'Efficient Shipyards',
+      description: 'Doubles shipyard production and consumption.',
+      cost: { research: 100000000000 },
+      prerequisites: [],
+      effects: [
+        {
+          target: 'building',
+          targetId: 'shipyard',
+          type: 'productionMultiplier',
+          value: 2
+        },
+        {
+          target: 'building',
+          targetId: 'shipyard',
+          type: 'consumptionMultiplier',
+          value: 2
+        }
+      ],
+    },
+    {
+      id: 'robotics_3',
+      name: 'Precision Assembly Lines',
+      description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [

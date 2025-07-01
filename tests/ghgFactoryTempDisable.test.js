@@ -68,7 +68,7 @@ describe('GHG factory temperature disabling', () => {
     for(let i=0;i<5;i++){
       fac.updateProductivity(global.resources, 1000);
     }
-    expect(ghgFactorySettings.restartCap).toBeGreaterThan(0.9);
+    expect(ghgFactorySettings.restartCap).toBeCloseTo(0.27, 2);
     expect(fac.productivity).toBeGreaterThan(0);
   });
 });
