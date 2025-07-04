@@ -103,6 +103,26 @@ steps:
 Functions like `checkResourceAvailability` and `reserve` help other modules plan
 actions without immediately consuming resources.
 
+## UI refresh requirements
+
+Certain actions recreate core game objects and therefore require the interface
+to be redrawn so elements bind to the new instances.
+
+- **Starting a new game** – call `startNewGame()` which sets the default planet
+  back to Mars and internally invokes `initializeGameState()`. This function
+  rebuilds resource displays, building/colony buttons and other UI sections.
+- **Loading a save file** – `loadGame()` parses the saved state then calls
+  `initializeGameState({preserveManagers: true})` to refresh UI elements while
+  keeping existing managers and effects. It then applies the loaded data to the
+  newly created objects.
+- **Moving to another planet** – `selectPlanet(key)` in `spaceUI.js` first asks
+  the `SpaceManager` to change the current planet, then calls
+  `initializeGameState({preserveManagers: true})` followed by `updateSpaceUI()`
+  so the Space tab reflects the new location.
+
+Failing to use these helpers can leave the DOM tied to outdated objects and
+cause inconsistent behaviour.
+
 #Testing
 
 jest and jsdom are installed globally
