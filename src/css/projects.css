@@ -185,6 +185,11 @@
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.pressure-input {
+  width: 50px;
+}
 /* Mirror Oversight Slider */
 .mirror-oversight {
     display: flex;
