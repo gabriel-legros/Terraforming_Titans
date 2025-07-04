@@ -1064,6 +1064,8 @@ class Terraforming extends EffectableEntity{
 
       let distributedMirror = mirrorFlux;
       let focusedMirror = 0;
+      let distributedLantern = lanternFlux;
+      let focusedLantern = 0;
 
       if (
         typeof projectManager !== 'undefined' &&
@@ -1074,14 +1076,20 @@ class Terraforming extends EffectableEntity{
         const perc = mirrorOversightSettings.percentage || 0;
         if (perc > 0) {
           distributedMirror = mirrorFlux * (1 - perc);
+          if (mirrorOversightSettings.applyToLantern) {
+            distributedLantern = lanternFlux * (1 - perc);
+          }
           if (mirrorOversightSettings.zone === zone) {
             focusedMirror = mirrorFlux * perc;
+            if (mirrorOversightSettings.applyToLantern) {
+              focusedLantern = lanternFlux * perc;
+            }
           }
         }
       }
 
-      const base = (baseSolar + lanternFlux + distributedMirror) * ratio;
-      return base + focusedMirror;
+      const base = (baseSolar + distributedLantern + distributedMirror) * ratio;
+      return base + focusedMirror + focusedLantern;
     }
 
     calculateSolarPanelMultiplier(){
