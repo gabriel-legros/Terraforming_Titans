@@ -2,12 +2,11 @@ const baseTemperatureRanges = {
   survival: {
     min: 273.15, // 0°C in Kelvin
     max: 313.15  // 50°C in Kelvin
-  },
-  growth: {
-    min: 283.15, // 10°C in Kelvin
-    max: 313.15  // 30°C in Kelvin
   }
 };
+
+// Default optimal growth temperature (15°C in Kelvin)
+const BASE_OPTIMAL_GROWTH_TEMPERATURE = 288.15;
 
 const lifeDesignerConfig = {
   maxPoints : 0
@@ -32,10 +31,12 @@ class LifeAttribute {
         return (baseTemperatureRanges.survival.min - this.value).toFixed(2) + 'K';
       case 'maxTemperatureTolerance':
         return (baseTemperatureRanges.survival.max + this.value).toFixed(2) + 'K';
-      case 'minTemperatureGrowth':
-        return (baseTemperatureRanges.growth.min - this.value).toFixed(2) + 'K';
-      case 'maxTemperatureGrowth':
-        return (baseTemperatureRanges.growth.max + this.value).toFixed(2) + 'K';
+      case 'optimalGrowthTemperature':
+        return (
+          BASE_OPTIMAL_GROWTH_TEMPERATURE + this.value
+        ).toFixed(2) + 'K';
+      case 'growthTemperatureTolerance':
+        return (this.value * 0.25).toFixed(2) + 'K';
       case 'photosynthesisEfficiency':
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'moistureEfficiency':
@@ -66,20 +67,19 @@ class LifeAttribute {
 class LifeDesign {
   constructor(minTemperatureTolerance,
     maxTemperatureTolerance,
-    minTemperatureGrowth,
-    maxTemperatureGrowth,
     photosynthesisEfficiency,
     moistureEfficiency,
     radiationTolerance,
     toxicityTolerance,
     invasiveness,
     spaceEfficiency, // Added new attribute
-    geologicalBurial // Added Geological Burial
+    geologicalBurial, // Added Geological Burial
+    growthTemperatureTolerance = 0
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 50);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
-    this.minTemperatureGrowth = new LifeAttribute('minTemperatureGrowth', minTemperatureGrowth, 'Minimum Temperature for Growth', 'Minimum daytime temperature for growth.', 10);
-    this.maxTemperatureGrowth = new LifeAttribute('maxTemperatureGrowth', maxTemperatureGrowth, 'Maximum Temperature for Growth', 'Maximum daytime temperature for growth.', 40);
+    this.optimalGrowthTemperature = new LifeAttribute('optimalGrowthTemperature', 0, 'Optimal Growth Temperature', 'Daytime temperature for peak growth. Costs no points to adjust.', 100);
+    this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'Reduces atmospheric water vapor pressure needed for growth when liquid water is unavailable (fallback with penalty).', 30);
     this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
@@ -91,7 +91,7 @@ class LifeDesign {
 
   getDesignCost() {
     return Object.values(this).reduce((sum, attribute) => {
-      if (attribute instanceof LifeAttribute) {
+      if (attribute instanceof LifeAttribute && attribute.name !== 'optimalGrowthTemperature') {
         return sum + attribute.value;
       }
       return sum;
@@ -128,8 +128,8 @@ class LifeDesign {
     const data = {
       minTemperatureTolerance: this.minTemperatureTolerance.value,
       maxTemperatureTolerance: this.maxTemperatureTolerance.value,
-      minTemperatureGrowth: this.minTemperatureGrowth.value,
-      maxTemperatureGrowth: this.maxTemperatureGrowth.value,
+      optimalGrowthTemperature: this.optimalGrowthTemperature.value,
+      growthTemperatureTolerance: this.growthTemperatureTolerance.value,
       photosynthesisEfficiency: this.photosynthesisEfficiency.value,
       moistureEfficiency: this.moistureEfficiency.value,
       radiationTolerance: this.radiationTolerance.value,
@@ -145,15 +145,14 @@ class LifeDesign {
     return new LifeDesign(
       data.minTemperatureTolerance,
       data.maxTemperatureTolerance,
-      data.minTemperatureGrowth,
-      data.maxTemperatureGrowth,
       data.photosynthesisEfficiency,
       data.moistureEfficiency,
       data.radiationTolerance,
       data.toxicityTolerance,
       data.invasiveness,
       data.spaceEfficiency ?? 0, // Added for loading, default to 0 if missing in save
-      data.geologicalBurial ?? 0 // Added Geological Burial, default 0
+      data.geologicalBurial ?? 0, // Added Geological Burial, default 0
+      data.growthTemperatureTolerance ?? 0
     );
   }
 
@@ -223,17 +222,11 @@ class LifeDesign {
 
   // Returns an array of zone names where the lifeform can actively grow (meets temp & moisture reqs)
   getGrowableZones() {
-      const growthTempResults = this.temperatureGrowthCheck(); // Get growth temp results object
-      const survivalTempResults = this.temperatureSurvivalCheck(); // Get survival temp results object
+      const survivalTempResults = this.temperatureSurvivalCheck();
       const growableZones = [];
 
-      // Iterate through the zones ('tropical', 'temperate', 'polar')
       for (const zoneName of ['tropical', 'temperate', 'polar']) {
-          // Check if growth temp, survival temp, AND moisture are all met for this zone
-          if (growthTempResults[zoneName]?.pass &&
-              survivalTempResults[zoneName]?.pass &&
-              this.moistureCheckZone(zoneName).pass)
-          {
+          if (survivalTempResults[zoneName]?.pass && this.moistureCheckZone(zoneName).pass) {
               growableZones.push(zoneName);
           }
       }
@@ -285,28 +278,28 @@ class LifeDesign {
       return results;
   }
 
-  // Checks growth temperature for a specific zone and returns details
-  temperatureGrowthCheckZone(zoneName) {
-      const temperatureRanges = this.getTemperatureRanges().growth;
+  // Calculates growth temperature multiplier for a specific zone
+  temperatureGrowthMultiplierZone(zoneName) {
       const zoneData = terraforming.temperature.zones[zoneName];
-      let reason = null;
-
-      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${formatNumber(zoneData.day,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
-      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${formatNumber(zoneData.day,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
-      
-      return { pass: reason === null, reason: reason };
+      const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + this.optimalGrowthTemperature.value;
+      const tolerance = this.growthTemperatureTolerance.value * 0.25;
+      if (tolerance <= 0) {
+          return zoneData.day === optimal ? 1 : 0;
+      }
+      const diff = zoneData.day - optimal;
+      return Math.exp(-(diff * diff) / (2 * tolerance * tolerance));
   }
 
-  // Returns an object indicating growth temperature status for all zones
+  // Returns an object with temperature growth multiplier for all zones
   temperatureGrowthCheck() {
       const results = {};
-      // Global pass requires ANY zone to pass
-      let globalPass = false;
+      let globalMultiplier = 0;
       for (const zoneName of ['tropical', 'temperate', 'polar']) {
-          results[zoneName] = this.temperatureGrowthCheckZone(zoneName);
-          if (results[zoneName].pass) globalPass = true; // If any zone passes, global passes
+          const mult = this.temperatureGrowthMultiplierZone(zoneName);
+          results[zoneName] = { pass: true, reason: null, multiplier: mult };
+          if (mult > globalMultiplier) globalMultiplier = mult;
       }
-      results.global = { pass: globalPass, reason: globalPass ? null : "Fails in all zones" };
+      results.global = { pass: true, reason: null, multiplier: globalMultiplier };
       return results;
   }
 
@@ -316,14 +309,8 @@ class LifeDesign {
       max: baseTemperatureRanges.survival.max + this.maxTemperatureTolerance.value
     };
   
-    const growthRange = {
-      min: baseTemperatureRanges.growth.min - this.minTemperatureGrowth.value,
-      max: baseTemperatureRanges.growth.max + this.maxTemperatureGrowth.value
-    };
-  
     return {
-      survival: survivalRange,
-      growth: growthRange
+      survival: survivalRange
     };
   }
 }
@@ -332,7 +319,7 @@ class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
     this.baseApplyDuration = 60000;
-    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
+    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
     this.tentativeDesign = null;
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
@@ -385,27 +372,25 @@ class LifeDesigner extends EffectableEntity {
   createNewDesign(
     minTemperatureTolerance,
     maxTemperatureTolerance,
-    minTemperatureGrowth,
-    maxTemperatureGrowth,
     photosynthesisEfficiency,
     moistureEfficiency,
     radiationTolerance,
     toxicityTolerance,
     invasiveness,
-    geologicalBurial // Added geologicalBurial
+    geologicalBurial,
+    growthTemperatureTolerance = 0
   ) {
     this.tentativeDesign = new LifeDesign(
       minTemperatureTolerance,
       maxTemperatureTolerance,
-      minTemperatureGrowth,
-      maxTemperatureGrowth,
       photosynthesisEfficiency,
       moistureEfficiency,
       radiationTolerance,
       toxicityTolerance,
       invasiveness,
       0, // Default spaceEfficiency for new design
-      geologicalBurial // Pass geologicalBurial
+      geologicalBurial, // Pass geologicalBurial
+      growthTemperatureTolerance
     );
   }
 
@@ -592,9 +577,9 @@ class LifeManager extends EffectableEntity {
               const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
               // Calculate logistic growth factor (approaches 0 as biomass nears capacity)
               const logisticFactor = maxBiomassForZone > 0 ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone) : 0;
-
-              // Calculate potential growth rate adjusted by logistic factor
-              const actualGrowthRate = zonalMaxGrowthRate * logisticFactor;
+              const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
+              // Calculate potential growth rate adjusted by logistic factor and temperature
+              const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier;
               // Calculate potential biomass increase for the tick based on the adjusted rate
               const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
 

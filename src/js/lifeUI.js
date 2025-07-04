@@ -12,8 +12,7 @@ const PHOTOSYNTHESIS_RATE_PER_POINT = 0.00008;
 const tempAttributes = [
   'minTemperatureTolerance',
   'maxTemperatureTolerance',
-  'minTemperatureGrowth',
-  'maxTemperatureGrowth',
+  'optimalGrowthTemperature'
 ];
 
 function getConvertedDisplay(attributeName, attribute) {
@@ -26,11 +25,8 @@ function getConvertedDisplay(attributeName, attribute) {
       case 'maxTemperatureTolerance':
         kelvin = baseTemperatureRanges.survival.max + attribute.value;
         break;
-      case 'minTemperatureGrowth':
-        kelvin = baseTemperatureRanges.growth.min - attribute.value;
-        break;
-      case 'maxTemperatureGrowth':
-        kelvin = baseTemperatureRanges.growth.max + attribute.value;
+      case 'optimalGrowthTemperature':
+        kelvin = BASE_OPTIMAL_GROWTH_TEMPERATURE + attribute.value;
         break;
     }
     return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
@@ -114,6 +110,13 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="growth-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Temp Multiplier</td>
+                        <td id="temp-multiplier-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="temp-multiplier-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="temp-multiplier-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="temp-multiplier-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Moisture</td>
                         <td id="moisture-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="moisture-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -176,7 +179,7 @@ function initializeLifeTerraformingDesignerUI() {
       let rows = '';
       const attributeOrder = [
           'minTemperatureTolerance', 'maxTemperatureTolerance',
-          'minTemperatureGrowth', 'maxTemperatureGrowth',
+          'optimalGrowthTemperature', 'growthTemperatureTolerance',
           'photosynthesisEfficiency', 'moistureEfficiency',
           'radiationTolerance', 'toxicityTolerance',
           'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
@@ -191,7 +194,7 @@ function initializeLifeTerraformingDesignerUI() {
           <tr>
             <td class="life-attribute-name">
               ${attribute.displayName} (Max ${attribute.maxUpgrades})
-              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}</div>
+              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.25°C, allowing better growth when temperatures deviate from the optimum.">&#9432;</span>' : ''}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -429,7 +432,7 @@ function updateLifeUI() {
       // Use the same attribute order as in generateAttributeRows
       const attributeOrder = [
            'minTemperatureTolerance', 'maxTemperatureTolerance',
-           'minTemperatureGrowth', 'maxTemperatureGrowth',
+           'optimalGrowthTemperature', 'growthTemperatureTolerance',
            'photosynthesisEfficiency', 'moistureEfficiency',
            'radiationTolerance', 'toxicityTolerance',
            'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
@@ -560,6 +563,10 @@ function updateLifeStatusTable() {
         updateStatusCell(`survival-temp-${zone}-status`, survivalTempResults[zone]);
         // Growth Temp
         updateStatusCell(`growth-temp-${zone}-status`, growthTempResults[zone]);
+        const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
+        if (tempMultCell && growthTempResults[zone]) {
+            tempMultCell.textContent = formatNumber(growthTempResults[zone].multiplier, false, 2);
+        }
         // Moisture
         updateStatusCell(`moisture-${zone}-status`, moistureResults[zone]);
          // Radiation (Apply global result, pass flag for special text)
