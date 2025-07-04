@@ -6,6 +6,9 @@ const lifeShopCategories = [
   { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' }
 ];
 
+// Growth rate increase for photosynthesis efficiency per point
+const PHOTOSYNTHESIS_RATE_PER_POINT = 0.00008;
+
 const tempAttributes = [
   'minTemperatureTolerance',
   'maxTemperatureTolerance',
@@ -31,6 +34,9 @@ function getConvertedDisplay(attributeName, attribute) {
         break;
     }
     return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
+  }
+  if (attributeName === 'photosynthesisEfficiency') {
+    return (PHOTOSYNTHESIS_RATE_PER_POINT * attribute.value).toFixed(5);
   }
   return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
 }
