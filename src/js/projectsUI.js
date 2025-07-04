@@ -464,19 +464,27 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      // Check if any child of the automation container is visible
       for (const child of automationSettingsContainer.children) {
-        // Ensure the child's visibility is determined by its computed style
-        if (getComputedStyle(child).display !== 'none') {
+        if (child && (child.nodeType === 1 || child instanceof Element) &&
+            typeof getComputedStyle === 'function' &&
+            getComputedStyle(child).display !== 'none') {
           hasVisibleAutomationItems = true;
           break;
         }
       }
-      // Hide the automation container itself if it has no visible children
-      automationSettingsContainer.style.display = hasVisibleAutomationItems ? 'flex' : 'none';
+      if (automationSettingsContainer.style) {
+        automationSettingsContainer.style.display = hasVisibleAutomationItems ? 'flex' : 'none';
+      }
     }
 
-    const progressButtonVisible = getComputedStyle(elements.progressButton).display !== 'none';
+    let progressButtonVisible = false;
+    if (
+      elements.progressButton &&
+      (elements.progressButton.nodeType === 1 || elements.progressButton instanceof Element) &&
+      typeof getComputedStyle === 'function'
+    ) {
+      progressButtonVisible = getComputedStyle(elements.progressButton).display !== 'none';
+    }
 
     // Hide the footer if both the progress button and all automation items are hidden
     if (progressButtonVisible || hasVisibleAutomationItems) {

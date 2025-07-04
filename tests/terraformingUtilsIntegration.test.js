@@ -11,6 +11,8 @@ global.getZoneRatio = getZoneRatio;
 global.getZonePercentage = getZonePercentage;
 global.EffectableEntity = EffectableEntity;
 global.lifeParameters = lifeParameters;
+global.projectManager = { projects: { spaceMirrorFacility: { isBooleanFlagSet: () => false } }, isBooleanFlagSet: () => false };
+global.mirrorOversightSettings = {};
 global.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 global.calculateEmissivity = physics.calculateEmissivity;
 global.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
