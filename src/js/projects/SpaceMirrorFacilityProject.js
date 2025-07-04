@@ -1,3 +1,11 @@
+// Import oversight UI helpers in Node environment
+if (typeof module !== 'undefined' && module.exports) {
+  var {
+    initializeMirrorOversightUI,
+    updateMirrorOversightUI,
+  } = require('../mirrorOversight.js');
+}
+
 class SpaceMirrorFacilityProject extends Project {
   renderUI(container) {
     const mirrorDetails = document.createElement('div');
@@ -8,6 +16,10 @@ class SpaceMirrorFacilityProject extends Project {
       <p>Total Power: <span id="total-power">0</span>W | Per m²: <span id="total-power-area">0</span>W/m²</p>
     `;
     container.appendChild(mirrorDetails);
+
+    if (typeof initializeMirrorOversightUI === 'function') {
+      initializeMirrorOversightUI(mirrorDetails);
+    }
     projectElements[this.name] = {
       ...projectElements[this.name],
       mirrorDetails: {
@@ -35,6 +47,10 @@ class SpaceMirrorFacilityProject extends Project {
     elements.mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea, false, 2);
     elements.mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
     elements.mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea, false, 2);
+
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
+    }
   }
 }
 
