@@ -370,6 +370,10 @@ class ProjectManager extends EffectableEntity {
         state.autoAssignSpaceships = project.autoAssignSpaceships;
         state.selectedDisposalResource = project.selectedDisposalResource;
         state.waitForCapacity = project.waitForCapacity;
+        if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
+          state.disableAbovePressure = project.disableAbovePressure;
+          state.disablePressureThreshold = project.disablePressureThreshold;
+        }
       }
 
       projectState[projectName] = state;
@@ -404,6 +408,10 @@ class ProjectManager extends EffectableEntity {
           project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal;
           if(savedProject.waitForCapacity !== undefined){
             project.waitForCapacity = savedProject.waitForCapacity;
+          }
+          if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
+            project.disableAbovePressure = savedProject.disableAbovePressure || false;
+            project.disablePressureThreshold = savedProject.disablePressureThreshold || 0;
           }
         }
         if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
