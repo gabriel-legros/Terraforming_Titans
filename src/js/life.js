@@ -14,7 +14,7 @@ const lifeDesignerConfig = {
 }
 
 const BASE_MAX_BIOMASS_DENSITY = 0.1; // Base max biomass in tons per m^2
-const RADIATION_TOLERANCE_THRESHOLD = 20; // Points needed for full mitigation
+const RADIATION_TOLERANCE_THRESHOLD = 25; // Points needed for full mitigation
 const MINIMUM_BIOMASS_DECAY_RATE = 1; // Minimum decay in tons per second when conditions are lethal
 
 class LifeAttribute {
@@ -37,13 +37,13 @@ class LifeAttribute {
       case 'maxTemperatureGrowth':
         return (baseTemperatureRanges.growth.max + this.value).toFixed(2) + 'K';
       case 'photosynthesisEfficiency':
-        return (0.0001*this.value).toFixed(5); // Adjust as needed
+        return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'moistureEfficiency':
         // Displays the required atmospheric water pressure (Pa) used as a fallback when liquid water is unavailable.
         const requiredPaFallback = 1000 / (1 + this.value);
         return requiredPaFallback.toFixed(1) + ' Pa';
       case 'radiationTolerance':
-        return this.value * 5 + '%';
+        return this.value * 4 + '%';
       case 'toxicityTolerance':
         return this.value * 10 + '%';
       case 'invasiveness':
@@ -82,7 +82,7 @@ class LifeDesign {
     this.maxTemperatureGrowth = new LifeAttribute('maxTemperatureGrowth', maxTemperatureGrowth, 'Maximum Temperature for Growth', 'Maximum daytime temperature for growth.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'Reduces atmospheric water vapor pressure needed for growth when liquid water is unavailable (fallback with penalty).', 30);
-    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 20);
+    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
     this.toxicityTolerance = new LifeAttribute('toxicityTolerance', toxicityTolerance, 'Toxicity Tolerance', 'Resistance to environmental toxins.', 10);
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', 100);
