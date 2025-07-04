@@ -103,13 +103,6 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="survival-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Growth Temp</td>
-                        <td id="growth-temp-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="growth-temp-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="growth-temp-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="growth-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                    </tr>
-                    <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Temp Multiplier</td>
                         <td id="temp-multiplier-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="temp-multiplier-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -565,8 +558,6 @@ function updateLifeStatusTable() {
         // --- Update Status Checks ---
         // Survival Temp
         updateStatusCell(`survival-temp-${zone}-status`, survivalTempResults[zone]);
-        // Growth Temp
-        updateStatusCell(`growth-temp-${zone}-status`, growthTempResults[zone]);
         const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
         if (tempMultCell && growthTempResults[zone]) {
             tempMultCell.textContent = formatNumber(growthTempResults[zone].multiplier, false, 2);
