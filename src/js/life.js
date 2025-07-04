@@ -78,7 +78,7 @@ class LifeDesign {
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 50);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
-    this.optimalGrowthTemperature = new LifeAttribute('optimalGrowthTemperature', 0, 'Optimal Growth Temperature', 'Daytime temperature for peak growth. Costs no points to adjust.', 100);
+    this.optimalGrowthTemperature = new LifeAttribute('optimalGrowthTemperature', 0, 'Optimal Growth Temperature', 'Daytime temperature for peak growth. Costs no points to adjust.', 10);
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'Reduces atmospheric water vapor pressure needed for growth when liquid water is unavailable (fallback with penalty).', 30);
@@ -142,7 +142,7 @@ class LifeDesign {
   }
 
   static load(data) {
-    return new LifeDesign(
+    const design = new LifeDesign(
       data.minTemperatureTolerance,
       data.maxTemperatureTolerance,
       data.photosynthesisEfficiency,
@@ -154,6 +154,9 @@ class LifeDesign {
       data.geologicalBurial ?? 0, // Added Geological Burial, default 0
       data.growthTemperatureTolerance ?? 0
     );
+
+    design.optimalGrowthTemperature.value = data.optimalGrowthTemperature ?? 0;
+    return design;
   }
 
   // Checks survival temperature for a specific zone and returns details
