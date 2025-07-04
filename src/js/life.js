@@ -36,7 +36,7 @@ class LifeAttribute {
           BASE_OPTIMAL_GROWTH_TEMPERATURE + this.value
         ).toFixed(2) + 'K';
       case 'growthTemperatureTolerance':
-        return (this.value * 0.25).toFixed(2) + 'K';
+        return (this.value * 0.5).toFixed(2) + 'K';
       case 'photosynthesisEfficiency':
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'moistureEfficiency':
@@ -285,7 +285,7 @@ class LifeDesign {
   temperatureGrowthMultiplierZone(zoneName) {
       const zoneData = terraforming.temperature.zones[zoneName];
       const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + this.optimalGrowthTemperature.value;
-      const tolerance = this.growthTemperatureTolerance.value * 0.25;
+      const tolerance = this.growthTemperatureTolerance.value * 0.5;
       if (tolerance <= 0) {
           return zoneData.day === optimal ? 1 : 0;
       }
