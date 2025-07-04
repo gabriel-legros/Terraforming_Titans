@@ -735,8 +735,8 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'building',
-            targetId: 'spaceMirror',
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
             type: 'booleanFlag',
             flagId: 'spaceMirrorFacilityOversight',
             value: true

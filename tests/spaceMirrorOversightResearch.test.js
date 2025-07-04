@@ -14,7 +14,14 @@ describe('Space Mirror Facility Oversight research', () => {
     const research = colonization.find(r => r.id === 'space_mirror_oversight');
     expect(research).toBeDefined();
     expect(research.cost.research).toBe(2000000);
-    const flagEffect = research.effects.find(e => e.target === 'building' && e.targetId === 'spaceMirror' && e.type === 'booleanFlag' && e.flagId === 'spaceMirrorFacilityOversight' && e.value === true);
+    const flagEffect = research.effects.find(
+      e =>
+        e.target === 'project' &&
+        e.targetId === 'spaceMirrorFacility' &&
+        e.type === 'booleanFlag' &&
+        e.flagId === 'spaceMirrorFacilityOversight' &&
+        e.value === true
+    );
     expect(flagEffect).toBeDefined();
   });
 });
