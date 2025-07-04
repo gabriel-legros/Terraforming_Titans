@@ -743,6 +743,29 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'atmospheric_monitoring',
+        name: 'Atmospheric Monitoring',
+        description: 'Enables setting limits on atmospheric mining special projects.',
+        cost: { research: 1000000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'carbonSpaceMining',
+            type: 'booleanFlag',
+            flagId: 'atmosphericMonitoring',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'nitrogenSpaceMining',
+            type: 'booleanFlag',
+            flagId: 'atmosphericMonitoring',
+            value: true
+          }
+        ],
+      },
     ],
     terraforming: [
       {
@@ -992,7 +1015,7 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },   
+      },
       {
         id: 'nitrogenImport',
         name: 'Nitrogen Importation',
