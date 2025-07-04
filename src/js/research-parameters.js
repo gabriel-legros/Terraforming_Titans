@@ -727,6 +727,22 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'space_mirror_oversight',
+        name: 'Space Mirror Facility Oversight',
+        description: 'Applies automated oversight controls to the space mirror facility.',
+        cost: { research: 2000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'spaceMirror',
+            type: 'booleanFlag',
+            flagId: 'spaceMirrorFacilityOversight',
+            value: true
+          }
+        ],
+      },
     ],
     terraforming: [
       {
