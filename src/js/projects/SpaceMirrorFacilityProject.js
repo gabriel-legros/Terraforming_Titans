@@ -186,6 +186,40 @@ class SpaceMirrorFacilityProject extends Project {
     `;
     container.appendChild(mirrorDetails);
 
+    const lanternDetails = document.createElement('div');
+    lanternDetails.classList.add('lantern-details-card');
+    lanternDetails.style.display = 'none';
+    lanternDetails.innerHTML = `
+      <div class="card-header">
+        <span class="card-title">Lantern Status</span>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Lanterns:</span>
+            <span id="num-lanterns" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Power/Lantern:</span>
+            <span id="power-per-lantern" class="stat-value">0 W</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Power/m²:</span>
+            <span id="power-per-lantern-area" class="stat-value">0 W/m²</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Power:</span>
+            <span id="total-lantern-power" class="stat-value">0 W</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Power/m²:</span>
+            <span id="total-lantern-area" class="stat-value">0 W/m²</span>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(lanternDetails);
+
     if (typeof initializeMirrorOversightUI === 'function') {
       initializeMirrorOversightUI(mirrorDetails);
     }
@@ -197,6 +231,14 @@ class SpaceMirrorFacilityProject extends Project {
         powerPerMirrorArea: mirrorDetails.querySelector('#power-per-mirror-area'),
         totalPower: mirrorDetails.querySelector('#total-power'),
         totalPowerArea: mirrorDetails.querySelector('#total-power-area'),
+      },
+      lanternDetails: {
+        container: lanternDetails,
+        numLanterns: lanternDetails.querySelector('#num-lanterns'),
+        powerPerLantern: lanternDetails.querySelector('#power-per-lantern'),
+        powerPerLanternArea: lanternDetails.querySelector('#power-per-lantern-area'),
+        totalPower: lanternDetails.querySelector('#total-lantern-power'),
+        totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
       },
     };
   }
@@ -216,6 +258,26 @@ class SpaceMirrorFacilityProject extends Project {
     elements.mirrorDetails.powerPerMirrorArea.textContent = `${formatNumber(powerPerMirrorArea, false, 2)} W/m²`;
     elements.mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
     elements.mirrorDetails.totalPowerArea.textContent = `${formatNumber(totalPowerArea, false, 2)} W/m²`;
+
+    if (elements.lanternDetails) {
+      const lantern = buildings.hyperionLantern;
+      const unlocked = lantern && lantern.unlocked;
+      elements.lanternDetails.container.style.display = unlocked ? 'block' : 'none';
+      if (unlocked) {
+        const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
+        const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
+        const numLanterns = lantern.active || 0;
+        const powerPerLantern = lantern.powerPerBuilding || 0;
+        const powerPerLanternArea = area > 0 ? powerPerLantern / area : 0;
+        const totalLanternPower = powerPerLantern * numLanterns * productivity;
+        const totalLanternArea = powerPerLanternArea * numLanterns * productivity;
+        elements.lanternDetails.numLanterns.textContent = formatNumber(numLanterns, false, 2);
+        elements.lanternDetails.powerPerLantern.textContent = formatNumber(powerPerLantern, false, 2);
+        elements.lanternDetails.powerPerLanternArea.textContent = `${formatNumber(powerPerLanternArea, false, 2)} W/m²`;
+        elements.lanternDetails.totalPower.textContent = formatNumber(totalLanternPower, false, 2);
+        elements.lanternDetails.totalPowerArea.textContent = `${formatNumber(totalLanternArea, false, 2)} W/m²`;
+      }
+    }
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

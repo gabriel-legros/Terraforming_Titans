@@ -1,7 +1,8 @@
 /* --- Base Card Styles --- */
 .project-card,
 .mirror-details-card,
-.mirror-oversight-card {
+.mirror-oversight-card,
+.lantern-details-card {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 6px;
