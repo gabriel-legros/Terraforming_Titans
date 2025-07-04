@@ -26,7 +26,7 @@ describe('temperature multiplier display', () => {
       colony: { research: { value: 0 }, funding: { value: 0 }, androids: { value: 0 }, components: { value: 0 }, electronics: { value: 0 } }
     };
     ctx.terraforming = {
-      temperature: { zones: { tropical: { day: 288.15, night: 288.15 }, temperate: { day: 288.15, night: 288.15 }, polar: { day: 288.15, night: 288.15 } } },
+      temperature: { zones: { tropical: { day: 293.15, night: 293.15 }, temperate: { day: 293.15, night: 293.15 }, polar: { day: 293.15, night: 293.15 } } },
       zonalSurface: { tropical: { biomass: 0 }, temperate: { biomass: 0 }, polar: { biomass: 0 } },
       zonalWater: { tropical: { liquid: 0 }, temperate: { liquid: 0 }, polar: { liquid: 0 } },
       getMagnetosphereStatus: () => true,

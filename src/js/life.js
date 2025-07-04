@@ -5,8 +5,8 @@ const baseTemperatureRanges = {
   }
 };
 
-// Default optimal growth temperature (15°C in Kelvin)
-const BASE_OPTIMAL_GROWTH_TEMPERATURE = 288.15;
+// Default optimal growth temperature (20°C in Kelvin)
+const BASE_OPTIMAL_GROWTH_TEMPERATURE = 293.15;
 
 const lifeDesignerConfig = {
   maxPoints : 0
@@ -78,7 +78,13 @@ class LifeDesign {
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 50);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
-    this.optimalGrowthTemperature = new LifeAttribute('optimalGrowthTemperature', 0, 'Optimal Growth Temperature', 'Daytime temperature for peak growth. Costs no points to adjust.', 10);
+    this.optimalGrowthTemperature = new LifeAttribute(
+      'optimalGrowthTemperature',
+      0,
+      'Optimal Growth Temperature',
+      'Daytime temperature for peak growth. Costs 1 point per degree from the 20\xB0C base.',
+      15
+    );
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'Reduces atmospheric water vapor pressure needed for growth when liquid water is unavailable (fallback with penalty).', 30);
@@ -91,7 +97,10 @@ class LifeDesign {
 
   getDesignCost() {
     return Object.values(this).reduce((sum, attribute) => {
-      if (attribute instanceof LifeAttribute && attribute.name !== 'optimalGrowthTemperature') {
+      if (attribute instanceof LifeAttribute) {
+        if (attribute.name === 'optimalGrowthTemperature') {
+          return sum + Math.abs(attribute.value);
+        }
         return sum + attribute.value;
       }
       return sum;
