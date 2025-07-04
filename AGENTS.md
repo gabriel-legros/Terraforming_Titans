@@ -121,7 +121,7 @@ to be redrawn so elements bind to the new instances.
   so the Space tab reflects the new location.
 
 Failing to use these helpers can leave the DOM tied to outdated objects and
-cause inconsistent behaviour.
+cause inconsistent behaviour.  When creating new UI element, some thought should be had on how this will interact with any of these three.
 
 #Testing
 
