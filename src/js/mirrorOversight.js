@@ -63,9 +63,8 @@ function initializeMirrorOversightUI(container) {
   slider.addEventListener('input', () => {
     const raw = slider.value;
     const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
-    valueSpan.textContent = val + '%';
+    setMirrorFocusPercentage(val);
   });
-  slider.addEventListener('change', () => setMirrorFocusPercentage(parseInt(slider.value,10)));
   div.appendChild(slider);
 
   const valueSpan = document.createElement('span');
@@ -83,12 +82,19 @@ function updateMirrorOversightUI() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) return;
-  if (typeof projectManager !== 'undefined' && projectManager.isBooleanFlagSet &&
-      projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
-    container.style.display = 'block';
-  } else {
-    container.style.display = 'none';
+  let enabled = false;
+  if (typeof projectManager !== 'undefined') {
+    if (projectManager.isBooleanFlagSet &&
+        projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
+      enabled = true;
+    } else if (projectManager.projects &&
+               projectManager.projects.spaceMirrorFacility &&
+               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
+               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
+      enabled = true;
+    }
   }
+  container.style.display = enabled ? 'block' : 'none';
   const slider = document.getElementById('mirror-oversight-slider');
   const valueSpan = document.getElementById('mirror-oversight-value');
   const select = document.getElementById('mirror-oversight-zone');
