@@ -221,7 +221,7 @@ class SpaceMirrorFacilityProject extends Project {
     container.appendChild(lanternDetails);
 
     if (typeof initializeMirrorOversightUI === 'function') {
-      initializeMirrorOversightUI(mirrorDetails);
+      initializeMirrorOversightUI(container);
     }
     projectElements[this.name] = {
       ...projectElements[this.name],
