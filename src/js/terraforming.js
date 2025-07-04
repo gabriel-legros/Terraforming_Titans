@@ -1057,16 +1057,23 @@ class Terraforming extends EffectableEntity{
 
     calculateZoneSolarFlux(zone, angleAdjusted = false) {
       const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
-
-      const baseSolar = this.luminosity.solarFlux;
-      const lanternFlux = this.calculateLanternFlux();
-      const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea * (buildings['spaceMirror']?.active || 0);
-
-      let distributedMirror = mirrorFlux;
-      let focusedMirror = 0;
-      let distributedLantern = lanternFlux;
-      let focusedLantern = 0;
-
+      const totalSurfaceArea = this.celestialParameters.surfaceArea;
+    
+      const baseSolar = this.luminosity.solarFlux; // W/m^2
+      
+      // Get total POWER (W) from enhancements
+      const totalMirrorPower = this.calculateMirrorEffect().interceptedPower * (buildings['spaceMirror']?.active || 0);
+      const totalLanternPower = this.calculateLanternFlux() * (this.celestialParameters.crossSectionArea || totalSurfaceArea);
+    
+      // Default: all power is distributed globally
+      let distributedMirrorPower = totalMirrorPower;
+      let focusedMirrorPower = 0;
+      let distributedLanternPower = totalLanternPower;
+      let focusedLanternPower = 0;
+    
+      let focusedMirrorFlux = 0;
+      let focusedLanternFlux = 0;
+    
       if (
         typeof projectManager.projects.spaceMirrorFacility !== 'undefined' &&
         projectManager.projects.spaceMirrorFacility.isBooleanFlagSet &&
@@ -1074,22 +1081,37 @@ class Terraforming extends EffectableEntity{
         typeof mirrorOversightSettings !== 'undefined'
       ) {
         const perc = mirrorOversightSettings.percentage || 0;
+        const targetZone = mirrorOversightSettings.zone;
+    
         if (perc > 0) {
-          distributedMirror = mirrorFlux * (1 - perc);
+          // Split the POWER based on the percentage setting
+          distributedMirrorPower = totalMirrorPower * (1 - perc);
+          focusedMirrorPower = totalMirrorPower * perc;
+    
           if (mirrorOversightSettings.applyToLantern) {
-            distributedLantern = lanternFlux * (1 - perc);
+            distributedLanternPower = totalLanternPower * (1 - perc);
+            focusedLanternPower = totalLanternPower * perc;
           }
-          if (mirrorOversightSettings.zone === zone) {
-            focusedMirror = mirrorFlux * perc;
-            if (mirrorOversightSettings.applyToLantern) {
-              focusedLantern = lanternFlux * perc;
+    
+          // Calculate focused FLUX for the target zone only
+          if (targetZone === zone) {
+            const targetZoneArea = totalSurfaceArea * getZonePercentage(targetZone);
+            if (targetZoneArea > 0) {
+              focusedMirrorFlux = 4*focusedMirrorPower / targetZoneArea;
+              focusedLanternFlux = 4*focusedLanternPower / targetZoneArea;
             }
           }
         }
       }
-
-      const base = (baseSolar + distributedLantern + distributedMirror) * ratio;
-      return base + focusedMirror + focusedLantern;
+    
+      // Calculate distributed FLUX from the remaining distributed POWER
+      const distributedMirrorFlux = totalSurfaceArea > 0 ? 4*distributedMirrorPower / totalSurfaceArea : 0;
+      const distributedLanternFlux = totalSurfaceArea > 0 ? 4*distributedLanternPower / totalSurfaceArea : 0;
+    
+      // Sum all fluxes and apply the zonal angle-of-incidence ratio
+      const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
+      
+      return totalFluxForZone;
     }
 
     calculateSolarPanelMultiplier(){
