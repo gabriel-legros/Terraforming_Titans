@@ -28,10 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
 
-  // Create all project items initially
+  // Create any new project items that don't exist in the UI yet
   projectsArray.forEach(project => {
     if (!projectElements[project.name]) {
       createProjectItem(project);
+    }
+  });
+
+  // Re-order the project cards in the DOM based on the new order
+  projectsArray.forEach(project => {
+    if (projectElements[project.name] && projectElements[project.name].projectItem) {
+      const projectItem = projectElements[project.name].projectItem;
+      // Appending an existing child moves it to the end of the parent's children list.
+      // This reorders the items to match the projectOrder array.
+      projectItem.parentElement.appendChild(projectItem);
     }
   });
 
@@ -52,146 +62,128 @@ function initializeProjectsUI() {
 }
 
 function createProjectItem(project) {
-  const projectItem = document.createElement('div');
-  projectItem.classList.add('special-projects-item');
+  const projectCard = document.createElement('div');
+  projectCard.classList.add('project-card');
+  projectCard.dataset.projectName = project.name;
 
-  // Project Name
-  const nameElement = document.createElement('h3'); // Use h3 or other heading tag to display the name
-  nameElement.textContent = project.displayName || project.name; // Use displayName or fallback to name
-  nameElement.classList.add('project-name');
-  projectItem.appendChild(nameElement); // Append project name before description
+  // Card Header
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add('card-header');
+  const nameElement = document.createElement('span');
+  nameElement.textContent = project.displayName || project.name;
+  nameElement.classList.add('card-title');
+  cardHeader.appendChild(nameElement);
 
-  // Project Description
+  const reorderButtons = document.createElement('div');
+  reorderButtons.classList.add('reorder-buttons');
+
+  const upButton = document.createElement('button');
+  upButton.innerHTML = '&#9650;';
+  upButton.addEventListener('click', () => moveProject(project.name, 'up'));
+  reorderButtons.appendChild(upButton);
+
+  const downButton = document.createElement('button');
+  downButton.innerHTML = '&#9660;';
+  downButton.addEventListener('click', () => moveProject(project.name, 'down'));
+  reorderButtons.appendChild(downButton);
+
+  cardHeader.appendChild(reorderButtons);
+
+  projectCard.appendChild(cardHeader);
+
+  // Card Body
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body');
+  
   const descriptionElement = document.createElement('p');
   descriptionElement.textContent = project.description;
   descriptionElement.classList.add('project-description');
-  projectItem.appendChild(descriptionElement);
+  cardBody.appendChild(descriptionElement);
 
+  const projectDetails = document.createElement('div');
+  projectDetails.classList.add('project-details');
 
-
+  // Cost
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
-    projectItem.appendChild(costElement);
-    projectElements[project.name] = {
-      ...projectElements[project.name],
-      costElement: costElement,
-    };
-    updateCostDisplay(project); // Initial call to display the scaled cost
+    projectDetails.appendChild(costElement);
+    projectElements[project.name] = { ...projectElements[project.name], costElement: costElement };
   }
 
-  // Repeat Count Display (if project is repeatable and not infinitely repeatable)
+  // Repeat Count
   if (project.repeatable && project.maxRepeatCount !== Infinity) {
-    repeatCountElement = document.createElement('p');
+    const repeatCountElement = document.createElement('p');
     repeatCountElement.id = `${project.name}-repeat-count`;
-    repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
-    projectItem.appendChild(repeatCountElement);
-
-  
-    // Store repeat count element
-    projectElements[project.name] = {
-      ...projectElements[project.name],
-      repeatCountElement: repeatCountElement,
-    };
+    projectDetails.appendChild(repeatCountElement);
+    projectElements[project.name] = { ...projectElements[project.name], repeatCountElement: repeatCountElement };
   }
 
-  // Resource Gain Information
+  // Resource Gain
   if (project.attributes?.resourceGain) {
     const resourceGainElement = document.createElement('p');
-    const updatedResourceGain = project.getEffectiveResourceGain();
-
-    let resourceGainEntries = [];
-    for (const [category, resources] of Object.entries(updatedResourceGain)) {
-      for (const [resource, value] of Object.entries(resources)) {
-        resourceGainEntries.push(`${resource.charAt(0).toUpperCase() + resource.slice(1)}: ${value}`);
-      }
-    }
-
-    resourceGainElement.textContent = `Resource Gain: ${resourceGainEntries.join(', ')}`;
     resourceGainElement.id = `${project.name}-resource-gain`;
-    projectItem.appendChild(resourceGainElement);
+    projectDetails.appendChild(resourceGainElement);
+    projectElements[project.name] = { ...projectElements[project.name], resourceGainElement: resourceGainElement };
+  }
+  
+  cardBody.appendChild(projectDetails);
+
+  if (typeof project.renderUI === 'function') {
+    project.renderUI(cardBody);
   }
 
+  projectCard.appendChild(cardBody);
 
-  // Unified Progress Button (created here but appended later so it appears at the bottom)
+  // Card Footer
+  const cardFooter = document.createElement('div');
+  cardFooter.classList.add('card-footer');
+
+  // Progress Button
   const progressButtonContainer = document.createElement('div');
   progressButtonContainer.classList.add('progress-button-container');
   const progressButton = document.createElement('button');
   progressButton.classList.add('progress-button');
   progressButton.style.width = '100%';
-  progressButton.textContent = `Start ${project.displayName}`; // Default button text
-  progressButton.disabled = false; // Enable or disable based on project state
+  progressButton.addEventListener('click', () => startProjectWithSelectedResources(project));
   progressButtonContainer.appendChild(progressButton);
+  cardFooter.appendChild(progressButtonContainer);
 
-  // Create a container for both checkboxes on the same row (also appended later)
-  const checkboxRowContainer = document.createElement('div');
-  checkboxRowContainer.classList.add('checkbox-row-container');
+  // Checkboxes
+  const automationSettingsContainer = document.createElement('div');
+  automationSettingsContainer.classList.add('automation-settings-container');
 
-  // Auto Start Checkbox
   const autoStartCheckboxContainer = document.createElement('div');
   autoStartCheckboxContainer.classList.add('checkbox-container');
-
   const autoStartCheckbox = document.createElement('input');
   autoStartCheckbox.type = 'checkbox';
-  autoStartCheckbox.checked = project.autoStart || false; // Set checkbox based on project state
   autoStartCheckbox.id = `${project.name}-auto-start`;
-  autoStartCheckbox.classList.add('auto-start-checkbox');
-
-  autoStartCheckbox.addEventListener('change', (event) => {
-    project.autoStart = event.target.checked; // Save the state in the project object
-  });
-
+  autoStartCheckbox.addEventListener('change', (event) => { project.autoStart = event.target.checked; });
   const autoStartLabel = document.createElement('label');
   autoStartLabel.htmlFor = `${project.name}-auto-start`;
-  autoStartLabel.textContent = 'Auto start project';
-
+  autoStartLabel.textContent = 'Auto start';
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
-  checkboxRowContainer.appendChild(autoStartCheckboxContainer);
+  automationSettingsContainer.appendChild(autoStartCheckboxContainer);
+  cardFooter.appendChild(automationSettingsContainer);
 
+  projectCard.appendChild(cardFooter);
 
-  // Store UI elements for updating later
+  // Store elements
   projectElements[project.name] = {
     ...projectElements[project.name],
+    projectItem: projectCard,
+    progressButton: progressButton,
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
-    checkboxRowContainer: checkboxRowContainer
+    automationSettingsContainer: automationSettingsContainer,
+    cardFooter: cardFooter,
+    upButton: upButton,
+    downButton: downButton
   };
 
-  if (typeof project.renderUI === 'function') {
-    project.renderUI(projectItem);
-  }
-
-  // Append the combined container and progress button at the bottom
-  projectItem.appendChild(progressButtonContainer);
-  projectItem.appendChild(checkboxRowContainer);
-
-  // Store the progress button for later updates
-  projectElements[project.name] = {
-    ...projectElements[project.name], // Merge with existing properties
-    progressButton: progressButton,
-  };
-
-  // Store project item in the category container dynamically
   const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
-  categoryContainer.appendChild(projectItem);
-
-  // Button click event to start project
-  progressButton.addEventListener('click', function () {
-    startProjectWithSelectedResources(project);
-  });
-
-  // Add <hr> element between projects for better separation
-  const hrElement = document.createElement('hr');
-  hrElement.style.border = '1px solid #ccc'; // Set border for the line
-  hrElement.style.margin = '10px 0'; // Add margin to separate it from other elements
-  projectItem.appendChild(hrElement);
-
-  // Store the project item
-  projectElements[project.name] = {
-    ...projectElements[project.name], // Merge with existing properties
-    projectItem : projectItem
-  };
+  categoryContainer.appendChild(projectCard);
 }
 
 function getOrCreateCategoryContainer(category) {
@@ -211,6 +203,29 @@ function getOrCreateCategoryContainer(category) {
   return categoryContainer;
 }
 
+function moveProject(projectName, direction) {
+  const project = projectManager.projects[projectName];
+  const category = project.category || 'general';
+  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+  const fromIndex = categoryProjects.findIndex(p => p.name === projectName);
+
+  if (fromIndex === -1) return;
+
+  let toIndex = fromIndex;
+  if (direction === 'up') {
+    toIndex = fromIndex - 1;
+  } else {
+    toIndex = fromIndex + 1;
+  }
+
+  if (toIndex < 0 || toIndex >= categoryProjects.length) {
+    return;
+  }
+
+  projectManager.reorderProject(fromIndex, toIndex, category);
+  renderProjects();
+}
+
 function getUpdatedResourceGain(project) {
   const updatedResourceGain = project.getEffectiveResourceGain;
   return updatedResourceGain;
@@ -220,8 +235,7 @@ function getUpdatedResourceGain(project) {
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costElement) {
-    const cost = project.getScaledCost(); // Use scaled cost for display
-    let costText = 'Cost: ';
+    const cost = project.getScaledCost();
     const costArray = [];
 
     for (const category in cost) {
@@ -240,8 +254,12 @@ function updateCostDisplay(project) {
       }
     }
 
-    costText += costArray.join(', ');
-    elements.costElement.innerHTML = costText;
+    if (costArray.length > 0) {
+      elements.costElement.innerHTML = `<strong>Cost:</strong> ${costArray.join(', ')}`;
+      elements.costElement.style.display = 'block';
+    } else {
+      elements.costElement.style.display = 'none';
+    }
   }
 }
 
@@ -317,18 +335,19 @@ function updateProjectUI(projectName) {
   }
 
   // Update Resource Gain Information if applicable
-  if (project.attributes && project.attributes.resourceGain) {
+  if (elements.resourceGainElement && project.attributes?.resourceGain) {
     const updatedResourceGain = project.getEffectiveResourceGain();
-    const resourceGainElement = document.getElementById(`${project.name}-resource-gain`);
-    if (resourceGainElement) {
-      let resourceGainText = 'Resource Gain: ';
-      for (const category in updatedResourceGain) {
+    const gainArray = [];
+    for (const category in updatedResourceGain) {
         for (const resource in updatedResourceGain[category]) {
-          resourceGainText += `${resources[category][resource].displayName}: ${formatNumber(updatedResourceGain[category][resource], true)}, `;
+            gainArray.push(`${resources[category][resource].displayName}: ${formatNumber(updatedResourceGain[category][resource], true)}`);
         }
-      }
-      resourceGainText = resourceGainText.slice(0, -2); // Remove trailing comma and space
-      resourceGainElement.innerHTML = resourceGainText;
+    }
+    if (gainArray.length > 0) {
+        elements.resourceGainElement.innerHTML = `<strong>Gain:</strong> ${gainArray.join(', ')}`;
+        elements.resourceGainElement.style.display = 'block';
+    } else {
+        elements.resourceGainElement.style.display = 'none';
     }
   }
 
@@ -400,19 +419,64 @@ function updateProjectUI(projectName) {
     project.updateUI();
   }
 
-
-
-  // Show or hide the auto start checkbox based on automation flag in projectManager
-  if (projectManager.isBooleanFlagSet('automateSpecialProjects')) {
-    elements.autoStartCheckboxContainer.classList.remove('hidden');
-  } else {
-    elements.autoStartCheckboxContainer.classList.add('hidden');
+  if (elements.automationSettingsContainer) {
+    if (project instanceof SpaceMiningProject && !elements.pressureControl) {
+      const pressureControl = project.createPressureControl();
+      elements.automationSettingsContainer.appendChild(pressureControl);
+    }
+    if (project instanceof SpaceExportBaseProject && !elements.waitCapacityCheckboxContainer) {
+      const waitCapacityCheckboxContainer = project.createWaitForCapacityCheckbox();
+      elements.automationSettingsContainer.appendChild(waitCapacityCheckboxContainer);
+    }
   }
+
+
+
 
 
   // Check if the auto-start checkbox is checked and attempt to start the project automatically
   if (elements.autoStartCheckbox?.checked && !project.isActive && !project.isCompleted && project.canStart()) {
     checkAndStartProjectAutomatically(project);
+  }
+  // Final visibility check for the footer and its contents
+  const footer = elements.cardFooter;
+  if (footer) {
+    const automationSettingsContainer = elements.automationSettingsContainer;
+    let hasVisibleAutomationItems = false;
+
+    if (automationSettingsContainer) {
+      // Check if any child of the automation container is visible
+      for (const child of automationSettingsContainer.children) {
+        // Ensure the child's visibility is determined by its computed style
+        if (getComputedStyle(child).display !== 'none') {
+          hasVisibleAutomationItems = true;
+          break;
+        }
+      }
+      // Hide the automation container itself if it has no visible children
+      automationSettingsContainer.style.display = hasVisibleAutomationItems ? 'flex' : 'none';
+    }
+
+    const progressButtonVisible = getComputedStyle(elements.progressButton).display !== 'none';
+
+    // Hide the footer if both the progress button and all automation items are hidden
+    if (progressButtonVisible || hasVisibleAutomationItems) {
+      footer.style.display = 'flex';
+    } else {
+      footer.style.display = 'none';
+    }
+  }
+
+  // Disable/enable reorder buttons
+  const category = project.category || 'general';
+  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+  const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
+
+  if (elements.upButton) {
+    elements.upButton.classList.toggle('disabled', currentIndex === 0);
+  }
+  if (elements.downButton) {
+    elements.downButton.classList.toggle('disabled', currentIndex === categoryProjects.length - 1);
   }
 }
 
@@ -468,11 +532,11 @@ function formatTotalResourceGainDisplay(totalResourceGain) {
 }
 
 function updateEmptyProjectMessages() {
-  document.querySelectorAll('.projects-list').forEach(container => {
+  document.querySelectorAll('.projects-subtab-content').forEach(container => {
     const messageId = `${container.id}-empty-message`;
     let message = document.getElementById(messageId);
 
-    const hasVisible = Array.from(container.getElementsByClassName('special-projects-item'))
+    const hasVisible = Array.from(container.getElementsByClassName('project-card'))
       .some(item => item.style.display !== 'none');
 
     if (!hasVisible) {

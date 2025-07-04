@@ -5,12 +5,12 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disablePressureThreshold = 0;
   }
 
-  createPressureControl(row) {
+  createPressureControl() {
     const control = document.createElement('div');
-    control.classList.add('pressure-control');
+    control.classList.add('checkbox-container', 'pressure-control');
     control.id = `${this.name}-pressure-control`;
     control.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
-
+  
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.classList.add('pressure-checkbox');
@@ -19,11 +19,11 @@ class SpaceMiningProject extends SpaceshipProject {
       this.disableAbovePressure = checkbox.checked;
     });
     control.appendChild(checkbox);
-
-    const label = document.createElement('span');
+  
+    const label = document.createElement('label');
     label.textContent = 'Disable if pressure above: ';
     control.appendChild(label);
-
+  
     const input = document.createElement('input');
     input.type = 'number';
     input.step = 1;
@@ -33,27 +33,23 @@ class SpaceMiningProject extends SpaceshipProject {
       this.disablePressureThreshold = parseFloat(input.value) || 0;
     });
     control.appendChild(input);
-
+  
     const unit = document.createElement('span');
     unit.textContent = 'kPa';
     control.appendChild(unit);
-
-    row.appendChild(control);
-
+  
     projectElements[this.name] = {
       ...projectElements[this.name],
       pressureControl: control,
       pressureCheckbox: checkbox,
       pressureInput: input,
     };
+  
+    return control;
   }
 
   renderUI(container) {
     super.renderUI(container);
-    const row = projectElements[this.name]?.checkboxRowContainer;
-    if (row) {
-      this.createPressureControl(row);
-    }
   }
 
   updateUI() {

@@ -30,67 +30,56 @@ function initializeMirrorOversightUI(container) {
   if (!container) return;
   const div = document.createElement('div');
   div.id = 'mirror-oversight-container';
-  div.classList.add('mirror-oversight');
+  div.classList.add('mirror-oversight-card');
   div.style.display = 'none';
 
-  const label = document.createElement('span');
-  label.textContent = 'Direct a percent of mirrors to focus on a specific zone : ';
-  const tooltip = document.createElement('span');
-  tooltip.classList.add('info-tooltip-icon');
-  tooltip.title = 'Direct a percent of mirrors to focus on a specific zone.';
-  label.appendChild(tooltip);
-  div.appendChild(label);
+  div.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">Mirror Oversight</span>
+      <span class="info-tooltip-icon" title="Direct a percentage of mirrors to focus on a specific zone."></span>
+    </div>
+    <div class="card-body">
+      <div class="control-group">
+        <label for="mirror-oversight-zone">Target Zone:</label>
+        <select id="mirror-oversight-zone">
+          <option value="tropical">Tropical</option>
+          <option value="temperate">Temperate</option>
+          <option value="polar">Polar</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="mirror-oversight-slider">Focus Percentage:</label>
+        <input type="range" id="mirror-oversight-slider" min="0" max="100" step="5" value="0">
+        <span id="mirror-oversight-value" class="slider-value">0%</span>
+      </div>
+      <div id="mirror-oversight-lantern-div" class="control-group">
+        <input type="checkbox" id="mirror-oversight-lantern">
+        <label for="mirror-oversight-lantern">Apply to Hyperion Lantern</label>
+      </div>
+    </div>
+  `;
 
-  const select = document.createElement('select');
-  select.id = 'mirror-oversight-zone';
-  ['tropical', 'temperate', 'polar'].forEach(z => {
-    const opt = document.createElement('option');
-    opt.value = z;
-    opt.textContent = z.charAt(0).toUpperCase() + z.slice(1);
-    select.appendChild(opt);
-  });
+  const select = div.querySelector('#mirror-oversight-zone');
   select.value = mirrorOversightSettings.zone;
   select.addEventListener('change', () => setMirrorFocusZone(select.value));
-  div.appendChild(select);
 
-  const slider = document.createElement('input');
-  slider.type = 'range';
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  slider.id = 'mirror-oversight-slider';
+  const slider = div.querySelector('#mirror-oversight-slider');
   slider.value = mirrorOversightSettings.percentage * 100;
   slider.addEventListener('input', () => {
     const raw = slider.value;
     const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
     setMirrorFocusPercentage(val);
   });
-  div.appendChild(slider);
 
-  const valueSpan = document.createElement('span');
-  valueSpan.id = 'mirror-oversight-value';
-  valueSpan.classList.add('slider-value');
-  const initRaw = slider.value;
-  const initVal = (typeof initRaw === 'number' || typeof initRaw === 'string') ? Number(initRaw) : 0;
-  valueSpan.textContent = initVal + '%';
-  div.appendChild(valueSpan);
+  const valueSpan = div.querySelector('#mirror-oversight-value');
+  valueSpan.textContent = `${Math.round(mirrorOversightSettings.percentage * 100)}%`;
 
-  const lanternDiv = document.createElement('div');
-  lanternDiv.id = 'mirror-oversight-lantern-div';
-  const lanternCheckbox = document.createElement('input');
-  lanternCheckbox.type = 'checkbox';
-  lanternCheckbox.id = 'mirror-oversight-lantern';
+  const lanternCheckbox = div.querySelector('#mirror-oversight-lantern');
   lanternCheckbox.checked = mirrorOversightSettings.applyToLantern;
   lanternCheckbox.addEventListener('change', () => {
     mirrorOversightSettings.applyToLantern = lanternCheckbox.checked;
     updateMirrorOversightUI();
   });
-  const lanternLabel = document.createElement('label');
-  lanternLabel.htmlFor = 'mirror-oversight-lantern';
-  lanternLabel.textContent = 'Apply to Hyperion Lantern';
-  lanternDiv.appendChild(lanternCheckbox);
-  lanternDiv.appendChild(lanternLabel);
-  div.appendChild(lanternDiv);
 
   // Table showing zonal solar flux
   const fluxTable = document.createElement('table');
@@ -165,11 +154,35 @@ function updateZonalFluxTable() {
 class SpaceMirrorFacilityProject extends Project {
   renderUI(container) {
     const mirrorDetails = document.createElement('div');
-    mirrorDetails.classList.add('mirror-details');
+    mirrorDetails.classList.add('mirror-details-card');
     mirrorDetails.innerHTML = `
-      <p>Mirrors: <span id="num-mirrors">0</span></p>
-      <p>Power/Mirror: <span id="power-per-mirror">0</span>W | Per m²: <span id="power-per-mirror-area">0</span>W/m²</p>
-      <p>Total Power: <span id="total-power">0</span>W | Per m²: <span id="total-power-area">0</span>W/m²</p>
+      <div class="card-header">
+        <span class="card-title">Mirror Status</span>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Mirrors:</span>
+            <span id="num-mirrors" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Power/Mirror:</span>
+            <span id="power-per-mirror" class="stat-value">0 W</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Power/m²:</span>
+            <span id="power-per-mirror-area" class="stat-value">0 W/m²</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Power:</span>
+            <span id="total-power" class="stat-value">0 W</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Power/m²:</span>
+            <span id="total-power-area" class="stat-value">0 W/m²</span>
+          </div>
+        </div>
+      </div>
     `;
     container.appendChild(mirrorDetails);
 
@@ -199,10 +212,10 @@ class SpaceMirrorFacilityProject extends Project {
     const totalPowerArea = powerPerMirrorArea * numMirrors;
 
     elements.mirrorDetails.numMirrors.textContent = formatNumber(numMirrors, false, 2);
-    elements.mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror, false, 2);
-    elements.mirrorDetails.powerPerMirrorArea.textContent = formatNumber(powerPerMirrorArea, false, 2);
-    elements.mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
-    elements.mirrorDetails.totalPowerArea.textContent = formatNumber(totalPowerArea, false, 2);
+    elements.mirrorDetails.powerPerMirror.textContent = `${formatNumber(powerPerMirror, false, 2)} W`;
+    elements.mirrorDetails.powerPerMirrorArea.textContent = `${formatNumber(powerPerMirrorArea, false, 2)} W/m²`;
+    elements.mirrorDetails.totalPower.textContent = `${formatNumber(totalPower, false, 2)} W`;
+    elements.mirrorDetails.totalPowerArea.textContent = `${formatNumber(totalPowerArea, false, 2)} W/m²`;
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

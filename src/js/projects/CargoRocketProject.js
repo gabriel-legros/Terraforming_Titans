@@ -1,25 +1,33 @@
 class CargoRocketProject extends Project {
-  createResourceSelectionUI() {
-    const selectionContainer = document.createElement('div');
-    selectionContainer.classList.add('resource-selection-container');
+  createCargoSelectionUI(container) {
+    const sectionContainer = document.createElement('div');
+    sectionContainer.classList.add('project-section-container');
+
+    const selectionGrid = document.createElement('div');
+    selectionGrid.classList.add('cargo-selection-grid');
+
+    const headerRow = document.createElement('div');
+    headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
+    headerRow.innerHTML = `
+        <span>Resource</span>
+        <span>Amount</span>
+        <span>Price (Funding)</span>
+        <span></span>
+    `;
+    selectionGrid.appendChild(headerRow);
 
     for (const category in this.attributes.resourceChoiceGainCost) {
       for (const resourceId in this.attributes.resourceChoiceGainCost[category]) {
         const resource = resources[category][resourceId];
-
         const resourceRow = document.createElement('div');
-        resourceRow.classList.add('project-resource-row');
         resourceRow.id = `${this.name}-${category}-${resourceId}-row`;
+        resourceRow.classList.add('cargo-resource-row');
+        resourceRow.style.display = resource.unlocked ? '' : 'none';
 
-        if (!resource.unlocked) {
-          resourceRow.style.display = 'none';
-        } else {
-          resourceRow.style.display = 'flex';
-        }
-
-        const label = document.createElement('label');
-        label.textContent = `${resource.displayName}: `;
-        label.classList.add('resource-label');
+        const label = document.createElement('span');
+        label.textContent = `${resource.displayName}`;
+        label.classList.add('cargo-resource-label');
+        resourceRow.appendChild(label);
 
         const quantityInput = document.createElement('input');
         quantityInput.type = 'number';
@@ -28,62 +36,51 @@ class CargoRocketProject extends Project {
         quantityInput.classList.add('resource-selection-input', `resource-selection-${this.name}`);
         quantityInput.dataset.category = category;
         quantityInput.dataset.resource = resourceId;
+        resourceRow.appendChild(quantityInput);
 
         const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
-        const pricePerUnitDisplay = document.createElement('span');
-        pricePerUnitDisplay.classList.add('price-per-unit');
-        pricePerUnitDisplay.textContent = `Price per unit: ${pricePerUnit} Funding`;
+        const priceDisplay = document.createElement('span');
+        priceDisplay.textContent = `${pricePerUnit}`;
+        resourceRow.appendChild(priceDisplay);
 
-        const buttonValues = [0, 1, 10, 100, 1000, 10000, 100000, 1000000];
         const buttonsContainer = document.createElement('div');
-        buttonsContainer.classList.add('buttons-container');
-
+        buttonsContainer.classList.add('cargo-buttons-container');
+        const buttonValues = [0, 1, 10, 100, 1000, 10000, 100000, 1000000];
         buttonValues.forEach((value) => {
           const button = document.createElement('button');
           button.type = 'button';
           button.classList.add('increment-button');
           button.textContent = value === 0 ? 'Clear' : `+${formatNumber(value, true)}`;
-
           button.addEventListener('click', () => {
-            if (value === 0) {
-              quantityInput.value = 0;
-            } else {
-              const currentValue = parseInt(quantityInput.value, 10);
-              const newValue = currentValue + value;
-              quantityInput.value = newValue;
-            }
-
+            quantityInput.value = (value === 0) ? 0 : (parseInt(quantityInput.value, 10) || 0) + value;
             updateTotalCostDisplay(this);
           });
-
           buttonsContainer.appendChild(button);
         });
-
-        resourceRow.appendChild(label);
-        resourceRow.appendChild(quantityInput);
-        resourceRow.appendChild(pricePerUnitDisplay);
         resourceRow.appendChild(buttonsContainer);
-
-        selectionContainer.appendChild(resourceRow);
+        selectionGrid.appendChild(resourceRow);
       }
     }
-
-    const totalCostDisplay = document.createElement('p');
-    totalCostDisplay.classList.add('total-cost-display');
-    totalCostDisplay.id = `${this.name}-total-cost-display`;
-    totalCostDisplay.textContent = 'Total Cost: 0 Funding';
-    selectionContainer.appendChild(totalCostDisplay);
-
-    return selectionContainer;
+    sectionContainer.appendChild(selectionGrid);
+    container.appendChild(sectionContainer);
   }
 
   renderUI(container) {
-    const selectionContainer = this.createResourceSelectionUI();
-    container.appendChild(selectionContainer);
+    const topSection = document.createElement('div');
+    topSection.classList.add('project-top-section');
+
+    this.createCargoSelectionUI(topSection);
+
+    container.appendChild(topSection);
+
+    const totalCostDisplay = document.createElement('p');
+    totalCostDisplay.id = `${this.name}-total-cost-display`;
+    totalCostDisplay.classList.add('total-cost-display');
+    container.appendChild(totalCostDisplay);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
-      resourceSelectionContainer: selectionContainer,
+      totalCostDisplay: totalCostDisplay,
     };
   }
 
@@ -98,7 +95,7 @@ class CargoRocketProject extends Project {
           const resource = resources[category][resourceId];
           const row = document.getElementById(`${this.name}-${category}-${resourceId}-row`);
           if (row) {
-            row.style.display = resource.unlocked ? 'flex' : 'none';
+            row.style.display = resource.unlocked ? 'grid' : 'none';
           }
         }
       }

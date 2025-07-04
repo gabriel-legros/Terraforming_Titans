@@ -272,6 +272,7 @@ class ProjectManager extends EffectableEntity {
     super({description: 'Manages all special projects'});
 
     this.projects = {};
+    this.projectOrder = [];
     this.durationMultiplier = 1;
   }
 
@@ -293,6 +294,7 @@ class ProjectManager extends EffectableEntity {
       const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
       const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
       this.projects[projectName] = new Ctor(projectData, projectName);
+      this.projectOrder.push(projectName);
     }
   }
 
@@ -322,7 +324,28 @@ class ProjectManager extends EffectableEntity {
   }
 
   getProjectStatuses() {
-    return Object.values(this.projects);
+    return this.projectOrder.map(projectName => this.projects[projectName]);
+  }
+
+  reorderProject(fromIndex, toIndex, category) {
+    const categoryProjects = this.projectOrder.filter(name => (this.projects[name].category || 'general') === category);
+
+    const [movedProject] = categoryProjects.splice(fromIndex, 1);
+    categoryProjects.splice(toIndex, 0, movedProject);
+
+    const newOrder = [];
+    let categoryProjectsAdded = false;
+    for (const projectName of this.projectOrder) {
+        if ((this.projects[projectName].category || 'general') === category) {
+            if (!categoryProjectsAdded) {
+                newOrder.push(...categoryProjects);
+                categoryProjectsAdded = true;
+            }
+        } else {
+            newOrder.push(projectName);
+        }
+    }
+    this.projectOrder = newOrder;
   }
 
   estimateProjects() {
@@ -378,13 +401,19 @@ class ProjectManager extends EffectableEntity {
 
       projectState[projectName] = state;
     }
-    return projectState;
+    return {
+        projects: projectState,
+        order: this.projectOrder
+    };
   }
 
   // Load a previously saved state into the projects
-  loadState(projectState) {
+  loadState(savedState) {
     this.activeEffects = [];
     this.booleanFlags = new Set();
+
+    const projectState = savedState.projects || savedState;
+    this.projectOrder = savedState.order || Object.keys(this.projects);
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
