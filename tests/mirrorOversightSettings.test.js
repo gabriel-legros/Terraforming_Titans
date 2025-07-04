@@ -1,9 +1,21 @@
+global.Project = class {};
+global.projectElements = {};
+global.buildings = {};
+global.terraforming = { calculateMirrorEffect: () => ({ interceptedPower: 0, powerPerUnitArea: 0 }) };
+global.formatNumber = () => '';
+
 const {
   setMirrorFocusZone,
   setMirrorFocusPercentage,
   resetMirrorOversightSettings,
   mirrorOversightSettings
-} = require('../src/js/mirrorOversight.js');
+} = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+
+delete global.Project;
+delete global.projectElements;
+delete global.buildings;
+delete global.terraforming;
+delete global.formatNumber;
 
 describe('mirror oversight settings', () => {
   test('setters modify settings', () => {

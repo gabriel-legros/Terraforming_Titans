@@ -24,8 +24,6 @@ describe('SpaceMirrorFacilityProject', () => {
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const mirrorCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceMirrorFacilityProject.js'), 'utf8');
     vm.runInContext(mirrorCode + '; this.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject;', ctx);
-    const oversCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'mirrorOversight.js'), 'utf8');
-    vm.runInContext(oversCode, ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
