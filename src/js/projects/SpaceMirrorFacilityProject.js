@@ -92,7 +92,24 @@ function initializeMirrorOversightUI(container) {
   lanternDiv.appendChild(lanternLabel);
   div.appendChild(lanternDiv);
 
+  // Table showing zonal solar flux
+  const fluxTable = document.createElement('table');
+  fluxTable.id = 'mirror-flux-table';
+  fluxTable.innerHTML = `
+    <thead>
+      <tr><th>Zone</th><th>Solar Flux (W/m²)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td></tr>
+      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td></tr>
+      <tr><td>Polar</td><td id="mirror-flux-polar">0</td></tr>
+    </tbody>
+  `;
+  div.appendChild(fluxTable);
+
   container.appendChild(div);
+
+  updateZonalFluxTable();
 }
 
 function updateMirrorOversightUI() {
@@ -125,6 +142,24 @@ function updateMirrorOversightUI() {
     const unlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
     lanternDiv.style.display = unlocked ? 'block' : 'none';
   }
+
+  if (enabled) {
+    updateZonalFluxTable();
+  }
+}
+
+function updateZonalFluxTable() {
+  if (typeof document === 'undefined' || typeof terraforming === 'undefined') return;
+  const zones = ['tropical', 'temperate', 'polar'];
+  zones.forEach(zone => {
+    const cell = document.getElementById(`mirror-flux-${zone}`);
+    if (!cell) return;
+    let flux = 0;
+    if (typeof terraforming.calculateZoneSolarFlux === 'function') {
+      flux = terraforming.calculateZoneSolarFlux(zone);
+    }
+    cell.textContent = formatNumber(flux, false, 2);
+  });
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -184,6 +219,7 @@ if (typeof globalThis !== 'undefined') {
   globalThis.resetMirrorOversightSettings = resetMirrorOversightSettings;
   globalThis.initializeMirrorOversightUI = initializeMirrorOversightUI;
   globalThis.updateMirrorOversightUI = updateMirrorOversightUI;
+  globalThis.updateZonalFluxTable = updateZonalFluxTable;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -195,5 +231,6 @@ if (typeof module !== 'undefined' && module.exports) {
     resetMirrorOversightSettings,
     initializeMirrorOversightUI,
     updateMirrorOversightUI,
+    updateZonalFluxTable,
   };
 }

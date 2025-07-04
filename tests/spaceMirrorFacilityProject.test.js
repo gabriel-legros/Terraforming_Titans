@@ -16,7 +16,10 @@ describe('SpaceMirrorFacilityProject', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
     ctx.buildings = { spaceMirror: { active: 5 } };
-    ctx.terraforming = { calculateMirrorEffect: () => ({ interceptedPower: 10, powerPerUnitArea: 0.5 }) };
+    ctx.terraforming = {
+      calculateMirrorEffect: () => ({ interceptedPower: 10, powerPerUnitArea: 0.5 }),
+      calculateZoneSolarFlux: zone => ({ tropical: 100, temperate: 50, polar: 25 })[zone]
+    };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -46,7 +49,9 @@ describe('SpaceMirrorFacilityProject', () => {
     expect(oversight.style.display).toBe('none');
 
     ctx.projectManager = { isBooleanFlagSet: () => true };
-    ctx.updateMirrorOversightUI();
+    project.updateUI();
     expect(oversight.style.display).toBe('block');
+    const fluxCell = dom.window.document.getElementById('mirror-flux-tropical');
+    expect(fluxCell.textContent).toBe('100.00');
   });
 });

@@ -244,3 +244,19 @@
     min-width: 45px;
     text-align: left;
 }
+
+/* Table for zonal solar flux */
+#mirror-flux-table {
+    margin-top: 8px;
+    border-collapse: collapse;
+}
+#mirror-flux-table th,
+#mirror-flux-table td {
+    border: 1px solid #ccc;
+    padding: 2px 4px;
+    text-align: right;
+}
+#mirror-flux-table th:first-child,
+#mirror-flux-table td:first-child {
+    text-align: left;
+}
