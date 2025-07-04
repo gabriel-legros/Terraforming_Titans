@@ -28,20 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
 
-  // Create any new project items that don't exist in the UI yet
+  // Create all project items initially
   projectsArray.forEach(project => {
     if (!projectElements[project.name]) {
       createProjectItem(project);
-    }
-  });
-
-  // Re-order the project cards in the DOM based on the new order
-  projectsArray.forEach(project => {
-    if (projectElements[project.name] && projectElements[project.name].projectItem) {
-      const projectItem = projectElements[project.name].projectItem;
-      // Appending an existing child moves it to the end of the parent's children list.
-      // This reorders the items to match the projectOrder array.
-      projectItem.parentElement.appendChild(projectItem);
     }
   });
 
@@ -204,26 +194,49 @@ function getOrCreateCategoryContainer(category) {
 }
 
 function moveProject(projectName, direction) {
+  const projectElement = projectElements[projectName].projectItem;
+  const container = projectElement.parentElement;
+
+  if (direction === 'up') {
+    const previousElement = projectElement.previousElementSibling;
+    if (previousElement && previousElement.classList.contains('project-card')) {
+      container.insertBefore(projectElement, previousElement);
+    }
+  } else { // down
+    const nextElement = projectElement.nextElementSibling;
+    if (nextElement && nextElement.classList.contains('project-card')) {
+      container.insertBefore(nextElement, projectElement);
+    }
+  }
+
   const project = projectManager.projects[projectName];
   const category = project.category || 'general';
-  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
-  const fromIndex = categoryProjects.findIndex(p => p.name === projectName);
-
-  if (fromIndex === -1) return;
-
+  const projectCards = Array.from(container.querySelectorAll('.project-card'));
+  const fromIndex = projectCards.findIndex(card => card.dataset.projectName === projectName);
   let toIndex = fromIndex;
   if (direction === 'up') {
-    toIndex = fromIndex - 1;
+    toIndex = fromIndex -1;
   } else {
     toIndex = fromIndex + 1;
   }
-
-  if (toIndex < 0 || toIndex >= categoryProjects.length) {
-    return;
+  
+  //This is not right. The fromIndex and toIndex are not correct.
+  
+  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+  const currentProjectIndex = categoryProjects.findIndex(p => p.name === projectName);
+  
+  let newIndex = currentProjectIndex;
+  if (direction === 'up') {
+      newIndex = currentProjectIndex - 1;
+  } else {
+      newIndex = currentProjectIndex + 1;
   }
 
-  projectManager.reorderProject(fromIndex, toIndex, category);
-  renderProjects();
+  projectManager.reorderProject(currentProjectIndex, newIndex, category);
+
+  // After reordering, update all project UIs to reflect new arrow states
+  const projectsToUpdate = projectManager.getProjectStatuses();
+  projectsToUpdate.forEach(p => updateProjectUI(p.name));
 }
 
 function getUpdatedResourceGain(project) {
