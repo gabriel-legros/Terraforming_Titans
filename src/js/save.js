@@ -167,12 +167,9 @@ function loadGame(slotOrCustomString) {
         loadJournalEntries(gameState.journalEntries, history);
       }
 
-      // If journal ends up blank after loading, rebuild it from story state
+      // Always rebuild the journal from story state after loading
       if (typeof reconstructJournalState === 'function') {
-        const blank = !journalEntriesData || journalEntriesData.every(e => !e || e.trim() === '');
-        if (blank) {
-          reconstructJournalState(storyManager, projectManager);
-        }
+        reconstructJournalState(storyManager, projectManager);
       }
 
       // Restore research progress
