@@ -34,7 +34,7 @@ function initializeMirrorOversightUI(container) {
   div.style.display = 'none';
 
   const label = document.createElement('span');
-  label.textContent = 'Mirror Oversight ';
+  label.textContent = 'Direct a percent of mirrors to focus on a specific zone : ';
   const tooltip = document.createElement('span');
   tooltip.classList.add('info-tooltip-icon');
   tooltip.title = 'Direct a percent of mirrors to focus on a specific zone.';
