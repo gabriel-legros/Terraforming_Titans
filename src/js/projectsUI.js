@@ -69,12 +69,12 @@ function createProjectItem(project) {
 
   const upButton = document.createElement('button');
   upButton.innerHTML = '&#9650;';
-  upButton.addEventListener('click', () => moveProject(project.name, 'up'));
+  upButton.addEventListener('click', (e) => moveProject(project.name, 'up', e.shiftKey));
   reorderButtons.appendChild(upButton);
 
   const downButton = document.createElement('button');
   downButton.innerHTML = '&#9660;';
-  downButton.addEventListener('click', () => moveProject(project.name, 'down'));
+  downButton.addEventListener('click', (e) => moveProject(project.name, 'down', e.shiftKey));
   reorderButtons.appendChild(downButton);
 
   cardHeader.appendChild(reorderButtons);
@@ -193,50 +193,56 @@ function getOrCreateCategoryContainer(category) {
   return categoryContainer;
 }
 
-function moveProject(projectName, direction) {
-  const projectElement = projectElements[projectName].projectItem;
-  const container = projectElement.parentElement;
+function moveProject(projectName, direction, shiftKey = false) {
+    const project = projectManager.projects[projectName];
+    const category = project.category || 'general';
+    const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+    const fromIndex = categoryProjects.findIndex(p => p.name === projectName);
 
-  if (direction === 'up') {
-    const previousElement = projectElement.previousElementSibling;
-    if (previousElement && previousElement.classList.contains('project-card')) {
-      container.insertBefore(projectElement, previousElement);
+    if (fromIndex === -1) return;
+
+    let toIndex = fromIndex;
+
+    if (shiftKey) {
+        if (direction === 'up') {
+            toIndex = 0;
+        } else {
+            toIndex = categoryProjects.length - 1;
+        }
+    } else {
+        if (direction === 'up') {
+            toIndex = fromIndex - 1;
+        } else {
+            toIndex = fromIndex + 1;
+        }
     }
-  } else { // down
-    const nextElement = projectElement.nextElementSibling;
-    if (nextElement && nextElement.classList.contains('project-card')) {
-      container.insertBefore(nextElement, projectElement);
+
+    if (toIndex < 0 || toIndex >= categoryProjects.length || toIndex === fromIndex) {
+        return;
     }
-  }
 
-  const project = projectManager.projects[projectName];
-  const category = project.category || 'general';
-  const projectCards = Array.from(container.querySelectorAll('.project-card'));
-  const fromIndex = projectCards.findIndex(card => card.dataset.projectName === projectName);
-  let toIndex = fromIndex;
-  if (direction === 'up') {
-    toIndex = fromIndex -1;
-  } else {
-    toIndex = fromIndex + 1;
-  }
-  
-  //This is not right. The fromIndex and toIndex are not correct.
-  
-  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
-  const currentProjectIndex = categoryProjects.findIndex(p => p.name === projectName);
-  
-  let newIndex = currentProjectIndex;
-  if (direction === 'up') {
-      newIndex = currentProjectIndex - 1;
-  } else {
-      newIndex = currentProjectIndex + 1;
-  }
+    projectManager.reorderProject(fromIndex, toIndex, category);
 
-  projectManager.reorderProject(currentProjectIndex, newIndex, category);
+    // Manually reorder the DOM to avoid full re-render
+    const container = projectElements[projectName].projectItem.parentElement;
+    const projectElement = projectElements[projectName].projectItem;
 
-  // After reordering, update all project UIs to reflect new arrow states
-  const projectsToUpdate = projectManager.getProjectStatuses();
-  projectsToUpdate.forEach(p => updateProjectUI(p.name));
+    if (toIndex === 0) {
+        container.insertBefore(projectElement, container.querySelector('.project-card'));
+    } else if (toIndex === categoryProjects.length - 1) {
+        container.appendChild(projectElement);
+    } else {
+        const sibling = projectElements[categoryProjects[toIndex].name].projectItem;
+        if (direction === 'up') {
+            container.insertBefore(projectElement, sibling);
+        } else {
+            container.insertBefore(projectElement, sibling.nextElementSibling);
+        }
+    }
+
+    // After reordering, update all project UIs to reflect new arrow states
+    const projectsToUpdate = projectManager.getProjectStatuses();
+    projectsToUpdate.forEach(p => updateProjectUI(p.name));
 }
 
 function getUpdatedResourceGain(project) {
