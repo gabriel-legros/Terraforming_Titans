@@ -1068,9 +1068,9 @@ class Terraforming extends EffectableEntity{
       let focusedLantern = 0;
 
       if (
-        typeof projectManager !== 'undefined' &&
-        projectManager.isBooleanFlagSet &&
-        projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
+        typeof projectManager.projects.spaceMirrorFacility !== 'undefined' &&
+        projectManager.projects.spaceMirrorFacility.isBooleanFlagSet &&
+        projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
         typeof mirrorOversightSettings !== 'undefined'
       ) {
         const perc = mirrorOversightSettings.percentage || 0;
