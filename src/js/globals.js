@@ -38,6 +38,7 @@ let ghgFactorySettings = {
   restartTimer: 0
 };
 
+
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;

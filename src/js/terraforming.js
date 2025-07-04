@@ -418,7 +418,7 @@ class Terraforming extends EffectableEntity{
             const availableIce = this.zonalWater[zone].ice || 0;
             const availableBuriedIce = this.zonalWater[zone].buriedIce || 0;
             const availableDryIce = this.zonalSurface[zone].dryIce || 0;
-            const zonalSolarFlux = solarFlux * getZoneRatio(zone); // Calculate zone-specific flux
+            const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
 
             // --- Upward Flux (Surface -> Atmosphere) ---
             const evapSublRates = calculateEvaporationSublimationRates(
@@ -897,8 +897,10 @@ class Terraforming extends EffectableEntity{
       this.temperature.value = globalTemps.mean;
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
 
+      this.luminosity.zonalFluxes = {};
       for (const zone in this.temperature.zones) {
-        const zoneFlux = modifiedSolarFlux * (getZoneRatio(zone) / 0.25);
+        const zoneFlux = this.calculateZoneSolarFlux(zone);
+        this.luminosity.zonalFluxes[zone] = zoneFlux;
         const zoneTemps = dayNightTemperaturesModel({ ...baseParams, flux: zoneFlux });
         this.temperature.zones[zone].value = zoneTemps.mean;
         this.temperature.zones[zone].day = zoneTemps.day;
@@ -1051,6 +1053,35 @@ class Terraforming extends EffectableEntity{
         return power / area;
       }
       return 0;
+    }
+
+    calculateZoneSolarFlux(zone, angleAdjusted = false) {
+      const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+
+      const baseSolar = this.luminosity.solarFlux;
+      const lanternFlux = this.calculateLanternFlux();
+      const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea * (buildings['spaceMirror']?.active || 0);
+
+      let distributedMirror = mirrorFlux;
+      let focusedMirror = 0;
+
+      if (
+        typeof projectManager !== 'undefined' &&
+        projectManager.isBooleanFlagSet &&
+        projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
+        typeof mirrorOversightSettings !== 'undefined'
+      ) {
+        const perc = mirrorOversightSettings.percentage || 0;
+        if (perc > 0) {
+          distributedMirror = mirrorFlux * (1 - perc);
+          if (mirrorOversightSettings.zone === zone) {
+            focusedMirror = mirrorFlux * perc;
+          }
+        }
+      }
+
+      const base = (baseSolar + lanternFlux + distributedMirror) * ratio;
+      return base + focusedMirror;
     }
 
     calculateSolarPanelMultiplier(){

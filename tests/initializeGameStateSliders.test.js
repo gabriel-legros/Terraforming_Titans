@@ -84,6 +84,7 @@ test('initializeGameState resets colony sliders to defaults', () => {
   vm.runInContext('initializeGameState();', ctx);
 
   const settings = vm.runInContext('colonySliderSettings', ctx);
+  const oversight = vm.runInContext('mirrorOversightSettings', ctx);
 
   global.window = originalWindow;
   global.document = originalDocument;
@@ -94,4 +95,5 @@ test('initializeGameState resets colony sliders to defaults', () => {
   }
 
   expect(settings).toEqual({ workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 });
+  expect(oversight).toEqual({ percentage: 0, zone: 'tropical' });
 });

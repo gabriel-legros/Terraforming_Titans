@@ -23,6 +23,7 @@ function getGameState() {
     settings: gameSettings,
     colonySliderSettings: colonySliderSettings,
     ghgFactorySettings: ghgFactorySettings,
+    mirrorOversightSettings: globalThis.mirrorOversightSettings,
     playTimeSeconds: playTimeSeconds
   };
 }
@@ -237,6 +238,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.ghgFactorySettings){
       Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
+    }
+
+    if(gameState.mirrorOversightSettings){
+      Object.assign(mirrorOversightSettings, gameState.mirrorOversightSettings);
     }
 
     if(gameState.playTimeSeconds !== undefined){

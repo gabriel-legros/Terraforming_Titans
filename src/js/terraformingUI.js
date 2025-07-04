@@ -633,7 +633,7 @@ function updateLifeBox() {
             <td><span id="albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Solar Flux (W/m²)</td>
+            <td>Solar Flux (W/m²) <span id="solar-flux-breakdown" class="info-tooltip-icon" title=""></span></td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
@@ -682,6 +682,12 @@ function updateLifeBox() {
     if (solarFluxDeltaEl) {
       const deltaF = terraforming.luminosity.modifiedSolarFlux - terraforming.luminosity.solarFlux;
       solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
+    }
+
+    const fluxTooltip = document.getElementById('solar-flux-breakdown');
+    if (fluxTooltip && terraforming.luminosity.zonalFluxes) {
+      const z = terraforming.luminosity.zonalFluxes;
+      fluxTooltip.title = `Tropical: ${z.tropical.toFixed(1)}\nTemperate: ${z.temperate.toFixed(1)}\nPolar: ${z.polar.toFixed(1)}`;
     }
 
     const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');

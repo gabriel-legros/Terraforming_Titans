@@ -129,6 +129,9 @@ function initializeGameState(options = {}) {
   if (typeof resetColonySliders === 'function') {
     resetColonySliders();
   }
+  if (typeof resetMirrorOversightSettings === 'function') {
+    resetMirrorOversightSettings();
+  }
   const fundingRate = currentPlanetParameters.fundingRate || 0;
   fundingModule = new FundingModule(resources, fundingRate);
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
