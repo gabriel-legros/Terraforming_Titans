@@ -633,7 +633,7 @@ function updateLifeBox() {
             <td><span id="albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Solar Flux (W/m²) <span id="solar-flux-breakdown" class="info-tooltip-icon" title=""></span></td>
+            <td>Solar Flux (W/m²) <span id="solar-flux-breakdown" class="info-tooltip-icon" title="">&#9432;</span></td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
