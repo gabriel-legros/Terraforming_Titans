@@ -180,6 +180,11 @@
   margin: 0;
   padding: 0;
 }
+
+.pressure-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 /* Mirror Oversight Slider */
 .mirror-oversight {
     display: flex;
