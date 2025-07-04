@@ -1,9 +1,10 @@
-const { getZoneRatio } = require('../src/js/zones.js');
+const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 
 // globals expected by terraforming.js
 global.getZoneRatio = getZoneRatio;
+global.getZonePercentage = getZonePercentage;
 global.EffectableEntity = EffectableEntity;
 global.lifeParameters = lifeParameters;
 
@@ -21,16 +22,24 @@ describe('calculateZoneSolarFlux', () => {
   test('applies mirror oversight percentage to selected zone', () => {
     const terra = createTerraforming();
     global.buildings = { spaceMirror: { surfaceArea: 500, active: 1 } };
-    global.projectManager = { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
+    };
     global.mirrorOversightSettings = { percentage: 0.5, zone: 'tropical', applyToLantern: false };
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
 
     const ratio = getZoneRatio('tropical') / 0.25;
+    const zonePerc = getZonePercentage('tropical');
     const baseSolar = terra.luminosity.solarFlux;
-    const mirror = terra.calculateMirrorEffect().powerPerUnitArea * buildings.spaceMirror.active;
-    const expected = (baseSolar + mirror * 0.5) * ratio + mirror * 0.5;
+    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
+    const expected = (
+      baseSolar +
+      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5) +
+      4 * mirrorPPA * buildings.spaceMirror.active * 0.5 / zonePerc
+    ) * ratio;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
@@ -38,7 +47,10 @@ describe('calculateZoneSolarFlux', () => {
   test('other zones receive only distributed mirrors', () => {
     const terra = createTerraforming();
     global.buildings = { spaceMirror: { surfaceArea: 500, active: 1 } };
-    global.projectManager = { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
+    };
     global.mirrorOversightSettings = { percentage: 0.5, zone: 'tropical', applyToLantern: false };
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -46,8 +58,11 @@ describe('calculateZoneSolarFlux', () => {
 
     const ratio = getZoneRatio('temperate') / 0.25;
     const baseSolar = terra.luminosity.solarFlux;
-    const mirror = terra.calculateMirrorEffect().powerPerUnitArea * buildings.spaceMirror.active;
-    const expected = (baseSolar + mirror * 0.5) * ratio;
+    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
+    const expected = (
+      baseSolar +
+      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5)
+    ) * ratio;
     const result = terra.calculateZoneSolarFlux('temperate');
     expect(result).toBeCloseTo(expected, 5);
   });
@@ -58,7 +73,10 @@ describe('calculateZoneSolarFlux', () => {
       spaceMirror: { surfaceArea: 500, active: 1 },
       hyperionLantern: { active: 1, powerPerBuilding: 100 }
     };
-    global.projectManager = { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
+    };
     global.mirrorOversightSettings = { percentage: 0.5, zone: 'tropical', applyToLantern: true };
 
     Terraforming.prototype.calculateLanternFlux = function(){
@@ -74,10 +92,18 @@ describe('calculateZoneSolarFlux', () => {
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
 
     const ratio = getZoneRatio('tropical') / 0.25;
+    const zonePerc = getZonePercentage('tropical');
     const baseSolar = terra.luminosity.solarFlux;
-    const mirror = terra.calculateMirrorEffect().powerPerUnitArea * buildings.spaceMirror.active;
+    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
     const lantern = terra.calculateLanternFlux();
-    const expected = (baseSolar + mirror * 0.5 + lantern * 0.5) * ratio + mirror * 0.5 + lantern * 0.5;
+    const areaFactor = terra.celestialParameters.crossSectionArea / terra.celestialParameters.surfaceArea;
+    const expected = (
+      baseSolar +
+      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5) +
+      4 * lantern * areaFactor * (1 - 0.5) +
+      4 * mirrorPPA * buildings.spaceMirror.active * 0.5 / zonePerc +
+      4 * lantern * areaFactor * 0.5 / zonePerc
+    ) * ratio;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });

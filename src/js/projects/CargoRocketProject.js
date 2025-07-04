@@ -81,6 +81,7 @@ class CargoRocketProject extends Project {
     projectElements[this.name] = {
       ...projectElements[this.name],
       totalCostDisplay: totalCostDisplay,
+      resourceSelectionContainer: container,
     };
   }
 

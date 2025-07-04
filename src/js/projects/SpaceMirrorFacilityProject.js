@@ -212,9 +212,9 @@ class SpaceMirrorFacilityProject extends Project {
     const totalPowerArea = powerPerMirrorArea * numMirrors;
 
     elements.mirrorDetails.numMirrors.textContent = formatNumber(numMirrors, false, 2);
-    elements.mirrorDetails.powerPerMirror.textContent = `${formatNumber(powerPerMirror, false, 2)} W`;
+    elements.mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror, false, 2);
     elements.mirrorDetails.powerPerMirrorArea.textContent = `${formatNumber(powerPerMirrorArea, false, 2)} W/m²`;
-    elements.mirrorDetails.totalPower.textContent = `${formatNumber(totalPower, false, 2)} W`;
+    elements.mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
     elements.mirrorDetails.totalPowerArea.textContent = `${formatNumber(totalPowerArea, false, 2)} W/m²`;
 
     if (typeof updateMirrorOversightUI === 'function') {
