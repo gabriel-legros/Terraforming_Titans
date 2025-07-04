@@ -70,6 +70,39 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.pressureInput.value = this.disablePressureThreshold;
     }
   }
+
+  getTargetAtmosphericResource() {
+    const attrs = this.attributes.resourceGainPerShip || this.attributes.resourceGain;
+    if (attrs && attrs.atmospheric) {
+      const keys = Object.keys(attrs.atmospheric);
+      if (keys.length > 0) {
+        return keys[0];
+      }
+    }
+    return null;
+  }
+
+  canStart() {
+    if (!super.canStart()) return false;
+
+    if (this.disableAbovePressure) {
+      const gas = this.getTargetAtmosphericResource();
+      if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
+        const amount = resources.atmospheric[gas].value || 0;
+        const pressurePa = calculateAtmosphericPressure(
+          amount,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
+        );
+        const pressureKPa = pressurePa / 1000;
+        if (pressureKPa >= this.disablePressureThreshold) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
 }
 
 // Expose constructor globally for browser usage
