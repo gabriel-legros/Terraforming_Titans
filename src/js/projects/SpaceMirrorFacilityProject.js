@@ -2,6 +2,7 @@
 var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   percentage: 0,
   zone: 'tropical',
+  applyToLantern: false,
 };
 
 function setMirrorFocusZone(zone) {
@@ -21,6 +22,7 @@ function setMirrorFocusPercentage(value) {
 function resetMirrorOversightSettings() {
   mirrorOversightSettings.zone = 'tropical';
   mirrorOversightSettings.percentage = 0;
+  mirrorOversightSettings.applyToLantern = false;
   updateMirrorOversightUI();
 }
 
@@ -73,6 +75,23 @@ function initializeMirrorOversightUI(container) {
   valueSpan.textContent = initVal + '%';
   div.appendChild(valueSpan);
 
+  const lanternDiv = document.createElement('div');
+  lanternDiv.id = 'mirror-oversight-lantern-div';
+  const lanternCheckbox = document.createElement('input');
+  lanternCheckbox.type = 'checkbox';
+  lanternCheckbox.id = 'mirror-oversight-lantern';
+  lanternCheckbox.checked = mirrorOversightSettings.applyToLantern;
+  lanternCheckbox.addEventListener('change', () => {
+    mirrorOversightSettings.applyToLantern = lanternCheckbox.checked;
+    updateMirrorOversightUI();
+  });
+  const lanternLabel = document.createElement('label');
+  lanternLabel.htmlFor = 'mirror-oversight-lantern';
+  lanternLabel.textContent = 'Apply to Hyperion Lantern';
+  lanternDiv.appendChild(lanternCheckbox);
+  lanternDiv.appendChild(lanternLabel);
+  div.appendChild(lanternDiv);
+
   container.appendChild(div);
 }
 
@@ -96,9 +115,16 @@ function updateMirrorOversightUI() {
   const slider = document.getElementById('mirror-oversight-slider');
   const valueSpan = document.getElementById('mirror-oversight-value');
   const select = document.getElementById('mirror-oversight-zone');
+  const lantern = document.getElementById('mirror-oversight-lantern');
+  const lanternDiv = document.getElementById('mirror-oversight-lantern-div');
   if (slider) slider.value = mirrorOversightSettings.percentage * 100;
   if (valueSpan) valueSpan.textContent = Math.round(mirrorOversightSettings.percentage * 100) + '%';
   if (select) select.value = mirrorOversightSettings.zone;
+  if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
+  if (lanternDiv) {
+    const unlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
+    lanternDiv.style.display = unlocked ? 'block' : 'none';
+  }
 }
 
 class SpaceMirrorFacilityProject extends Project {
