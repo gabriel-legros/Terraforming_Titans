@@ -246,12 +246,15 @@ function initializeLifeTerraformingDesignerUI() {
           const currentTentativeValue = parseInt(tentativeValueDisplay.textContent, 10);
           const maxUpgrades = lifeDesigner.tentativeDesign[attributeName].maxUpgrades;
 
-          const remainingPoints = lifeDesigner.maxLifeDesignPoints() - lifeDesigner.tentativeDesign.getDesignCost() + lifeDesigner.tentativeDesign[attributeName].value;
+          const remainingPoints =
+            lifeDesigner.maxLifeDesignPoints() -
+            lifeDesigner.tentativeDesign.getDesignCost() +
+            Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
 
           let newValue = currentTentativeValue + changeAmount;
 
           if (attributeName === 'optimalGrowthTemperature') {
-              newValue = Math.max(-10, Math.min(10, newValue));
+              newValue = Math.max(-15, Math.min(15, newValue));
           } else {
               // Clamp the value between 0 and the allowed maximum and available points
               newValue = Math.max(0, Math.min(maxUpgrades, newValue));
@@ -477,22 +480,10 @@ function updateLifeUI() {
         
         let pointsRemaining = 0;
         if (lifeDesigner.tentativeDesign) {
-          // Calculate remaining based on TENTATIVE design
-          const pointsUsed = Object.values(lifeDesigner.tentativeDesign).reduce((sum, attribute) => {
-              if (attribute instanceof LifeAttribute) {
-                  return sum + attribute.value;
-              }
-              return sum;
-          }, 0);
+          const pointsUsed = lifeDesigner.tentativeDesign.getDesignCost();
           pointsRemaining = maxPoints - pointsUsed;
         } else {
-          // Calculate remaining based on CURRENT design when no tentative design exists
-           const pointsUsed = Object.values(lifeDesigner.currentDesign).reduce((sum, attribute) => {
-              if (attribute instanceof LifeAttribute) {
-                  return sum + attribute.value;
-              }
-              return sum;
-          }, 0);
+          const pointsUsed = lifeDesigner.currentDesign.getDesignCost();
           pointsRemaining = maxPoints - pointsUsed;
         }
         pointsRemainingSpan.textContent = pointsRemaining;
