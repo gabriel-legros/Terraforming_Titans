@@ -25,7 +25,7 @@ const skillParameters = {
       baseValue: 0.2,
       perRank: true
     },
-    requires: ['research_boost']
+    requires: ['worker_reduction']
   },
   worker_reduction: {
     id: 'worker_reduction',
@@ -110,7 +110,7 @@ const skillParameters = {
       baseValue: 0.15,
       perRank: true
     },
-    requires: ['worker_reduction']
+    requires: ['research_boost']
   },
   life_design_points: {
     id: 'life_design_points',

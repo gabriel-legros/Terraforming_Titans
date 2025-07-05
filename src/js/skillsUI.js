@@ -17,8 +17,8 @@ function canUnlockSkill(id) {
 
 const skillLayout = {
     build_cost: { row: 0, col: 3 },
-    worker_reduction: { row: 1, col: 2 },
-    research_boost: { row: 1, col: 4 },
+    research_boost: { row: 1, col: 2 },
+    worker_reduction: { row: 1, col: 4 },
     maintenance_reduction: { row: 3, col: 4 },
     pop_growth: { row: 2, col: 4 },
     android_efficiency: { row: 3, col: 0 },
