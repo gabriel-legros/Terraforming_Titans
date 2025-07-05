@@ -265,9 +265,11 @@ function updateCostDisplay(project) {
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
-        const formattedResourceText = availableAmount >= requiredAmount
-          ? resourceText
-          : `<span style="color: red;">${resourceText}</span>`;
+        const highlight = availableAmount < requiredAmount &&
+          !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+        const formattedResourceText = highlight
+          ? `<span style="color: red;">${resourceText}</span>`
+          : resourceText;
         
         costArray.push(formattedResourceText);
       }
@@ -298,7 +300,7 @@ function updateTotalCostDisplay(project) {
   // Update the total cost display element
   const totalCostDisplay = document.getElementById(`${project.name}-total-cost-display`);
   if (totalCostDisplay) {
-    totalCostDisplay.innerHTML = formatTotalCostDisplay({colony : {funding : totalCost}});
+    totalCostDisplay.innerHTML = formatTotalCostDisplay({colony : {funding : totalCost}}, project);
   }
 }
 
@@ -522,7 +524,7 @@ function checkAndStartProjectAutomatically(project) {
   }
 }
 
-function formatTotalCostDisplay(totalCost) {
+function formatTotalCostDisplay(totalCost, project) {
   const costArray = [];
   for (const category in totalCost) {
     for (const resource in totalCost[category]) {
@@ -534,9 +536,11 @@ function formatTotalCostDisplay(totalCost) {
 
       // Check if the player has enough of this resource
       const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
-      const formattedResourceText = availableAmount >= requiredAmount
-        ? resourceText
-        : `<span style="color: red;">${resourceText}</span>`;
+      const highlight = availableAmount < requiredAmount &&
+        !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+      const formattedResourceText = highlight
+        ? `<span style="color: red;">${resourceText}</span>`
+        : resourceText;
 
       costArray.push(formattedResourceText);
     }
