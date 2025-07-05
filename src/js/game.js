@@ -96,11 +96,12 @@ function create() {
 
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
+  const preserveJournal = options.preserveJournal || false;
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
 
-  if (typeof resetJournal === 'function') {
+  if (!preserveJournal && typeof resetJournal === 'function') {
     resetJournal();
   }
 
