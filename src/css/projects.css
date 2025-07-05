@@ -437,7 +437,7 @@
 }
 
 #growth-rate-container {
-    flex: 1;
+    flex: 0 0 auto; /* Prevent the card from growing */
 }
 
 #colony-sliders-container {
