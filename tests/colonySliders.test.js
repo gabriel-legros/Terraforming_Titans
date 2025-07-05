@@ -162,7 +162,7 @@ describe('colony sliders', () => {
 
     ctx.initializeColonySlidersUI();
     const container = dom.window.document.getElementById('colony-sliders-container');
-    expect(container.classList.contains('hidden')).toBe(true);
+    expect(container.classList.contains('invisible')).toBe(true);
   });
 
   test('new game reinitializes sliders as hidden', () => {
@@ -182,12 +182,12 @@ describe('colony sliders', () => {
 
     // Simulate unlocked state from previous game
     const container = dom.window.document.getElementById('colony-sliders-container');
-    container.classList.remove('hidden');
+    container.classList.remove('invisible');
 
     // Starting a new game should hide sliders again
     ctx.initializeColonySlidersUI();
 
-    expect(container.classList.contains('hidden')).toBe(true);
+    expect(container.classList.contains('invisible')).toBe(true);
   });
 
   test('slider functions update UI values', () => {
