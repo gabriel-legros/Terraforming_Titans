@@ -95,6 +95,7 @@ function processNextJournalEntry() {
   const { text, eventId, source } = journalQueue.shift();
   journalCurrentEventId = eventId;
   const journalEntries = document.getElementById('journal-entries');
+  const journalContainer = document.getElementById('journal');
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
 
@@ -116,11 +117,15 @@ function processNextJournalEntry() {
       }
       index++;
 
+      if (!journalUserScrolling && journalContainer) {
+        journalContainer.scrollTop = journalContainer.scrollHeight;
+      }
+
       let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 250 : 50;
       setTimeout(typeLetter, delay);
     } else {
-      if (!journalUserScrolling) {
-        journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+      if (!journalUserScrolling && journalContainer) {
+        journalContainer.scrollTop = journalContainer.scrollHeight; // Scroll to the latest entry
       }
 
       console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
@@ -142,6 +147,7 @@ function processNextJournalEntry() {
 
 function loadJournalEntries(entries, history = null, entrySources = null, historySourcesParam = null) {
   const journalEntries = document.getElementById('journal-entries');
+  const journalContainer = document.getElementById('journal');
   journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
   journalTyping = false;
@@ -160,8 +166,8 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
     journalEntries.appendChild(entry);
   });
 
-  if (!journalUserScrolling) {
-    journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to the latest entry
+  if (!journalUserScrolling && journalContainer) {
+    journalContainer.scrollTop = journalContainer.scrollHeight; // Scroll to the latest entry
   }
   journalEntriesData = entries;
   journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
@@ -181,6 +187,7 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
  */
 function clearJournal() {
   const journalEntries = document.getElementById('journal-entries');
+  const journalContainer = document.getElementById('journal');
   journalEntries.innerHTML = ''; // Remove all entries from the display
   journalEntriesData = []; // Clear the stored data array but keep history
   journalEntrySources = [];
@@ -188,7 +195,7 @@ function clearJournal() {
   journalTyping = false;
   journalCurrentEventId = null;
   journalUserScrolling = false;
-  journalEntries.scrollTop = 0;
+  if (journalContainer) journalContainer.scrollTop = 0;
   journalChapterIndex = getJournalChapterGroups().length - 1;
   updateJournalNavArrows();
 }
@@ -309,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  const entriesDiv = document.getElementById('journal-entries');
+  const entriesDiv = document.getElementById('journal');
   if (entriesDiv) {
     entriesDiv.addEventListener('scroll', () => {
       const atBottom = entriesDiv.scrollHeight - entriesDiv.scrollTop <= entriesDiv.clientHeight + 5;
