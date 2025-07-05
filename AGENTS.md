@@ -129,6 +129,7 @@ jest and jsdom are installed globally
 Create new tests for any newly implemented feature
 Run tests with npm test
 Describe how many tests have passed/failed and describe any tests that failed if you cannot fix it.
+Avoid asserting on the exact wording of story text in tests. Verify structural data like IDs or prerequisites instead so narrative phrasing can change without breaking tests.
 
 # Character Personalities
 
