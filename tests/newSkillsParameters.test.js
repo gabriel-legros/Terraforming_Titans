@@ -5,7 +5,7 @@ describe('new skill parameter definitions', () => {
     const skill = skillParams.project_speed;
     expect(skill).toBeDefined();
     expect(skill.maxRank).toBe(5);
-    expect(skill.requires).toContain('worker_reduction');
+    expect(skill.requires).toContain('research_boost');
   });
 
   test('life_design_points skill exists with correct config', () => {
@@ -15,9 +15,9 @@ describe('new skill parameter definitions', () => {
     expect(skill.requires).toContain('pop_growth');
   });
 
-  test('pop_growth requires research_boost after swap', () => {
+  test('pop_growth requires worker_reduction after swap', () => {
     const skill = skillParams.pop_growth;
-    expect(skill.requires).toContain('research_boost');
+    expect(skill.requires).toContain('worker_reduction');
   });
 
   test('android_efficiency requires project_speed', () => {
