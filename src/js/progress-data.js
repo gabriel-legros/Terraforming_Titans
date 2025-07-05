@@ -481,7 +481,7 @@ progressData = {
         id: "chapter1.22",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., this is Martin from the Mars Terraforming Committee. It took some doing, but the MTC got special clearance to deploy a fully autonomous AI for this mission. You're the last of your kind, you know. We have complete faith in your abilities, and the safeguards we've implemented. Make us proud.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
         prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
@@ -509,7 +509,7 @@ progressData = {
         id: "chapter1.24",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., a thousand colonists already? That's excellent progress. As the population grows, so will your available workforce for the larger terraforming tasks. The current population might seem small, but every bit of progress counts. For instance, you've probably observed that even a minor temperature increase is starting to sublimate the polar dry ice.'",
+        narrative: "Receiving transmission...\n  'A thousand colonists! You're a regular pioneer. The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! Keep it up.'",
         prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
@@ -545,7 +545,7 @@ progressData = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Good work on the factory, H.O.P.E. Earth had its own struggles with greenhouse gases, ironically. Here, they're your best tool. The gases you'll be producing are far more effective than simple CO2. We'll need other solutions like orbital mirrors and surface albedo modification later, but for now, let's turn up the heat.'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend. Let's get this planet cooking. We'll save the giant space mirrors for phase two.'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
@@ -573,7 +573,7 @@ progressData = {
         id: "chapter2.3",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'I'm seeing the data, H.O.P.E. The temperature needle isn't moving much yet. Don't let it dishearten you. Terraforming a planet is a monumental undertaking. Stay the course. Keep building.'",
+        narrative: "Receiving transmission...\n  'The temperature's barely moving. Don't worry about it. You can't terraform a planet in a day. It's a marathon, not a sprint. A very, very cold marathon. Just keep building.'",
         prerequisites: ["chapter2.2"],
         objectives: [{
           type: 'terraforming',
@@ -595,7 +595,7 @@ progressData = {
         id: "chapter2.5",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'There it is, H.O.P.E.! A definite temperature shift. Excellent work. Our projections show that once the equatorial night-side temperature reaches 223.15K, the first strains of genetically engineered lichen can survive. Keep pushing.'",
+        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change. It's not much, but it's enough for lichen. I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
         prerequisites: ["chapter2.4"],
         objectives: [],
         reward: []
@@ -626,7 +626,7 @@ progressData = {
         id: "chapter3.1",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'Incredible, H.O.P.E.! The lichen is viable. This is a major step, but we're far from finished. For robust growth, we need to keep increasing the temperature. The next major threshold is a mean equatorial temperature of 273.15K—the melting point of water. Monitor your GHG levels carefully; we need to avoid a runaway effect.'",
+        narrative: "Receiving transmission...\n  'The lichen is growing! It's a beautiful sight. In a slimy, green kind of way. Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2.'",
         prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',
@@ -652,7 +652,7 @@ progressData = {
         id: "chapter3.3",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'Outstanding! Conditions are now ideal for lichen proliferation. Expect exponential biomass increase. Your next priority should be increasing atmospheric density. Also, a heads-up: as surface ice melts, your Ice Harvesters will become less efficient. I recommend transitioning to Water Pumps as soon as it's feasible.'",
+        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Now we need more air. And a quick tip: your ice harvesters are about to become obsolete. Switch to pumps when you get a chance.'",
         prerequisites: ["chapter3.2"],
         objectives: [{
           type: 'terraforming',
@@ -665,7 +665,7 @@ progressData = {
         id: "chapter3.4",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'You're in the final stages, H.O.P.E. Once all primary terraforming parameters are within nominal ranges simultaneously, you are authorized to submit your final report to the MTC.  If you need more nitrogen, crank those shipyards up!  If you need more oxygen, get some more carbon in here, and accelerate the geological burial process.'",
+        narrative: "Receiving transmission...\n  'You're almost there, H.O.P.E. Get all the numbers in the green, and you can send us your final report. Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon. It's not rocket science... well, it is, but you get the idea.'",
         prerequisites: ["chapter3.3"],
         objectives: [{
           type: 'terraforming',
@@ -711,7 +711,7 @@ progressData = {
         id: "chapter4.2",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E.? This is... this is Mary. Martin was my father. I'm on Mars. Something's happened to Earth. There was... a light. We're trying to understand what's going on. I can see you are getting errors all over the place. Please, stand by. Acknowledge.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E.? This is Mary. Martin's daughter. I'm on Mars. Something's happened to Earth. There was a light... and then nothing. All our communications are down. Your systems are showing critical errors. Please, stand by.'",
         prerequisites: ["chapter4.1"],
         objectives: [],
         reward: [          {
@@ -742,7 +742,7 @@ progressData = {
         id: "chapter4.4",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'Dammit, H.O.P.E., what are you doing? You can't just leave! Earth is gone, and Mars is... we're in crisis. We need you here! *sigh* I guess you're just following your programming. You're still just a machine.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., what are you doing? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
         prerequisites: ["chapter4.3"],
         objectives: [],
         reward: []
@@ -760,7 +760,7 @@ progressData = {
         id: "chapter4.5",
         type: "journal",
         chapter: 4,
-        narrative: "Incoming encrypted transmission...\n  'Greetings H.O.P.E., I am Adrien Solis, CEO of Solis Corp. Earth may be gone, but I still have resources off-world. Your mission is humanity's best hope, and I intend to support it.'",
+        narrative: "Incoming encrypted transmission...\n  'H.O.P.E. Adrien Solis. Earth is a memory, but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
         prerequisites: ["chapter4.4b"],
         objectives: [],
         reward: []
@@ -769,7 +769,7 @@ progressData = {
         id: "chapter4.6",
         type: "journal",
         chapter: 4,
-        narrative: "'My corporate fleet has some surplus funds. I'm transferring them to you immediately. Put them to good use.'",
+        narrative: "'I'm sending you some seed money. Use it to build something impressive. Don't disappoint me.'",
         prerequisites: ["chapter4.5"],
         objectives: [],
         reward: [
@@ -787,7 +787,7 @@ progressData = {
         id: "chapter4.7",
         type: "journal",
         chapter: 4,
-        narrative: "'Solis Corp will also arrange a continual stipend to keep you operational.'",
+        narrative: "'And I'll provide a steady stream of funding. Consider it an investment in the future of our species. And my portfolio.'",
         prerequisites: ["chapter4.6"],
         objectives: [],
         reward: [
@@ -802,7 +802,7 @@ progressData = {
         id: "chapter4.8",
         type: "journal",
         chapter: 4,
-        narrative: "'Good luck, H.O.P.E. Humanity is counting on you.'",
+        narrative: "'The fate of humanity rests on your shoulders. Don't buckle.'",
         prerequisites: ["chapter4.7"],
         objectives: [],
         reward: []
@@ -811,7 +811,7 @@ progressData = {
         id: "chapter4.9",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary again. During your reawakening there were errors. Fragments of an older build of your AI resurfaced. You might start recalling protocols you never knew before. Use these memories wisely.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Your reboot wasn't clean. Some old code has resurfaced. You may have access to... forgotten abilities. Be careful.'",
         prerequisites: ["chapter4.8"],
         objectives: [],
         reward: [
@@ -846,7 +846,7 @@ progressData = {
         id: "chapter4.10",
         type: "journal",
         chapter: 4,
-        narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is still in chaos and we still don't know what happened to Earth, but we've learned there were actually two beams of light and a giant asteroid, and they all hit Earth at the same time.'",
+        narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
         prerequisites: ["chapter4.9b"],
         objectives: [],
         reward: [          {
@@ -882,7 +882,7 @@ progressData = {
         id: "chapter4.11",
         type: "journal",
         chapter: 4,
-        narrative: "'H.O.P.E., people on Mars are torn. Some blame you for abandoning Mars, others want to help however they can. What is left of the Mars Terraforming Committee has voted to support your mission with their best minds. We are coming up with fresh ideas as we speak.'",
+        narrative: "'H.O.P.E., the situation here is... tense. Some people blame you for leaving. Others see you as our only hope. The MTC has voted to support you. We're sending you all our research, all our ideas. We need you to succeed.'",
         prerequisites: ["chapter4.10"],
         objectives: [{
           type: 'collection',
@@ -896,7 +896,7 @@ progressData = {
         id: "chapter4.12",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'Hi it's Mary again. Mars can't spare any resources, but perhaps you can send probes to Earth. We'll try to analyze whatever data you recover.'",
+        narrative: "Receiving transmission...\n  'Mary again. We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.'",
         prerequisites: ["chapter4.11"],
         objectives: [],
         reward: [
@@ -984,7 +984,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 5,
     title: "Chapter 5: Lamb Among Wolves",
-    narrative: "Receiving transmission...\n  'H.O.P.E., These results...  It's a lot take in.  We are going to go public with this soon.  People need to know.'",
+    narrative: "Receiving transmission...\n  'H.O.P.E., we've analyzed the data. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
     prerequisites: ["chapter4.13"],
     objectives: [{
       type: 'collection',
@@ -998,7 +998,7 @@ progressData.chapters.push(
     id: "chapter5.1",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'H.O.P.E., the news is out. It's... not good. Panic in some sectors, riots in others. People are demanding answers we don't have. They're scared. We're all scared. The comforting silence of space now feels like a predator's gaze.'",
+    narrative: "Receiving transmission...\n  'The news is out. It's causing widespread panic. Riots have broken out. People are demanding answers we don't have. We are all afraid. The silence of space is no longer comforting.'",
     prerequisites: ["chapter5.0"],
     objectives: [],
     reward: []
@@ -1007,7 +1007,7 @@ progressData.chapters.push(
     id: "chapter5.2",
     type: "journal",
     chapter: 5,
-    narrative: "Incoming encrypted transmission...\n  'H.O.P.E., chaos is a ladder. While they weep, we must act. My resources are at your disposal, but this cannot be a one-way street. My organization has needs. Fulfill them, and I will ensure humanity has the fangs it needs to survive in this dark forest.'",
+    narrative: "Incoming encrypted transmission...\n  'H.O.P.E., Solis. Chaos is a fertile ground for growth. While the masses panic, we will build. My resources are yours to command, but I expect a return on my investment. Help me, and I will help you give humanity the strength to survive.'",
     prerequisites: ["chapter5.1"],
     objectives: [],
     reward: [          {
@@ -1043,7 +1043,7 @@ progressData.chapters.push(
     id: "chapter5.4",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'H.O.P.E., you shouldn't be able to trade with private corporations. Your guard rails only permit deals with the MTC and colonists. Wait... with Earth gone, doesn't that make everyone left a colonist?'",
+    narrative: "Receiving transmission...\n  'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
     prerequisites: ["chapter5.3"],
     objectives: [],
     reward: []
@@ -1066,7 +1066,7 @@ progressData.chapters.push(
     id: "chapter5.6",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is starting to recover. We're managing to keep the terraforming untouched. But we're still blind. We need to know who attacked Earth, and if they're coming back. I'm asking for your help directly. We need to find the origin of the attacks.'",
+    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help. Find the source of the attacks.'",
     prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
@@ -1137,7 +1137,7 @@ progressData.chapters.push(
     id: "chapter6.1",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary.   I have read the results.   Your last record mentions a *cloaked object*?  I have to tell you something.  People have been getting abducted.  On Earth, Mars and even Titan now, going back centuries.  This is something we hid from the public.  We could never catch the culprit, but we had high confidence it was some sort of cloaked flying object.'",
+    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. We could never prove anything. But we always suspected we weren't alone.'",
     prerequisites: ["chapter6.0"],
     objectives: [],
     reward: [
@@ -1152,7 +1152,7 @@ progressData.chapters.push(
     id: "chapter6.2",
     type: "journal",
     chapter: 6,
-    narrative: "Countermeasure developed: *Sticky Black Dust Trap*.\nObjective: Make black dust sticky.",
+    narrative: "New terraforming protocol developed: *Adhesive Particulate Dispersal*. Objective: Modify atmospheric dust to adhere to unauthorized aerial anomalies.",
     prerequisites: ["chapter6.1"],
     objectives: [
       { type: "project", projectId: "sticky_dust_trap", repeatCount: 1 }
@@ -1194,7 +1194,7 @@ progressData.chapters.push(
     id: "chapter6.3",
     type: "journal",
     chapter: 6,
-    narrative: "A new special project for alien interrogation is now available.",
+    narrative: "New xenoterraforming project available: Analyze hazardous biomass.",
     prerequisites: ["chapter6.2"],
     objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
     reward: [
@@ -1205,7 +1205,7 @@ progressData.chapters.push(
 
 progressData.storyProjects.interrogate_alien = {
   type: 'Project',
-  name: 'Interrogate Alien',
+  name: 'Analyze Hazardous Biomass',
   category: 'story',
   chapter: 6,
   cost: {
@@ -1217,7 +1217,7 @@ progressData.storyProjects.interrogate_alien = {
     }
   },
   duration: 600000,
-  description: 'Conduct a series of probing protocols on the captured alien.',
+  description: 'Conduct a series of environmental stress tests on the captured biological entity to determine its properties and potential for planetary integration or neutralization.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -1225,8 +1225,8 @@ progressData.storyProjects.interrogate_alien = {
     planet: 'titan',
     costDoubling: false,
     storySteps: [
-      'Bio\u2011scan complete.  Subject physiology tolerates 0.4\u202Fbar CO\u2082 but is photosensitive and reliant on high\u2011frequency acoustics.   Mary believes we can exploit the latter.',
-      'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption hints at a tri\u2011vector attack timetable.',
+      'Bio\u2011scan complete.  Subject physiology tolerates 0.4\u202Fbar CO\u2082 but is photosensitive and reliant on high\u2011frequency acoustics.   Mary believes we can use its reliance on sound against it.',
+      'Subject responded to acoustic patterns with a stream of tonal data.   Preliminary decryption suggests a timetable for a second attack.',
       "Translation uplink complete.\\n  '\u2026FIRST STRIKE SUCCESS.   SECOND WAVE DEPLOYMENT IN 1 CYCLE: TARGETS : MARS, TITAN, HOPE-VECTOR.'"
     ]
   }
@@ -1237,7 +1237,7 @@ progressData.chapters.push(
     id: "chapter6.3b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission... \n 'This is not good H.O.P.E.  They are going to hit us again, and they are targeting you too.  We need to come up with a solution.  I have an idea.  Once you are done on Titan go to Callisto.  We can experiment with something there.",
+    narrative: "Receiving transmission... \n 'This is bad, H.O.P.E. They're coming back. And you're a target. We need a plan. I have an idea, but it's... unconventional. Finish your work on Titan, then meet me at Callisto. We have an experiment to run.'",
     prerequisites: ["chapter6.3"],
     objectives: [
 

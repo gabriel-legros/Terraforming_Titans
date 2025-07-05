@@ -129,3 +129,15 @@ jest and jsdom are installed globally
 Create new tests for any newly implemented feature
 Run tests with npm test
 Describe how many tests have passed/failed and describe any tests that failed if you cannot fix it.
+
+# Character Personalities
+
+This section outlines the personalities of the main characters in the story.
+
+*   **H.O.P.E.:** A hyper-intelligent AI with a deadpan, serious, and literal personality. H.O.P.E.'s dialogue should always be straightforward and devoid of emotion or humor, with the exception of treating almost everything as some form of terraforming (e.g. aliens are "hazardous biomass").
+
+*   **Martin:** The whimsical and clever head of the Mars Terraforming Committee. His dialogue should be lighthearted and witty, even when discussing serious topics. He acts as a mentor figure to H.O.P.E. in the early stages of the game.
+
+*   **Mary:** Martin's daughter, a brilliant scientist who takes over communication with H.O.P.E. after her father. Her tone is situational. In good times, she's witty and clever, much like her father. In bad times, her dialogue becomes serious and focused as she grapples with the unfolding crisis.
+
+*   **Adrien Solis:** The cynical and opportunistic CEO of Solis Corp. His dialogue is sharp, business-like, and often laced with a dark sense of humor. He sees the destruction of Earth as an opportunity but remains committed to helping humanity succeed.
