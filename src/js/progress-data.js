@@ -24,7 +24,7 @@ progressData = {
       {
         id: "chapter1",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Loading colony resources interface...",
         prerequisites: ["chapter0.1"],
         objectives: [
@@ -108,7 +108,7 @@ progressData = {
       {
         id: "chapter1.1",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Loading surface resources interface...",
         prerequisites: ["chapter1"],
         objectives: [
@@ -130,7 +130,7 @@ progressData = {
       {
         id: "chapter1.2",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Loading underground resources interface...",
         prerequisites: ["chapter1.1"],
         objectives: [
@@ -146,7 +146,7 @@ progressData = {
       {
         id: "chapter1.3",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Loading special projects interface...",
         prerequisites: ["chapter1.2"],
         objectives: [
@@ -167,14 +167,14 @@ progressData = {
       {
         id: "chapter1.3b",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Awaiting resource payload from Earth...",
         prerequisites: ["chapter1.3"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
             resource: 'metal',
-            quantity: 200
+            quantity: 1000
         }
         ],
         reward: [
@@ -183,7 +183,7 @@ progressData = {
       {
         id: "chapter1.3c",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Loading construction interface...",
         prerequisites: ["chapter1.3b"],
         objectives: [
@@ -198,7 +198,7 @@ progressData = {
       {
         id: "chapter1.4",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Integrating building categories...",
         prerequisites: ["chapter1.3c"],
         objectives: [
@@ -213,7 +213,7 @@ progressData = {
       {
         id: "chapter1.5",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Integrating building blueprints...",
         prerequisites: ["chapter1.4"],
         objectives: [
@@ -224,7 +224,7 @@ progressData = {
       {
         id: "chapter1.6",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: oreMine.btb...",
         prerequisites: ["chapter1.5"],
         objectives: [
@@ -239,7 +239,7 @@ progressData = {
       {
         id: "chapter1.7",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: windTurbine.btb...",
         prerequisites: ["chapter1.6"],
         objectives: [
@@ -254,7 +254,7 @@ progressData = {
       {
         id: "chapter1.8",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: battery.btb...",
         prerequisites: ["chapter1.7"],
         objectives: [
@@ -269,7 +269,7 @@ progressData = {
       {
         id: "chapter1.9",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: storageDepot.btb...",
         prerequisites: ["chapter1.8"],
         objectives: [
@@ -284,7 +284,7 @@ progressData = {
       {
         id: "chapter1.11",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Objective: Construct an Ore Mine to initiate mineral extraction.",
         prerequisites: ["chapter1.9"],
         objectives: [{
@@ -299,7 +299,7 @@ progressData = {
       {
         id: "chapter1.12",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Power requirement detected for Ore Mine. Objective: Construct three Wind Turbines.",
         prerequisites: ["chapter1.11"],
         objectives: [{
@@ -314,7 +314,7 @@ progressData = {
       {
         id: "chapter1.13",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Initial infrastructure established. New blueprints available for download.",
         prerequisites: ["chapter1.12"],
         objectives: [
@@ -325,7 +325,7 @@ progressData = {
       {
         id: "chapter1.14",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: sandQuarry.btb...",
         prerequisites: ["chapter1.13"],
         objectives: [
@@ -339,7 +339,7 @@ progressData = {
       {
         id: "chapter1.15",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: glassSmelter.btb...",
         prerequisites: ["chapter1.14"],
         objectives: [
@@ -353,7 +353,7 @@ progressData = {
       {
         id: "chapter1.16",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Processing blueprint: solarPanel.btb...",
         prerequisites: ["chapter1.15"],
         objectives: [
@@ -367,7 +367,7 @@ progressData = {
       {
         id: "chapter1.17",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Analysis: Solar Panels offer superior efficiency and lower maintenance costs. Objective: Construct a Solar Panel.",
         prerequisites: ["chapter1.16"],
         objectives: [{
@@ -385,7 +385,7 @@ progressData = {
       {
         id: "chapter1.18",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 units of water.",
         prerequisites: ["chapter1.17"],
         objectives: [{
@@ -401,7 +401,7 @@ progressData = {
       {
         id: "chapter1.19",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Authorization granted: Colony construction and personnel importation from Earth are now enabled.",
         prerequisites: ["chapter1.18"],
         objectives: [
@@ -427,7 +427,7 @@ progressData = {
       {
         id: "chapter1.19b",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Objective: Construct a Scientist Outpost to expand research capabilities.",
         prerequisites: ["chapter1.19"],
         objectives: [      {
@@ -445,7 +445,7 @@ progressData = {
       {
         id: "chapter1.20",
         type: "journal",
-        chapter: 1,
+        chapter: 0,
         narrative: "Personnel will accelerate terraforming progress. New special project available: Import Colonists.",
         prerequisites: ["chapter1.19b"],
         objectives: [{
