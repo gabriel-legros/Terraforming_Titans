@@ -4,9 +4,20 @@ function createGrowthRateDisplay(){
   const controlsContainer = document.getElementById('colony-controls-container');
   if(!controlsContainer || document.getElementById('growth-rate-container')) return;
 
-  const container = document.createElement('div');
-  container.id = 'growth-rate-container';
-  container.classList.add('growth-rate');
+  const card = document.createElement('div');
+  card.classList.add('project-card');
+  card.id = 'growth-rate-container';
+
+  const header = document.createElement('div');
+  header.classList.add('card-header');
+  const title = document.createElement('span');
+  title.classList.add('card-title');
+  title.textContent = 'Growth Rate';
+  header.appendChild(title);
+  card.appendChild(header);
+
+  const body = document.createElement('div');
+  body.classList.add('card-body');
 
   // Capacity multiplier line
   const capLine = document.createElement('div');
@@ -17,7 +28,7 @@ function createGrowthRateDisplay(){
   capInfo.title = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.';
   capInfo.innerHTML = '&#9432;';
   capLine.appendChild(capInfo);
-  container.appendChild(capLine);
+  body.appendChild(capLine);
 
   // Base rate line
   const baseLine = document.createElement('div');
@@ -28,7 +39,7 @@ function createGrowthRateDisplay(){
   baseInfo.title = 'Base growth rate derived from happiness: (happiness - 50%) / 300. Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating. Each luxury resource can add 10 happiness if food and energy are met, and milestones ready to claim or claimed provide 10 more. Happiness above 50% increases growth while below 50% causes decay.';
   baseInfo.innerHTML = '&#9432;';
   baseLine.appendChild(baseInfo);
-  container.appendChild(baseLine);
+  body.appendChild(baseLine);
 
   // Other multipliers line
   const otherLine = document.createElement('div');
@@ -39,7 +50,7 @@ function createGrowthRateDisplay(){
   otherInfo.title = 'Multipliers from colony sliders, and other effects.';
   otherInfo.innerHTML = '&#9432;';
   otherLine.appendChild(otherInfo);
-  container.appendChild(otherLine);
+  body.appendChild(otherLine);
 
   // Final growth line
   const growthLine = document.createElement('div');
@@ -50,14 +61,16 @@ function createGrowthRateDisplay(){
   growthInfo.title = 'Final growth rate after applying all multipliers. Population grows at base rate × population × capacity multiplier, further modified by colony sliders and other effects.';
   growthInfo.innerHTML = '&#9432;';
   growthLine.appendChild(growthInfo);
-  container.appendChild(growthLine);
+  body.appendChild(growthLine);
+
+  card.appendChild(body);
 
   // Insert to the left of the sliders
   const firstChild = controlsContainer.firstChild;
   if(firstChild){
-    controlsContainer.insertBefore(container, firstChild);
+    controlsContainer.insertBefore(card, firstChild);
   } else {
-    controlsContainer.appendChild(container);
+    controlsContainer.appendChild(card);
   }
 }
 

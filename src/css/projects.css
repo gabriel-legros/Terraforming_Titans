@@ -428,3 +428,68 @@
     cursor: default;
     pointer-events: none;
 }
+
+/* --- Colony UI --- */
+#colony-controls-container {
+    display: flex;
+    gap: 15px;
+    align-items: stretch; /* Ensures cards have the same height */
+}
+
+#growth-rate-container {
+    flex: 1;
+}
+
+#colony-sliders-container {
+    flex: 2; /* Makes the management card wider */
+}
+
+#unhide-obsolete-container {
+    margin-left: auto; /* Pushes the button to the right */
+}
+
+#growth-rate-container.project-card .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.growth-rate-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.growth-rate-line span:first-child {
+    font-weight: 600;
+    color: #495057;
+}
+
+.colony-slider {
+    display: grid;
+    grid-template-columns: 150px 100px 1fr 100px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.colony-slider label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9em;
+    text-align: left;
+}
+
+.colony-slider .slider-value {
+    font-size: 0.9em;
+    color: #6c757d;
+    text-align: left;
+    font-weight: normal; /* Override bold font weight */
+}
+
+.colony-slider .slider-effect {
+    font-size: 0.9em;
+    color: #6c757d;
+    text-align: left;
+}

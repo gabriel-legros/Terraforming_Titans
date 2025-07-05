@@ -7,13 +7,19 @@ function initializeColonySlidersUI() {
   // Ensure sliders start hidden until unlocked via research
   container.classList.add('hidden');
 
-  const box = document.createElement('div');
-  box.classList.add('sliders-box');
+  const card = document.createElement('div');
+  card.classList.add('project-card');
 
-  const title = document.createElement('div');
-  title.classList.add('sliders-title');
+  const header = document.createElement('div');
+  header.classList.add('card-header');
+  const title = document.createElement('span');
+  title.classList.add('card-title');
   title.textContent = 'Colony Management';
-  box.appendChild(title);
+  header.appendChild(title);
+  card.appendChild(header);
+
+  const body = document.createElement('div');
+  body.classList.add('card-body');
 
   const sliderRow = document.createElement('div');
   sliderRow.classList.add('colony-slider');
@@ -35,7 +41,6 @@ function initializeColonySlidersUI() {
   input.step = 5;
   input.id = 'workforce-slider';
   input.value = colonySliderSettings.workerRatio * 100;
-  input.style.width = '200px';
   input.setAttribute('list', 'workforce-slider-ticks');
   input.classList.add('pretty-slider');
   sliderRow.appendChild(input);
@@ -54,8 +59,7 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(datalist);
 
-  box.appendChild(sliderRow);
-  container.appendChild(box);
+  body.appendChild(sliderRow);
 
   // Update display and apply value
   const updateValue = (val) => {
@@ -105,7 +109,6 @@ function initializeColonySlidersUI() {
   foodInput.step = 0.5;
   foodInput.id = 'food-slider';
   foodInput.value = colonySliderSettings.foodConsumption;
-  foodInput.style.width = '200px';
   foodInput.setAttribute('list', 'food-slider-ticks');
   foodInput.classList.add('pretty-slider');
   foodRow.appendChild(foodInput);
@@ -122,7 +125,7 @@ function initializeColonySlidersUI() {
     foodList.appendChild(option);
   }
   container.appendChild(foodList);
-  box.appendChild(foodRow);
+  body.appendChild(foodRow);
 
   const updateFoodValue = (val) => {
     if (foodValue && foodEffect) {
@@ -168,7 +171,6 @@ function initializeColonySlidersUI() {
   waterInput.step = 0.5;
   waterInput.id = 'water-slider';
   waterInput.value = colonySliderSettings.luxuryWater;
-  waterInput.style.width = '200px';
   waterInput.setAttribute('list', 'water-slider-ticks');
   waterInput.classList.add('pretty-slider');
   waterRow.appendChild(waterInput);
@@ -185,7 +187,7 @@ function initializeColonySlidersUI() {
     waterList.appendChild(option);
   }
   container.appendChild(waterList);
-  box.appendChild(waterRow);
+  body.appendChild(waterRow);
 
   const updateWaterValue = (val) => {
     if (waterValue && waterEffect) {
@@ -232,7 +234,6 @@ function initializeColonySlidersUI() {
   oreInput.step = 1;
   oreInput.id = 'ore-worker-slider';
   oreInput.value = colonySliderSettings.oreMineWorkers;
-  oreInput.style.width = '200px';
   oreInput.setAttribute('list', 'ore-worker-slider-ticks');
   oreInput.classList.add('pretty-slider');
   oreRow.appendChild(oreInput);
@@ -250,7 +251,10 @@ function initializeColonySlidersUI() {
     oreList.appendChild(option);
   }
   container.appendChild(oreList);
-  box.appendChild(oreRow);
+  body.appendChild(oreRow);
+
+  card.appendChild(body);
+  container.appendChild(card);
 
   const updateOreValue = (val) => {
     if (oreValue && oreEffect) {
