@@ -58,6 +58,12 @@ function loadGame(slotOrCustomString) {
           defaultPlanet = key; // keep global consistent
           currentPlanetParameters = planetParameters[key];
         }
+
+        // Clear previously applied story effects so they don't carry over
+        if (storyManager) {
+          storyManager.appliedEffects = [];
+        }
+
         // Reinitialize game state using the loaded planet parameters
         initializeGameState({preserveManagers: true});
         if (typeof tabManager.resetVisibility === 'function') {
@@ -180,6 +186,9 @@ function loadGame(slotOrCustomString) {
       if (gameState.research) {
           researchManager.loadState(gameState.research);
           updateAllResearchButtons(researchManager.researches);
+      }
+      if (typeof updateAdvancedResearchVisibility === 'function') {
+          updateAdvancedResearchVisibility();
       }
 
     // Restore ore scanning progress
