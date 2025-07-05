@@ -139,14 +139,19 @@ class StoryManager {
             return;
         }
         const eventChapter = event.chapter;
+        let chapterChanged = false;
         if (this.currentChapter === null) {
             this.currentChapter = eventChapter;
         } else if (eventChapter !== this.currentChapter) {
             clearJournal();
             this.currentChapter = eventChapter;
+            chapterChanged = true;
         }
         console.log(`Activating event: ${event.id}`);
         this.activeEventIds.add(event.id);
+        if (chapterChanged && typeof reconstructJournalState === 'function') {
+            reconstructJournalState(this, typeof projectManager !== 'undefined' ? projectManager : undefined);
+        }
         event.trigger(); // Calls addJournalEntry if it's a journal type
     }
 
