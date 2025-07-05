@@ -893,11 +893,8 @@ class Terraforming extends EffectableEntity{
         gSurface: gSurface
       };
 
-      const globalTemps = dayNightTemperaturesModel(baseParams);
-      this.temperature.value = globalTemps.mean;
-      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
-
       this.luminosity.zonalFluxes = {};
+      let weightedTemp = 0;
       for (const zone in this.temperature.zones) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -905,7 +902,11 @@ class Terraforming extends EffectableEntity{
         this.temperature.zones[zone].value = zoneTemps.mean;
         this.temperature.zones[zone].day = zoneTemps.day;
         this.temperature.zones[zone].night = zoneTemps.night;
+        const zonePct = getZonePercentage(zone);
+        weightedTemp += zoneTemps.mean * zonePct;
       }
+      this.temperature.value = weightedTemp;
+      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
     }
 
     calculateEffectiveAlbedo() {
