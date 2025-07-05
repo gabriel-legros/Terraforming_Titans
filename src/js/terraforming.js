@@ -1098,16 +1098,16 @@ class Terraforming extends EffectableEntity{
           if (targetZone === zone) {
             const targetZoneArea = totalSurfaceArea * getZonePercentage(targetZone);
             if (targetZoneArea > 0) {
-              focusedMirrorFlux = 4*focusedMirrorPower / targetZoneArea;
-              focusedLanternFlux = 4*focusedLanternPower / targetZoneArea;
+              focusedMirrorFlux = focusedMirrorPower / targetZoneArea;
+              focusedLanternFlux = focusedLanternPower / targetZoneArea;
             }
           }
         }
       }
     
       // Calculate distributed FLUX from the remaining distributed POWER
-      const distributedMirrorFlux = totalSurfaceArea > 0 ? 4*distributedMirrorPower / totalSurfaceArea : 0;
-      const distributedLanternFlux = totalSurfaceArea > 0 ? 4*distributedLanternPower / totalSurfaceArea : 0;
+      const distributedMirrorFlux = totalSurfaceArea > 0 ? distributedMirrorPower / totalSurfaceArea : 0;
+      const distributedLanternFlux = totalSurfaceArea > 0 ? distributedLanternPower / totalSurfaceArea : 0;
     
       // Sum all fluxes and apply the zonal angle-of-incidence ratio
       const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
