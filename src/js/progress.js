@@ -494,6 +494,7 @@ class StoryManager {
             activeEventIds: Array.from(this.activeEventIds),
             completedEventIds: Array.from(this.completedEventIds),
             appliedEffects: this.appliedEffects,
+            currentChapter: this.currentChapter,
              // Save waiting state too!
             waitingForJournalEventId: this.waitingForJournalEventId
         };
@@ -511,6 +512,7 @@ class StoryManager {
         this.activeEventIds = new Set(savedState.activeEventIds || []);
         this.completedEventIds = new Set(savedState.completedEventIds || []);
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
+        this.currentChapter = savedState.currentChapter || 0;
 
         // ... (rest of loadState for effects) ...
          this.appliedEffects = savedState.appliedEffects || [];
