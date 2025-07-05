@@ -100,10 +100,17 @@ function processNextJournalEntry() {
   journalEntries.appendChild(entry); // Append the empty paragraph first
 
   const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
+  const prevGroupsLength = getJournalChapterGroups().length;
   journalEntriesData.push(text); // Store the journal entry in the array
   journalHistoryData.push(text); // Also keep it in the full history
   journalEntrySources.push(srcObj);
   journalHistorySources.push(srcObj);
+
+  // If this entry started a new chapter, automatically move to it
+  const newGroupsLength = getJournalChapterGroups().length;
+  if (newGroupsLength > prevGroupsLength) {
+    journalChapterIndex = newGroupsLength - 1;
+  }
   updateJournalNavArrows();
 
   let index = 0;
