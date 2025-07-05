@@ -174,7 +174,7 @@ const projectParameters = {
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: "Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the metal returned.",
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,

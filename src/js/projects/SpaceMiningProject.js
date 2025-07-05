@@ -5,6 +5,28 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disablePressureThreshold = 0;
   }
 
+  shouldPenalizeMetalProduction() {
+    const gainMetal = this.attributes.resourceGainPerShip?.colony?.metal;
+    const cost = this.calculateSpaceshipCost();
+    const metalCost = cost.colony?.metal || 0;
+    return !!gainMetal && metalCost > 0;
+  }
+
+  ignoreCostForResource(category, resource) {
+    return category === 'colony' && resource === 'metal' && this.shouldPenalizeMetalProduction();
+  }
+
+  applyMetalCostPenalty(gain) {
+    if (!this.shouldPenalizeMetalProduction()) return;
+    const cost = this.calculateSpaceshipCost();
+    const metalCost = cost.colony?.metal || 0;
+    const scaling = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+    const totalCost = metalCost * scaling;
+    if (gain.colony && typeof gain.colony.metal === 'number') {
+      gain.colony.metal = Math.max(0, gain.colony.metal - totalCost);
+    }
+  }
+
   createPressureControl() {
     const control = document.createElement('div');
     control.classList.add('checkbox-container', 'pressure-control');

@@ -69,7 +69,7 @@ class SpaceshipProject extends Project {
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
       const totalCost = this.calculateSpaceshipTotalCost();
-      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost);
+      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this);
     }
 
     if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
@@ -353,6 +353,9 @@ class SpaceshipProject extends Project {
     const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
     for (const category in totalSpaceshipCost) {
       for (const resource in totalSpaceshipCost[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
         if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
           return false;
         }
@@ -384,6 +387,9 @@ class SpaceshipProject extends Project {
       const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
       for (const category in totalSpaceshipCost) {
         for (const resource in totalSpaceshipCost[category]) {
+          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+            continue;
+          }
           resources[category][resource].decrease(totalSpaceshipCost[category][resource]);
         }
       }
@@ -404,6 +410,9 @@ class SpaceshipProject extends Project {
 
     if (this.attributes.spaceMining) {
       const gain = this.calculateSpaceshipTotalResourceGain();
+      if (this.applyMetalCostPenalty) {
+        this.applyMetalCostPenalty(gain);
+      }
       this.pendingResourceGains = this.pendingResourceGains || [];
       for (const category in gain) {
         for (const resource in gain[category]) {
@@ -440,6 +449,9 @@ class SpaceshipProject extends Project {
       const totalCost = this.calculateSpaceshipTotalCost();
       for (const category in totalCost) {
         for (const resource in totalCost[category]) {
+          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+            continue;
+          }
           resources[category][resource].modifyRate(
             -1000 * totalCost[category][resource] / this.getEffectiveDuration(),
             'Spaceship Cost',
