@@ -481,7 +481,7 @@ progressData = {
         id: "chapter1.22",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
         prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
@@ -1162,7 +1162,26 @@ progressData.chapters.push(
         targetId: "interrogate_alien",
         type: "enable"
       }]
-  }
+  },
+  {
+    id: "chapter6.2",
+    type: "journal",
+    chapter: 6,
+    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. We got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
+    prerequisites: ["chapter6.2"],
+    objectives: [],
+    reward: []
+  },
+ {
+   id: "chapter6.3",
+   type: "journal",
+   chapter: 6,
+   narrative: "New xenoterraforming project available: Analyze hazardous biomass.",
+   prerequisites: ["chapter6.2b"],
+   objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
+   reward: [
+   ]
+ }
 );
 
 progressData.storyProjects.sticky_dust_trap = {
@@ -1190,17 +1209,6 @@ progressData.storyProjects.sticky_dust_trap = {
 };
 
 progressData.chapters.push(
-  {
-    id: "chapter6.3",
-    type: "journal",
-    chapter: 6,
-    narrative: "New xenoterraforming project available: Analyze hazardous biomass.",
-    prerequisites: ["chapter6.2"],
-    objectives: [      { type: "project", projectId: "interrogate_alien", repeatCount: 3 }],
-    reward: [
-    ]
-  },
-
 );
 
 progressData.storyProjects.interrogate_alien = {
