@@ -36,7 +36,7 @@ function getJournalChapterGroups() {
     if (chNum !== null) {
       if (chNum !== currentNum) {
         currentNum = chNum;
-        current = chNum > 0 ? { chapterId: src.id, chapterNum: chNum, entries: [], sources: [] } : null;
+        current = chNum >= 0 ? { chapterId: src.id, chapterNum: chNum, entries: [], sources: [] } : null;
         if (current) groups.push(current);
       }
     } else if (!current) {
