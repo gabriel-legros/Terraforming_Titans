@@ -150,6 +150,6 @@ function selectPlanet(planetKey){
         currentPlanetParameters = planetParameters[planetKey];
     }
 
-    initializeGameState({preserveManagers: true});
+    initializeGameState({preserveManagers: true, preserveJournal: true});
     updateSpaceUI();
 }

@@ -34,12 +34,11 @@ describe('calculateZoneSolarFlux', () => {
     const ratio = getZoneRatio('tropical') / 0.25;
     const zonePerc = getZonePercentage('tropical');
     const baseSolar = terra.luminosity.solarFlux;
-    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
-    const expected = (
-      baseSolar +
-      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5) +
-      4 * mirrorPPA * buildings.spaceMirror.active * 0.5 / zonePerc
-    ) * ratio;
+    const mirror = terra.calculateMirrorEffect();
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const distributedMirror = (mirror.interceptedPower * (1 - 0.5) * buildings.spaceMirror.active) / totalArea;
+    const focusedMirror = (mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / (totalArea * zonePerc);
+    const expected = (baseSolar + distributedMirror + focusedMirror) * ratio;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
@@ -58,11 +57,10 @@ describe('calculateZoneSolarFlux', () => {
 
     const ratio = getZoneRatio('temperate') / 0.25;
     const baseSolar = terra.luminosity.solarFlux;
-    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
-    const expected = (
-      baseSolar +
-      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5)
-    ) * ratio;
+    const mirror = terra.calculateMirrorEffect();
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const distributedMirror = (mirror.interceptedPower * (1 - 0.5) * buildings.spaceMirror.active) / totalArea;
+    const expected = (baseSolar + distributedMirror) * ratio;
     const result = terra.calculateZoneSolarFlux('temperate');
     expect(result).toBeCloseTo(expected, 5);
   });
@@ -94,16 +92,15 @@ describe('calculateZoneSolarFlux', () => {
     const ratio = getZoneRatio('tropical') / 0.25;
     const zonePerc = getZonePercentage('tropical');
     const baseSolar = terra.luminosity.solarFlux;
-    const mirrorPPA = terra.calculateMirrorEffect().powerPerUnitArea;
-    const lantern = terra.calculateLanternFlux();
-    const areaFactor = terra.celestialParameters.crossSectionArea / terra.celestialParameters.surfaceArea;
-    const expected = (
-      baseSolar +
-      4 * mirrorPPA * buildings.spaceMirror.active * (1 - 0.5) +
-      4 * lantern * areaFactor * (1 - 0.5) +
-      4 * mirrorPPA * buildings.spaceMirror.active * 0.5 / zonePerc +
-      4 * lantern * areaFactor * 0.5 / zonePerc
-    ) * ratio;
+    const mirror = terra.calculateMirrorEffect();
+    const lanternFlux = terra.calculateLanternFlux();
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const areaFactor = terra.celestialParameters.crossSectionArea / totalArea;
+    const distributedMirror = (mirror.interceptedPower * (1 - 0.5) * buildings.spaceMirror.active) / totalArea;
+    const focusedMirror = (mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / (totalArea * zonePerc);
+    const distributedLantern = lanternFlux * areaFactor * (1 - 0.5);
+    const focusedLantern = lanternFlux * areaFactor * 0.5 / zonePerc;
+    const expected = (baseSolar + distributedMirror + focusedMirror + distributedLantern + focusedLantern) * ratio;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
