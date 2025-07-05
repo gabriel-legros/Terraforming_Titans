@@ -57,6 +57,27 @@ const tabParameters = {
       this.tabs = {}; // Object to store tab elements by their ID
       this.loadTabs(tabParams); // Initialize tabs from parameters
     }
+
+    // Reset visibility of all managed tabs according to provided parameters
+    resetVisibility(tabParams) {
+      // Clear active and hidden classes from every tab
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+        t.classList.remove('hidden');
+      });
+
+      // Apply default hidden state from parameters
+      tabParams.tabs.forEach(tabConfig => {
+        const tab = this.tabs[tabConfig.id];
+        if (tab) {
+          if (tabConfig.isHidden) {
+            tab.classList.add('hidden');
+          } else {
+            tab.classList.remove('hidden');
+          }
+        }
+      });
+    }
   
     // Method to load tabs from the provided tab parameters
     loadTabs(tabParams) {
