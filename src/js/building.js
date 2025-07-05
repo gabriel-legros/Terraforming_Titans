@@ -342,8 +342,15 @@ class Building extends EffectableEntity {
       if(this.requiresLand){
         resources.surface.land.reserve(this.requiresLand*buildCount);
       }
+      const oldActive = this.active;
+      const oldProductivity = this.productivity;
       this.count += buildCount;
       this.active += buildCount;
+      if(this.active > 0){
+        this.productivity = oldProductivity * (oldActive / this.active);
+      } else {
+        this.productivity = 0;
+      }
       this.updateResourceStorage();
       return true;
     }
