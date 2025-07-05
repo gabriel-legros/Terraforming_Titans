@@ -6,6 +6,10 @@ body {
     display: none;
 }
 
+.invisible {
+    visibility: hidden;
+}
+
 .tabs,
 .buildings-subtabs,
 .research-subtabs,

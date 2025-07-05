@@ -5,7 +5,7 @@ function initializeColonySlidersUI() {
   if (!container) return;
   container.innerHTML = '';
   // Ensure sliders start hidden until unlocked via research
-  container.classList.add('hidden');
+  container.classList.add('invisible');
 
   const card = document.createElement('div');
   card.classList.add('project-card');

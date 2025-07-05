@@ -95,6 +95,7 @@ const tabParameters = {
         let tabContent = document.getElementById(tabContentId);
         if(tabContent){
             tabContent.classList.remove('hidden');
+            tabContent.classList.remove('invisible');
         }
     }
   
