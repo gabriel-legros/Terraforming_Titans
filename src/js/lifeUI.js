@@ -255,6 +255,13 @@ function initializeLifeTerraformingDesignerUI() {
 
           if (attributeName === 'optimalGrowthTemperature') {
               newValue = Math.max(-15, Math.min(15, newValue));
+              const costExcludingCurrent =
+                lifeDesigner.tentativeDesign.getDesignCost() -
+                Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
+              const available =
+                lifeDesigner.maxLifeDesignPoints() - costExcludingCurrent;
+              const allowed = Math.min(Math.abs(newValue), Math.max(0, available));
+              newValue = Math.sign(newValue) * allowed;
           } else {
               // Clamp the value between 0 and the allowed maximum and available points
               newValue = Math.max(0, Math.min(maxUpgrades, newValue));
