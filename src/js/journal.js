@@ -188,6 +188,13 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
 function clearJournal() {
   const journalEntries = document.getElementById('journal-entries');
   const journalContainer = document.getElementById('journal');
+  if (journalQueue && journalQueue.length) {
+    journalQueue.forEach(({ text, eventId, source }) => {
+      const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
+      journalHistoryData.push(text);
+      journalHistorySources.push(srcObj);
+    });
+  }
   journalEntries.innerHTML = ''; // Remove all entries from the display
   journalEntriesData = []; // Clear the stored data array but keep history
   journalEntrySources = [];
