@@ -66,16 +66,21 @@ function expectedTemperature(terra, params, resources) {
     biomass: calculateAverageCoverage(terra, 'biomass')
   };
 
-  const temps = physics.dayNightTemperaturesModel({
-    groundAlbedo,
-    flux: modifiedFlux,
-    rotationPeriodH: rotation,
-    surfacePressureBar: pressureBar,
-    composition,
-    surfaceFractions,
-    gSurface: g
-  });
-  return temps.mean;
+  let weighted = 0;
+  for (const zone of ['tropical', 'temperate', 'polar']) {
+    const zoneFlux = terra.calculateZoneSolarFlux(zone);
+    const zTemps = physics.dayNightTemperaturesModel({
+      groundAlbedo,
+      flux: zoneFlux,
+      rotationPeriodH: rotation,
+      surfacePressureBar: pressureBar,
+      composition,
+      surfaceFractions,
+      gSurface: g
+    });
+    weighted += zTemps.mean * getZonePercentage(zone);
+  }
+  return weighted;
 }
 
 describe('initial planetary temperatures', () => {
