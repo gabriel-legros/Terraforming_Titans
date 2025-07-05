@@ -5,6 +5,10 @@ function getChapterNumber(id) {
     return m ? parseInt(m[1], 10) : null;
 }
 
+function joinLines(text) {
+    return Array.isArray(text) ? text.join('\n') : text;
+}
+
 class StoryManager {
     constructor(progressData) {
         this.allEvents = this.loadEvents(progressData);
@@ -570,15 +574,16 @@ class StoryEvent {
             case "pop-up":
                 createPopup(
                     this.parameters.title,
-                    this.parameters.text,
+                    joinLines(this.parameters.text),
                     this.parameters.buttonText
                 );
                 break;
             case "journal":
+                 const text = joinLines(this.narrative);
                  if (this.title) {
-                    addJournalEntry(`${this.title}:\n${this.narrative}`, this.id, { type: 'chapter', id: this.id });
+                    addJournalEntry([`${this.title}:`, text], this.id, { type: 'chapter', id: this.id });
                  } else {
-                    addJournalEntry(this.narrative, this.id, { type: 'chapter', id: this.id });
+                    addJournalEntry(text, this.id, { type: 'chapter', id: this.id });
                  }
                 break;
             default:

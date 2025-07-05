@@ -1258,3 +1258,21 @@ if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
 }
 
+// --- Normalize narrative and story text into arrays to avoid manual \n handling ---
+(function normalizeProgressData(data) {
+  if (!data) return;
+  const toLines = txt => Array.isArray(txt) ? txt.slice() : (typeof txt === 'string' ? txt.split('\n') : []);
+  (data.chapters || []).forEach(ch => {
+    ch.narrativeLines = toLines(ch.narrative);
+    if (ch.parameters) {
+      ch.parameters.textLines = toLines(ch.parameters.text);
+    }
+  });
+  const projects = data.storyProjects || {};
+  Object.values(projects).forEach(proj => {
+    if (proj.attributes && Array.isArray(proj.attributes.storySteps)) {
+      proj.attributes.storyStepLines = proj.attributes.storySteps.map(toLines);
+    }
+  });
+})(progressData);
+

@@ -1,4 +1,7 @@
 (function(){
+  function joinLines(text){
+    return Array.isArray(text) ? text.join('\n') : text;
+  }
   function reconstructJournalState(sm, pm, data = progressData, updateJournal = true) {
     const entries = [];
     const sources = [];
@@ -22,7 +25,8 @@
           entries.length = 0;
           sources.length = 0;
         }
-        const text = ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
+        const lines = ch.narrativeLines || [ch.narrative];
+        const text = ch.title ? joinLines([`${ch.title}:`, ...lines]) : joinLines(lines);
         if (text != null) {
           entries.push(text);
           sources.push({ type: 'chapter', id: ch.id });
@@ -34,15 +38,16 @@
             if (obj.type === 'project') {
               const proj = projects[obj.projectId] || {};
               const repeat = proj.repeatCount || 0;
-              const steps = storyProjects[obj.projectId]?.attributes?.storySteps || [];
+              const steps = storyProjects[obj.projectId]?.attributes?.storyStepLines || storyProjects[obj.projectId]?.attributes?.storySteps || [];
               const needed = obj.repeatCount || steps.length;
               const count = Math.min(repeat, needed, steps.length);
               for (let i = 0; i < count; i++) {
                 const stepText = steps[i];
                 if (stepText != null) {
-                  entries.push(stepText);
+                  const textStr = joinLines(stepText);
+                  entries.push(textStr);
                   sources.push({ type: 'project', id: obj.projectId, step: i });
-                  historyEntries.push(stepText);
+                  historyEntries.push(textStr);
                   historySources.push({ type: 'project', id: obj.projectId, step: i });
                 }
               }

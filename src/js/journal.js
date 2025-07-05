@@ -12,6 +12,10 @@ let journalCurrentEventId = null; // id of the event whose text is typing
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 
+function joinLines(text) {
+  return Array.isArray(text) ? text.join('\n') : text;
+}
+
 function getChapterNumber(id) {
   const m = /^chapter(\d+)/.exec(id);
   return m ? parseInt(m[1], 10) : null;
@@ -78,7 +82,7 @@ function displayJournalChapter(index) {
   updateJournalNavArrows();
 }
 function addJournalEntry(text, eventId = null, source = null) {
-  journalQueue.push({ text, eventId, source });
+  journalQueue.push({ text: joinLines(text), eventId, source });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -163,7 +167,7 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
     const entry = document.createElement('p');
-    const lines = entryText.split('\n'); // Split the text by newlines
+    const lines = joinLines(entryText).split('\n'); // Split the text by newlines
     lines.forEach((line, index) => {
       entry.appendChild(document.createTextNode(line));
       if (index < lines.length - 1) {
@@ -259,7 +263,7 @@ function showJournalHistory() {
   entriesContainer.classList.add('history-entries');
   journalHistoryData.forEach(text => {
     const entry = document.createElement('p');
-    const lines = text.split('\n');
+    const lines = joinLines(text).split('\n');
     lines.forEach((line, idx) => {
       entry.appendChild(document.createTextNode(line));
       if (idx < lines.length - 1) {
@@ -292,13 +296,17 @@ function getJournalTextFromSource(source) {
   if (source.type === 'chapter') {
     const ch = (progressData && progressData.chapters || []).find(c => c.id === source.id);
     if (ch) {
-      return ch.title ? `${ch.title}:\n${ch.narrative}` : ch.narrative;
+      const lines = ch.narrativeLines || [ch.narrative];
+      if (ch.title) {
+        return joinLines([`${ch.title}:`, ...lines]);
+      }
+      return joinLines(lines);
     }
   } else if (source.type === 'project') {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
-    const steps = proj && proj.attributes && proj.attributes.storySteps;
+    const steps = proj && proj.attributes && (proj.attributes.storyStepLines || proj.attributes.storySteps);
     if (steps && steps[source.step] !== undefined) {
-      return steps[source.step];
+      return joinLines(steps[source.step]);
     }
   }
   return '';
