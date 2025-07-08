@@ -133,6 +133,7 @@
 
 .auto-build-input-container,
 .auto-build-target-container,
+.auto-build-setactive-container,
 .ghg-temp-control {
     display: flex;
     align-items: center;
