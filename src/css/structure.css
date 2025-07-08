@@ -99,6 +99,10 @@
     font-size: 0.85em;
 }
 
+.day-night-icon {
+    margin-left: 4px;
+}
+
 .build-count-display {
     display: inline-block; /* Reserve consistent space for the count */
     width: 2em;           /* Keep x10 and /10 buttons aligned */

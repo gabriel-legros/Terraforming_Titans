@@ -200,6 +200,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
     productivityContainer.appendChild(productivityValue);
 
+    if (structure.dayNightActivity) {
+      const dayNightIcon = document.createElement('span');
+      dayNightIcon.id = `${structure.name}-day-night-icon`;
+      dayNightIcon.classList.add('day-night-icon');
+      dayNightIcon.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
+      productivityContainer.appendChild(dayNightIcon);
+    }
+
     constructedCountContainer.appendChild(productivityContainer);
   }
 
@@ -600,7 +608,7 @@ function updateDecreaseButtonText(button, buildCount) {
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
-      
+
         if (structure.dayNightActivity && dayNightCycle.isNight()) {
           productivityElement.style.color = 'darkblue';
         } else if (productivityValue < 100) {
@@ -608,6 +616,11 @@ function updateDecreaseButtonText(button, buildCount) {
         } else {
           productivityElement.style.color = 'inherit';
         }
+      }
+
+      const iconElement = document.getElementById(`${structureName}-day-night-icon`);
+      if (iconElement) {
+        iconElement.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
       }
   
       const button = document.getElementById(`build-${structureName}`);
