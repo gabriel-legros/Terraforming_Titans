@@ -154,7 +154,6 @@
 }
 
 .hide-button:disabled {
-    background-color: #e0e0e0;
     color: #aaa;
     cursor: not-allowed;
 }
