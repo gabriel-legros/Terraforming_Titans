@@ -125,9 +125,7 @@ function createColonyDetails(structure) {
 
 // Update the colony-specific needs display
 function updateColonyDetailsDisplay(structureRow, structure) {
-  // Check if there are hidden obsolete buildings and update the "Unhide" button visibility
-  const hasHiddenObsoleteBuildings = Object.values(colonies).some(colony => colony.isHidden);
-  document.getElementById('unhide-obsolete-container').style.display = hasHiddenObsoleteBuildings ? 'block' : 'none';
+  updateUnhideButtons();
 
   // Update comfort and happiness boxes
   updateNeedBox(structureRow.querySelector(`#${structure.name}-happiness`), 'Happiness', structure.happiness, false, structure);
@@ -217,14 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const unhideButton = document.getElementById('unhide-obsolete-button');
   if (unhideButton) {
     unhideButton.addEventListener('click', () => {
-      // Access the *current* global colonies object directly inside the handler
       Object.values(colonies).forEach(colony => {
-        if (colony.unlocked && colony.obsolete) { // Only unhide obsolete ones that were hidden
+        if (colony.unlocked) {
           colony.isHidden = false;
         }
       });
-      // Potentially need to re-render the colony buttons after unhiding
-      updateColonyDisplay(colonies); // Re-render to show the unhidden buildings
+      updateColonyDisplay(colonies);
     });
   }
 

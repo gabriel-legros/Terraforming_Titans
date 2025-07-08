@@ -4,12 +4,15 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-describe('colony hide button state', () => {
-  test('hide button disabled while colony active', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="root"></div>', { runScripts: 'outside-only' });
+describe('category unhide button', () => {
+  test('shows button when buildings hidden and unhides on click', () => {
+    const html = `<!DOCTYPE html>
+      <div id="resource-unhide-container" style="display:none;">
+        <button id="resource-unhide-button"></button>
+      </div>`;
+    const dom = new JSDOM(html, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
-    // minimal stubs required by structuresUI.js
     ctx.formatNumber = n => n;
     ctx.formatBigInteger = n => String(n);
     ctx.formatBuildingCount = n => String(n);
@@ -29,15 +32,17 @@ describe('colony hide button state', () => {
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'structuresUI.js'), 'utf8');
     vm.runInContext(code, ctx);
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 
     const structure = {
-      name: 'testColony',
+      name: 'test',
       displayName: 'Test',
+      category: 'resource',
       canBeToggled: false,
       count: 1,
-      active: 1,
+      active: 0,
       unlocked: true,
-      isHidden: false,
+      isHidden: true,
       requiresProductivity: false,
       autoBuildEnabled: false,
       autoBuildPercent: 0.1,
@@ -59,18 +64,19 @@ describe('colony hide button state', () => {
       description: ''
     };
 
-    const row = ctx.createStructureRow(structure, () => {}, () => {}, true);
+    const row = ctx.createStructureRow(structure, () => {}, () => {});
     dom.window.document.body.appendChild(row);
 
-    ctx.updateStructureDisplay({ [structure.name]: structure });
+    ctx.buildings = { test: structure };
+    ctx.updateStructureDisplay(ctx.buildings);
 
-    const hideBtn = row.querySelector('.hide-button');
-    expect(hideBtn.style.display).toBe('inline-block');
-    expect(hideBtn.disabled).toBe(true);
+    const container = dom.window.document.getElementById('resource-unhide-container');
+    expect(container.style.display).toBe('block');
 
-    structure.active = 0;
-    ctx.updateStructureDisplay({ [structure.name]: structure });
+    const btn = dom.window.document.getElementById('resource-unhide-button');
+    btn.dispatchEvent(new dom.window.Event('click'));
 
-    expect(hideBtn.disabled).toBe(false);
+    expect(structure.isHidden).toBe(false);
   });
 });
+
