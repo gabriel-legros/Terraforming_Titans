@@ -1050,7 +1050,7 @@ class Terraforming extends EffectableEntity{
       if(lantern && lantern.active > 0){
         const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
         const power = (lantern.powerPerBuilding || 0) * lantern.active * productivity;
-        const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
+        const area = this.celestialParameters.surfaceArea;
         return power / area;
       }
       return 0;
