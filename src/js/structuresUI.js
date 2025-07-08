@@ -292,6 +292,22 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   autoBuildContainer.appendChild(autoBuildTargetContainer);
 
+  const setActiveContainer = document.createElement('div');
+  setActiveContainer.classList.add('auto-build-setactive-container');
+  const setActiveButton = document.createElement('button');
+  setActiveButton.id = `${structure.name}-set-active-button`;
+  setActiveButton.textContent = 'Set active to target';
+  setActiveButton.addEventListener('click', () => {
+    const population = resources.colony.colonists.value;
+    const targetCount = Math.ceil((structure.autoBuildPercent * population) / 100);
+    const desiredActive = Math.min(targetCount, structure.count);
+    const change = desiredActive - structure.active;
+    adjustStructureActivation(structure, change);
+    updateBuildingDisplay(buildings);
+  });
+  setActiveContainer.appendChild(setActiveButton);
+  autoBuildContainer.appendChild(setActiveContainer);
+
   if(structure.name === 'ghgFactory') {
     const tempControl = document.createElement('div');
     tempControl.id = `${structure.name}-temp-control`;
