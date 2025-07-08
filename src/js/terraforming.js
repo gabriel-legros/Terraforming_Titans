@@ -1050,7 +1050,7 @@ class Terraforming extends EffectableEntity{
       if(lantern && lantern.active > 0){
         const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
         const power = (lantern.powerPerBuilding || 0) * lantern.active * productivity;
-        const area = this.celestialParameters.surfaceArea;
+        const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }
       return 0;
@@ -1098,16 +1098,16 @@ class Terraforming extends EffectableEntity{
           if (targetZone === zone) {
             const targetZoneArea = totalSurfaceArea * getZonePercentage(targetZone);
             if (targetZoneArea > 0) {
-              focusedMirrorFlux = focusedMirrorPower / targetZoneArea;
-              focusedLanternFlux = focusedLanternPower / targetZoneArea;
+              focusedMirrorFlux = 4*focusedMirrorPower / targetZoneArea;
+              focusedLanternFlux = 4*focusedLanternPower / targetZoneArea;
             }
           }
         }
       }
     
       // Calculate distributed FLUX from the remaining distributed POWER
-      const distributedMirrorFlux = totalSurfaceArea > 0 ? distributedMirrorPower / totalSurfaceArea : 0;
-      const distributedLanternFlux = totalSurfaceArea > 0 ? distributedLanternPower / totalSurfaceArea : 0;
+      const distributedMirrorFlux = totalSurfaceArea > 0 ? 4*distributedMirrorPower / totalSurfaceArea : 0;
+      const distributedLanternFlux = totalSurfaceArea > 0 ? 4*distributedLanternPower / totalSurfaceArea : 0;
     
       // Sum all fluxes and apply the zonal angle-of-incidence ratio
       const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
