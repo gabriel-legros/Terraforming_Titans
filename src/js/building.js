@@ -11,6 +11,7 @@ class Building extends EffectableEntity {
     this.count = 0;
     this.active = 0;
     this.productivity = 0;
+    this.isHidden = false; // track whether the building is hidden in the UI
 
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;

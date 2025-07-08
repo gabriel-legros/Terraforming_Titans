@@ -157,3 +157,25 @@
     color: #aaa;
     cursor: not-allowed;
 }
+
+.unhide-obsolete-container {
+    margin-left: auto;
+}
+
+.unhide-obsolete-button {
+    background-color: #b6bfc2;
+    color: rgb(0, 0, 0);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.unhide-obsolete-button:hover {
+    background-color: #45a049;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}

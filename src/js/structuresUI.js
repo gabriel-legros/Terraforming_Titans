@@ -141,10 +141,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.classList.add('hide-button');
   hideButton.textContent = 'Hide';
   hideButton.addEventListener('click', function () {
-    // Hide this building
     structure.isHidden = true;
+    updateUnhideButtons();
   });
-  hideButton.disabled = !(structure.obsolete && structure.active === 0 && !structure.isHidden);
+  hideButton.disabled = structure.active > 0;
 
   leftContainer.appendChild(hideButton);
   buttonContainer.appendChild(leftContainer);
@@ -553,9 +553,8 @@ function updateDecreaseButtonText(button, buildCount) {
       const hideButton = buttonContainer.querySelector('.hide-button');
 
       if (hideButton) {
-        const canHide = structure.obsolete && structure.active === 0 && !structure.isHidden;
         hideButton.style.display = 'inline-block';
-        hideButton.disabled = !canHide;
+        hideButton.disabled = structure.active > 0;
       }
 
       // Toggle visibility of autoBuildContainer based on globalEffects
@@ -633,6 +632,7 @@ function updateDecreaseButtonText(button, buildCount) {
         updateColonyDetailsDisplay(structureRow, structure);
       }
     }
+    updateUnhideButtons();
   }
 
   function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
@@ -726,7 +726,7 @@ function formatStorageDetails(storageObject) {
   return storageDetails.slice(0, -2); // Remove trailing comma and space
 }
 
-function updateEmptyBuildingMessages() {
+  function updateEmptyBuildingMessages() {
   const containerIds = [
     'resource-buildings-buttons',
     'production-buildings-buttons',
@@ -757,3 +757,33 @@ function updateEmptyBuildingMessages() {
     }
   });
 }
+
+function updateUnhideButtons() {
+  const categories = ['resource', 'production', 'energy', 'storage', 'terraforming'];
+  categories.forEach(cat => {
+    const container = document.getElementById(`${cat}-unhide-container`);
+    if (!container) return;
+    const hasHidden = Object.values(buildings).some(b => b.category === cat && b.isHidden);
+    container.style.display = hasHidden ? 'block' : 'none';
+  });
+
+  const colonyContainer = document.getElementById('unhide-obsolete-container');
+  if (colonyContainer) {
+    const hasColonyHidden = Object.values(colonies).some(c => c.isHidden);
+    colonyContainer.style.display = hasColonyHidden ? 'block' : 'none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['resource','production','energy','storage','terraforming'].forEach(cat => {
+    const btn = document.getElementById(`${cat}-unhide-button`);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        Object.values(buildings).forEach(b => {
+          if (b.category === cat) b.isHidden = false;
+        });
+        updateBuildingDisplay(buildings);
+      });
+    }
+  });
+});
