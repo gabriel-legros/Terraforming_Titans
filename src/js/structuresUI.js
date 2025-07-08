@@ -144,6 +144,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     // Hide this building
     structure.isHidden = true;
   });
+  hideButton.disabled = !(structure.obsolete && structure.active === 0 && !structure.isHidden);
 
   leftContainer.appendChild(hideButton);
   buttonContainer.appendChild(leftContainer);
@@ -536,11 +537,9 @@ function updateDecreaseButtonText(button, buildCount) {
       const hideButton = buttonContainer.querySelector('.hide-button');
 
       if (hideButton) {
-        if (structure.obsolete && structure.active === 0 && !structure.isHidden) {
-          hideButton.style.display = 'inline-block'; // Show the button
-        } else {
-          hideButton.style.display = 'none'; // Hide the button
-        }
+        const canHide = structure.obsolete && structure.active === 0 && !structure.isHidden;
+        hideButton.style.display = 'inline-block';
+        hideButton.disabled = !canHide;
       }
 
       // Toggle visibility of autoBuildContainer based on globalEffects
