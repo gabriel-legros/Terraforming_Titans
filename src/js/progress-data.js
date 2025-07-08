@@ -846,7 +846,7 @@ progressData = {
         id: "chapter4.10",
         type: "journal",
         chapter: 4,
-        narrative: "Chapter 4: Dark Forest\nReceiving transmission...\n  'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
         prerequisites: ["chapter4.9b"],
         objectives: [],
         reward: [          {
