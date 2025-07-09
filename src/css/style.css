@@ -1,5 +1,6 @@
 body {
     font-family: Arial, sans-serif;
+    overflow:hidden;
 }
 
 .hidden {
@@ -59,22 +60,24 @@ body {
 .resource-wrapper {
     flex: 0 0 16%; /* Takes up 20% of the space */
     min-width: 16%;
-    height: calc(100vh - 150px); /* Scale with window height minus top area */
+    height: calc(100vh - 110px); /* Scale with window height minus top area */
     overflow-y: auto; /* Scroll if content exceeds space */
 }
 
 .tab-content-wrapper {
     display: flex;
     gap: 10px;
-    height: calc(100vh - 150px); /* Fill remaining vertical space below tabs */
+    height: calc(100vh - 110px); /* Fill remaining vertical space below tabs */
 }
 
 /* Adjusts the main content area (tab-content) to take all remaining space */
 .tab-content {
     flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
-    height: calc(100vh - 150px); /* Scale with window height minus top area */
+    height: calc(100vh - 110px); /* Scale with window height minus top area */
     overflow-y: auto; /* Scroll if content exceeds space */
+    padding-left:10px;
+    padding-right:10px;
 }
 
 .tab-content.active {
@@ -126,7 +129,7 @@ body {
     padding: 15px; /* Adds padding to the journal text */
     box-sizing: border-box; /* Ensures padding is inside the element width */
     overflow-y: auto; /* Allows scrolling if content exceeds height */
-    height: calc(100vh - 150px); /* Scale with window height minus top area */
+    height: calc(100vh - 110px); /* Scale with window height minus top area */
 }
 
 /* Journal entries */
