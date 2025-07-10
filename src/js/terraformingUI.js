@@ -44,6 +44,10 @@ function activateTerraformingSubtab(subtabId) {
   // Add active class to the clicked subtab and corresponding content
   document.querySelector(`[data-subtab="${subtabId}"]`).classList.add('active');
   document.getElementById(subtabId).classList.add('active');
+
+  if(subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
+    markMilestonesViewed();
+  }
 }
 
 function createTerraformingSummaryUI() {

@@ -228,6 +228,10 @@ function loadGame(slotOrCustomString) {
       if(silenceToggle){
         silenceToggle.checked = gameSettings.silenceSolisAlert;
       }
+      const milestoneToggle = document.getElementById('milestone-silence-toggle');
+      if(milestoneToggle){
+        milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {

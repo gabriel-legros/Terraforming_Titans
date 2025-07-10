@@ -22,6 +22,7 @@ let gameSettings = {
   useCelsius: false,
   hideCompletedResearch: false,
   silenceSolisAlert: false,
+  silenceMilestoneAlert: false,
 };
 
 let colonySliderSettings = {

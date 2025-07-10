@@ -114,7 +114,7 @@
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects</div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
-    <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming</div>
+    <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
     <div class="tab hidden" id="space-tab" data-tab="space">Space</div>
     <!-- *************************** -->
@@ -324,6 +324,9 @@
           </div>
           <div id = "milestone-terraforming" class="terraforming-subtab-content">
             <h2>Milestones</h2>
+            <div class="milestone-options">
+                <label><input type="checkbox" id="milestone-silence-toggle"> Silence milestone alert</label>
+            </div>
              <!-- Milestones UI goes here -->
           </div>
         </div>
