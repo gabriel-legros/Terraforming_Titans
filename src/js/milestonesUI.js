@@ -1,3 +1,6 @@
+let milestoneAlertNeeded = false;
+let lastCompletableCount = 0;
+
 function createMilestonesUI() {
     const milestonesContainer = document.getElementById('milestone-terraforming');
     milestonesContainer.innerHTML = ''; // Clear any existing content
@@ -11,6 +14,25 @@ function createMilestonesUI() {
     const description = document.createElement('p');
     description.textContent = 'Track your progress and unlock up to 10% colony happiness as you achieve these terraforming milestones.  Each milestone completed will also start a festival.';
     milestonesContainer.appendChild(description);
+
+    const silenceDiv = document.createElement('div');
+    const silenceLabel = document.createElement('label');
+    const silenceToggle = document.createElement('input');
+    silenceToggle.type = 'checkbox';
+    silenceToggle.id = 'milestone-silence-toggle';
+    if (typeof gameSettings !== 'undefined') {
+        silenceToggle.checked = gameSettings.silenceMilestoneAlert || false;
+    }
+    silenceToggle.addEventListener('change', () => {
+        if (typeof gameSettings !== 'undefined') {
+            gameSettings.silenceMilestoneAlert = silenceToggle.checked;
+        }
+        updateMilestoneAlert();
+    });
+    silenceLabel.appendChild(silenceToggle);
+    silenceLabel.appendChild(document.createTextNode(' Silence milestone alert'));
+    silenceDiv.appendChild(silenceLabel);
+    milestonesContainer.appendChild(silenceDiv);
 
     // Add total bonuses display
     const totalBonuses = document.createElement('div');
@@ -104,4 +126,39 @@ function updateMilestonesUI() {
             milestonesManager.countdownElement = null;
         }
     }
+
+    checkMilestoneAlert();
+    updateMilestoneAlert();
+}
+
+function checkMilestoneAlert() {
+    const count = (typeof milestonesManager !== 'undefined' && milestonesManager.getCompletableMilestones)
+        ? milestonesManager.getCompletableMilestones().length
+        : 0;
+    if (count > lastCompletableCount) {
+        milestoneAlertNeeded = true;
+    }
+    lastCompletableCount = count;
+}
+
+function updateMilestoneAlert() {
+    const alertEl = document.getElementById('terraforming-alert');
+    if (!alertEl) return;
+    if (typeof gameSettings !== 'undefined' && gameSettings.silenceMilestoneAlert) {
+        alertEl.style.display = 'none';
+        return;
+    }
+    alertEl.style.display = milestoneAlertNeeded ? 'inline' : 'none';
+}
+
+function markMilestonesViewed() {
+    milestoneAlertNeeded = false;
+    lastCompletableCount = (typeof milestonesManager !== 'undefined' && milestonesManager.getCompletableMilestones)
+        ? milestonesManager.getCompletableMilestones().length
+        : 0;
+    updateMilestoneAlert();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { checkMilestoneAlert, updateMilestoneAlert, markMilestonesViewed };
 }
