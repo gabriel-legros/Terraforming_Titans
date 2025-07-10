@@ -48,7 +48,7 @@ class SpaceMiningProject extends SpaceshipProject {
   
     const input = document.createElement('input');
     input.type = 'number';
-    input.step = 1;
+    input.step = 'any';
     input.classList.add('pressure-input');
     input.value = this.disablePressureThreshold;
     input.addEventListener('input', () => {
