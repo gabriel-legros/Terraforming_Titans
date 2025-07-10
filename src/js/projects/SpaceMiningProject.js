@@ -85,7 +85,9 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.pressureCheckbox.checked = this.disableAbovePressure;
     }
     if (elements.pressureInput) {
-      elements.pressureInput.value = this.disablePressureThreshold;
+      if (document.activeElement !== elements.pressureInput) {
+        elements.pressureInput.value = this.disablePressureThreshold;
+      }
     }
   }
 
