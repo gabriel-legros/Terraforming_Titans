@@ -322,7 +322,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates negates the radiation penalty for life.",
+    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates negates the radiation penalty for life.  The cost of this project includes all the machinery and infrastructure required to build, house, cool and secure the cable.",
     repeatable: false,
     unlocked : false,
     attributes : {
