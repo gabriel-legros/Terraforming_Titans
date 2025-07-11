@@ -58,8 +58,8 @@ body {
 
 /* Adjusts the resource container width */
 .resource-wrapper {
-    flex: 0 0 16%; /* Takes up 20% of the space */
-    min-width: 16%;
+    flex: 0 0 16%; /* Takes up 16% of the space */
+    min-width: 300px;
     height: calc(100vh - 120px); /* Scale with window height minus top area */
     overflow-y: auto; /* Scroll if content exceeds space */
 }
