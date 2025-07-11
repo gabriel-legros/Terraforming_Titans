@@ -1164,7 +1164,7 @@ progressData.chapters.push(
       }]
   },
   {
-    id: "chapter6.2",
+    id: "chapter6.2b",
     type: "journal",
     chapter: 6,
     narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. We got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
