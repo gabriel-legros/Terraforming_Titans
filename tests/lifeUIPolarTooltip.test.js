@@ -50,5 +50,6 @@ describe('lifeUI polar tooltip', () => {
     const icon = header.querySelector('.info-tooltip-icon');
     expect(icon).not.toBeNull();
     expect(icon.title).toBe('Not required to complete terraforming.  Can be ignored.  Or not.');
+
   });
 });
