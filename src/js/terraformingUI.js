@@ -736,6 +736,7 @@ function createCompleteTerraformingButton(container) {
         if (typeof updateCompleteTerraformingButton === 'function') {
             updateCompleteTerraformingButton();
         }
+        button.textContent = 'ERROR : MTC not responding';
     }
   });
 }
@@ -746,13 +747,28 @@ function updateCompleteTerraformingButton() {
 
   if (!button) return;
 
+  const planetTerraformed = (typeof spaceManager !== 'undefined' &&
+    typeof spaceManager.getCurrentPlanetKey === 'function' &&
+    typeof spaceManager.isPlanetTerraformed === 'function' &&
+    spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey()));
+
+  if (planetTerraformed) {
+      button.textContent = 'ERROR : MTC not responding';
+      button.style.backgroundColor = 'gray';
+      button.style.cursor = 'not-allowed';
+      button.disabled = true;
+      return;
+  }
+
   if (terraforming.readyForCompletion) {
       button.style.backgroundColor = 'green';
       button.style.cursor = 'pointer';
       button.disabled = false; // Enable the button
+      button.textContent = 'Complete Terraforming';
   } else {
       button.style.backgroundColor = 'red';
       button.style.cursor = 'not-allowed';
       button.disabled = true; // Disable the button
+      button.textContent = 'Complete Terraforming';
   }
 }
