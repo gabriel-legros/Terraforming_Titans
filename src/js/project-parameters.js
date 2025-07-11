@@ -314,15 +314,15 @@ const projectParameters = {
     category :"infrastructure",
     cost: {
       colony: {
-        metal: 1e12,
-        glass: 1e12,
-        electronics: 1e10,
-        components: 1e10,
-        superconductors : 1e9
+        metal: 1e10,
+        glass: 1e10,
+        electronics: 1e9,
+        components: 1e9,
+        superconductors : 1e8
       }
     },
     duration: 120000,
-    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates provides an effective boost of 50% to life growth.",
+    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates negates the radiation penalty for life.",
     repeatable: false,
     unlocked : false,
     attributes : {
