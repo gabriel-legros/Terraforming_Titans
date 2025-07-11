@@ -7,7 +7,7 @@ Terraforming.prototype.updateLuminosity = function(){};
 Terraforming.prototype.updateSurfaceTemperature = function(){};
 
 describe('luminosity life growth effect', () => {
-  test('applyTerraformingEffects adds life growth multiplier based on luminosity', () => {
+  test('zonal solar panel multiplier uses zonal flux when available', () => {
     global.resources = { atmospheric: {}, special: { albedoUpgrades: { value: 0 } } };
     global.buildings = { spaceMirror: { active: 0 } };
     global.colonies = {};
@@ -16,25 +16,15 @@ describe('luminosity life growth effect', () => {
     global.tabManager = {};
     global.fundingModule = {};
     global.lifeDesigner = {};
-    const lifeManager = new EffectableEntity({ description: 'life' });
-    global.lifeManager = lifeManager;
+    global.lifeManager = new EffectableEntity({ description: 'life' });
     global.oreScanner = {};
-
-    // dummy addEffect to route effects directly
-    global.addEffect = (effect) => {
-      if (effect.target === 'lifeManager') {
-        lifeManager.addAndReplace(effect);
-      }
-    };
 
     const celestial = { distanceFromSun: 1, radius: 1, gravity: 1, albedo: 0 };
     const tf = new Terraforming(global.resources, celestial);
-    tf.luminosity.modifiedSolarFlux = 2000; // results in multiplier 2
+    tf.luminosity.zonalFluxes = { tropical: 1500, temperate: 1000, polar: 500 };
 
-    tf.applyTerraformingEffects();
-
-    const effect = lifeManager.activeEffects.find(e => e.type === 'lifeGrowthMultiplier');
-    expect(effect).toBeDefined();
-    expect(effect.value).toBeCloseTo(2);
+    expect(tf.calculateZonalSolarPanelMultiplier('tropical')).toBeCloseTo(1.5);
+    expect(tf.calculateZonalSolarPanelMultiplier('temperate')).toBeCloseTo(1);
+    expect(tf.calculateZonalSolarPanelMultiplier('polar')).toBeCloseTo(0.5);
   });
 });
