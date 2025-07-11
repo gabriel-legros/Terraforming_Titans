@@ -668,6 +668,13 @@ function updateDecreaseButtonText(button, buildCount) {
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
 
+    // Include solar flux for space mirrors
+    if (structure.name === 'spaceMirror' && terraforming && typeof terraforming.calculateMirrorEffect === 'function') {
+      const mirrorFluxPerMirror = terraforming.calculateMirrorEffect().powerPerUnitArea;
+      const flux = mirrorFluxPerMirror * structure.active;
+      providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
+    }
+
     if (providesParts.length > 0) {
       detailsText += `<strong>Provides:</strong> ${providesParts.join(', ')}`;
     }
