@@ -34,8 +34,8 @@ describe('life luminosity table', () => {
     ctx.createLifeBox(row);
     ctx.updateLifeBox();
 
-    expect(dom.window.document.getElementById('life-luminosity-tropical').textContent).toBe('120.00');
-    expect(dom.window.document.getElementById('life-luminosity-temperate').textContent).toBe('100.00');
-    expect(dom.window.document.getElementById('life-luminosity-polar').textContent).toBe('80.00');
+    expect(dom.window.document.getElementById('life-photo-tropical').textContent).toBe('120.00');
+    expect(dom.window.document.getElementById('life-photo-temperate').textContent).toBe('100.00');
+    expect(dom.window.document.getElementById('life-photo-polar').textContent).toBe('80.00');
   });
 });

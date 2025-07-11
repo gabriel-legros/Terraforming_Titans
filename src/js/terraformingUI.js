@@ -496,26 +496,14 @@ function createWaterBox(row) {
           <tr>
             <th>Region</th>
             <th>Coverage (%)</th>
+            <th>Photo Mult (%)</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>Overall</td><td id="life-coverage-overall">0.00</td></tr>
-          <tr><td>Polar</td><td id="life-coverage-polar">0.00</td></tr>
-          <tr><td>Temperate</td><td id="life-coverage-temperate">0.00</td></tr>
-          <tr><td>Tropical</td><td id="life-coverage-tropical">0.00</td></tr>
-        </tbody>
-      </table>
-      <table id="life-luminosity-table">
-        <thead>
-          <tr>
-            <th>Zone</th>
-            <th>Photosynthesis Multiplier (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Tropical</td><td id="life-luminosity-tropical">0.00</td></tr>
-          <tr><td>Temperate</td><td id="life-luminosity-temperate">0.00</td></tr>
-          <tr><td>Polar</td><td id="life-luminosity-polar">0.00</td></tr>
+          <tr><td>Overall</td><td id="life-coverage-overall">0.00</td><td id="life-photo-overall">-</td></tr>
+          <tr><td>Polar</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
+          <tr><td>Temperate</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
+          <tr><td>Tropical</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
         </tbody>
       </table>
       `;
@@ -572,12 +560,12 @@ function updateLifeBox() {
     const tropicalEl = document.getElementById('life-coverage-tropical');
     if (tropicalEl) tropicalEl.textContent = (tropicalCov * 100).toFixed(2);
 
-    const lumTrop = document.getElementById('life-luminosity-tropical');
-    if (lumTrop) lumTrop.textContent = (terraforming.calculateZonalSolarPanelMultiplier('tropical')*100).toFixed(2);
-    const lumTemp = document.getElementById('life-luminosity-temperate');
-    if (lumTemp) lumTemp.textContent = (terraforming.calculateZonalSolarPanelMultiplier('temperate')*100).toFixed(2);
-    const lumPolar = document.getElementById('life-luminosity-polar');
-    if (lumPolar) lumPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
+    const photoTrop = document.getElementById('life-photo-tropical');
+    if (photoTrop) photoTrop.textContent = (terraforming.calculateZonalSolarPanelMultiplier('tropical')*100).toFixed(2);
+    const photoTemp = document.getElementById('life-photo-temperate');
+    if (photoTemp) photoTemp.textContent = (terraforming.calculateZonalSolarPanelMultiplier('temperate')*100).toFixed(2);
+    const photoPolar = document.getElementById('life-photo-polar');
+    if (photoPolar) photoPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
   }
   
   // Function to create the magnetosphere box, with conditional text based on boolean flag
