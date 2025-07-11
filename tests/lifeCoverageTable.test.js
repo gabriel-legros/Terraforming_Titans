@@ -12,6 +12,7 @@ describe('life coverage table', () => {
     const ctx = dom.getInternalVMContext();
 
     ctx.ZONES = ['tropical', 'temperate', 'polar'];
+    ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
     ctx.calculateAverageCoverage = () => 0.25;
     ctx.calculateZonalCoverage = (tf, zone) => {
       switch(zone){
