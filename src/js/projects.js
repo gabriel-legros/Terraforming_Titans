@@ -288,14 +288,24 @@ class ProjectManager extends EffectableEntity {
   }
 
   initializeProjects(projectParameters) {
+    const storyProjects = [];
+    const otherProjects = [];
+
     for (const projectName in projectParameters) {
       const projectData = projectParameters[projectName];
       const type = projectData.type || 'Project';
       const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
       const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
       this.projects[projectName] = new Ctor(projectData, projectName);
-      this.projectOrder.push(projectName);
+
+      if (projectData.category === 'story') {
+        storyProjects.push(projectName);
+      } else {
+        otherProjects.push(projectName);
+      }
     }
+
+    this.projectOrder = storyProjects.reverse().concat(otherProjects);
   }
 
   startProject(projectName) {
