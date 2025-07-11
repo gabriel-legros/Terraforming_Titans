@@ -91,7 +91,7 @@ function initializeLifeTerraformingDesignerUI() {
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Global</th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span class="info-tooltip-icon" title="not required to complete terraforming.  Can be ignored.  Or not.">&#9432;</span></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span class="info-tooltip-icon" title="Not required to complete terraforming.  Can be ignored.  Or not.">&#9432;</span></th>
                     </tr>
                 </thead>
                 <tbody>
