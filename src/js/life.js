@@ -330,7 +330,7 @@ class LifeDesign {
 class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
-    this.baseApplyDuration = 60000;
+    this.baseApplyDuration = 30000;
     this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
     this.tentativeDesign = null;
 
