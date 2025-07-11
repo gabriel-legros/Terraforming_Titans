@@ -1119,6 +1119,13 @@ class Terraforming extends EffectableEntity{
       return this.luminosity.modifiedSolarFlux / SOLAR_PANEL_BASE_LUMINOSITY;
     }
 
+    calculateZonalSolarPanelMultiplier(zone){
+      if(this.luminosity.zonalFluxes && typeof this.luminosity.zonalFluxes[zone] === 'number'){
+        return this.luminosity.zonalFluxes[zone] / SOLAR_PANEL_BASE_LUMINOSITY;
+      }
+      return this.calculateSolarPanelMultiplier();
+    }
+
     calculateWindTurbineMultiplier(){
       const pressureKPa = this.calculateTotalPressure();
       const pressureAtm = pressureKPa / KPA_PER_ATM;
@@ -1182,13 +1189,7 @@ class Terraforming extends EffectableEntity{
       addEffect(windTurbineEffect);
 
 
-      const lifeLuminosityEffect = {
-        effectId: 'luminosity',
-        target: 'lifeManager',
-        type: 'lifeGrowthMultiplier',
-        value: solarPanelMultiplier
-      };
-      addEffect(lifeLuminosityEffect);
+
 
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty()
       

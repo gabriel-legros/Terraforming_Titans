@@ -565,6 +565,8 @@ class LifeManager extends EffectableEntity {
           if (!terraforming.getMagnetosphereStatus()) {
               zonalMaxGrowthRate *= (0.5 + 0.5 * design.getRadiationMitigationRatio());
           }
+          // Apply luminosity bonus based on the zone
+          zonalMaxGrowthRate *= terraforming.calculateZonalSolarPanelMultiplier(zoneName);
           // Apply global growth multiplier effects
           zonalMaxGrowthRate *= this.getEffectiveLifeGrowthMultiplier();
 

@@ -31,7 +31,8 @@ describe('biomass decay without oxygen', () => {
         polar: { liquid: 1 }
       },
       getMagnetosphereStatus: () => true,
-      celestialParameters: { surfaceArea: 1, gravity: 1, radius: 1 }
+      celestialParameters: { surfaceArea: 1, gravity: 1, radius: 1 },
+      calculateZonalSolarPanelMultiplier: () => 1
     };
     ctx.resources = {
       surface: { biomass: { value: 0, modifyRate: jest.fn() } },
