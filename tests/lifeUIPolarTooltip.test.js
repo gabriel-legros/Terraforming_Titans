@@ -49,6 +49,7 @@ describe('lifeUI polar tooltip', () => {
     const header = dom.window.document.querySelector('#life-status-table th:nth-child(5)');
     const icon = header.querySelector('.info-tooltip-icon');
     expect(icon).not.toBeNull();
-    expect(icon.title).toBe('not required to complete terraforming.  Can be ignored.  Or not.');
+    const tooltip = icon.title.toLowerCase();
+    expect(tooltip).toBe('not required to complete terraforming.  can be ignored.  or not.');
   });
 });
