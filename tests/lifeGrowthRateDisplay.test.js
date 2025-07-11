@@ -49,10 +49,9 @@ describe('life growth rate display', () => {
     ctx.initializeLifeTerraformingDesignerUI();
     ctx.updateLifeUI();
 
-    const rateCell = dom.window.document.getElementById('growth-rate-global-status');
-    const capCell = dom.window.document.getElementById('growth-capacity-global-status');
-    expect(rateCell.textContent).toBe('0.80');
-    expect(capCell.textContent).toBe('100.0');
-    expect(rateCell.title).toContain('Base:');
+    const valueSpan = dom.window.document.getElementById('growth-rate-tropical-value');
+    const tooltip = dom.window.document.getElementById('growth-rate-tropical-tooltip');
+    expect(valueSpan.textContent).toBe('0.80');
+    expect(tooltip.title).toContain('Base:');
   });
 });
