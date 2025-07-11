@@ -11,19 +11,29 @@ body {
     visibility: hidden;
 }
 
-.tabs,
-.buildings-subtabs,
-.research-subtabs,
-.projects-subtabs,
-.terraforming-subtabs,
-.hope-subtabs
- {
+.tabs {
     display: flex;
     cursor: pointer;
     background-color: #333;
     padding: 10px;
     gap: 10px;
     margin-bottom: 10px;
+}
+
+.buildings-subtabs,
+.research-subtabs,
+.projects-subtabs,
+.terraforming-subtabs,
+.hope-subtabs {
+    display: flex;
+    cursor: pointer;
+    background-color: #333;
+    padding: 10px;
+    gap: 10px;
+    margin-bottom: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .tab,
