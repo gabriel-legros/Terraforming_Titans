@@ -486,7 +486,10 @@ function createWaterBox(row) {
     lifeBox.id = 'life-box';
     const lifeInfo = document.createElement('span');
     lifeInfo.classList.add('info-tooltip-icon');
-    lifeInfo.title = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.';
+    const tropPct = (getZonePercentage('tropical') * 100).toFixed(1);
+    const tempPct = (getZonePercentage('temperate') * 100).toFixed(1);
+    const polPct  = (getZonePercentage('polar') * 100).toFixed(1);
+    lifeInfo.title = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n- Tropical: ' + tropPct + '%\n- Temperate: ' + tempPct + '%\n- Polar: ' + polPct + '%';
     lifeInfo.innerHTML = '&#9432;';
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `

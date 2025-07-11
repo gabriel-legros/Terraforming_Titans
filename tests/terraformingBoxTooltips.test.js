@@ -12,6 +12,7 @@ describe('terraforming box tooltips', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.toDisplayTemperature = numbers.toDisplayTemperature;
     ctx.getTemperatureUnit = numbers.getTemperatureUnit;
+    ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
 
     ctx.resources = { atmospheric: { o2: { displayName: 'O2', value: 0 } } };
     ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };

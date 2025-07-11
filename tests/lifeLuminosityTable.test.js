@@ -10,6 +10,7 @@ describe('life luminosity table', () => {
     const ctx = dom.getInternalVMContext();
 
     ctx.ZONES = ['tropical', 'temperate', 'polar'];
+    ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
     ctx.calculateAverageCoverage = () => 0.25;
     ctx.calculateZonalCoverage = () => 0; // not needed
     ctx.terraforming = {
