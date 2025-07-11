@@ -137,12 +137,26 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="biomass-amount-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-amount-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
-                     <tr>
+                    <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Biomass Density (tons/m²)</td>
                         <td id="biomass-density-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Capacity Multiplier (%)</td>
+                        <td id="growth-capacity-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-capacity-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-capacity-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-capacity-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Growth Rate (%/s)</td>
+                        <td id="growth-rate-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-rate-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-rate-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="growth-rate-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                 </tbody>
             </table>
@@ -577,19 +591,39 @@ function updateLifeStatusTable() {
          const amountCell = document.getElementById(`biomass-amount-${zone}-status`);
          const densityCell = document.getElementById(`biomass-density-${zone}-status`);
 
-         if (zone === 'global') {
-             if(amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
-             // Use 1 decimal place for global density
-             if(densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
-         } else {
-             const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
-             const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
+        if (zone === 'global') {
+            if(amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
+            if(densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
+        } else {
+            const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
+            const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+            const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
 
-             if(amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
-              // Use 1 decimal place for zonal density
-             if(densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
-         }
+            if(amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
+            if(densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
+        }
+
+        const capacityCell = document.getElementById(`growth-capacity-${zone}-status`);
+        const growthCell = document.getElementById(`growth-rate-${zone}-status`);
+        const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
+        const zoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
+        const maxBiomassForZone = zoneArea * maxDensity;
+        const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
+
+        if(capacityCell) capacityCell.textContent = formatNumber(capacityMult * 100, false, 1);
+
+        if(growthCell){
+            const baseRate = designToCheck.photosynthesisEfficiency.value * PHOTOSYNTHESIS_RATE_PER_POINT;
+            const lumMult = zone === 'global'
+                ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
+                : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
+            const tempMult = growthTempResults[zone]?.multiplier || 0;
+            const radMult = terraforming.getMagnetosphereStatus() ? 1 : (0.5 + 0.5 * designToCheck.getRadiationMitigationRatio());
+            const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * otherMult;
+            growthCell.textContent = formatNumber(finalRate * 100, false, 2);
+            growthCell.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
+        }
     });
 }
 
