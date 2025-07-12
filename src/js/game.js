@@ -97,6 +97,7 @@ function create() {
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
+  const skipStoryInitialization = options.skipStoryInitialization || false;
   let savedAdvancedResearch = null;
   if (preserveManagers && resources && resources.colony && resources.colony.advancedResearch) {
     savedAdvancedResearch = {
@@ -173,7 +174,9 @@ function initializeGameState(options = {}) {
   milestonesManager = new MilestonesManager();
   if (!preserveManagers) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
-    storyManager.initializeStory();
+    if (!skipStoryInitialization) {
+      storyManager.initializeStory();
+    }
     spaceManager = new SpaceManager(planetParameters);
   }
 
