@@ -614,7 +614,7 @@ class StoryEvent {
             case "journal":
                  const text = joinLines(this.narrative);
                  if (this.title) {
-                    addJournalEntry([`${this.title}:`, text], this.id, { type: 'chapter', id: this.id });
+                    addJournalEntry([`${this.title}`, text], this.id, { type: 'chapter', id: this.id });
                  } else {
                     addJournalEntry(text, this.id, { type: 'chapter', id: this.id });
                  }

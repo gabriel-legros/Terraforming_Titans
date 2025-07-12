@@ -1398,7 +1398,7 @@ progressData.chapters.push(
     id: "chapter7.0",
     type: "journal",
     chapter: 7,
-    title: "Cold Dawn",
+    title: "Chapter 7: Cold Dawn",
     narrative: "Touchdown complete. Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: We see it, H.O.P.E. Solid landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.",
     prerequisites: ["chapter6.4"],
     objectives: [],
