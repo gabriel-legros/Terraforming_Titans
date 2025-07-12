@@ -249,7 +249,18 @@ const titanOverrides = {
     gravity: 1.35,
     radius: 2574.7,
     albedo: 0.22,
-    rotationPeriod: 382.7,
+  rotationPeriod: 382.7,
+  }
+};
+
+const callistoOverrides = {
+  name: 'Callisto',
+  celestialParameters: {
+    distanceFromSun: 5.2,
+    gravity: 1.24,
+    radius: 2410,
+    albedo: 0.2,
+    rotationPeriod: 400,
   }
 };
 

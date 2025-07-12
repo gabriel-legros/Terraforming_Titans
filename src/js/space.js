@@ -25,8 +25,16 @@ class SpaceManager {
             this.planetStatuses[key] = {
                 terraformed: false,
                 visited: false,
+                enabled: false, // visible/selectable in UI
                 // Add other statuses later if needed (e.g., colonized: false)
             };
+        });
+
+        // Mars and Titan are available from the start
+        ['mars', 'titan'].forEach(p => {
+            if (this.planetStatuses[p]) {
+                this.planetStatuses[p].enabled = true;
+            }
         });
     }
 
@@ -41,6 +49,29 @@ class SpaceManager {
      */
     isPlanetTerraformed(planetKey) {
         return this.planetStatuses[planetKey]?.terraformed || false;
+    }
+
+    /**
+     * Checks if a planet is enabled/visible.
+     * @param {string} planetKey
+     * @returns {boolean}
+     */
+    isPlanetEnabled(planetKey) {
+        return !!this.planetStatuses[planetKey]?.enabled;
+    }
+
+    /**
+     * Enable a planet so it appears in the UI.
+     * @param {string} planetKey
+     * @returns {boolean} True if the planet exists and was enabled.
+     */
+    enablePlanet(planetKey) {
+        if (this.planetStatuses[planetKey]) {
+            this.planetStatuses[planetKey].enabled = true;
+            return true;
+        }
+        console.warn(`SpaceManager: Cannot enable unknown planet ${planetKey}`);
+        return false;
     }
 
     /**
@@ -85,7 +116,7 @@ class SpaceManager {
             }
              // Ensure status object exists for the new current planet
              if (!this.planetStatuses[key]) {
-                  this.planetStatuses[key] = { terraformed: false, visited: false };
+                  this.planetStatuses[key] = { terraformed: false, visited: false, enabled: false };
                   console.warn(`SpaceManager: Initialized missing status for planet ${key}.`);
              }
            return true;
@@ -101,6 +132,14 @@ class SpaceManager {
      * @returns {boolean} - True if the planet was changed.
      */
     changeCurrentPlanet(key) {
+        if (!this.isPlanetEnabled(key)) {
+            console.warn(`SpaceManager: Planet ${key} is not enabled.`);
+            return false;
+        }
+        if (this.isPlanetTerraformed(key)) {
+            console.warn(`SpaceManager: Planet ${key} already terraformed.`);
+            return false;
+        }
         return this._setCurrentPlanetKey(key);
     }
 
@@ -166,6 +205,9 @@ class SpaceManager {
                     }
                     if (typeof savedData.planetStatuses[planetKey].visited === 'boolean') {
                         this.planetStatuses[planetKey].visited = savedData.planetStatuses[planetKey].visited;
+                    }
+                    if (typeof savedData.planetStatuses[planetKey].enabled === 'boolean') {
+                        this.planetStatuses[planetKey].enabled = savedData.planetStatuses[planetKey].enabled;
                     }
                 }
             });
