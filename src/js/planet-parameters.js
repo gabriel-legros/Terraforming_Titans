@@ -255,17 +255,6 @@ const titanOverrides = {
 
 const callistoOverrides = {
   name: 'Callisto',
-  celestialParameters: {
-    distanceFromSun: 5.2,
-    gravity: 1.24,
-    radius: 2410,
-    albedo: 0.2,
-    rotationPeriod: 400,
-  }
-};
-
-const callistoOverrides = {
-  name: 'Callisto',
 
   resources: {
     /* ---------- SURFACE ---------- */
