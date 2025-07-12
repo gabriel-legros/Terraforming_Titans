@@ -98,6 +98,12 @@ class Resource extends EffectableEntity {
   // Method to update the storage cap based on active structures
   updateStorageCap() {
     let newCap = this.baseCap; // Start with the base capacity
+    const bonus = this.activeEffects
+      ? this.activeEffects
+          .filter(e => e.type === 'baseStorageBonus')
+          .reduce((sum, e) => sum + e.value, 0)
+      : 0;
+    newCap += bonus;
     for (const structureName in structures) {
       const structure = structures[structureName];
       if (structure.storage && structure.active > 0) {

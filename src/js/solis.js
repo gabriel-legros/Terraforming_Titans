@@ -132,7 +132,19 @@ class SolisManager extends EffectableEntity {
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
-      resources.colony[key].increase(amount);
+      const res = resources.colony[key];
+      res.increase(amount);
+      if (typeof addEffect === 'function' && res.hasCap) {
+        addEffect({
+          target: 'resource',
+          resourceType: 'colony',
+          targetId: key,
+          type: 'baseStorageBonus',
+          value: up.purchases * amount,
+          effectId: `solisStorage-${key}`,
+          sourceId: 'solisShop'
+        });
+      }
     }
     return true;
   }
@@ -151,9 +163,21 @@ class SolisManager extends EffectableEntity {
 
     for (const key in RESOURCE_UPGRADE_AMOUNTS) {
       const upgrade = this.shopUpgrades[key];
-      if (upgrade && upgrade.purchases > 0 && resources && resources.colony &&
-          resources.colony[key] && typeof resources.colony[key].increase === 'function') {
-        resources.colony[key].increase(RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases);
+      const res = resources && resources.colony && resources.colony[key];
+      if (upgrade && upgrade.purchases > 0 && res && typeof res.increase === 'function') {
+        const amount = RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases;
+        res.increase(amount);
+        if (typeof addEffect === 'function' && res.hasCap) {
+          addEffect({
+            target: 'resource',
+            resourceType: 'colony',
+            targetId: key,
+            type: 'baseStorageBonus',
+            value: amount,
+            effectId: `solisStorage-${key}`,
+            sourceId: 'solisShop'
+          });
+        }
       }
     }
   }
