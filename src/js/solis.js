@@ -1,11 +1,11 @@
 const RESOURCE_UPGRADE_AMOUNTS = {
   metal: 100,
+  food: 100,
   components: 100,
   electronics: 100,
   glass: 100,
   water: 1000000,
   androids: 100,
-  food: 100
 };
 
 class SolisManager extends EffectableEntity {
@@ -32,12 +32,12 @@ class SolisManager extends EffectableEntity {
     this.shopUpgrades = {
       funding: { baseCost: 1, purchases: 0 },
       metal: { baseCost: 1, purchases: 0 },
+      food: { baseCost: 1, purchases: 0 },
       components: { baseCost: 1, purchases: 0 },
       electronics: { baseCost: 1, purchases: 0 },
       glass: { baseCost: 1, purchases: 0 },
       water: { baseCost: 1, purchases: 0 },
-      androids: { baseCost: 10, purchases: 0 },
-      food: { baseCost: 1, purchases: 0 }
+      androids: { baseCost: 10, purchases: 0 }
     };
   }
 

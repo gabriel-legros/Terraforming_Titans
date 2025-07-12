@@ -4,12 +4,12 @@ const shopElements = {};
 const shopDescriptions = {
   funding: 'Increase funding by 1',
   metal: 'Increase starting metal by 100',
+  food: 'Increase starting food by 100',
   components: 'Increase starting components by 100',
   electronics: 'Increase starting electronics by 100',
   glass: 'Increase starting glass by 100',
   water: 'Increase starting water by 1M',
   androids: 'Increase starting androids by 100',
-  food: 'Increase starting food by 100'
 };
 
 function showSolisTab() {
@@ -123,7 +123,7 @@ function initializeSolisUI() {
     title.textContent = 'Solis Shop';
     shopContainer.insertBefore(title, container);
     
-    ['funding', 'metal', 'components', 'electronics', 'glass', 'water', 'androids', 'food'].forEach(key => {
+    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids'].forEach(key => {
       container.appendChild(createShopItem(key));
     });
   }
