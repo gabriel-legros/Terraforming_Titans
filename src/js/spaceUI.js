@@ -60,6 +60,7 @@ function updateSpaceUI() {
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
         if (!data || !data.celestialParameters || !data.name) return; // Skip bad data
+        if (!_spaceManagerInstance.isPlanetEnabled(key)) return; // hide if disabled
 
         const celestial = data.celestialParameters;
         const planetDiv = document.createElement('div');
@@ -99,16 +100,14 @@ function updateSpaceUI() {
             selectButton.textContent = 'Current Location';
             selectButton.disabled = true;
             selectButton.title = `You are currently at ${data.name}.`;
+        } else if (isTerraformed) {
+            selectButton.textContent = 'Already Terraformed';
+            selectButton.disabled = true;
+            selectButton.title = `${data.name} has already been terraformed.`;
         } else {
-            // Disable button if the target planet is already terraformed? (Gameplay decision)
-            // if (isTerraformed) {
-            //    selectButton.textContent = 'Already Terraformed';
-            //    selectButton.disabled = true;
-            //} else {
-                selectButton.textContent = `Select ${data.name}`;
-                selectButton.disabled = !canChangePlanet; // Enable only if current planet terraformed
-                selectButton.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
-            //}
+            selectButton.textContent = `Select ${data.name}`;
+            selectButton.disabled = !canChangePlanet;
+            selectButton.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
         }
         planetDiv.appendChild(selectButton);
         optionsContainer.appendChild(planetDiv);
@@ -136,6 +135,14 @@ function selectPlanet(planetKey){
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
     if(!_spaceManagerInstance.isPlanetTerraformed(currentKey)) {
         console.warn('Cannot travel until current planet is terraformed.');
+        return;
+    }
+    if(!_spaceManagerInstance.isPlanetEnabled(planetKey)) {
+        console.warn('Planet not yet available.');
+        return;
+    }
+    if(_spaceManagerInstance.isPlanetTerraformed(planetKey)) {
+        console.warn('Target planet already terraformed.');
         return;
     }
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;

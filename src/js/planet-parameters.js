@@ -249,7 +249,18 @@ const titanOverrides = {
     gravity: 1.35,
     radius: 2574.7,
     albedo: 0.22,
-    rotationPeriod: 382.7,
+  rotationPeriod: 382.7,
+  }
+};
+
+const callistoOverrides = {
+  name: 'Callisto',
+  celestialParameters: {
+    distanceFromSun: 5.2,
+    gravity: 1.24,
+    radius: 2410,
+    albedo: 0.2,
+    rotationPeriod: 400,
   }
 };
 
@@ -257,7 +268,8 @@ const titanOverrides = {
 
 const planetSpecificOverrides = {
   mars: marsOverrides,
-  titan: titanOverrides
+  titan: titanOverrides,
+  callisto: callistoOverrides
   // Add future planets here by defining their override objects
 };
 
@@ -288,7 +300,8 @@ function getPlanetParameters(planetName) {
 
 const planetParameters = {
     mars: getPlanetParameters('mars'),
-    titan: getPlanetParameters('titan')
+    titan: getPlanetParameters('titan'),
+    callisto: getPlanetParameters('callisto')
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
