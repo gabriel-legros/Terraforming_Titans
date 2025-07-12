@@ -1,4 +1,5 @@
 #Instructions
+Any major update to a feature present in this file should also be summarized and documented in this file (AGENTS.md).
 All imports and exports need to be done with the fact this game will be run in a browser from index.html in mind.
 - Story projects added in **progress-data.js** must be placed close to the chapter where they unlock.
 
