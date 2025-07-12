@@ -526,6 +526,22 @@ class StoryManager {
              const effectKey = JSON.stringify(effect);
              if (!effect.oneTimeFlag) { uniqueEffectsToApply.set(effectKey, effect); }
          });
+
+         // Ensure completed chapter rewards are applied even if not saved
+         this.completedEventIds.forEach(eventId => {
+             const event = this.findEventById(eventId);
+             if (!event || event.type !== 'journal' || !Array.isArray(event.reward)) return;
+             event.reward.forEach(effect => {
+                 if (effect && !effect.oneTimeFlag) {
+                     const effectKey = JSON.stringify(effect);
+                     if (!uniqueEffectsToApply.has(effectKey)) {
+                         uniqueEffectsToApply.set(effectKey, effect);
+                         this.appliedEffects.push(effect);
+                     }
+                 }
+             });
+         });
+
          uniqueEffectsToApply.forEach(effect => {
              addEffect(effect);
              // console.log(`Reapplied effect on load: ${effect.type} to ${effect.targetId}`);
