@@ -117,9 +117,8 @@ to be redrawn so elements bind to the new instances.
   back to Mars and internally invokes `initializeGameState()`. This function
   rebuilds resource displays, building/colony buttons and other UI sections.
 - **Loading a save file** – `loadGame()` parses the saved state then calls
-  `initializeGameState({preserveManagers: true})` to refresh UI elements while
-  keeping existing managers and effects. It then applies the loaded data to the
-  newly created objects.
+  `initializeGameState()` to rebuild managers and UI from scratch before
+  applying the loaded data.
 - **Moving to another planet** – `selectPlanet(key)` in `spaceUI.js` first asks
   the `SpaceManager` to change the current planet, then calls
   `initializeGameState({preserveManagers: true})` followed by `updateSpaceUI()`
