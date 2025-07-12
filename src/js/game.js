@@ -176,8 +176,8 @@ function initializeGameState(options = {}) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
+      spaceManager = new SpaceManager(planetParameters);
     }
-    spaceManager = new SpaceManager(planetParameters);
   }
 
   // Regenerate UI elements to bind to new objects
