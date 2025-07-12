@@ -341,6 +341,23 @@ const projectParameters = {
       ]
     }
   },
+  dysonSwarmReceiver : {
+    type: 'DysonSwarmReceiverProject',
+    name : 'Dyson Swarm Receiver',
+    category : 'mega',
+    cost: {
+      colony: {
+        metal: 10000000,
+        components: 1000000,
+        electronics: 100000
+      }
+    },
+    duration: 300000,
+    description: 'Construct the ground-based receiver array for the Dyson Swarm. Currently provides no benefits.',
+    repeatable: false,
+    unlocked: false,
+    attributes: { }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",
