@@ -189,7 +189,7 @@ function initializeLifeTerraformingDesignerUI() {
       const attributeOrder = [
           'minTemperatureTolerance', 'maxTemperatureTolerance',
           'optimalGrowthTemperature', 'growthTemperatureTolerance',
-          'photosynthesisEfficiency', 'moistureEfficiency',
+          'photosynthesisEfficiency',
           'radiationTolerance', 'toxicityTolerance',
           'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
       ];
@@ -456,7 +456,7 @@ function updateLifeUI() {
       const attributeOrder = [
            'minTemperatureTolerance', 'maxTemperatureTolerance',
            'optimalGrowthTemperature', 'growthTemperatureTolerance',
-           'photosynthesisEfficiency', 'moistureEfficiency',
+           'photosynthesisEfficiency',
            'radiationTolerance', 'toxicityTolerance',
            'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
         ];

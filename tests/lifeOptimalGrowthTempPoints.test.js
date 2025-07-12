@@ -48,7 +48,7 @@ describe('lifeUI optimal growth temperature spending', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0);
     ctx.lifeDesigner.tentativeDesign.copyFrom(ctx.lifeDesigner.currentDesign);
     ctx.lifeDesigner.addAndReplace({ type: 'lifeDesignPointBonus', value: 10, effectId: 'test', sourceId: 'test' });
 
