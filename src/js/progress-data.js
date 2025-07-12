@@ -1393,7 +1393,7 @@ progressData.chapters.push(
   /* -- CHAPTER 7 : Cold Dawn -- */
   {
     id: "chapter7.0",
-    type: "pop-up",
+    type: "journal",
     chapter: 7,
     parameters: {
       title: "Cold Dawn",
