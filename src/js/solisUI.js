@@ -3,13 +3,13 @@ let solisUIInitialized = false;
 const shopElements = {};
 const shopDescriptions = {
   funding: 'Increase funding by 1',
-  metal: 'Increase starting metal by 100',
-  food: 'Increase starting food by 100',
-  components: 'Increase starting components by 100',
-  electronics: 'Increase starting electronics by 100',
-  glass: 'Increase starting glass by 100',
-  water: 'Increase starting water by 1M',
-  androids: 'Increase starting androids by 100',
+  metal: 'Increase starting metal and base storage by 100',
+  food: 'Increase starting food and base storage by 100',
+  components: 'Increase starting components and base storage by 100',
+  electronics: 'Increase starting electronics and base storage by 100',
+  glass: 'Increase starting glass and base storage by 100',
+  water: 'Increase starting water and base storage by 1M',
+  androids: 'Increase starting androids and base storage by 100',
 };
 
 function showSolisTab() {

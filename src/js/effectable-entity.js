@@ -151,6 +151,9 @@ class EffectableEntity {
         case 'fundingBonus':
           this.applyFundingBonus(effect);
           break;
+        case 'baseStorageBonus':
+          this.applyBaseStorageBonus(effect);
+          break;
         case 'globalCostReduction':
           this.applyGlobalCostReduction(effect);
           break;
@@ -250,11 +253,17 @@ class EffectableEntity {
       }
     }
 
-    applyFundingBonus(effect) {
-      if (typeof this.fundingRate !== 'undefined' && typeof this.baseFundingRate !== 'undefined') {
-        this.fundingRate = this.baseFundingRate + effect.value;
-      }
+  applyFundingBonus(effect) {
+    if (typeof this.fundingRate !== 'undefined' && typeof this.baseFundingRate !== 'undefined') {
+      this.fundingRate = this.baseFundingRate + effect.value;
     }
+  }
+
+  applyBaseStorageBonus(effect) {
+    if (typeof this.updateStorageCap === 'function') {
+      this.updateStorageCap();
+    }
+  }
 
     applyGlobalCostReduction(effect) {
       const multiplier = 1 - effect.value;
