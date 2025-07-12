@@ -57,6 +57,7 @@ The Dyson Swarm project begins with research into a large orbital array. An adva
 - **population.js** together with colony modules controls growth, worker allocation and happiness.
 - **ore-scanning.js** searches for underground resource deposits using adjustable scanning strength.
 - **warning.js** displays urgent alerts like colonist deaths or extreme greenhouse conditions.
+- Sustain costs for active projects now register as 'project' consumption in resource rate tooltips.
 
 # Effectable Entities Design
 
