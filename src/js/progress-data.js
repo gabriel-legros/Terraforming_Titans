@@ -1399,7 +1399,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 7,
     title: "Chapter 7: Cold Dawn",
-    narrative: "Touchdown complete. Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: We see it, H.O.P.E. Solid landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.",
+    narrative: "Touchdown complete. Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: 'We see it, H.O.P.E. Solid landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
     prerequisites: ["chapter6.4"],
     objectives: [],
     reward: []
@@ -1408,7 +1408,7 @@ progressData.chapters.push(
     id: "chapter7.1",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  MARY: H.O.P.E., I'm patching you into a one-time, quantum-scrambled channel. Dr. Evelyn Hart has a proposal. It's... ambitious.\n  DR. HART: H.O.P.E., before the... incident... we were working on a climate control project. A Planetary Thruster to nudge Earth's orbit. The project was abandoned, but not before we built and tested the foundations on Callisto. We're resurrecting it as 'Operation Sidestep.' By creating a series of random, coordinated micro-burns from here, Mars, and Titan, we can shift our barycenter just enough to make the enemy's next attack miss. We must walk without rhythm, so to speak. Absolute secrecy is paramount. All public-facing work must be disguised as 'Heat-Sink Upgrades.'\nNew directive received. Covert operation 'Sidestep' initiated. Public designation: 'Heat-Sink Upgrades'.",
+    narrative: "Receiving transmission...\n  MARY: 'H.O.P.E., I'm patching you into a one-time, quantum-scrambled channel. Dr. Evelyn Hart has a proposal. It's... ambitious.'\n  DR. HART: 'H.O.P.E., before the... incident... we were working on a climate control project. A Planetary Thruster to nudge Earth's orbit. The project was abandoned, but not before we built and tested the foundations on Callisto. We're resurrecting it as 'Operation Sidestep.' By creating a series of random, coordinated micro-burns from here, Mars, and Titan, we can shift our barycenter just enough to make the enemy's next attack miss. We must walk without rhythm, so to speak. Absolute secrecy is paramount. All public-facing work must be disguised as Heat-Sink Upgrades.'\nNew directive received. Covert operation 'Sidestep' initiated. Public designation: 'Heat-Sink Upgrades'.",
     prerequisites: ["chapter7.0"],
     objectives: [],
     reward: [
