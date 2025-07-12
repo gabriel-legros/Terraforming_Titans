@@ -4,6 +4,8 @@
 let _spaceManagerInstance = null;
 // Cache of DOM nodes for each planet keyed by planet id
 const planetUIElements = {};
+// Track whether the space UI has been generated already
+let spaceUIInitialized = false;
 
 /**
  * Initializes the Space Tab UI elements and stores the SpaceManager instance.
@@ -16,6 +18,13 @@ function initializeSpaceUI(spaceManager) {
     }
     _spaceManagerInstance = spaceManager; // Store the instance for later use
     console.log("Initializing Space UI with SpaceManager reference.");
+
+    // If the UI has already been generated, just update with the new instance
+    if (spaceUIInitialized) {
+        updateSpaceUI();
+        return;
+    }
+    spaceUIInitialized = true;
 
     const optionsContainer = document.getElementById('planet-selection-options');
     const statusContainer = document.getElementById('travel-status');
