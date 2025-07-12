@@ -1041,7 +1041,18 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },   
+      },
+      {
+        id: 'dyson_swarm_receiver',
+        name: 'Dyson Swarm Receiver',
+        description: 'Enables construction of a receiver for orbital solar collectors.',
+        cost: { research: 10000000000 },
+        prerequisites: [],
+        requiredFlags: ['dysonSwarmUnlocked'],
+        effects: [
+          { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' }
+        ]
+      },
     ],
     advanced: [
       {
@@ -1141,6 +1152,21 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'dayNightActivity',
             value: false
+          }
+        ]
+      },
+      {
+        id: 'dyson_swarm_concept',
+        name: 'Dyson Swarm Concept',
+        description: 'Opens research into building massive solar collectors in space.',
+        cost: { advancedResearch: 30000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'dysonSwarmUnlocked',
+            value: true
           }
         ]
       }

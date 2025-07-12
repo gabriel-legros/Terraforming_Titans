@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   updateStoryProjectsVisibility();
+  updateMegaProjectsVisibility();
 });
 
 function renderProjects() {
@@ -42,6 +43,7 @@ function renderProjects() {
 
   updateEmptyProjectMessages();
   updateStoryProjectsVisibility();
+  updateMegaProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -646,6 +648,30 @@ function updateStoryProjectsVisibility() {
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return p.category === 'story' && p.unlocked && planetOk;
+    });
+  }
+
+  if (visible) {
+    subtab.classList.remove('hidden');
+    content.classList.remove('hidden');
+  } else {
+    subtab.classList.add('hidden');
+    content.classList.add('hidden');
+  }
+}
+
+function updateMegaProjectsVisibility() {
+  const subtab = document.querySelector('.projects-subtab[data-subtab="mega-projects"]');
+  const content = document.getElementById('mega-projects');
+  if (!subtab || !content) return;
+
+  let visible = false;
+  if (projectManager && projectManager.projects) {
+    visible = Object.values(projectManager.projects).some(p => {
+      const planetOk = !p.attributes.planet ||
+        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
+      return p.category === 'mega' && p.unlocked && planetOk;
     });
   }
 
