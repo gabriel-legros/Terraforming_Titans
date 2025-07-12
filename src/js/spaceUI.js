@@ -2,6 +2,8 @@
 
 // Store reference to the SpaceManager instance
 let _spaceManagerInstance = null;
+// Cache of DOM nodes for each planet keyed by planet id
+const planetUIElements = {};
 
 /**
  * Initializes the Space Tab UI elements and stores the SpaceManager instance.
@@ -22,10 +24,54 @@ function initializeSpaceUI(spaceManager) {
         console.error("Space UI critical element '#planet-selection-options' not found.");
         return;
     }
-     if (statusContainer) {
-         statusContainer.innerHTML = "";
-         statusContainer.style.display = 'none'; // Hide travel status
-     }
+    if (statusContainer) {
+        statusContainer.innerHTML = '';
+        statusContainer.style.display = 'none'; // Hide travel status
+    }
+
+    const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
+    if (!allPlanetData) {
+        optionsContainer.innerHTML = '<p style="color: red;">Error: Planet data unavailable.</p>';
+        return;
+    }
+
+    const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
+    Object.entries(allPlanetData).forEach(([key, data]) => {
+        if (!data || !data.celestialParameters || !data.name) return;
+        const celestial = data.celestialParameters;
+
+        const planetDiv = document.createElement('div');
+        planetDiv.classList.add('planet-option');
+        planetDiv.dataset.planetKey = key;
+
+        const nameHeading = document.createElement('h3');
+        planetDiv.appendChild(nameHeading);
+
+        const statsDiv = document.createElement('div');
+        statsDiv.classList.add('planet-stats');
+        statsDiv.innerHTML = `
+            <p><strong>Distance:</strong> ${celestial.distanceFromSun} AU</p>
+            <p><strong>Gravity:</strong> ${celestial.gravity} m/s²</p>
+            <p><strong>Radius:</strong> ${format(celestial.radius)} km</p>
+            <p><strong>Albedo:</strong> ${celestial.albedo}</p>
+            <p><strong>Status:</strong> <span class="planet-status"></span></p>
+        `;
+        planetDiv.appendChild(statsDiv);
+
+        const selectButton = document.createElement('button');
+        selectButton.classList.add('select-planet-button');
+        selectButton.dataset.planetKey = key;
+        planetDiv.appendChild(selectButton);
+
+        optionsContainer.appendChild(planetDiv);
+
+        planetUIElements[key] = {
+            container: planetDiv,
+            nameHeading,
+            statusSpan: statsDiv.querySelector('.planet-status'),
+            button: selectButton
+        };
+    });
 
     updateSpaceUI(); // Perform the initial draw using the stored instance
 }
@@ -38,79 +84,43 @@ function initializeSpaceUI(spaceManager) {
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
 
-    const optionsContainer = document.getElementById('planet-selection-options');
     const statusContainer = document.getElementById('travel-status');
-    if (!optionsContainer) return; // Guard clause
-
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
+    if (!allPlanetData) return;
+
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
+    const canChangePlanet = _spaceManagerInstance.isPlanetTerraformed(currentKey);
 
-    if (!allPlanetData) {
-        optionsContainer.innerHTML = '<p style="color: red;">Error: Planet data unavailable.</p>';
-        return;
-    }
-
-    const canChangePlanet = _spaceManagerInstance.isPlanetTerraformed(_spaceManagerInstance.getCurrentPlanetKey());
-
-    optionsContainer.innerHTML = ''; // Clear
     if (statusContainer) {
         statusContainer.style.display = canChangePlanet ? 'none' : 'block';
         statusContainer.textContent = canChangePlanet ? '' : 'Current planet must be fully terraformed before traveling.';
     }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
-        if (!data || !data.celestialParameters || !data.name) return; // Skip bad data
-        if (!_spaceManagerInstance.isPlanetEnabled(key)) return; // hide if disabled
+        const ui = planetUIElements[key];
+        if (!ui) return;
 
-        const celestial = data.celestialParameters;
-        const planetDiv = document.createElement('div');
-        planetDiv.classList.add('planet-option');
-        planetDiv.dataset.planetKey = key;
+        const isEnabled = _spaceManagerInstance.isPlanetEnabled(key);
+        ui.container.style.display = isEnabled ? 'block' : 'none';
 
-        // --- Get Status from Manager ---
-        const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(key); // <<< Check status
-
-        // Name - Add indication if terraformed
-        const nameHeading = document.createElement('h3');
-        nameHeading.textContent = data.name + (isTerraformed ? " (Terraformed)" : ""); // <<< Indicate status
-        if (isTerraformed) {
-            nameHeading.style.color = '#4CAF50'; // Example: Green text if terraformed
-        }
-        planetDiv.appendChild(nameHeading);
-
-        // Stats (same as before)
-        const statsDiv = document.createElement('div');
-        statsDiv.classList.add('planet-stats');
-        const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
-        statsDiv.innerHTML = `
-            <p><strong>Distance:</strong> ${celestial.distanceFromSun} AU</p>
-            <p><strong>Gravity:</strong> ${celestial.gravity} m/s²</p>
-            <p><strong>Radius:</strong> ${format(celestial.radius)} km</p>
-            <p><strong>Albedo:</strong> ${celestial.albedo}</p>
-            <p><strong>Status:</strong> ${isTerraformed ? '<span style="color: #4CAF50;">Terraforming Complete</span>' : 'Terraforming pending'}</p>
-        `; // <<< Added Status line
-        planetDiv.appendChild(statsDiv);
-
-        // Button (logic remains the same - disable based on current location or future travel state)
-        const selectButton = document.createElement('button');
-        selectButton.classList.add('select-planet-button');
-        selectButton.dataset.planetKey = key;
+        const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
+        ui.nameHeading.textContent = data.name + (isTerraformed ? ' (Terraformed)' : '');
+        ui.nameHeading.style.color = isTerraformed ? '#4CAF50' : '';
+        ui.statusSpan.innerHTML = isTerraformed ? '<span style="color: #4CAF50;">Terraforming Complete</span>' : 'Terraforming pending';
 
         if (key === currentKey) {
-            selectButton.textContent = 'Current Location';
-            selectButton.disabled = true;
-            selectButton.title = `You are currently at ${data.name}.`;
+            ui.button.textContent = 'Current Location';
+            ui.button.disabled = true;
+            ui.button.title = `You are currently at ${data.name}.`;
         } else if (isTerraformed) {
-            selectButton.textContent = 'Already Terraformed';
-            selectButton.disabled = true;
-            selectButton.title = `${data.name} has already been terraformed.`;
+            ui.button.textContent = 'Already Terraformed';
+            ui.button.disabled = true;
+            ui.button.title = `${data.name} has already been terraformed.`;
         } else {
-            selectButton.textContent = `Select ${data.name}`;
-            selectButton.disabled = !canChangePlanet;
-            selectButton.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
+            ui.button.textContent = `Select ${data.name}`;
+            ui.button.disabled = !canChangePlanet;
+            ui.button.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
         }
-        planetDiv.appendChild(selectButton);
-        optionsContainer.appendChild(planetDiv);
     });
 }
 
