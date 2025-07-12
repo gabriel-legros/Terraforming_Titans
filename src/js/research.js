@@ -151,6 +151,19 @@ class Research {
       }
     }
 
+    // Reapply effects for all completed research. Used when game state is
+    // recreated but the research manager persists (e.g. travelling to a new
+    // planet).
+    reapplyEffects() {
+      for (const category in this.researches) {
+        this.researches[category].forEach((research) => {
+          if (research.isResearched) {
+            this.applyResearchEffects(research);
+          }
+        });
+      }
+    }
+
   // Apply research effects to the target
   applyResearchEffects(research) {
     research.effects.forEach((effect) => {
@@ -161,18 +174,22 @@ class Research {
   // Remove research effects from the target
   removeResearchEffects(research) {
     research.effects.forEach((effect) => {
-      if (effect.target === 'building') {
-        const building = buildings[effect.targetId];
-        if (building) {
-          building.removeEffect(research.id);
-        }
-      } else if (effect.target === 'projectManager') {
-        // Remove effect from the project manager
-        projectManager.removeEffect(research.id);
-        console.log(`Removed effect from ProjectManager with source ID: ${research.id}`);
-      }
-      // Other target types (e.g., resources, colonies) can be handled here
+      removeEffect({ ...effect, sourceId: research.id });
     });
+  }
+
+  // Reset all non-advanced researches back to incomplete
+  resetRegularResearch() {
+    for (const category in this.researches) {
+      if (category === 'advanced') continue;
+      this.researches[category].forEach((research) => {
+        if (research.isResearched) {
+          this.removeResearchEffects(research);
+          research.isResearched = false;
+        }
+      });
+    }
+    this.sortAllResearches();
   }
 }
 
