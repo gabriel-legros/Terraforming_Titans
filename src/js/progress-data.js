@@ -1250,6 +1250,29 @@ progressData.chapters.push(
     objectives: [
 
     ],
+    reward: [
+      {
+        target: 'spaceManager',
+        targetId: 'callisto',
+        type: 'enable'
+      }
+    ]
+  }
+);
+
+progressData.chapters.push(
+  {
+    id: "chapter6.4",
+    type: "journal",
+    chapter: 6,
+    narrative: "Callisto is the next designation for terraforming. Prepare for deployment.",
+    prerequisites: ["chapter6.3b"],
+    objectives: [
+      {
+        type: 'currentPlanet',
+        planetId: 'callisto'
+      }
+    ],
     reward: []
   }
 );

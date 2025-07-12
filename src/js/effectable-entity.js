@@ -508,7 +508,8 @@ function addOrRemoveEffect(effect, action) {
     'lifeManager': lifeManager,
     'oreScanner': oreScanner,
     'researchManager' : researchManager,
-    'solisManager' : solisManager
+    'solisManager' : solisManager,
+    'spaceManager' : spaceManager
   };
 
   if (effect.target in targetHandlers) {
