@@ -51,7 +51,7 @@ describe('LifeDesigner cancelDeployment', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0);
 
     ctx.lifeDesigner.confirmDesign();
     expect(ctx.lifeDesigner.isActive).toBe(true);

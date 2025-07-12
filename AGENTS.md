@@ -34,6 +34,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 
 - **skills.js** and **skillsUI.js** implement the H.O.P.E. skill tree which grants global bonuses as skill points are earned.
 - **life.js** with **lifeUI.js** lets players design custom lifeforms by spending design points on attributes like temperature tolerance and radiation resistance.
+- The moisture efficiency stat has been removed. Life now only grows when liquid water is present.
 - **space.js** and **spaceUI.js** handle interplanetary travel once a planet is fully terraformed. `initializeSpaceUI` now renders planet entries once and `updateSpaceUI` simply toggles visibility and button text using SpaceManager status. The initializer checks for existing elements so loading a save doesn't duplicate the planet options.
 - `game.js` now calls `updateSpaceUI()` each tick so newly enabled planets become visible right away.
 - **gold-asteroid.js** spawns a temporary event that awards large production multipliers when clicked.

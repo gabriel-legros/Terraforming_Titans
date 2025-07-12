@@ -42,7 +42,7 @@ describe('lifeUI polar tooltip', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0);
 
     ctx.initializeLifeTerraformingDesignerUI();
 

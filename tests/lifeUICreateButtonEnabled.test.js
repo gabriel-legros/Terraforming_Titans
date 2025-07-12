@@ -42,7 +42,7 @@ describe('lifeUI create button re-enabled', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0);
 
     ctx.initializeLifeTerraformingDesignerUI();
     ctx.updateLifeUI();

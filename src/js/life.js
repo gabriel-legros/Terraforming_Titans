@@ -39,10 +39,6 @@ class LifeAttribute {
         return (this.value * 0.5).toFixed(2) + 'K';
       case 'photosynthesisEfficiency':
         return (0.00008*this.value).toFixed(5); // Adjust as needed
-      case 'moistureEfficiency':
-        // Displays the required atmospheric water pressure (Pa) used as a fallback when liquid water is unavailable.
-        const requiredPaFallback = 1000 / (1 + this.value);
-        return requiredPaFallback.toFixed(1) + ' Pa';
       case 'radiationTolerance':
         return this.value * 4 + '%';
       case 'toxicityTolerance':
@@ -68,7 +64,6 @@ class LifeDesign {
   constructor(minTemperatureTolerance,
     maxTemperatureTolerance,
     photosynthesisEfficiency,
-    moistureEfficiency,
     radiationTolerance,
     toxicityTolerance,
     invasiveness,
@@ -87,7 +82,6 @@ class LifeDesign {
     );
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
-    this.moistureEfficiency = new LifeAttribute('moistureEfficiency', moistureEfficiency, 'Moisture Efficiency', 'Reduces atmospheric water vapor pressure needed for growth when liquid water is unavailable (fallback with penalty).', 30);
     this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
     this.toxicityTolerance = new LifeAttribute('toxicityTolerance', toxicityTolerance, 'Toxicity Tolerance', 'Resistance to environmental toxins.', 10);
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
@@ -140,7 +134,6 @@ class LifeDesign {
       optimalGrowthTemperature: this.optimalGrowthTemperature.value,
       growthTemperatureTolerance: this.growthTemperatureTolerance.value,
       photosynthesisEfficiency: this.photosynthesisEfficiency.value,
-      moistureEfficiency: this.moistureEfficiency.value,
       radiationTolerance: this.radiationTolerance.value,
       toxicityTolerance: this.toxicityTolerance.value,
       invasiveness: this.invasiveness.value,
@@ -155,7 +148,6 @@ class LifeDesign {
       data.minTemperatureTolerance,
       data.maxTemperatureTolerance,
       data.photosynthesisEfficiency,
-      data.moistureEfficiency,
       data.radiationTolerance,
       data.toxicityTolerance,
       data.invasiveness,
@@ -245,36 +237,19 @@ class LifeDesign {
       return growableZones;
   } // Correct closing brace for the getGrowableZones method
 
-  // Checks if sufficient moisture (liquid or atmospheric fallback) is available for growth in a specific zone.
+  // Checks if sufficient moisture (liquid only) is available for growth in a specific zone.
   moistureCheckZone(zoneName) {
-      if (!terraforming || !terraforming.zonalWater || !resources.atmospheric) {
+      if (!terraforming || !terraforming.zonalWater) {
           console.error("Terraforming or resource data not available for moisture check in zone:", zoneName);
           return { pass: false, reason: "Data unavailable" };
       }
 
-      // Check for liquid water first
       const liquidWater = terraforming.zonalWater[zoneName]?.liquid || 0;
-      if (liquidWater > 1e-9) { // Use a small threshold
-          return { pass: true, reason: null }; // Sufficient liquid water
+      if (liquidWater > 1e-9) {
+          return { pass: true, reason: null };
       }
 
-      // If no liquid water, check atmospheric water fallback requirement
-      const moistureEfficiencyValue = this.moistureEfficiency.value;
-      const vapReqPa = 1000 / (1 + moistureEfficiencyValue); // Required atmospheric pressure for fallback
-      const waterAmount = resources.atmospheric['atmosphericWater']?.value || 0;
-      const currentWaterVaporPressurePa = calculateAtmosphericPressure(
-          waterAmount,
-          terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
-      );
-
-      const pass = currentWaterVaporPressurePa >= vapReqPa;
-      let reason = null;
-      if (!pass) {
-          reason = `Need liquid water (preferred) or ${formatNumber(vapReqPa, false, 1)} Pa water vapor (fallback), have ${formatNumber(currentWaterVaporPressurePa, false, 1)} Pa`;
-      }
-
-      return { pass: pass, reason: reason }; // Pass if atmospheric fallback is sufficient
+      return { pass: false, reason: "Need liquid water" };
   }
 
   // Returns an object indicating moisture status for all zones
@@ -331,7 +306,7 @@ class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
     this.baseApplyDuration = 30000;
-    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
+    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
     this.tentativeDesign = null;
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
@@ -385,7 +360,6 @@ class LifeDesigner extends EffectableEntity {
     minTemperatureTolerance,
     maxTemperatureTolerance,
     photosynthesisEfficiency,
-    moistureEfficiency,
     radiationTolerance,
     toxicityTolerance,
     invasiveness,
@@ -396,7 +370,6 @@ class LifeDesigner extends EffectableEntity {
       minTemperatureTolerance,
       maxTemperatureTolerance,
       photosynthesisEfficiency,
-      moistureEfficiency,
       radiationTolerance,
       toxicityTolerance,
       invasiveness,
@@ -539,7 +512,6 @@ class LifeManager extends EffectableEntity {
   updateLife(deltaTime) {
       const design = lifeDesigner.currentDesign;
       const baseGrowthRate = design.getBaseGrowthRate();
-      const moistureEfficiencyValue = design.moistureEfficiency.value; // Get efficiency value
       const survivableTempZones = design.temperatureSurvivalCheck(); // Array of zone names
       const growableZones = design.getGrowableZones(); // Array of zone names where temp & moisture are OK
 
@@ -600,44 +572,15 @@ class LifeManager extends EffectableEntity {
               // --- Moisture Check and Growth Limitation ---
               const globalCO2 = resources.atmospheric['carbonDioxide']?.value || 0;
               const availableLiquidWater = terraforming.zonalWater[zoneName]?.liquid || 0;
-              let growthPenalty = 1.0; // 1.0 means no penalty
-              // let usedLiquidWater = false; // Moved declaration to loop start
-
               if (availableLiquidWater > 1e-9) {
-                  // --- Growth using Liquid Water ---
                   usedLiquidWater = true;
                   const maxGrowthByLiquidWater = (availableLiquidWater / waterRatio) * biomassRatio;
                   const maxGrowthByCO2 = (globalCO2 / co2Ratio) * biomassRatio;
                   biomassChange = Math.min(potentialBiomassIncrease, maxGrowthByCO2, maxGrowthByLiquidWater);
                   waterChange = -(biomassChange / biomassRatio) * waterRatio;
-                  // Liquid water consumption applied later
               } else {
-                  // --- Attempt Growth using Atmospheric Water ---
-                  usedLiquidWater = false;
-                  const vapReqPa = 1000 / (1 + moistureEfficiencyValue);
-                  const currentAtmoWater = resources.atmospheric['atmosphericWater']?.value || 0;
-                  const currentWaterVaporPressurePa = calculateAtmosphericPressure(
-                      currentAtmoWater,
-                      terraforming.celestialParameters.gravity,
-                      terraforming.celestialParameters.radius
-                  );
-
-                  if (currentWaterVaporPressurePa >= vapReqPa) {
-                      // Sufficient atmospheric pressure, apply penalty
-                      growthPenalty = 0.1; // 90% penalty
-                      const maxGrowthByAtmoWater = (currentAtmoWater / waterRatio) * biomassRatio;
-                      const maxGrowthByCO2 = (globalCO2 / co2Ratio) * biomassRatio;
-                      // Limit potential growth first
-                      let potentialAtmosphericGrowth = Math.min(potentialBiomassIncrease, maxGrowthByCO2, maxGrowthByAtmoWater);
-                      // Then apply penalty
-                      biomassChange = potentialAtmosphericGrowth * growthPenalty;
-                      waterChange = -(biomassChange / biomassRatio) * waterRatio; // Water consumed based on penalized growth
-                      // Atmospheric water consumption applied later
-                  } else {
-                      // Insufficient atmospheric water
-                      biomassChange = 0;
-                      waterChange = 0;
-                  }
+                  biomassChange = 0;
+                  waterChange = 0;
               }
 
               // Calculate CO2 and O2 changes based on final biomassChange
@@ -651,11 +594,9 @@ class LifeManager extends EffectableEntity {
                   if (resources.atmospheric.oxygen) resources.atmospheric.oxygen.modifyRate(oxygenChange * growthRateMultiplier, 'Life Growth', 'life');
                   if (resources.surface.biomass) resources.surface.biomass.modifyRate(biomassChange * growthRateMultiplier, 'Life Growth', 'life');
 
-                  // Update water rate based on which source was used
+                  // Update water rate when liquid water is consumed
                   if (usedLiquidWater) {
                       if (resources.surface.liquidWater) resources.surface.liquidWater.modifyRate(waterChange * growthRateMultiplier, 'Life Growth', 'life');
-                  } else {
-                      if (resources.atmospheric.atmosphericWater) resources.atmospheric.atmosphericWater.modifyRate(waterChange * growthRateMultiplier, 'Life Growth', 'life');
                   }
               }
 
@@ -701,14 +642,9 @@ class LifeManager extends EffectableEntity {
               terraforming.zonalSurface[zoneName].biomass += biomassChange;
 
               // Apply water change (consumption or release)
-              if (usedLiquidWater && biomassChange > 0) { // Consumed liquid water during growth
-                  terraforming.zonalWater[zoneName].liquid += waterChange; // waterChange is negative
+              if (usedLiquidWater && biomassChange > 0) {
+                  terraforming.zonalWater[zoneName].liquid += waterChange;
                   terraforming.zonalWater[zoneName].liquid = Math.max(0, terraforming.zonalWater[zoneName].liquid);
-              } else if (waterChange !== 0) { // Consumed/released atmospheric water (growth or decay)
-                  if (resources.atmospheric['atmosphericWater']) {
-                      resources.atmospheric['atmosphericWater'].value += waterChange;
-                      resources.atmospheric['atmosphericWater'].value = Math.max(0, resources.atmospheric['atmosphericWater'].value);
-                  }
               }
 
               // Apply CO2 change directly to global resource

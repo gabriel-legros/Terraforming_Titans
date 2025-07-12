@@ -42,7 +42,7 @@ describe('lifeUI controls disable during deployment', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,0,0,0,0,0,0);
 
     ctx.initializeLifeTerraformingDesignerUI();
     ctx.updateLifeUI();

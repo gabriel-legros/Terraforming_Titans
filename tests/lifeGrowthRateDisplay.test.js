@@ -44,7 +44,7 @@ describe('life growth rate display', () => {
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
-    ctx.lifeDesigner.createNewDesign(0,0,100,0,0,0,0,0,0);
+    ctx.lifeDesigner.createNewDesign(0,0,100,0,0,0,0,0);
 
     ctx.initializeLifeTerraformingDesignerUI();
     ctx.updateLifeUI();
