@@ -1413,7 +1413,6 @@ progressData.chapters.push(
     objectives: [],
     reward: [
       { target: 'project', targetId: 'sidestep_excavation', type: 'enable' },
-      { target: 'projectManager', type: 'activateSubtab', subtabClass:'projects-subtab', contentClass:'projects-subtab-content', targetId:'story-projects', unhide:true, onLoad:false }
     ]
   },
   {
