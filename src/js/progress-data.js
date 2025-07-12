@@ -1571,41 +1571,40 @@ progressData.chapters.push(
 
   /* -- CHAPTER 11 : Three Worlds Renewed -- */
   {
-    id: "chapter11.0",
+    id: "chapter10.3",
     type: "journal",
-    chapter: 11,
-    title: "Chapter 11: Three Worlds Renewed",
+    chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe. The whole system is celebrating. People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
     prerequisites: ["chapter10.2"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter11.1",
+    id: "chapter10.4",
     type: "journal",
-    chapter: 11,
+    chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. Give us our ocean world.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
-    prerequisites: ["chapter11.0"],
+    prerequisites: ["chapter10.3"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: []
   },
   {
-    id: "chapter11.2",
+    id: "chapter10.5",
     type: "journal",
-    chapter: 11,
+    chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores his lieutenants stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks future Sidestep operations.",
-    prerequisites: ["chapter11.1"],
+    prerequisites: ["chapter10.4"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter11.3",
+    id: "chapter10.6",
     type: "journal",
-    chapter: 11,
+    chapter: 10,
     narrative: "Directive update: Humanity’s survival demands expansion. **New terraforming target designated: Ganymede.**",
-    prerequisites: ["chapter11.2"],
+    prerequisites: ["chapter10.5"],
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }
     ],
