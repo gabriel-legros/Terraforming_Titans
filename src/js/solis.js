@@ -26,6 +26,9 @@ class SolisManager extends EffectableEntity {
     this.questInterval = 15 * 60 * 1000; // 15 minutes
     this.refreshCooldown = 5 * 60 * 1000; // 5 minutes
 
+    // Track which planets have already received purchased resources
+    this.deliveredPlanets = {};
+
     // Purchasable upgrades for the Solis shop
     this.shopUpgrades = {
       funding: { baseCost: 1, purchases: 0 },
@@ -111,6 +114,20 @@ class SolisManager extends EffectableEntity {
     return up ? up.baseCost * (up.purchases + 1) : 0;
   }
 
+  deliverResourceUpgrades(planetKey) {
+    if (planetKey && this.deliveredPlanets[planetKey]) return;
+    for (const key in RESOURCE_UPGRADE_AMOUNTS) {
+      const upgrade = this.shopUpgrades[key];
+      if (upgrade && upgrade.purchases > 0 && resources && resources.colony &&
+          resources.colony[key] && typeof resources.colony[key].increase === 'function') {
+        resources.colony[key].increase(RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases);
+      }
+    }
+    if (planetKey) {
+      this.deliveredPlanets[planetKey] = true;
+    }
+  }
+
   purchaseUpgrade(key) {
     const up = this.shopUpgrades[key];
     if (!up) return false;
@@ -118,6 +135,11 @@ class SolisManager extends EffectableEntity {
     if (this.solisPoints < cost) return false;
     this.solisPoints -= cost;
     up.purchases += 1;
+    const currentPlanet =
+      typeof spaceManager !== 'undefined' &&
+      spaceManager.getCurrentPlanetKey &&
+      spaceManager.getCurrentPlanetKey();
+
     if (key === 'funding' && typeof addEffect === 'function') {
       addEffect({
         target: 'fundingModule',
@@ -130,6 +152,9 @@ class SolisManager extends EffectableEntity {
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
       resources.colony[key].increase(amount);
+      if (currentPlanet) {
+        this.deliveredPlanets[currentPlanet] = true;
+      }
     }
     return true;
   }
@@ -145,14 +170,11 @@ class SolisManager extends EffectableEntity {
         sourceId: 'solisShop'
       });
     }
-
-    for (const key in RESOURCE_UPGRADE_AMOUNTS) {
-      const upgrade = this.shopUpgrades[key];
-      if (upgrade && upgrade.purchases > 0 && resources && resources.colony &&
-          resources.colony[key] && typeof resources.colony[key].increase === 'function') {
-        resources.colony[key].increase(RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases);
-      }
-    }
+    const currentPlanet =
+      typeof spaceManager !== 'undefined' &&
+      spaceManager.getCurrentPlanetKey &&
+      spaceManager.getCurrentPlanetKey();
+    this.deliverResourceUpgrades(currentPlanet);
   }
 
   update(delta) {
@@ -177,6 +199,7 @@ class SolisManager extends EffectableEntity {
       lastQuestTime: this.lastQuestTime,
       lastRefreshTime: this.lastRefreshTime,
       postCompletionCooldownUntil: this.postCompletionCooldownUntil,
+      deliveredPlanets: this.deliveredPlanets,
       upgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
         o[k] = this.shopUpgrades[k].purchases;
         return o;
@@ -191,6 +214,7 @@ class SolisManager extends EffectableEntity {
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
     this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
+    this.deliveredPlanets = data.deliveredPlanets || {};
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.shopUpgrades[k]) {
