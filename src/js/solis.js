@@ -37,7 +37,8 @@ class SolisManager extends EffectableEntity {
       electronics: { baseCost: 1, purchases: 0 },
       glass: { baseCost: 1, purchases: 0 },
       water: { baseCost: 1, purchases: 0 },
-      androids: { baseCost: 10, purchases: 0 }
+      androids: { baseCost: 10, purchases: 0 },
+      colonistRocket: { baseCost: 1, purchases: 0 }
     };
   }
 
@@ -129,6 +130,17 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisFunding',
         sourceId: 'solisShop'
       });
+    } else if (key === 'colonistRocket' && typeof addEffect === 'function') {
+      addEffect({
+        target: 'project',
+        targetId: 'import_colonists_1',
+        type: 'increaseResourceGain',
+        resourceCategory: 'colony',
+        resourceId: 'colonists',
+        value: up.purchases,
+        effectId: 'solisColonistRocket',
+        sourceId: 'solisShop'
+      });
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
@@ -157,6 +169,20 @@ class SolisManager extends EffectableEntity {
         type: 'fundingBonus',
         value: count,
         effectId: 'solisFunding',
+        sourceId: 'solisShop'
+      });
+    }
+
+    const rocketUpgrade = this.shopUpgrades.colonistRocket;
+    if (rocketUpgrade && rocketUpgrade.purchases > 0 && typeof addEffect === 'function') {
+      addEffect({
+        target: 'project',
+        targetId: 'import_colonists_1',
+        type: 'increaseResourceGain',
+        resourceCategory: 'colony',
+        resourceId: 'colonists',
+        value: rocketUpgrade.purchases,
+        effectId: 'solisColonistRocket',
         sourceId: 'solisShop'
       });
     }

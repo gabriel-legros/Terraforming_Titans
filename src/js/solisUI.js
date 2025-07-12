@@ -10,6 +10,7 @@ const shopDescriptions = {
   glass: 'Increase starting glass and base storage by 100',
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
+  colonistRocket: 'Increase colonists per import rocket by 1',
 };
 
 function showSolisTab() {
@@ -123,7 +124,7 @@ function initializeSolisUI() {
     title.textContent = 'Solis Shop';
     shopContainer.insertBefore(title, container);
     
-    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids'].forEach(key => {
+    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket'].forEach(key => {
       container.appendChild(createShopItem(key));
     });
   }
