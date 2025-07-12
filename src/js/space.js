@@ -1,7 +1,8 @@
 // space.js
 
-class SpaceManager {
+class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
+        super({ description: 'Manages planetary travel' });
         if (!planetsData) {
             throw new Error("SpaceManager requires planetsData during construction.");
         }
@@ -72,6 +73,10 @@ class SpaceManager {
         }
         console.warn(`SpaceManager: Cannot enable unknown planet ${planetKey}`);
         return false;
+    }
+
+    enable(planetKey) {
+        this.enablePlanet(planetKey);
     }
 
     /**
@@ -223,4 +228,8 @@ class SpaceManager {
 
          console.log("SpaceManager state loaded:", this.saveState());
     }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = SpaceManager;
 }
