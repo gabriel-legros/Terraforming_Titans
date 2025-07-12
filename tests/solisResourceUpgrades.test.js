@@ -9,7 +9,8 @@ describe('Solis resource upgrades', () => {
     electronics: 100,
     glass: 100,
     water: 1000000,
-    androids: 100
+    androids: 100,
+    food: 100
   };
 
   for (const key of Object.keys(amounts)) {

@@ -4,7 +4,8 @@ const RESOURCE_UPGRADE_AMOUNTS = {
   electronics: 100,
   glass: 100,
   water: 1000000,
-  androids: 100
+  androids: 100,
+  food: 100
 };
 
 class SolisManager extends EffectableEntity {
@@ -16,6 +17,7 @@ class SolisManager extends EffectableEntity {
       electronics: 20,
       androids: 50,
       superconductors: 100,
+      food: 5,
     }, resourceValues);
     this.solisPoints = 0;
     this.rewardMultiplier = 1;
@@ -34,7 +36,8 @@ class SolisManager extends EffectableEntity {
       electronics: { baseCost: 1, purchases: 0 },
       glass: { baseCost: 1, purchases: 0 },
       water: { baseCost: 1, purchases: 0 },
-      androids: { baseCost: 10, purchases: 0 }
+      androids: { baseCost: 10, purchases: 0 },
+      food: { baseCost: 1, purchases: 0 }
     };
   }
 
