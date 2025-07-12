@@ -253,11 +253,85 @@ const titanOverrides = {
   }
 };
 
+const callistoOverrides = {
+  name: 'Callisto',
+
+  resources: {
+    /* ---------- SURFACE ---------- */
+    surface: {
+      /* total land area ≈ 7.30 Gha (= 7.30 × 10⁹ ha)   4πr² with r = 2410 km :contentReference[oaicite:0]{index=0} */
+      land: { initialValue: 7300000000 },
+
+      /* ~4 × 10¹⁶ t of easily‑accessible water‑ice (≪ 4 × 10¹⁹ t true inventory) */
+      ice: { initialValue: 4e16, unlocked: true },
+
+      liquidWater:   { initialValue: 0 },
+      dryIce:        { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce:{ initialValue: 0 }
+    },
+
+    /* ---------- UNDERGROUND ---------- */
+    underground: {
+      /* 1 deposit / 10⁶ ha rule ⇒ 7 300 maximum */
+      ore:        { initialValue: 3, maxDeposits: 7300, areaTotal: 73000 },
+      geothermal: { initialValue: 1, maxDeposits:   3, areaTotal: 73000 } // geologically quiet
+    },
+
+    /* ---------- ATMOSPHERE (ultra‑thin CO₂/O₂ exosphere) ---------- */
+    atmospheric: {
+      carbonDioxide:    { initialValue: 5e4 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
+      inertGas:         { initialValue: 1e5 },   // mostly Ar; trace amounts
+      oxygen:           { initialValue: 5e3 },   // sputtered O₂  :contentReference[oaicite:2]{index=2}
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane:{ initialValue: 0 }
+    },
+
+    /* ---------- SPECIAL ---------- */
+    special: {
+      /* baseCap = land (ha) × 10 000 — same scaling used for Mars/Titan */
+      albedoUpgrades: { baseCap: 73000000000000 }
+    }
+  },
+
+  /* ---------- PER‑LATITUDE WATER PARTITION ---------- */
+  zonalWater: {
+    tropical:  { liquid: 0, ice: 4e15,  buriedIce: 1.2e16 },
+    temperate: { liquid: 0, ice: 1.2e16, buriedIce: 3.6e16 },
+    polar:     { liquid: 0, ice: 2.4e16, buriedIce: 7.2e16 }
+  },
+  zonalSurface: {
+    tropical:  { dryIce: 0 },
+    temperate: { dryIce: 0 },
+    polar:     { dryIce: 0 }
+  },
+  zonalHydrocarbons: {
+    tropical:  { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar:     { liquid: 0, ice: 0 }
+  },
+
+  /* ---------- ECONOMIC & GAMEPLAY ---------- */
+  fundingRate: 0,              // as remote as Titan
+  buildingParameters: { maintenanceFraction: 0.001 }, // keep default
+  populationParameters: { workerRatio: 0.5 },          // keep default
+
+  /* ---------- CELESTIAL ---------- */
+  celestialParameters: {
+    distanceFromSun: 5.2,      // Jupiter’s semi‑major axis (AU)
+    gravity: 1.236,            // m s‑² :contentReference[oaicite:3]{index=3}
+    radius: 2410.3,            // km :contentReference[oaicite:4]{index=4}
+    albedo: 0.20,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
+    rotationPeriod: 400.8      // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
   mars: marsOverrides,
-  titan: titanOverrides
+  titan: titanOverrides,
+  callisto: callistoOverrides
   // Add future planets here by defining their override objects
 };
 
@@ -288,7 +362,8 @@ function getPlanetParameters(planetName) {
 
 const planetParameters = {
     mars: getPlanetParameters('mars'),
-    titan: getPlanetParameters('titan')
+    titan: getPlanetParameters('titan'),
+    callisto: getPlanetParameters('callisto')
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
