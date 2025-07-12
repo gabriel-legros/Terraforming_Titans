@@ -262,7 +262,7 @@ const callistoOverrides = {
       land: { initialValue: 7300000000 },
 
       /* ~4 × 10¹⁶ t of easily‑accessible water‑ice (≪ 4 × 10¹⁹ t true inventory) */
-      ice: { initialValue: 159999999942703360, unlocked: true },
+      ice: { initialValue: 159999999942703360000, unlocked: true },
 
       liquidWater:   { initialValue: 0 },
       dryIce:        { initialValue: 0 },
@@ -298,17 +298,17 @@ const callistoOverrides = {
     "tropical": {
       "liquid": 0,
       "ice": 3999997867081992,
-      "buriedIce": 12000000000000000
+      "buriedIce": 4000000000000000000000
     },
     "temperate": {
       "liquid": 0,
       "ice": 12000001547288686,
-      "buriedIce": 36000000000000000
+      "buriedIce": 5000000000000000000000
     },
     "polar": {
       "liquid": 0,
       "ice": 24000000528332670,
-      "buriedIce": 72000000000000000
+      "buriedIce": 1000000000000000000000
     }
   },
   "zonalSurface": {

@@ -1,8 +1,10 @@
 function formatNumber(value, integer = false, precision = 1) {
     const absValue = Math.abs(value);
     let formatted;
-  
-    if (absValue >= 1e18 - 1e15) {
+
+    if (absValue >= 1e21 - 1e18) {
+      formatted = integer && absValue % 1e21 === 0 ? (absValue / 1e21) + 'Sx' : (absValue / 1e21).toFixed(precision) + 'Sx';  
+    } else if (absValue >= 1e18 - 1e15) {
       formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(precision) + 'Qn';
     } else if (absValue >= 1e15 - 1e12) {
       formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(precision) + 'Q';
