@@ -243,7 +243,6 @@ const titanOverrides = {
     }
   },
   
-  fundingRate: 0, // Override funding rate
   celestialParameters : { // Override all celestial parameters
     distanceFromSun: 9.58,
     gravity: 1.35,
@@ -263,7 +262,7 @@ const callistoOverrides = {
       land: { initialValue: 7300000000 },
 
       /* ~4 × 10¹⁶ t of easily‑accessible water‑ice (≪ 4 × 10¹⁹ t true inventory) */
-      ice: { initialValue: 4e16, unlocked: true },
+      ice: { initialValue: 159999999942703360, unlocked: true },
 
       liquidWater:   { initialValue: 0 },
       dryIce:        { initialValue: 0 },
@@ -280,10 +279,10 @@ const callistoOverrides = {
 
     /* ---------- ATMOSPHERE (ultra‑thin CO₂/O₂ exosphere) ---------- */
     atmospheric: {
-      carbonDioxide:    { initialValue: 5e4 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
+      carbonDioxide:    { initialValue: 2420.183854974918 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
       inertGas:         { initialValue: 1e5 },   // mostly Ar; trace amounts
       oxygen:           { initialValue: 5e3 },   // sputtered O₂  :contentReference[oaicite:2]{index=2}
-      atmosphericWater: { initialValue: 0 },
+      atmosphericWater: { initialValue: 57231437.138837904 },
       atmosphericMethane:{ initialValue: 0 }
     },
 
@@ -295,26 +294,48 @@ const callistoOverrides = {
   },
 
   /* ---------- PER‑LATITUDE WATER PARTITION ---------- */
-  zonalWater: {
-    tropical:  { liquid: 0, ice: 4e15,  buriedIce: 1.2e16 },
-    temperate: { liquid: 0, ice: 1.2e16, buriedIce: 3.6e16 },
-    polar:     { liquid: 0, ice: 2.4e16, buriedIce: 7.2e16 }
+ "zonalWater": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 3999997867081992,
+      "buriedIce": 12000000000000000
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 12000001547288686,
+      "buriedIce": 36000000000000000
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 24000000528332670,
+      "buriedIce": 72000000000000000
+    }
   },
-  zonalSurface: {
-    tropical:  { dryIce: 0 },
-    temperate: { dryIce: 0 },
-    polar:     { dryIce: 0 }
+  "zonalSurface": {
+    "tropical": {
+      "dryIce": 13641.393362700177
+    },
+    "temperate": {
+      "dryIce": 23833.186930256372
+    },
+    "polar": {
+      "dryIce": 10105.235852068325
+    }
   },
-  zonalHydrocarbons: {
-    tropical:  { liquid: 0, ice: 0 },
-    temperate: { liquid: 0, ice: 0 },
-    polar:     { liquid: 0, ice: 0 }
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
   },
-
-  /* ---------- ECONOMIC & GAMEPLAY ---------- */
-  fundingRate: 0,              // as remote as Titan
-  buildingParameters: { maintenanceFraction: 0.001 }, // keep default
-  populationParameters: { workerRatio: 0.5 },          // keep default
 
   /* ---------- CELESTIAL ---------- */
   celestialParameters: {
