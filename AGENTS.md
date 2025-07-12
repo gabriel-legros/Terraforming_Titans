@@ -131,6 +131,9 @@ Run tests with npm test
 Describe how many tests have passed/failed and describe any tests that failed if you cannot fix it.
 Avoid asserting on the exact wording of story text in tests. Verify structural data like IDs or prerequisites instead so narrative phrasing can change without breaking tests.
 
+# Storytelling Style
+In chapters after the destruction of Earth, each character's name should prefix their dialogue the second time they speak in a chapter. This helps clarify who is speaking as the cast of characters expands.
+
 # Character Personalities
 
 This section outlines the personalities of the main characters in the story.
@@ -142,3 +145,7 @@ This section outlines the personalities of the main characters in the story.
 *   **Mary:** Martin's daughter, a brilliant scientist who takes over communication with H.O.P.E. after her father. Her tone is situational. In good times, she's witty and clever, much like her father. In bad times, her dialogue becomes serious and focused as she grapples with the unfolding crisis.
 
 *   **Adrien Solis:** The cynical and opportunistic CEO of Solis Corp. His dialogue is sharp, business-like, and often laced with a dark sense of humor. He sees the destruction of Earth as an opportunity but remains committed to helping humanity succeed.
+
+*   **Dr. Evelyn Hart:** A brilliant and pragmatic scientist, Dr. Hart is the architect of Operation Sidestep. Her dialogue is professional, focused, and driven by the immense scientific and strategic pressures of the unfolding crisis. She is a master of contingency planning and secrecy.
+
+*   **Elias Kane:** The charismatic and fanatical leader of the Cult of Three Wounds. He believes the aliens are saviors and that humanity's attempts to terraform are a blasphemy against a grand cosmic design. His dialogue is prophetic, manipulative, and aimed at undermining H.O.P.E.'s mission at every turn, as he is secretly following the aliens' orders.

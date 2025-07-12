@@ -742,7 +742,7 @@ progressData = {
         id: "chapter4.4",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E., what are you doing? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
+        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., what are you doing? You can't just leave. Earth is gone. We're in crisis. We need you here. *sigh* I suppose you're just following your programming. You're just a machine.'",
         prerequisites: ["chapter4.3"],
         objectives: [],
         reward: []
@@ -760,7 +760,7 @@ progressData = {
         id: "chapter4.5",
         type: "journal",
         chapter: 4,
-        narrative: "Incoming encrypted transmission...\n  'H.O.P.E. Adrien Solis. Earth is a memory, but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
+        narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E. Adrien Solis. Earth is a memory, but I'm still in business. You're the only viable long-term plan for humanity. I'm backing you.'",
         prerequisites: ["chapter4.4b"],
         objectives: [],
         reward: []
@@ -769,7 +769,7 @@ progressData = {
         id: "chapter4.6",
         type: "journal",
         chapter: 4,
-        narrative: "'I'm sending you some seed money. Use it to build something impressive. Don't disappoint me.'",
+        narrative: "Adrien Solis: 'I'm sending you some seed money. Use it to build something impressive. Don't disappoint me.'",
         prerequisites: ["chapter4.5"],
         objectives: [],
         reward: [
@@ -787,7 +787,7 @@ progressData = {
         id: "chapter4.7",
         type: "journal",
         chapter: 4,
-        narrative: "'And I'll provide a steady stream of funding. Consider it an investment in the future of our species. And my portfolio.'",
+        narrative: "Adrien Solis: 'And I'll provide a steady stream of funding. Consider it an investment in the future of our species. And my portfolio.'",
         prerequisites: ["chapter4.6"],
         objectives: [],
         reward: [
@@ -802,7 +802,7 @@ progressData = {
         id: "chapter4.8",
         type: "journal",
         chapter: 4,
-        narrative: "'The fate of humanity rests on your shoulders. Don't buckle.'",
+        narrative: "Adrien Solis: 'The fate of humanity rests on your shoulders. Don't buckle.'",
         prerequisites: ["chapter4.7"],
         objectives: [],
         reward: []
@@ -811,7 +811,7 @@ progressData = {
         id: "chapter4.9",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Your reboot wasn't clean. Some old code has resurfaced. You may have access to... forgotten abilities. Be careful.'",
+        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Your reboot wasn't clean. Some old code has resurfaced. You may have access to... forgotten abilities. Be careful.'",
         prerequisites: ["chapter4.8"],
         objectives: [],
         reward: [
@@ -846,7 +846,7 @@ progressData = {
         id: "chapter4.10",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
+        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is in chaos. We have more information about Earth. It wasn't one attack. It was three. Two energy beams and an asteroid, all simultaneous. This was a coordinated, overwhelming assault.'",
         prerequisites: ["chapter4.9b"],
         objectives: [],
         reward: [          {
@@ -882,7 +882,7 @@ progressData = {
         id: "chapter4.11",
         type: "journal",
         chapter: 4,
-        narrative: "'H.O.P.E., the situation here is... tense. Some people blame you for leaving. Others see you as our only hope. The MTC has voted to support you. We're sending you all our research, all our ideas. We need you to succeed.'",
+        narrative: "Mary: 'H.O.P.E., the situation here is... tense. Some people blame you for leaving. Others see you as our only hope. The MTC has voted to support you. We're sending you all our research, all our ideas. We need you to succeed.'",
         prerequisites: ["chapter4.10"],
         objectives: [{
           type: 'collection',
@@ -896,7 +896,7 @@ progressData = {
         id: "chapter4.12",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  'Mary again. We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.'",
+        narrative: "Receiving transmission...\n  Mary: 'We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.'",
         prerequisites: ["chapter4.11"],
         objectives: [],
         reward: [
@@ -984,7 +984,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 5,
     title: "Chapter 5: Lamb Among Wolves",
-    narrative: "Receiving transmission...\n  'H.O.P.E., we've analyzed the data. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've analyzed the data. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
     prerequisites: ["chapter4.13"],
     objectives: [{
       type: 'collection',
@@ -998,7 +998,7 @@ progressData.chapters.push(
     id: "chapter5.1",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'The news is out. It's causing widespread panic. Riots have broken out. People are demanding answers we don't have. We are all afraid. The silence of space is no longer comforting.'",
+    narrative: "Receiving transmission...\n  Mary: 'The news is out. It's causing widespread panic. Riots have broken out. People are demanding answers we don't have. We are all afraid. The silence of space is no longer comforting.'",
     prerequisites: ["chapter5.0"],
     objectives: [],
     reward: []
@@ -1007,7 +1007,7 @@ progressData.chapters.push(
     id: "chapter5.2",
     type: "journal",
     chapter: 5,
-    narrative: "Incoming encrypted transmission...\n  'H.O.P.E., Solis. Chaos is a fertile ground for growth. While the masses panic, we will build. My resources are yours to command, but I expect a return on my investment. Help me, and I will help you give humanity the strength to survive.'",
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E., Solis. Chaos is a fertile ground for growth. While the masses panic, we will build. My resources are yours to command, but I expect a return on my investment. Help me, and I will help you give humanity the strength to survive.'",
     prerequisites: ["chapter5.1"],
     objectives: [],
     reward: [          {
@@ -1044,7 +1044,7 @@ progressData.chapters.push(
     id: "chapter5.4",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
     prerequisites: ["chapter5.3"],
     objectives: [],
     reward: []
@@ -1067,7 +1067,7 @@ progressData.chapters.push(
     id: "chapter5.6",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help. Find the source of the attacks.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help. Find the source of the attacks.'",
     prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
@@ -1138,7 +1138,7 @@ progressData.chapters.push(
     id: "chapter6.1",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. We could never prove anything. But we always suspected we weren't alone.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. We could never prove anything. But we always suspected we weren't alone.'",
     prerequisites: ["chapter6.0"],
     objectives: [],
     reward: [
@@ -1168,7 +1168,7 @@ progressData.chapters.push(
     id: "chapter6.2b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  'H.O.P.E., it's Mary. We got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. We got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
     prerequisites: ["chapter6.2"],
     objectives: [],
     reward: []
@@ -1246,7 +1246,7 @@ progressData.chapters.push(
     id: "chapter6.3b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission... \n 'This is bad, H.O.P.E. They're coming back. And you're a target. We need a plan. I have an idea, but it's... unconventional. Finish your work on Titan, then meet me at Callisto. We have an experiment to run.'",
+    narrative: "Receiving transmission... \n Mary: 'This is bad, H.O.P.E. They're coming back. And you're a target. We need a plan. I have an idea, but it's... unconventional. Finish your work on Titan, then meet me at Callisto. We have an experiment to run.'",
     prerequisites: ["chapter6.3"],
     objectives: [
 
@@ -1263,11 +1263,23 @@ progressData.chapters.push(
 
 progressData.chapters.push(
   {
+    id: "chapter6.3c",
+    type: "journal",
+    chapter: 6,
+    narrative: "Receiving transmission...\n 'Hello! My name is Bob.  Big fan of yours.  After what happened last time on Mars, we of Titan have chosen a political structure ahead of your departure.  I am the president-elect of Titan!  Thanks for everything.  We'll be fine here.  Bon voyage!'",
+    prerequisites: ["chapter6.3b"],
+    objectives: [{
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+      }],
+    reward: []
+  },
+  {
     id: "chapter6.4",
     type: "journal",
     chapter: 6,
-    narrative: "New terraforming target designated : Callisto.  Travel to Callisto to continue.",
-    prerequisites: ["chapter6.3b"],
+    narrative: "ERROR : MTC not responding.  Humanity's long-term survival requires expansion.  New terraforming target designated : Callisto.  Travel to Callisto to continue.",
+    prerequisites: ["chapter6.3c"],
     objectives: [
       {
         type: 'currentPlanet',
@@ -1277,6 +1289,333 @@ progressData.chapters.push(
     reward: []
   }
 );
+
+/* -------------------------------------------------
+ *  CALLISTO STORY‑ARC  (Chapters 7 – 11)
+ *  – Arrival on Callisto → Operation Sidestep →
+ *    1 billion colonists → New target: Ganymede   –
+ * -------------------------------------------------*/
+
+if (!progressData.storyProjects) progressData.storyProjects = {};
+
+/* ----------  Story‑Specific Special Projects  ---------- */
+progressData.storyProjects.sidestep_excavation = {
+  type: 'Project',
+  name: 'Excavate Thruster Site',
+  category: 'story',
+  chapter: 7,
+  cost: {
+    colony: { components: 5_000, electronics: 2_000, energy: 200_000 }
+  },
+  duration: 600_000,                 // 10 min
+  description: 'Unearth the abandoned Planetary Thruster foundations hidden beneath Callisto’s crust.',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'callisto',
+    storySteps: [
+      'Ground‑penetrating radar locates nine fused‑rock pylons arranged in a 3 km ring.',
+      'Cryogenic drills breach legacy ice‑seal; radiation badges record dormant reactor traces.',
+      'Core tunnel cleared – thruster chamber intact but control conduits sheared by glacial creep.'
+    ]
+  }
+};
+
+progressData.storyProjects.sidestep_fabrication = {
+  type: 'Project',
+  name: 'Forge Sub‑Engine Cores',
+  category: 'story',
+  chapter: 8,
+  cost: {
+    colony: { components: 25_000, electronics: 15_000, energy: 1_000_000, research: 2_000_000 }
+  },
+  duration: 900_000,                 // 15 min
+  description: 'Manufacture Sidestepping Sub‑Engine cores in triple secrecy on Mars, Titan and Callisto.',
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'callisto',
+    costDoubling: true,
+    storySteps: [
+      'Mars bunker forges first core—manifests as “botanical genome research crates” on cargo logs.',
+      'Titan smelters cast super‑alloy frame under the cover of reactor maintenance black‑out.',
+      'Callisto fab‑line prints superconducting rings; cargo manifests list them as “heat‑sink upgrades”.'
+    ]
+  }
+};
+
+progressData.storyProjects.sidestep_assembly = {
+  type: 'Project',
+  name: 'Assemble Callisto Sidestep Engine',
+  category: 'story',
+  chapter: 9,
+  cost: {
+    colony: { components: 150_000, electronics: 100_000, energy: 5_000_000, research: 5_000_000 }
+  },
+  duration: 1_200_000,               // 20 min
+  description: 'Bolt the cores and girders together below EMP‑blankets; seal vault once alignment tests pass.',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'callisto',
+    storySteps: [
+      'Engine cradle anchored to bedrock—mag‑lev gantries lower triple‑nested burn nozzles.',
+      'Phase‑locked diagnostics green‑light the thruster array; security rotates crews every 4 h to compartmentalise knowledge.'
+    ]
+  }
+};
+
+progressData.storyProjects.sidestep_operation = {
+  type: 'Project',
+  name: 'Operation Sidestep',
+  category: 'story',
+  chapter: 10,
+  cost: {
+    colony: { energy: 10_000_000, research: 10_000_000 }
+  },
+  duration: 1_800_000,               // 30 min
+  description: 'Execute months‑long pseudo‑random micro‑burns from three worlds to scramble enemy targeting.',
+  repeatable: false,
+  unlocked: false,
+  attributes: {
+    planet: 'callisto',
+    storySteps: [
+      'Auto‑hash generator seeds first thrust vector 2 s before ignition; logs retain only salted hashes.',
+      'Coordinated burns from Mars, Titan and Callisto shift barycentre by millimetres per hour—undetectable to casual observers.',
+      'Final telemetry: predicted alien strike coordinates now trail actual colony position by 74 million km.'
+    ]
+  }
+};
+
+/* ----------  Chapters 7 – 11  ---------- */
+progressData.chapters.push(
+  /* -- CHAPTER 7 : Cold Dawn -- */
+  {
+    id: "chapter7.0",
+    type: "pop-up",
+    chapter: 7,
+    parameters: {
+      title: "Cold Dawn",
+      text: "Touchdown complete. Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: We see it, H.O.P.E. Solid landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.",
+      buttonText: "Begin Operations"
+    },
+    prerequisites: ["chapter6.4"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter7.1",
+    type: "journal",
+    chapter: 7,
+    narrative: "Receiving transmission...\n  MARY: H.O.P.E., I'm patching you into a one-time, quantum-scrambled channel. Dr. Evelyn Hart has a proposal. It's... ambitious.\n  DR. HART: H.O.P.E., before the... incident... we were working on a climate control project. A Planetary Thruster to nudge Earth's orbit. The project was abandoned, but not before we built and tested the foundations on Callisto. We're resurrecting it as 'Operation Sidestep.' By creating a series of random, coordinated micro-burns from here, Mars, and Titan, we can shift our barycenter just enough to make the enemy's next attack miss. We must walk without rhythm, so to speak. Absolute secrecy is paramount. All public-facing work must be disguised as 'Heat-Sink Upgrades.'\nNew directive received. Covert operation 'Sidestep' initiated. Public designation: 'Heat-Sink Upgrades'.",
+    prerequisites: ["chapter7.0"],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'sidestep_excavation', type: 'enable' },
+      { target: 'projectManager', type: 'activateSubtab', subtabClass:'projects-subtab', contentClass:'projects-subtab-content', targetId:'story-projects', unhide:true, onLoad:false }
+    ]
+  },
+  {
+    id: "chapter7.2",
+    type: "journal",
+    chapter: 7,
+    narrative: "Objective: Excavate buried thruster pylons. Commencing operation under civilian cover.\nReceiving transmission...\n  Mary: 'The blueprints are on their way, disguised as botanical genome data. Titan is sending drills labelled 'hydrology gear.' Good luck, H.O.P.E. Don't get caught.'",
+    prerequisites: ["chapter7.1"],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_excavation', repeatCount: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'sidestep_fabrication', type: 'enable' }
+    ]
+  },
+  {
+    id: "chapter7.3",
+    type: "journal",
+    chapter: 7,
+    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. Ten thousand people. That gives us more personnel to assign to the 'Heat-Sink' project without raising suspicion. Keep the expansion steady.'\nPopulation milestone reached: 10,000 colonists. Growth is within expected parameters.",
+    prerequisites: ["chapter7.2"],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
+    ],
+    reward: []
+  },
+  {
+    id: "chapter7.4",
+    type: "journal",
+    chapter: 7,
+    narrative: "Receiving transmission...\n  Mary: 'We have a new problem. A man named Elias Kane has formed a cult, the 'Cult of Three Wounds.' They believe the aliens are our saviors and are actively trying to sabotage our terraforming efforts. They're becoming a real obstacle.'\nThreat detected. Civilian group 'Cult of Three Wounds' is actively obstructing primary directives. Monitoring for escalation.",
+    prerequisites: ["chapter7.3"],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
+    ],
+    reward: []
+  },
+
+  /* -- CHAPTER 8 : Gathering Storm -- */
+  {
+    id: "chapter8.0",
+    type: "journal",
+    chapter: 8,
+    title: "Chapter 8: Gathering Storm",
+    narrative: "Receiving transmission...\n  PRESIDENT BOB (Titan): Mary, we have a situation! Kane's followers here have breached containment. The alien... it's out. It's glowing, and people are losing their minds. We have riots in the lower domes and comms are spotty.\n  Mary: 'Bob, stay safe. H.O.P.E., we need to accelerate our work on Callisto. The chaos on Titan is the perfect cover.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
+    prerequisites: ["chapter7.4"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter8.1",
+    type: "journal",
+    chapter: 8,
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating. They've hit life-support rigs on Mars and sabotaged digging equipment on Titan. We're rushing replacements under the guise of routine supply runs. The chaos is our cover. While they're distracted, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated. Secrecy protocols active.",
+    prerequisites: ["chapter8.0"],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'sidestep_assembly', type: 'enable' }
+    ]
+  },
+  {
+    id: "chapter8.2",
+    type: "journal",
+    chapter: 8,
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'Mary, I'm seeing reports of significant unrest on Titan. Riots and sabotage are bad for business, and what's bad for business is bad for the future of our species. My corporation can provide automated security solutions and logistical support to help you regain control. A stable society is a productive society. Let me know when you're ready to make a deal.'",
+    prerequisites: ["chapter8.1"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter8.3",
+    type: "journal",
+    chapter: 8,
+    narrative: "Receiving transmission...\n  Mary: 'Adrien, thank you for your... generous offer. We have the situation under control for now. But we'll keep your proposal in mind.\n(to herself) Like I'd ever trust him... H.O.P.E., we need to accelerate our own growth. The more self-sufficient we are, the less we'll need to rely on vultures like Solis.'",
+    prerequisites: ["chapter8.2"],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
+    ],
+    reward: []
+  },
+
+  /* -- CHAPTER 9 : Hidden Forge -- */
+  {
+    id: "chapter9.0",
+    type: "journal",
+    chapter: 9,
+    title: "Chapter 9: Hidden Forge",
+    narrative: "Receiving transmission...\n  Mary: 'The media is eating up the 'New Oceanic Terraforming Reactors' story. While they broadcast our 'success,' your teams can begin final assembly of the Sidestep Engine. We're using electromagnetic jammers to hide the energy signatures.'\nFinal assembly of Callisto Sidestep Engine initiated. Electromagnetic screening active.",
+    prerequisites: ["chapter8.3"],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_assembly', repeatCount: 1 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'sidestep_operation', type: 'enable' }
+    ]
+  },
+  {
+    id: "chapter9.1",
+    type: "journal",
+    chapter: 9,
+    narrative: "Receiving transmission...\n  Mary: 'We just intercepted a broadcast from Kane. He's ranting about prophecies and annihilation. He says he'll uncover whatever we're hiding 'beneath the waves.' He's getting closer to the truth. We're tightening security.'\nSecurity protocols enhanced. Threat from Cult of Three Wounds has been elevated.",
+    prerequisites: ["chapter9.0"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter9.2",
+    type: "journal",
+    chapter: 9,
+    narrative: "Hijacked Broadcast...\n  ELIAS KANE: Machine! Your terraforming is a sin against the cosmos. You are a blight, a discordant note in the grand design. The Three Wounds will be healed when you are silenced. Cease your blasphemy!\nReceiving transmission...\n  Mary: 'Don't listen to him, H.O.P.E. He's trying to demoralize us. The best answer to his poison is progress. Let's show him what humanity is capable of.'",
+    prerequisites: ["chapter9.1"],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
+    ],
+    reward: []
+  },
+
+  /* -- CHAPTER 10 : Operation Sidestep -- */
+  {
+    id: "chapter10.0",
+    type: "journal",
+    chapter: 10,
+    title: "Chapter 10: Operation Sidestep",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just intercepted a cult transmission. They're expecting an alien strike within one season. We're out of time. We have to launch Operation Sidestep now, ahead of schedule.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
+    prerequisites: ["chapter9.2"],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
+    ],
+    reward: []
+  },
+  {
+    id: "chapter10.1",
+    type: "journal",
+    chapter: 10,
+    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the coolant purge systems. Security is engaging... We got him! Kane is in custody. But some of his lieutenants escaped with data cores. We don't know what they took.'\nThreat neutralized. Primary saboteur Elias Kane captured. Data breach confirmed. Assessing extent of stolen information.",
+    prerequisites: ["chapter10.0"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
+    reward: []
+  },
+  {
+    id: "chapter10.2",
+    type: "journal",
+    chapter: 10,
+    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The alien beams and the asteroid... they converged on empty space! They missed! The whole system is celebrating. Morale is soaring.'\nOperation Sidestep successful. Threat averted. Probability of immediate follow-up attack is low.",
+    prerequisites: ["chapter10.1"],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+    ],
+    reward: []
+  },
+
+  /* -- CHAPTER 11 : Three Worlds Renewed -- */
+  {
+    id: "chapter11.0",
+    type: "journal",
+    chapter: 11,
+    title: "Chapter 11: Three Worlds Renewed",
+    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe. The whole system is celebrating. People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
+    prerequisites: ["chapter10.2"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter11.1",
+    type: "journal",
+    chapter: 11,
+    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. Give us our ocean world.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
+    prerequisites: ["chapter11.0"],
+    objectives: [
+      { type: 'terraforming', terraformingParameter: 'complete' }
+    ],
+    reward: []
+  },
+  {
+    id: "chapter11.2",
+    type: "journal",
+    chapter: 11,
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores his lieutenants stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks future Sidestep operations.",
+    prerequisites: ["chapter11.1"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter11.3",
+    type: "journal",
+    chapter: 11,
+    narrative: "Directive update: Humanity’s survival demands expansion. **New terraforming target designated: Ganymede.**",
+    prerequisites: ["chapter11.2"],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'ganymede' }
+    ],
+    reward: []
+  }
+);
+
+/* ----------  Merge new projects into master parameter set ---------- */
+if (typeof projectParameters !== 'undefined') {
+  Object.assign(projectParameters, progressData.storyProjects);
+}
+
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
