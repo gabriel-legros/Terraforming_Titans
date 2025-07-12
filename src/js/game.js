@@ -131,7 +131,16 @@ function initializeGameState(options = {}) {
   oreScanner = new OreScanning(currentPlanetParameters);
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
-  researchManager = new ResearchManager(researchParameters);
+  if (!preserveManagers || !researchManager) {
+    researchManager = new ResearchManager(researchParameters);
+  } else {
+    if (!globalGameIsLoadingFromSave && typeof researchManager.resetRegularResearch === 'function') {
+      researchManager.resetRegularResearch();
+    }
+    if (typeof researchManager.reapplyEffects === 'function') {
+      researchManager.reapplyEffects();
+    }
+  }
   if (!preserveManagers || !skillManager) {
     skillManager = new SkillManager(skillParameters);
   }

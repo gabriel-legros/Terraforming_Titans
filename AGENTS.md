@@ -39,6 +39,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 - **autobuild.js** automatically constructs buildings based on population ratios when auto-build is enabled.
 - **milestones.js** and **milestonesUI.js** track long term objectives and unlock rewards.
 - **solis.js** and **solisUI.js** manage the Solis shop and quest system which grants Solis points for completing delivery quests.
+- The ResearchManager now persists between planets. Only advanced researches remain completed after travel; regular researches reset on each new planet.
 
 ## Dyson Swarm Receiver
 The Dyson Swarm project begins with research into a large orbital array. An advanced research unlocks the concept and a follow-up energy research enables the **Dyson Swarm Receiver** special project. The receiver currently costs massive resources (10M metal, 1M components, 100k electronics) and takes five minutes to build but provides no effect yet.
