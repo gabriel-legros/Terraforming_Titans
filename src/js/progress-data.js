@@ -1265,7 +1265,7 @@ progressData.chapters.push(
     id: "chapter6.4",
     type: "journal",
     chapter: 6,
-    narrative: "Callisto is the next designation for terraforming. Prepare for deployment.",
+    narrative: "New terraforming target designated : Callisto.  Complete terraforming first to continue.",
     prerequisites: ["chapter6.3b"],
     objectives: [
       {
