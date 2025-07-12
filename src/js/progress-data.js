@@ -1492,7 +1492,7 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'Adrien, thank you for your... generous offer. We have the situation under control for now. But we'll keep your proposal in mind.\n(to herself) Like I'd ever trust him... H.O.P.E., we need to accelerate our own growth. The more self-sufficient we are, the less we'll need to rely on vultures like Solis.'",
     prerequisites: ["chapter8.2"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
     reward: []
   },
@@ -1528,7 +1528,7 @@ progressData.chapters.push(
     narrative: "Hijacked Broadcast...\n  ELIAS KANE: Machine! Your terraforming is a sin against the cosmos. You are a blight, a discordant note in the grand design. The Three Wounds will be healed when you are silenced. Cease your blasphemy!\nReceiving transmission...\n  Mary: 'Don't listen to him, H.O.P.E. He's trying to demoralize us. The best answer to his poison is progress. Let's show him what humanity is capable of.'",
     prerequisites: ["chapter9.1"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
     ],
     reward: []
   },
@@ -1552,7 +1552,7 @@ progressData.chapters.push(
     chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the coolant purge systems. Security is engaging... We got him! Kane is in custody. But some of his lieutenants escaped with data cores. We don't know what they took.'\nThreat neutralized. Primary saboteur Elias Kane captured. Data breach confirmed. Assessing extent of stolen information.",
     prerequisites: ["chapter10.0"],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }],
     reward: []
   },
   {
