@@ -1356,7 +1356,8 @@ progressData.storyProjects.sidestep_assembly = {
   },
   duration: 1_200_000,               // 20 min
   description: 'Bolt the cores and girders together; seal vault once alignment tests pass.',
-  repeatable: false,
+  repeatable: true,
+  maxRepeatCount: 2,
   unlocked: false,
   attributes: {
     planet: 'callisto',
