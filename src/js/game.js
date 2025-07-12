@@ -263,6 +263,9 @@ function updateRender() {
   updateWarnings();
   updateMilestonesUI();
   updateHopeUI();
+  if (typeof updateSpaceUI === 'function') {
+    updateSpaceUI();
+  }
 }
 
 function update(time, delta) {
