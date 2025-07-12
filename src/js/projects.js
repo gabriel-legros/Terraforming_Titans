@@ -14,6 +14,7 @@ class Project extends EffectableEntity {
     this.repeatCount = 0; // Track the current number of times the project has been repeated
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
+    this.isPaused = false; // Whether the project is paused due to missing sustain cost
   }
 
   initializeFromConfig(config, name) {
@@ -21,6 +22,7 @@ class Project extends EffectableEntity {
     this.name = name;
     this.displayName = config.name;
     this.cost = config.cost;
+    this.sustainCost = config.sustainCost || null; // Per-second resource cost while active
     this.production = config.production;
     this.duration = config.duration;
     this.description = config.description;
@@ -110,6 +112,10 @@ class Project extends EffectableEntity {
       return false;
     }
 
+    if (this.isPaused) {
+      return this.hasSustainResources();
+    }
+
     const cost = this.getScaledCost();
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -132,16 +138,43 @@ class Project extends EffectableEntity {
     }
   }
 
+  hasSustainResources(deltaTime = 1000) {
+    if (!this.sustainCost) return true;
+    const seconds = deltaTime / 1000;
+    for (const category in this.sustainCost) {
+      for (const resource in this.sustainCost[category]) {
+        const required = this.sustainCost[category][resource] * seconds;
+        if (resources[category][resource].value < required) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  deductSustainResources(deltaTime) {
+    if (!this.sustainCost) return;
+    const seconds = deltaTime / 1000;
+    for (const category in this.sustainCost) {
+      for (const resource in this.sustainCost[category]) {
+        const amount = this.sustainCost[category][resource] * seconds;
+        resources[category][resource].decrease(amount);
+      }
+    }
+  }
+
   start(resources) {
     if (this.canStart(resources)) {
-      // Deduct the required resources
-      this.deductResources(resources);
-  
-      // Set the project as active and reset the remaining time
+      // Deduct the required resources if this isn't a resume
+      if (!this.isPaused) {
+        this.deductResources(resources);
+        this.remainingTime = this.getEffectiveDuration();
+        this.startingDuration = this.remainingTime;
+      }
+
+      // Set the project as active
       this.isActive = true;
-  
-      this.remainingTime = this.getEffectiveDuration(); // Default duration for other projects
-      this.startingDuration = this.remainingTime;
+      this.isPaused = false;
   
   
       console.log(`Project ${this.name} started.`);
@@ -152,8 +185,26 @@ class Project extends EffectableEntity {
     }
   }
 
+  resume() {
+    if (this.isPaused && !this.isCompleted && this.hasSustainResources()) {
+      this.isActive = true;
+      this.isPaused = false;
+      console.log(`Project ${this.name} resumed.`);
+      return true;
+    }
+    return false;
+  }
+
   update(deltaTime) {
     if (!this.isActive || this.isCompleted) return;
+
+    if (!this.hasSustainResources(deltaTime)) {
+      this.isActive = false;
+      this.isPaused = true;
+      return;
+    }
+
+    this.deductSustainResources(deltaTime);
 
     this.remainingTime -= deltaTime;
 
@@ -390,6 +441,7 @@ class ProjectManager extends EffectableEntity {
       const project = this.projects[projectName];
       const state = {
         isActive: project.isActive,
+        isPaused: project.isPaused,
         isCompleted: project.isCompleted,
         remainingTime: project.remainingTime,
         startingDuration: project.startingDuration,
@@ -431,6 +483,7 @@ class ProjectManager extends EffectableEntity {
 
       if (project) {
         project.isActive = savedProject.isActive;
+        project.isPaused = savedProject.isPaused || false;
         project.isCompleted = savedProject.isCompleted;
         project.remainingTime = savedProject.remainingTime;
         project.startingDuration = savedProject.startingDuration || project.getEffectiveDuration();
