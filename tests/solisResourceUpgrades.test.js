@@ -64,6 +64,7 @@ describe('Solis resource upgrades', () => {
       cols[k] = makeResource();
     }
     global.resources = { colony: cols };
+    global.globalGameIsLoadingFromSave = false;
     const manager = new SolisManager();
     for (const k of Object.keys(amounts)) {
       manager.shopUpgrades[k].purchases = k === 'metal' ? 2 : 1;
@@ -77,5 +78,24 @@ describe('Solis resource upgrades', () => {
         expect(cols[k].cap).toBe(amounts[k]);
       }
     }
+  });
+
+  test('reapplyEffects does not grant resources when loading from save', () => {
+    const cols = {};
+    for (const k of Object.keys(amounts)) {
+      cols[k] = makeResource();
+    }
+    global.resources = { colony: cols };
+    global.globalGameIsLoadingFromSave = true;
+    const manager = new SolisManager();
+    for (const k of Object.keys(amounts)) {
+      manager.shopUpgrades[k].purchases = 1;
+    }
+    manager.reapplyEffects();
+    for (const k of Object.keys(amounts)) {
+      expect(cols[k].value).toBe(0);
+      expect(cols[k].cap).toBe(amounts[k]);
+    }
+    global.globalGameIsLoadingFromSave = false;
   });
 });
