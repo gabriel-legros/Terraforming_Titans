@@ -65,7 +65,7 @@ function loadGame(slotOrCustomString) {
         }
 
         // Reinitialize game state using the loaded planet parameters
-        initializeGameState();
+        initializeGameState({ skipStoryInitialization: true });
         if (typeof tabManager.resetVisibility === 'function') {
           tabManager.resetVisibility(tabParameters);
         }
