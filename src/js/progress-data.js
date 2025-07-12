@@ -1507,7 +1507,7 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'The media is eating up the 'New Oceanic Terraforming Reactors' story. While they broadcast our 'success,' your teams can begin final assembly of the Sidestep Engine. We're using electromagnetic jammers to hide the energy signatures.'\nFinal assembly of Callisto Sidestep Engine initiated. Electromagnetic screening active.",
     prerequisites: ["chapter8.3"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_assembly', repeatCount: 1 }
+      { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
     ],
     reward: [
       { target: 'project', targetId: 'sidestep_operation', type: 'enable' }
