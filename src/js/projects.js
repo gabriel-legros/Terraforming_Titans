@@ -448,6 +448,7 @@ class ProjectManager extends EffectableEntity {
         repeatCount: project.repeatCount,
         pendingResourceGains: project.pendingResourceGains || [],
         autoStart : project.autoStart,
+        shownStorySteps: Array.from(project.shownStorySteps),
       };
 
       if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
@@ -494,6 +495,7 @@ class ProjectManager extends EffectableEntity {
         }
         project.effects = [];
         project.autoStart = savedProject.autoStart;
+        project.shownStorySteps = new Set(savedProject.shownStorySteps || []);
         if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
           project.assignedSpaceships = savedProject.assignedSpaceships;
           project.autoAssignSpaceships = savedProject.autoAssignSpaceships;

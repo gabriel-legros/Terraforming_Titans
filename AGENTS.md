@@ -50,6 +50,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 The Dyson Swarm project begins with research into a large orbital array. An advanced research unlocks the concept and a follow-up energy research enables the **Dyson Swarm Receiver** special project. The receiver currently costs massive resources (10M metal, 1M components, 100k electronics) and takes five minutes to build but provides no effect yet.
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
 - **projects.js** and **projectsUI.js** handle special missions such as asteroid mining, cargo exports and other repeatable tasks.
+- Story project progress now stores which narrative steps have already been shown so repeating or reloading a project will never reprint earlier text.
 - **spaceship.js** with **spaceshipUI.js** allows producing spaceships and assigning them to projects.
 - **day-night-cycle.js** updates a UI progress bar showing planetary time and affects building productivity.
 - **journal.js** maintains a log of story messages with typing effects and history display.
