@@ -1433,7 +1433,7 @@ progressData.chapters.push(
     id: "chapter7.3",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. That gives us more personnel to assign to the 'Heat-Sink' project without raising suspicion. Keep the expansion steady.'",
+    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. That gives us more personnel to assign to the 'Heat-Sink' project without raising suspicion. Keep the expansion steady.'  New special project available : Forge Sub-Engine Cores",
     prerequisites: ["chapter7.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
