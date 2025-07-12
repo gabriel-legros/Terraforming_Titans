@@ -97,6 +97,13 @@ function create() {
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
+  let savedAdvancedResearch = null;
+  if (preserveManagers && resources && resources.colony && resources.colony.advancedResearch) {
+    savedAdvancedResearch = {
+      value: resources.colony.advancedResearch.value,
+      unlocked: resources.colony.advancedResearch.unlocked,
+    };
+  }
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
@@ -114,6 +121,10 @@ function initializeGameState(options = {}) {
   dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
   resources = {};
   resources = createResources(currentPlanetParameters.resources);
+  if (savedAdvancedResearch) {
+    resources.colony.advancedResearch.value = savedAdvancedResearch.value;
+    resources.colony.advancedResearch.unlocked = savedAdvancedResearch.unlocked;
+  }
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
