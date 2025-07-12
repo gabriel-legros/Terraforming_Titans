@@ -1025,7 +1025,8 @@ progressData.chapters.push(
         targetId: 'solis-hope',
         unhide: true,
         onLoad: false
-      }
+      },
+      { target: 'resource', resourceType: 'colony', targetId: 'androids', type: 'enable' }
     ]
   },
   {
