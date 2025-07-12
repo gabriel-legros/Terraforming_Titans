@@ -158,7 +158,11 @@ class Project extends EffectableEntity {
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
         const amount = this.sustainCost[category][resource] * seconds;
+        const rate = this.sustainCost[category][resource];
         resources[category][resource].decrease(amount);
+        if (resources[category][resource].modifyRate) {
+          resources[category][resource].modifyRate(-rate, this.displayName, 'project');
+        }
       }
     }
   }
