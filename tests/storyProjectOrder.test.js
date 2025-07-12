@@ -23,10 +23,10 @@ describe('default story project order', () => {
       .map(p => p.name);
 
     expect(order.slice(0, 4)).toEqual([
-      'interrogate_alien',
-      'sticky_dust_trap',
-      'triangulate_attack',
-      'earthProbe'
+      'sidestep_operation',
+      'sidestep_assembly',
+      'sidestep_fabrication',
+      'sidestep_excavation'
     ]);
   });
 });

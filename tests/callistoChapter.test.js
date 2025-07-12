@@ -15,7 +15,7 @@ describe('Callisto chapter and unlock', () => {
     expect(ch64).toBeDefined();
     const reward = ch63b.reward.find(r => r.target === 'spaceManager' && r.targetId === 'callisto' && r.type === 'enable');
     expect(reward).toBeDefined();
-    expect(ch64.prerequisites).toContain('chapter6.3b');
+    expect(ch64.prerequisites).toContain('chapter6.3c');
     const obj = ch64.objectives && ch64.objectives[0];
     expect(obj).toEqual({ type: 'currentPlanet', planetId: 'callisto' });
   });

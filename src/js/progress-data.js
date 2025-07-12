@@ -1374,6 +1374,9 @@ progressData.storyProjects.sidestep_operation = {
   cost: {
     colony: { energy: 10_000_000, research: 10_000_000 }
   },
+  sustainCost: {
+    colony: { energy: 100_000 }
+  },
   duration: 1_800_000,               // 30 min
   description: 'Execute months‑long pseudo‑random micro‑burns from three worlds to scramble enemy targeting.',
   repeatable: false,
