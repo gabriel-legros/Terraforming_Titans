@@ -101,6 +101,20 @@ function createProjectItem(project) {
     projectElements[project.name] = { ...projectElements[project.name], costElement: costElement };
   }
 
+  // Sustain Cost
+  if (project.sustainCost) {
+    const sustainContainer = document.createElement('p');
+    sustainContainer.classList.add('project-sustain-cost');
+    const sustainText = document.createElement('span');
+    const info = document.createElement('span');
+    info.classList.add('info-tooltip-icon');
+    info.title = 'Project will pause if sustain cost is not met.';
+    info.innerHTML = '&#9432;';
+    sustainContainer.append(sustainText, info);
+    projectDetails.appendChild(sustainContainer);
+    projectElements[project.name] = { ...projectElements[project.name], sustainCostElement: sustainText };
+  }
+
   // Repeat Count
   if (project.repeatable && project.maxRepeatCount !== Infinity) {
     const repeatCountElement = document.createElement('p');
@@ -284,6 +298,26 @@ function updateCostDisplay(project) {
   }
 }
 
+function updateSustainCostDisplay(project) {
+  const elements = projectElements[project.name];
+  if (elements && elements.sustainCostElement && project.sustainCost) {
+    const costArray = [];
+    for (const category in project.sustainCost) {
+      for (const resource in project.sustainCost[category]) {
+        const perSecond = project.sustainCost[category][resource];
+        const resourceDisplayName = resources[category][resource].displayName || resource;
+        costArray.push(`${resourceDisplayName}: ${formatNumber(perSecond, true)}/s`);
+      }
+    }
+    if (costArray.length > 0) {
+      elements.sustainCostElement.textContent = `Sustain: ${costArray.join(', ')}`;
+      elements.sustainCostElement.parentElement.style.display = 'block';
+    } else {
+      elements.sustainCostElement.parentElement.style.display = 'none';
+    }
+  }
+}
+
 function updateTotalCostDisplay(project) {
   let totalCost = 0;
 
@@ -376,6 +410,9 @@ function updateProjectUI(projectName) {
   if (elements.costElement) {
     updateCostDisplay(project); // Refresh the cost display with scaled cost
   }
+  if (elements.sustainCostElement) {
+    updateSustainCostDisplay(project);
+  }
 
   // Check if the project has reached its maximum repeat count or is completed and not repeatable
   const isMaxRepeatReached = project.repeatable && project.repeatCount >= project.maxRepeatCount;
@@ -411,6 +448,10 @@ function updateProjectUI(projectName) {
         } else if (project.isCompleted) {
           elements.progressButton.textContent = `Completed: ${project.displayName}`;
           elements.progressButton.style.background = '#4caf50';
+        } else if (project.isPaused) {
+          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+          elements.progressButton.textContent = `Resume ${project.displayName} (${timeRemaining}s left)`;
+          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
           // Update dynamic duration for spaceMining projects
           let duration = project.getEffectiveDuration();
@@ -511,7 +552,11 @@ function updateProjectUI(projectName) {
 
 
 function startProjectWithSelectedResources(project) {
-  if (project.canStart()) {
+  if (project.isPaused) {
+    if (!project.resume()) {
+      console.log(`Failed to resume project: ${project.name}`);
+    }
+  } else if (project.canStart()) {
     projectManager.startProject(project.name);
   } else {
     console.log(`Failed to start project: ${project.name}`);
@@ -519,7 +564,11 @@ function startProjectWithSelectedResources(project) {
 }
 
 function checkAndStartProjectAutomatically(project) {
-  if (project.canStart()) {
+  if (project.isPaused) {
+    if (project.canStart()) {
+      startProjectWithSelectedResources(project);
+    }
+  } else if (project.canStart()) {
     startProjectWithSelectedResources(project);
   }
 }
