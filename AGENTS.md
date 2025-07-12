@@ -41,6 +41,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 - **milestones.js** and **milestonesUI.js** track long term objectives and unlock rewards.
 - **solis.js** and **solisUI.js** manage the Solis shop and quest system which grants Solis points for completing delivery quests.
 - The shop now offers a food upgrade granting +100 food per purchase.
+- A colonist rocket upgrade increases colonists delivered per import rocket by 1 for each purchase.
 - Resource upgrades now apply a base storage bonus effect to the purchased resource.
 - Resources calculate their storage cap from active baseStorageBonus effects instead of modifying the baseCap value.
 - The ResearchManager now persists between planets. Only advanced researches remain completed after travel; regular researches reset on each new planet.
