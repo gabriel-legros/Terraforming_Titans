@@ -1554,7 +1554,7 @@ progressData.chapters.push(
     chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the coolant purge systems. Security is engaging... We got him! Kane is in custody. But some of his lieutenants escaped with data cores. We don't know what they took.'\nThreat neutralized. Primary saboteur Elias Kane captured. Data breach confirmed. Assessing extent of stolen information.",
     prerequisites: ["chapter10.0"],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }],
+    objectives: [],
     reward: []
   },
   {
