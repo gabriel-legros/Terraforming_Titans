@@ -1379,16 +1379,17 @@ progressData.storyProjects.sidestep_operation = {
   sustainCost: {
     colony: { energy: 100_000_000_000_000 }
   },
-  duration: 1_800_000,               // 30 min
+  duration: 6_000,               // 10 min
   description: 'Execute months‑long pseudo‑random micro‑burns from three worlds to scramble enemy targeting.',
-  repeatable: false,
+  repeatable: true,
+  maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'callisto',
     storySteps: [
       'Auto‑hash generator seeds first thrust vector 2 s before ignition; logs retain only salted hashes.',
       'Coordinated burns from Mars, Titan and Callisto shift barycentre by millimetres per hour—undetectable to casual observers.',
-      'Final telemetry: predicted alien strike coordinates now trail actual colony position by 74 million km.'
+      'Final calculation: predicted alien strike coordinates now trail actual colony position by 74 million km.'
     ]
   }
 };
@@ -1543,7 +1544,7 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just intercepted a cult transmission. They're expecting an alien strike within one season. We're out of time. We have to launch Operation Sidestep now, ahead of schedule.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
     prerequisites: ["chapter9.2"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }
     ],
     reward: []
   },
