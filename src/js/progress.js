@@ -355,7 +355,22 @@ class StoryManager {
                 }
                 return '';
             }
-           case 'solisPoints': {
+          case 'currentPlanet': {
+                let name = objective.planetId || '';
+                if (typeof planetParameters !== 'undefined' && planetParameters[name] && planetParameters[name].name) {
+                    name = planetParameters[name].name;
+                } else if (name) {
+                    name = name.charAt(0).toUpperCase() + name.slice(1);
+                }
+                const current = (typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function')
+                    ? spaceManager.getCurrentPlanetKey()
+                    : null;
+                if (current === objective.planetId) {
+                    return `Currently on ${name}`;
+                }
+                return `Travel to ${name}`;
+          }
+          case 'solisPoints': {
                 const current = solisManager ? solisManager.solisPoints || 0 : 0;
                 return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
             }
