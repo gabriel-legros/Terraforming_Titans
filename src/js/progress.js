@@ -152,6 +152,9 @@ class StoryManager {
             chapterChanged = true;
         }
         console.log(`Activating event: ${event.id}`);
+        if (!event.activePlanet && typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function') {
+            event.activePlanet = spaceManager.getCurrentPlanetKey();
+        }
         this.activeEventIds.add(event.id);
         event.trigger(); // Calls addJournalEntry if it's a journal type
     }
@@ -209,11 +212,11 @@ class StoryManager {
             return true;
         }
         return event.objectives.every(objective => {
-            return this.isObjectiveComplete(objective);
+            return this.isObjectiveComplete(objective, event);
         });
     }
 
-    isObjectiveComplete(objective) { // Keep as is
+    isObjectiveComplete(objective, event = null) { // Keep as is but allow event context
        // ... (your existing logic) ...
         switch (objective.type) {
             case 'collection':
@@ -236,7 +239,8 @@ class StoryManager {
                  switch(objective.terraformingParameter){
                     case 'complete':
                         if (typeof spaceManager !== 'undefined') {
-                            return spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
+                            const planet = objective.planetId || (event && event.activePlanet) || spaceManager.getCurrentPlanetKey();
+                            return spaceManager.isPlanetTerraformed(planet);
                         }
                         return false;
                     case 'tropicalTemperature':
@@ -366,7 +370,7 @@ class StoryManager {
             const ev = this.findEventById(id);
             if (!ev || !ev.objectives) continue;
             for (const obj of ev.objectives) {
-                if (!this.isObjectiveComplete(obj)) {
+                if (!this.isObjectiveComplete(obj, ev)) {
                     return this.describeObjective(obj);
                 }
             }
@@ -500,8 +504,15 @@ class StoryManager {
             appliedEffects: this.appliedEffects,
             currentChapter: this.currentChapter,
              // Save waiting state too!
-            waitingForJournalEventId: this.waitingForJournalEventId
+            waitingForJournalEventId: this.waitingForJournalEventId,
+            activeEventPlanets: {}
         };
+        this.activeEventIds.forEach(id => {
+            const ev = this.findEventById(id);
+            if (ev && ev.activePlanet) {
+                state.activeEventPlanets[id] = ev.activePlanet;
+            }
+        });
         // console.log("Saving StoryManager state:", JSON.stringify(state));
         return state;
     }
@@ -517,6 +528,12 @@ class StoryManager {
         this.completedEventIds = new Set(savedState.completedEventIds || []);
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
+
+        const activePlanets = savedState.activeEventPlanets || {};
+        Object.keys(activePlanets).forEach(id => {
+            const ev = this.findEventById(id);
+            if (ev) ev.activePlanet = activePlanets[id];
+        });
 
         // ... (rest of loadState for effects) ...
          this.appliedEffects = savedState.appliedEffects || [];
