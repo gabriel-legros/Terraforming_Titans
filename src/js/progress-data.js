@@ -1352,7 +1352,7 @@ progressData.storyProjects.sidestep_assembly = {
   category: 'story',
   chapter: 9,
   cost: {
-    colony: { components: 150_000, electronics: 100_000, energy: 5_000_000, research: 5_000_000 }
+    colony: { components: 500_000, electronics: 100_000, energy: 5_000_000, research: 5_000_000 }
   },
   duration: 1_200_000,               // 20 min
   description: 'Bolt the cores and girders together; seal vault once alignment tests pass.',
