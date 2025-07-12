@@ -1309,7 +1309,8 @@ progressData.storyProjects.sidestep_excavation = {
   },
   duration: 600_000,                 // 10 min
   description: 'Unearth the abandoned Planetary Thruster foundations hidden beneath Callisto’s crust.',
-  repeatable: false,
+  repeatable: true,
+  maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'callisto',
@@ -1422,7 +1423,7 @@ progressData.chapters.push(
     narrative: "Objective: Excavate buried thruster pylons. Commencing operation under civilian cover.\nReceiving transmission...\n  Mary: 'The blueprints are on their way, disguised as botanical genome data. Titan is sending drills labelled 'hydrology gear.' Good luck, H.O.P.E. Don't get caught.'",
     prerequisites: ["chapter7.1"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_excavation', repeatCount: 1 }
+      { type: 'project', projectId: 'sidestep_excavation', repeatCount: 3 }
     ],
     reward: [
       { target: 'project', targetId: 'sidestep_fabrication', type: 'enable' }
@@ -1432,10 +1433,10 @@ progressData.chapters.push(
     id: "chapter7.3",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. Ten thousand people. That gives us more personnel to assign to the 'Heat-Sink' project without raising suspicion. Keep the expansion steady.'\nPopulation milestone reached: 10,000 colonists. Growth is within expected parameters.",
+    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. That gives us more personnel to assign to the 'Heat-Sink' project without raising suspicion. Keep the expansion steady.'\nPopulation milestone reached: 10,000 colonists. Growth is within expected parameters.",
     prerequisites: ["chapter7.2"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
     reward: []
   },
@@ -1446,7 +1447,7 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'We have a new problem. A man named Elias Kane has formed a cult, the 'Cult of Three Wounds.' They believe the aliens are our saviors and are actively trying to sabotage our terraforming efforts. They're becoming a real obstacle.'\nThreat detected. Civilian group 'Cult of Three Wounds' is actively obstructing primary directives. Monitoring for escalation.",
     prerequisites: ["chapter7.3"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
     reward: []
   },
