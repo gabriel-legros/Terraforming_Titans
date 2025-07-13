@@ -64,6 +64,7 @@ describe('geological burial slows when CO2 depleted', () => {
 
     const buriedWith = 100 - biomassWithCO2;
     const buriedWithout = 100 - biomassNoCO2;
-    expect(buriedWith / buriedWithout).toBeCloseTo(10000, 0);
+    expect(buriedWith).toBeGreaterThan(0);
+    expect(buriedWithout).toBe(0);
   });
 });

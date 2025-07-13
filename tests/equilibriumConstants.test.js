@@ -38,7 +38,7 @@ global.buildings = { spaceMirror: { surfaceArea: 0, active: 0 } };
 
 const Terraforming = require('../src/js/terraforming.js');
 global.Terraforming = Terraforming;
-require('../src/js/debug-tools.js');
+const debugTools = require('../src/js/debug-tools.js');
 
 function createResources(config) {
   const res = {};
@@ -60,7 +60,7 @@ describe('equilibrium constants', () => {
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
     terra.calculateInitialValues();
-    terra.calculateEquilibriumConstants();
+    debugTools.calculateEquilibriumConstants.call(terra);
 
     terra.updateResources(1000); // one tick
 
