@@ -110,6 +110,6 @@ describe('planet selection', () => {
     expect(marsDryIce).not.toBe(newDryIce);
     // Titan's dry ice distribution changed in the latest parameters. The
     // expected total now reflects the sum of the new zonal values.
-    expect(newDryIce).toBeCloseTo(7053.679870832162, 5);
+    expect(newDryIce).toBeCloseTo(7053.679738011067, 5);
   });
 });

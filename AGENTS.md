@@ -21,6 +21,8 @@ calculations from **physics.js**, **hydrology.js**, **water-cycle.js**,
   area.
 - Melting mechanics cap available ice at zone surface area multiplied by ice
   coverage and 0.1 m when computing melt flow between zones or within a zone.
+- Water and methane melting/freezing calculations now share a helper in
+  **phase-change-utils.js** to avoid duplicate logic.
 
 The hydrocarbon cycle models methane in its liquid, ice and vapor forms.  It
 uses Penman-based equations for evaporation and sublimation alongside flow and
