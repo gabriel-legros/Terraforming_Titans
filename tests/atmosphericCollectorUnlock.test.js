@@ -16,5 +16,6 @@ describe('Atmospheric Water Collector unlock trigger', () => {
     expect(obj.conditionId).toBe('shouldUnlockAtmosphericWaterCollector');
     const reward = ev.reward.find(r => r.targetId === 'atmosphericWaterCollector');
     expect(reward).toBeDefined();
+    expect(ev.chapter).toBe(-1);
   });
 });
