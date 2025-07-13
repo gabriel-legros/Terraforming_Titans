@@ -935,11 +935,11 @@ class Terraforming extends EffectableEntity{
 
     calculateSurfaceAlbedo() {
         const groundAlbedo = this.calculateGroundAlbedo();
-        const surfaceFractions = {
-          ocean: calculateAverageCoverage(this, 'liquidWater'),
-          ice: calculateAverageCoverage(this, 'ice'),
-          biomass: calculateAverageCoverage(this, 'biomass')
-        };
+        const surfaceFractions = calculateSurfaceFractions(
+          calculateAverageCoverage(this, 'liquidWater'),
+          calculateAverageCoverage(this, 'ice'),
+          calculateAverageCoverage(this, 'biomass')
+        );
         return surfaceAlbedoMix(groundAlbedo, surfaceFractions);
     }
 

@@ -137,12 +137,12 @@ function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
   if (!fractions) return rockAlb;
   const albs = { ...DEFAULT_SURFACE_ALBEDO };
   if (customAlb) Object.assign(albs, customAlb);
-  const rockFrac = 1.0 - Object.values(fractions).reduce((a, b) => a + b, 0);
-  if (rockFrac < 0) return rockAlb;
+  const rockFrac = Math.max(1.0 - Object.values(fractions).reduce((a, b) => a + b, 0),0);
   let a = rockFrac * rockAlb;
   for (const k in fractions) {
     a += fractions[k] * (albs[k] !== undefined ? albs[k] : rockAlb);
   }
+
   return a;
 }
 
