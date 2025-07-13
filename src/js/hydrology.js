@@ -197,34 +197,36 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalT
 // Compute melting and freezing rates for a surface zone based on temperature
 function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1) {
     const freezingPoint = 273.15;
-    const meltingRateMultiplier = 0.0000005; // per K per second
-    const freezingRateMultiplier = 0.0000005; // per K per second
+    const meltingRateMultiplier = 0.000001; // per K per second
+    const freezingRateMultiplier = 0.000001; // per K per second
 
     let meltingRate = 0;
     let freezingRate = 0;
 
-    const iceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
-    const meltCap = zoneArea * iceCoverage * 0.1;
-    const cappedSurfaceIce = Math.min(availableIce || 0, meltCap);
-    const remainingMeltCap = Math.max(0, meltCap - cappedSurfaceIce);
-    const cappedBuriedIce = Math.min(availableBuriedIce || 0, remainingMeltCap);
-
     if (temperature > freezingPoint) {
         const diff = temperature - freezingPoint;
-        // Calculate potential melt rate based on total ice available for melting
-        const potentialMeltRate = (cappedSurfaceIce + cappedBuriedIce) * meltingRateMultiplier * diff;
 
-        // Apply melt to surface ice first
-        const meltFromSurface = Math.min(potentialMeltRate, cappedSurfaceIce);
-        const remainingMeltPotential = potentialMeltRate - meltFromSurface;
+        // 1. Calculate surface melt rate
+        const surfaceIceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
+        const surfaceMeltCap = zoneArea * surfaceIceCoverage * 0.1;
+        const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
+        const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
 
-        // Apply 10% of the remaining melt potential to buried ice
-        let meltFromBuried = 0;
-        if (remainingMeltPotential > 0) {
-            meltFromBuried = Math.min(remainingMeltPotential * 0.1, cappedBuriedIce);
+        // 2. Calculate potential buried melt rate
+        const buriedIceCoverage = 1; // Assume 100% coverage for buried ice
+        const buriedMeltCap = zoneArea * buriedIceCoverage * 0.1;
+        const cappedBuriedIce = Math.min(availableBuriedIce || 0, buriedMeltCap);
+        const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.1; // 10% penalty
+
+        // 3. Compare and determine actual buried melt
+        let actualBuriedMeltRate = 0;
+        if (potentialBuriedMeltRate > surfaceMeltRate) {
+            actualBuriedMeltRate = potentialBuriedMeltRate - surfaceMeltRate;
         }
 
-        meltingRate = meltFromSurface + meltFromBuried;
+        // 4. Total melting rate
+        meltingRate = surfaceMeltRate + actualBuriedMeltRate;
+
     } else if (temperature < freezingPoint && availableLiquid > 0) {
         const diff = freezingPoint - temperature;
         freezingRate = availableLiquid * freezingRateMultiplier * diff;
@@ -235,34 +237,36 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
 
 function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1) {
     const freezingPoint = 90.7; // Methane freezing point in K
-    const meltingRateMultiplier = 0.0000005; // per K per second
-    const freezingRateMultiplier = 0.0000005; // per K per second
+    const meltingRateMultiplier = 0.000001; // per K per second
+    const freezingRateMultiplier = 0.000001; // per K per second
 
     let meltingRate = 0;
     let freezingRate = 0;
 
-    const iceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
-    const meltCap = zoneArea * iceCoverage * 0.1;
-    const cappedSurfaceIce = Math.min(availableIce || 0, meltCap);
-    const remainingMeltCap = Math.max(0, meltCap - cappedSurfaceIce);
-    const cappedBuriedIce = Math.min(availableBuriedIce || 0, remainingMeltCap);
-
     if (temperature > freezingPoint) {
         const diff = temperature - freezingPoint;
-        // Calculate potential melt rate based on total ice available for melting
-        const potentialMeltRate = (cappedSurfaceIce + cappedBuriedIce) * meltingRateMultiplier * diff;
 
-        // Apply melt to surface ice first
-        const meltFromSurface = Math.min(potentialMeltRate, cappedSurfaceIce);
-        const remainingMeltPotential = potentialMeltRate - meltFromSurface;
+        // 1. Calculate surface melt rate
+        const surfaceIceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
+        const surfaceMeltCap = zoneArea * surfaceIceCoverage * 0.1;
+        const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
+        const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
 
-        // Apply 10% of the remaining melt potential to buried ice
-        let meltFromBuried = 0;
-        if (remainingMeltPotential > 0) {
-            meltFromBuried = Math.min(remainingMeltPotential * 0.1, cappedBuriedIce);
+        // 2. Calculate potential buried melt rate
+        const buriedIceCoverage = 1; // Assume 100% coverage for buried ice
+        const buriedMeltCap = zoneArea * buriedIceCoverage * 0.1;
+        const cappedBuriedIce = Math.min(availableBuriedIce || 0, buriedMeltCap);
+        const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.1; // 10% penalty
+
+        // 3. Compare and determine actual buried melt
+        let actualBuriedMeltRate = 0;
+        if (potentialBuriedMeltRate > surfaceMeltRate) {
+            actualBuriedMeltRate = potentialBuriedMeltRate - surfaceMeltRate;
         }
 
-        meltingRate = meltFromSurface + meltFromBuried;
+        // 4. Total melting rate
+        meltingRate = surfaceMeltRate + actualBuriedMeltRate;
+
     } else if (temperature < freezingPoint && availableLiquid > 0) {
         const diff = freezingPoint - temperature;
         freezingRate = availableLiquid * freezingRateMultiplier * diff;
