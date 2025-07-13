@@ -46,6 +46,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
         let coveredArea = 1;
         if (terraforming && getZonePercentageFn) {
             const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
+            totalIceAvail[zone] = Math.min(totalIceAvail[zone], zoneArea*0.1);
          //   const surfaceSubstance = (zonalData[zone][liquidProp] || 0) + (zonalData[zone][iceProp] || 0);
          //   const coverage = estimateCoverageFn(surfaceSubstance, zoneArea);
         //    coveredArea = zoneArea * (coverage > 0 ? coverage : 1);
