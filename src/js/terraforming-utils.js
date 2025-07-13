@@ -75,6 +75,34 @@ function calculateAverageCoverage(terraforming, resourceType) {
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
 }
 
+// Derive surface fractions for albedo calculations. Biomass always claims its
+// full portion of the surface. Water and ice then divide whatever area remains
+// between them. If their combined coverage exceeds the leftover area, each is
+// scaled proportionally so the total does not surpass 100% of the zone.
+function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage) {
+  const biomass = Math.min(biomassCoverage, 1);
+  const remaining = 1 - biomass;
+
+  const water = Math.max(0, waterCoverage);
+  const ice = Math.max(0, iceCoverage);
+  const totalWI = water + ice;
+
+  let waterFraction = water;
+  let iceFraction = ice;
+
+  if (totalWI > remaining && totalWI > 0) {
+    const scale = remaining / totalWI;
+    waterFraction = water * scale;
+    iceFraction = ice * scale;
+  }
+
+  return {
+    ocean: waterFraction,
+    ice: iceFraction,
+    biomass: biomass
+  };
+}
+
 function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
@@ -116,6 +144,7 @@ if (!isNode) {
   // expose wrappers for browser usage without overwriting the captured bases
   globalThis.calculateAverageCoverage = calculateAverageCoverage;
   globalThis.calculateZonalCoverage = calculateZonalCoverage;
+  globalThis.calculateSurfaceFractions = calculateSurfaceFractions;
   globalThis.calculateEvaporationSublimationRates = calculateZonalEvaporationSublimationRates;
   globalThis.calculatePrecipitationRateFactor = calculateZonalPrecipitationRateFactor;
   globalThis.calculateMeltingFreezingRates = calculateZonalMeltingFreezingRates;
@@ -125,6 +154,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     calculateAverageCoverage,
     calculateZonalCoverage,
+    calculateSurfaceFractions,
     // expose with original names for consumers
     calculateEvaporationSublimationRates: calculateZonalEvaporationSublimationRates,
     calculatePrecipitationRateFactor: calculateZonalPrecipitationRateFactor,
