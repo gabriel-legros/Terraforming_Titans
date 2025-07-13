@@ -23,6 +23,9 @@
     calculateMethaneCondensationRateFactor = hydrocarbonCycle.calculateMethaneCondensationRateFactor;
     calculateMethaneEvaporationRate = hydrocarbonCycle.calculateMethaneEvaporationRate;
 
+    const physics = require('./physics.js');
+    calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
+
     const zonesMod = require('./zones.js');
     getZonePercentage = zonesMod.getZonePercentage;
     getZoneRatio = zonesMod.getZoneRatio;
