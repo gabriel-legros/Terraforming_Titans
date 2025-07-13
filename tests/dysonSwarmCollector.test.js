@@ -25,7 +25,7 @@ describe('Dyson Swarm collector behaviour', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager; this.Project = Project;', ctx);
-    const dysonCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'dysonswarm.js'), 'utf8');
+    const dysonCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'dysonswarm.js'), 'utf8');
     vm.runInContext(dysonCode + '; this.DysonSwarmReceiverProject = DysonSwarmReceiverProject;', ctx);
 
     ctx.projectManager = new ctx.ProjectManager();
@@ -60,7 +60,7 @@ describe('Dyson Swarm collector behaviour', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const dysonCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'dysonswarm.js'), 'utf8');
+    const dysonCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'dysonswarm.js'), 'utf8');
     vm.runInContext(dysonCode + '; this.DysonSwarmReceiverProject = DysonSwarmReceiverProject;', ctx);
 
     const params = { name: 'dyson', category: 'mega', cost: {}, duration: 0, description: '', repeatable: false, unlocked: true, attributes: {} };
