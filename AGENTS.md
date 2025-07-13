@@ -63,9 +63,7 @@ scripts implement the tabs, pop-ups and other interface elements.
 ## Dyson Swarm Receiver
 The Dyson Swarm project begins with research into a large orbital array. An advanced research unlocks the concept and a follow-up energy research enables the **Dyson Swarm Receiver** special project. The receiver initially costs massive resources (10M metal, 1M components, 100k electronics) and takes five minutes to build.
 Once complete, players may deploy orbital solar collectors from a dedicated UI. Collectors require glass, electronics and components and build over time with optional automation. The total collectors persist when travelling between planets and each provides additional energy production labelled as **Dyson Swarm** in the resource rates.
-- The collector progress bar now updates even after the receiver project is finished, and collector controls remain disabled until the receiver itself is complete.
-- The solar collector UI remains hidden until the receiver project is completed, showing the Dyson Swarm card only when ready.
-- The collector cost is now displayed on the Dyson Swarm card.
+
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
 - **projects.js** and **projectsUI.js** handle special missions such as asteroid mining, cargo exports and other repeatable tasks.
 - Story project progress now stores which narrative steps have already been shown so repeating or reloading a project will never reprint earlier text.
@@ -75,10 +73,6 @@ Once complete, players may deploy orbital solar collectors from a dedicated UI. 
 - **population.js** together with colony modules controls growth, worker allocation and happiness.
 - **ore-scanning.js** searches for underground resource deposits using adjustable scanning strength.
 - **warning.js** displays urgent alerts like colonist deaths or extreme greenhouse conditions.
-- Sustain costs for active projects now register as 'project' consumption in resource rate tooltips.
-- Projects requiring ongoing resources check if enough supplies exist for the next second rather than just the current frame.
-- The luminosity box now shows both ground albedo (base plus black dust) and surface albedo derived from physics.js.
-- Surface albedo deltas compare against the initial surface value on game start, defaulting to ground albedo if unavailable. Tooltip breakdowns list black dust, water, ice and biomass percentages.
 
 # Effectable Entities Design
 
@@ -185,3 +179,14 @@ This section outlines the personalities of the main characters in the story.
 - Atmospheric Water Collector building unlocks via a condition-based story trigger when the planet is hot and dry. The trigger is now treated as a prerequisite so the journal entry only appears once conditions are met.
 - Prerequisites can include condition checks like objectives. StoryManager evaluates these when determining if an event should activate.
 - Story events with a chapter value of `-1` do not change the current chapter when activated; their journal text appears in whichever chapter is active.
+
+# Changelogs
+Insert changes here.  Keep it organized.
+
+- The collector progress bar now updates even after the receiver project is finished, and collector controls remain disabled until the receiver itself is complete.
+- The solar collector UI remains hidden until the receiver project is completed, showing the Dyson Swarm card only when ready.
+- The collector cost is now displayed on the Dyson Swarm card.
+- Sustain costs for active projects now register as 'project' consumption in resource rate tooltips.
+- Projects requiring ongoing resources check if enough supplies exist for the next second rather than just the current frame.
+- The luminosity box now shows both ground albedo (base plus black dust) and surface albedo derived from physics.js.
+- Surface albedo deltas compare against the initial surface value on game start, defaulting to ground albedo if unavailable. Tooltip breakdowns list black dust, water, ice and biomass percentages.
