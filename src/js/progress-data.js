@@ -972,6 +972,21 @@ progressData.storyProjects.earthProbe = {
 
 progressData.chapters.push(
   {
+    id: "any.awCollector",
+    type: "journal",
+    chapter: 0,
+    narrative: "Blueprint retrieved: Atmospheric Water Collector now constructible.",
+    prerequisites: [],
+    objectives: [
+      { type: 'condition', conditionId: 'shouldUnlockAtmosphericWaterCollector', description: '' }
+    ],
+    reward: [
+      { target: 'building', targetId: 'atmosphericWaterCollector', type: 'enable' }
+    ]
+  }
+);
+progressData.chapters.push(
+  {
     id: "chapter4.13",
     type: "journal",
     chapter: 4,
