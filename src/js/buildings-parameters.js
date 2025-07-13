@@ -60,6 +60,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  atmosphericWaterCollector: {
+    name: 'Atmospheric Water Collector',
+    category: 'resource',
+    description: 'Condenses atmospheric moisture when little surface water remains.',
+    cost: { colony: { components: 10, electronics: 1 } },
+    consumption: { atmospheric: { atmosphericWater: 1 } },
+    production: { colony: { water: 1 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   recyclingFacility: {
     name: 'Recycling Facility',
     category: 'resource',

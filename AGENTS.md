@@ -178,3 +178,4 @@ This section outlines the personalities of the main characters in the story.
 *   **Dr. Evelyn Hart:** A brilliant and pragmatic scientist, Dr. Hart is the architect of Operation Sidestep. Her dialogue is professional, focused, and driven by the immense scientific and strategic pressures of the unfolding crisis. She is a master of contingency planning and secrecy.
 
 *   **Elias Kane:** The charismatic and fanatical leader of the Cult of Three Wounds. He believes the aliens are saviors and that humanity's attempts to terraform are a blasphemy against a grand cosmic design. His dialogue is prophetic, manipulative, and aimed at undermining H.O.P.E.'s mission at every turn, as he is secretly following the aliens' orders.
+\n- Atmospheric Water Collector building unlocks via a condition-based story trigger when the planet is hot and dry.

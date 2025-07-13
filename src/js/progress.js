@@ -9,6 +9,20 @@ function joinLines(text) {
     return Array.isArray(text) ? text.join('\n') : text;
 }
 
+function compareValues(current, target, comparison = 'gte') {
+    switch (comparison) {
+        case 'gt':
+            return current > target;
+        case 'lt':
+            return current < target;
+        case 'lte':
+            return current <= target;
+        case 'gte':
+        default:
+            return current >= target;
+    }
+}
+
 class StoryManager {
     constructor(progressData) {
         this.allEvents = this.loadEvents(progressData);
@@ -226,7 +240,7 @@ class StoryManager {
                     console.error(`Resource check failed: ${objective.resourceType}.${objective.resource} not found.`);
                     return false;
                 }
-                return resourceCategory[objective.resource].value >= objective.quantity;
+                return compareValues(resourceCategory[objective.resource].value, objective.quantity, objective.comparison);
             case 'building':
                 const building = buildings[objective.buildingName];
                 return building ? building.count >= objective.quantity : false;
@@ -244,13 +258,13 @@ class StoryManager {
                         }
                         return false;
                     case 'tropicalTemperature':
-                         return terraforming.temperature?.zones?.tropical?.value >= objective.value;
+                         return compareValues(terraforming.temperature?.zones?.tropical?.value || 0, objective.value, objective.comparison);
                     case 'tropicalNightTemperature':
-                         return terraforming.temperature?.zones?.tropical?.night >= objective.value;
+                         return compareValues(terraforming.temperature?.zones?.tropical?.night || 0, objective.value, objective.comparison);
                     case 'tropicalDayTemperature':
-                         return terraforming.temperature?.zones?.tropical?.day >= objective.value;
+                         return compareValues(terraforming.temperature?.zones?.tropical?.day || 0, objective.value, objective.comparison);
                     case 'pressure':
-                         return terraforming.calculateTotalPressure() > objective.value;
+                         return compareValues(terraforming.calculateTotalPressure(), objective.value, objective.comparison);
                     // ... etc
                  }
                  return false; // Default for terraforming if parameter not matched
@@ -271,9 +285,22 @@ class StoryManager {
                    return solisManager.solisPoints >= (objective.points || 0);
                }
                return false;
-           default:
-                console.error(`Unknown objective type: ${objective.type}`);
-                return false;
+          case 'condition': {
+               const fn = globalThis[objective.conditionId];
+               if (typeof fn === 'function') {
+                   try {
+                       return fn();
+                   } catch (e) {
+                       console.error('Condition function threw', e);
+                       return false;
+                   }
+               }
+               console.warn(`Condition function not found: ${objective.conditionId}`);
+               return false;
+          }
+          default:
+               console.error(`Unknown objective type: ${objective.type}`);
+               return false;
        }
    }
 
@@ -374,6 +401,9 @@ class StoryManager {
                 const current = solisManager ? solisManager.solisPoints || 0 : 0;
                 return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
             }
+          case 'condition': {
+                return objective.description || '';
+          }
            default:
                 return '';
        }
