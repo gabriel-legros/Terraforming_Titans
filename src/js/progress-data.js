@@ -972,21 +972,6 @@ progressData.storyProjects.earthProbe = {
 
 progressData.chapters.push(
   {
-    id: "any.awCollector",
-    type: "journal",
-    chapter: -1,
-    narrative: "Blueprint retrieved: Atmospheric Water Collector now constructible.",
-    prerequisites: [
-      { type: 'condition', conditionId: 'shouldUnlockAtmosphericWaterCollector', description: '' }
-    ],
-    objectives: [],
-    reward: [
-      { target: 'building', targetId: 'atmosphericWaterCollector', type: 'enable' }
-    ]
-  }
-);
-progressData.chapters.push(
-  {
     id: "chapter4.13",
     type: "journal",
     chapter: 4,
@@ -1654,3 +1639,18 @@ if (typeof projectParameters !== 'undefined') {
   });
 })(progressData);
 
+progressData.chapters.push(
+  {
+    id: "any.awCollector",
+    type: "journal",
+    chapter: -1,
+    narrative: "Blueprint retrieved: Atmospheric Water Collector now constructible.",
+    prerequisites: [
+      { type: 'condition', conditionId: 'shouldUnlockAtmosphericWaterCollector', description: '' }
+    ],
+    objectives: [],
+    reward: [
+      { target: 'building', targetId: 'atmosphericWaterCollector', type: 'enable' }
+    ]
+  }
+);
