@@ -191,13 +191,13 @@ const titanOverrides = {
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       "carbonDioxide": {
-        "initialValue": 92955.75635271562
+        "initialValue": 92946.32012925664
       },
       "atmosphericWater": {
-        "initialValue": 2.3668872182736668e-12
+        "initialValue": 1.7716265996959241e-12
       },
       "atmosphericMethane": {
-        "initialValue": 129124910946202.95,
+        "initialValue": 124032130092556.89,
         "unlocked": true
       }
     },
@@ -205,7 +205,7 @@ const titanOverrides = {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
     }
   },
-  "zonalWater": {
+   "zonalWater": {
     "tropical": {
       "liquid": 0,
       "ice": 3791.2409230205194,
@@ -224,27 +224,27 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 2768.868838805237
+      "dryIce": 2772.122063894122
     },
     "temperate": {
-      "dryIce": 3649.678466925043
+      "dryIce": 3654.6212950974455
     },
     "polar": {
-      "dryIce": 625.6963415526989
+      "dryIce": 626.9365118405951
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 1852736791414.1562,
+      "liquid": 1884760335162.6494,
       "ice": 0
     },
     "temperate": {
-      "liquid": 2535944053669.6943,
+      "liquid": 2449857992361.6147,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 986408208737.3937
+      "ice": 6133251579946.04
     }
   },
 
