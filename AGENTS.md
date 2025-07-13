@@ -181,4 +181,5 @@ This section outlines the personalities of the main characters in the story.
 
 *   **Elias Kane:** The charismatic and fanatical leader of the Cult of Three Wounds. He believes the aliens are saviors and that humanity's attempts to terraform are a blasphemy against a grand cosmic design. His dialogue is prophetic, manipulative, and aimed at undermining H.O.P.E.'s mission at every turn, as he is secretly following the aliens' orders.
 - Atmospheric Water Collector building unlocks via a condition-based story trigger when the planet is hot and dry. The trigger is now treated as a prerequisite so the journal entry only appears once conditions are met.
+- Prerequisites can include condition checks like objectives. StoryManager evaluates these when determining if an event should activate.
 - Story events with a chapter value of `-1` do not change the current chapter when activated; their journal text appears in whichever chapter is active.

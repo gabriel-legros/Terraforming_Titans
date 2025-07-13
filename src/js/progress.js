@@ -86,12 +86,18 @@ class StoryManager {
             // --- Automatically add prerequisite based on nextChapter ---
             // Find the event that lists *this* event as its nextChapter
             const previousEvent = progressData.chapters.find(ch => ch.nextChapter === config.id);
-            if (previousEvent && !config.prerequisites?.includes(previousEvent.id)) {
+            if (previousEvent) {
                  if (!event.prerequisites) {
                       event.prerequisites = [];
                  }
-                 console.log(`Auto-adding prerequisite: ${previousEvent.id} for event ${event.id}`);
-                 event.prerequisites.push(previousEvent.id);
+                 const already = event.prerequisites.some(p =>
+                      (typeof p === 'string' && p === previousEvent.id) ||
+                      (p && typeof p === 'object' && p.id === previousEvent.id)
+                 );
+                 if (!already) {
+                      console.log(`Auto-adding prerequisite: ${previousEvent.id} for event ${event.id}`);
+                      event.prerequisites.push(previousEvent.id);
+                 }
             }
             // --------------------------------------------------------
             eventsMap.set(event.id, event);
@@ -177,21 +183,25 @@ class StoryManager {
         event.trigger(); // Calls addJournalEntry if it's a journal type
     }
 
-    checkActivationConditions(event) { // Keep mostly as is (using prerequisites)
+    checkActivationConditions(event) { // extended to support typed prerequisites
          if (!event) return false;
-         // Use prerequisites (potentially auto-added in loadEvents)
          if (event.prerequisites && event.prerequisites.length > 0) {
-             const allPrereqsMet = event.prerequisites.every(prereqId => this.completedEventIds.has(prereqId));
-             if (!allPrereqsMet) {
-                // console.log(`Event ${event.id} prerequisites not met: ${event.prerequisites.filter(id => !this.completedEventIds.has(id))}`);
-             }
+             const allPrereqsMet = event.prerequisites.every(pr => this.isPrerequisiteMet(pr, event));
              return allPrereqsMet;
          }
-         // If an event has NO prerequisites (like the very first one), it should be activatable.
-         // Let's assume chapter0.1 has no prerequisites. Others get them from nextChapter.
-         // This allows the first event to activate.
          return true;
      }
+
+    isPrerequisiteMet(prereq, event = null) {
+        if (typeof prereq === 'string') {
+            return this.completedEventIds.has(prereq);
+        }
+        if (!prereq || typeof prereq !== 'object') return false;
+        if (prereq.type === 'event' && prereq.id) {
+            return this.completedEventIds.has(prereq.id);
+        }
+        return this.isObjectiveComplete(prereq, event);
+    }
 
 
     processEventCompletion(eventId) { // Keep mostly as is
@@ -497,15 +507,19 @@ class StoryManager {
 
             const event = this.findEventById(eventId);
             if (event && event.prerequisites) {
-                event.prerequisites.forEach(prereqId => {
-                    findPrereqsRecursive(prereqId);
+                event.prerequisites.forEach(pr => {
+                    const id = typeof pr === 'string' ? pr : pr && pr.id;
+                    if (id) findPrereqsRecursive(id);
                 });
             }
         };
 
         // Start the recursion from the target chapter's prerequisites
         if (targetEvent.prerequisites) {
-            targetEvent.prerequisites.forEach(prereqId => findPrereqsRecursive(prereqId));
+            targetEvent.prerequisites.forEach(pr => {
+                const id = typeof pr === 'string' ? pr : pr && pr.id;
+                if (id) findPrereqsRecursive(id);
+            });
         }
 
 
