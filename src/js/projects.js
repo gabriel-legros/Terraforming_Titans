@@ -154,7 +154,7 @@ class Project extends EffectableEntity {
 
   deductSustainResources(deltaTime) {
     if (!this.sustainCost) return;
-    const seconds = deltaTime / 1000;
+    const seconds = 1;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
         const amount = this.sustainCost[category][resource] * seconds;
@@ -209,11 +209,6 @@ class Project extends EffectableEntity {
     }
 
     this.deductSustainResources(deltaTime);
-
-    if (!this.hasSustainResources()) {
-      this.isActive = false;
-      this.isPaused = true;
-    }
 
     this.remainingTime -= deltaTime;
 
