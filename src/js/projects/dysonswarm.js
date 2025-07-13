@@ -6,9 +6,9 @@ class DysonSwarmReceiverProject extends Project {
     this.collectorProgress = 0;
     this.autoDeployCollectors = false;
     this.collectorCost = {
-      colony: { glass: 1000, electronics: 1000, components: 1000 }
+      colony: { metal: 250000, electronics: 125000, components: 20000, glass: 4000,  }
     };
-    this.energyPerCollector = 1000000;
+    this.energyPerCollector = 1000000000000;
   }
 
   renderUI(container) {
