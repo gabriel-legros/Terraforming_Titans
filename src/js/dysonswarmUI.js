@@ -10,8 +10,8 @@ function renderDysonSwarmUI(project, container) {
         <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors"></span></div>
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
-        <div class="stat-item"><span class="stat-label">Collector Cost:</span><span id="ds-collector-cost"></span></div>
       </div>
+      <div class="stat-item collector-cost-container"><span class="stat-label">Collector Cost:</span><span id="ds-collector-cost"></span></div>
       <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container"><input type="checkbox" id="ds-auto"><label for="ds-auto">Auto start</label></div>
     </div>`;

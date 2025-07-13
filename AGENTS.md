@@ -179,7 +179,6 @@ This section outlines the personalities of the main characters in the story.
 - Atmospheric Water Collector building unlocks via a condition-based story trigger when the planet is hot and dry. The trigger is now treated as a prerequisite so the journal entry only appears once conditions are met.
 - Prerequisites can include condition checks like objectives. StoryManager evaluates these when determining if an event should activate.
 - Story events with a chapter value of `-1` do not change the current chapter when activated; their journal text appears in whichever chapter is active.
-- Journal entries from chapter `-1` events are excluded when loading a save or reconstructing the journal.
 
 # Changelogs
 Insert changes here.  Keep it organized.
@@ -191,4 +190,3 @@ Insert changes here.  Keep it organized.
 - Projects requiring ongoing resources check if enough supplies exist for the next second rather than just the current frame.
 - The luminosity box now shows both ground albedo (base plus black dust) and surface albedo derived from physics.js.
 - Surface albedo deltas compare against the initial surface value on game start, defaulting to ground albedo if unavailable. Tooltip breakdowns list black dust, water, ice and biomass percentages.
-- Loading a save now filters out journal entries from chapter `-1` events so they do not persist between sessions.
