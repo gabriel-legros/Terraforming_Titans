@@ -65,6 +65,7 @@ The Dyson Swarm project begins with research into a large orbital array. An adva
 Once complete, players may deploy orbital solar collectors from a dedicated UI. Collectors require glass, electronics and components and build over time with optional automation. The total collectors persist when travelling between planets and each provides additional energy production labelled as **Dyson Swarm** in the resource rates.
 - The collector progress bar now updates even after the receiver project is finished, and collector controls remain disabled until the receiver itself is complete.
 - The solar collector UI remains hidden until the receiver project is completed, showing the Dyson Swarm card only when ready.
+- The collector cost is now displayed on the Dyson Swarm card.
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
 - **projects.js** and **projectsUI.js** handle special missions such as asteroid mining, cargo exports and other repeatable tasks.
 - Story project progress now stores which narrative steps have already been shown so repeating or reloading a project will never reprint earlier text.
