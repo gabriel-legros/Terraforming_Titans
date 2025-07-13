@@ -78,6 +78,16 @@ function psychrometricConstantMethane(atmPressure) {
   return psychrometricConstant(atmPressure, L_V_METHANE); // Pa/K
 }
 
+// Approximate methane boiling point (K) at a given pressure (Pa).
+// Derived from two reference points and valid roughly from 0.1 to 10 bar.
+function boilingPointMethane(atmPressure) {
+  if (atmPressure <= 0) return 0;
+  // ln(P) = A - B/T form of Clausius-Clapeyron
+  const A = 20.8676;
+  const B = 1043.0733;
+  return B / (A - Math.log(atmPressure));
+}
+
 // Function to calculate evaporation rate for methane using the modified Penman equation
 function evaporationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
     const Delta_s = slopeSVPMethane(T);
@@ -197,8 +207,10 @@ function calculateMethaneCondensationRateFactor({
     zoneArea,
     methaneVaporPressure,
     dayTemperature,
-    nightTemperature
+    nightTemperature,
+    atmPressure
 }) {
+    const boilingPoint = boilingPointMethane(atmPressure);
     const res = condensationRateFactorUtil({
         zoneArea,
         vaporPressure: methaneVaporPressure,
@@ -208,7 +220,9 @@ function calculateMethaneCondensationRateFactor({
         saturationFn: calculateSaturationPressureMethane,
         freezePoint: 90.7,
         transitionRange: 2,
-        maxDiff: 10
+        maxDiff: 10,
+        boilingPoint,
+        boilTransitionRange: 5
     });
     return {
         liquidRateFactor: res.liquidRate,
@@ -227,7 +241,8 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateMethaneEvaporationRate,
         sublimationRateMethane,
         rapidSublimationRateMethane,
-        calculateMethaneSublimationRate
+        calculateMethaneSublimationRate,
+        boilingPointMethane
     };
 } else {
     // Expose functions globally for browser usage
@@ -240,4 +255,5 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.sublimationRateMethane = sublimationRateMethane;
     globalThis.rapidSublimationRateMethane = rapidSublimationRateMethane;
     globalThis.calculateMethaneSublimationRate = calculateMethaneSublimationRate;
+    globalThis.boilingPointMethane = boilingPointMethane;
 }

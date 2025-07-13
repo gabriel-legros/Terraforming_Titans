@@ -472,7 +472,8 @@ class Terraforming extends EffectableEntity{
                 globalWaterPressurePa,
                 gravity,
                 dayTemp,
-                nightTemp
+                nightTemp,
+                globalTotalPressurePa
             );
             // Calculate potential amounts based on zonal conditions (before global limits)
             zonalChanges[zone].potentialRainfall = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
@@ -550,7 +551,8 @@ class Terraforming extends EffectableEntity{
                 zoneArea,
                 methaneVaporPressure: globalMethanePressurePa,
                 dayTemperature: dayTemp,
-                nightTemperature: nightTemp
+                nightTemperature: nightTemp,
+                atmPressure: globalTotalPressurePa
             });
             // Methane Condensation
             const methaneCondensationAmount = methaneCondRateFactors.liquidRateFactor * methaneCondensationParameter * durationSeconds;

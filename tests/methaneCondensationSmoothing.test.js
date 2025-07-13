@@ -3,6 +3,7 @@ const { calculateMethaneCondensationRateFactor } = require('../src/js/hydrocarbo
 describe('methane condensation smoothing around freezing', () => {
   const zoneArea = 1e6; // m^2
   const methaneVaporPressure = 30000; // Pa - ensure above saturation
+  const atmPressure = 101325;
 
   test('above freezing favors liquid', () => {
     const res = calculateMethaneCondensationRateFactor({
@@ -10,6 +11,7 @@ describe('methane condensation smoothing around freezing', () => {
       methaneVaporPressure,
       dayTemperature: 94,
       nightTemperature: 93,
+      atmPressure,
     });
     expect(res.liquidRateFactor).toBeGreaterThan(0);
     expect(res.liquidRateFactor).toBeGreaterThan(res.iceRateFactor);
@@ -21,6 +23,7 @@ describe('methane condensation smoothing around freezing', () => {
       methaneVaporPressure,
       dayTemperature: 88,
       nightTemperature: 89,
+      atmPressure,
     });
     expect(res.iceRateFactor).toBeGreaterThan(res.liquidRateFactor);
     expect(res.iceRateFactor).toBeGreaterThan(0);
@@ -32,6 +35,7 @@ describe('methane condensation smoothing around freezing', () => {
       methaneVaporPressure,
       dayTemperature: 91,
       nightTemperature: 90,
+      atmPressure,
     });
     expect(res.liquidRateFactor).toBeGreaterThan(0);
     expect(res.iceRateFactor).toBeGreaterThan(0);

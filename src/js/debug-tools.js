@@ -226,7 +226,8 @@
         initialWaterPressurePa,
         gravity,
         dayTemp,
-        nightTemp
+        nightTemp,
+        initialTotalPressurePa
       );
       potentialPrecipitationRateFactor +=
         precipRateFactors.rainfallRateFactor + precipRateFactors.snowfallRateFactor;
@@ -256,7 +257,8 @@
         zoneArea,
         methaneVaporPressure: initialMethanePressurePa,
         dayTemperature: dayTemp,
-        nightTemperature: nightTemp
+        nightTemperature: nightTemp,
+        atmPressure: initialTotalPressurePa
       });
       potentialMethaneCondensationRateFactor +=
         methaneCondRateFactors.liquidRateFactor + methaneCondRateFactors.iceRateFactor;

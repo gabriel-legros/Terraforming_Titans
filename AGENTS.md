@@ -23,6 +23,11 @@ calculations from **physics.js**, **hydrology.js**, **water-cycle.js**,
   coverage and 0.1 m when computing melt flow between zones or within a zone.
 - Water and methane melting/freezing calculations now share a helper in
   **phase-change-utils.js** to avoid duplicate logic.
+ - Condensation calculations now taper off near the pressure-dependent boiling
+   point of each substance. `water-cycle.js` uses an Antoine-equation helper
+   `boilingPointWater`. Methane temperatures rely on `boilingPointMethane`, a
+   log-based approximation good for roughly 0.1–10 bar. Both feed into a
+   `boilingPoint` parameter for `condensationRateFactor`.
 
 The hydrocarbon cycle models methane in its liquid, ice and vapor forms.  It
 uses Penman-based equations for evaporation and sublimation alongside flow and
