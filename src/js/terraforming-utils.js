@@ -122,14 +122,15 @@ function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, 
   });
 }
 
-function calculateZonalPrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp) {
+function calculateZonalPrecipitationRateFactor(terraforming, zone, waterVaporPressure, gravity, dayTemp, nightTemp, atmPressure) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   return baseCalculatePrecipFactor({
     zoneArea,
     waterVaporPressure,
     gravity,
     dayTemperature: dayTemp,
-    nightTemperature: nightTemp
+    nightTemperature: nightTemp,
+    atmPressure
   });
 }
 

@@ -4,6 +4,7 @@ describe('precipitation smoothing around freezing', () => {
   const zoneArea = 1e6; // m^2
   const waterVaporPressure = 800; // Pa
   const gravity = 9.81;
+  const atmPressure = 101325;
 
   test('above freezing gives predominantly rain', () => {
     const res = calculatePrecipitationRateFactor({
@@ -12,6 +13,7 @@ describe('precipitation smoothing around freezing', () => {
       gravity,
       dayTemperature: 276,
       nightTemperature: 275,
+      atmPressure,
     });
     expect(res.rainfallRateFactor).toBeGreaterThan(0);
     expect(res.rainfallRateFactor).toBeGreaterThan(res.snowfallRateFactor);
@@ -24,6 +26,7 @@ describe('precipitation smoothing around freezing', () => {
       gravity,
       dayTemperature: 270,
       nightTemperature: 271,
+      atmPressure,
     });
     expect(res.rainfallRateFactor).toBe(0);
     expect(res.snowfallRateFactor).toBeGreaterThan(0);
@@ -36,6 +39,7 @@ describe('precipitation smoothing around freezing', () => {
       gravity,
       dayTemperature: 274,
       nightTemperature: 272,
+      atmPressure,
     });
     expect(res.rainfallRateFactor).toBeGreaterThan(0);
     expect(res.snowfallRateFactor).toBeGreaterThan(0);

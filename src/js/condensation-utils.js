@@ -8,7 +8,7 @@ if (isNodeCondensation) {
   // for browser usage nothing to setup
 }
 
-function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10 }) {
+function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10, boilingPoint = Infinity, boilTransitionRange = 2 }) {
   if (typeof saturationFn !== 'function') {
     throw new Error('condensationRateFactor requires saturationFn');
   }
@@ -24,7 +24,12 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
         if (!isNaN(baseRate) && baseRate > 0) {
           const diff = freezePoint - temp;
           const intensityScale = temp < freezePoint ? Math.min(diff / maxDiff, 1.0) : 1.0;
-          const rate = baseRate * intensityScale;
+          let rate = baseRate * intensityScale;
+          if (Number.isFinite(boilingPoint)) {
+            const boilMix = Math.min(Math.max((temp - (boilingPoint - boilTransitionRange)) / (2 * boilTransitionRange), 0), 1);
+            const boilingScale = 1 - boilMix;
+            rate *= boilingScale;
+          }
           const mix = Math.min(Math.max((temp - (freezePoint - transitionRange)) / (2 * transitionRange), 0), 1);
           liquid = rate * mix;
           ice = rate - liquid;

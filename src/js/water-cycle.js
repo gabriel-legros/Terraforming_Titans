@@ -107,6 +107,19 @@ function slopeSaturationVaporPressureWater(T) {
 function psychrometricConstantWater(atmPressure) {
     return psychrometricConstant(atmPressure, L_V_WATER); // Pa/K
 }
+
+// Estimate the boiling point of water (K) from pressure (Pa) using the
+// Antoine equation. The constants cover a wide range around standard
+// atmospheric conditions, avoiding iterative solves.
+function boilingPointWater(atmPressure) {
+    if (atmPressure <= 0) return 0;
+    const A = 8.07131; // Antoine coefficients for water
+    const B = 1730.63;
+    const C = 233.426;
+    const PmmHg = atmPressure * 0.00750062; // Pa → mmHg
+    const T_C = B / (A - Math.log10(PmmHg)) - C; // Celsius
+    return T_C + 273.15;
+}
   
 // Function to calculate sublimation rate for water ice using the modified Penman equation
 function sublimationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
@@ -225,8 +238,10 @@ function calculatePrecipitationRateFactor({
     waterVaporPressure,
     gravity,
     dayTemperature,
-    nightTemperature
+    nightTemperature,
+    atmPressure
 }) {
+    const boilingPoint = boilingPointWater(atmPressure);
     const res = condensationRateFactorUtil({
         zoneArea,
         vaporPressure: waterVaporPressure,
@@ -236,7 +251,9 @@ function calculatePrecipitationRateFactor({
         saturationFn: saturationVaporPressureBuck,
         freezePoint: 273.15,
         transitionRange: 2,
-        maxDiff: 10
+        maxDiff: 10,
+        boilingPoint,
+        boilTransitionRange: 5
     });
     return { rainfallRateFactor: res.liquidRate, snowfallRateFactor: res.iceRate };
 }
@@ -250,7 +267,8 @@ if (typeof module !== 'undefined' && module.exports) {
         sublimationRateWater,
         evaporationRateWater,
         calculateEvaporationSublimationRates,
-        calculatePrecipitationRateFactor
+        calculatePrecipitationRateFactor,
+        boilingPointWater
     };
 } else {
     // Expose functions globally for browser usage
@@ -262,4 +280,5 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.evaporationRateWater = evaporationRateWater;
     globalThis.calculateEvaporationSublimationRates = calculateEvaporationSublimationRates;
     globalThis.calculatePrecipitationRateFactor = calculatePrecipitationRateFactor;
+    globalThis.boilingPointWater = boilingPointWater;
 }
