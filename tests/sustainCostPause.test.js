@@ -33,10 +33,12 @@ describe('project sustain cost pause', () => {
     project.start(ctx.resources);
     expect(project.isActive).toBe(true);
     project.update(500);
-    expect(ctx.resources.colony.energy.value).toBeCloseTo(995);
-    project.update(60000); // consume 600 energy
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
+    project.update(60000); // deduct one second of sustain cost
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(980);
     expect(project.isActive).toBe(true);
-    project.update(40000); // not enough energy -> pause
+    ctx.resources.colony.energy.value = 5; // insufficient for next second
+    project.update(1000); // not enough energy -> pause
     expect(project.isPaused).toBe(true);
     expect(project.isActive).toBe(false);
   });
