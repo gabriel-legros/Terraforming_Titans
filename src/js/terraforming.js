@@ -351,6 +351,7 @@ class Terraforming extends EffectableEntity{
       this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
 
       this.updateLuminosity();
+      this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
       this.updateSurfaceTemperature();
 
     this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
@@ -1559,6 +1560,9 @@ synchronizeGlobalResources() {
       // Ensure global resources reflect loaded/recalculated state
       this.synchronizeGlobalResources();
       this.updateLuminosity(); // Recalculate luminosity
+      if (this.luminosity.initialSurfaceAlbedo === undefined) {
+          this.luminosity.initialSurfaceAlbedo = this.luminosity.groundAlbedo;
+      }
       this.updateSurfaceTemperature(); // Recalculate temperatures
   } // End loadState
 

@@ -637,12 +637,12 @@ function updateLifeBox() {
         </thead>
         <tbody>
           <tr>
-            <td>Ground Albedo <span class="info-tooltip-icon" title="Base albedo blended with black dust upgrades.">&#9432;</span></td>
+            <td>Ground Albedo <span id="ground-albedo-tooltip" class="info-tooltip-icon" title="Base albedo blended with black dust upgrades.">&#9432;</span></td>
             <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Surface Albedo <span class="info-tooltip-icon" title="Includes oceans, ice and biomass coverage.">&#9432;</span></td>
+            <td>Surface Albedo <span id="surface-albedo-tooltip" class="info-tooltip-icon" title="Includes oceans, ice and biomass coverage.">&#9432;</span></td>
             <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
@@ -686,6 +686,15 @@ function updateLifeBox() {
       const d = terraforming.luminosity.groundAlbedo - terraforming.celestialParameters.albedo;
       groundDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
+    const groundTooltip = document.getElementById('ground-albedo-tooltip');
+    if (groundTooltip) {
+      const base = terraforming.celestialParameters.albedo;
+      const upgrades = (typeof resources !== 'undefined' && resources.special && resources.special.albedoUpgrades)
+        ? resources.special.albedoUpgrades.value : 0;
+      const area = terraforming.celestialParameters.surfaceArea || 1;
+      const coverage = area > 0 ? Math.min(upgrades / area, 1) : 0;
+      groundTooltip.title = `Base: ${base.toFixed(2)}\nBlack dust coverage: ${(coverage*100).toFixed(1)}%`;
+    }
 
     const surfAlbEl = document.getElementById('surface-albedo');
     if (surfAlbEl) {
@@ -694,8 +703,20 @@ function updateLifeBox() {
 
     const surfDeltaEl = document.getElementById('surface-albedo-delta');
     if (surfDeltaEl) {
-      const d = terraforming.luminosity.surfaceAlbedo - terraforming.celestialParameters.albedo;
+      const base = (terraforming.luminosity.initialSurfaceAlbedo !== undefined)
+        ? terraforming.luminosity.initialSurfaceAlbedo
+        : terraforming.luminosity.groundAlbedo;
+      const d = terraforming.luminosity.surfaceAlbedo - base;
       surfDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+    }
+    const surfTooltip = document.getElementById('surface-albedo-tooltip');
+    if (surfTooltip) {
+      const water = calculateAverageCoverage(terraforming, 'liquidWater');
+      const ice = calculateAverageCoverage(terraforming, 'ice');
+      const bio = calculateAverageCoverage(terraforming, 'biomass');
+      const fr = calculateSurfaceFractions(water, ice, bio);
+      const rock = Math.max(1 - (fr.ocean + fr.ice + fr.biomass), 0);
+      surfTooltip.title = `Rock: ${(rock*100).toFixed(1)}%\nWater: ${(fr.ocean*100).toFixed(1)}%\nIce: ${(fr.ice*100).toFixed(1)}%\nBiomass: ${(fr.biomass*100).toFixed(1)}%`;
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');
