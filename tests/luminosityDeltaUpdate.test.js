@@ -12,9 +12,11 @@ describe('updateLuminosityBox', () => {
     const ctx = dom.getInternalVMContext();
 
     ctx.formatNumber = numbers.formatNumber;
+    ctx.calculateAverageCoverage = () => 0;
+    ctx.calculateSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -36,5 +38,34 @@ describe('updateLuminosityBox', () => {
 
     const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
     expect(fluxDelta).toBe('+100.00');
+  });
+
+  test('uses ground albedo when initial value missing', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div class="row"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+
+    ctx.formatNumber = numbers.formatNumber;
+
+    ctx.calculateAverageCoverage = () => 0;
+    ctx.calculateSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+
+    ctx.terraforming = {
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, albedo: 0.25, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      celestialParameters: { albedo: 0.3 },
+      getLuminosityStatus: () => true,
+      calculateSolarPanelMultiplier: () => 1
+    };
+
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    vm.runInContext(code, ctx);
+
+    const row = dom.window.document.querySelector('.row');
+    ctx.createLuminosityBox(row);
+
+    ctx.terraforming.luminosity.surfaceAlbedo = 0.28;
+    ctx.updateLuminosityBox();
+
+    const delta = dom.window.document.getElementById('surface-albedo-delta').textContent;
+    expect(delta).toBe('+0.03');
   });
 });
