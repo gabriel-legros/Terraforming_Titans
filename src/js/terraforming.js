@@ -118,7 +118,8 @@ class Terraforming extends EffectableEntity{
     ['tropical', 'temperate', 'polar'].forEach(zone => {
         this.zonalHydrocarbons[zone] = {
             liquid: 0,
-            ice: 0
+            ice: 0,
+            buriedIce: 0
         };
     });
 
@@ -312,6 +313,11 @@ class Terraforming extends EffectableEntity{
     // Override defaults if planet parameters specify zonal hydrocarbon amounts
     if (currentPlanetParameters.zonalHydrocarbons) {
         this.zonalHydrocarbons = structuredClone(currentPlanetParameters.zonalHydrocarbons);
+        zones.forEach(z => {
+            if (this.zonalHydrocarbons[z] && !this.zonalHydrocarbons[z].hasOwnProperty('buriedIce')) {
+                this.zonalHydrocarbons[z].buriedIce = 0;
+            }
+        });
     }
 
     // Override defaults if planet parameters specify zonal surface amounts
@@ -398,6 +404,7 @@ class Terraforming extends EffectableEntity{
                 potentialAtmosphericMethaneChange: 0,
                 liquidMethane: 0,
                 hydrocarbonIce: 0,
+                buriedHydrocarbonIce: 0,
                 // Store potential downward flux amounts for scaling
                 potentialRainfall: 0,
                 potentialSnowfall: 0,
@@ -499,8 +506,7 @@ class Terraforming extends EffectableEntity{
             let meltFromIce = 0;
             let meltFromBuried = 0;
             if (totalZoneIce > 0) {
-                const surfaceFraction = currentSurfaceIce / totalZoneIce;
-                meltFromIce = Math.min(meltAmount * surfaceFraction, currentSurfaceIce);
+                meltFromIce = Math.min(meltAmount, currentSurfaceIce);
                 meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuriedIce);
             }
             zonalChanges[zone].ice += freezeAmount - meltFromIce;
@@ -520,6 +526,7 @@ class Terraforming extends EffectableEntity{
             // --- Methane Cycle ---
             const availableLiquidMethane = this.zonalHydrocarbons[zone].liquid || 0;
             const availableHydrocarbonIce = this.zonalHydrocarbons[zone].ice || 0;
+            const availableBuriedHydrocarbonIce = this.zonalHydrocarbons[zone].buriedIce || 0;
 
             // Methane Evaporation
             const liquidMethaneCoverage = calculateZonalCoverage(this, zone, 'liquidMethane');
@@ -552,11 +559,31 @@ class Terraforming extends EffectableEntity{
             zonalChanges[zone].potentialAtmosphericMethaneChange -= (methaneCondensationAmount + methaneIceCondensationAmount);
 
             // Methane Melting/Freezing
-            const methaneMeltFreezeRates = calculateMethaneMeltingFreezingRates(zoneTemp, availableHydrocarbonIce, availableLiquidMethane);
-            const methaneMeltAmount = Math.min(methaneMeltFreezeRates.meltingRate * durationSeconds, availableHydrocarbonIce);
-            const methaneFreezeAmount = Math.min(methaneMeltFreezeRates.freezingRate * durationSeconds, availableLiquidMethane + zonalChanges[zone].liquidMethane);
+            const methaneMeltFreezeRates = calculateMethaneMeltingFreezingRates(
+                zoneTemp,
+                availableHydrocarbonIce,
+                availableLiquidMethane,
+                availableBuriedHydrocarbonIce,
+                zoneArea
+            );
+            const availableForMethaneMelt = availableHydrocarbonIce + availableBuriedHydrocarbonIce + (zonalChanges[zone].hydrocarbonIce || 0);
+            const methaneMeltAmount = Math.min(methaneMeltFreezeRates.meltingRate * durationSeconds, availableForMethaneMelt);
+            const methaneFreezeAmount = Math.min(methaneMeltFreezeRates.freezingRate * durationSeconds, availableLiquidMethane + (zonalChanges[zone].liquidMethane || 0));
+
             zonalChanges[zone].liquidMethane += methaneMeltAmount - methaneFreezeAmount;
-            zonalChanges[zone].hydrocarbonIce += methaneFreezeAmount - methaneMeltAmount;
+
+            const currentSurfaceMethaneIce = availableHydrocarbonIce + (zonalChanges[zone].hydrocarbonIce || 0);
+            const currentBuriedMethaneIce = availableBuriedHydrocarbonIce + (zonalChanges[zone].buriedHydrocarbonIce || 0);
+            let meltFromMethaneIce = 0;
+            let meltFromBuriedMethaneIce = 0;
+            if ((currentSurfaceMethaneIce + currentBuriedMethaneIce) > 0) {
+                meltFromMethaneIce = Math.min(methaneMeltAmount, currentSurfaceMethaneIce);
+                meltFromBuriedMethaneIce = Math.min(methaneMeltAmount - meltFromMethaneIce, currentBuriedMethaneIce);
+            }
+
+            zonalChanges[zone].hydrocarbonIce += methaneFreezeAmount - meltFromMethaneIce;
+            zonalChanges[zone].buriedHydrocarbonIce -= meltFromBuriedMethaneIce;
+
             totalMethaneMeltAmount += methaneMeltAmount;
             totalMethaneFreezeAmount += methaneFreezeAmount;
         
@@ -699,21 +726,56 @@ class Terraforming extends EffectableEntity{
                 zoneWeights[z] = w;
                 weightSum += w;
             });
+
+            const adjustments = {};
+            let totalPositiveDiff = 0;
+            let totalNegativeDiff = 0;
+
             zones.forEach(z => {
                 const current = zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall;
                 const desired = totalPrecip * zoneWeights[z] / weightSum;
-                let diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
-                if (diff !== 0) {
-                    const zoneTemp = this.temperature.zones[z].value;
-                    const isRain = zoneTemp > 273.15; // >0°C
-                    const rainAdj = isRain ? diff : 0;
-                    const snowAdj = isRain ? 0 : diff;
+                const diff = (desired - current) * PRECIPITATION_REDISTRIBUTION_FRACTION;
+                adjustments[z] = { diff };
+                if (diff > 0) totalPositiveDiff += diff;
+                else totalNegativeDiff += diff;
+            });
 
-                    zonalChanges[z].liquidWater += rainAdj;
-                    zonalChanges[z].ice += snowAdj;
-                    totalRainfallAmount += rainAdj;
-                    totalSnowfallAmount += snowAdj;
+            // Balance the redistribution so net change is zero
+            const totalDiff = totalPositiveDiff + totalNegativeDiff;
+            const scalingFactor = (totalPositiveDiff > 0 && totalDiff !== 0) ? -totalNegativeDiff / totalPositiveDiff : 1;
+
+
+            zones.forEach(z => {
+                const diff = adjustments[z].diff;
+                if (Math.abs(diff) < 1e-9) return;
+
+                let rainAdj = 0;
+                let snowAdj = 0;
+
+                if (diff > 0) { // Deficit zone: receives precipitation
+                    const scaledDiff = diff * scalingFactor;
+                    const zoneTemp = this.temperature.zones[z].value;
+                    const isRain = zoneTemp > 273.15;
+                    rainAdj = isRain ? scaledDiff : 0;
+                    snowAdj = isRain ? 0 : scaledDiff;
+                } else { // Surplus zone: provides precipitation
+                    const precipInZone = zonalChanges[z].actualRainfall + zonalChanges[z].actualSnowfall;
+                    if (precipInZone > 0) {
+                        const rainFraction = zonalChanges[z].actualRainfall / precipInZone;
+                        const snowFraction = zonalChanges[z].actualSnowfall / precipInZone;
+                        rainAdj = diff * rainFraction;
+                        snowAdj = diff * snowFraction;
+                    } else {
+                        // No precipitation in this zone to remove, so diff is effectively 0 for this zone
+                        rainAdj = 0;
+                        snowAdj = 0;
+                    }
                 }
+
+                zonalChanges[z].liquidWater += rainAdj;
+                zonalChanges[z].ice += snowAdj;
+                totalRainfallAmount += rainAdj;
+                totalSnowfallAmount += snowAdj;
             });
         }
 
@@ -749,6 +811,8 @@ class Terraforming extends EffectableEntity{
 
             this.zonalHydrocarbons[zone].liquid += zonalChanges[zone].liquidMethane;
             this.zonalHydrocarbons[zone].ice += zonalChanges[zone].hydrocarbonIce;
+            if (!this.zonalHydrocarbons[zone].buriedIce) this.zonalHydrocarbons[zone].buriedIce = 0;
+            this.zonalHydrocarbons[zone].buriedIce += zonalChanges[zone].buriedHydrocarbonIce || 0;
 
             // Ensure non-negative
             this.zonalWater[zone].liquid = Math.max(0, this.zonalWater[zone].liquid);
@@ -757,6 +821,7 @@ class Terraforming extends EffectableEntity{
             this.zonalSurface[zone].dryIce = Math.max(0, this.zonalSurface[zone].dryIce);
             this.zonalHydrocarbons[zone].liquid = Math.max(0, this.zonalHydrocarbons[zone].liquid);
             this.zonalHydrocarbons[zone].ice = Math.max(0, this.zonalHydrocarbons[zone].ice);
+            this.zonalHydrocarbons[zone].buriedIce = Math.max(0, this.zonalHydrocarbons[zone].buriedIce);
         }
 
         // --- 4. Update Global Rates for UI ---
@@ -1395,7 +1460,9 @@ synchronizeGlobalResources() {
         totalDryIce += this.zonalSurface[zone].dryIce || 0;
         totalBiomass += this.zonalSurface[zone].biomass || 0;
         totalLiquidMethane += this.zonalHydrocarbons[zone].liquid || 0;
-        totalHydrocarbonIce += this.zonalHydrocarbons[zone].ice || 0;
+        const surfaceMethaneIce = this.zonalHydrocarbons[zone].ice || 0;
+        const buriedMethaneIce = this.zonalHydrocarbons[zone].buriedIce || 0;
+        totalHydrocarbonIce += surfaceMethaneIce + buriedMethaneIce;
     });
 
     // Update global SURFACE resource values (Amounts)
@@ -1467,6 +1534,13 @@ synchronizeGlobalResources() {
       this.zonalWater = terraformingState.zonalWater ? structuredClone(terraformingState.zonalWater) : this.zonalWater;
       this.zonalSurface = terraformingState.zonalSurface ? structuredClone(terraformingState.zonalSurface) : this.zonalSurface;
       this.zonalHydrocarbons = terraformingState.zonalHydrocarbons ? structuredClone(terraformingState.zonalHydrocarbons) : this.zonalHydrocarbons;
+      if (this.zonalHydrocarbons) {
+          for (const zone of ['tropical', 'temperate', 'polar']) {
+              if (this.zonalHydrocarbons[zone] && !this.zonalHydrocarbons[zone].hasOwnProperty('buriedIce')) {
+                  this.zonalHydrocarbons[zone].buriedIce = 0;
+              }
+          }
+      }
 
       // If loading a save where initial values weren't calculated, run calculateInitialValues.
       // This will correctly initialize global resource amounts based on parameters
