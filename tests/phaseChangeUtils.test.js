@@ -37,6 +37,31 @@ describe('phase-change utility helpers', () => {
   });
 });
 
+describe('meltingFreezingRates helper', () => {
+  test('matches hydrology water calculation', () => {
+    const params = {
+      temperature: 280,
+      freezingPoint: 273.15,
+      availableIce: 5,
+      availableLiquid: 1,
+      availableBuriedIce: 2,
+      zoneArea: 1,
+      estimateCoverageFn: (amount, area) => amount / area
+    };
+    const utilRes = utils.meltingFreezingRates(params);
+    const hydro = require('../src/js/hydrology.js');
+    const hydroRes = hydro.calculateMeltingFreezingRates(
+      params.temperature,
+      params.availableIce,
+      params.availableLiquid,
+      params.availableBuriedIce,
+      params.zoneArea
+    );
+    expect(utilRes.meltingRate).toBeCloseTo(hydroRes.meltingRate);
+    expect(utilRes.freezingRate).toBeCloseTo(hydroRes.freezingRate);
+  });
+});
+
 // verify cycle modules still compute rates using helpers
 
 describe('cycle modules via utils', () => {
