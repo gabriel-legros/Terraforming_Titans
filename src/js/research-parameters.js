@@ -189,6 +189,17 @@ const researchParameters = {
           }
         ],
       },
+      {
+        id: 'dyson_swarm_receiver',
+        name: 'Dyson Swarm Receiver',
+        description: 'Enables construction of a receiver for orbital solar collectors.',
+        cost: { research: 10000000000 },
+        prerequisites: [],
+        requiredFlags: ['dysonSwarmUnlocked'],
+        effects: [
+          { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' }
+        ]
+      },
     ],
     industry: [
       {
@@ -1041,17 +1052,6 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },
-      {
-        id: 'dyson_swarm_receiver',
-        name: 'Dyson Swarm Receiver',
-        description: 'Enables construction of a receiver for orbital solar collectors.',
-        cost: { research: 10000000000 },
-        prerequisites: [],
-        requiredFlags: ['dysonSwarmUnlocked'],
-        effects: [
-          { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' }
-        ]
       },
     ],
     advanced: [
