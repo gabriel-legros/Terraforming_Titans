@@ -10,6 +10,7 @@ function renderDysonSwarmUI(project, container) {
         <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors"></span></div>
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
+        <div class="stat-item"><span class="stat-label">Collector Cost:</span><span id="ds-collector-cost"></span></div>
       </div>
       <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container"><input type="checkbox" id="ds-auto"><label for="ds-auto">Auto start</label></div>
@@ -22,6 +23,7 @@ function renderDysonSwarmUI(project, container) {
     collectorsDisplay: card.querySelector('#ds-collectors'),
     powerPerDisplay: card.querySelector('#ds-power-per'),
     totalPowerDisplay: card.querySelector('#ds-total-power'),
+    costDisplay: card.querySelector('#ds-collector-cost'),
     startButton: card.querySelector('#ds-start'),
     autoCheckbox: card.querySelector('#ds-auto')
   };
@@ -40,6 +42,18 @@ function updateDysonSwarmUI(project) {
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 0);
   const total = project.energyPerCollector * project.collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 0);
+  if (els.costDisplay) {
+    const parts = [];
+    for (const category in project.collectorCost) {
+      for (const res in project.collectorCost[category]) {
+        const displayName = (resources && resources[category] && resources[category][res] && resources[category][res].displayName)
+          ? resources[category][res].displayName
+          : res.charAt(0).toUpperCase() + res.slice(1);
+        parts.push(`${displayName}: ${formatNumber(project.collectorCost[category][res], true)}`);
+      }
+    }
+    els.costDisplay.textContent = parts.join(', ');
+  }
   if (!project.isCompleted) {
     els.startButton.textContent = 'Receiver Incomplete';
     els.startButton.style.background = '#999';
