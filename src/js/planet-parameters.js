@@ -303,17 +303,17 @@ const callistoOverrides = {
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 3999997867081992,
+      "ice": 230631.9271327228,
       "buriedIce": 4000000000000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 12000001547288686,
+      "ice": 1892967.541452649,
       "buriedIce": 5000000000000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 24000000528332670,
+      "ice": 39_999_587_448_332.15,
       "buriedIce": 1000000000000000000000
     }
   },
@@ -348,7 +348,7 @@ const callistoOverrides = {
     distanceFromSun: 5.2,      // Jupiter’s semi‑major axis (AU)
     gravity: 1.236,            // m s‑² :contentReference[oaicite:3]{index=3}
     radius: 2410.3,            // km :contentReference[oaicite:4]{index=4}
-    albedo: 0.20,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
+    albedo: 0.17,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
     rotationPeriod: 400.8      // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
   }
 };

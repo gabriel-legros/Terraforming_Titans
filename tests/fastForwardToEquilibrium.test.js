@@ -25,7 +25,7 @@ describe('fastForwardToEquilibrium', () => {
     expect(Math.min(...steps)).toBeLessThan(Math.max(...steps));
   });
 
-  test('increases step size when unstable for many steps', () => {
+  test('always calls updateLogic with a fixed step', () => {
     global.resources = {
       surface: { ice: { value: 0 }, liquidWater: { value: 0 }, dryIce: { value: 0 } },
       atmospheric: { carbonDioxide: { value: 0 }, atmosphericWater: { value: 0 } }
@@ -36,21 +36,21 @@ describe('fastForwardToEquilibrium', () => {
     const steps = [];
     global.updateLogic = ms => {
       steps.push(ms);
-      global.resources.surface.ice.value += 1;
+      // Make it unstable so it runs a few times
+      global.resources.surface.ice.value += 10;
     };
 
     fastForwardToEquilibrium({
-      stepMs: 1,
-      maxSteps: 5,
+      stepMs: 10000, // 10s jump
+      maxSteps: 3,
       stableSteps: 100,
-      accelerateThreshold: 1,
-      accelerateFactor: 2,
-      threshold: 0,
-      minStepMs: 1
+      threshold: 1,
+      minStepMs: 1000
     });
 
+    // Each call to updateLogic should have the same fixed step
     expect(steps.length).toBeGreaterThan(1);
-    expect(Math.max(...steps)).toBeGreaterThan(Math.min(...steps));
+    expect(steps.every(s => s === 1000)).toBe(true);
   });
 
   test('generateOverrideSnippet includes hydrocarbon values', () => {

@@ -1,6 +1,5 @@
 (function(){
   const isNode = typeof module !== 'undefined' && module.exports;
-  const Terraforming = globalThis.Terraforming;
   let calculateEvaporationSublimationRates,
       calculatePrecipitationRateFactor,
       calculateZonalCoverage,
@@ -9,7 +8,8 @@
       calculateMethaneEvaporationRate,
       getZonePercentage,
       getZoneRatio,
-      reconstructJournalState;
+      reconstructJournalState,
+      calculateAtmosphericPressure;
   if (isNode) {
     const utils = require('./terraforming-utils.js');
     calculateEvaporationSublimationRates = utils.calculateEvaporationSublimationRates;
@@ -39,6 +39,7 @@
     getZonePercentage = globalThis.getZonePercentage;
     getZoneRatio = globalThis.getZoneRatio;
     reconstructJournalState = globalThis.reconstructJournalState;
+    calculateAtmosphericPressure = globalThis.calculateAtmosphericPressure;
   }
   function captureValues() {
     const globalVals = {
@@ -121,52 +122,45 @@
   }
 
   function fastForwardToEquilibrium(options = {}) {
-    let stepMs = options.stepMs || 1000;
-    const maxSteps = options.maxSteps || 1000;
+    let stepMs = options.stepMs || 1000 * 60 * 60; // The "jump" size, e.g., 1 hour
+    const fixedUpdateStep = 50; // The actual step for updateLogic, hardcoded to 1s
+    const maxSteps = options.maxSteps || 1000; // Max number of jumps
     const stableSteps = options.stableSteps || 10;
     const threshold = options.threshold ?? 1;
     const refineFactor = options.refineFactor || 0.5;
-    const minStepMs = options.minStepMs || 1;
-    const accelerateFactor = options.accelerateFactor || 1.001;
-    const accelerateThreshold = options.accelerateThreshold || 100;
-    const maxStepMs = options.maxStepMs || Infinity;
+    const minStepMs = options.minStepMs || 1000 * 60; // Min jump size, e.g., 1 minute
 
     let prev = captureValues();
     let stable = 0;
-    let unstable = 0;
     let step;
 
     for (step = 0; step < maxSteps; step++) {
-      updateLogic(stepMs);
-      const cur = captureValues();
+        const numUpdates = Math.max(1, Math.floor(stepMs / fixedUpdateStep));
+        for (let i = 0; i < numUpdates; i++) {
+            updateLogic(fixedUpdateStep);
+        }
+        const cur = captureValues();
 
-      if (isStable(prev, cur, threshold)) {
-        stable++;
-        unstable = 0;
-      } else {
-        stable = 0;
-        unstable++;
-      }
-
-      if (stable >= stableSteps) {
-        if (stepMs > minStepMs) {
-          stepMs = Math.max(minStepMs, stepMs * refineFactor);
-          stable = 0;
+        if (isStable(prev, cur, threshold)) {
+            stable++;
         } else {
-          console.log('Equilibrium reached after', step + 1, 'steps');
-          console.log('Global values:', cur.global);
-          console.log('Zonal values:', cur.zones);
-          console.log('Override snippet:\n' + generateOverrideSnippet(cur));
-          return cur;
+            stable = 0;
         }
-      } else if (unstable >= accelerateThreshold) {
-        if (stepMs < maxStepMs) {
-          stepMs = Math.min(maxStepMs, stepMs * accelerateFactor);
-        }
-        unstable = 0;
-      }
 
-      prev = cur;
+        if (stable >= stableSteps) {
+            if (stepMs > minStepMs) {
+                stepMs = Math.max(minStepMs, stepMs * refineFactor);
+                stable = 0;
+            } else {
+                console.log('Equilibrium reached after', step + 1, 'steps');
+                console.log('Global values:', cur.global);
+                console.log('Zonal values:', cur.zones);
+                console.log('Override snippet:\n' + generateOverrideSnippet(cur));
+                return cur;
+            }
+        }
+
+        prev = cur;
     }
 
     console.log('Max steps reached without clear equilibrium');
@@ -316,9 +310,6 @@
     );
   }
 
-  if (typeof Terraforming !== 'undefined') {
-    Terraforming.prototype.calculateEquilibriumConstants = calculateEquilibriumConstants;
-  }
 
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -326,9 +317,14 @@
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
-    if (typeof Terraforming !== 'undefined') {
-      globalThis.calculateEquilibriumConstants = calculateEquilibriumConstants;
-    }
     globalThis.reconstructJournalState = reconstructJournalState;
+    globalThis.runEquilibriumCalculation = function(terraformingInstance) {
+      if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {
+        console.log('Calling calculateEquilibriumConstants. initialValuesCalculated =', terraformingInstance.initialValuesCalculated);
+        calculateEquilibriumConstants.call(terraformingInstance);
+      } else {
+        console.error("Please pass the terraforming game object, e.g., runEquilibriumCalculation(terraforming)");
+      }
+    };
   }
 })();

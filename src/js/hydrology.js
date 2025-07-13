@@ -80,8 +80,8 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
             if (slopeFactor < 0.1) slopeFactor = 0.1;
 
             if (diff > 0) {
-                const flowCoefficient = flowRateCoefficient * 0.01;
-                const potentialFlow = (zonalData[source][liquidProp] || 0) * flowCoefficient * Math.min(Math.sqrt(diff), 1) * slopeFactor * secondsMultiplier;
+                const flowCoefficient = flowRateCoefficient * Math.min(Math.sqrt(diff), 1);
+                const potentialFlow = (zonalData[source][liquidProp] || 0) * flowCoefficient  * slopeFactor * secondsMultiplier;
                 flows[source][target] = potentialFlow;
                 outflow[source] += potentialFlow;
             } else {
@@ -90,7 +90,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
 
             const neighborTemp = zonalTemperatures[target];
             if (typeof neighborTemp === 'number' && neighborTemp > meltingPoint && totalIceAvail[source] > 0 && diff > 0) {
-                const meltCoefficient = flowRateCoefficient * 0.01 * Math.min(Math.sqrt(diff), 1);
+                const meltCoefficient = flowRateCoefficient * Math.min(Math.sqrt(diff), 1);
                 const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
                 melts[source][target] = potentialMelt;
                 meltOut[source] += potentialMelt;
