@@ -19,6 +19,8 @@ calculations from **physics.js**, **hydrology.js**, **water-cycle.js**,
 - Surface fraction calculations for albedo now allocate biomass first and scale
   water and ice proportionally when their combined coverage exceeds remaining
   area.
+- Melting mechanics cap available ice at zone surface area multiplied by ice
+  coverage and 0.1 m when computing melt flow between zones or within a zone.
 
 The hydrocarbon cycle models methane in its liquid, ice and vapor forms.  It
 uses Penman-based equations for evaporation and sublimation alongside flow and

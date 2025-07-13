@@ -46,10 +46,9 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
         let coveredArea = 1;
         if (terraforming && getZonePercentageFn) {
             const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
-            totalIceAvail[zone] = Math.min(totalIceAvail[zone], zoneArea*0.1);
-         //   const surfaceSubstance = (zonalData[zone][liquidProp] || 0) + (zonalData[zone][iceProp] || 0);
-         //   const coverage = estimateCoverageFn(surfaceSubstance, zoneArea);
-        //    coveredArea = zoneArea * (coverage > 0 ? coverage : 1);
+            const iceCoverage = estimateCoverageFn(zonalData[zone][iceProp] || 0, zoneArea);
+            const meltCap = zoneArea * iceCoverage * 0.1; // 10 cm layer
+            totalIceAvail[zone] = Math.min(totalIceAvail[zone], meltCap);
             coveredArea = zoneArea;
         }
 
@@ -182,7 +181,7 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalT
 }
 
 // Compute melting and freezing rates for a surface zone based on temperature
-function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0) {
+function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1) {
     const freezingPoint = 273.15;
     const meltingRateMultiplier = 0.00000001; // per K per second
     const freezingRateMultiplier = 0.00000001; // per K per second
@@ -190,7 +189,9 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
     let meltingRate = 0;
     let freezingRate = 0;
 
-    const totalIce = (availableIce || 0) + (availableBuriedIce || 0);
+    const iceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
+    const meltCap = zoneArea * iceCoverage * 0.1;
+    const totalIce = Math.min((availableIce || 0) + (availableBuriedIce || 0), meltCap);
 
     if (temperature > freezingPoint && totalIce > 0) {
         const diff = temperature - freezingPoint;
@@ -203,7 +204,7 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
     return { meltingRate, freezingRate };
 }
 
-function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid) {
+function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid, zoneArea = 1) {
     const freezingPoint = 90.7; // Methane freezing point in K
     const meltingRateMultiplier = 0.00000001; // per K per second
     const freezingRateMultiplier = 0.00000001; // per K per second
@@ -211,9 +212,13 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
     let meltingRate = 0;
     let freezingRate = 0;
 
-    if (temperature > freezingPoint && availableIce > 0) {
+    const iceCoverage = estimateCoverageFn ? estimateCoverageFn(availableIce || 0, zoneArea) : 1;
+    const meltCap = zoneArea * iceCoverage * 0.1;
+    const cappedIce = Math.min(availableIce || 0, meltCap);
+
+    if (temperature > freezingPoint && cappedIce > 0) {
         const diff = temperature - freezingPoint;
-        meltingRate = availableIce * meltingRateMultiplier * diff;
+        meltingRate = cappedIce * meltingRateMultiplier * diff;
     } else if (temperature < freezingPoint && availableLiquid > 0) {
         const diff = freezingPoint - temperature;
         freezingRate = availableLiquid * freezingRateMultiplier * diff;
