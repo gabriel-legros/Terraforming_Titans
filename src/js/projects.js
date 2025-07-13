@@ -465,6 +465,11 @@ class ProjectManager extends EffectableEntity {
           state.disablePressureThreshold = project.disablePressureThreshold;
         }
       }
+      if (typeof DysonSwarmReceiverProject !== 'undefined' && project instanceof DysonSwarmReceiverProject) {
+        state.collectors = project.collectors;
+        state.collectorProgress = project.collectorProgress;
+        state.autoDeployCollectors = project.autoDeployCollectors;
+      }
 
       projectState[projectName] = state;
     }
@@ -507,14 +512,19 @@ class ProjectManager extends EffectableEntity {
           if(savedProject.waitForCapacity !== undefined){
             project.waitForCapacity = savedProject.waitForCapacity;
           }
-          if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
-            project.disableAbovePressure = savedProject.disableAbovePressure || false;
-            project.disablePressureThreshold = savedProject.disablePressureThreshold || 0;
-          }
+        if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
+          project.disableAbovePressure = savedProject.disableAbovePressure || false;
+          project.disablePressureThreshold = savedProject.disablePressureThreshold || 0;
         }
-        if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
-          project.applyCompletionEffect();
-        }
+      }
+      if (typeof DysonSwarmReceiverProject !== 'undefined' && project instanceof DysonSwarmReceiverProject) {
+        project.collectors = savedProject.collectors || 0;
+        project.collectorProgress = savedProject.collectorProgress || 0;
+        project.autoDeployCollectors = savedProject.autoDeployCollectors || false;
+      }
+      if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
+        project.applyCompletionEffect();
+      }
       }
     }
 
