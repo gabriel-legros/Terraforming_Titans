@@ -35,6 +35,14 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateEvaporationSublimationRates = terraformUtils.calculateEvaporationSublimationRates;
     var calculatePrecipitationRateFactor = terraformUtils.calculatePrecipitationRateFactor;
     var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
+
+    const physics = require('./physics.js');
+    if (typeof globalThis.surfaceAlbedoMix === 'undefined') {
+        globalThis.surfaceAlbedoMix = physics.surfaceAlbedoMix;
+    }
+    if (typeof globalThis.cloudFraction === 'undefined') {
+        globalThis.cloudFraction = physics.cloudFraction;
+    }
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
@@ -335,6 +343,7 @@ class Terraforming extends EffectableEntity{
       // Initial synchronization to update global resource amounts and calculate initial pressures
       this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
 
+      this.updateLuminosity();
       this.updateSurfaceTemperature();
 
     this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
@@ -837,13 +846,15 @@ class Terraforming extends EffectableEntity{
 
     // Function to update luminosity properties
     updateLuminosity() {
-      this.luminosity.albedo = this.calculateEffectiveAlbedo();
+      this.luminosity.groundAlbedo = this.calculateGroundAlbedo();
+      this.luminosity.surfaceAlbedo = this.calculateSurfaceAlbedo();
+      this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
       this.luminosity.modifiedSolarFlux = this.calculateModifiedSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
     updateSurfaceTemperature() {
-      const groundAlbedo = this.luminosity.albedo;
+      const groundAlbedo = this.luminosity.groundAlbedo;
       const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
       const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
       const gSurface = this.celestialParameters.gravity;
@@ -909,27 +920,30 @@ class Terraforming extends EffectableEntity{
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
     }
 
-    calculateEffectiveAlbedo() {
+    calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
-        const oceanAlbedo = 0.06;
         const upgradeAlbedo = 0.05;
-        const biomassAlbedo = 0.20;
         const surfaceArea = this.celestialParameters.surfaceArea;
 
-        // Use helper functions to get coverage ratios
-        const waterRatio = calculateAverageCoverage(this, 'liquidWater');
-        const lifeRatio = calculateAverageCoverage(this, 'biomass');
-
         const albedoUpgrades = resources.special.albedoUpgrades.value;
-        // Calculate ratios, ensuring they don't exceed available land area
-        const albedoUpgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1 - waterRatio - lifeRatio) : 0;
-        const untouchedRatio = Math.max(1 - waterRatio - albedoUpgradeRatio - lifeRatio, 0);
+        const upgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1) : 0;
+        const untouchedRatio = Math.max(1 - upgradeRatio, 0);
 
-        const effectiveAlbedo = oceanAlbedo * waterRatio +
-                               upgradeAlbedo * albedoUpgradeRatio +
-                               lifeRatio * biomassAlbedo +
-                               untouchedRatio * baseAlbedo;
-        return effectiveAlbedo;
+        return upgradeAlbedo * upgradeRatio + untouchedRatio * baseAlbedo;
+    }
+
+    calculateSurfaceAlbedo() {
+        const groundAlbedo = this.calculateGroundAlbedo();
+        const surfaceFractions = {
+          ocean: calculateAverageCoverage(this, 'liquidWater'),
+          ice: calculateAverageCoverage(this, 'ice'),
+          biomass: calculateAverageCoverage(this, 'biomass')
+        };
+        return surfaceAlbedoMix(groundAlbedo, surfaceFractions);
+    }
+
+    calculateEffectiveAlbedo() {
+        return this.calculateSurfaceAlbedo();
     }
 
     update(deltaTime) {

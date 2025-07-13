@@ -637,9 +637,14 @@ function updateLifeBox() {
         </thead>
         <tbody>
           <tr>
-            <td>Albedo <span class="info-tooltip-icon" title="Albedo is the measure of reflectivity. Key values:\n- Rock (Base): Varies by planet\n- Ocean: 0.06\n- Water Ice: 0.6\n- Dry Ice: 0.6\n- Biomass: 0.20\n- Black Dust: 0.05\n- Methane Ocean: 0.1">&#9432;</span></td>
-            <td><span id="effective-albedo">${terraforming.luminosity.albedo.toFixed(2)}</span></td>
-            <td><span id="albedo-delta"></span></td>
+            <td>Ground Albedo <span class="info-tooltip-icon" title="Base albedo blended with black dust upgrades.">&#9432;</span></td>
+            <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="ground-albedo-delta"></span></td>
+          </tr>
+          <tr>
+            <td>Surface Albedo <span class="info-tooltip-icon" title="Includes oceans, ice and biomass coverage.">&#9432;</span></td>
+            <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
             <td>Solar Flux (W/m²)</td>
@@ -671,15 +676,26 @@ function updateLifeBox() {
       luminosityBox.style.borderColor = 'red';
     }
 
-    const effectiveAlbedo = document.getElementById('effective-albedo');
-    if (effectiveAlbedo) {
-      effectiveAlbedo.textContent = terraforming.luminosity.albedo.toFixed(2);
+    const groundAlbEl = document.getElementById('ground-albedo');
+    if (groundAlbEl) {
+      groundAlbEl.textContent = terraforming.luminosity.groundAlbedo.toFixed(2);
     }
 
-    const albedoDeltaEl = document.getElementById('albedo-delta');
-    if (albedoDeltaEl) {
-      const deltaA = terraforming.luminosity.albedo - terraforming.celestialParameters.albedo;
-      albedoDeltaEl.textContent = `${deltaA >= 0 ? '+' : ''}${formatNumber(deltaA, false, 2)}`;
+    const groundDeltaEl = document.getElementById('ground-albedo-delta');
+    if (groundDeltaEl) {
+      const d = terraforming.luminosity.groundAlbedo - terraforming.celestialParameters.albedo;
+      groundDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+    }
+
+    const surfAlbEl = document.getElementById('surface-albedo');
+    if (surfAlbEl) {
+      surfAlbEl.textContent = terraforming.luminosity.surfaceAlbedo.toFixed(2);
+    }
+
+    const surfDeltaEl = document.getElementById('surface-albedo-delta');
+    if (surfDeltaEl) {
+      const d = terraforming.luminosity.surfaceAlbedo - terraforming.celestialParameters.albedo;
+      surfDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');

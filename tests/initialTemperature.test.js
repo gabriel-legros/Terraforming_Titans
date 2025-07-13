@@ -36,7 +36,7 @@ function expectedTemperature(terra, params, resources) {
   const AU_METER = 149597870700;
   const distanceMeters = params.celestialParameters.distanceFromSun * AU_METER;
   const modifiedFlux = terra.calculateModifiedSolarFlux(distanceMeters);
-  const groundAlbedo = terra.calculateEffectiveAlbedo();
+  const groundAlbedo = terra.calculateGroundAlbedo();
   const rotation = params.celestialParameters.rotationPeriod || 24;
   const g = params.celestialParameters.gravity;
 
