@@ -285,10 +285,10 @@ const callistoOverrides = {
 
     /* ---------- ATMOSPHERE (ultra‑thin CO₂/O₂ exosphere) ---------- */
     atmospheric: {
-      carbonDioxide:    { initialValue: 2420.183854974918 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
+      carbonDioxide:    { initialValue: 2414.6137246225217 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
       inertGas:         { initialValue: 1e5 },   // mostly Ar; trace amounts
       oxygen:           { initialValue: 5e3 },   // sputtered O₂  :contentReference[oaicite:2]{index=2}
-      atmosphericWater: { initialValue: 57231437.138837904 },
+      atmosphericWater: { initialValue: 22934.27284032676 },
       atmosphericMethane:{ initialValue: 0 }
     },
 
@@ -303,29 +303,29 @@ const callistoOverrides = {
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 230631.9271327228,
-      "buriedIce": 4000000000000000000000
+      "ice": 227987.50423423847,
+      "buriedIce": 4e+21
     },
     "temperate": {
       "liquid": 0,
-      "ice": 1892967.541452649,
-      "buriedIce": 5000000000000000000000
+      "ice": 1899338.2410272758,
+      "buriedIce": 5e+21
     },
     "polar": {
       "liquid": 0,
-      "ice": 39_999_587_448_332.15,
-      "buriedIce": 1000000000000000000000
+      "ice": 39999644653114.9,
+      "buriedIce": 1e+21
     }
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 13641.393362700177
+      "dryIce": 13595.230503597835
     },
     "temperate": {
-      "dryIce": 23833.186930256372
+      "dryIce": 23737.390468573874
     },
     "polar": {
-      "dryIce": 10105.235852068325
+      "dryIce": 10252.765303402204
     }
   },
   "zonalHydrocarbons": {
