@@ -1,8 +1,9 @@
 const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow } = require('../src/js/hydrology.js');
 const { calculateMeltingFreezingRates: zonalRates } = require('../src/js/terraforming-utils.js');
-const { getZonePercentage } = require('../src/js/zones.js');
+const { getZonePercentage, estimateCoverage } = require('../src/js/zones.js');
 
 global.getZonePercentage = getZonePercentage;
+global.estimateCoverage = estimateCoverage;
 
 const zoneElevations = { tropical: 0, temperate: 0.5, polar: 1 };
 
@@ -11,21 +12,22 @@ function makeTerraforming(zonalWater) {
 }
 
 describe('hydrology melting with buried ice', () => {
-  test('calculateMeltingFreezingRates melts buried ice', () => {
+  test('calculateMeltingFreezingRates respects area cap', () => {
     const T = 280; // above freezing
-    const diff = T - 273.15;
-    const res = calculateMeltingFreezingRates(T, 0, 0, 10);
-    const expected = 10 * 0.0000001 * diff;
-    expect(res.meltingRate).toBeCloseTo(expected);
+    const res = calculateMeltingFreezingRates(T, 0, 0, 10, 1);
+    expect(res.meltingRate).toBeCloseTo(0);
     expect(res.freezingRate).toBe(0);
   });
 
-  test('calculateZonalMeltingFreezingRates uses buried ice from terraforming', () => {
-    const terra = { zonalWater: { polar: { ice: 5, buriedIce: 3, liquid: 1 } } };
+  test('calculateZonalMeltingFreezingRates caps melt by coverage', () => {
+    const terra = { zonalWater: { polar: { ice: 5, buriedIce: 3, liquid: 1 } }, celestialParameters: { surfaceArea: 1 } };
     const T = 280;
+    const zoneArea = terra.celestialParameters.surfaceArea * getZonePercentage('polar');
+    const coverage = estimateCoverage(5, zoneArea);
+    const meltCap = zoneArea * coverage * 0.1;
     const diff = T - 273.15;
+    const expected = meltCap * 0.00000001 * diff;
     const res = zonalRates(terra, 'polar', T);
-    const expected = (5 + 3) * 0.0000001 * diff;
     expect(res.meltingRate).toBeCloseTo(expected);
   });
 
@@ -38,8 +40,10 @@ describe('hydrology melting with buried ice', () => {
     const temps = { polar: 250, temperate: 274, tropical: 260 };
     const melt = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
-    // Melt coefficient updated in hydrology to 0.001
-    const expectedMelt = (100 + 50) * 0.001 * slopeFactor;
+    const zoneArea = getZonePercentage('polar');
+    const coverage = estimateCoverage(100, zoneArea);
+    const meltCap = zoneArea * coverage * 0.1;
+    const expectedMelt = meltCap * 0.001 * slopeFactor;
     const surfaceFraction = 100 / (100 + 50);
     const meltFromIce = expectedMelt * surfaceFraction;
     const meltFromBuried = expectedMelt - meltFromIce;
