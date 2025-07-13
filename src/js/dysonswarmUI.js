@@ -33,6 +33,9 @@ function renderDysonSwarmUI(project, container) {
 function updateDysonSwarmUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
+  if (els.swarmCard) {
+    els.swarmCard.style.display = project.isCompleted ? 'block' : 'none';
+  }
   els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 0);
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 0);
   const total = project.energyPerCollector * project.collectors;
