@@ -1388,8 +1388,8 @@ progressData.storyProjects.sidestep_operation = {
     planet: 'callisto',
     storySteps: [
       'Auto‑hash generator seeds first thrust vector 2 s before ignition; logs retain only salted hashes.',
-      'Coordinated burns from Mars, Titan and Callisto shift barycentre by millimetres per hour—undetectable to casual observers.',
-      'Final calculation: predicted alien strike coordinates now trail actual colony position by 74 million km.'
+      'Coordinated burns from Mars, Titan and Callisto shift barycentre ever so slightly—undetectable to casual observers.',
+      'Final calculation: predicted alien strike coordinates now trail actual colony position by 4 thousands km.'
     ]
   }
 };
@@ -1544,7 +1544,7 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just intercepted a cult transmission. They're expecting an alien strike within one season. We're out of time. We have to launch Operation Sidestep now, ahead of schedule.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
     prerequisites: ["chapter9.2"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }      
     ],
     reward: []
   },
@@ -1554,7 +1554,7 @@ progressData.chapters.push(
     chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the coolant purge systems. Security is engaging... We got him! Kane is in custody. But some of his lieutenants escaped with data cores. We don't know what they took.'\nThreat neutralized. Primary saboteur Elias Kane captured. Data breach confirmed. Assessing extent of stolen information.",
     prerequisites: ["chapter10.0"],
-    objectives: [],
+    objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
     reward: []
   },
   {
@@ -1564,7 +1564,6 @@ progressData.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The alien beams and the asteroid... they converged on empty space! They missed! The whole system is celebrating. Morale is soaring.'\nOperation Sidestep successful. Threat averted. Probability of immediate follow-up attack is low.",
     prerequisites: ["chapter10.1"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
     ],
     reward: []
   },
