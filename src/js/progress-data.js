@@ -976,10 +976,10 @@ progressData.chapters.push(
     type: "journal",
     chapter: -1,
     narrative: "Blueprint retrieved: Atmospheric Water Collector now constructible.",
-    prerequisites: [],
-    objectives: [
+    prerequisites: [
       { type: 'condition', conditionId: 'shouldUnlockAtmosphericWaterCollector', description: '' }
     ],
+    objectives: [],
     reward: [
       { target: 'building', targetId: 'atmosphericWaterCollector', type: 'enable' }
     ]
