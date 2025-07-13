@@ -24,6 +24,7 @@ class DysonSwarmReceiverProject extends Project {
   }
 
   canStartCollector() {
+    if (!this.isCompleted) return false;
     if (this.collectorProgress > 0) return false;
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {

@@ -376,15 +376,13 @@ class ProjectManager extends EffectableEntity {
   updateProjects(deltaTime) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
-  
+
       if (typeof project.autoAssign === 'function') {
         project.autoAssign();
       }
-  
-      // Update each project if it is active
-      if (project.isActive) {
-        project.update(deltaTime);
-      }
+
+      // Always update so subclasses can run logic after completion
+      project.update(deltaTime);
     }
   }
 

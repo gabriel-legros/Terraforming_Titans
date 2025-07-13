@@ -37,6 +37,16 @@ function updateDysonSwarmUI(project) {
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 0);
   const total = project.energyPerCollector * project.collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 0);
+  if (!project.isCompleted) {
+    els.startButton.textContent = 'Receiver Incomplete';
+    els.startButton.style.background = '#999';
+    els.startButton.disabled = true;
+    els.autoCheckbox.disabled = true;
+    return;
+  } else {
+    els.startButton.disabled = false;
+    els.autoCheckbox.disabled = false;
+  }
   if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
