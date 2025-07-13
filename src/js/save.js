@@ -28,6 +28,16 @@ function getGameState() {
   };
 }
 
+function filterChapterMinusOneSources(arr) {
+  return (arr || []).filter(src => {
+    if (src && src.type === 'chapter') {
+      const ch = (progressData && progressData.chapters || []).find(c => c.id === src.id);
+      return !(ch && ch.chapter === -1);
+    }
+    return true;
+  });
+}
+
 // Load game state from a specific slot or custom string
 function loadGame(slotOrCustomString) {
   if (slotOrCustomString === undefined) {
@@ -168,10 +178,11 @@ function loadGame(slotOrCustomString) {
     }
 
       if (gameState.journalEntrySources) {
-        const entries = mapSourcesToText(gameState.journalEntrySources);
-        const historySources = gameState.journalHistorySources || gameState.journalEntrySources;
+        const entrySources = filterChapterMinusOneSources(gameState.journalEntrySources);
+        const historySources = filterChapterMinusOneSources(gameState.journalHistorySources || gameState.journalEntrySources);
+        const entries = mapSourcesToText(entrySources);
         const history = mapSourcesToText(historySources);
-        loadJournalEntries(entries, history, gameState.journalEntrySources, historySources);
+        loadJournalEntries(entries, history, entrySources, historySources);
       } else if (gameState.journalEntries) {
         const history = gameState.journalHistory || gameState.journalEntries;
         loadJournalEntries(gameState.journalEntries, history);
