@@ -16,6 +16,10 @@ Weather and surface modelling are implemented in **terraforming.js** with helper
 calculations from **physics.js**, **hydrology.js**, **water-cycle.js**,
 **dry-ice-cycle.js** and **hydrocarbon-cycle.js**.
 
+- Surface fraction calculations for albedo now allocate biomass first and scale
+  water and ice proportionally when their combined coverage exceeds remaining
+  area.
+
 The hydrocarbon cycle models methane in its liquid, ice and vapor forms.  It
 uses Penman-based equations for evaporation and sublimation alongside flow and
 melting logic in **hydrology.js**.

@@ -32,6 +32,7 @@ if (typeof module !== 'undefined' && module.exports) {
     var terraformUtils = require('./terraforming-utils.js');
     var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
     var calculateZonalCoverage = terraformUtils.calculateZonalCoverage;
+    var calculateSurfaceFractions = terraformUtils.calculateSurfaceFractions;
     var calculateEvaporationSublimationRates = terraformUtils.calculateEvaporationSublimationRates;
     var calculatePrecipitationRateFactor = terraformUtils.calculatePrecipitationRateFactor;
     var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
@@ -877,11 +878,11 @@ class Terraforming extends EffectableEntity{
       const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
       this.temperature.opticalDepth = tau;
 
-        const surfaceFractions = {
-          ocean: calculateAverageCoverage(this, 'liquidWater'),
-          ice: calculateAverageCoverage(this, 'ice'),
-          biomass: calculateAverageCoverage(this, 'biomass')
-        };
+        const surfaceFractions = calculateSurfaceFractions(
+          calculateAverageCoverage(this, 'liquidWater'),
+          calculateAverageCoverage(this, 'ice'),
+          calculateAverageCoverage(this, 'biomass')
+        );
 
       const baseParams = {
         groundAlbedo: groundAlbedo,

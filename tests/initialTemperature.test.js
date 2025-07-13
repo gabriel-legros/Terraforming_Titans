@@ -3,7 +3,7 @@ const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
-const { calculateAverageCoverage } = require('../src/js/terraforming-utils.js');
+const { calculateAverageCoverage, calculateSurfaceFractions } = require('../src/js/terraforming-utils.js');
 
 // Expose globals expected by terraforming module
 global.getZoneRatio = getZoneRatio;
@@ -60,11 +60,11 @@ function expectedTemperature(terra, params, resources) {
     if (ghg > 0) composition.greenhouseGas = ghg / total;
   }
 
-  const surfaceFractions = {
-    ocean: calculateAverageCoverage(terra, 'liquidWater'),
-    ice: calculateAverageCoverage(terra, 'ice'),
-    biomass: calculateAverageCoverage(terra, 'biomass')
-  };
+  const surfaceFractions = calculateSurfaceFractions(
+    calculateAverageCoverage(terra, 'liquidWater'),
+    calculateAverageCoverage(terra, 'ice'),
+    calculateAverageCoverage(terra, 'biomass')
+  );
 
   let weighted = 0;
   for (const zone of ['tropical', 'temperate', 'polar']) {
