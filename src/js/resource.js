@@ -24,6 +24,11 @@ class Resource extends EffectableEntity {
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
+
+    // Track recent value changes to calculate short term average rates
+    this._rateElapsed = 0;
+    this._rateAccumulated = 0;
+    this.lastSecondRate = 0;
   }
 
   // Method to initialize configurable properties
@@ -85,6 +90,17 @@ class Resource extends EffectableEntity {
 
   release(amount) {
     this.reserved = Math.max(this.reserved - amount, 0);
+  }
+
+  // Record value changes to compute an average rate over roughly one second
+  recordChange(delta, deltaTime) {
+    this._rateAccumulated += delta;
+    this._rateElapsed += deltaTime;
+    if (this._rateElapsed >= 1000) {
+      this.lastSecondRate = this._rateAccumulated / (this._rateElapsed / 1000);
+      this._rateAccumulated = 0;
+      this._rateElapsed = 0;
+    }
   }
 
   addDeposit(amount = 1) {
@@ -374,6 +390,11 @@ function produceResources(deltaTime, buildings) {
       }
 
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
+
+      // Track short term average rate
+      if (typeof resource.recordChange === 'function') {
+        resource.recordChange(resource.value - previousValue, deltaTime);
+      }
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
         const zones = ['tropical', 'temperate', 'polar'];

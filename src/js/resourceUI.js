@@ -218,22 +218,27 @@ function updateResourceRateDisplay(resource){
   const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
   if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
-    const formattedNumber = formatNumber(netRate);
-    // Removed the specific check for surface category to allow displaying rates < 1
-    if(Math.abs(netRate) < 1e-3)
+    let displayRate = netRate;
+    if (resource.category === 'surface' || resource.category === 'atmospheric') {
+      if (typeof resource.lastSecondRate === 'number') {
+        displayRate = resource.lastSecondRate;
+      }
+    }
+
+    if(Math.abs(displayRate) < 1e-3)
     {
       ppsElement.textContent = `0/s`;
     } else {
-      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
+      ppsElement.textContent = `${displayRate >= 0 ? '+' : ''}${formatNumber(displayRate, false, 2)}/s`;
     }
-    // Apply red color if netRate is negative and the absolute value is greater than the resource value
-    if (netRate < 0 && Math.abs(netRate) > resource.value) {
+    // Apply red color if displayRate is negative and the absolute value is greater than the resource value
+    if (displayRate < 0 && Math.abs(displayRate) > resource.value) {
       ppsElement.style.color = 'red';
-    } 
+    }
     // Apply orange if netRate is negative but less than or equal to the resource value
-    else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) { //If running out in 2 minutes
+    else if (displayRate < 0 && Math.abs(displayRate) > resource.value / 120) { //If running out in 2 minutes
       ppsElement.style.color = 'orange';
-    } 
+    }
     // Reset to default color if the condition is not met
     else {
       ppsElement.style.color = '';

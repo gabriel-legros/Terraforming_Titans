@@ -22,7 +22,7 @@ describe('fastForwardToEquilibrium', () => {
     });
 
     expect(steps.length).toBeGreaterThan(1);
-    expect(steps.every(s => s === 50)).toBe(true);
+    expect(steps.every(s => s === 100)).toBe(true);
   });
 
   test('always calls updateLogic with a fixed step', () => {
@@ -50,7 +50,7 @@ describe('fastForwardToEquilibrium', () => {
 
     // Each call to updateLogic should have the same fixed step
     expect(steps.length).toBeGreaterThan(1);
-    expect(steps.every(s => s === 50)).toBe(true);
+    expect(steps.every(s => s === 100)).toBe(true);
   });
 
   test('generateOverrideSnippet includes hydrocarbon values', () => {

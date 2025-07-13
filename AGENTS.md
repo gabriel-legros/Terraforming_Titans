@@ -68,6 +68,7 @@ The Dyson Swarm project begins with research into a large orbital array. An adva
 - Projects requiring ongoing resources check if enough supplies exist for the next second rather than just the current frame.
 - The luminosity box now shows both ground albedo (base plus black dust) and surface albedo derived from physics.js.
 - Surface albedo deltas compare against the initial surface value on game start, defaulting to ground albedo if unavailable. Tooltip breakdowns list black dust, water, ice and biomass percentages.
+- Surface and atmospheric resource rate displays show the average change over the last second while colony resources continue to show instantaneous rates.
 
 # Effectable Entities Design
 
