@@ -974,7 +974,7 @@ progressData.chapters.push(
   {
     id: "any.awCollector",
     type: "journal",
-    chapter: 0,
+    chapter: -1,
     narrative: "Blueprint retrieved: Atmospheric Water Collector now constructible.",
     prerequisites: [],
     objectives: [

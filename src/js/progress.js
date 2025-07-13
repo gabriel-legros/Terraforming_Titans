@@ -158,12 +158,16 @@ class StoryManager {
         }
         const eventChapter = event.chapter;
         let chapterChanged = false;
-        if (this.currentChapter === null) {
-            this.currentChapter = eventChapter;
-        } else if (eventChapter !== this.currentChapter) {
-            clearJournal();
-            this.currentChapter = eventChapter;
-            chapterChanged = true;
+
+        // Chapter -1 indicates the event should not change the current chapter
+        if (eventChapter !== -1) {
+            if (this.currentChapter === null) {
+                this.currentChapter = eventChapter;
+            } else if (eventChapter !== this.currentChapter) {
+                clearJournal();
+                this.currentChapter = eventChapter;
+                chapterChanged = true;
+            }
         }
         console.log(`Activating event: ${event.id}`);
         if (!event.activePlanet && typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function') {
