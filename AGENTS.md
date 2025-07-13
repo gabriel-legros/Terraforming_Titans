@@ -61,7 +61,8 @@ scripts implement the tabs, pop-ups and other interface elements.
 - The ResearchManager now persists between planets. Only advanced researches remain completed after travel; regular researches reset on each new planet.
 
 ## Dyson Swarm Receiver
-The Dyson Swarm project begins with research into a large orbital array. An advanced research unlocks the concept and a follow-up energy research enables the **Dyson Swarm Receiver** special project. The receiver currently costs massive resources (10M metal, 1M components, 100k electronics) and takes five minutes to build but provides no effect yet.
+The Dyson Swarm project begins with research into a large orbital array. An advanced research unlocks the concept and a follow-up energy research enables the **Dyson Swarm Receiver** special project. The receiver initially costs massive resources (10M metal, 1M components, 100k electronics) and takes five minutes to build.
+Once complete, players may deploy orbital solar collectors from a dedicated UI. Collectors require glass, electronics and components and build over time with optional automation. The total collectors persist when travelling between planets and each provides additional energy production labelled as **Dyson Swarm** in the resource rates.
 - **save.js** manages localStorage save slots and autosaving of resources, structures, research and story progress.
 - **projects.js** and **projectsUI.js** handle special missions such as asteroid mining, cargo exports and other repeatable tasks.
 - Story project progress now stores which narrative steps have already been shown so repeating or reloading a project will never reprint earlier text.
