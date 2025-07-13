@@ -210,6 +210,11 @@ class Project extends EffectableEntity {
 
     this.deductSustainResources(deltaTime);
 
+    if (!this.hasSustainResources()) {
+      this.isActive = false;
+      this.isPaused = true;
+    }
+
     this.remainingTime -= deltaTime;
 
     if (this.remainingTime <= 0) {

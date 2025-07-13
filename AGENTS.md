@@ -63,6 +63,7 @@ The Dyson Swarm project begins with research into a large orbital array. An adva
 - **ore-scanning.js** searches for underground resource deposits using adjustable scanning strength.
 - **warning.js** displays urgent alerts like colonist deaths or extreme greenhouse conditions.
 - Sustain costs for active projects now register as 'project' consumption in resource rate tooltips.
+- The luminosity box now shows both ground albedo (base plus black dust) and surface albedo derived from physics.js.
 
 # Effectable Entities Design
 

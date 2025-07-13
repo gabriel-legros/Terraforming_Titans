@@ -14,7 +14,7 @@ describe('updateLuminosityBox', () => {
     ctx.formatNumber = numbers.formatNumber;
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -26,11 +26,12 @@ describe('updateLuminosityBox', () => {
     const row = dom.window.document.querySelector('.row');
     ctx.createLuminosityBox(row);
 
+    ctx.terraforming.luminosity.surfaceAlbedo = 0.35;
     ctx.terraforming.luminosity.albedo = 0.35;
     ctx.terraforming.luminosity.modifiedSolarFlux = 1100;
     ctx.updateLuminosityBox();
 
-    const albedoDelta = dom.window.document.getElementById('albedo-delta').textContent;
+    const albedoDelta = dom.window.document.getElementById('surface-albedo-delta').textContent;
     expect(albedoDelta).toBe('+0.05');
 
     const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
