@@ -3,7 +3,7 @@ const path = require('path');
 const vm = require('vm');
 
 describe('Atmospheric Water Collector unlock trigger', () => {
-  test('story trigger exists with condition objective', () => {
+  test('story trigger exists with condition prerequisite', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
     vm.createContext(ctx);
@@ -11,9 +11,10 @@ describe('Atmospheric Water Collector unlock trigger', () => {
     const chapters = ctx.progressData.chapters;
     const ev = chapters.find(c => c.id === 'any.awCollector');
     expect(ev).toBeDefined();
-    const obj = ev.objectives[0];
-    expect(obj.type).toBe('condition');
-    expect(obj.conditionId).toBe('shouldUnlockAtmosphericWaterCollector');
+    expect(ev.objectives.length).toBe(0);
+    const prereq = ev.prerequisites[0];
+    expect(prereq.type).toBe('condition');
+    expect(prereq.conditionId).toBe('shouldUnlockAtmosphericWaterCollector');
     const reward = ev.reward.find(r => r.targetId === 'atmosphericWaterCollector');
     expect(reward).toBeDefined();
     expect(ev.chapter).toBe(-1);
