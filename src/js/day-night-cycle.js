@@ -35,13 +35,19 @@ class DayNightCycle {
     }
 
     // Method to load the state into DayNightCycle
-    loadState(state) {
-      this.dayProgress = state.dayProgress || 0;
-      this.elapsedTime = state.elapsedTime || 0;
-    }
+  loadState(state) {
+    this.dayProgress = state.dayProgress || 0;
+    this.elapsedTime = state.elapsedTime || 0;
+  }
 }
 
-  
+// Convert a rotation period in hours to a day-night cycle duration in
+// milliseconds using one Earth day as one minute.
+function rotationPeriodToDuration(rotationHours) {
+  return (rotationHours / 24) * 60000;
+}
+
+
 
 function updateDayNightDisplay() {
   const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
@@ -64,4 +70,8 @@ function updateDayNightDisplay() {
     progressBar.style.backgroundColor = `rgb(0, 0, ${dayProgress * 2.55})`; // Transitions from dark blue to lighter blue as night progresses
     progressBar.classList.add('night');
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { DayNightCycle, rotationPeriodToDuration, updateDayNightDisplay };
 }
