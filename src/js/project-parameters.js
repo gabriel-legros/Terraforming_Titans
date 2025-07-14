@@ -353,7 +353,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct the ground-based receiver array for the Dyson Swarm. Currently provides no benefits.',
+    description: 'Construct the receiver array to receive energy from the Dyson Swarm and enables its expansion.',
     repeatable: false,
     unlocked: false,
     attributes: { }
