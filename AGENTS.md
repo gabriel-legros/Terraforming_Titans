@@ -110,3 +110,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Surface albedo deltas compare against initial values, listing black dust, water,
   ice and biomass percentages.
 - Projects now save and load themselves with dedicated methods overridden by subclasses.
+- Dyson Swarm collector duration now scales with the number of terraformed planets using a helper in SpaceManager, and the button shows the time required.

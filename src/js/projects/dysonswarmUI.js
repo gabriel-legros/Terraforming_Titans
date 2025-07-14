@@ -71,7 +71,8 @@ function updateDysonSwarmUI(project) {
     els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
   } else {
     const can = project.canStartCollector();
-    els.startButton.textContent = 'Deploy Collector';
+    const dur = Math.round(project.collectorDuration / 1000);
+    els.startButton.textContent = `Deploy Collector (${dur}s)`;
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
   }
   els.autoCheckbox.checked = project.autoDeployCollectors;

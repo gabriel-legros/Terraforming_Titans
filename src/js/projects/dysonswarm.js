@@ -2,13 +2,24 @@ class DysonSwarmReceiverProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.collectors = 0;
-    this.collectorDuration = 60000;
+    this.baseCollectorDuration = 60000;
     this.collectorProgress = 0;
     this.autoDeployCollectors = false;
     this.collectorCost = {
       colony: { metal: 250000, electronics: 125000, components: 20000, glass: 4000,  }
     };
     this.energyPerCollector = 1000000000000;
+  }
+
+  get collectorDuration() {
+    if (
+      typeof spaceManager === 'undefined' ||
+      typeof spaceManager.getTerraformedPlanetCount !== 'function'
+    ) {
+      return this.baseCollectorDuration;
+    }
+    const count = spaceManager.getTerraformedPlanetCount();
+    return this.baseCollectorDuration / (count + 1);
   }
 
   renderUI(container) {

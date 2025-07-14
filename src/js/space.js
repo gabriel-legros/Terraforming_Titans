@@ -62,6 +62,15 @@ class SpaceManager extends EffectableEntity {
     }
 
     /**
+     * Counts how many planets have been fully terraformed.
+     * @returns {number}
+     */
+    getTerraformedPlanetCount() {
+        return Object.values(this.planetStatuses)
+            .filter(status => status.terraformed).length;
+    }
+
+    /**
      * Enable a planet so it appears in the UI.
      * @param {string} planetKey
      * @returns {boolean} True if the planet exists and was enabled.
