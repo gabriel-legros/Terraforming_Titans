@@ -22,6 +22,23 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - **solis.js** and **solisUI.js** provide a shop and quest system.
 - The ResearchManager persists between planets so only advanced research remains after travel.
 
+## Prestige systems
+Two reset layers control long term progression:
+
+### New game
+Calling `startNewGame()` fully recreates the game state and returns the player to Mars. Nothing carries over between playthroughs.
+
+### Planet travel
+Selecting another world via `selectPlanet(key)` soft resets the colony while keeping meta systems. It awards one skill point on the first visit and calls `initializeGameState({ preserveManagers: true, preserveJournal: true })` so that:
+* `ResearchManager` survives but `resetRegularResearch()` clears normal tech while advanced research and its resource are preserved.
+* `SkillManager` retains unlocked skills and re‑applies their effects.
+* `SolisManager` keeps quests, points and shop upgrades.
+* `SpaceManager` records which planets have been visited or terraformed.
+* `StoryManager` continues tracking active events and re‑applies their rewards.
+* The **Dyson Swarm Receiver** project's collector count persists, maintaining its energy contribution across planets.
+
+When loading a save or switching planets, call each manager's `reapplyEffects` method so stored modifiers affect the newly created game objects.
+
 ## Dyson Swarm Receiver
 Research unlocks a large orbital array followed by the **Dyson Swarm Receiver** mega
 project. The receiver costs 10&nbsp;M metal, 1&nbsp;M components and 100&nbsp;k electronics and
