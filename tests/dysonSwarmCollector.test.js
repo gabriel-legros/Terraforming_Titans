@@ -10,9 +10,10 @@ describe('Dyson Swarm collector behaviour', () => {
       EffectableEntity,
       resources: {
         colony: {
-          glass: { value: 2000, decrease: () => {}, updateStorageCap: () => {} },
-          electronics: { value: 2000, decrease: () => {}, updateStorageCap: () => {} },
-          components: { value: 2000, decrease: () => {}, updateStorageCap: () => {} },
+          metal: { value: 1000000, decrease: () => {}, updateStorageCap: () => {} },
+          glass: { value: 500000, decrease: () => {}, updateStorageCap: () => {} },
+          electronics: { value: 500000, decrease: () => {}, updateStorageCap: () => {} },
+          components: { value: 100000, decrease: () => {}, updateStorageCap: () => {} },
           energy: { value: 0, modifyRate: () => {}, updateStorageCap: () => {} }
         }
       },
