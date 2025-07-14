@@ -20,6 +20,7 @@
     let currentChapter = null;
     data.chapters.forEach(ch => {
       if (completed.has(ch.id)) {
+        if (ch.chapter === -1) return; // Skip any-chapter events
         if (currentChapter === null || ch.chapter !== currentChapter) {
           currentChapter = ch.chapter;
           entries.length = 0;
