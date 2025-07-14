@@ -1561,7 +1561,7 @@ progressData.chapters.push(
     id: "chapter10.2",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The energy beams and the asteroid... they converged on empty space! They missed! The entire system is celebrating. Morale is higher than I've ever seen it.'\nOperation Sidestep successful. Threat averted. Probability of an immediate, retargeted attack is low.",
+    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The energy beams and the asteroid... they converged on empty space! They missed! They brought a death ray to a math test and didn't show their work. The entire system is celebrating. Morale is higher than I've ever seen it.'\nOperation Sidestep successful. Threat averted. Probability of an immediate, retargeted attack is low.",
     prerequisites: ["chapter10.1"],
     objectives: [
     ],
