@@ -29,7 +29,9 @@ function create() {
   }, tabParameters);
 
   // Set up the game scene, objects, and initial state
-  dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
+  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const dayDuration = rotationPeriodToDuration(rotation);
+  dayNightCycle = new DayNightCycle(dayDuration);
   updateDayNightDisplay();
 
   // Initialize resources
@@ -119,7 +121,9 @@ function initializeGameState(options = {}) {
 
   playTimeSeconds = 0;
 
-  dayNightCycle = new DayNightCycle(120000); // Day duration of 2 minutes (120000 milliseconds)
+  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const dayDuration = rotationPeriodToDuration(rotation);
+  dayNightCycle = new DayNightCycle(dayDuration);
   resources = {};
   resources = createResources(currentPlanetParameters.resources);
   if (savedAdvancedResearch) {
