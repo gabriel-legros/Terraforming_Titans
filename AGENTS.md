@@ -109,3 +109,4 @@ second time they speak in a chapter to help clarify who is talking.
 - The luminosity box shows ground and surface albedo separately.
 - Surface albedo deltas compare against initial values, listing black dust, water,
   ice and biomass percentages.
+- Projects now save and load themselves with dedicated methods overridden by subclasses.

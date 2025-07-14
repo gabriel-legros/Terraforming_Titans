@@ -73,6 +73,22 @@ class DysonSwarmReceiverProject extends Project {
       resources.colony.energy.modifyRate(rate, 'Dyson Swarm', 'project');
     }
   }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      collectors: this.collectors,
+      collectorProgress: this.collectorProgress,
+      autoDeployCollectors: this.autoDeployCollectors,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.collectors = state.collectors || 0;
+    this.collectorProgress = state.collectorProgress || 0;
+    this.autoDeployCollectors = state.autoDeployCollectors || false;
+  }
 }
 
 if (typeof globalThis !== 'undefined') {

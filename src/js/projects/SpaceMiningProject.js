@@ -123,6 +123,20 @@ class SpaceMiningProject extends SpaceshipProject {
 
     return true;
   }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      disableAbovePressure: this.disableAbovePressure,
+      disablePressureThreshold: this.disablePressureThreshold,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.disableAbovePressure = state.disableAbovePressure || false;
+    this.disablePressureThreshold = state.disablePressureThreshold || 0;
+  }
 }
 
 // Expose constructor globally for browser usage
