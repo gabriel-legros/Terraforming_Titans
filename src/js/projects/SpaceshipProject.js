@@ -488,6 +488,26 @@ class SpaceshipProject extends Project {
   estimateCostAndGain() {
     this.estimateProjectCostAndGain();
   }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      assignedSpaceships: this.assignedSpaceships,
+      autoAssignSpaceships: this.autoAssignSpaceships,
+      selectedDisposalResource: this.selectedDisposalResource,
+      waitForCapacity: this.waitForCapacity,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.assignedSpaceships = state.assignedSpaceships;
+    this.autoAssignSpaceships = state.autoAssignSpaceships;
+    this.selectedDisposalResource = state.selectedDisposalResource || this.attributes.defaultDisposal;
+    if (state.waitForCapacity !== undefined) {
+      this.waitForCapacity = state.waitForCapacity;
+    }
+  }
 }
 
 if (typeof globalThis !== 'undefined') {

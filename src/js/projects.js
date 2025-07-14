@@ -319,6 +319,39 @@ class Project extends EffectableEntity {
   estimateProjectCostAndGain() {
     // Default implementation intentionally left blank
   }
+
+  saveState() {
+    return {
+      isActive: this.isActive,
+      isPaused: this.isPaused,
+      isCompleted: this.isCompleted,
+      remainingTime: this.remainingTime,
+      startingDuration: this.startingDuration,
+      repeatCount: this.repeatCount,
+      pendingResourceGains: this.pendingResourceGains || [],
+      autoStart: this.autoStart,
+      shownStorySteps: Array.from(this.shownStorySteps),
+    };
+  }
+
+  loadState(state) {
+    this.isActive = state.isActive;
+    this.isPaused = state.isPaused || false;
+    this.isCompleted = state.isCompleted;
+    this.remainingTime = state.remainingTime;
+    this.startingDuration = state.startingDuration || this.getEffectiveDuration();
+    this.repeatCount = state.repeatCount;
+    this.pendingResourceGains = state.pendingResourceGains;
+    if (this.pendingResourceGains) {
+      this.oneTimeResourceGainsDisplay = this.pendingResourceGains;
+    }
+    this.effects = [];
+    this.autoStart = state.autoStart;
+    this.shownStorySteps = new Set(state.shownStorySteps || []);
+    if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
+      this.applyCompletionEffect();
+    }
+  }
   
 }
 
@@ -441,40 +474,11 @@ class ProjectManager extends EffectableEntity {
     const projectState = {};
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
-      const state = {
-        isActive: project.isActive,
-        isPaused: project.isPaused,
-        isCompleted: project.isCompleted,
-        remainingTime: project.remainingTime,
-        startingDuration: project.startingDuration,
-        repeatCount: project.repeatCount,
-        pendingResourceGains: project.pendingResourceGains || [],
-        autoStart : project.autoStart,
-        shownStorySteps: Array.from(project.shownStorySteps),
-      };
-
-      if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
-        state.assignedSpaceships = project.assignedSpaceships;
-        state.autoAssignSpaceships = project.autoAssignSpaceships;
-        state.selectedDisposalResource = project.selectedDisposalResource;
-        state.waitForCapacity = project.waitForCapacity;
-        if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
-          state.disableAbovePressure = project.disableAbovePressure;
-          state.disablePressureThreshold = project.disablePressureThreshold;
-        }
+      if (typeof project.saveState === 'function') {
+        projectState[projectName] = project.saveState();
       }
-      if (typeof DysonSwarmReceiverProject !== 'undefined' && project instanceof DysonSwarmReceiverProject) {
-        state.collectors = project.collectors;
-        state.collectorProgress = project.collectorProgress;
-        state.autoDeployCollectors = project.autoDeployCollectors;
-      }
-
-      projectState[projectName] = state;
     }
-    return {
-        projects: projectState,
-        order: this.projectOrder
-    };
+    return { projects: projectState, order: this.projectOrder };
   }
 
   // Load a previously saved state into the projects
@@ -489,40 +493,8 @@ class ProjectManager extends EffectableEntity {
       const savedProject = projectState[projectName];
       const project = this.projects[projectName];
 
-      if (project) {
-        project.isActive = savedProject.isActive;
-        project.isPaused = savedProject.isPaused || false;
-        project.isCompleted = savedProject.isCompleted;
-        project.remainingTime = savedProject.remainingTime;
-        project.startingDuration = savedProject.startingDuration || project.getEffectiveDuration();
-        project.repeatCount = savedProject.repeatCount;
-        project.pendingResourceGains = savedProject.pendingResourceGains;
-        if(project.pendingResourceGains){
-          project.oneTimeResourceGainsDisplay = project.pendingResourceGains;
-        }
-        project.effects = [];
-        project.autoStart = savedProject.autoStart;
-        project.shownStorySteps = new Set(savedProject.shownStorySteps || []);
-        if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) {
-          project.assignedSpaceships = savedProject.assignedSpaceships;
-          project.autoAssignSpaceships = savedProject.autoAssignSpaceships;
-          project.selectedDisposalResource = savedProject.selectedDisposalResource || project.attributes.defaultDisposal;
-          if(savedProject.waitForCapacity !== undefined){
-            project.waitForCapacity = savedProject.waitForCapacity;
-          }
-        if (typeof SpaceMiningProject !== 'undefined' && project instanceof SpaceMiningProject) {
-          project.disableAbovePressure = savedProject.disableAbovePressure || false;
-          project.disablePressureThreshold = savedProject.disablePressureThreshold || 0;
-        }
-      }
-      if (typeof DysonSwarmReceiverProject !== 'undefined' && project instanceof DysonSwarmReceiverProject) {
-        project.collectors = savedProject.collectors || 0;
-        project.collectorProgress = savedProject.collectorProgress || 0;
-        project.autoDeployCollectors = savedProject.autoDeployCollectors || false;
-      }
-      if(project.attributes.completionEffect && (project.isCompleted || project.repeatCount > 0)){
-        project.applyCompletionEffect();
-      }
+      if (project && typeof project.loadState === 'function') {
+        project.loadState(savedProject);
       }
     }
 
