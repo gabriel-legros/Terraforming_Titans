@@ -27,34 +27,6 @@ function calculateEmissivity(composition, surfacePressureBar){
   return 1 - Math.exp(-tau);
 }
 
-function calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio){
-  // Constants
-  const stefanBoltzmann = 5.670374419e-8; // Stefan-Boltzmann constant (W·m⁻²·K⁻⁴)
-
-  // Calculate the effective temperature without atmosphere (Teff)
-  const effectiveTempNoAtmosphere = Math.pow(
-    (zoneRatio*modifiedSolarFlux * (1 - albedo)) / (stefanBoltzmann),
-    0.25
-  );
-  
-  return effectiveTempNoAtmosphere;
-}
-
-function calculateEffectiveTemperature(
-  modifiedSolarFlux,
-  albedo,
-  emissivity,
-  zoneRatio
-) {
-  const effectiveTempNoAtmosphere = calculateEffectiveTemperatureNoAtm(modifiedSolarFlux, albedo, zoneRatio);
-
-  // Calculate the surface temperature with greenhouse effect (Tsurface)
-  const multiplier = Math.pow(1 / (1 - emissivity / 2), 0.25);
-  const surfaceTemperature = effectiveTempNoAtmosphere * multiplier;
-
-  return surfaceTemperature
-}
-
 // Function to calculate air density (rho_a)
 function airDensity(atmPressure, T) {
     // atmPressure: Atmospheric pressure in Pa

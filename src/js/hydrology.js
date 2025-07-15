@@ -221,7 +221,7 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
         availableLiquid,
         availableBuriedIce,
         zoneArea,
-        coverageFn
+        coverageFn,
     });
 }
 
