@@ -57,3 +57,35 @@
 .popup-close-button:hover {
   background-color: #45a049;
 }
+
+/* System pop-up styling */
+.system-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.system-popup-window {
+  background-color: white;
+  color: black;
+  border: 2px solid black;
+  padding: 10px 20px;
+  max-width: 80%;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.system-popup-title {
+  margin-top: 0;
+}
+
+.system-popup-text {
+  margin: 10px 0;
+}

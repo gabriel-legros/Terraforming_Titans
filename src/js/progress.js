@@ -674,6 +674,13 @@ class StoryEvent {
                     this.parameters.buttonText
                 );
                 break;
+            case "system-pop-up":
+                createSystemPopup(
+                    this.parameters.title,
+                    joinLines(this.parameters.text),
+                    this.parameters.buttonText
+                );
+                break;
             case "journal":
                  const text = joinLines(this.narrative);
                  if (this.title) {
