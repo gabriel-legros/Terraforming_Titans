@@ -273,11 +273,12 @@ function updateRender() {
 }
 
 function update(time, delta) {
+  const speed = (typeof gameSpeed !== 'undefined') ? gameSpeed : 1;
+  const scaledDelta = delta * speed;
+  updateLogic(scaledDelta);   // Update game state
+  updateRender();             // Render updated game state
 
-  updateLogic(delta);   // Update game state
-  updateRender();       // Render updated game state
-
-  autosave(delta);      // Call the autosave function
+  autosave(scaledDelta);      // Call the autosave function
 }
 
 function startNewGame() {
