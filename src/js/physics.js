@@ -64,6 +64,7 @@ const DEFAULT_SURFACE_ALBEDO = {
   snow: 0.85,
   co2_ice: 0.50,
   hydrocarbon: 0.10,
+  hydrocarbonIce :0.50,
   biomass: 0.20
 };
 
