@@ -1107,7 +1107,7 @@ class Terraforming extends EffectableEntity{
       // The total power intercepted by the mirror
       const interceptedPower = solarFluxAtMirror * mirrorSurfaceArea; // W
       // Intercepted power per unit surface area of the planet
-      const powerPerUnitArea = interceptedPower / this.celestialParameters.surfaceArea; // W/m²
+      const powerPerUnitArea = interceptedPower / this.celestialParameters.crossSectionArea; // W/m²
       
       // Return both the total intercepted power and power per unit area
       return {
