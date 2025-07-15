@@ -1,4 +1,4 @@
-const { calculateAtmosphericPressure, calculateEffectiveTemperatureNoAtm, calculateEmissivity } = require('../src/js/physics.js');
+const { calculateAtmosphericPressure, effectiveTemp, calculateEmissivity } = require('../src/js/physics.js');
 
 describe('physics helpers', () => {
   test('calculateAtmosphericPressure basic case', () => {
@@ -6,9 +6,9 @@ describe('physics helpers', () => {
     expect(p).toBeCloseTo(0.0007957747, 8);
   });
 
-  test('calculateEffectiveTemperatureNoAtm', () => {
-    const T = calculateEffectiveTemperatureNoAtm(1000, 0.5, 1);
-    expect(T).toBeCloseTo(306.4358463, 5);
+  test('effectiveTemp black body calculation', () => {
+    const T = effectiveTemp(0.5, 1000);
+    expect(T).toBeCloseTo(216.6828649, 5);
   });
 
   test('calculateEmissivity uses optical depth', () => {
