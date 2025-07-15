@@ -51,7 +51,7 @@ const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 const KPA_PER_ATM = 101.325;
 
-const EQUILIBRIUM_WATER_PARAMETER = 0.0023366278638323732;
+const EQUILIBRIUM_WATER_PARAMETER = 0.005;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.00010;
 
 // Fraction of precipitation redistributed across zones
@@ -1492,11 +1492,6 @@ synchronizeGlobalResources() {
       zonalSurface: this.zonalSurface,
       zonalHydrocarbons: this.zonalHydrocarbons,
       // zonalBiomass: this.zonalBiomass, // REMOVED - Biomass is stored in zonalSurface
-      // Save equilibrium constants
-      equilibriumPrecipitationMultiplier: this.equilibriumPrecipitationMultiplier,
-      equilibriumCondensationParameter: this.equilibriumCondensationParameter,
-      equilibriumMethaneCondensationParameter: this.equilibriumMethaneCondensationParameter,
-      // NOTE: Stored rates (like totalEvaporationRate) are not saved, they are recalculated each tick.
       };
   }
 
@@ -1505,11 +1500,6 @@ synchronizeGlobalResources() {
 
       this.completed = terraformingState.completed || false;
       this.initialValuesCalculated = terraformingState.initialValuesCalculated || false;
-
-      this.equilibriumPrecipitationMultiplier = terraformingState.equilibriumPrecipitationMultiplier ?? this.equilibriumPrecipitationMultiplier;
-      this.equilibriumCondensationParameter = terraformingState.equilibriumCondensationParameter ?? this.equilibriumCondensationParameter;
-      this.equilibriumMethaneCondensationParameter = terraformingState.equilibriumMethaneCondensationParameter ?? this.equilibriumMethaneCondensationParameter;
-
 
       // Load Temperature (including zonal)
       if (terraformingState.temperature) {

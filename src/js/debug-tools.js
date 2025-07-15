@@ -4,8 +4,11 @@
       calculatePrecipitationRateFactor,
       calculateZonalCoverage,
       calculateCO2CondensationRateFactor,
+      rapidSublimationRateCO2,
       calculateMethaneCondensationRateFactor,
       calculateMethaneEvaporationRate,
+      calculateMethaneSublimationRate,
+      rapidSublimationRateMethane,
       getZonePercentage,
       getZoneRatio,
       reconstructJournalState,
@@ -18,10 +21,13 @@
 
     const dryIceCycle = require('./dry-ice-cycle.js');
     calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
+    rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
 
     const hydrocarbonCycle = require('./hydrocarbon-cycle.js');
     calculateMethaneCondensationRateFactor = hydrocarbonCycle.calculateMethaneCondensationRateFactor;
     calculateMethaneEvaporationRate = hydrocarbonCycle.calculateMethaneEvaporationRate;
+    calculateMethaneSublimationRate = hydrocarbonCycle.calculateMethaneSublimationRate;
+    rapidSublimationRateMethane = hydrocarbonCycle.rapidSublimationRateMethane;
 
     const physics = require('./physics.js');
     calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
@@ -37,8 +43,11 @@
     calculatePrecipitationRateFactor = globalThis.calculatePrecipitationRateFactor;
     calculateZonalCoverage = globalThis.calculateZonalCoverage;
     calculateCO2CondensationRateFactor = globalThis.calculateCO2CondensationRateFactor;
+    rapidSublimationRateCO2 = globalThis.rapidSublimationRateCO2;
     calculateMethaneCondensationRateFactor = globalThis.calculateMethaneCondensationRateFactor;
     calculateMethaneEvaporationRate = globalThis.calculateMethaneEvaporationRate;
+    calculateMethaneSublimationRate = globalThis.calculateMethaneSublimationRate;
+    rapidSublimationRateMethane = globalThis.rapidSublimationRateMethane;
     getZonePercentage = globalThis.getZonePercentage;
     getZoneRatio = globalThis.getZoneRatio;
     reconstructJournalState = globalThis.reconstructJournalState;
@@ -192,8 +201,6 @@
       if (gas === 'carbonDioxide') initialCo2PressurePa = pressure;
       if (gas === 'atmosphericMethane') initialMethanePressurePa = pressure;
     }
-    const solarFlux = this.luminosity.modifiedSolarFlux;
-
     let initialTotalWaterEvapSublRate = 0;
     let initialTotalCO2SublRate = 0;
     let initialTotalMethaneEvapRate = 0;
@@ -205,7 +212,7 @@
     for (const zone of zones) {
       const dayTemp = this.temperature.zones[zone].day;
       const nightTemp = this.temperature.zones[zone].night;
-      const zonalSolarFlux = solarFlux * getZoneRatio(zone);
+      const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
       const evapSublRates = calculateEvaporationSublimationRates(
         this,
         zone,
@@ -219,6 +226,10 @@
       initialTotalWaterEvapSublRate +=
         evapSublRates.evaporationRate + evapSublRates.waterSublimationRate;
       initialTotalCO2SublRate += evapSublRates.co2SublimationRate;
+
+      const availableDryIce = this.zonalSurface[zone]?.dryIce || 0;
+      const rapidCo2Rate = rapidSublimationRateCO2(dayTemp, availableDryIce);
+      initialTotalCO2SublRate += rapidCo2Rate;
 
       const precipRateFactors = calculatePrecipitationRateFactor(
         this,
@@ -252,6 +263,22 @@
         zonalSolarFlux
       });
       initialTotalMethaneEvapRate += methaneEvaporationRateValue;
+
+      const hydrocarbonIceCoverage = calculateZonalCoverage(this, zone, 'hydrocarbonIce');
+      const methaneSublimationRateValue = calculateMethaneSublimationRate({
+        zoneArea,
+        hydrocarbonIceCoverage,
+        dayTemperature: dayTemp,
+        nightTemperature: nightTemp,
+        methaneVaporPressure: initialMethanePressurePa,
+        avgAtmPressure: initialTotalPressurePa,
+        zonalSolarFlux
+      });
+      initialTotalMethaneEvapRate += methaneSublimationRateValue;
+
+      const availableMethaneIce = this.zonalHydrocarbons[zone]?.ice || 0;
+      const rapidMethaneRate = rapidSublimationRateMethane(dayTemp, availableMethaneIce);
+      initialTotalMethaneEvapRate += rapidMethaneRate;
 
       const methaneCondRateFactors = calculateMethaneCondensationRateFactor({
         zoneArea,
