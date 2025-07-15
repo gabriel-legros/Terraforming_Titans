@@ -620,11 +620,12 @@ function updateLifeStatusTable() {
                 : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
             const tempMult = growthTempResults[zone]?.multiplier || 0;
             const radMult = terraforming.getMagnetosphereStatus() ? 1 : (0.5 + 0.5 * designToCheck.getRadiationMitigationRatio());
+            const waterMult = (terraforming.zonalWater[zone]?.liquid || 0) > 1e-9 ? 1 : 0;
             const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
-            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * otherMult;
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if(valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if(tooltipSpan) {
-                tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
+                tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nMoisture: x${formatNumber(waterMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
             }
         }
     });
