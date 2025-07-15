@@ -3,7 +3,7 @@ const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
-const { calculateAverageCoverage, calculateSurfaceFractions } = require('../src/js/terraforming-utils.js');
+const { calculateAverageCoverage, calculateSurfaceFractions, calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
 
 // Expose globals expected by terraforming module
 global.getZoneRatio = getZoneRatio;
@@ -60,22 +60,21 @@ function expectedTemperature(terra, params, resources) {
     if (ghg > 0) composition.greenhouseGas = ghg / total;
   }
 
-  const surfaceFractions = calculateSurfaceFractions(
-    calculateAverageCoverage(terra, 'liquidWater'),
-    calculateAverageCoverage(terra, 'ice'),
-    calculateAverageCoverage(terra, 'biomass')
-  );
-
   let weighted = 0;
   for (const zone of ['tropical', 'temperate', 'polar']) {
     const zoneFlux = terra.calculateZoneSolarFlux(zone);
+    const zoneFractions = calculateSurfaceFractions(
+      calculateZonalCoverage(terra, zone, 'liquidWater'),
+      calculateZonalCoverage(terra, zone, 'ice'),
+      calculateZonalCoverage(terra, zone, 'biomass')
+    );
     const zTemps = physics.dayNightTemperaturesModel({
       groundAlbedo,
       flux: zoneFlux,
       rotationPeriodH: rotation,
       surfacePressureBar: pressureBar,
       composition,
-      surfaceFractions,
+      surfaceFractions: zoneFractions,
       gSurface: g
     });
     weighted += zTemps.mean * getZonePercentage(zone);

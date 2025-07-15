@@ -103,6 +103,13 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage) 
   };
 }
 
+function calculateZonalSurfaceFractions(terraforming, zone) {
+  const water = calculateZonalCoverage(terraforming, zone, 'liquidWater');
+  const ice = calculateZonalCoverage(terraforming, zone, 'ice');
+  const bio = calculateZonalCoverage(terraforming, zone, 'biomass');
+  return calculateSurfaceFractions(water, ice, bio);
+}
+
 function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
   const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
@@ -148,6 +155,7 @@ if (!isNode) {
   globalThis.calculateAverageCoverage = calculateAverageCoverage;
   globalThis.calculateZonalCoverage = calculateZonalCoverage;
   globalThis.calculateSurfaceFractions = calculateSurfaceFractions;
+  globalThis.calculateZonalSurfaceFractions = calculateZonalSurfaceFractions;
   globalThis.calculateEvaporationSublimationRates = calculateZonalEvaporationSublimationRates;
   globalThis.calculatePrecipitationRateFactor = calculateZonalPrecipitationRateFactor;
   globalThis.calculateMeltingFreezingRates = calculateZonalMeltingFreezingRates;
@@ -158,6 +166,7 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateAverageCoverage,
     calculateZonalCoverage,
     calculateSurfaceFractions,
+    calculateZonalSurfaceFractions,
     // expose with original names for consumers
     calculateEvaporationSublimationRates: calculateZonalEvaporationSublimationRates,
     calculatePrecipitationRateFactor: calculateZonalPrecipitationRateFactor,

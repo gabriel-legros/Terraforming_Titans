@@ -33,6 +33,7 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
     var calculateZonalCoverage = terraformUtils.calculateZonalCoverage;
     var calculateSurfaceFractions = terraformUtils.calculateSurfaceFractions;
+    var calculateZonalSurfaceFractions = terraformUtils.calculateZonalSurfaceFractions;
     var calculateEvaporationSublimationRates = terraformUtils.calculateEvaporationSublimationRates;
     var calculatePrecipitationRateFactor = terraformUtils.calculatePrecipitationRateFactor;
     var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
@@ -957,19 +958,12 @@ class Terraforming extends EffectableEntity{
       const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
       this.temperature.opticalDepth = tau;
 
-        const surfaceFractions = calculateSurfaceFractions(
-          calculateAverageCoverage(this, 'liquidWater'),
-          calculateAverageCoverage(this, 'ice'),
-          calculateAverageCoverage(this, 'biomass')
-        );
-
       const baseParams = {
         groundAlbedo: groundAlbedo,
         flux: modifiedSolarFlux,
         rotationPeriodH: rotationPeriod,
         surfacePressureBar: surfacePressureBar,
         composition: composition,
-        surfaceFractions: surfaceFractions,
         gSurface: gSurface
       };
 
@@ -978,7 +972,8 @@ class Terraforming extends EffectableEntity{
       for (const zone in this.temperature.zones) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
-        const zoneTemps = dayNightTemperaturesModel({ ...baseParams, flux: zoneFlux });
+        const zoneFractions = calculateZonalSurfaceFractions(this, zone);
+        const zoneTemps = dayNightTemperaturesModel({ ...baseParams, flux: zoneFlux, surfaceFractions: zoneFractions });
         this.temperature.zones[zone].value = zoneTemps.mean;
         this.temperature.zones[zone].day = zoneTemps.day;
         this.temperature.zones[zone].night = zoneTemps.night;
@@ -986,7 +981,7 @@ class Terraforming extends EffectableEntity{
         weightedTemp += zoneTemps.mean * zonePct;
       }
       this.temperature.value = weightedTemp;
-      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(surfaceAlbedoMix(groundAlbedo, surfaceFractions), modifiedSolarFlux);
+      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
     }
 
     calculateGroundAlbedo() {
@@ -1001,14 +996,20 @@ class Terraforming extends EffectableEntity{
         return upgradeAlbedo * upgradeRatio + untouchedRatio * baseAlbedo;
     }
 
-    calculateSurfaceAlbedo() {
+    calculateZonalSurfaceAlbedo(zone) {
         const groundAlbedo = this.calculateGroundAlbedo();
-        const surfaceFractions = calculateSurfaceFractions(
-          calculateAverageCoverage(this, 'liquidWater'),
-          calculateAverageCoverage(this, 'ice'),
-          calculateAverageCoverage(this, 'biomass')
-        );
-        return surfaceAlbedoMix(groundAlbedo, surfaceFractions);
+        const fractions = calculateZonalSurfaceFractions(this, zone);
+        return surfaceAlbedoMix(groundAlbedo, fractions);
+    }
+
+    calculateSurfaceAlbedo() {
+        let weighted = 0;
+        for (const zone of ZONES) {
+            const alb = this.calculateZonalSurfaceAlbedo(zone);
+            const pct = getZonePercentage(zone);
+            weighted += alb * pct;
+        }
+        return weighted;
     }
 
     calculateEffectiveAlbedo() {
