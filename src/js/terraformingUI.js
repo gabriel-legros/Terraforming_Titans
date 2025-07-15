@@ -642,7 +642,7 @@ function updateLifeBox() {
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Surface Albedo <span id="surface-albedo-tooltip" class="info-tooltip-icon" title="Includes oceans, ice and biomass coverage.">&#9432;</span></td>
+            <td>Surface Albedo <span id="surface-albedo-tooltip" class="info-tooltip-icon" title="Breakdown of surface types by zone. Darker materials lower albedo and warm the climate.">&#9432;</span></td>
             <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
@@ -711,15 +711,24 @@ function updateLifeBox() {
     }
     const surfTooltip = document.getElementById('surface-albedo-tooltip');
     if (surfTooltip) {
-      const lines = [];
+      const sections = [];
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
         const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.biomass), 0);
         const pct = v => (v * 100).toFixed(1);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
-        lines.push(`${name}: R ${pct(rock)}% W ${pct(fr.ocean)}% I ${pct(fr.ice)}% HC ${pct(fr.hydrocarbon)}% MI ${pct(fr.hydrocarbonIce)}% D ${pct(fr.co2_ice)}% B ${pct(fr.biomass)}%`);
+        sections.push(
+          `${name}:
+  Rock: ${pct(rock)}%
+  Water: ${pct(fr.ocean)}%
+  Ice: ${pct(fr.ice)}%
+  Hydrocarbons: ${pct(fr.hydrocarbon)}%
+  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%
+  Dry Ice: ${pct(fr.co2_ice)}%
+  Biomass: ${pct(fr.biomass)}%`
+        );
       }
-      surfTooltip.title = lines.join('\n');
+      surfTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}`;
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');
