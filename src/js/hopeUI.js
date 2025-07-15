@@ -26,15 +26,19 @@ function initializeHopeUI() {
 
 function updateHopeAlert() {
     const alertEl = document.getElementById('hope-alert');
-    if (!alertEl) return;
+    const subtabEl = document.getElementById('solis-subtab-alert');
+    if (!alertEl && !subtabEl) return;
     if (typeof gameSettings !== 'undefined' && gameSettings.silenceSolisAlert) {
-        alertEl.style.display = 'none';
+        if (alertEl) alertEl.style.display = 'none';
+        if (subtabEl) subtabEl.style.display = 'none';
         return;
     }
     if (typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible) {
-        alertEl.style.display = 'inline';
+        if (alertEl) alertEl.style.display = 'inline';
+        if (subtabEl) subtabEl.style.display = 'inline';
     } else {
-        alertEl.style.display = 'none';
+        if (alertEl) alertEl.style.display = 'none';
+        if (subtabEl) subtabEl.style.display = 'none';
     }
 }
 
