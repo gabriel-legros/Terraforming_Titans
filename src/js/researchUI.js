@@ -102,7 +102,9 @@ function loadResearchCategory(category) {
     }
 
     // Clear the current research list
-    researchListContainer.innerHTML = '';
+    while (researchListContainer.firstChild) {
+        researchListContainer.removeChild(researchListContainer.firstChild);
+    }
 
     // Load research items for the given category
     const researches = researchManager.getResearchesByCategory(category);

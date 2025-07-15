@@ -48,7 +48,9 @@ function renderProjects() {
 
 function initializeProjectsUI() {
   document.querySelectorAll('.projects-list').forEach(container => {
-    container.innerHTML = '';
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
   });
   projectElements = {};
 }

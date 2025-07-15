@@ -37,7 +37,9 @@ function createColonyButtons(colonies) {
 // Create buttons for buildings and colonies
 function createStructureButtons(structures, containerId, buildCallback, toggleCallback, isColony = false) {
   const buttonsContainer = document.getElementById(containerId);
-  buttonsContainer.innerHTML = '';
+  while (buttonsContainer.firstChild) {
+    buttonsContainer.removeChild(buttonsContainer.firstChild);
+  }
 
   structures.forEach((structure) => {
     // Create structure row (shared for buildings and colonies)
