@@ -430,6 +430,17 @@ class Building extends EffectableEntity {
         }
       }
 
+      // Disable Bio Factory when designed life cannot survive anywhere
+      if(
+        this.name === 'bioFactory' &&
+        typeof lifeDesigner !== 'undefined' &&
+        lifeDesigner.currentDesign &&
+        typeof lifeDesigner.currentDesign.canSurviveAnywhere === 'function' &&
+        !lifeDesigner.currentDesign.canSurviveAnywhere()
+      ){
+        targetProductivity = 0;
+      }
+
       if(Math.abs(targetProductivity - this.productivity) < 0.001){
         this.productivity = targetProductivity;
       }

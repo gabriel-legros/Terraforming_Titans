@@ -114,3 +114,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Day-night cycle duration now derives from each planet's rotation period, treating one Earth day as one minute.
 - Added a "system-pop-up" story event type for instant messages.
 - Added a `setGameSpeed` console command that multiplies time progression for the current session.
+- Bio Factory stops producing if designed life can't survive in any zone.
