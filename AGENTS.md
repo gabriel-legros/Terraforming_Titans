@@ -116,3 +116,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added a `setGameSpeed` console command that multiplies time progression for the current session.
 - Bio Factory stops producing if designed life can't survive in any zone.
 - Life growth rate shows 0 when no liquid water is present and its tooltip lists a moisture multiplier.
+- Subtab alerts indicate available Solis quests and completable terraforming milestones.

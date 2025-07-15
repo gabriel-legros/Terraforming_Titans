@@ -143,12 +143,16 @@ function checkMilestoneAlert() {
 
 function updateMilestoneAlert() {
     const alertEl = document.getElementById('terraforming-alert');
-    if (!alertEl) return;
+    const subtabEl = document.getElementById('milestone-subtab-alert');
+    if (!alertEl && !subtabEl) return;
     if (typeof gameSettings !== 'undefined' && gameSettings.silenceMilestoneAlert) {
-        alertEl.style.display = 'none';
+        if (alertEl) alertEl.style.display = 'none';
+        if (subtabEl) subtabEl.style.display = 'none';
         return;
     }
-    alertEl.style.display = milestoneAlertNeeded ? 'inline' : 'none';
+    const display = milestoneAlertNeeded ? 'inline' : 'none';
+    if (alertEl) alertEl.style.display = display;
+    if (subtabEl) subtabEl.style.display = display;
 }
 
 function markMilestonesViewed() {
