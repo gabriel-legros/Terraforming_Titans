@@ -206,12 +206,13 @@ const projectParameters = {
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to recover water and ice from all over the place, delivered as ice to the surface. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen.",
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
       spaceMining : true,
+      dynamicWaterImport: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {surface: {ice : 1000000}}
     }

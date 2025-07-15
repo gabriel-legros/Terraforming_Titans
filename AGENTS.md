@@ -118,3 +118,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Life growth rate shows 0 when no liquid water is present and its tooltip lists a moisture multiplier.
 - Subtab alerts indicate available Solis quests and completable terraforming milestones.
 - Space mirror power per unit area now uses cross-section area for accurate flux.
+- Space mining water shipments now deliver liquid water to zones above freezing or ice if all zones are below 0°C.

@@ -137,6 +137,57 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAbovePressure = state.disableAbovePressure || false;
     this.disablePressureThreshold = state.disablePressureThreshold || 0;
   }
+
+  calculateSpaceshipGainPerShip() {
+    if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
+      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+      const zones = ['tropical', 'temperate', 'polar'];
+      const allBelow = zones.every(z => (terraforming?.temperature?.zones?.[z]?.value || 0) <= 273.15);
+      const resource = allBelow ? 'ice' : 'liquidWater';
+      return { surface: { [resource]: this.attributes.resourceGainPerShip.surface.ice * efficiency } };
+    }
+    return super.calculateSpaceshipGainPerShip();
+  }
+
+  calculateSpaceshipTotalResourceGain() {
+    if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
+      const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+      const gainPerShip = this.calculateSpaceshipGainPerShip();
+      const resource = Object.keys(gainPerShip.surface)[0];
+      const amount = gainPerShip.surface[resource] * scalingFactor;
+      return { surface: { [resource]: amount } };
+    }
+    return super.calculateSpaceshipTotalResourceGain();
+  }
+
+  applySpaceshipResourceGain() {
+    if (this.attributes.dynamicWaterImport && this.pendingResourceGains?.length) {
+      const entry = this.pendingResourceGains[0];
+      const amount = entry.quantity;
+      const zones = ['tropical', 'temperate', 'polar'];
+      const temps = terraforming?.temperature?.zones || {};
+      const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
+      if (allBelow) {
+        zones.forEach(zone => {
+          const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+          terraforming.zonalWater[zone].ice += amount * pct;
+        });
+      } else {
+        const eligible = zones.filter(z => (temps[z]?.value || 0) > 273.15);
+        const totalPct = eligible.reduce((s, z) => s + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0);
+        eligible.forEach(zone => {
+          const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / eligible.length;
+          terraforming.zonalWater[zone].liquid += amount * (pct / totalPct);
+        });
+      }
+      if (typeof terraforming.synchronizeGlobalResources === 'function') {
+        terraforming.synchronizeGlobalResources();
+      }
+      this.pendingResourceGains = [];
+      return;
+    }
+    super.applySpaceshipResourceGain();
+  }
 }
 
 // Expose constructor globally for browser usage
