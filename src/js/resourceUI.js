@@ -259,7 +259,7 @@ function updateResourceRateDisplay(resource){
           case 'ice': {
             const iceObj = terraforming.zonalWater?.[zone];
             if (iceObj) {
-              val = (iceObj.ice || 0) + (iceObj.buriedIce || 0);
+              val = (iceObj.ice || 0);
               zoneBuried[zone] = iceObj.buriedIce || 0;
             }
             break;
@@ -276,7 +276,7 @@ function updateResourceRateDisplay(resource){
           case 'hydrocarbonIce': {
             const obj = terraforming.zonalHydrocarbons?.[zone];
             if (obj) {
-              val = (obj.ice || 0) + (obj.buriedIce || 0);
+              val = (obj.ice || 0);
               zoneBuried[zone] = obj.buriedIce || 0;
             }
             break;
@@ -297,7 +297,6 @@ function updateResourceRateDisplay(resource){
               const buried = zoneBuried[zone] || 0;
               entry += ` / ${formatNumber(buried, false, 3)} (buried)`;
             }
-            if (resource.unit) entry += ` ${resource.unit}`;
             tooltipContent += entry + '<br>';
           }
         });
