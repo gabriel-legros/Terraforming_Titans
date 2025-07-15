@@ -120,3 +120,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space mirror power per unit area now uses cross-section area for accurate flux.
 - Space mining water shipments now deliver liquid water to zones above freezing or ice if all zones are below 0°C.
 - Melting and freezing rate calculations now use `calculateZonalCoverage` for ice so scale factors are correct.
+- Hydrology wrappers no longer pass `estimateCoverage` to the melt/freeze util; they provide a `calculateZonalCoverage` function instead.

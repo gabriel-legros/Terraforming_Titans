@@ -209,8 +209,7 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
         availableLiquid,
         availableBuriedIce,
         zoneArea,
-        coverageFn,
-        estimateCoverageFn
+        coverageFn
     });
 }
 
@@ -223,7 +222,6 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
         availableBuriedIce,
         zoneArea,
         coverageFn,
-        estimateCoverageFn
     });
 }
 
