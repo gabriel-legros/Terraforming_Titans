@@ -444,7 +444,7 @@ const buildingsParameters = {
   bioFactory:{
     name: 'Bio Factory',
     category: 'terraforming',
-    description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.',
+    description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.  Requires an active life design that can survive somewhere to function.',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
     consumption: {colony: {energy: 10000000, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
     production: {atmospheric: {oxygen : 0.177388}, surface: {biomass : 0.166612}},
