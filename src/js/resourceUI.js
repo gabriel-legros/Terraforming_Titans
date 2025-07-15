@@ -249,16 +249,21 @@ function updateResourceRateDisplay(resource){
     // Add zonal breakdown for surface resources if available
     if (typeof terraforming !== 'undefined') {
       const zoneValues = {};
+      const zoneBuried = {};
       ['tropical', 'temperate', 'polar'].forEach(zone => {
         let val;
         switch (resource.name) {
           case 'liquidWater':
             val = terraforming.zonalWater?.[zone]?.liquid;
             break;
-          case 'ice':
+          case 'ice': {
             const iceObj = terraforming.zonalWater?.[zone];
-            if (iceObj) val = (iceObj.ice || 0) + (iceObj.buriedIce || 0);
+            if (iceObj) {
+              val = (iceObj.ice || 0) + (iceObj.buriedIce || 0);
+              zoneBuried[zone] = iceObj.buriedIce || 0;
+            }
             break;
+          }
           case 'dryIce':
             val = terraforming.zonalSurface?.[zone]?.dryIce;
             break;
@@ -268,9 +273,14 @@ function updateResourceRateDisplay(resource){
           case 'liquidMethane':
             val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
             break;
-          case 'hydrocarbonIce':
-            val = terraforming.zonalHydrocarbons?.[zone]?.ice;
+          case 'hydrocarbonIce': {
+            const obj = terraforming.zonalHydrocarbons?.[zone];
+            if (obj) {
+              val = (obj.ice || 0) + (obj.buriedIce || 0);
+              zoneBuried[zone] = obj.buriedIce || 0;
+            }
             break;
+          }
           default:
             val = undefined;
         }
@@ -282,7 +292,13 @@ function updateResourceRateDisplay(resource){
         tooltipContent += '<br><strong>Zonal Amounts:</strong><br>';
         ['tropical', 'temperate', 'polar'].forEach(zone => {
           if (zoneValues[zone] !== undefined) {
-            tooltipContent += `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}${resource.unit ? ' ' + resource.unit : ''}<br>`;
+            let entry = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
+            if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
+              const buried = zoneBuried[zone] || 0;
+              entry += ` / ${formatNumber(buried, false, 3)} (buried)`;
+            }
+            if (resource.unit) entry += ` ${resource.unit}`;
+            tooltipContent += entry + '<br>';
           }
         });
       }
