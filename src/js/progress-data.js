@@ -595,7 +595,7 @@ progressData = {
         id: "chapter2.5",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change. It's not much, but it's enough for lichen. I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
+        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change. It's not much, but it's almost enough for lichen. We're almost there!  I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
         prerequisites: ["chapter2.4"],
         objectives: [],
         reward: []
