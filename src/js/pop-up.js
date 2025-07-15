@@ -74,3 +74,39 @@ function createPopup(title, text, buttonText) {
 
   typeLetter(); // Start typing the text
 }
+
+function createSystemPopup(title, text, buttonText) {
+  window.popupActive = true;
+  game.scene.pause('mainScene');
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('system-popup-overlay');
+
+  const popupWindow = document.createElement('div');
+  popupWindow.classList.add('system-popup-window');
+
+  if (title) {
+    const popupTitle = document.createElement('h2');
+    popupTitle.classList.add('system-popup-title');
+    popupTitle.textContent = title;
+    popupWindow.appendChild(popupTitle);
+  }
+
+  const popupText = document.createElement('p');
+  popupText.classList.add('system-popup-text');
+  popupText.textContent = text;
+  popupWindow.appendChild(popupText);
+
+  const closeButton = document.createElement('button');
+  closeButton.classList.add('popup-close-button');
+  closeButton.textContent = buttonText || 'OK';
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+    window.popupActive = false;
+    game.scene.resume('mainScene');
+  });
+
+  popupWindow.appendChild(closeButton);
+  overlay.appendChild(popupWindow);
+  document.body.appendChild(overlay);
+}
