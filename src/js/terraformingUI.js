@@ -733,7 +733,7 @@ function updateLifeBox() {
     const fluxTooltip = document.getElementById('solar-flux-breakdown');
     if (fluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
-      fluxTooltip.title = `Tropical: ${z.tropical.toFixed(1)}\nTemperate: ${z.temperate.toFixed(1)}\nPolar: ${z.polar.toFixed(1)}`;
+      fluxTooltip.title = `Day Flux by zone \n Tropical: ${z.tropical.toFixed(1)}\nTemperate: ${z.temperate.toFixed(1)}\nPolar: ${z.polar.toFixed(1)}`;
     }
 
     const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');
