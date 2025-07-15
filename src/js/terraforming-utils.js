@@ -79,35 +79,43 @@ function calculateAverageCoverage(terraforming, resourceType) {
 // full portion of the surface. Water and ice then divide whatever area remains
 // between them. If their combined coverage exceeds the leftover area, each is
 // scaled proportionally so the total does not surpass 100% of the zone.
-function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage) {
+function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
+                                   hydrocarbonCoverage = 0,
+                                   methaneIceCoverage = 0,
+                                   dryIceCoverage = 0) {
   const biomass = Math.min(biomassCoverage, 1);
   const remaining = 1 - biomass;
 
-  const water = Math.max(0, waterCoverage);
-  const ice = Math.max(0, iceCoverage);
-  const totalWI = water + ice;
+  const surfaces = {
+    ocean: Math.max(0, waterCoverage),
+    ice: Math.max(0, iceCoverage),
+    hydrocarbon: Math.max(0, hydrocarbonCoverage),
+    hydrocarbonIce: Math.max(0, methaneIceCoverage),
+    co2_ice: Math.max(0, dryIceCoverage)
+  };
 
-  let waterFraction = water;
-  let iceFraction = ice;
+  const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
 
-  if (totalWI > remaining && totalWI > 0) {
-    const scale = remaining / totalWI;
-    waterFraction = water * scale;
-    iceFraction = ice * scale;
+  let scale = 1;
+  if (totalOther > remaining && totalOther > 0) {
+    scale = remaining / totalOther;
   }
 
-  return {
-    ocean: waterFraction,
-    ice: iceFraction,
-    biomass: biomass
-  };
+  for (const key in surfaces) {
+    surfaces[key] *= scale;
+  }
+
+  return { ...surfaces, biomass };
 }
 
 function calculateZonalSurfaceFractions(terraforming, zone) {
   const water = calculateZonalCoverage(terraforming, zone, 'liquidWater');
   const ice = calculateZonalCoverage(terraforming, zone, 'ice');
   const bio = calculateZonalCoverage(terraforming, zone, 'biomass');
-  return calculateSurfaceFractions(water, ice, bio);
+  const hydro = calculateZonalCoverage(terraforming, zone, 'liquidMethane');
+  const hydroIce = calculateZonalCoverage(terraforming, zone, 'hydrocarbonIce');
+  const dryIce = calculateZonalCoverage(terraforming, zone, 'dryIce');
+  return calculateSurfaceFractions(water, ice, bio, hydro, hydroIce, dryIce);
 }
 
 function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {

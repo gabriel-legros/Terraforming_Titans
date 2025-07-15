@@ -714,10 +714,10 @@ function updateLifeBox() {
       const lines = [];
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.biomass), 0);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.biomass), 0);
         const pct = v => (v * 100).toFixed(1);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
-        lines.push(`${name}: R ${pct(rock)}% W ${pct(fr.ocean)}% I ${pct(fr.ice)}% B ${pct(fr.biomass)}%`);
+        lines.push(`${name}: R ${pct(rock)}% W ${pct(fr.ocean)}% I ${pct(fr.ice)}% HC ${pct(fr.hydrocarbon)}% MI ${pct(fr.hydrocarbonIce)}% D ${pct(fr.co2_ice)}% B ${pct(fr.biomass)}%`);
       }
       surfTooltip.title = lines.join('\n');
     }

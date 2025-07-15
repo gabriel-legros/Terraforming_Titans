@@ -122,3 +122,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Melting and freezing rate calculations now use `calculateZonalCoverage` for ice so scale factors are correct.
 - Hydrology wrappers no longer pass `estimateCoverage` to the melt/freeze util; they provide a `calculateZonalCoverage` function instead.
 - Surface albedo now averages zonal albedos and the luminosity tooltip lists rock, water, ice and biomass percentages per zone.
+- Hydrocarbon and dry ice coverage now contribute to surface albedo calculations and appear in the luminosity tooltip.
