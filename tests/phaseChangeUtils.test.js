@@ -45,9 +45,9 @@ describe('meltingFreezingRates helper', () => {
       availableIce: 5,
       availableLiquid: 1,
       availableBuriedIce: 2,
-      zoneArea: 1,
-      estimateCoverageFn: (amount, area) => amount / area
+      zoneArea: 1
     };
+    params.coverageFn = () => params.availableIce / params.zoneArea;
     const utilRes = utils.meltingFreezingRates(params);
     const hydro = require('../src/js/hydrology.js');
     const hydroRes = hydro.calculateMeltingFreezingRates(
@@ -55,7 +55,8 @@ describe('meltingFreezingRates helper', () => {
       params.availableIce,
       params.availableLiquid,
       params.availableBuriedIce,
-      params.zoneArea
+      params.zoneArea,
+      () => params.availableIce / params.zoneArea
     );
     expect(utilRes.meltingRate).toBeCloseTo(hydroRes.meltingRate);
     expect(utilRes.freezingRate).toBeCloseTo(hydroRes.freezingRate);
