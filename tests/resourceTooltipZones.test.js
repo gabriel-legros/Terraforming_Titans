@@ -61,9 +61,9 @@ describe('resource tooltip zonal values', () => {
     ctx.createResourceDisplay({ surface: { ice: resource } });
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('ice-tooltip').innerHTML;
-    const tropTotal = numbers.formatNumber(5 + 15, false, 3);
-    const tempTotal = numbers.formatNumber(10 + 25, false, 3);
-    const polTotal = numbers.formatNumber(15 + 35, false, 3);
+    const tropTotal = numbers.formatNumber(5, false, 3);
+    const tempTotal = numbers.formatNumber(10, false, 3);
+    const polTotal = numbers.formatNumber(15, false, 3);
     const tropBuried = numbers.formatNumber(15, false, 3);
     const tempBuried = numbers.formatNumber(25, false, 3);
     const polBuried = numbers.formatNumber(35, false, 3);
@@ -99,9 +99,9 @@ describe('resource tooltip zonal values', () => {
     ctx.createResourceDisplay({ surface: { hydrocarbonIce: resource } });
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('hydrocarbonIce-tooltip').innerHTML;
-    const tTotal = numbers.formatNumber(2 + 4, false, 3);
-    const mTotal = numbers.formatNumber(3 + 6, false, 3);
-    const pTotal = numbers.formatNumber(4 + 8, false, 3);
+    const tTotal = numbers.formatNumber(2, false, 3);
+    const mTotal = numbers.formatNumber(3, false, 3);
+    const pTotal = numbers.formatNumber(4, false, 3);
     const tBuried = numbers.formatNumber(4, false, 3);
     const mBuried = numbers.formatNumber(6, false, 3);
     const pBuried = numbers.formatNumber(8, false, 3);

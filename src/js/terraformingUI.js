@@ -711,12 +711,15 @@ function updateLifeBox() {
     }
     const surfTooltip = document.getElementById('surface-albedo-tooltip');
     if (surfTooltip) {
-      const water = calculateAverageCoverage(terraforming, 'liquidWater');
-      const ice = calculateAverageCoverage(terraforming, 'ice');
-      const bio = calculateAverageCoverage(terraforming, 'biomass');
-      const fr = calculateSurfaceFractions(water, ice, bio);
-      const rock = Math.max(1 - (fr.ocean + fr.ice + fr.biomass), 0);
-      surfTooltip.title = `Rock: ${(rock*100).toFixed(1)}%\nWater: ${(fr.ocean*100).toFixed(1)}%\nIce: ${(fr.ice*100).toFixed(1)}%\nBiomass: ${(fr.biomass*100).toFixed(1)}%`;
+      const lines = [];
+      for (const z of ZONES) {
+        const fr = calculateZonalSurfaceFractions(terraforming, z);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.biomass), 0);
+        const pct = v => (v * 100).toFixed(1);
+        const name = z.charAt(0).toUpperCase() + z.slice(1);
+        lines.push(`${name}: R ${pct(rock)}% W ${pct(fr.ocean)}% I ${pct(fr.ice)}% B ${pct(fr.biomass)}%`);
+      }
+      surfTooltip.title = lines.join('\n');
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');

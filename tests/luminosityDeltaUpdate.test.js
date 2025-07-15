@@ -14,6 +14,10 @@ describe('updateLuminosityBox', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.calculateAverageCoverage = () => 0;
     ctx.calculateSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+    ctx.calculateZonalSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+    ctx.ZONES = ['tropical','temperate','polar'];
+    ctx.calculateZonalSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+    ctx.ZONES = ['tropical','temperate','polar'];
 
     ctx.terraforming = {
       luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3 },
@@ -48,6 +52,8 @@ describe('updateLuminosityBox', () => {
 
     ctx.calculateAverageCoverage = () => 0;
     ctx.calculateSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+    ctx.calculateZonalSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
+    ctx.ZONES = ['tropical','temperate','polar'];
 
     ctx.terraforming = {
       luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, albedo: 0.25, solarFlux: 1000, modifiedSolarFlux: 1000 },
