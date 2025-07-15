@@ -123,3 +123,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Hydrology wrappers no longer pass `estimateCoverage` to the melt/freeze util; they provide a `calculateZonalCoverage` function instead.
 - Surface albedo now averages zonal albedos and the luminosity tooltip lists rock, water, ice and biomass percentages per zone.
 - Hydrocarbon and dry ice coverage now contribute to surface albedo calculations and appear in the luminosity tooltip.
+- Surface albedo tooltip now shows a detailed breakdown for each zone.
