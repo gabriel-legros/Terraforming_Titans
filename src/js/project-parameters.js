@@ -206,7 +206,7 @@ const projectParameters = {
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen.",
+    description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
