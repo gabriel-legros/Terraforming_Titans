@@ -113,3 +113,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Dyson Swarm collector duration now scales with the number of terraformed planets using a helper in SpaceManager, and the button shows the time required.
 - Day-night cycle duration now derives from each planet's rotation period, treating one Earth day as one minute.
 - Added a "system-pop-up" story event type for instant messages.
+- Added a `setGameSpeed` console command that multiplies time progression for the current session.
