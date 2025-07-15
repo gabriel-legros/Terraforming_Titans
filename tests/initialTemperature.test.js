@@ -66,7 +66,10 @@ function expectedTemperature(terra, params, resources) {
     const zoneFractions = calculateSurfaceFractions(
       calculateZonalCoverage(terra, zone, 'liquidWater'),
       calculateZonalCoverage(terra, zone, 'ice'),
-      calculateZonalCoverage(terra, zone, 'biomass')
+      calculateZonalCoverage(terra, zone, 'biomass'),
+      calculateZonalCoverage(terra, zone, 'liquidMethane'),
+      calculateZonalCoverage(terra, zone, 'hydrocarbonIce'),
+      calculateZonalCoverage(terra, zone, 'dryIce')
     );
     const zTemps = physics.dayNightTemperaturesModel({
       groundAlbedo,
