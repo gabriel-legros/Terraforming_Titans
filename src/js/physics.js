@@ -156,8 +156,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     calculateAtmosphericPressure,
     calculateEmissivity,
-    calculateEffectiveTemperatureNoAtm,
-    calculateEffectiveTemperature,
     airDensity,
     calculateDayNightTemperatureVariation,
     autoSlabHeatCapacity,
