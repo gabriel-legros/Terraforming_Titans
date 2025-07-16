@@ -22,7 +22,6 @@ global.airDensity = physics.airDensity;
 
 global.sublimationRateCO2 = dryIce.sublimationRateCO2;
 global.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor;
-global.EQUILIBRIUM_CO2_PARAMETER = dryIce.EQUILIBRIUM_CO2_PARAMETER;
 
 global.evaporationRateMethane = hydrocarbon.evaporationRateMethane;
 global.calculateMethaneCondensationRateFactor = hydrocarbon.calculateMethaneCondensationRateFactor;

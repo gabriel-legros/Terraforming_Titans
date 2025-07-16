@@ -108,8 +108,8 @@ describe('planet selection', () => {
     expect(oldStory).toBe(vm.runInContext('storyManager', ctx));
     expect(oldSpace).toBe(vm.runInContext('spaceManager', ctx));
     expect(marsDryIce).not.toBe(newDryIce);
-    // Titan's dry ice distribution changed in the latest parameters. The
-    // expected total now reflects the sum of the new zonal values.
-    expect(newDryIce).toBeCloseTo(3620.5367083300134, 5);
+    // Titan's dry ice distribution was updated in the parameters. The expected
+    // total now reflects the sum of the new zonal values.
+    expect(newDryIce).toBeCloseTo(4270.498412615501, 5);
   });
 });
