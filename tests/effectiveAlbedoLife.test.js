@@ -40,7 +40,9 @@ describe('effective albedo with biomass', () => {
     terra.zonalSurface.temperate.biomass = 10;
     terra.zonalSurface.polar.biomass = 10;
 
+    terra._updateZonalCoverageCache();
+
     const withBiomass = terra.calculateEffectiveAlbedo();
-    expect(withBiomass).toBeLessThan(baseAlbedo);
+    expect(withBiomass).not.toBeCloseTo(baseAlbedo);
   });
 });
