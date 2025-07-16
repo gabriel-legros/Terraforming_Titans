@@ -44,7 +44,7 @@ class DayNightCycle {
 // Convert a rotation period in hours to a day-night cycle duration in
 // milliseconds using one Earth day as one minute.
 function rotationPeriodToDuration(rotationHours) {
-  return (rotationHours / 24) * 60000;
+  return (rotationHours / 24) * 30000;
 }
 
 
