@@ -174,6 +174,11 @@ class Terraforming extends EffectableEntity{
       targetMax: 2000,
       unlocked: false,
       albedo: 0.25,
+      groundAlbedo: 0,
+      surfaceAlbedo: 0,
+      actualAlbedo: 0,
+      initialSurfaceAlbedo: undefined,
+      initialActualAlbedo: undefined,
       solarFlux: 0,
       modifiedSolarFlux: 0,
       surfaceTemperature: 0
@@ -353,6 +358,7 @@ class Terraforming extends EffectableEntity{
 
       this.updateLuminosity();
       this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
+      this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
       this.updateSurfaceTemperature();
 
     this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
@@ -918,6 +924,7 @@ class Terraforming extends EffectableEntity{
     updateLuminosity() {
       this.luminosity.groundAlbedo = this.calculateGroundAlbedo();
       this.luminosity.surfaceAlbedo = this.calculateSurfaceAlbedo();
+      this.luminosity.actualAlbedo = this.calculateActualAlbedo();
       this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
       this.luminosity.modifiedSolarFlux = this.calculateModifiedSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
@@ -1014,6 +1021,14 @@ class Terraforming extends EffectableEntity{
 
     calculateEffectiveAlbedo() {
         return this.calculateSurfaceAlbedo();
+    }
+
+    calculateActualAlbedo() {
+        const surf = this.calculateSurfaceAlbedo();
+        const pressureBar = this.calculateTotalPressure() / 100;
+        const cf = cloudFraction(pressureBar);
+        const aCloud = 0.55 + 0.20 * Math.tanh(pressureBar / 5.0);
+        return (1 - cf) * surf + cf * aCloud;
     }
 
     update(deltaTime) {
@@ -1555,6 +1570,9 @@ synchronizeGlobalResources() {
       this.updateLuminosity(); // Recalculate luminosity
       if (this.luminosity.initialSurfaceAlbedo === undefined) {
           this.luminosity.initialSurfaceAlbedo = this.luminosity.groundAlbedo;
+      }
+      if (this.luminosity.initialActualAlbedo === undefined) {
+          this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
       }
       this.updateSurfaceTemperature(); // Recalculate temperatures
   } // End loadState

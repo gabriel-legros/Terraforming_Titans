@@ -22,7 +22,7 @@ describe('updateLuminosityBox', () => {
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3, initialActualAlbedo: 0.3 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -35,6 +35,7 @@ describe('updateLuminosityBox', () => {
     ctx.createLuminosityBox(row);
 
     ctx.terraforming.luminosity.surfaceAlbedo = 0.35;
+    ctx.terraforming.luminosity.actualAlbedo = 0.32;
     ctx.terraforming.luminosity.albedo = 0.35;
     ctx.terraforming.luminosity.modifiedSolarFlux = 1100;
     ctx.updateLuminosityBox();
@@ -44,6 +45,9 @@ describe('updateLuminosityBox', () => {
 
     const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
     expect(fluxDelta).toBe('+100.00');
+
+    const actualDelta = dom.window.document.getElementById('actual-albedo-delta').textContent;
+    expect(actualDelta).toBe('+0.02');
   });
 
   test('uses ground albedo when initial value missing', () => {
@@ -58,7 +62,7 @@ describe('updateLuminosityBox', () => {
     ctx.ZONES = ['tropical','temperate','polar'];
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, albedo: 0.25, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, actualAlbedo: 0.25, albedo: 0.25, solarFlux: 1000, modifiedSolarFlux: 1000 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -71,9 +75,13 @@ describe('updateLuminosityBox', () => {
     ctx.createLuminosityBox(row);
 
     ctx.terraforming.luminosity.surfaceAlbedo = 0.28;
+    ctx.terraforming.luminosity.actualAlbedo = 0.26;
     ctx.updateLuminosityBox();
 
     const delta = dom.window.document.getElementById('surface-albedo-delta').textContent;
     expect(delta).toBe('+0.03');
+
+    const adelta = dom.window.document.getElementById('actual-albedo-delta').textContent;
+    expect(adelta).toBe('+0');
   });
 });
