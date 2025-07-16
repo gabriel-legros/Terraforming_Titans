@@ -382,8 +382,10 @@ function produceResources(deltaTime, buildings) {
           const proportion = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
           if (anyAboveZero) {
             terraforming.zonalWater[zone].liquid += overflow * proportion;
+            resources.surface.liquidWater.value += overflow * proportion;
           } else {
             terraforming.zonalWater[zone].ice += overflow * proportion;
+            resources.surface.ice.value += overflow * proportion;
           }
         });
 
