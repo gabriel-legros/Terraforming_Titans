@@ -8,7 +8,13 @@ global.estimateCoverage = estimateCoverage;
 const zoneElevations = { tropical: 0, temperate: 0.5, polar: 1 };
 
 function makeTerraforming(zonalWater) {
-  return { zonalWater, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
+  const cache = {};
+  for (const zone in zonalWater) {
+    cache[zone] = {
+      ice: (zonalWater[zone].ice || 0) > 0 ? 0.1 : 0 // Simplified mock
+    };
+  }
+  return { zonalWater, zonalCoverageCache: cache, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
 }
 
 describe('hydrology melting with buried ice', () => {
@@ -20,10 +26,14 @@ describe('hydrology melting with buried ice', () => {
   });
 
   test('calculateZonalMeltingFreezingRates caps melt by coverage', () => {
-    const terra = { zonalWater: { polar: { ice: 5, buriedIce: 3, liquid: 1 } }, celestialParameters: { surfaceArea: 1 } };
+    const terra = {
+      zonalWater: { polar: { ice: 5, buriedIce: 3, liquid: 1 } },
+      zonalCoverageCache: { polar: { ice: 0.1 } }, // Mocked coverage
+      celestialParameters: { surfaceArea: 1 }
+    };
     const T = 280;
     const zoneArea = terra.celestialParameters.surfaceArea * getZonePercentage('polar');
-    const coverage = calculateZonalCoverage(terra, 'polar', 'ice');
+    const coverage = terra.zonalCoverageCache.polar.ice;
     const meltCap = zoneArea * coverage * 0.1;
     const diff = T - 273.15;
     const expected = meltCap * 0.000001 * diff;
@@ -42,7 +52,7 @@ describe('hydrology melting with buried ice', () => {
     const melt = simulateSurfaceWaterFlow(terra, 1000, temps, zoneElevations);
     const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
     const zoneArea = getZonePercentage('polar');
-    const coverage = calculateZonalCoverage(terra, 'polar', 'ice');
+    const coverage = terra.zonalCoverageCache.polar.ice;
     const meltCap = zoneArea * coverage * 0.1;
     const expectedMelt = meltCap * 0.001 * slopeFactor;
     const surfaceFraction = 100 / (100 + 50);

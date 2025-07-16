@@ -68,7 +68,7 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
 function calculateAverageCoverage(terraforming, resourceType) {
   let weightedAverageCoverage = 0;
   for (const zone of getZones()) {
-    const cov = calculateZonalCoverage(terraforming, zone, resourceType);
+    const cov = terraforming.zonalCoverageCache[zone]?.[resourceType] ?? 0;
     const zonePct = zonePercentage(zone);
     weightedAverageCoverage += cov * zonePct;
   }
@@ -109,20 +109,22 @@ function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
 }
 
 function calculateZonalSurfaceFractions(terraforming, zone) {
-  const water = calculateZonalCoverage(terraforming, zone, 'liquidWater');
-  const ice = calculateZonalCoverage(terraforming, zone, 'ice');
-  const bio = calculateZonalCoverage(terraforming, zone, 'biomass');
-  const hydro = calculateZonalCoverage(terraforming, zone, 'liquidMethane');
-  const hydroIce = calculateZonalCoverage(terraforming, zone, 'hydrocarbonIce');
-  const dryIce = calculateZonalCoverage(terraforming, zone, 'dryIce');
+  const cache = terraforming.zonalCoverageCache[zone] || {};
+  const water = cache.liquidWater ?? 0;
+  const ice = cache.ice ?? 0;
+  const bio = cache.biomass ?? 0;
+  const hydro = cache.liquidMethane ?? 0;
+  const hydroIce = cache.hydrocarbonIce ?? 0;
+  const dryIce = cache.dryIce ?? 0;
   return calculateSurfaceFractions(water, ice, bio, hydro, hydroIce, dryIce);
 }
 
 function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
-  const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
-  const iceCoverage = calculateZonalCoverage(terraforming, zone, 'ice');
-  const dryIceCoverage = calculateZonalCoverage(terraforming, zone, 'dryIce');
+  const cache = terraforming.zonalCoverageCache[zone] || {};
+  const liquidWaterCoverage = cache.liquidWater ?? 0;
+  const iceCoverage = cache.ice ?? 0;
+  const dryIceCoverage = cache.dryIce ?? 0;
   return baseCalculateEvapSubl({
     zoneArea,
     liquidWaterCoverage,
@@ -154,7 +156,7 @@ const calculateZonalMeltingFreezingRates = (terraforming, zone, temperature) => 
   const availableBuriedIce = terraforming.zonalWater?.[zone]?.buriedIce || 0;
   const availableLiquid = terraforming.zonalWater?.[zone]?.liquid || 0;
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
-  const coverageFn = () => calculateZonalCoverage(terraforming, zone, 'ice');
+  const coverageFn = () => terraforming.zonalCoverageCache[zone]?.ice ?? 0;
   return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid, availableBuriedIce, zoneArea, coverageFn);
 };
 

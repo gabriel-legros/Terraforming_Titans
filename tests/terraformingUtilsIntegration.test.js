@@ -52,6 +52,7 @@ describe('terraforming-utils integration', () => {
     terra.zonalWater.tropical.liquid = 1e6;
     terra.zonalWater.temperate.liquid = 5e5;
     terra.calculateInitialValues();
+    terra._updateZonalCoverageCache();
 
     const expectedStatus = calculateAverageCoverage(terra, 'liquidWater') > terra.waterTarget;
     expect(terra.getWaterStatus()).toBe(expectedStatus);

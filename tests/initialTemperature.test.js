@@ -63,13 +63,14 @@ function expectedTemperature(terra, params, resources) {
   let weighted = 0;
   for (const zone of ['tropical', 'temperate', 'polar']) {
     const zoneFlux = terra.calculateZoneSolarFlux(zone);
+    const cache = terra.zonalCoverageCache[zone] || {};
     const zoneFractions = calculateSurfaceFractions(
-      calculateZonalCoverage(terra, zone, 'liquidWater'),
-      calculateZonalCoverage(terra, zone, 'ice'),
-      calculateZonalCoverage(terra, zone, 'biomass'),
-      calculateZonalCoverage(terra, zone, 'liquidMethane'),
-      calculateZonalCoverage(terra, zone, 'hydrocarbonIce'),
-      calculateZonalCoverage(terra, zone, 'dryIce')
+      cache.liquidWater ?? 0,
+      cache.ice ?? 0,
+      cache.biomass ?? 0,
+      cache.liquidMethane ?? 0,
+      cache.hydrocarbonIce ?? 0,
+      cache.dryIce ?? 0
     );
     const zTemps = physics.dayNightTemperaturesModel({
       groundAlbedo,
@@ -94,6 +95,7 @@ describe('initial planetary temperatures', () => {
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
     terra.calculateInitialValues();
+    terra._updateZonalCoverageCache(); // Manually populate cache for test
     const expected = expectedTemperature(terra, params, res);
     expect(terra.temperature.value).toBeCloseTo(expected, 5);
   });

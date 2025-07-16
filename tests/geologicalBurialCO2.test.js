@@ -15,6 +15,11 @@ describe('geological burial slows when CO2 depleted', () => {
     ctx.getZonePercentage = () => 1;
     ctx.calculateZonalCoverage = () => 0;
     ctx.terraforming = {
+      zonalCoverageCache: {
+        tropical: { liquidWater: 0.1, ice: 0 },
+        temperate: { liquidWater: 0.1, ice: 0 },
+        polar: { liquidWater: 0.1, ice: 0 }
+      },
       temperature: { zones: {
         tropical: { day: 300, night: 300 },
         temperate: { day: 300, night: 300 },

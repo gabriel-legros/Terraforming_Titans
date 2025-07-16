@@ -24,6 +24,11 @@ describe('life coverage table', () => {
     };
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
+      zonalCoverageCache: {
+        polar: { biomass: 0.1 },
+        temperate: { biomass: 0.2 },
+        tropical: { biomass: 0.3 }
+      },
       life: { target: 0.5 },
       zonalSurface: { tropical:{}, temperate:{}, polar:{} },
       celestialParameters: { surfaceArea: 1 },

@@ -17,6 +17,7 @@ describe('Terraforming calculateZonalCoverage util', () => {
     const terra = new Terraforming({}, { radius: 10 });
     terra.zonalWater = {}; // no data for zones
     terra.zonalSurface = {};
+    terra.zonalCoverageCache = {}; // no data for zones
     expect(() => calculateZonalCoverage(terra, 'tropical', 'liquidWater')).not.toThrow();
     expect(calculateZonalCoverage(terra, 'tropical', 'liquidWater')).toBe(0);
   });

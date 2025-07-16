@@ -15,6 +15,11 @@ describe('biomass decay without oxygen', () => {
     ctx.getZonePercentage = () => 1;
     ctx.calculateZonalCoverage = () => 0;
     ctx.terraforming = {
+      zonalCoverageCache: {
+        tropical: { liquidWater: 0.1, ice: 0 },
+        temperate: { liquidWater: 0.1, ice: 0 },
+        polar: { liquidWater: 0.1, ice: 0 }
+      },
       temperature: { zones: {
         tropical: { day: 200, night: 200 },
         temperate: { day: 200, night: 200 },

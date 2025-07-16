@@ -549,9 +549,9 @@ function updateLifeBox() {
     }
 
     // Calculate zonal coverage percentages
-    const polarCov = calculateZonalCoverage(terraforming, 'polar', 'biomass');
-    const temperateCov = calculateZonalCoverage(terraforming, 'temperate', 'biomass');
-    const tropicalCov = calculateZonalCoverage(terraforming, 'tropical', 'biomass');
+    const polarCov = terraforming.zonalCoverageCache['polar']?.biomass ?? 0;
+    const temperateCov = terraforming.zonalCoverageCache['temperate']?.biomass ?? 0;
+    const tropicalCov = terraforming.zonalCoverageCache['tropical']?.biomass ?? 0;
 
     // Update life coverage display
     const overallEl = document.getElementById('life-coverage-overall');

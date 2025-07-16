@@ -552,8 +552,8 @@ class LifeManager extends EffectableEntity {
               // --- Growth Calculation ---
               // Calculate land area and biomass capacity first
               const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName);
-              const liquidWaterCoverage = calculateZonalCoverage(terraforming, zoneName, 'liquidWater');
-              const iceCoverage = calculateZonalCoverage(terraforming, zoneName, 'ice');
+              const liquidWaterCoverage = terraforming.zonalCoverageCache[zoneName]?.liquidWater ?? 0;
+              const iceCoverage = terraforming.zonalCoverageCache[zoneName]?.ice ?? 0;
               // const availableLandArea = Math.max(0, zoneArea * (1 - liquidWaterCoverage - iceCoverage)); // Land area calculation no longer used for biomass limit
 
               const spaceEfficiencyValue = design.spaceEfficiency.value;

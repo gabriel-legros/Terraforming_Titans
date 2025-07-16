@@ -15,6 +15,11 @@ describe('life luminosity table', () => {
     ctx.calculateZonalCoverage = () => 0; // not needed
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
+      zonalCoverageCache: {
+        polar: { biomass: 0 },
+        temperate: { biomass: 0 },
+        tropical: { biomass: 0 }
+      },
       life: { target: 0.5 },
       zonalSurface: { tropical:{}, temperate:{}, polar:{} },
       celestialParameters: { surfaceArea: 1 },
