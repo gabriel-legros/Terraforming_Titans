@@ -116,10 +116,13 @@ function autoBuild(buildings, delta = 0) {
                 cost.surface.land = (cost.surface.land || 0) + building.requiresLand * buildCount;
             }
 
+            let built = false;
             if (typeof building.build === 'function') {
-                building.build(buildCount);
+                built = building.build(buildCount);
             }
-            autobuildCostTracker.recordCost(building.displayName, cost);
+            if (built) {
+                autobuildCostTracker.recordCost(building.displayName, cost);
+            }
         }
         // Skip incremental building as it significantly impacts performance
     });
