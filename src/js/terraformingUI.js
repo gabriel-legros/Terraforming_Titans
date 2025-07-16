@@ -680,6 +680,11 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
+            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Cloud fraction = 1 - exp(-P/3). Actual albedo blends surface albedo with cloud albedo based on this fraction.">&#9432;</span></td>
+            <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="actual-albedo-delta"></span></td>
+          </tr>
+          <tr>
             <td>Solar Flux (W/m²)</td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-breakdown" class="info-tooltip-icon" title="">&#9432;</span></td>
             <td><span id="solar-flux-delta"></span></td>
@@ -762,6 +767,25 @@ function updateLifeBox() {
         );
       }
       surfTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}`;
+    }
+
+    const actualTooltip = document.getElementById('actual-albedo-tooltip');
+    if (actualTooltip) {
+      actualTooltip.title = 'Actual albedo = (1 - cloud fraction) * surface albedo + cloud fraction * cloud albedo.\nCloud fraction = 1 - exp(-P/3) where P is surface pressure in bars.';
+    }
+
+    const actualAlbEl = document.getElementById('actual-albedo');
+    if (actualAlbEl) {
+      actualAlbEl.textContent = terraforming.luminosity.actualAlbedo.toFixed(2);
+    }
+
+    const actualDeltaEl = document.getElementById('actual-albedo-delta');
+    if (actualDeltaEl) {
+      const base = (terraforming.luminosity.initialActualAlbedo !== undefined)
+        ? terraforming.luminosity.initialActualAlbedo
+        : terraforming.luminosity.actualAlbedo;
+      const d = terraforming.luminosity.actualAlbedo - base;
+      actualDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
 
     const modifiedSolarFlux = document.getElementById('modified-solar-flux');
