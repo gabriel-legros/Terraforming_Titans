@@ -616,6 +616,38 @@ function updateLifeBox() {
     }
   }
   
+  function buildAlbedoTable() {
+    const baseAlb = terraforming.celestialParameters.albedo;
+    const defaults = (typeof DEFAULT_SURFACE_ALBEDO !== 'undefined') ? DEFAULT_SURFACE_ALBEDO : {
+      ocean: 0.06,
+      ice: 0.65,
+      snow: 0.85,
+      co2_ice: 0.50,
+      hydrocarbon: 0.10,
+      hydrocarbonIce: 0.50,
+      biomass: 0.20
+    };
+    return [
+      ['Surface', 'Albedo'],
+      ['Base rock', baseAlb.toFixed(2)],
+      ['Black dust', '0.05'],
+      ['Ocean', defaults.ocean.toFixed(2)],
+      ['Ice', defaults.ice.toFixed(2)],
+      ['Snow', defaults.snow.toFixed(2)],
+      ['Dry Ice', defaults.co2_ice.toFixed(2)],
+      ['Hydrocarbon', defaults.hydrocarbon.toFixed(2)],
+      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(2)],
+      ['Biomass', defaults.biomass.toFixed(2)]
+    ];
+  }
+
+  function setLuminosityTooltip(el) {
+    const table = buildAlbedoTable();
+    const albLines = table.map(row => row.join(' | ')).join('\n');
+    el.title = 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice, biomass) and cloud cover. A lower albedo means more energy is absorbed.\n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.\n\n' +
+      'Albedo values:\n' + albLines;
+  }
+
   //Luminosity
   function createLuminosityBox(row) {
     const luminosityBox = document.createElement('div');
@@ -623,7 +655,8 @@ function updateLifeBox() {
     luminosityBox.id = 'luminosity-box';
     const lumInfo = document.createElement('span');
     lumInfo.classList.add('info-tooltip-icon');
-    lumInfo.title = 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice, biomass) and cloud cover. A lower albedo means more energy is absorbed.\n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.';
+    lumInfo.id = 'luminosity-tooltip';
+    setLuminosityTooltip(lumInfo);
     lumInfo.innerHTML = '&#9432;';
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
@@ -746,6 +779,11 @@ function updateLifeBox() {
     if (fluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
       fluxTooltip.title = `Day Flux by zone \n Tropical: ${z.tropical.toFixed(1)}\nTemperate: ${z.temperate.toFixed(1)}\nPolar: ${z.polar.toFixed(1)}`;
+    }
+
+    const mainTooltip = document.getElementById('luminosity-tooltip');
+    if (mainTooltip) {
+      setLuminosityTooltip(mainTooltip);
     }
 
     const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');

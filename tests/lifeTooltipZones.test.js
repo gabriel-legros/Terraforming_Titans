@@ -12,6 +12,7 @@ describe('life tooltip zone percentages', () => {
     ctx.getZonePercentage = zones.getZonePercentage;
     ctx.calculateAverageCoverage = () => 0;
     ctx.calculateZonalCoverage = () => 0;
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       life: { target: 0.5 },
       zonalSurface: { tropical:{}, temperate:{}, polar:{} },

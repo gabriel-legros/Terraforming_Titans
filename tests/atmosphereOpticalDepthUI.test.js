@@ -13,6 +13,7 @@ describe('atmosphere UI optical depth', () => {
     ctx.toDisplayTemperature = numbers.toDisplayTemperature;
     ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
 
     ctx.resources = { atmospheric: { o2: { displayName: 'O2' } } };
     ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };

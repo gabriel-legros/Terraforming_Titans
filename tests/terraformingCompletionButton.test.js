@@ -11,6 +11,7 @@ describe('complete terraforming button', () => {
     const originalDocument = global.document;
     global.window = dom.window;
     global.document = dom.window.document;
+    global.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
 
     global.terraforming = { completed: false, readyForCompletion: true };
     global.spaceManager = {

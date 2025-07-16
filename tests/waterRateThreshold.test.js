@@ -13,6 +13,7 @@ describe('updateWaterBox thresholds', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.calculateAverageCoverage = () => 0;
     ctx.ZONES = [];
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       waterTarget: 0,
       totalEvaporationRate: 5e-5,
