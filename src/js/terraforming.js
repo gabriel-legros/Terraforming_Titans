@@ -42,6 +42,9 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.cloudFraction === 'undefined') {
         globalThis.cloudFraction = physics.cloudFraction;
     }
+    if (typeof globalThis.calculateActualAlbedoPhysics === 'undefined') {
+        globalThis.calculateActualAlbedoPhysics = physics.calculateActualAlbedoPhysics;
+    }
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
@@ -940,29 +943,10 @@ class Terraforming extends EffectableEntity{
       const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
       const gSurface = this.celestialParameters.gravity;
 
-      let co2Mass = 0, h2oMass = 0, ch4Mass = 0, safeGHGMass = 0, inertMass = 0, totalMass = 0;
-
-      for (const gas in resources.atmospheric) {
-        const amountTons = resources.atmospheric[gas].value || 0;
-        const kg = amountTons * 1000;
-        if (gas === 'carbonDioxide') co2Mass += kg;
-        else if (gas === 'atmosphericWater') h2oMass += kg;
-        else if (gas === 'atmosphericMethane') ch4Mass += kg;
-        else if (gas === 'greenhouseGas') safeGHGMass += kg;
-        else inertMass += kg;
-      }
-      totalMass = co2Mass + h2oMass + ch4Mass + safeGHGMass + inertMass;
+      const { composition, totalMass } = this.calculateAtmosphericComposition();
 
       const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
       const surfacePressureBar = surfacePressurePa / 100000;
-
-      const composition = {};
-      if (totalMass > 0) {
-        if (co2Mass > 0) composition.co2 = co2Mass / totalMass;
-        if (h2oMass > 0) composition.h2o = h2oMass / totalMass;
-        if (ch4Mass > 0) composition.ch4 = ch4Mass / totalMass;
-        if (safeGHGMass > 0) composition.greenhouseGas = safeGHGMass / totalMass;
-      }
 
       const emissivity = calculateEmissivity(composition, surfacePressureBar);
       this.temperature.emissivity = emissivity;
@@ -1030,9 +1014,8 @@ class Terraforming extends EffectableEntity{
     calculateActualAlbedo() {
         const surf = this.calculateSurfaceAlbedo();
         const pressureBar = this.calculateTotalPressure() / 100;
-        const cf = cloudFraction(pressureBar);
-        const aCloud = 0.55 + 0.20 * Math.tanh(pressureBar / 5.0);
-        return (1 - cf) * surf + cf * aCloud;
+        const { composition } = this.calculateAtmosphericComposition();
+        return calculateActualAlbedoPhysics(surf, pressureBar, composition).albedo;
     }
 
     update(deltaTime) {
@@ -1112,6 +1095,28 @@ class Terraforming extends EffectableEntity{
             );
         }
         return totalPressurePa / 1000; // Convert Pa to kPa
+    }
+
+    calculateAtmosphericComposition() {
+        let co2Mass = 0, h2oMass = 0, ch4Mass = 0, safeGHGMass = 0, inertMass = 0;
+        for (const gas in resources.atmospheric) {
+            const amountTons = resources.atmospheric[gas].value || 0;
+            const kg = amountTons * 1000;
+            if (gas === 'carbonDioxide') co2Mass += kg;
+            else if (gas === 'atmosphericWater') h2oMass += kg;
+            else if (gas === 'atmosphericMethane') ch4Mass += kg;
+            else if (gas === 'greenhouseGas') safeGHGMass += kg;
+            else inertMass += kg;
+        }
+        const totalMass = co2Mass + h2oMass + ch4Mass + safeGHGMass + inertMass;
+        const composition = {};
+        if (totalMass > 0) {
+            if (co2Mass > 0) composition.co2 = co2Mass / totalMass;
+            if (h2oMass > 0) composition.h2o = h2oMass / totalMass;
+            if (ch4Mass > 0) composition.ch4 = ch4Mass / totalMass;
+            if (safeGHGMass > 0) composition.greenhouseGas = safeGHGMass / totalMass;
+        }
+        return { composition, totalMass };
     }
 
     // Removed global calculateHumidity function as humidity should be calculated zonally if needed.

@@ -680,7 +680,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Cloud fraction = 1 - exp(-P/3). Actual albedo blends surface albedo with cloud albedo based on this fraction.">&#9432;</span></td>
+            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Actual albedo accounts for clouds and photochemical haze. A = (1 - cfCloud) * ((1 - cfHaze) * surface albedo + cfHaze * haze albedo) + cfCloud * cloud albedo.">&#9432;</span></td>
             <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
@@ -771,7 +771,7 @@ function updateLifeBox() {
 
     const actualTooltip = document.getElementById('actual-albedo-tooltip');
     if (actualTooltip) {
-      actualTooltip.title = 'Actual albedo = (1 - cloud fraction) * surface albedo + cloud fraction * cloud albedo.\nCloud fraction = 1 - exp(-P/3) where P is surface pressure in bars.';
+      actualTooltip.title = 'Actual albedo = (1 - cfCloud) * ((1 - cfHaze) * surface albedo + cfHaze * haze albedo) + cfCloud * cloud albedo.';
     }
 
     const actualAlbEl = document.getElementById('actual-albedo');

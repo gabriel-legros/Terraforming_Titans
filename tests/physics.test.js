@@ -1,4 +1,4 @@
-const { calculateAtmosphericPressure, effectiveTemp, calculateEmissivity } = require('../src/js/physics.js');
+const { calculateAtmosphericPressure, effectiveTemp, calculateEmissivity, calculateActualAlbedoPhysics } = require('../src/js/physics.js');
 
 describe('physics helpers', () => {
   test('calculateAtmosphericPressure basic case', () => {
@@ -15,5 +15,12 @@ describe('physics helpers', () => {
     const e = calculateEmissivity({ co2: 0.5 }, 1);
     expect(e).toBeGreaterThan(0);
     expect(e).toBeLessThan(1);
+  });
+
+  test('calculateActualAlbedoPhysics includes clouds and haze', () => {
+    const res = calculateActualAlbedoPhysics(0.3, 1, { h2o: 0.02 });
+    expect(res.albedo).toBeGreaterThan(0.3);
+    expect(res.cfCloud).toBeGreaterThan(0);
+    expect(res.cfHaze).toBeGreaterThan(0);
   });
 });
