@@ -680,7 +680,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Actual albedo accounts for clouds and photochemical haze. A = (1 - cfCloud) * ((1 - cfHaze) * surface albedo + cfHaze * haze albedo) + cfCloud * cloud albedo.">&#9432;</span></td>
+            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Actual albedo factors in cloud cover and hazy skies, blending their reflectivity with the surface.">&#9432;</span></td>
             <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
@@ -771,7 +771,7 @@ function updateLifeBox() {
 
     const actualTooltip = document.getElementById('actual-albedo-tooltip');
     if (actualTooltip) {
-      actualTooltip.title = 'Actual albedo = (1 - cfCloud) * ((1 - cfHaze) * surface albedo + cfHaze * haze albedo) + cfCloud * cloud albedo.';
+      actualTooltip.title = 'Actual albedo factors in how much haze and cloud cover reflect sunlight on top of the surface.';
     }
 
     const actualAlbEl = document.getElementById('actual-albedo');
