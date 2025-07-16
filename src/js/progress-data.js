@@ -896,7 +896,7 @@ progressData = {
         id: "chapter4.12",
         type: "journal",
         chapter: 4,
-        narrative: "Receiving transmission...\n  Mary: 'We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.'",
+        narrative: "Receiving transmission...\n  Mary: 'We don't have resources to spare, but we have scientists. Send probes to Earth. We'll analyze the data.' \nNew special project available : Earth Recon Probe",
         prerequisites: ["chapter4.11"],
         objectives: [],
         reward: [
