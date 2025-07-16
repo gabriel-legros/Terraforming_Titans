@@ -124,3 +124,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Surface albedo now averages zonal albedos and the luminosity tooltip lists rock, water, ice and biomass percentages per zone.
 - Hydrocarbon and dry ice coverage now contribute to surface albedo calculations and appear in the luminosity tooltip.
 - Surface albedo tooltip now shows a detailed breakdown for each zone.
+- Luminosity tooltip lists all albedo values and updates when the base albedo changes.

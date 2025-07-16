@@ -22,6 +22,7 @@ describe('life coverage table', () => {
         default: return 0;
       }
     };
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       life: { target: 0.5 },
       zonalSurface: { tropical:{}, temperate:{}, polar:{} },

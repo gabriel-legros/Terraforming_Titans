@@ -13,6 +13,7 @@ describe('life luminosity table', () => {
     ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
     ctx.calculateAverageCoverage = () => 0.25;
     ctx.calculateZonalCoverage = () => 0; // not needed
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       life: { target: 0.5 },
       zonalSurface: { tropical:{}, temperate:{}, polar:{} },

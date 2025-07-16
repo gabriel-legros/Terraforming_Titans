@@ -165,6 +165,7 @@ if (typeof module !== 'undefined' && module.exports) {
     cloudFraction,
     surfaceAlbedoMix,
     diurnalAmplitude,
-    dayNightTemperaturesModel
+    dayNightTemperaturesModel,
+    DEFAULT_SURFACE_ALBEDO
   };
 }

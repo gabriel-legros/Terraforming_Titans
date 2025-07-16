@@ -16,8 +16,10 @@ describe('updateLuminosityBox', () => {
     ctx.calculateSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
     ctx.calculateZonalSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
     ctx.ZONES = ['tropical','temperate','polar'];
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.calculateZonalSurfaceFractions = () => ({ ocean: 0, ice: 0, biomass: 0 });
     ctx.ZONES = ['tropical','temperate','polar'];
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
 
     ctx.terraforming = {
       luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3 },

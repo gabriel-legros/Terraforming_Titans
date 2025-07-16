@@ -11,6 +11,7 @@ describe('updatePlayTimeDisplay', () => {
     const ctx = dom.getInternalVMContext();
     ctx.formatPlayTime = numbers.formatPlayTime;
     ctx.playTimeSeconds = 730;
+    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     ctx.updatePlayTimeDisplay();
