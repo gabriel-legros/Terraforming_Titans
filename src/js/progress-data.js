@@ -578,7 +578,7 @@ progressData = {
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
-          value: 237
+          value: 243
       }],
         reward: []
       },
@@ -586,7 +586,7 @@ progressData = {
         id: "chapter2.4",
         type: "journal",
         chapter: 2,
-        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 237K.",
+        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 243K.",
         prerequisites: ["chapter2.3"],
         objectives: [],
         reward: []
@@ -595,7 +595,7 @@ progressData = {
         id: "chapter2.5",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change. It's not much, but it's almost enough for lichen. We're almost there!  I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
+        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change.  You should start growing some lichen now.  It cannot grow on its own, but it can survive out there for now.  I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
         prerequisites: ["chapter2.4"],
         objectives: [],
         reward: []
@@ -604,13 +604,14 @@ progressData = {
         id: "chapter2.6",
         type: "journal",
         chapter: 2,
-        narrative: "Objective: Achieve a minimum equatorial night-side temperature of 223.15K to support extremophile organisms.",
+        narrative: "Objective: Beging spread of life on Mars.",
         prerequisites: ["chapter2.5"],
         objectives: [{
-          type: 'terraforming',
-          terraformingParameter : 'tropicalNightTemperature',
-          value: 223.15
-      }],
+            type: 'collection',
+            resourceType: 'surface',
+            resource: 'biomass',
+            quantity: 1000
+        }],
         reward: []
       },
       {
@@ -626,7 +627,7 @@ progressData = {
         id: "chapter3.1",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'The lichen is growing! It's a beautiful sight. In a slimy, green kind of way. Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2.'",
+        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way. Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2.'",
         prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',

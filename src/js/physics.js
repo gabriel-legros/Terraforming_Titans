@@ -47,15 +47,39 @@ function calculateDayNightTemperatureVariation(temperature, columnMass){
 // ───────────────────────────────────────────────────────────
 const SIGMA = 5.670374419e-8;
 // Include Safe GHG (modeled after SF6) with a very high optical depth factor
-const GAMMA = { h2o: 1, co2: 10.0, ch4: 150.0, greenhousegas: 235000.0 };
+const GAMMA = {           // absorption strength
+  h2o : 84.0,
+  co2 : 10.0,
+  ch4 : 150.0,
+  h2so4 : 50.0,           //  NEW  (approx. – tweak as you like)
+  greenhousegas : 235000.0
+};
 const ALPHA = 1.0;
 const BETA = 0.6;
 
-const SAT_COEFF = {          // B_i   (bar‑1)
-  h2o: 0.0,                  // water vapour saturates even at low P
-  co2: 0.0,                  // CO₂ lines strong everywhere
-  ch4: 0.7                   // CH₄ needs higher pressure to close Titan’s window
-  // add NH3, SO2 … here as needed
+const SAT_COEFF = {       // pressure-saturation scaling (bar-1)
+  h2o  : 0.0,
+  co2  : 0,
+  ch4  : 4,
+  h2so4: 0.1              //  NEW
+};
+
+/*  Each entry describes how *that* condensate behaves.
+      refMix  – mixing ratio (mass fraction) that saturates availability (=1)
+      cfMax   – maximum cloud-fraction achievable
+      pScale  – pressure scale (bar) for cloud build-up
+      aBase   – core albedo of an optically thick deck
+      aVar    – extra brightening with pressure          */
+const CLOUD_SPEC = {
+  h2o  : {                         
+    refMix : 0.01,
+    cfMax  : 0.50,
+    pScale : 0.8,
+    aBase  : 0.60,
+    aVar   : 0.18
+  },
+  ch4  : { refMix: 0.02,  cfMax: 0.10, pScale: 2.0, aBase: 0.60, aVar: 0.10 },
+  h2so4: { refMix: 1e-4,  cfMax: 0.99, pScale: 5.0, aBase: 0.75, aVar: 0.05 }
 };
 
 const DEFAULT_SURFACE_ALBEDO = {
@@ -67,6 +91,44 @@ const DEFAULT_SURFACE_ALBEDO = {
   hydrocarbonIce :0.50,
   biomass: 0.20
 };
+
+// ───────────────────────────────────────────────────────────
+//  Cloud & haze properties from composition + pressure + τ
+// ───────────────────────────────────────────────────────────
+function cloudAndHazeProps (pBar, tau, comp = {}) {
+
+  let cfTot = 0;      // summed cloud-fraction
+  let aCloudWeighted = 0;
+
+  // --- blend all condensables --------------------------------
+  for (const gas in CLOUD_SPEC) {
+    const spec = CLOUD_SPEC[gas];
+    const mix  = comp[gas] || 0;           // mass fraction
+
+    if (mix <= 0) continue;                // nothing of this gas
+
+    const availability = Math.min(1, mix / spec.refMix);
+
+    const cf = spec.cfMax *
+               (1 - Math.exp(-pBar / spec.pScale)) *
+               availability;               // cloud cover from this gas
+
+    const aGas = spec.aBase +
+                 spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
+
+    aCloudWeighted += cf * aGas;
+    cfTot          += cf;
+  }
+
+  // normalise albedo if any clouds at all
+  const aCloud = cfTot > 0 ? aCloudWeighted / cfTot : 0;
+
+  // --- photochemical haze (depends mainly on τ) --------------
+  const cfHaze = Math.min(0.90, tau / 2.0);                // saturates by τ≈5
+  const aHaze  = 0.02 + 0.23 * (1 - Math.exp(-tau / 3.0)); // ≈0.25 at τ≈5
+
+  return { cfCloud: Math.min(0.99, cfTot), aCloud, cfHaze, aHaze };
+}
 
 function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, g = 9.81, kappaSoil = 7e-7, rhoCSoil = 1.4e6) {
   const f = surfaceFractions || {};
@@ -90,6 +152,17 @@ function effectiveTemp(albedo, flux) {
 }
 
 function opticalDepth(comp, pBar) {
+  let tau = 0;
+  for (const gas in comp) {
+    const x   = comp[gas];          // mixing ratio
+    const key = gas.toLowerCase();
+    const G   = GAMMA[key] ?? 0;    // absorption strength
+    tau += G * Math.pow(x, ALPHA) * Math.pow(pBar, BETA);
+  }
+  return tau;
+}
+
+function opticalDepthSat(comp, pBar) {
   let tau = 0;
   for (const gas in comp) {
     const x   = comp[gas];          // mixing ratio
@@ -126,6 +199,9 @@ function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
   return num / den;
 }
 
+// ───────────────────────────────────────────────────────────
+//  Main surface-temperature routine (signature unchanged)
+// ───────────────────────────────────────────────────────────
 function dayNightTemperaturesModel({
   groundAlbedo,
   flux,
@@ -138,19 +214,37 @@ function dayNightTemperaturesModel({
   gSurface = 9.81
 }) {
   if (slabHeatCapacity === null) {
-    slabHeatCapacity = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, gSurface);
+    slabHeatCapacity = autoSlabHeatCapacity(
+      rotationPeriodH, surfacePressureBar, surfaceFractions, gSurface);
   }
+
   const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
-  const cf = cloudFraction(surfacePressureBar);
-  const aCloud = 0.55 + 0.20 * Math.tanh(surfacePressureBar / 5.0);
-  const A = (1 - cf) * aSurf + cf * aCloud;
 
-  const TEff = effectiveTemp(A, flux);
+  // greenhouse optical depth
   const tau = opticalDepth(composition, surfacePressureBar);
-  const TSurf = TEff * Math.pow(1 + 0.75 * tau, 0.25);
+  const tauSat = opticalDepthSat(composition, surfacePressureBar);
 
-  const dT = diurnalAmplitude(A, flux, TSurf, slabHeatCapacity, rotationPeriodH);
-  return { day: TSurf + 0.5 * dT, night: TSurf - 0.5 * dT, mean: TSurf };
+  // NEW: smoothly blended clouds + haze
+  const { cfCloud, aCloud, cfHaze, aHaze } =
+        cloudAndHazeProps(surfacePressureBar, tau, composition);
+
+  // Bond albedo
+  const A_noCloud = (1 - cfHaze) * aSurf + cfHaze * aHaze;
+  const A         = (1 - cfCloud) * A_noCloud + cfCloud * aCloud;
+
+  // Temperatures
+  const T_eff  = effectiveTemp(A, flux);
+  const T_surf = T_eff * Math.pow(1 + 0.75 * tauSat, 0.25);
+
+  const dT = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);
+
+  return {
+    day   : T_surf + 0.5 * dT,
+    night : T_surf - 0.5 * dT,
+    mean  : T_surf,
+    albedo: A,
+    cfCloud, cfHaze          // diagnostics if you want them
+  };
 }
 
 if (typeof module !== 'undefined' && module.exports) {

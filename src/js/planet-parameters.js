@@ -63,10 +63,10 @@ const defaultPlanetParameters = {
       geothermal: { name: 'Geo. vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false } // Default (Mars)
     },
     atmospheric: {
-      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 2.4e13, unlocked:false , unit: 'ton' }, // Default (Mars)
+      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' }, // Default (Mars)
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
-      atmosphericWater: { name: 'Water Vap.', initialValue: 10192599116.52503, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
+      atmosphericWater: { name: 'Water Vap.', initialValue: 34978095.08318223, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
@@ -116,30 +116,30 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 23998778149445.85
+        "initialValue": 23998810562847.49
       },
       "atmosphericWater": {
-        "initialValue": 29190648.769977562
+        "initialValue": 34978095.08318223
       },
       "atmosphericMethane": {
         "initialValue": 0
       }
     }
   },
-"zonalWater": {
+ "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 1102258.915998608,
+      "ice": 104314879.81632595,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 1737333.3119429161,
+      "ice": 156647397.2232867,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007967969807,
+      "ice": 4500007704059933,
       "buriedIce": 700000000000000
     }
   },
@@ -151,7 +151,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 20001221850554.15
+      "dryIce": 20001189437152.51
     }
   },
   "zonalHydrocarbons": {
@@ -197,7 +197,7 @@ const titanOverrides = {
         "initialValue": 1.3009089092924678e-12
       },
       "atmosphericMethane": {
-        "initialValue": 124651728768804.66,
+        "initialValue": 260651728768804.66,
         "unlocked": true
       }
     },
@@ -253,7 +253,7 @@ const titanOverrides = {
     distanceFromSun: 9.58,
     gravity: 1.35,
     radius: 2574.7,
-    albedo: 0.22,
+    albedo: 0.15,
   rotationPeriod: 382.7,
   }
 };

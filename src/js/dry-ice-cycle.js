@@ -14,10 +14,6 @@ if (isNodeDryIce) {
   }
 }
 
-// Default equilibrium parameter for CO₂ condensation. This value is used until
-// a more accurate one can be calculated from in-game conditions.
-const EQUILIBRIUM_CO2_PARAMETER = 3.064664438753366e-8;
-
 function calculateSaturationPressureCO2(temperature) {
     // Critical properties of CO₂
     const Tc = 304.1282; // Critical temperature in K
@@ -182,5 +178,4 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.sublimationRateCO2 = sublimationRateCO2;
     globalThis.rapidSublimationRateCO2 = rapidSublimationRateCO2;
     globalThis.calculateCO2CondensationRateFactor = calculateCO2CondensationRateFactor;
-    globalThis.EQUILIBRIUM_CO2_PARAMETER = EQUILIBRIUM_CO2_PARAMETER;
 }
