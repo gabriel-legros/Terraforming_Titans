@@ -25,9 +25,6 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.ZONES === 'undefined') {
         globalThis.ZONES = ZONES;
     }
-    if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
-        globalThis.EQUILIBRIUM_CO2_PARAMETER = dryIceCycle.EQUILIBRIUM_CO2_PARAMETER;
-    }
 
     var terraformUtils = require('./terraforming-utils.js');
     var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
@@ -55,6 +52,12 @@ const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.000047944585831950544;
 const EQUILIBRIUM_CO2_PARAMETER = 3.695049443068239e-8;
 
+if (typeof module !== 'undefined' && module.exports) {
+    if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
+        globalThis.EQUILIBRIUM_CO2_PARAMETER = EQUILIBRIUM_CO2_PARAMETER;
+    }
+}
+
 // Fraction of precipitation redistributed across zones
 const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
 // Weights for redistribution: small effect from winds, larger from water coverage
@@ -80,7 +83,7 @@ class Terraforming extends EffectableEntity{
 
     this.initialValuesCalculated = false;
     this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
-    this.equilibriumCondensationParameter = EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
+    this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
     this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default, will be calculated
 
       this.completed = false;
@@ -1093,7 +1096,7 @@ class Terraforming extends EffectableEntity{
 
     resetDefaultConstants(){
         this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER;
-        this.equilibriumCondensationParameter = EQUILIBRIUM_CO2_PARAMETER;
+        this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER;
         this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default value
     }
     

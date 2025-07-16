@@ -25,7 +25,6 @@ global.R_AIR = 287;
 global.airDensity = physics.airDensity;
 global.sublimationRateCO2 = dryIce.sublimationRateCO2;
 global.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor;
-global.EQUILIBRIUM_CO2_PARAMETER = dryIce.EQUILIBRIUM_CO2_PARAMETER;
 
 const Terraforming = require('../src/js/terraforming.js');
 

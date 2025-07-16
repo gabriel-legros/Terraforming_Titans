@@ -3,6 +3,7 @@ const STEFAN_BOLTZMANN = 5.67e-8; // W/m²·K⁴
 const L_S_CO2 = 574000; // J/kg (latent heat of sublimation for CO2)
 const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
+
 const isNodeDryIce = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -167,8 +168,7 @@ if (typeof module !== 'undefined' && module.exports) {
         psychrometricConstantCO2,
         sublimationRateCO2,
         rapidSublimationRateCO2,
-        calculateCO2CondensationRateFactor,
-        EQUILIBRIUM_CO2_PARAMETER
+        calculateCO2CondensationRateFactor
     };
 } else {
     // Expose functions globally for browser usage
