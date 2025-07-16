@@ -179,6 +179,16 @@ function cloudFraction(pBar) {
   return Math.min(cf, 0.99);
 }
 
+// Calculate actual (Bond) albedo and cloud/haze fractions
+function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}) {
+  const tau = opticalDepth(composition, pressureBar);
+  const { cfCloud, aCloud, cfHaze, aHaze } =
+        cloudAndHazeProps(pressureBar, tau, composition);
+  const A_noCloud = (1 - cfHaze) * surfaceAlbedo + cfHaze * aHaze;
+  const A         = (1 - cfCloud) * A_noCloud + cfCloud * aCloud;
+  return { albedo: A, cfCloud, cfHaze };
+}
+
 function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
   if (!fractions) return rockAlb;
   const albs = { ...DEFAULT_SURFACE_ALBEDO };
@@ -260,6 +270,7 @@ if (typeof module !== 'undefined' && module.exports) {
     surfaceAlbedoMix,
     diurnalAmplitude,
     dayNightTemperaturesModel,
+    calculateActualAlbedoPhysics,
     DEFAULT_SURFACE_ALBEDO
   };
 }

@@ -126,3 +126,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Surface albedo tooltip now shows a detailed breakdown for each zone.
 - Luminosity tooltip lists all albedo values and updates when the base albedo changes.
 - Luminosity box now shows actual albedo including cloud fraction with a tooltip explaining the calculation.
+- Actual albedo calculation now resides in physics.js and the luminosity box pulls the value from this helper with an updated tooltip.
