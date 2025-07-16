@@ -70,7 +70,7 @@ describe('methane atmospheric rate tracking', () => {
 
     const calls = res.atmospheric.atmosphericMethane.modifyRate.mock.calls;
     const labels = calls.map(c => c[1]);
-    expect(labels).toContain('Methane Evaporation');
-    expect(labels).toContain('Methane Condensation');
+    expect(labels).toContain('Evaporation/Sublimation');
+    expect(labels).toContain('Precipitation');
   });
 });

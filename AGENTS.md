@@ -128,3 +128,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Luminosity box now shows actual albedo including cloud fraction with a tooltip explaining the calculation.
 - Actual albedo calculation now resides in physics.js and the luminosity box pulls the value from this helper with an updated tooltip.
 - Actual albedo tooltip now explains cloud and haze contributions in plain language.
+- Autobuild no longer records any cost when a structure can't be built due to missing land.
