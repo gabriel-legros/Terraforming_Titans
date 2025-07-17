@@ -1160,27 +1160,22 @@ class Terraforming extends EffectableEntity{
         projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
         typeof mirrorOversightSettings !== 'undefined'
       ) {
-        const perc = mirrorOversightSettings.percentage || 0;
-        const targetZone = mirrorOversightSettings.zone;
-    
-        if (perc > 0) {
-          // Split the POWER based on the percentage setting
-          distributedMirrorPower = totalMirrorPower * (1 - perc);
-          focusedMirrorPower = totalMirrorPower * perc;
-    
-          if (mirrorOversightSettings.applyToLantern) {
-            distributedLanternPower = totalLanternPower * (1 - perc);
-            focusedLanternPower = totalLanternPower * perc;
-          }
-    
-          // Calculate focused FLUX for the target zone only
-          if (targetZone === zone) {
-            const targetZoneArea = totalSurfaceArea * getZonePercentage(targetZone);
-            if (targetZoneArea > 0) {
-              focusedMirrorFlux = 4*focusedMirrorPower / targetZoneArea;
-              focusedLanternFlux = 4*focusedLanternPower / targetZoneArea;
-            }
-          }
+        const dist = mirrorOversightSettings.distribution || {};
+        const zonePerc = dist[zone] || 0;
+        const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0));
+
+        distributedMirrorPower = totalMirrorPower * globalPerc;
+        focusedMirrorPower = totalMirrorPower * zonePerc;
+
+        if (mirrorOversightSettings.applyToLantern) {
+          distributedLanternPower = totalLanternPower * globalPerc;
+          focusedLanternPower = totalLanternPower * zonePerc;
+        }
+
+        const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+        if (zoneArea > 0 && zonePerc > 0) {
+          focusedMirrorFlux = 4 * focusedMirrorPower / zoneArea;
+          focusedLanternFlux = 4 * focusedLanternPower / zoneArea;
         }
       }
     

@@ -95,5 +95,5 @@ test('initializeGameState resets colony sliders to defaults', () => {
   }
 
   expect(settings).toEqual({ workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 });
-  expect(oversight).toEqual({ percentage: 0, zone: 'tropical', applyToLantern: false });
+  expect(oversight).toEqual({ distribution: { tropical: 0, temperate: 0, polar: 0 }, applyToLantern: false });
 });

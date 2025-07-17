@@ -5,8 +5,7 @@ global.terraforming = { calculateMirrorEffect: () => ({ interceptedPower: 0, pow
 global.formatNumber = () => '';
 
 const {
-  setMirrorFocusZone,
-  setMirrorFocusPercentage,
+  setMirrorDistribution,
   resetMirrorOversightSettings,
   mirrorOversightSettings
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
@@ -19,21 +18,21 @@ delete global.formatNumber;
 
 describe('mirror oversight settings', () => {
   test('setters modify settings', () => {
-    setMirrorFocusZone('temperate');
-    setMirrorFocusPercentage(50);
+    setMirrorDistribution('tropical', 40);
+    setMirrorDistribution('temperate', 30);
     mirrorOversightSettings.applyToLantern = true;
-    expect(mirrorOversightSettings.zone).toBe('temperate');
-    expect(mirrorOversightSettings.percentage).toBeCloseTo(0.5);
+    expect(mirrorOversightSettings.distribution.tropical).toBeCloseTo(0.4);
+    expect(mirrorOversightSettings.distribution.temperate).toBeCloseTo(0.3);
     expect(mirrorOversightSettings.applyToLantern).toBe(true);
   });
 
   test('reset restores defaults', () => {
-    mirrorOversightSettings.zone = 'polar';
-    mirrorOversightSettings.percentage = 0.8;
+    mirrorOversightSettings.distribution.tropical = 0.2;
+    mirrorOversightSettings.distribution.temperate = 0.3;
+    mirrorOversightSettings.distribution.polar = 0.4;
     mirrorOversightSettings.applyToLantern = true;
     resetMirrorOversightSettings();
-    expect(mirrorOversightSettings.zone).toBe('tropical');
-    expect(mirrorOversightSettings.percentage).toBe(0);
+    expect(mirrorOversightSettings.distribution).toEqual({ tropical: 0, temperate: 0, polar: 0 });
     expect(mirrorOversightSettings.applyToLantern).toBe(false);
   });
 });
