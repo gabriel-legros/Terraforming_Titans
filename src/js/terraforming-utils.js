@@ -121,10 +121,9 @@ function calculateZonalSurfaceFractions(terraforming, zone) {
 
 function calculateZonalEvaporationSublimationRates(terraforming, zone, dayTemp, nightTemp, waterVaporPressure, co2VaporPressure, avgAtmPressure, zonalSolarFlux) {
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
-  const cache = terraforming.zonalCoverageCache[zone] || {};
-  const liquidWaterCoverage = cache.liquidWater ?? 0;
-  const iceCoverage = cache.ice ?? 0;
-  const dryIceCoverage = cache.dryIce ?? 0;
+  const liquidWaterCoverage = calculateZonalCoverage(terraforming, zone, 'liquidWater');
+  const iceCoverage = calculateZonalCoverage(terraforming, zone, 'ice');
+  const dryIceCoverage = calculateZonalCoverage(terraforming, zone, 'dryIce');
   return baseCalculateEvapSubl({
     zoneArea,
     liquidWaterCoverage,

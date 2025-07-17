@@ -985,7 +985,11 @@ class Terraforming extends EffectableEntity{
         for (const zone of ZONES) {
             this.zonalCoverageCache[zone] = {};
             for (const resourceType of resourceTypes) {
-                this.zonalCoverageCache[zone][resourceType] = calculateZonalCoverage(this, zone, resourceType);
+                let cov = calculateZonalCoverage(this, zone, resourceType);
+                if (resourceType === 'biomass' && this.zonalSurface[zone]?.biomass > 0) {
+                    cov = Math.max(cov, 0.1);
+                }
+                this.zonalCoverageCache[zone][resourceType] = cov;
             }
         }
     }

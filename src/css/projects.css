@@ -23,6 +23,17 @@
     align-items: center;
 }
 
+.collapse-arrow {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.project-card.collapsed .card-body,
+.project-card.collapsed .progress-button-container,
+.project-card.collapsed .reorder-buttons {
+    display: none;
+}
+
 .card-title {
     font-weight: bold;
     font-size: 1.1em;
