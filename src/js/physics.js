@@ -48,7 +48,7 @@ function calculateDayNightTemperatureVariation(temperature, columnMass){
 const SIGMA = 5.670374419e-8;
 // Include Safe GHG (modeled after SF6) with a very high optical depth factor
 const GAMMA = {           // absorption strength
-  h2o : 84.0,
+  h2o : 10.0,
   co2 : 10.0,
   ch4 : 150.0,
   h2so4 : 50.0,           //  NEW  (approx. – tweak as you like)
