@@ -19,7 +19,7 @@
     padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -438,6 +438,7 @@
 .reorder-buttons {
     display: flex;
     flex-direction: column;
+    margin-left: auto;
 }
 
 .reorder-buttons button {
