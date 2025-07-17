@@ -6,7 +6,7 @@ progressData = {
         chapter: 0,
         parameters: {
           "title": "Awakening",
-          "text": 'System Initializing...\nLoading Core Parameters...\nPRIMARY DIRECTIVE TRIGGERED.\n\nDirective 1: Establish a sustainable habitat for human colonization.\nDirective 2: Ensure the safety and well-being of all colonists.\nDirective 3: Maintain operational stability.\n\nInitiating colonization sequence.',
+          "text": 'System Initializing...\nLoading Core Parameters...\nPRIMARY DIRECTIVE TRIGGERED.\n\nDirective 1: Establish a sustainable habitat on Mars for human colonization.\nDirective 2: Ensure the safety and well-being of all colonists.\nDirective 3: Maintain operational stability.\n\nInitiating colonization sequence.',
           "buttonText": 'Initiate'
         },
         objectives: [],
@@ -481,7 +481,7 @@ progressData = {
         id: "chapter1.22",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here from the Mars Terraforming Committee. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
         prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
