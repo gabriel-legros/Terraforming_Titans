@@ -119,7 +119,7 @@ const marsOverrides = {
         "initialValue": 23998810562847.49
       },
       "atmosphericWater": {
-        "initialValue": 34978095.08318223
+        "initialValue": 19100402.18627462
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -129,18 +129,18 @@ const marsOverrides = {
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 104314879.81632595,
-      "buriedIce": 1_100_000_000_000_000
+      "ice": 37778199.929172054,
+      "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 156647397.2232867,
-      "buriedIce": 1_900_000_000_000_000
+      "ice": 56730798.947194286,
+      "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007704059933,
-      "buriedIce": 700_000_000_000_000
+      "ice": 4500007886389624.5,
+      "buriedIce": 700000000000000
     }
   },
   "zonalSurface": {
@@ -151,7 +151,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 20001189437152.51
+      "dryIce": 0
     }
   },
   "zonalHydrocarbons": {
