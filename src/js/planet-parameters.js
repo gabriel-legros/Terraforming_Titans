@@ -130,17 +130,17 @@ const marsOverrides = {
     "tropical": {
       "liquid": 0,
       "ice": 104314879.81632595,
-      "buriedIce": 1100000000000000
+      "buriedIce": 1_100_000_000_000_000
     },
     "temperate": {
       "liquid": 0,
       "ice": 156647397.2232867,
-      "buriedIce": 1900000000000000
+      "buriedIce": 1_900_000_000_000_000
     },
     "polar": {
       "liquid": 0,
       "ice": 4500007704059933,
-      "buriedIce": 700000000000000
+      "buriedIce": 700_000_000_000_000
     }
   },
   "zonalSurface": {

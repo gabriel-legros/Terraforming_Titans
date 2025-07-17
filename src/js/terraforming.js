@@ -150,7 +150,7 @@ class Terraforming extends EffectableEntity{
       name: 'Temperature',
       value: 0,
       targetMin: 278.15, // 15°C in Kelvin,
-      targetMax: 293.15,
+      targetMax: 298.15,
       effectiveTempNoAtmosphere: 0,
       emissivity: 0,
       opticalDepth: 0,

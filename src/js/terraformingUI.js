@@ -182,7 +182,7 @@ function createTemperatureBox(row) {
     temperatureBox.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
     const targetSpan = document.getElementById('temperature-target');
     if(targetSpan){
-      targetSpan.textContent = `Target : Average between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(293.15), false, 2)}${unit}.`;
+      targetSpan.textContent = `Target : Average between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
     }
 
     const temperatureCurrent = document.getElementById('temperature-current');
