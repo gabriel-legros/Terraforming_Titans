@@ -23,6 +23,7 @@ let gameSettings = {
   hideCompletedResearch: false,
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
+  silenceUnlockAlert: false,
 };
 
 let colonySliderSettings = {

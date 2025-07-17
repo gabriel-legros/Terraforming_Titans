@@ -3,7 +3,7 @@ document.querySelectorAll('.buildings-subtabs .building-subtab').forEach(tab => 
     tab.addEventListener('click', function () {
         // Remove the 'active' class from all subtabs
         document.querySelectorAll('.buildings-subtabs .building-subtab').forEach(t => t.classList.remove('active'));
-        
+
         // Add the 'active' class to the clicked subtab
         this.classList.add('active');
 
@@ -17,6 +17,9 @@ document.querySelectorAll('.buildings-subtabs .building-subtab').forEach(tab => 
 
         // Show the content of the selected subtab
         document.getElementById(category).classList.add('active');
+        if (typeof markBuildingSubtabViewed === 'function') {
+            markBuildingSubtabViewed(category);
+        }
     });
 });
 
@@ -50,4 +53,70 @@ function initializeBuildingTabs() {
     document.getElementById('terraforming-buildings-tab').addEventListener('click', () => {
         activateBuildingSubtab('terraforming-buildings');
     });
+}
+
+let buildingTabAlertNeeded = false;
+const buildingSubtabAlerts = {
+    'resource-buildings': false,
+    'production-buildings': false,
+    'energy-buildings': false,
+    'storage-buildings': false,
+    'terraforming-buildings': false,
+};
+
+function registerBuildingUnlockAlert(subtabId) {
+    buildingTabAlertNeeded = true;
+    buildingSubtabAlerts[subtabId] = true;
+    updateBuildingAlert();
+}
+
+function updateBuildingAlert() {
+    const alertEl = document.getElementById('buildings-alert');
+    if (alertEl) {
+        const display = (!gameSettings.silenceUnlockAlert && buildingTabAlertNeeded) ? 'inline' : 'none';
+        alertEl.style.display = display;
+    }
+    for (const key in buildingSubtabAlerts) {
+        const el = document.getElementById(`${key}-alert`);
+        if (el) {
+            const display = (!gameSettings.silenceUnlockAlert && buildingSubtabAlerts[key]) ? 'inline' : 'none';
+            el.style.display = display;
+        }
+    }
+}
+
+function markBuildingsViewed() {
+    buildingTabAlertNeeded = false;
+    updateBuildingAlert();
+}
+
+function markBuildingSubtabViewed(subtabId) {
+    buildingSubtabAlerts[subtabId] = false;
+    for (const name in buildings) {
+        const b = buildings[name];
+        if (b.category && `${b.category}-buildings` === subtabId && b.unlocked) {
+            b.alertedWhenUnlocked = true;
+        }
+    }
+    if (Object.values(buildingSubtabAlerts).every(v => !v)) {
+        buildingTabAlertNeeded = false;
+    }
+    updateBuildingAlert();
+}
+
+function initializeBuildingAlerts() {
+    buildingTabAlertNeeded = false;
+    for (const k in buildingSubtabAlerts) buildingSubtabAlerts[k] = false;
+    for (const name in buildings) {
+        const b = buildings[name];
+        if (b.unlocked && !b.alertedWhenUnlocked) {
+            buildingTabAlertNeeded = true;
+            buildingSubtabAlerts[`${b.category}-buildings`] = true;
+        }
+    }
+    updateBuildingAlert();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { registerBuildingUnlockAlert, updateBuildingAlert, initializeBuildingAlerts, markBuildingSubtabViewed, markBuildingsViewed };
 }

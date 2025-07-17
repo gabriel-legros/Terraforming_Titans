@@ -41,10 +41,16 @@ function create() {
   // Initialize buildings
   buildings = initializeBuildings(buildingsParameters);
   createBuildingButtons(buildings);
+  if (typeof initializeBuildingAlerts === 'function') {
+    initializeBuildingAlerts();
+  }
 
   // Initialize projects using the ProjectManager
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
+  if (typeof initializeProjectAlerts === 'function') {
+    initializeProjectAlerts();
+  }
 
   oreScanner = new OreScanning(currentPlanetParameters);
 
@@ -187,9 +193,15 @@ function initializeGameState(options = {}) {
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
   createBuildingButtons(buildings);
+  if (typeof initializeBuildingAlerts === 'function') {
+    initializeBuildingAlerts();
+  }
   createColonyButtons(colonies);
   initializeProjectsUI();
   renderProjects();
+  if (typeof initializeProjectAlerts === 'function') {
+    initializeProjectAlerts();
+  }
   initializeColonySlidersUI();
   initializeResearchUI(); // Reinitialize research UI as well
   initializeHopeUI();

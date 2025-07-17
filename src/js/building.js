@@ -12,6 +12,7 @@ class Building extends EffectableEntity {
     this.active = 0;
     this.productivity = 0;
     this.isHidden = false; // track whether the building is hidden in the UI
+    this.alertedWhenUnlocked = this.unlocked ? true : false;
 
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;
@@ -577,7 +578,13 @@ class Building extends EffectableEntity {
   }
 
   enable() {
+    const first = !this.unlocked;
     this.unlocked = true;
+    if (first && !this.alertedWhenUnlocked) {
+      if (typeof registerBuildingUnlockAlert === 'function') {
+        registerBuildingUnlockAlert(`${this.category}-buildings`);
+      }
+    }
   }
 }
 
