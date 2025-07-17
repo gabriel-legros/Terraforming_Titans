@@ -140,4 +140,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Project cards can be collapsed via the title to hide details except automation options.
 - Collapsing a project card now keeps its title aligned on the left.
 - Save screen includes a Pause button to stop game updates.
+- Active building subtab alerts clear immediately when unlocking a structure while that subtab is open.
 - Pause button now sets game speed to 0 so time does not advance when paused.
