@@ -66,10 +66,19 @@ function createProjectItem(project) {
   // Card Header
   const cardHeader = document.createElement('div');
   cardHeader.classList.add('card-header');
+
   const nameElement = document.createElement('span');
   nameElement.textContent = project.displayName || project.name;
   nameElement.classList.add('card-title');
+
+  const arrow = document.createElement('span');
+  arrow.classList.add('collapse-arrow');
+  arrow.innerHTML = '&#9660;';
+  cardHeader.appendChild(arrow);
   cardHeader.appendChild(nameElement);
+
+  nameElement.addEventListener('click', () => toggleProjectCollapse(projectCard));
+  arrow.addEventListener('click', () => toggleProjectCollapse(projectCard));
 
   const reorderButtons = document.createElement('div');
   reorderButtons.classList.add('reorder-buttons');
@@ -763,4 +772,13 @@ function initializeProjectAlerts() {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { registerProjectUnlockAlert, updateProjectAlert, initializeProjectAlerts, markProjectSubtabViewed, markProjectsViewed };
+}
+
+
+function toggleProjectCollapse(projectCard) {
+  projectCard.classList.toggle('collapsed');
+  const arrow = projectCard.querySelector('.collapse-arrow');
+  if (arrow) {
+    arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  }
 }

@@ -19,8 +19,19 @@
     padding: 8px 12px;
     border-bottom: 1px solid #dee2e6;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+}
+
+.collapse-arrow {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.project-card.collapsed .card-body,
+.project-card.collapsed .progress-button-container,
+.project-card.collapsed .reorder-buttons {
+    display: none;
 }
 
 .card-title {
@@ -427,6 +438,7 @@
 .reorder-buttons {
     display: flex;
     flex-direction: column;
+    margin-left: auto;
 }
 
 .reorder-buttons button {
