@@ -494,6 +494,10 @@ function updateProjectUI(projectName) {
       const waitCapacityCheckboxContainer = project.createWaitForCapacityCheckbox();
       elements.automationSettingsContainer.appendChild(waitCapacityCheckboxContainer);
     }
+    if (project instanceof SpaceExportBaseProject && !elements.temperatureControl) {
+      const tempControl = project.createTemperatureControl();
+      elements.automationSettingsContainer.appendChild(tempControl);
+    }
   }
 
 

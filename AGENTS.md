@@ -133,3 +133,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Overflowed colony water now pools as liquid only in warm zones, or as ice across all zones when none are above freezing.
 - Overflow water splits proportionally among warm zones instead of using their global percentages.
 - Modified solar flux now averages zonal solar flux values so the luminosity display reflects zone distribution.
+- Resource disposal projects can now disable exports below a user-set temperature threshold when Atmospheric Monitoring is researched.

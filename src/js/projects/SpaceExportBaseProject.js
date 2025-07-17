@@ -1,4 +1,9 @@
 class SpaceExportBaseProject extends SpaceshipProject {
+  constructor(config, name) {
+    super(config, name);
+    this.disableBelowTemperature = false;
+    this.disableTemperatureThreshold = 303.15;
+  }
   renderUI(container) {
     super.renderUI(container);
     if (this.attributes.disposable) {
@@ -92,8 +97,54 @@ class SpaceExportBaseProject extends SpaceshipProject {
       totalDisposalElement: totalDisposal,
       gainPerResourceElement: gainPerResource,
     };
-  
+
     return sectionContainer;
+  }
+
+  createTemperatureControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'temperature-control');
+    control.id = `${this.name}-temperature-control`;
+    control.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('temperature-checkbox');
+    checkbox.checked = this.disableBelowTemperature;
+    checkbox.addEventListener('change', () => {
+      this.disableBelowTemperature = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.textContent = 'Disable if temperature below: ';
+    control.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.classList.add('temperature-input');
+    input.value = toDisplayTemperature(this.disableTemperatureThreshold);
+    input.addEventListener('input', () => {
+      const val = parseFloat(input.value);
+      this.disableTemperatureThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+    });
+    control.appendChild(input);
+
+    const unit = document.createElement('span');
+    unit.classList.add('temperature-unit');
+    unit.textContent = getTemperatureUnit();
+    control.appendChild(unit);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      temperatureControl: control,
+      temperatureCheckbox: checkbox,
+      temperatureInput: input,
+      temperatureUnit: unit,
+    };
+
+    return control;
   }
 
   updateUI() {
@@ -107,6 +158,21 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (elements.waitCapacityCheckboxContainer) {
       elements.waitCapacityCheckboxContainer.style.display =
           projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
+    }
+
+    if (elements.temperatureControl) {
+      elements.temperatureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+    }
+    if (elements.temperatureCheckbox) {
+      elements.temperatureCheckbox.checked = this.disableBelowTemperature;
+    }
+    if (elements.temperatureInput) {
+      if (document.activeElement !== elements.temperatureInput) {
+        elements.temperatureInput.value = toDisplayTemperature(this.disableTemperatureThreshold);
+      }
+    }
+    if (elements.temperatureUnit) {
+      elements.temperatureUnit.textContent = getTemperatureUnit();
     }
 
     if (elements.disposalPerShipElement) {
@@ -152,6 +218,35 @@ class SpaceExportBaseProject extends SpaceshipProject {
         funding: totalDisposalAmount * this.attributes.fundingGainAmount,
       },
     };
+  }
+
+  canStart() {
+    if (!super.canStart()) return false;
+
+    if (this.disableBelowTemperature) {
+      if (typeof terraforming !== 'undefined' && terraforming.temperature) {
+        const temp = terraforming.temperature.value || 0;
+        if (temp <= this.disableTemperatureThreshold) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      disableBelowTemperature: this.disableBelowTemperature,
+      disableTemperatureThreshold: this.disableTemperatureThreshold,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.disableBelowTemperature = state.disableBelowTemperature || false;
+    this.disableTemperatureThreshold = typeof state.disableTemperatureThreshold === 'number' ? state.disableTemperatureThreshold : 303.15;
   }
 }
 
