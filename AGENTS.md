@@ -132,3 +132,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space mirror oversight now distributes mirrors across zones with sliders for each zone and an automatic "any zone" value.
 - Overflowed colony water now pools as liquid only in warm zones, or as ice across all zones when none are above freezing.
 - Overflow water splits proportionally among warm zones instead of using their global percentages.
+- Modified solar flux now averages zonal solar flux values so the luminosity display reflects zone distribution.
