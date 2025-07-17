@@ -68,6 +68,7 @@ body {
     display: flex;
     gap: 10px;
     height: calc(100vh - 120px); /* Fill remaining vertical space below tabs */
+    background-color: white;
 }
 
 /* Adjusts the main content area (tab-content) to take all remaining space */
