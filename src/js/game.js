@@ -17,6 +17,9 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+if (typeof globalThis !== 'undefined') {
+  globalThis.game = game;
+}
 
 function preload() {
   // Load assets (images, sounds, etc.) here
