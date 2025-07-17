@@ -118,37 +118,48 @@ function processNextJournalEntry() {
   updateJournalNavArrows();
 
   let index = 0;
+  let lastTimestamp = 0;
 
-  function typeLetter() {
-    if (index < text.length) {
+  const typeLetter = (timestamp) => {
+    if (!lastTimestamp) {
+      lastTimestamp = timestamp;
+    }
+
+    let elapsed = timestamp - lastTimestamp;
+    let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n')) ? 250 : 50;
+
+    while (elapsed >= delay && index < text.length) {
       if (text[index] === '\n') {
-        entry.appendChild(document.createElement('br')); // Add a line break element for \n
+        entry.appendChild(document.createElement('br'));
       } else {
-        entry.appendChild(document.createTextNode(text[index])); // Add the current letter as a text node
+        entry.appendChild(document.createTextNode(text[index]));
       }
       index++;
+      elapsed -= delay;
+      delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n')) ? 250 : 50;
+    }
+    lastTimestamp = timestamp - elapsed;
 
-      if (!journalUserScrolling && journalContainer) {
-        journalContainer.scrollTop = journalContainer.scrollHeight;
-      }
+    if (!journalUserScrolling && journalContainer) {
+      journalContainer.scrollTop = journalContainer.scrollHeight;
+    }
 
-      let delay = (text[index - 1] === '.' || text[index - 1] === '\n') ? 250 : 50;
-      setTimeout(typeLetter, delay);
+    if (index < text.length) {
+      requestAnimationFrame(typeLetter);
     } else {
       if (!journalUserScrolling && journalContainer) {
-        journalContainer.scrollTop = journalContainer.scrollHeight; // Scroll to the latest entry
+        journalContainer.scrollTop = journalContainer.scrollHeight;
       }
 
       console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
       const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
       document.dispatchEvent(storyEvent);
 
-      // Start next entry if queued
       processNextJournalEntry();
     }
-  }
+  };
 
-  typeLetter();
+  requestAnimationFrame(typeLetter);
 
   if (journalCollapsed) {
     journalUnread = true;
