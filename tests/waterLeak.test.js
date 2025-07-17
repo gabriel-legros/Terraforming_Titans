@@ -82,20 +82,39 @@ describe('water leaks when colony storage full', () => {
     };
   }
 
-  test('leaks as liquid when any zone above 0C', () => {
+  test('leaks entirely into warm zones', () => {
     const ctx = createContext(true);
     const b = makeBuilding();
     ctx.b = b;
     vm.runInContext('produceResources(1000, {b})', ctx, { filename: 'vm' });
-    const tropExp = 10 * getZonePercentage('tropical');
-    const tempExp = 10 * getZonePercentage('temperate');
-    const polarExp = 10 * getZonePercentage('polar');
+    const tropExp = 10; // all overflow goes to tropical zone
     expect(ctx.terraforming.zonalWater.tropical.liquid).toBeCloseTo(tropExp);
-    expect(ctx.terraforming.zonalWater.temperate.liquid).toBeCloseTo(tempExp);
-    expect(ctx.terraforming.zonalWater.polar.liquid).toBeCloseTo(polarExp);
+    expect(ctx.terraforming.zonalWater.temperate.liquid).toBe(0);
+    expect(ctx.terraforming.zonalWater.temperate.ice).toBe(0);
+    expect(ctx.terraforming.zonalWater.polar.liquid).toBe(0);
+    expect(ctx.terraforming.zonalWater.polar.ice).toBe(0);
     expect(ctx.resources.colony.water.value).toBe(100);
     expect(ctx.resources.colony.water.overflowRate).toBeCloseTo(10);
     expect(ctx.resources.surface.liquidWater.overflowRate).toBeCloseTo(10);
+    expect(ctx.resources.surface.ice.overflowRate).toBe(0);
+  });
+
+  test('distributes across multiple warm zones by area', () => {
+    const ctx = createContext(true);
+    // Make another zone warm as well
+    ctx.terraforming.temperature.zones.polar.value = 280;
+    const b = makeBuilding();
+    ctx.b = b;
+    vm.runInContext('produceResources(1000, {b})', ctx, { filename: 'vm' });
+    const warmZones = ['tropical', 'polar'];
+    const warmArea = warmZones.reduce((sum, z) => sum + getZonePercentage(z), 0);
+    const tropExp = 10 * (getZonePercentage('tropical') / warmArea);
+    const polarExp = 10 * (getZonePercentage('polar') / warmArea);
+    expect(ctx.terraforming.zonalWater.tropical.liquid).toBeCloseTo(tropExp);
+    expect(ctx.terraforming.zonalWater.polar.liquid).toBeCloseTo(polarExp);
+    expect(ctx.terraforming.zonalWater.temperate.liquid).toBe(0);
+    expect(ctx.resources.surface.liquidWater.overflowRate).toBeCloseTo(10);
+    expect(ctx.resources.surface.ice.overflowRate).toBe(0);
   });
 
   test('leaks as ice when all zones below 0C', () => {
