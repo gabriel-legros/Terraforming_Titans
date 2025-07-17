@@ -249,6 +249,10 @@ function updateResourceRateDisplay(resource){
     if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
       const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
       tooltipContent += `<div>${ratioPercent}% of colonists provide workers</div>`;
+      if (typeof resources !== 'undefined') {
+        const androids = resources.colony?.androids?.value || 0;
+        tooltipContent += `<div>${formatNumber(androids, true)} from androids</div>`;
+      }
 
       if (typeof buildings !== 'undefined') {
         const assignments = [];
