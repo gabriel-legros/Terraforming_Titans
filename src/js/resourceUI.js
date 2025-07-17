@@ -246,6 +246,32 @@ function updateResourceRateDisplay(resource){
     let tooltipContent = '';
     tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
 
+    if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
+      const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
+      tooltipContent += `<div>${ratioPercent}% of colonists provide workers</div>`;
+
+      if (typeof buildings !== 'undefined') {
+        const assignments = [];
+        for (const name in buildings) {
+          const b = buildings[name];
+          if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
+            const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
+            if (assigned > 0) {
+              assignments.push([b.displayName || name, assigned]);
+            }
+          }
+        }
+        if (assignments.length > 0) {
+          assignments.sort((a, b) => b[1] - a[1]);
+          tooltipContent += '<div><strong>Assignments:</strong></div><div style="display: table; width: 100%;">';
+          assignments.forEach(([n, count]) => {
+            tooltipContent += `\n          <div style="display: table-row;">\n            <div style="display: table-cell; text-align: left; padding-right: 10px;">${n}</div>\n            <div style="display: table-cell; text-align: right;">${formatNumber(count, true)}</div>\n          </div>`;
+          });
+          tooltipContent += '</div>';
+        }
+      }
+    }
+
     // Add zonal breakdown for surface resources if available
     if (typeof terraforming !== 'undefined') {
       const zoneValues = {};
