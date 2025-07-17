@@ -68,6 +68,16 @@ function registerBuildingUnlockAlert(subtabId) {
     buildingTabAlertNeeded = true;
     buildingSubtabAlerts[subtabId] = true;
     updateBuildingAlert();
+    const activeTab = document.getElementById('buildings');
+    const activeSubtab = document.querySelector('.building-subtab.active');
+    if (
+        activeTab &&
+        activeTab.classList.contains('active') &&
+        activeSubtab &&
+        activeSubtab.dataset.subtab === subtabId
+    ) {
+        markBuildingSubtabViewed(subtabId);
+    }
 }
 
 function updateBuildingAlert() {
