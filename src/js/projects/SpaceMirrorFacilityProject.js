@@ -1,27 +1,33 @@
 // Mirror oversight controls
 var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
-  percentage: 0,
-  zone: 'tropical',
+  distribution: { tropical: 0, temperate: 0, polar: 0 },
   applyToLantern: false,
 };
 
-function setMirrorFocusZone(zone) {
-  const valid = ['tropical', 'temperate', 'polar'];
-  if (valid.includes(zone)) {
-    mirrorOversightSettings.zone = zone;
-    updateMirrorOversightUI();
+function setMirrorDistribution(zone, value) {
+  const zones = ['tropical', 'temperate', 'polar'];
+  if (!zones.includes(zone)) return;
+  const dist = mirrorOversightSettings.distribution;
+  const v = Math.max(0, Math.min(100, Math.round(value)));
+  dist[zone] = v / 100;
+  let total = dist.tropical + dist.temperate + dist.polar;
+  if (total > 1) {
+    let excess = total - 1;
+    zones.filter(z => z !== zone).forEach(z => {
+      if (excess > 0) {
+        const reduce = Math.min(dist[z], excess);
+        dist[z] -= reduce;
+        excess -= reduce;
+      }
+    });
   }
-}
-
-function setMirrorFocusPercentage(value) {
-  const v = Math.max(0, Math.min(100, value));
-  mirrorOversightSettings.percentage = v / 100;
   updateMirrorOversightUI();
 }
 
 function resetMirrorOversightSettings() {
-  mirrorOversightSettings.zone = 'tropical';
-  mirrorOversightSettings.percentage = 0;
+  mirrorOversightSettings.distribution.tropical = 0;
+  mirrorOversightSettings.distribution.temperate = 0;
+  mirrorOversightSettings.distribution.polar = 0;
   mirrorOversightSettings.applyToLantern = false;
   updateMirrorOversightUI();
 }
@@ -36,21 +42,28 @@ function initializeMirrorOversightUI(container) {
   div.innerHTML = `
     <div class="card-header">
       <span class="card-title">Mirror Oversight</span>
-      <span class="info-tooltip-icon" title="Direct a percentage of mirrors to focus on a specific zone."></span>
+      <span class="info-tooltip-icon" title="Distribute mirror focus among zones."></span>
     </div>
     <div class="card-body">
       <div class="control-group">
-        <label for="mirror-oversight-zone">Target Zone:</label>
-        <select id="mirror-oversight-zone">
-          <option value="tropical">Tropical</option>
-          <option value="temperate">Temperate</option>
-          <option value="polar">Polar</option>
-        </select>
+        <label for="mirror-oversight-tropical">Tropical:</label>
+        <input type="range" id="mirror-oversight-tropical" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-tropical-value" class="slider-value">0%</span>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-slider">Focus Percentage:</label>
-        <input type="range" id="mirror-oversight-slider" min="0" max="100" step="5" value="0">
-        <span id="mirror-oversight-value" class="slider-value">0%</span>
+        <label for="mirror-oversight-temperate">Temperate:</label>
+        <input type="range" id="mirror-oversight-temperate" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-temperate-value" class="slider-value">0%</span>
+      </div>
+      <div class="control-group">
+        <label for="mirror-oversight-polar">Polar:</label>
+        <input type="range" id="mirror-oversight-polar" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
+      </div>
+      <div class="control-group">
+        <label for="mirror-oversight-any">Any Zone:</label>
+        <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100" disabled>
+        <span id="mirror-oversight-any-value" class="slider-value">100%</span>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
@@ -59,20 +72,18 @@ function initializeMirrorOversightUI(container) {
     </div>
   `;
 
-  const select = div.querySelector('#mirror-oversight-zone');
-  select.value = mirrorOversightSettings.zone;
-  select.addEventListener('change', () => setMirrorFocusZone(select.value));
-
-  const slider = div.querySelector('#mirror-oversight-slider');
-  slider.value = mirrorOversightSettings.percentage * 100;
-  slider.addEventListener('input', () => {
-    const raw = slider.value;
-    const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
-    setMirrorFocusPercentage(val);
+  const sliders = {
+    tropical: div.querySelector('#mirror-oversight-tropical'),
+    temperate: div.querySelector('#mirror-oversight-temperate'),
+    polar: div.querySelector('#mirror-oversight-polar'),
+  };
+  Object.keys(sliders).forEach(zone => {
+    sliders[zone].addEventListener('input', () => {
+      const raw = sliders[zone].value;
+      const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
+      setMirrorDistribution(zone, val);
+    });
   });
-
-  const valueSpan = div.querySelector('#mirror-oversight-value');
-  valueSpan.textContent = `${Math.round(mirrorOversightSettings.percentage * 100)}%`;
 
   const lanternCheckbox = div.querySelector('#mirror-oversight-lantern');
   lanternCheckbox.checked = mirrorOversightSettings.applyToLantern;
@@ -118,14 +129,23 @@ function updateMirrorOversightUI() {
     }
   }
   container.style.display = enabled ? 'block' : 'none';
-  const slider = document.getElementById('mirror-oversight-slider');
-  const valueSpan = document.getElementById('mirror-oversight-value');
-  const select = document.getElementById('mirror-oversight-zone');
+  const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0 };
+  const vals = {
+    tropical: Math.round((dist.tropical || 0) * 100),
+    temperate: Math.round((dist.temperate || 0) * 100),
+    polar: Math.round((dist.polar || 0) * 100)
+  };
+  const anyVal = 100 - vals.tropical - vals.temperate - vals.polar;
+  ['tropical','temperate','polar','any'].forEach(zone => {
+    const slider = document.getElementById(`mirror-oversight-${zone}`);
+    const span = document.getElementById(`mirror-oversight-${zone}-value`);
+    const val = zone === 'any' ? anyVal : vals[zone];
+    if (slider) slider.value = val;
+    if (span) span.textContent = val + '%';
+  });
+
   const lantern = document.getElementById('mirror-oversight-lantern');
   const lanternDiv = document.getElementById('mirror-oversight-lantern-div');
-  if (slider) slider.value = mirrorOversightSettings.percentage * 100;
-  if (valueSpan) valueSpan.textContent = Math.round(mirrorOversightSettings.percentage * 100) + '%';
-  if (select) select.value = mirrorOversightSettings.zone;
   if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
   if (lanternDiv) {
     const unlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
@@ -289,8 +309,7 @@ class SpaceMirrorFacilityProject extends Project {
 if (typeof globalThis !== 'undefined') {
   globalThis.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject;
   globalThis.mirrorOversightSettings = mirrorOversightSettings;
-  globalThis.setMirrorFocusZone = setMirrorFocusZone;
-  globalThis.setMirrorFocusPercentage = setMirrorFocusPercentage;
+  globalThis.setMirrorDistribution = setMirrorDistribution;
   globalThis.resetMirrorOversightSettings = resetMirrorOversightSettings;
   globalThis.initializeMirrorOversightUI = initializeMirrorOversightUI;
   globalThis.updateMirrorOversightUI = updateMirrorOversightUI;
@@ -301,8 +320,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     SpaceMirrorFacilityProject,
     mirrorOversightSettings,
-    setMirrorFocusZone,
-    setMirrorFocusPercentage,
+    setMirrorDistribution,
     resetMirrorOversightSettings,
     initializeMirrorOversightUI,
     updateMirrorOversightUI,
