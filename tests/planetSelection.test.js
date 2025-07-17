@@ -107,7 +107,7 @@ describe('planet selection', () => {
     expect(newName).toBe('Titan');
     expect(oldStory).toBe(vm.runInContext('storyManager', ctx));
     expect(oldSpace).toBe(vm.runInContext('spaceManager', ctx));
-    // Titan's parameters start with no dry ice on the surface.
+    // Titan's parameters now start with no dry ice on the surface.
     expect(newDryIce).toBeCloseTo(0, 5);
   });
 });
