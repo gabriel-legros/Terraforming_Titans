@@ -86,6 +86,10 @@ function updateBuildingAlert() {
 }
 
 function markBuildingsViewed() {
+    const active = document.querySelector('.building-subtab.active');
+    if (active && typeof markBuildingSubtabViewed === 'function') {
+        markBuildingSubtabViewed(active.dataset.subtab);
+    }
     buildingTabAlertNeeded = false;
     updateBuildingAlert();
 }
