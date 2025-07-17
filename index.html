@@ -105,6 +105,7 @@
     <script src="src/js/spaceUI.js"></script>
     <script src="src/js/warning.js"></script>
     <script src="src/js/game.js"></script>
+    <script src="src/js/pause.js"></script>
     <script src="src/js/debug-tools.js"></script>
 </head>
 
@@ -485,6 +486,11 @@
                           <button id="load-from-file-button">Load from File</button>
                         </td>
                       </tr>
+                        <tr>
+                          <td colspan="3">
+                            <button id="pause-button">Pause</button>
+                          </td>
+                        </tr>
                   </tbody>
               </table>
           </div>
@@ -610,6 +616,10 @@
         });
     }
 
+    const pauseButton = document.getElementById("pause-button");
+    if (pauseButton) {
+        pauseButton.addEventListener("click", togglePause);
+    }
      // Ensure the initially active tab content is displayed on load
      // (The 'settings' tab has 'active' class in HTML, so this might be redundant
      // unless dynamically changing the default)
