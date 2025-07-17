@@ -129,3 +129,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Actual albedo calculation now resides in physics.js and the luminosity box pulls the value from this helper with an updated tooltip.
 - Actual albedo tooltip now explains cloud and haze contributions in plain language.
 - Autobuild no longer records any cost when a structure can't be built due to missing land.
+- Overflowed colony water now pools as liquid only in warm zones, or as ice across all zones when none are above freezing.
+- Overflow water splits proportionally among warm zones instead of using their global percentages.

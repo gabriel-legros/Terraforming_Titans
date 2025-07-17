@@ -377,25 +377,36 @@ function produceResources(deltaTime, buildings) {
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
         const zones = ['tropical', 'temperate', 'polar'];
-        const anyAboveZero = zones.some(z => (terraforming.temperature?.zones?.[z]?.value || 0) > 273.15);
-        zones.forEach(zone => {
-          const proportion = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
-          if (anyAboveZero) {
-            terraforming.zonalWater[zone].liquid += overflow * proportion;
-            resources.surface.liquidWater.value += overflow * proportion;
+        const warmZones = zones.filter(z => (terraforming.temperature?.zones?.[z]?.value || 0) > 273.15);
+        const targetZones = warmZones.length > 0 ? warmZones : zones;
+        const warmArea = warmZones.reduce((sum, z) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0) || 1;
+        let liquidRate = 0;
+        let iceRate = 0;
+
+        targetZones.forEach(zone => {
+          const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+          const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
+          const amount = overflow * proportion;
+
+          if (warmZones.length > 0) {
+            terraforming.zonalWater[zone].liquid += amount;
+            resources.surface.liquidWater.value += amount;
+            liquidRate += amount / (deltaTime / 1000);
           } else {
-            terraforming.zonalWater[zone].ice += overflow * proportion;
-            resources.surface.ice.value += overflow * proportion;
+            terraforming.zonalWater[zone].ice += amount;
+            resources.surface.ice.value += amount;
+            iceRate += amount / (deltaTime / 1000);
           }
         });
 
         // Record overflow rate for tooltips
         const rate = overflow / (deltaTime / 1000);
         resource.overflowRate = rate;
-        if (anyAboveZero && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.overflowRate = (resources.surface.liquidWater.overflowRate || 0) + rate;
-        } else if (resources.surface?.ice) {
-          resources.surface.ice.overflowRate = (resources.surface.ice.overflowRate || 0) + rate;
+        if (liquidRate > 0 && resources.surface?.liquidWater) {
+          resources.surface.liquidWater.overflowRate = (resources.surface.liquidWater.overflowRate || 0) + liquidRate;
+        }
+        if (iceRate > 0 && resources.surface?.ice) {
+          resources.surface.ice.overflowRate = (resources.surface.ice.overflowRate || 0) + iceRate;
         }
       }
     }
