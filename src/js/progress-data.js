@@ -6,7 +6,7 @@ progressData = {
         chapter: 0,
         parameters: {
           "title": "Awakening",
-          "text": 'System Initializing...\nLoading Core Parameters...\nPRIMARY DIRECTIVE TRIGGERED.\n\nDirective 1: Establish a sustainable habitat for human colonization.\nDirective 2: Ensure the safety and well-being of all colonists.\nDirective 3: Maintain operational stability.\n\nInitiating colonization sequence.',
+          "text": 'System Initializing...\nLoading Core Parameters...\nPRIMARY DIRECTIVE TRIGGERED.\n\nDirective 1: Establish a sustainable habitat on Mars for human colonization.\nDirective 2: Ensure the safety and well-being of all colonists.\nDirective 3: Maintain operational stability.\n\nInitiating colonization sequence.',
           "buttonText": 'Initiate'
         },
         objectives: [],
@@ -481,7 +481,7 @@ progressData = {
         id: "chapter1.22",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here from the Mars Terraforming Committee. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
         prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
@@ -1252,27 +1252,22 @@ progressData.chapters.push(
     objectives: [
 
     ],
-    reward: [
-      {
-        target: 'spaceManager',
-        targetId: 'callisto',
-        type: 'enable'
-      }
-    ]
+    reward: []
   }
 );
 
 progressData.chapters.push(
   {
     id: "chapter6.3c",
-    type: "journal",
+    type: "system-pop-up",
     chapter: 6,
-    narrative: "Receiving transmission...\n 'Hello! My name is Bob.  Big fan of yours.  After what happened last time on Mars, we of Titan have chosen a political structure ahead of your departure.  I am the president-elect of Titan!  Thanks for everything.  We'll be fine here.  Bon voyage!'",
+    parameters: {
+      title: "Demo Complete",
+      text: "Thank you very much for playing the demo for my game.  The complete game will have many more story planets, a few more prestige systems, a random planet generator, and challenge planets.  You can expect megastructures and more sci-fi references.  This story cannot end without humanity dealing with hazardous biomass after all.  \n Signed, Thratur, terraforming.titans@gmail.com",
+      buttonText: "OK"
+    },
     prerequisites: ["chapter6.3b"],
-    objectives: [{
-      type: 'terraforming',
-      terraformingParameter : 'complete',
-      }],
+    objectives: [],
     reward: []
   },
   {
@@ -1280,7 +1275,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 6,
     narrative: "ERROR : MTC not responding.  Humanity's long-term survival requires expansion.  New terraforming target designated : Callisto.  Travel to Callisto to continue.",
-    prerequisites: ["chapter6.3c"],
+    prerequisites: ["impossible"],
     objectives: [
       {
         type: 'currentPlanet',
