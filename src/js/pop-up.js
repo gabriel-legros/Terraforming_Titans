@@ -51,28 +51,37 @@ function createPopup(title, text, buttonText) {
 
   // Typing animation for the text
   let index = 0;
+  let lastTimestamp = 0;
 
-  function typeLetter() {
-    if (index < text.length) {
-      // Check for line break characters and handle them as a line break
+  const typeLetter = (timestamp) => {
+    if (!lastTimestamp) {
+      lastTimestamp = timestamp;
+    }
+
+    let elapsed = timestamp - lastTimestamp;
+    let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+
+    while (elapsed >= delay && index < text.length) {
       if (text[index] === '\n' || text.slice(index, index + 4) === '<br>') {
-        popupText.innerHTML += '<br>'; // Add a line break in HTML
-        index += (text[index] === '\n') ? 1 : 4; // Skip \n or <br> in the text
+        popupText.innerHTML += '<br>';
+        index += (text[index] === '\n') ? 1 : 4;
       } else {
-        popupText.innerHTML += text[index]; // Use innerHTML to support <br>
+        popupText.innerHTML += text[index];
         index++;
       }
-      
-      // Check if the current character is a period or a line break for extra delay
-      let delay = (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>') ? 500 : 50; // 500 ms for periods and line breaks, 50 ms for other characters
-      setTimeout(typeLetter, delay);
+      elapsed -= delay;
+      delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+    }
+    lastTimestamp = timestamp - elapsed;
+
+    if (index < text.length) {
+      requestAnimationFrame(typeLetter);
     } else {
-      // Show the close button after the text is fully displayed
       closeButton.style.display = 'block';
     }
-  }
+  };
 
-  typeLetter(); // Start typing the text
+  requestAnimationFrame(typeLetter);
 }
 
 function createSystemPopup(title, text, buttonText) {
