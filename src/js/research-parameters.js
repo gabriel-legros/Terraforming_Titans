@@ -774,6 +774,13 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'atmosphericMonitoring',
             value: true
+          },
+          {
+            target: 'project',
+            targetId: 'disposeResources',
+            type: 'booleanFlag',
+            flagId: 'atmosphericMonitoring',
+            value: true
           }
         ],
       },

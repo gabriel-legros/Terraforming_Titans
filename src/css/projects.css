@@ -399,6 +399,16 @@
     width: 60px;
 }
 
+.temperature-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.temperature-control .temperature-input {
+    width: 60px;
+}
+
 .resource-selection-input {
     width: 80px;
     text-align: center;
