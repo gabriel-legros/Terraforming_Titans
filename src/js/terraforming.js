@@ -366,13 +366,14 @@ class Terraforming extends EffectableEntity{
     // on the fly when needed (e.g., for delta or equilibrium calculations)
     // based on the initial values stored in currentPlanetParameters.resources.atmospheric.
 
-      // Initial synchronization to update global resource amounts and calculate initial pressures
-      this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
+    // Initial synchronization to update global resource amounts and calculate initial pressures
+    this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
 
-      this.updateLuminosity();
-      this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
-      this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
-      this.updateSurfaceTemperature();
+    this._updateZonalCoverageCache();
+    this.updateLuminosity();
+    this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
+    this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
+    this.updateSurfaceTemperature();
 
     this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
     this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
@@ -990,10 +991,10 @@ class Terraforming extends EffectableEntity{
     }
 
     update(deltaTime) {
-      this._updateZonalCoverageCache(); // New call at the start of the update tick
-
       // Distribute global changes (from buildings) into zones first
       this.distributeGlobalChangesToZones(deltaTime);
+
+      this._updateZonalCoverageCache(); // New call at the start of the update tick
 
       //First update luminosity
       this.updateLuminosity();

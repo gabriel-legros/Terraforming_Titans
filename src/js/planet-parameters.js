@@ -50,7 +50,7 @@ const defaultPlanetParameters = {
     },
     surface: {
       land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
-      ice: { name: 'Ice', initialValue: 0, unlocked:false , unit: 'ton' }, // Default (Mars)
+      ice: { name: 'Ice', initialValue: 8200007980898617, unlocked:false , unit: 'ton' }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
       dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
@@ -66,7 +66,7 @@ const defaultPlanetParameters = {
       carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' }, // Default (Mars)
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
-      atmosphericWater: { name: 'Water Vap.', initialValue: 34978095.08318223, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
+      atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
@@ -99,7 +99,7 @@ const marsOverrides = {
 "resources": {
     "surface": {
       "ice": {
-        "initialValue": 8199999826709445
+        "initialValue": 8200007980898620
       },
       "liquidWater": {
         "initialValue": 0
@@ -119,22 +119,22 @@ const marsOverrides = {
         "initialValue": 23998810562847.49
       },
       "atmosphericWater": {
-        "initialValue": 19100402.18627462
+        "initialValue": 19100402.12301435
       },
       "atmosphericMethane": {
         "initialValue": 0
       }
     }
   },
- "zonalWater": {
+  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 37778199.929172054,
+      "ice": 37778199.556139365,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 56730798.947194286,
+      "ice": 56730796.17582948,
       "buriedIce": 1900000000000000
     },
     "polar": {

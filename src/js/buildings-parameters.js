@@ -367,7 +367,7 @@ const buildingsParameters = {
     dustFactory: {
     name: 'Black Dust Factory',
     category: 'terraforming',
-    description: 'Generates large amount of black dust with an albedo of 0.05, and spreads it over the surface.  May need millions to have any meaningful effect.',
+    description: 'Generates large amount of black dust with an albedo of 0.05, and spreads it over the surface.  In turn, the black dust allows the ground to absorb heat better.  May need millions to have any meaningful effect.',
     cost: { colony: { metal: 10, components: 2 } },
     consumption: { colony: { energy: 500000 } },
     production: { special: { albedoUpgrades: 100 } },

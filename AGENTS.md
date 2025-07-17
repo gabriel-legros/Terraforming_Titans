@@ -135,3 +135,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Modified solar flux now averages zonal solar flux values so the luminosity display reflects zone distribution.
 - Resource disposal projects can now disable exports below a user-set temperature threshold when Atmospheric Monitoring is researched.
 - Workers tooltip now shows the colonist worker ratio and lists assignments per building sorted by usage.
+- Demo branch ends after chapter6.3b with a system pop-up instead of unlocking Callisto.
