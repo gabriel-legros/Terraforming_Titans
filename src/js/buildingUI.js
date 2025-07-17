@@ -31,6 +31,9 @@ function activateBuildingSubtab(subtabId) {
     // Activate the clicked subtab and corresponding content
     document.getElementById(subtabId + '-tab').classList.add('active'); // Activate the subtab by concatenating '-tab'
     document.getElementById(subtabId).classList.add('active'); // Activate the corresponding content
+    if (typeof markBuildingSubtabViewed === 'function') {
+        markBuildingSubtabViewed(subtabId);
+    }
 }
 
 function initializeBuildingTabs() {
