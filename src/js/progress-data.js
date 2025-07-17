@@ -1275,7 +1275,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 6,
     narrative: "ERROR : MTC not responding.  Humanity's long-term survival requires expansion.  New terraforming target designated : Callisto.  Travel to Callisto to continue.",
-    prerequisites: ["chapter6.3c"],
+    prerequisites: ["impossible"],
     objectives: [
       {
         type: 'currentPlanet',
