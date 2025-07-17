@@ -135,6 +135,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Modified solar flux now averages zonal solar flux values so the luminosity display reflects zone distribution.
 - Resource disposal projects can now disable exports below a user-set temperature threshold when Atmospheric Monitoring is researched.
 - Workers tooltip now shows the colonist worker ratio and lists assignments per building sorted by usage.
+- Workers tooltip also lists android-provided workers.
 - Demo branch ends after chapter6.3b with a system pop-up instead of unlocking Callisto.
 - Buildings and special projects now show an exclamation mark when first unlocked. Alerts clear on visiting the relevant tab or subtab and can be disabled in settings.
 - Project cards can be collapsed via the title to hide details except automation options.
@@ -143,3 +144,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Active building subtab alerts clear immediately when unlocking a structure while that subtab is open.
 - Pause button now sets game speed to 0 so time does not advance when paused.
 - Building subtab alerts now clear when switching subtabs.
+- A grey "PAUSED" alert appears in the warning area whenever the game is paused.
