@@ -11,6 +11,8 @@ describe('pause button', () => {
     ctx.document = dom.window.document;
     const calls = [];
     ctx.game = { scene: { pause: () => calls.push('pause'), resume: () => calls.push('resume') } };
+    ctx.gameSpeed = 1;
+    ctx.setGameSpeed = (s) => { ctx.gameSpeed = s; };
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'pause.js'), 'utf8');
     vm.runInContext(code + '; this.togglePause = togglePause; this.isGamePaused = isGamePaused;', ctx);
 
@@ -20,10 +22,12 @@ describe('pause button', () => {
     expect(calls[0]).toBe('pause');
     expect(btn.textContent).toBe('Resume');
     expect(ctx.isGamePaused()).toBe(true);
+    expect(ctx.gameSpeed).toBe(0);
 
     ctx.togglePause();
     expect(calls[1]).toBe('resume');
     expect(btn.textContent).toBe('Pause');
     expect(ctx.isGamePaused()).toBe(false);
+    expect(ctx.gameSpeed).toBe(1);
   });
 });

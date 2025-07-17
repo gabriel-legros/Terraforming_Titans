@@ -5,6 +5,9 @@
     paused = !paused;
     globalThis.manualPause = paused;
     const btn = typeof document !== 'undefined' ? document.getElementById('pause-button') : null;
+    if(typeof setGameSpeed === 'function'){
+      setGameSpeed(paused ? 0 : 1);
+    }
     if(paused){
       if(globalThis.game && game.scene){
         game.scene.pause('mainScene');

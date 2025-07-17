@@ -1,8 +1,8 @@
 (function(){
   function setGameSpeed(speed){
     const value = Number(speed);
-    if(isNaN(value) || value <= 0){
-      console.warn('setGameSpeed expects a positive number');
+    if(isNaN(value) || value < 0){
+      console.warn('setGameSpeed expects a non-negative number');
       return;
     }
     if(typeof gameSpeed !== 'undefined'){
