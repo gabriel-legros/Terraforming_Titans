@@ -893,7 +893,6 @@ class Terraforming extends EffectableEntity{
       this.luminosity.actualAlbedo = this.calculateActualAlbedo();
       this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
-      this.luminosity.modifiedSolarFlux = this.calculateModifiedSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
     updateSurfaceTemperature() {
@@ -923,6 +922,7 @@ class Terraforming extends EffectableEntity{
 
       this.luminosity.zonalFluxes = {};
       let weightedTemp = 0;
+      let weightedFlux = 0;
       for (const zone in this.temperature.zones) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -933,8 +933,10 @@ class Terraforming extends EffectableEntity{
         this.temperature.zones[zone].night = zoneTemps.night;
         const zonePct = getZonePercentage(zone);
         weightedTemp += zoneTemps.mean * zonePct;
+        weightedFlux += zoneFlux * zonePct;
       }
       this.temperature.value = weightedTemp;
+      this.luminosity.modifiedSolarFlux = weightedFlux;
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
     }
 
