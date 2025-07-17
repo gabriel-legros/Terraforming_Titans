@@ -1252,27 +1252,22 @@ progressData.chapters.push(
     objectives: [
 
     ],
-    reward: [
-      {
-        target: 'spaceManager',
-        targetId: 'callisto',
-        type: 'enable'
-      }
-    ]
+    reward: []
   }
 );
 
 progressData.chapters.push(
   {
     id: "chapter6.3c",
-    type: "journal",
+    type: "system-pop-up",
     chapter: 6,
-    narrative: "Receiving transmission...\n 'Hello! My name is Bob.  Big fan of yours.  After what happened last time on Mars, we of Titan have chosen a political structure ahead of your departure.  I am the president-elect of Titan!  Thanks for everything.  We'll be fine here.  Bon voyage!'",
+    parameters: {
+      title: "Demo Complete",
+      text: "Thank you for playing the demo!",
+      buttonText: "OK"
+    },
     prerequisites: ["chapter6.3b"],
-    objectives: [{
-      type: 'terraforming',
-      terraformingParameter : 'complete',
-      }],
+    objectives: [],
     reward: []
   },
   {

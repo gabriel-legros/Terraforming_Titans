@@ -49,7 +49,7 @@ describe('lifeUI polar tooltip', () => {
     const header = dom.window.document.querySelector('#life-status-table th:nth-child(5)');
     const icon = header.querySelector('.info-tooltip-icon');
     expect(icon).not.toBeNull();
-    expect(icon.title).toBe('Not required to complete terraforming.  Can be ignored.  Or not.');
+    expect(icon.title).toBe('Not required to complete terraforming.  Can be ignored.  Or not.  Tip : keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.');
 
   });
 });
