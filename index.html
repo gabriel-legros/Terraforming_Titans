@@ -115,8 +115,8 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings</div>
-    <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects</div>
+    <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings<span id="buildings-alert" class="unlock-alert">!</span></div>
+    <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
     <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
@@ -158,11 +158,11 @@
         <!-- ... existing buildings content ... -->
         <div class="container hidden" id="building-container">
             <div class="buildings-subtabs">
-                <div id="resource-buildings-tab" class="building-subtab" data-subtab="resource-buildings">Resources</div>
-                <div id="production-buildings-tab" class="building-subtab" data-subtab="production-buildings">Production</div>
-                <div id="energy-buildings-tab" class="building-subtab" data-subtab="energy-buildings">Energy</div>
-                <div id="storage-buildings-tab" class="building-subtab" data-subtab="storage-buildings">Storage</div>
-                <div id="terraforming-buildings-tab" class="building-subtab" data-subtab="terraforming-buildings">Terraforming</div>
+                <div id="resource-buildings-tab" class="building-subtab" data-subtab="resource-buildings">Resources<span id="resource-buildings-alert" class="unlock-alert">!</span></div>
+                <div id="production-buildings-tab" class="building-subtab" data-subtab="production-buildings">Production<span id="production-buildings-alert" class="unlock-alert">!</span></div>
+                <div id="energy-buildings-tab" class="building-subtab" data-subtab="energy-buildings">Energy<span id="energy-buildings-alert" class="unlock-alert">!</span></div>
+                <div id="storage-buildings-tab" class="building-subtab" data-subtab="storage-buildings">Storage<span id="storage-buildings-alert" class="unlock-alert">!</span></div>
+                <div id="terraforming-buildings-tab" class="building-subtab" data-subtab="terraforming-buildings">Terraforming<span id="terraforming-buildings-alert" class="unlock-alert">!</span></div>
             </div>
             <div class="building-subtab-content-wrapper">
                 <div id="resource-buildings" class="building-subtab-content">
@@ -219,10 +219,10 @@
         <!-- ... existing special projects content ... -->
         <div class="container special-projects-container">
           <div class="projects-subtabs">
-            <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects">Resources</div>
-            <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects">Infrastructure</div>
-            <div id="mega-projects-tab" class="projects-subtab hidden" data-subtab="mega-projects">Mega</div>
-            <div id="story-projects-tab" class="projects-subtab hidden" data-subtab="story-projects">Story</div>
+            <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects">Resources<span id="resources-projects-alert" class="unlock-alert">!</span></div>
+            <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects">Infrastructure<span id="infrastructure-projects-alert" class="unlock-alert">!</span></div>
+            <div id="mega-projects-tab" class="projects-subtab hidden" data-subtab="mega-projects">Mega<span id="mega-projects-alert" class="unlock-alert">!</span></div>
+            <div id="story-projects-tab" class="projects-subtab hidden" data-subtab="story-projects">Story<span id="story-projects-alert" class="unlock-alert">!</span></div>
           </div>
           <div class="projects-subtab-content-wrapper">
             <div id="resources-projects" class="projects-subtab-content active">
@@ -498,6 +498,9 @@
           <label style="display:block;margin-bottom:8px;">
             <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
           </label>
+          <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
+          </label>
       </div>
     </div>
 
@@ -544,12 +547,17 @@
     // Add event listeners to all tab buttons
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function () {
-            // Check if the tab is hidden before trying to activate
-             if (!this.classList.contains('hidden')) {
+            if (!this.classList.contains('hidden')) {
                   activateTab(this.dataset.tab);
-             } else {
+                  if (this.dataset.tab === 'buildings' && typeof markBuildingsViewed === 'function') {
+                      markBuildingsViewed();
+                  }
+                  if (this.dataset.tab === 'special-projects' && typeof markProjectsViewed === 'function') {
+                      markProjectsViewed();
+                  }
+            } else {
                  console.log(`Tab ${this.dataset.tab} is hidden and cannot be clicked.`);
-             }
+            }
         });
     });
 
@@ -595,6 +603,16 @@
         silenceToggle.addEventListener('change', () => {
             gameSettings.silenceSolisAlert = silenceToggle.checked;
             updateHopeAlert();
+        });
+    }
+
+    const unlockToggle = document.getElementById('unlock-alert-toggle');
+    if (unlockToggle) {
+        unlockToggle.checked = gameSettings.silenceUnlockAlert;
+        unlockToggle.addEventListener('change', () => {
+            gameSettings.silenceUnlockAlert = unlockToggle.checked;
+            if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
+            if (typeof updateProjectAlert === 'function') updateProjectAlert();
         });
     }
 

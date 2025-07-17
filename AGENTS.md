@@ -136,6 +136,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Resource disposal projects can now disable exports below a user-set temperature threshold when Atmospheric Monitoring is researched.
 - Workers tooltip now shows the colonist worker ratio and lists assignments per building sorted by usage.
 - Demo branch ends after chapter6.3b with a system pop-up instead of unlocking Callisto.
+- Buildings and special projects now show an exclamation mark when first unlocked. Alerts clear on visiting the relevant tab or subtab and can be disabled in settings.
 - Project cards can be collapsed via the title to hide details except automation options.
 - Collapsing a project card now keeps its title aligned on the left.
 - Save screen includes a Pause button to stop game updates.

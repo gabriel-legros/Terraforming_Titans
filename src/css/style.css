@@ -207,6 +207,13 @@ body {
     margin-left: 4px;
 }
 
+.unlock-alert {
+    color: red;
+    font-weight: bold;
+    display: none;
+    margin-left: 4px;
+}
+
 .journal.collapsed {
     display: none;
 }

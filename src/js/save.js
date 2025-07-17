@@ -119,6 +119,9 @@ function loadGame(slotOrCustomString) {
         }
       }
       createBuildingButtons(buildings);
+      if (typeof initializeBuildingAlerts === 'function') {
+        initializeBuildingAlerts();
+      }
   
       // Restore colonies
         if (gameState.colonies) {
@@ -231,6 +234,10 @@ function loadGame(slotOrCustomString) {
       const milestoneToggle = document.getElementById('milestone-silence-toggle');
       if(milestoneToggle){
         milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
+      }
+      const unlockToggle = document.getElementById('unlock-alert-toggle');
+      if(unlockToggle){
+        unlockToggle.checked = gameSettings.silenceUnlockAlert;
       }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;

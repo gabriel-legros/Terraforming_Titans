@@ -15,6 +15,7 @@ class Project extends EffectableEntity {
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
+    this.alertedWhenUnlocked = this.unlocked ? true : false;
   }
 
   initializeFromConfig(config, name) {
@@ -311,7 +312,14 @@ class Project extends EffectableEntity {
   }
 
   enable() {
+    const first = !this.unlocked;
     this.unlocked = true;
+    if (first && !this.alertedWhenUnlocked) {
+      const cat = this.category || 'resources';
+      if (typeof registerProjectUnlockAlert === 'function') {
+        registerProjectUnlockAlert(`${cat}-projects`);
+      }
+    }
   }
 
 
@@ -331,6 +339,7 @@ class Project extends EffectableEntity {
       pendingResourceGains: this.pendingResourceGains || [],
       autoStart: this.autoStart,
       shownStorySteps: Array.from(this.shownStorySteps),
+      alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
   }
 
@@ -348,6 +357,7 @@ class Project extends EffectableEntity {
     this.effects = [];
     this.autoStart = state.autoStart;
     this.shownStorySteps = new Set(state.shownStorySteps || []);
+    this.alertedWhenUnlocked = state.alertedWhenUnlocked || false;
     if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
       this.applyCompletionEffect();
     }
@@ -503,6 +513,9 @@ class ProjectManager extends EffectableEntity {
     }
     if (typeof renderProjects === 'function') {
       renderProjects();
+    }
+    if (typeof initializeProjectAlerts === 'function') {
+      initializeProjectAlerts();
     }
   }
 }

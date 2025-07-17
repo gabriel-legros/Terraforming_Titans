@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show the content of the selected subtab
         document.getElementById(category).classList.add('active');
+        if (typeof markProjectSubtabViewed === 'function') {
+          markProjectSubtabViewed(category);
+        }
     });
   });
   updateStoryProjectsVisibility();
@@ -702,6 +705,75 @@ function updateMegaProjectsVisibility() {
 function activateProjectSubtab(subtabId) {
   activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
 }
+
+let projectTabAlertNeeded = false;
+const projectSubtabAlerts = {
+  'resources-projects': false,
+  'infrastructure-projects': false,
+  'mega-projects': false,
+  'story-projects': false,
+};
+
+function registerProjectUnlockAlert(subtabId) {
+  projectTabAlertNeeded = true;
+  projectSubtabAlerts[subtabId] = true;
+  updateProjectAlert();
+}
+
+function updateProjectAlert() {
+  const alertEl = document.getElementById('projects-alert');
+  if (alertEl) {
+    const display = (!gameSettings.silenceUnlockAlert && projectTabAlertNeeded) ? 'inline' : 'none';
+    alertEl.style.display = display;
+  }
+  for (const key in projectSubtabAlerts) {
+    const el = document.getElementById(`${key}-alert`);
+    if (el) {
+      const display = (!gameSettings.silenceUnlockAlert && projectSubtabAlerts[key]) ? 'inline' : 'none';
+      el.style.display = display;
+    }
+  }
+}
+
+function markProjectsViewed() {
+  projectTabAlertNeeded = false;
+  updateProjectAlert();
+}
+
+function markProjectSubtabViewed(subtabId) {
+  projectSubtabAlerts[subtabId] = false;
+  for (const name in projectManager.projects) {
+    const p = projectManager.projects[name];
+    const cat = p.category || 'resources';
+    const id = `${cat}-projects`;
+    if (id === subtabId && p.unlocked) {
+      p.alertedWhenUnlocked = true;
+    }
+  }
+  if (Object.values(projectSubtabAlerts).every(v => !v)) {
+    projectTabAlertNeeded = false;
+  }
+  updateProjectAlert();
+}
+
+function initializeProjectAlerts() {
+  projectTabAlertNeeded = false;
+  for (const k in projectSubtabAlerts) projectSubtabAlerts[k] = false;
+  for (const name in projectManager.projects) {
+    const p = projectManager.projects[name];
+    if (p.unlocked && !p.alertedWhenUnlocked) {
+      projectTabAlertNeeded = true;
+      const cat = p.category || 'resources';
+      projectSubtabAlerts[`${cat}-projects`] = true;
+    }
+  }
+  updateProjectAlert();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { registerProjectUnlockAlert, updateProjectAlert, initializeProjectAlerts, markProjectSubtabViewed, markProjectsViewed };
+}
+
 
 function toggleProjectCollapse(projectCard) {
   projectCard.classList.toggle('collapsed');
