@@ -1261,6 +1261,12 @@ progressData.chapters.push(
     id: "chapter6.3c",
     type: "system-pop-up",
     chapter: 6,
+    //narrative : "Complete the terraforming of Titan to continue",
+    //
+    //objectives: [{
+      //type: 'terraforming',
+      //terraformingParameter : 'complete',
+    //}],
     parameters: {
       title: "Demo Complete",
       text: "Thank you very much for playing the demo for my game.  The complete game will have many more story planets, a few more prestige systems, a random planet generator, and challenge planets.  You can expect megastructures and more sci-fi references.  This story cannot end without humanity dealing with hazardous biomass after all.  \n Signed, Thratur, terraforming.titans@gmail.com",
@@ -1275,6 +1281,7 @@ progressData.chapters.push(
     type: "journal",
     chapter: 6,
     narrative: "ERROR : MTC not responding.  Humanity's long-term survival requires expansion.  New terraforming target designated : Callisto.  Travel to Callisto to continue.",
+    //prerequisites: ["chapter6.3c"],
     prerequisites: ["impossible"],
     objectives: [
       {
