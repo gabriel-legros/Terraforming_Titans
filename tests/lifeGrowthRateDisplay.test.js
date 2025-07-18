@@ -52,6 +52,6 @@ describe('life growth rate display', () => {
     const valueSpan = dom.window.document.getElementById('growth-rate-tropical-value');
     const tooltip = dom.window.document.getElementById('growth-rate-tropical-tooltip');
     expect(valueSpan.textContent).toBe('0');
-    expect(tooltip.title).toContain('Moisture: x0');
+    expect(tooltip.title).toContain('Liquid Water: x0');
   });
 });
