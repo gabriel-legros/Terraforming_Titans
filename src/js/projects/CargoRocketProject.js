@@ -128,7 +128,7 @@ class CargoRocketProject extends Project {
     console.log('Getting one time cargo rocket');
     this.pendingResourceGains = effect.pendingResourceGains;
     this.isActive = true;
-    this.remainingTime = 30000;
+    this.remainingTime = 20000;
 
     // Update the visible entered amount in the resource selection UI
     this.pendingResourceGains.forEach(({ resource, quantity }) => {
