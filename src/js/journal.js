@@ -13,7 +13,8 @@ let journalUserScrolling = false;
 let journalChapterIndex = 0;
 
 if (typeof globalThis.requestAnimationFrame === 'undefined') {
-  globalThis.requestAnimationFrame = cb => setTimeout(cb, 16);
+  globalThis.requestAnimationFrame = cb =>
+    setTimeout(() => cb(typeof performance !== 'undefined' ? performance.now() : Date.now()), 16);
 }
 if (typeof globalThis.cancelAnimationFrame === 'undefined') {
   globalThis.cancelAnimationFrame = id => clearTimeout(id);
