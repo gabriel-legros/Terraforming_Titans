@@ -145,3 +145,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Pause button now sets game speed to 0 so time does not advance when paused.
 - Building subtab alerts now clear when switching subtabs.
 - A grey "PAUSED" alert appears in the warning area whenever the game is paused.
+- Adapted fission power now doubles reactor water usage.
