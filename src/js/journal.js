@@ -12,6 +12,13 @@ let journalCurrentEventId = null; // id of the event whose text is typing
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 
+if (typeof globalThis.requestAnimationFrame === 'undefined') {
+  globalThis.requestAnimationFrame = cb => setTimeout(cb, 16);
+}
+if (typeof globalThis.cancelAnimationFrame === 'undefined') {
+  globalThis.cancelAnimationFrame = id => clearTimeout(id);
+}
+
 function joinLines(text) {
   return Array.isArray(text) ? text.join('\n') : text;
 }
