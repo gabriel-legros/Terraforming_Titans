@@ -110,7 +110,7 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="temp-multiplier-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Moisture</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Liquid Water</td>
                         <td id="moisture-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="moisture-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="moisture-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -625,7 +625,7 @@ function updateLifeStatusTable() {
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if(valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if(tooltipSpan) {
-                tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nMoisture: x${formatNumber(waterMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
+                tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nLiquid Water: x${formatNumber(waterMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
             }
         }
     });
