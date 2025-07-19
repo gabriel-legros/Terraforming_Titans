@@ -71,6 +71,7 @@ function updateResearchButtonText(button, researchItem, visible) {
         button.style.color = 'red';
     } else {
         // Otherwise, set to default color
+        button.disabled = false;
         button.style.color = 'inherit';
     }
 
