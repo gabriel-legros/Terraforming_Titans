@@ -59,6 +59,28 @@ function getTemperatureUnit() {
     return parts.join(' ');
   }
 
+function formatDuration(seconds) {
+  if (seconds >= 365 * 24 * 3600) {
+    return '>1 year';
+  }
+  if (seconds >= 24 * 3600) {
+    const days = Math.floor(seconds / (24 * 3600));
+    const hours = Math.floor((seconds % (24 * 3600)) / 3600);
+    return `${days}d ${hours}h`;
+  }
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}m ${secs}s`;
+  }
+  return `${Math.floor(seconds)}s`;
+}
+
 function formatBuildingCount(value) {
   if (Math.abs(value) > 1e6) {
     return formatNumber(value, false, 3);
@@ -74,5 +96,6 @@ function formatBuildingCount(value) {
       toDisplayTemperature,
       getTemperatureUnit,
       formatPlayTime,
+      formatDuration,
     };
   }
