@@ -252,12 +252,12 @@ function moveProject(projectName, direction, shiftKey = false) {
     const container = projectElements[projectName].projectItem.parentElement;
     const projectElement = projectElements[projectName].projectItem;
 
-    if (toIndex === 0) {
+    if (toIndexFull === 0) {
         container.insertBefore(projectElement, container.querySelector('.project-card'));
-    } else if (toIndex === categoryProjects.length - 1) {
+    } else if (toIndexFull === categoryProjects.length - 1) {
         container.appendChild(projectElement);
     } else {
-        const sibling = projectElements[categoryProjects[toIndex].name].projectItem;
+        const sibling = projectElements[categoryProjects[toIndexFull].name].projectItem;
         if (direction === 'up') {
             container.insertBefore(projectElement, sibling);
         } else {
