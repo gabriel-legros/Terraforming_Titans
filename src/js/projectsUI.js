@@ -227,31 +227,26 @@ function moveProject(projectName, direction, shiftKey = false) {
     const project = projectManager.projects[projectName];
     const category = project.category || 'general';
     const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
-    const fromIndex = categoryProjects.findIndex(p => p.name === projectName);
+    const unlockedIndexes = [];
+    categoryProjects.forEach((p, idx) => { if (p.unlocked) unlockedIndexes.push(idx); });
+    const fromIndexFull = categoryProjects.findIndex(p => p.name === projectName);
+    const fromUnlockedPos = unlockedIndexes.indexOf(fromIndexFull);
 
-    if (fromIndex === -1) return;
+    if (fromUnlockedPos === -1) return;
 
-    let toIndex = fromIndex;
-
+    let targetUnlockedPos = fromUnlockedPos;
     if (shiftKey) {
-        if (direction === 'up') {
-            toIndex = 0;
-        } else {
-            toIndex = categoryProjects.length - 1;
-        }
+        targetUnlockedPos = direction === 'up' ? 0 : unlockedIndexes.length - 1;
     } else {
-        if (direction === 'up') {
-            toIndex = fromIndex - 1;
-        } else {
-            toIndex = fromIndex + 1;
-        }
+        targetUnlockedPos = direction === 'up' ? fromUnlockedPos - 1 : fromUnlockedPos + 1;
     }
 
-    if (toIndex < 0 || toIndex >= categoryProjects.length || toIndex === fromIndex) {
+    if (targetUnlockedPos < 0 || targetUnlockedPos >= unlockedIndexes.length || targetUnlockedPos === fromUnlockedPos) {
         return;
     }
 
-    projectManager.reorderProject(fromIndex, toIndex, category);
+    const toIndexFull = unlockedIndexes[targetUnlockedPos];
+    projectManager.reorderProject(fromIndexFull, toIndexFull, category);
 
     // Manually reorder the DOM to avoid full re-render
     const container = projectElements[projectName].projectItem.parentElement;
@@ -559,14 +554,15 @@ function updateProjectUI(projectName) {
 
   // Disable/enable reorder buttons
   const category = project.category || 'general';
-  const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+  const categoryProjectsAll = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
+  const categoryProjects = categoryProjectsAll.filter(p => p.unlocked);
   const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
   if (elements.upButton) {
-    elements.upButton.classList.toggle('disabled', currentIndex === 0);
+    elements.upButton.classList.toggle('disabled', currentIndex <= 0);
   }
   if (elements.downButton) {
-    elements.downButton.classList.toggle('disabled', currentIndex === categoryProjects.length - 1);
+    elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
   }
 }
 
