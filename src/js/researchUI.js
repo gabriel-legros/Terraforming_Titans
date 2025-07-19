@@ -16,6 +16,9 @@ function formatResearchCost(cost) {
 function updateAllResearchButtons(researchData) {
     const researchTabs = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
     researchTabs.forEach((tab) => {
+        const visibleIds = researchManager.getVisibleResearchIdsByCategory
+            ? researchManager.getVisibleResearchIdsByCategory(tab)
+            : new Set(researchData[tab].map(r => r.id));
         researchData[tab].forEach((researchItem) => {
             const button = document.getElementById(`research-${researchItem.id}`);
             if (button) {
@@ -25,28 +28,44 @@ function updateAllResearchButtons(researchData) {
                 if (researchContainer) {
                     if (researchItem.isResearched) {
                         researchContainer.classList.add('completed-research');
-                        // Hide or show the completed research based on the toggle state
                         researchContainer.classList.toggle('hidden', completedResearchHidden);
                     } else {
                         researchContainer.classList.remove('completed-research');
                         researchContainer.classList.remove('hidden');
                     }
+                    const costEl = researchContainer.querySelector('.research-cost');
+                    const descEl = researchContainer.querySelector('.research-description');
+                    const isVisible = visibleIds.has(researchItem.id);
+                    updateResearchButtonText(button, researchItem, isVisible);
+                    if (costEl && descEl) {
+                        if (isVisible) {
+                            costEl.textContent = `Cost: ${formatResearchCost(researchItem.cost)}`;
+                            descEl.textContent = researchItem.description;
+                        } else {
+                            costEl.textContent = 'Cost: ???';
+                            descEl.textContent = '???';
+                        }
+                    }
+                } else {
+                    const isVisible = visibleIds.has(researchItem.id);
+                    updateResearchButtonText(button, researchItem, isVisible);
                 }
-
-                updateResearchButtonText(button, researchItem);
             }
         });
     });
 }
 
-function updateResearchButtonText(button, researchItem) {
-    let buttonText = `${researchItem.name}`;
+function updateResearchButtonText(button, researchItem, visible) {
+    let buttonText = visible ? `${researchItem.name}` : '???';
 
     // Check if the research is already done
     if (researchItem.isResearched) {
         buttonText += ' - Researched';
         button.disabled = true; // Disable the button if the research is already done
         button.style.color = 'grey'; // Set the text color to grey when research is completed
+    } else if (!visible) {
+        button.disabled = true;
+        button.style.color = 'inherit';
     } else if (!canAffordResearch(researchItem)) {
         // If research can't be afforded, set color to red
         button.style.color = 'red';
@@ -108,6 +127,9 @@ function loadResearchCategory(category) {
 
     // Load research items for the given category
     const researches = researchManager.getResearchesByCategory(category);
+    const visibleIds = researchManager.getVisibleResearchIdsByCategory
+        ? researchManager.getVisibleResearchIdsByCategory(category)
+        : new Set(researches.map(r => r.id));
     if (researches.length === 0) {
         researchListContainer.innerHTML = '<p>No research available.</p>';
         return;
@@ -134,20 +156,25 @@ function loadResearchCategory(category) {
         const researchButton = document.createElement('button');
         researchButton.classList.add('research-button');
         researchButton.id = `research-${research.id}`;
-        updateResearchButtonText(researchButton, research);
+        const isVisible = visibleIds.has(research.id);
+        updateResearchButtonText(researchButton, research, isVisible);
 
         researchButton.addEventListener('click', () => {
             researchManager.completeResearch(research.id);
-            updateAllResearchButtons(researchManager.researches);
+            updateResearchUI();
         });
 
         const researchDescription = document.createElement('p');
         researchDescription.classList.add('research-description');
-        researchDescription.textContent = research.description;
+        if (isVisible) {
+            researchDescription.textContent = research.description;
+        } else {
+            researchDescription.textContent = '???';
+        }
 
         const researchCost = document.createElement('p');
         researchCost.classList.add('research-cost');
-        researchCost.textContent = `Cost: ${formatResearchCost(research.cost)}`;
+        researchCost.textContent = isVisible ? `Cost: ${formatResearchCost(research.cost)}` : 'Cost: ???';
 
         // Append button, cost, and description to the research container
         researchContainer.appendChild(researchButton);
