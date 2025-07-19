@@ -29,8 +29,7 @@
 }
 
 .project-card.collapsed .card-body,
-.project-card.collapsed .progress-button-container,
-.project-card.collapsed .reorder-buttons {
+.project-card.collapsed .progress-button-container {
     display: none;
 }
 
