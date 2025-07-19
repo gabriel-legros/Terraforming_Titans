@@ -150,3 +150,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Research lists only reveal the three cheapest available items per category. Others show ??? until unlocked.
 - Terraforming calculations preserve provided surface and cross-section area values.
 - Collapsed project cards now keep their reorder arrows visible so special projects can be moved without expanding them.
+- Reorder arrows for special projects now ignore locked projects when determining movement limits.
