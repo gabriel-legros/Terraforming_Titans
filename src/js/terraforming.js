@@ -80,8 +80,12 @@ class Terraforming extends EffectableEntity{
     this.resources = resources;
     this.celestialParameters = celestialParameters;
     const radiusMeters = this.celestialParameters.radius * 1000;
-    this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
-    this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
+    if (!this.celestialParameters.surfaceArea) {
+        this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
+    }
+    if (!this.celestialParameters.crossSectionArea) {
+        this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
+    }
 
     this.lifeParameters = lifeParameters; // Load external life parameters
     this.zonalCoverageCache = {};

@@ -99,6 +99,20 @@ class Research {
       return this.researches[category] || [];
     }
 
+    // Return the IDs of researches that should be visible for a category.
+    // All completed researches stay visible along with the cheapest
+    // `limit` incomplete ones.
+    getVisibleResearchIdsByCategory(category, limit = 3) {
+      const researches = this.getResearchesByCategory(category);
+      const visible = new Set();
+      const unresearched = researches.filter(r => !r.isResearched);
+      unresearched.slice(0, limit).forEach(r => visible.add(r.id));
+      researches.forEach(r => {
+        if (r.isResearched) visible.add(r.id);
+      });
+      return visible;
+    }
+
     calculateResearchTotalCost(research) {
       return Object.values(research.cost || {}).reduce((sum, val) => sum + val, 0);
     }
