@@ -146,3 +146,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Building subtab alerts now clear when switching subtabs.
 - A grey "PAUSED" alert appears in the warning area whenever the game is paused.
 - Adapted fission power now doubles reactor water usage.
+- Resource tooltips show remaining time until cap or depletion based on current rates.

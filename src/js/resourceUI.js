@@ -245,6 +245,18 @@ function updateResourceRateDisplay(resource){
   if (tooltipElement) {
     let tooltipContent = '';
     tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
+    const netRate = resource.productionRate - resource.consumptionRate;
+    if (netRate > 0 && resource.hasCap) {
+      const time = (resource.cap - resource.value) / netRate;
+      if (time > 0) {
+        tooltipContent += `<div>Time to cap: ${formatDuration(time)}</div>`;
+      }
+    } else if (netRate < 0) {
+      const time = resource.value / Math.abs(netRate);
+      if (time > 0) {
+        tooltipContent += `<div>Time to empty: ${formatDuration(time)}</div>`;
+      }
+    }
 
     if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
       const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);

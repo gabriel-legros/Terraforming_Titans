@@ -10,6 +10,7 @@ describe('worker resource tooltip', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="resources-container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.formatNumber = numbers.formatNumber;
+    ctx.formatDuration = numbers.formatDuration;
     ctx.oreScanner = { scanData: {} };
     ctx.populationModule = { getEffectiveWorkerRatio: () => 0.6 };
     ctx.resources = { colony: { androids: { value: 5 } } };
