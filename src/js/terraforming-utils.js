@@ -59,7 +59,7 @@ function calculateZonalCoverage(terraforming, zone, resourceType) {
   if (resourceType === 'dryIce' || resourceType === 'ice' || resourceType === 'hydrocarbonIce') {
     scale *= 100;
   } else if (resourceType === 'biomass') {
-    scale *= 1000;
+    scale *= 10000;
   }
 
   return estimateCoverageFn(zonalAmount, zoneArea, scale);
