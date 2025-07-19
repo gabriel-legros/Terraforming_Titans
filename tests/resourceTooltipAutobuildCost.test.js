@@ -11,6 +11,7 @@ describe('resource tooltip autobuild cost', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="resources-container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.formatNumber = numbers.formatNumber;
+    ctx.formatDuration = numbers.formatDuration;
     ctx.oreScanner = { scanData: {} };
 
     let code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'autobuild.js'), 'utf8');
