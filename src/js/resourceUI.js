@@ -248,14 +248,10 @@ function updateResourceRateDisplay(resource){
     const netRate = resource.productionRate - resource.consumptionRate;
     if (netRate > 0 && resource.hasCap) {
       const time = (resource.cap - resource.value) / netRate;
-      if (time > 0) {
-        tooltipContent += `<div>Time to cap: ${formatDuration(time)}</div>`;
-      }
+      tooltipContent += `<div>Time to cap: ${formatDuration(Math.max(time, 0))}</div>`;
     } else if (netRate < 0) {
       const time = resource.value / Math.abs(netRate);
-      if (time > 0) {
-        tooltipContent += `<div>Time to empty: ${formatDuration(time)}</div>`;
-      }
+      tooltipContent += `<div>Time to empty: ${formatDuration(Math.max(time, 0))}</div>`;
     }
 
     if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
