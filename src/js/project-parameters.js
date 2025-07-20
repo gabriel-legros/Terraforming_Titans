@@ -145,17 +145,17 @@ const projectParameters = {
     category : "infrastructure",
     cost: {
       colony: {
-        electronics : 1000,
-        components: 1000
+        electronics : 10,
+        components: 10
       }
     },
     duration: 120000,
-    description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  This project becomes more expensive each time it is completed.",
+    description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  The price scales with the number of ore mines constructed.",
     repeatable: true,
     maxRepeatCount: 100000,
     unlocked : false,
     attributes : {
-      costScaling : true,
+      costOreMineScaling : true,
       effectScaling : true,
       completionEffect: [
         {
@@ -164,7 +164,25 @@ const projectParameters = {
           effectId: 'deeper_mining',
           type: 'productionMultiplier',
           value: 1
-        }      
+        },
+        {
+          target: 'building',
+          targetId: 'oreMine',
+          effectId: 'deeper_mining_cost_metal',
+          type: 'resourceCostMultiplier',
+          resourceCategory: 'colony',
+          resourceId: 'metal',
+          value: 1
+        },
+        {
+          target: 'building',
+          targetId: 'oreMine',
+          effectId: 'deeper_mining_cost_components',
+          type: 'resourceCostMultiplier',
+          resourceCategory: 'colony',
+          resourceId: 'components',
+          value: 1
+        }
       ]
     }
   },

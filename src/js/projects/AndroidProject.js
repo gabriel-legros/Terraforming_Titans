@@ -28,8 +28,8 @@ class AndroidProject extends Project {
   }
 
   getAndroidSpeedMultiplier() {
-    const maxDeposits = currentPlanetParameters.resources.underground.ore.maxDeposits || 1;
-    return 1 + Math.sqrt(this.assignedAndroids / maxDeposits);
+    const mineCount = Math.max((buildings?.oreMine?.count || 0), 1);
+    return 1 + Math.sqrt(this.assignedAndroids / mineCount);
   }
 
   getBaseDuration() {
