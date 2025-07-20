@@ -170,6 +170,11 @@ class AndroidProject extends Project {
   }
 }
 
+// Expose constructor globally for browser usage
+if (typeof globalThis !== 'undefined') {
+  globalThis.AndroidProject = AndroidProject;
+}
+
 if (typeof module !== 'undefined') {
   module.exports = AndroidProject;
 }
