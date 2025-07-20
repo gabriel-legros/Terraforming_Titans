@@ -148,6 +148,13 @@ body {
     color: #333;
 }
 
+/* Separator for story project entries */
+#journal-entries hr.journal-entry-separator {
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 8px 0;
+}
+
 #current-objective {
     margin: 5px 0;
 }

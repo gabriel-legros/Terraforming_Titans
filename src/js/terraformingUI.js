@@ -250,7 +250,7 @@ function createTemperatureBox(row) {
             <th>Pressure (Pa)</th>
             <th>Delta (Pa)</th>
             <th>Target (Pa)</th>
-            <th>Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -258,13 +258,16 @@ function createTemperatureBox(row) {
   
     // Iterate through gases defined in the global resources to build the table structure
     for (const gas in resources.atmospheric) {
+        const hasTarget = terraformingGasTargets.hasOwnProperty(gas);
+        const statusClass = hasTarget ? 'status-cross' : '';
+        const statusIcon = hasTarget ? '✗' : '';
         innerHTML += `
           <tr>
             <td>${resources.atmospheric[gas].displayName}</td>
             <td><span id="${gas}-pressure">0.00</span></td>
             <td><span id="${gas}-delta">N/A</span></td>
             <td><span class='gas-range'>${getGasRangeString(gas)}</span></td>
-            <td><span id="${gas}-status" class="status-cross">✗</span></td>
+            <td><span id="${gas}-status" class="${statusClass}">${statusIcon}</span></td>
           </tr>
         `;
     }
@@ -341,7 +344,10 @@ function createTemperatureBox(row) {
         const statusElement = document.getElementById(`${gas}-status`);
         if (statusElement) {
             const target = terraformingGasTargets[gas];
-            if (target && currentGlobalPressurePa >= target.min && currentGlobalPressurePa <= target.max) {
+            if (!target) {
+                statusElement.textContent = '';
+                statusElement.classList.remove('status-check', 'status-cross');
+            } else if (currentGlobalPressurePa >= target.min && currentGlobalPressurePa <= target.max) {
                 statusElement.textContent = '✓';
                 statusElement.classList.add('status-check');
                 statusElement.classList.remove('status-cross');

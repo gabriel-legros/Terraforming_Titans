@@ -17,8 +17,8 @@ describe('atmosphere gas status icons', () => {
     ctx.DEFAULT_SURFACE_ALBEDO = physics.DEFAULT_SURFACE_ALBEDO;
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 
-    ctx.resources = { atmospheric: { o2: { displayName: 'O2', value: 0 } } };
-    ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };
+    ctx.resources = { atmospheric: { o2: { displayName: 'O2', value: 0 }, atmosphericWater: { displayName: 'H2O', value: 0 } } };
+    ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 }, atmosphericWater: { initialValue: 0 } } } };
     ctx.terraformingGasTargets = { o2: { min: 0, max: 0 } };
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
@@ -55,5 +55,10 @@ describe('atmosphere gas status icons', () => {
     ctx.updateAtmosphereBox();
     expect(statusEl.textContent).toBe('✗');
     expect(statusEl.classList.contains('status-cross')).toBe(true);
+
+    const waterStatus = dom.window.document.getElementById('atmosphericWater-status');
+    expect(waterStatus.textContent).toBe('');
+    expect(waterStatus.classList.contains('status-check')).toBe(false);
+    expect(waterStatus.classList.contains('status-cross')).toBe(false);
   });
 });
