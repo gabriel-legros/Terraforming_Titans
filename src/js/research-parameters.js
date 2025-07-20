@@ -334,14 +334,30 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'androidHousing',
-            type: 'enable'
-          },
+        type: 'enable'
+      },
+      {
+        target: 'resource',
+        resourceType : 'colony',
+        targetId: 'androids',
+        type: 'enable'
+      },
+      ],
+      },
+      {
+        id: 'android_assisted_mining',
+        name: 'Android-assisted deeper mining',
+        description: 'Allows assigning androids to the Deeper mining project for massive speed boosts.',
+        cost: { research: 2000000 },
+        prerequisites: ['deep_mine','android_factory'],
+        effects: [
           {
-            target: 'resource',
-            resourceType : 'colony',
-            targetId: 'androids',
-            type: 'enable'
-          },
+            target: 'project',
+            targetId: 'deeperMining',
+            type: 'booleanFlag',
+            flagId: 'androidAssist',
+            value: true
+          }
         ],
       },
       {

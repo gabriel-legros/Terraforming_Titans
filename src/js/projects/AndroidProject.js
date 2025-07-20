@@ -1,0 +1,171 @@
+class AndroidProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.assignedAndroids = 0;
+    this.autoAssignAndroids = false;
+    this.assignmentMultiplier = 1;
+  }
+
+  assignAndroids(count) {
+    const available = Math.floor(resources.colony.androids.value);
+    this.assignedAndroids = this.assignedAndroids || 0;
+    const adjusted = Math.max(-this.assignedAndroids, Math.min(count, available));
+    this.assignedAndroids += adjusted;
+    resources.colony.androids.value -= adjusted;
+  }
+
+  getAndroidSpeedMultiplier() {
+    const maxDeposits = currentPlanetParameters.resources.underground.ore.maxDeposits || 1;
+    if (this.assignedAndroids <= 0) return 0;
+    return Math.sqrt(this.assignedAndroids / maxDeposits);
+  }
+
+  getBaseDuration() {
+    if (this.isBooleanFlagSet('androidAssist')) {
+      const multiplier = this.getAndroidSpeedMultiplier();
+      if (multiplier > 0) {
+        return this.duration / multiplier;
+      }
+    }
+    return super.getBaseDuration();
+  }
+
+  canStart() {
+    if (this.isBooleanFlagSet('androidAssist') && this.assignedAndroids === 0) {
+      return false;
+    }
+    return super.canStart();
+  }
+
+  createAndroidAssignmentUI(container) {
+    const sectionContainer = document.createElement('div');
+    sectionContainer.classList.add('project-section-container');
+
+    const title = document.createElement('h4');
+    title.classList.add('section-title');
+    title.textContent = 'Androids';
+    sectionContainer.appendChild(title);
+
+    const assignmentContainer = document.createElement('div');
+    assignmentContainer.classList.add('spaceship-assignment-container');
+
+    const assignedAndAvailableContainer = document.createElement('div');
+    assignedAndAvailableContainer.classList.add('assigned-and-available-container');
+
+    const assignedContainer = document.createElement('div');
+    assignedContainer.classList.add('assigned-ships-container');
+    const assignedLabel = document.createElement('span');
+    assignedLabel.textContent = 'Assigned:';
+    const assignedDisplay = document.createElement('span');
+    assignedDisplay.id = `${this.name}-assigned-androids`;
+    assignedContainer.append(assignedLabel, assignedDisplay);
+
+    const availableContainer = document.createElement('div');
+    availableContainer.classList.add('available-ships-container');
+    const availableLabel = document.createElement('span');
+    availableLabel.textContent = 'Available:';
+    const availableDisplay = document.createElement('span');
+    availableDisplay.id = `${this.name}-available-androids`;
+    availableContainer.append(availableLabel, availableDisplay);
+
+    assignedAndAvailableContainer.append(assignedContainer, availableContainer);
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('buttons-container');
+
+    const createButton = (text, onClick, parent = buttonsContainer) => {
+      const button = document.createElement('button');
+      button.textContent = text;
+      button.addEventListener('click', onClick);
+      parent.appendChild(button);
+      return button;
+    };
+
+    const mainButtons = document.createElement('div');
+    mainButtons.classList.add('main-buttons');
+    buttonsContainer.appendChild(mainButtons);
+
+    createButton('0', () => this.assignAndroids(-this.assignedAndroids), mainButtons);
+    const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(-this.assignmentMultiplier), mainButtons);
+    const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(this.assignmentMultiplier), mainButtons);
+    createButton('Max', () => this.assignAndroids(Math.floor(resources.colony.androids.value)), mainButtons);
+
+    const multiplierContainer = document.createElement('div');
+    multiplierContainer.classList.add('multiplier-container');
+    buttonsContainer.appendChild(multiplierContainer);
+
+    createButton('/10', () => {
+      this.assignmentMultiplier = Math.max(1, this.assignmentMultiplier / 10);
+      minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
+    }, multiplierContainer);
+    createButton('x10', () => {
+      this.assignmentMultiplier *= 10;
+      minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
+    }, multiplierContainer);
+
+    const speedDisplay = document.createElement('div');
+    speedDisplay.id = `${this.name}-android-speed`;
+    speedDisplay.title = 'sqrt(androids assigned / ore veins max deposits)';
+    buttonsContainer.appendChild(speedDisplay);
+
+    assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer);
+    sectionContainer.appendChild(assignmentContainer);
+    container.appendChild(sectionContainer);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      assignedAndroidsDisplay: assignedDisplay,
+      availableAndroidsDisplay: availableDisplay,
+      androidSpeedDisplay: speedDisplay,
+    };
+  }
+
+  renderUI(container) {
+    if (this.isBooleanFlagSet('androidAssist')) {
+      this.createAndroidAssignmentUI(container);
+    }
+  }
+
+  updateUI() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+    if (elements.assignedAndroidsDisplay) {
+      elements.assignedAndroidsDisplay.textContent = formatBigInteger(this.assignedAndroids);
+    }
+    if (elements.availableAndroidsDisplay) {
+      elements.availableAndroidsDisplay.textContent = formatBigInteger(Math.floor(resources.colony.androids.value));
+    }
+    if (elements.androidSpeedDisplay) {
+      const mult = this.getAndroidSpeedMultiplier();
+      elements.androidSpeedDisplay.textContent = `Speed x${formatNumber(mult, true)}`;
+    }
+  }
+
+  autoAssign() {
+    if (!this.autoAssignAndroids) return;
+    const available = Math.floor(resources.colony.androids.value);
+    if (available > 0) {
+      this.assignAndroids(available);
+    }
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      assignedAndroids: this.assignedAndroids,
+      autoAssignAndroids: this.autoAssignAndroids,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.assignedAndroids = state.assignedAndroids;
+    this.autoAssignAndroids = state.autoAssignAndroids;
+  }
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = AndroidProject;
+}
