@@ -60,5 +60,6 @@ describe('short duration progress bar', () => {
     const btn = ctx.projectElements.test.progressButton;
     expect(btn.style.background.includes('linear-gradient')).toBe(false);
     expect(btn.style.background).toBe('rgb(76, 175, 80)');
+    expect(btn.textContent.includes('%')).toBe(false);
   });
 });
