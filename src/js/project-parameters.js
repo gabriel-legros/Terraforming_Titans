@@ -140,7 +140,7 @@ const projectParameters = {
     }
   },
   deeperMining: {
-    type: 'Project',
+    type: 'AndroidProject',
     name: "Deeper mining",
     category : "infrastructure",
     cost: {
@@ -152,7 +152,7 @@ const projectParameters = {
     duration: 120000,
     description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  This project becomes more expensive each time it is completed.",
     repeatable: true,
-    maxRepeatCount: 1000,
+    maxRepeatCount: 100000,
     unlocked : false,
     attributes : {
       costScaling : true,
