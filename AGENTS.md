@@ -154,3 +154,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Atmosphere box shows a green check or red X for each gas requirement.
 - Temperature unit preference now persists when traveling to another planet.
 - Metal export projects now cap each export at max(terraformed planets, 1) billion metal.
+- Story project journal entries now include a separator line and prefix showing progress.
