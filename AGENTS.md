@@ -158,3 +158,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Story project journal entries now include a separator line and prefix showing progress.
 - Deeper mining supports android assignments for massive speed boosts.
 - Android assignment UI initializes hidden and shows once the upgrade is researched.
+- Android project speed multiplier now adds 1 to the calculation and updates active progress bars immediately. The display reads "Deepening speed boost" beside the controls.

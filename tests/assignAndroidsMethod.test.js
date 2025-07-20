@@ -67,8 +67,8 @@ describe('AndroidProject.assignAndroids', () => {
     project.booleanFlags.add('androidAssist');
     project.assignAndroids(1_000_000_000);
     const mult = project.getAndroidSpeedMultiplier();
-    expect(mult).toBeCloseTo(1000);
+    expect(mult).toBeCloseTo(1001);
     const duration = project.getBaseDuration();
-    expect(duration).toBeCloseTo(0.1);
+    expect(duration).toBeCloseTo(0.0999);
   });
 });

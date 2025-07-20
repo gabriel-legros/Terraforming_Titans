@@ -6,24 +6,36 @@ class AndroidProject extends Project {
     this.assignmentMultiplier = 1;
   }
 
+  adjustActiveDuration() {
+    if (this.isActive) {
+      const newDuration = this.getEffectiveDuration();
+      const progressRatio = (this.startingDuration - this.remainingTime) / this.startingDuration;
+      this.startingDuration = newDuration;
+      this.remainingTime = newDuration * (1 - progressRatio);
+    }
+  }
+
   assignAndroids(count) {
     const available = Math.floor(resources.colony.androids.value);
     this.assignedAndroids = this.assignedAndroids || 0;
     const adjusted = Math.max(-this.assignedAndroids, Math.min(count, available));
     this.assignedAndroids += adjusted;
     resources.colony.androids.value -= adjusted;
+    this.adjustActiveDuration();
+    if (typeof updateProjectUI === 'function') {
+      updateProjectUI(this.name);
+    }
   }
 
   getAndroidSpeedMultiplier() {
     const maxDeposits = currentPlanetParameters.resources.underground.ore.maxDeposits || 1;
-    if (this.assignedAndroids <= 0) return 0;
-    return Math.sqrt(this.assignedAndroids / maxDeposits);
+    return 1 + Math.sqrt(this.assignedAndroids / maxDeposits);
   }
 
   getBaseDuration() {
     if (this.isBooleanFlagSet('androidAssist')) {
       const multiplier = this.getAndroidSpeedMultiplier();
-      if (multiplier > 0) {
+      if (multiplier > 1) {
         return this.duration / multiplier;
       }
     }
@@ -107,8 +119,8 @@ class AndroidProject extends Project {
 
     const speedDisplay = document.createElement('div');
     speedDisplay.id = `${this.name}-android-speed`;
-    speedDisplay.title = 'sqrt(androids assigned / ore veins max deposits)';
-    buttonsContainer.appendChild(speedDisplay);
+    speedDisplay.title = '1 + sqrt(androids assigned / ore veins max deposits)';
+    multiplierContainer.appendChild(speedDisplay);
 
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer);
     sectionContainer.appendChild(assignmentContainer);
@@ -143,7 +155,7 @@ class AndroidProject extends Project {
     }
     if (elements.androidSpeedDisplay) {
       const mult = this.getAndroidSpeedMultiplier();
-      elements.androidSpeedDisplay.textContent = `Speed x${formatNumber(mult, true)}`;
+      elements.androidSpeedDisplay.textContent = `Deepening speed boost x${formatNumber(mult, true)}`;
     }
   }
 
