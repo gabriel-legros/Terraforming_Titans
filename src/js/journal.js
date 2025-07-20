@@ -344,7 +344,13 @@ function getJournalTextFromSource(source) {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
     const steps = proj && proj.attributes && (proj.attributes.storyStepLines || proj.attributes.storySteps);
     if (steps && steps[source.step] !== undefined) {
-      return joinLines(steps[source.step]);
+      let text = joinLines(steps[source.step]);
+      if (proj && proj.name) {
+        const total = Array.isArray(proj.attributes?.storySteps) ? proj.attributes.storySteps.length : (Array.isArray(proj.attributes?.storyStepLines) ? proj.attributes.storyStepLines.length : steps.length);
+        const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
+        text = `${proj.name} ${stepNum}/${total}: ${text}`;
+      }
+      return text;
     }
   }
   return '';

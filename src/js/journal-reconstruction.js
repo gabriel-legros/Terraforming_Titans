@@ -42,10 +42,15 @@
               const steps = storyProjects[obj.projectId]?.attributes?.storyStepLines || storyProjects[obj.projectId]?.attributes?.storySteps || [];
               const needed = obj.repeatCount || steps.length;
               const count = Math.min(repeat, needed, steps.length);
+              const projName = storyProjects[obj.projectId]?.name;
+              const total = storyProjects[obj.projectId]?.attributes?.storySteps?.length || steps.length;
               for (let i = 0; i < count; i++) {
                 const stepText = steps[i];
                 if (stepText != null) {
-                  const textStr = joinLines(stepText);
+                  let textStr = joinLines(stepText);
+                  if (projName) {
+                    textStr = `${projName} ${i + 1}/${total}: ${textStr}`;
+                  }
                   entries.push(textStr);
                   sources.push({ type: 'project', id: obj.projectId, step: i });
                   historyEntries.push(textStr);

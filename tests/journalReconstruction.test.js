@@ -12,11 +12,11 @@ describe('journal reconstruction from sources', () => {
     const ctx = dom.getInternalVMContext();
     ctx.progressData = {
       chapters: [ { id: 'c1', type: 'journal', narrative: 'alpha' } ],
-      storyProjects: { p1: { attributes: { storySteps: ['step1'] } } }
+      storyProjects: { p1: { name: 'P1', attributes: { storySteps: ['step1'] } } }
     };
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'journal.js'), 'utf8');
     vm.runInContext(code, ctx);
     const res = ctx.mapSourcesToText([{type:'chapter', id:'c1'}, {type:'project', id:'p1', step:0}]);
-    expect(res).toEqual(['alpha', 'step1']);
+    expect(res).toEqual(['alpha', 'P1 1/1: step1']);
   });
 });
