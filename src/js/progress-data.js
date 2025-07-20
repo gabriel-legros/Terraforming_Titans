@@ -1269,7 +1269,7 @@ progressData.chapters.push(
     //}],
     parameters: {
       title: "Demo Complete",
-      text: "Thank you very much for playing the demo for my game.  The complete game will have many more story planets, a few more prestige systems, a random planet generator, and challenge planets.  You can expect megastructures and more sci-fi references.  This story cannot end without humanity dealing with hazardous biomass after all.  \n Signed, Thratur, terraforming.titans@gmail.com",
+      text: "Thank you very much for playing the demo for my game.  The complete game will have many more story planets, a few more prestige systems, a random planet generator, and challenge planets.  You can expect megastructures and more sci-fi references.  This story cannot end without humanity dealing with hazardous biomass after all.  \n Signed, Thratur",
       buttonText: "OK"
     },
     prerequisites: ["chapter6.3b"],
