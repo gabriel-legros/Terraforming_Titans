@@ -160,3 +160,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Android assignment UI initializes hidden and shows once the upgrade is researched.
 - Android project speed multiplier now adds 1 to the calculation and updates active progress bars immediately. The display reads "Deepening speed boost" beside the controls.
 - Deeper mining costs now scale with ore mines built and also increases ore mine construction costs. Android boost scales with built mines instead of deposits.
+- Deeper mining now uses a dedicated class `DeeperMiningProject`.
