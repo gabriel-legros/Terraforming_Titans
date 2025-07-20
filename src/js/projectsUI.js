@@ -510,7 +510,6 @@ function updateProjectUI(projectName) {
 
   if (typeof AndroidProject !== 'undefined' &&
       project instanceof AndroidProject &&
-      project.isBooleanFlagSet('androidAssist') &&
       !elements.assignedAndroidsDisplay &&
       elements.cardBody) {
     project.createAndroidAssignmentUI(elements.cardBody);
