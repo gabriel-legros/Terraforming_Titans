@@ -37,12 +37,15 @@ describe('AndroidProject UI', () => {
 
     ctx.initializeProjectsUI();
     ctx.createProjectItem(project);
-    ctx.updateProjectUI('deeperMining');
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    expect(ctx.projectElements.deeperMining.assignedAndroidsDisplay).toBeDefined();
+    // UI should be created immediately but hidden until the research flag is set
     const section = ctx.projectElements.deeperMining.androidAssignmentContainer;
+    expect(section).toBeDefined();
     expect(section.style.display).toBe('none');
+
+    ctx.updateProjectUI('deeperMining');
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
 
     project.booleanFlags.add('androidAssist');
     ctx.updateProjectUI('deeperMining');
