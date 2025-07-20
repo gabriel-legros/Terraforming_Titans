@@ -165,8 +165,8 @@ class AndroidProject extends Project {
 
   loadState(state) {
     super.loadState(state);
-    this.assignedAndroids = state.assignedAndroids;
-    this.autoAssignAndroids = state.autoAssignAndroids;
+    this.assignedAndroids = state.assignedAndroids || 0;
+    this.autoAssignAndroids = state.autoAssignAndroids || 0;
   }
 }
 
