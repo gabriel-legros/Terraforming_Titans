@@ -140,7 +140,7 @@ const projectParameters = {
     }
   },
   deeperMining: {
-    type: 'AndroidProject',
+    type: 'DeeperMiningProject',
     name: "Deeper mining",
     category : "infrastructure",
     cost: {

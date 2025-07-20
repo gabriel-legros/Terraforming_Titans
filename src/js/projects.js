@@ -105,17 +105,6 @@ class Project extends EffectableEntity {
 
       return scaledCost;
     }
-    if (this.attributes.costOreMineScaling) {
-      const oreMines = Math.max((buildings?.oreMine?.count || 0), 1);
-      const scaledCost = {};
-      for (const resourceCategory in cost) {
-        scaledCost[resourceCategory] = {};
-        for (const resource in cost[resourceCategory]) {
-          scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * oreMines;
-        }
-      }
-      return scaledCost;
-    }
     return cost;
   }
 

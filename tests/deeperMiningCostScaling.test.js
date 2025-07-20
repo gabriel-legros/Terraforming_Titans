@@ -12,6 +12,8 @@ describe('Deeper mining cost scaling', () => {
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const androidCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'AndroidProject.js'), 'utf8');
     vm.runInContext(androidCode + '; this.AndroidProject = AndroidProject;', ctx);
+    const deeperCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'DeeperMiningProject.js'), 'utf8');
+    vm.runInContext(deeperCode + '; this.DeeperMiningProject = DeeperMiningProject;', ctx);
     const config = {
       name: 'deeperMining',
       category: 'infrastructure',
@@ -23,7 +25,7 @@ describe('Deeper mining cost scaling', () => {
       unlocked: true,
       attributes: { costOreMineScaling: true }
     };
-    const p = new ctx.AndroidProject(config, 'deeperMining');
+    const p = new ctx.DeeperMiningProject(config, 'deeperMining');
     const cost = p.getScaledCost();
     expect(cost.colony.electronics).toBe(50);
     expect(cost.colony.components).toBe(50);

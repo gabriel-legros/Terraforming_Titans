@@ -155,7 +155,7 @@ class AndroidProject extends Project {
     }
     if (elements.androidSpeedDisplay) {
       const mult = this.getAndroidSpeedMultiplier();
-      elements.androidSpeedDisplay.textContent = `Deepening speed boost x${formatNumber(mult, true)}`;
+      elements.androidSpeedDisplay.textContent = `Speed x${formatNumber(mult, true)}`;
     }
   }
 
