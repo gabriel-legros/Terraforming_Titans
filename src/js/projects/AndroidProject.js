@@ -112,25 +112,29 @@ class AndroidProject extends Project {
 
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer);
     sectionContainer.appendChild(assignmentContainer);
+    sectionContainer.id = `${this.name}-android-assignment`;
+    sectionContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
     container.appendChild(sectionContainer);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       assignedAndroidsDisplay: assignedDisplay,
       availableAndroidsDisplay: availableDisplay,
+      androidAssignmentContainer: sectionContainer,
       androidSpeedDisplay: speedDisplay,
     };
   }
 
   renderUI(container) {
-    if (this.isBooleanFlagSet('androidAssist')) {
-      this.createAndroidAssignmentUI(container);
-    }
+    this.createAndroidAssignmentUI(container);
   }
 
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
+    if (elements.androidAssignmentContainer) {
+      elements.androidAssignmentContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
+    }
     if (elements.assignedAndroidsDisplay) {
       elements.assignedAndroidsDisplay.textContent = formatBigInteger(this.assignedAndroids);
     }

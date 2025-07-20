@@ -6,7 +6,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 const numbers = require('../src/js/numbers.js');
 
 describe('AndroidProject UI', () => {
-  test('assignment UI appears when androidAssist flag set', () => {
+  test('assignment UI hides until androidAssist flag set', () => {
   const dom = new JSDOM(`<!DOCTYPE html>
       <div class="projects-subtab-content-wrapper">
         <div id="infrastructure-projects-list" class="projects-list"></div>
@@ -37,14 +37,17 @@ describe('AndroidProject UI', () => {
 
     ctx.initializeProjectsUI();
     ctx.createProjectItem(project);
+    ctx.updateProjectUI('deeperMining');
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    expect(ctx.projectElements.deeperMining.assignedAndroidsDisplay).toBeUndefined();
+    expect(ctx.projectElements.deeperMining.assignedAndroidsDisplay).toBeDefined();
+    const section = ctx.projectElements.deeperMining.androidAssignmentContainer;
+    expect(section.style.display).toBe('none');
 
     project.booleanFlags.add('androidAssist');
     ctx.updateProjectUI('deeperMining');
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    expect(ctx.projectElements.deeperMining.assignedAndroidsDisplay).toBeDefined();
+    expect(ctx.projectElements.deeperMining.androidAssignmentContainer.style.display).toBe('block');
   });
 });

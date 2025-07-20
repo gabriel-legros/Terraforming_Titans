@@ -157,3 +157,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Time to cap/empty tooltips now display 0s when a resource is already full or empty.
 - Story project journal entries now include a separator line and prefix showing progress.
 - Deeper mining supports android assignments for massive speed boosts.
+- Android assignment UI initializes hidden and shows once the upgrade is researched.
