@@ -456,7 +456,12 @@ function updateProjectUI(projectName) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
           elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
-          elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+          if (project.startingDuration < 1000) {
+            // Avoid flashy gradients for instant projects
+            elements.progressButton.style.background = '#4caf50';
+          } else {
+            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+          }
         } else if (project.isCompleted) {
           elements.progressButton.textContent = `Completed: ${project.displayName}`;
           elements.progressButton.style.background = '#4caf50';
