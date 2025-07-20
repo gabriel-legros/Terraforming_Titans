@@ -124,7 +124,9 @@ function initializeGameState(options = {}) {
     resetJournal();
   }
 
-  gameSettings.useCelsius = false;
+  if (!preserveManagers) {
+    gameSettings.useCelsius = false;
+  }
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
