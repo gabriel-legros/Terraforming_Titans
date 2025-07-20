@@ -151,3 +151,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Terraforming calculations preserve provided surface and cross-section area values.
 - Collapsed project cards now keep their reorder arrows visible so special projects can be moved without expanding them.
 - Reorder arrows for special projects now ignore locked projects when determining movement limits.
+- Atmosphere box shows a green check or red X for each gas requirement.
