@@ -7,7 +7,7 @@ describe('AndroidProject.assignAndroids', () => {
   test('updates assigned androids and resource count', () => {
     const ctx = { console, EffectableEntity };
     ctx.resources = { colony: { androids: { value: 5 } } };
-    ctx.currentPlanetParameters = { resources: { underground: { ore: { maxDeposits: 1000 } } } };
+    ctx.buildings = { oreMine: { count: 1 } };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -15,7 +15,7 @@ describe('AndroidProject.assignAndroids', () => {
     vm.runInContext(androidCode + '; this.AndroidProject = AndroidProject;', ctx);
 
     global.resources = ctx.resources;
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.buildings = ctx.buildings;
 
     const config = {
       name: 'Test',
@@ -39,10 +39,10 @@ describe('AndroidProject.assignAndroids', () => {
     expect(ctx.resources.colony.androids.value).toBe(5);
   });
 
-  test('calculates speed multiplier based on ore deposits', () => {
+  test('calculates speed multiplier based on ore mines', () => {
     const ctx = { console, EffectableEntity };
     ctx.resources = { colony: { androids: { value: 1_000_000_000 } } };
-    ctx.currentPlanetParameters = { resources: { underground: { ore: { maxDeposits: 1000 } } } };
+    ctx.buildings = { oreMine: { count: 1000 } };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -50,7 +50,7 @@ describe('AndroidProject.assignAndroids', () => {
     vm.runInContext(androidCode + '; this.AndroidProject = AndroidProject;', ctx);
 
     global.resources = ctx.resources;
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.buildings = ctx.buildings;
 
     const config = {
       name: 'Test',
