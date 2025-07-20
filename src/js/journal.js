@@ -90,7 +90,20 @@ function displayJournalChapter(index) {
   updateJournalNavArrows();
 }
 function addJournalEntry(text, eventId = null, source = null) {
-  journalQueue.push({ text: joinLines(text), eventId, source });
+  let entryText = joinLines(text);
+
+  let separator = false;
+  if (source && source.type === 'project' &&
+      progressData && progressData.storyProjects && progressData.storyProjects[source.id]) {
+    const proj = progressData.storyProjects[source.id];
+    const total = proj.attributes && Array.isArray(proj.attributes.storySteps)
+      ? proj.attributes.storySteps.length : 0;
+    const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
+    entryText = `${proj.name} ${stepNum}/${total}: ${entryText}`;
+    separator = true;
+  }
+
+  journalQueue.push({ text: entryText, eventId, source, separator });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -104,10 +117,16 @@ function processNextJournalEntry() {
   }
 
   journalTyping = true;
-  const { text, eventId, source } = journalQueue.shift();
+  const { text, eventId, source, separator } = journalQueue.shift();
   journalCurrentEventId = eventId;
   const journalEntries = document.getElementById('journal-entries');
   const journalContainer = document.getElementById('journal');
+  if (separator) {
+    const hr = document.createElement('hr');
+    hr.classList.add('journal-entry-separator');
+    journalEntries.appendChild(hr);
+  }
+
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
 
