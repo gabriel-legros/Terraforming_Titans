@@ -48,4 +48,34 @@ describe('resource tooltip time remaining', () => {
     const expected = numbers.formatDuration(40 / 4);
     expect(html).toContain(expected);
   });
+
+  test('shows 0 time to cap when already full', () => {
+    const { dom, ctx } = setup();
+    const resource = {
+      name: 'oxygen', displayName: 'O2', category: 'colony',
+      value: 100, cap: 100, hasCap: true, reserved: 0, unlocked: true,
+      productionRate: 5, consumptionRate: 0,
+      productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
+    };
+    ctx.createResourceDisplay({ colony: { oxygen: resource } });
+    ctx.updateResourceRateDisplay(resource);
+    const html = dom.window.document.getElementById('oxygen-tooltip').innerHTML;
+    expect(html).toContain('Time to cap');
+    expect(html).toContain('0s');
+  });
+
+  test('shows 0 time to empty when already empty', () => {
+    const { dom, ctx } = setup();
+    const resource = {
+      name: 'fuel', displayName: 'Fuel', category: 'colony',
+      value: 0, cap: 50, hasCap: true, reserved: 0, unlocked: true,
+      productionRate: 0, consumptionRate: 3,
+      productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
+    };
+    ctx.createResourceDisplay({ colony: { fuel: resource } });
+    ctx.updateResourceRateDisplay(resource);
+    const html = dom.window.document.getElementById('fuel-tooltip').innerHTML;
+    expect(html).toContain('Time to empty');
+    expect(html).toContain('0s');
+  });
 });
