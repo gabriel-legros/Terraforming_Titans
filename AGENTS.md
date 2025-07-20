@@ -153,3 +153,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Reorder arrows for special projects now ignore locked projects when determining movement limits.
 - Atmosphere box shows a green check or red X for each gas requirement.
 - Temperature unit preference now persists when traveling to another planet.
+- Metal export projects now cap each export at max(terraformed planets, 1) billion metal.
