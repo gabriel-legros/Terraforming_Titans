@@ -193,6 +193,7 @@ function createProjectItem(project) {
   projectElements[project.name] = {
     ...projectElements[project.name],
     projectItem: projectCard,
+    cardBody: cardBody,
     progressButton: progressButton,
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
@@ -505,6 +506,14 @@ function updateProjectUI(projectName) {
       const tempControl = project.createTemperatureControl();
       elements.automationSettingsContainer.appendChild(tempControl);
     }
+  }
+
+  if (typeof AndroidProject !== 'undefined' &&
+      project instanceof AndroidProject &&
+      project.isBooleanFlagSet('androidAssist') &&
+      !elements.assignedAndroidsDisplay &&
+      elements.cardBody) {
+    project.createAndroidAssignmentUI(elements.cardBody);
   }
 
 
