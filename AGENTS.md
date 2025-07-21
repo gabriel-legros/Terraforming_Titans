@@ -166,3 +166,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Day-night toggle also halves maintenance for those structures and skips the penalty on Ice Harvesters once Infrared Vision is researched.
 - Restored the yellow/blue animation by re-linking the day-night cycle stylesheet.
 - Day-night setting checkbox now updates when starting a new game or loading a save.
+- Solis tab remains hidden in HTML until chapter 5.2 unlocks it.
