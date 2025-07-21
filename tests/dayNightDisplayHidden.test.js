@@ -13,6 +13,6 @@ describe('day-night display hidden', () => {
 
     updateDayNightDisplay();
     const container = dom.window.document.querySelector('.day-night-progress-bar-container');
-    expect(container.style.display).toBe('none');
+    expect(container.style.visibility).toBe('hidden');
   });
 });
