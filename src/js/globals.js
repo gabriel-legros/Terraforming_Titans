@@ -16,6 +16,7 @@ let storyStarted = false;  // Track if the story has been triggered
 let terraforming;
 let lifeDesigner;
 let lifeManager;
+let researchManager;
 let fundingModule;
 
 let gameSettings = {
