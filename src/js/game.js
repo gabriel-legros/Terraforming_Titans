@@ -129,6 +129,7 @@ function initializeGameState(options = {}) {
 
   if (!preserveManagers) {
     gameSettings.useCelsius = false;
+    gameSettings.disableDayNightCycle = false;
   }
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
