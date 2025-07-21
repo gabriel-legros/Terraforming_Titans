@@ -459,6 +459,10 @@ class EffectableEntity {
         this.sortAllResearches();
       }
 
+      if (flagId === 'dayNightActivity' && typeof applyDayNightSettingEffects === 'function') {
+        applyDayNightSettingEffects();
+      }
+
       console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
     }
 

@@ -202,7 +202,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
     productivityContainer.appendChild(productivityValue);
 
-    if (structure.dayNightActivity) {
+    if (structure.dayNightActivity && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
       const dayNightIcon = document.createElement('span');
       dayNightIcon.id = `${structure.name}-day-night-icon`;
       dayNightIcon.classList.add('day-night-icon');
@@ -611,7 +611,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const productivityValue = Math.round((structure.productivity * 100));
         productivityElement.textContent = `${productivityValue}%`;
 
-        if (structure.dayNightActivity && dayNightCycle.isNight()) {
+        if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
           productivityElement.style.color = 'darkblue';
         } else if (productivityValue < 100) {
           productivityElement.style.color = 'red';
@@ -622,7 +622,12 @@ function updateDecreaseButtonText(button, buildCount) {
 
       const iconElement = document.getElementById(`${structureName}-day-night-icon`);
       if (iconElement) {
-        iconElement.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
+        if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
+          iconElement.style.display = 'none';
+        } else {
+          iconElement.style.display = '';
+          iconElement.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
+        }
       }
   
       const button = document.getElementById(`build-${structureName}`);

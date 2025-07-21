@@ -48,6 +48,7 @@
     <script src="src/js/save.js"></script>
     <script src="src/js/structuresUI.js"></script>
     <script src="src/js/day-night-cycle.js"></script>
+    <script src="src/js/day-night-setting.js"></script>
     <script src="src/js/ore-scanning.js"></script>
     <script src="src/js/resource.js"></script>
     <script src="src/js/resourceUI.js"></script>
@@ -505,6 +506,9 @@
           <label style="display:block;margin-bottom:8px;">
             <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
           </label>
+          <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="day-night-toggle" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance."> Disable day-night cycle
+          </label>
       </div>
     </div>
 
@@ -617,6 +621,19 @@
             gameSettings.silenceUnlockAlert = unlockToggle.checked;
             if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
             if (typeof updateProjectAlert === 'function') updateProjectAlert();
+        });
+    }
+
+    const dayNightToggle = document.getElementById('day-night-toggle');
+    if (dayNightToggle) {
+        dayNightToggle.checked = gameSettings.disableDayNightCycle;
+        dayNightToggle.addEventListener('change', () => {
+            gameSettings.disableDayNightCycle = dayNightToggle.checked;
+            if (typeof applyDayNightSettingEffects === 'function') applyDayNightSettingEffects();
+            updateDayNightDisplay();
+            if (typeof updateBuildingDisplay === 'function') {
+                updateBuildingDisplay(buildings);
+            }
         });
     }
 

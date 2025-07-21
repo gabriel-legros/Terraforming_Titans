@@ -10,9 +10,12 @@ class DayNightCycle {
       this.dayProgress = (this.elapsedTime % this.dayDuration) / this.dayDuration;
     }
   
-    isDay() {
+  isDay() {
+      if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
+        return true;
+      }
       return this.dayProgress < 0.5;
-    }
+  }
   
     isNight() {
       return !this.isDay();
@@ -50,8 +53,15 @@ function rotationPeriodToDuration(rotationHours) {
 
 
 function updateDayNightDisplay() {
+  const container = document.querySelector('.day-night-progress-bar-container');
+  if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
+    if (container) container.style.display = 'none';
+    return;
+  }
+  if (container) container.style.display = 'block';
+
   const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
-  const dayProgress = dayNightCycle.getDayProgress() * 100;  
+  const dayProgress = dayNightCycle.getDayProgress() * 100;
 
   const progressBar = document.getElementById('day-night-progress-bar');
   const progressText = document.getElementById('progress-text');
@@ -61,7 +71,7 @@ function updateDayNightDisplay() {
   // Update text, optionally round to 2 decimal places for display
   progressText.textContent = `Day Progress: ${dayProgress.toFixed(1)}%`;
 
-    // Change color gradually between yellow (day) and dark blue (night)
+  // Change color gradually between yellow (day) and dark blue (night)
   if (dayNightStatus === 'Day') {
     // Transition from yellow (255, 255, 0) to orange (255, 165, 0)
     progressBar.style.backgroundColor = `rgb(255, ${255 - dayProgress * 0.9}, 0)`; // Transitions from yellow to orange

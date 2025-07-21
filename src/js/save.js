@@ -239,6 +239,10 @@ function loadGame(slotOrCustomString) {
       if(unlockToggle){
         unlockToggle.checked = gameSettings.silenceUnlockAlert;
       }
+      const dayNightToggle = document.getElementById('day-night-toggle');
+      if(dayNightToggle){
+        dayNightToggle.checked = gameSettings.disableDayNightCycle;
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {
@@ -269,6 +273,16 @@ function loadGame(slotOrCustomString) {
     }
 
     tabManager.activateTab('buildings');
+
+    if(typeof applyDayNightSettingEffects === 'function'){
+      applyDayNightSettingEffects();
+    }
+    if (typeof updateDayNightDisplay === 'function') {
+      updateDayNightDisplay();
+    }
+    if (typeof updateBuildingDisplay === 'function') {
+      updateBuildingDisplay(buildings);
+    }
 
     globalGameIsLoadingFromSave = false;
 

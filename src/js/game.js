@@ -44,6 +44,9 @@ function create() {
   // Initialize buildings
   buildings = initializeBuildings(buildingsParameters);
   createBuildingButtons(buildings);
+  if (typeof applyDayNightSettingEffects === 'function') {
+    applyDayNightSettingEffects();
+  }
   if (typeof initializeBuildingAlerts === 'function') {
     initializeBuildingAlerts();
   }
@@ -198,6 +201,9 @@ function initializeGameState(options = {}) {
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
   createBuildingButtons(buildings);
+  if (typeof applyDayNightSettingEffects === 'function') {
+    applyDayNightSettingEffects();
+  }
   if (typeof initializeBuildingAlerts === 'function') {
     initializeBuildingAlerts();
   }
