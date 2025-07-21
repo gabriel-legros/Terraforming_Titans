@@ -13,7 +13,7 @@ describe('Dyson Swarm card visibility', () => {
     ctx.formatNumber = n => n;
     ctx.console = console;
 
-    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'dysonswarmUI.js'), 'utf8');
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'dysonswarmUI.js'), 'utf8');
     vm.runInContext(uiCode, ctx);
 
     const project = {
