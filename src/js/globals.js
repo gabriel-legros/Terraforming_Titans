@@ -24,6 +24,7 @@ let gameSettings = {
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
   silenceUnlockAlert: false,
+  disableDayNightCycle: false,
 };
 
 let colonySliderSettings = {

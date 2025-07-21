@@ -162,3 +162,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Deeper mining costs now scale with ore mines built and also increases ore mine construction costs. Android boost scales with built mines instead of deposits.
 - Deeper mining now uses a dedicated class `DeeperMiningProject`.
 - Deeper mining costs also scale with the number of project completions.
+- Settings menu can disable the day-night cycle. Solar panels and Ice Harvesters operate at half strength and the progress bar hides.
+- Day-night toggle also halves maintenance for those structures and skips the penalty on Ice Harvesters once Infrared Vision is researched.
