@@ -29,6 +29,17 @@ function hideSolisTab() {
   if (content) content.classList.add('hidden');
 }
 
+function updateSolisVisibility() {
+  if (typeof solisManager === 'undefined') return;
+  if (solisManager.enabled) {
+    if (!solisTabVisible) {
+      showSolisTab();
+    }
+  } else if (solisTabVisible) {
+    hideSolisTab();
+  }
+}
+
 function createShopItem(key) {
   const item = document.createElement('div');
   item.classList.add('solis-shop-item');
@@ -208,5 +219,5 @@ function updateSolisUI() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { hideSolisTab, showSolisTab };
+  module.exports = { hideSolisTab, showSolisTab, updateSolisVisibility };
 }

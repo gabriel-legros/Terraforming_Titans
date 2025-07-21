@@ -208,6 +208,9 @@ function loadGame(slotOrCustomString) {
       if (typeof solisManager.reapplyEffects === 'function') {
         solisManager.reapplyEffects();
       }
+      if (typeof updateSolisVisibility === 'function') {
+        updateSolisVisibility();
+      }
     }
 
     if(gameState.lifeDesigner){

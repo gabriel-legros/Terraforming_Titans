@@ -43,6 +43,9 @@ function updateHopeAlert() {
 }
 
 function updateHopeUI() {
+    if (typeof updateSolisVisibility === 'function') {
+        updateSolisVisibility();
+    }
     if (typeof updateSkillTreeUI === 'function') {
         updateSkillTreeUI();
     }
