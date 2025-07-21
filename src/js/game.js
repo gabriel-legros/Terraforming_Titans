@@ -130,6 +130,10 @@ function initializeGameState(options = {}) {
   if (!preserveManagers) {
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
+    const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;
+    if (dayNightToggle) {
+      dayNightToggle.checked = gameSettings.disableDayNightCycle;
+    }
   }
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});

@@ -9,7 +9,7 @@ describe('journal toggle functionality', () => {
     const dom = new JSDOM(`<!DOCTYPE html><html><body>
       <div id="journal" class="journal"><div id="journal-entries"></div></div>
       <button id="toggle-journal-button"></button>
-      <span id="journal-alert" class="journal-alert"></span>
+      <button id="show-journal-button" class="hidden"></button>
     </body></html>`, { runScripts: 'outside-only' });
 
     const ctx = dom.getInternalVMContext();
@@ -26,6 +26,6 @@ describe('journal toggle functionality', () => {
     jest.runAllTimers();
     jest.useRealTimers();
 
-    expect(dom.window.document.getElementById('journal-alert').style.display).toBe('inline');
+    expect(dom.window.document.getElementById('show-journal-button').classList.contains('unread')).toBe(true);
   });
 });
