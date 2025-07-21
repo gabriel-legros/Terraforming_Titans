@@ -1275,6 +1275,13 @@ progressData.chapters.push(
     prerequisites: ["chapter6.3b"],
     objectives: [],
     reward: []
+    //reward: [
+    //  {
+    //    target: 'spaceManager',
+    //    targetId: 'callisto',
+    //    type: 'enable'
+    //  }
+    //]
   },
   {
     id: "chapter6.4",
@@ -1596,10 +1603,16 @@ progressData.chapters.push(
     id: "chapter10.5",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores his lieutenants stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks future Sidestep operations.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede, deep deep underground, or rather, under the sea. With the data cores his lieutenants stole, they could potentially find some flaw with Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks future Sidestep operations.",
     prerequisites: ["chapter10.4"],
     objectives: [],
-    reward: []
+    reward: [
+      {
+        target: 'spaceManager',
+        targetId: 'ganymede',
+        type: 'enable'
+      }
+    ]
   },
   {
     id: "chapter10.6",
