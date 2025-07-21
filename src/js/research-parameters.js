@@ -467,6 +467,22 @@ const researchParameters = {
       ],
     },
     {
+      id: 'self_replicating_ships',
+      name: 'Self Replicating Ships',
+      description: 'Unused spaceships duplicate themselves over time.',
+      cost: { research: 10000000000 },
+      prerequisites: [],
+      requiredFlags: ['selfReplicatingShipsUnlocked'],
+      effects: [
+        {
+          target: 'global',
+          type: 'booleanFlag',
+          flagId: 'selfReplicatingShips',
+          value: true
+        }
+      ]
+    },
+    {
       id: 'robotics_3',
       name: 'Precision Assembly Lines',
       description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
@@ -1197,6 +1213,21 @@ const researchParameters = {
             target: 'researchManager',
             type: 'booleanFlag',
             flagId: 'dysonSwarmUnlocked',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'self_replicating_ships_concept',
+        name: 'Self Replicating Ships',
+        description: 'Opens research into autonomous self-building spacecraft.',
+        cost: { advancedResearch: 50000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'selfReplicatingShipsUnlocked',
             value: true
           }
         ]
