@@ -517,15 +517,17 @@ function addOrRemoveEffect(effect, action) {
     'tabContent': tabManager,
     'global': globalEffects,
     'terraforming': terraforming,
-    'lifeDesigner': lifeDesigner,
-    'lifeManager': lifeManager,
-    'oreScanner': oreScanner,
-    'researchManager' : researchManager,
-    'solisManager' : solisManager,
-    'spaceManager' : spaceManager
+    'lifeDesigner': globalThis.lifeDesigner,
+    'lifeManager': globalThis.lifeManager,
+    'oreScanner': globalThis.oreScanner,
+    'researchManager' : globalThis.researchManager,
+    'solisManager' : globalThis.solisManager,
+    'spaceManager' : globalThis.spaceManager
   };
 
-  if (effect.target in targetHandlers) {
+  if (effect.target in targetHandlers &&
+      targetHandlers[effect.target] &&
+      typeof targetHandlers[effect.target][action] === 'function') {
     targetHandlers[effect.target][action](effect);
   } else if (effect.target === 'building') {
     const building = buildings[effect.targetId];
