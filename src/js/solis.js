@@ -227,7 +227,6 @@ class SolisManager extends EffectableEntity {
 
   saveState() {
     return {
-      enabled: this.enabled,
       solisPoints: this.solisPoints,
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
@@ -242,7 +241,6 @@ class SolisManager extends EffectableEntity {
   }
 
   loadState(data) {
-    this.enabled = data.enabled || false;
     this.solisPoints = data.solisPoints || 0;
     this.rewardMultiplier = data.rewardMultiplier || 1;
     this.currentQuest = data.currentQuest;
