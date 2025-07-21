@@ -17,6 +17,16 @@
       };
       effects.push(prodEffect);
 
+      const consEffect = {
+        target: 'building',
+        targetId: id,
+        type: 'consumptionMultiplier',
+        value: 0.5,
+        effectId: `disable-day-night-consumption-${id}`,
+        sourceId: 'settings'
+      };
+      effects.push(consEffect);
+
       const cost = (building.cost && building.cost.colony) || {};
       for(const resource in cost){
         effects.push({
