@@ -339,6 +339,13 @@ progressTitan.chapters.push(
     prerequisites: ["chapter6.3b"],
     objectives: [],
     reward: []
+    //reward: [
+    //  {
+    //    target: 'spaceManager',
+    //    targetId: 'callisto',
+    //    type: 'enable'
+    //  }
+    //]
   },
   {
     id: "chapter6.4",
