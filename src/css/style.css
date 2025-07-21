@@ -30,6 +30,15 @@ body {
     margin-bottom: 10px;
 }
 
+.buildings-subtabs,
+.research-subtabs,
+.projects-subtabs,
+.terraforming-subtabs,
+.hope-subtabs
+ {
+    margin-right:25px;
+}
+
 .tab,
 .building-subtab,
 .research-subtab,
@@ -168,17 +177,31 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
 }
 
 .top-bar .day-night-progress-bar-container {
     flex: 1;
 }
 
-.journal-toggle {
-    padding: 5px 10px;
+#journal-toggle-icon {
+    cursor: pointer;
+    margin-right: 10px;
 }
 
+#show-journal-button {
+    position: fixed;
+    right: 10px;
+    z-index: 1001;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px 0 0 5px;
+}
+
+#show-journal-button.unread {
+    color: red;
+}
 
 .journal-nav {
     cursor: pointer;

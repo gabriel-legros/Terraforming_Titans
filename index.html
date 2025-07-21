@@ -139,10 +139,8 @@
       <span id="progress-text" class="progress-text">Day Progress</span>
       <div id="day-night-progress-bar" class="day-night-progress-bar"></div>
     </div>
-    <button id="toggle-journal-button" class="journal-toggle">Hide Journal</button>
-    <span id="journal-alert" class="journal-alert">!</span>
   </div>
-
+<div id="show-journal-button" class="hidden">&laquo;</div>
     <!-- Game Content Tabs -->
     <div class="tab-content-wrapper">
 
@@ -515,7 +513,7 @@
 
     <!-- Journal Section -->
     <div id="journal" class="journal">
-        <h3>Journal <span id="journal-nav-container"><span id="journal-prev" class="journal-nav">&#9664;</span><span id="journal-next" class="journal-nav">&#9654;</span></span></h3>
+        <h3><span id="journal-toggle-icon">&raquo;</span> Journal <span id="journal-nav-container"><span id="journal-prev" class="journal-nav">&#9664;</span><span id="journal-next" class="journal-nav">&#9654;</span></span></h3>
         <div id="current-objective" class="current-objective"></div>
         <div id="journal-entries">
             <!-- Journal entries will be dynamically inserted here -->

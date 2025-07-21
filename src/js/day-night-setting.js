@@ -37,6 +37,7 @@
         if(typeof removeEffect === 'function') effects.forEach(removeEffect);
       }
     });
+    document.dispatchEvent(new CustomEvent('dayNightCycleToggled'));
   }
 
   if(typeof module !== 'undefined' && module.exports){

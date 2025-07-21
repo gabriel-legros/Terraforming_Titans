@@ -266,24 +266,37 @@ function resetJournal() {
 }
 
 function updateJournalAlert() {
-  const alertEl = document.getElementById('journal-alert');
-  if (alertEl) {
-    alertEl.style.display = journalUnread ? 'inline' : 'none';
+  const showButton = document.getElementById('show-journal-button');
+  if (showButton) {
+    showButton.classList.toggle('unread', journalUnread);
+  }
+}
+
+function updateShowJournalButtonPosition() {
+  const showButton = document.getElementById('show-journal-button');
+  const topBar = document.querySelector('.top-bar');
+  if (showButton && topBar) {
+    const topBarRect = topBar.getBoundingClientRect();
+    showButton.style.top = `${topBarRect.bottom + 13}px`;
   }
 }
 
 function toggleJournal() {
   const journal = document.getElementById('journal');
-  const button = document.getElementById('toggle-journal-button');
+  const showButton = document.getElementById('show-journal-button');
   journalCollapsed = !journalCollapsed;
   if (journalCollapsed) {
     journal.classList.add('collapsed');
-    if (button) button.textContent = 'Show Journal';
+    showButton.classList.remove('hidden');
+    updateShowJournalButtonPosition();
   } else {
     journal.classList.remove('collapsed');
-    if (button) button.textContent = 'Hide Journal';
+    showButton.classList.add('hidden');
     journalUnread = false;
     updateJournalAlert();
+    if (showButton) {
+      showButton.classList.remove('unread');
+    }
   }
 }
 
@@ -361,10 +374,15 @@ function mapSourcesToText(sources) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const toggleButton = document.getElementById('toggle-journal-button');
-  if (toggleButton) {
-    toggleButton.addEventListener('click', toggleJournal);
+  const toggleIcon = document.getElementById('journal-toggle-icon');
+  if (toggleIcon) {
+    toggleIcon.addEventListener('click', toggleJournal);
   }
+  const showButton = document.getElementById('show-journal-button');
+  if (showButton) {
+    showButton.addEventListener('click', toggleJournal);
+  }
+  document.addEventListener('dayNightCycleToggled', updateShowJournalButtonPosition);
   const prevArrow = document.getElementById('journal-prev');
   if (prevArrow) {
     prevArrow.addEventListener('click', () => {
