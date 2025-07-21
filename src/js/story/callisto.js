@@ -177,7 +177,7 @@ progressCallisto.chapters.push(
     id: "chapter8.1",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is our opportunity. While their attention is divided, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is concerning. While their attention is divided, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
     prerequisites: ["chapter8.0"],
     objectives: [
       { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
@@ -190,7 +190,7 @@ progressCallisto.chapters.push(
     id: "chapter8.2",
     type: "journal",
     chapter: 8,
-    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'Mary, my sources report significant unrest on Titan. Riots and sabotage are... inefficient. And what's inefficient is bad for the future of our species. My corporation can provide automated security solutions and logistical support to help you restore order. A stable society is a productive society. Let me know when you're ready to make a deal.'",
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'Mary, my sources report significant unrest on Titan. Riots and sabotage are... inefficient. And what is bad for business is bad for humanity. My corporation can provide automated security solutions and logistical support to help you restore order. A stable society is a productive society. Let me know when you're ready to make a deal.'",
     prerequisites: ["chapter8.1"],
     objectives: [],
     reward: []
@@ -199,7 +199,7 @@ progressCallisto.chapters.push(
     id: "chapter8.3",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'Adrien, thank you for your... generous offer. We have the situation under control. For now. But we'll keep your proposal in mind.\n(to herself) As if I'd ever trust him... H.O.P.E., we need to accelerate our own development. The more self-sufficient we become, the less we'll have to rely on vultures like Solis.'",
+    narrative: "Receiving transmission...\n  Mary: 'Adrien, thank you for your... generous offer. We have the situation under control. For now. But we'll keep your proposal in mind.\n(to herself) As if I'd ever trust him... H.O.P.E., we need to accelerate our own development. We should not have to rely on vultures like Solis.'",
     prerequisites: ["chapter8.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -249,7 +249,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 10,
     title: "Chapter 10: Operation Sidestep",
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep now, ready or not.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
     prerequisites: ["chapter9.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -260,7 +260,7 @@ progressCallisto.chapters.push(
     id: "chapter10.1",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the geothermal plant's coolant systems. Our security forces are engaging... We have him! Kane is in custody. But several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\nThreat neutralized. Primary saboteur Elias Kane captured. Data breach confirmed. Assessing extent of compromised information.",
+    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the geothermal plant's coolant systems. Our security forces are engaging... We have some prisoners!  But Kane and several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\n Data breach confirmed. Assessing extent of compromised information.",
     prerequisites: ["chapter10.0"],
     objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
     reward: []
@@ -290,7 +290,7 @@ progressCallisto.chapters.push(
     id: "chapter10.4",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
+    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
     prerequisites: ["chapter10.3"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
@@ -301,7 +301,7 @@ progressCallisto.chapters.push(
     id: "chapter10.5",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores his lieutenants stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks future Sidestep operations.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
     prerequisites: ["chapter10.4"],
     objectives: [],
     reward: []
