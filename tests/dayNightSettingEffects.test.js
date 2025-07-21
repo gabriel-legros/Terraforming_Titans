@@ -37,10 +37,12 @@ describe('day-night setting effects', () => {
     expect(buildings.solarPanel.activeEffects.some(e => e.effectId === 'disable-day-night-production-solarPanel')).toBe(true);
     expect(buildings.solarPanel.activeEffects.some(e => e.effectId === 'disable-day-night-maintenance-solarPanel-metal')).toBe(true);
     expect(buildings.iceHarvester.activeEffects.some(e => e.effectId === 'disable-day-night-production-iceHarvester')).toBe(true);
+    expect(buildings.iceHarvester.activeEffects.some(e => e.effectId === 'disable-day-night-consumption-iceHarvester')).toBe(true);
 
     buildings.iceHarvester.dayNightActivity = false;
     applyDayNightSettingEffects();
     expect(buildings.iceHarvester.activeEffects.some(e => e.effectId === 'disable-day-night-production-iceHarvester')).toBe(false);
+    expect(buildings.iceHarvester.activeEffects.some(e => e.effectId === 'disable-day-night-consumption-iceHarvester')).toBe(false);
 
     global.gameSettings.disableDayNightCycle = false;
     applyDayNightSettingEffects();

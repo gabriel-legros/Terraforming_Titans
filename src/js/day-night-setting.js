@@ -17,6 +17,18 @@
       };
       effects.push(prodEffect);
 
+      if (id === 'iceHarvester') {
+        const consEffect = {
+          target: 'building',
+          targetId: id,
+          type: 'consumptionMultiplier',
+          value: 0.5,
+          effectId: `disable-day-night-consumption-${id}`,
+          sourceId: 'settings'
+        };
+        effects.push(consEffect);
+      }
+
       const cost = (building.cost && building.cost.colony) || {};
       for(const resource in cost){
         effects.push({
@@ -37,7 +49,9 @@
         if(typeof removeEffect === 'function') effects.forEach(removeEffect);
       }
     });
-    document.dispatchEvent(new CustomEvent('dayNightCycleToggled'));
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('dayNightCycleToggled'));
+    }
   }
 
   if(typeof module !== 'undefined' && module.exports){

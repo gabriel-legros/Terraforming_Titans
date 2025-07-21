@@ -165,3 +165,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Settings menu can disable the day-night cycle. Solar panels and Ice Harvesters operate at half strength and the progress bar hides.
 - Day-night toggle also halves maintenance for those structures and skips the penalty on Ice Harvesters once Infrared Vision is researched.
 - Restored the yellow/blue animation by re-linking the day-night cycle stylesheet.
+- Disabling the day-night cycle now also halves Ice Harvester consumption unless Infrared Vision is researched.

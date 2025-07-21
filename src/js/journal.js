@@ -270,6 +270,10 @@ function updateJournalAlert() {
   if (showButton) {
     showButton.classList.toggle('unread', journalUnread);
   }
+  const alert = document.getElementById('journal-alert');
+  if (alert) {
+    alert.style.display = journalUnread ? 'inline' : 'none';
+  }
 }
 
 function updateShowJournalButtonPosition() {
@@ -287,11 +291,11 @@ function toggleJournal() {
   journalCollapsed = !journalCollapsed;
   if (journalCollapsed) {
     journal.classList.add('collapsed');
-    showButton.classList.remove('hidden');
+    if (showButton) showButton.classList.remove('hidden');
     updateShowJournalButtonPosition();
   } else {
     journal.classList.remove('collapsed');
-    showButton.classList.add('hidden');
+    if (showButton) showButton.classList.add('hidden');
     journalUnread = false;
     updateJournalAlert();
     if (showButton) {

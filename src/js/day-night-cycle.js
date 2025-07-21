@@ -55,10 +55,10 @@ function rotationPeriodToDuration(rotationHours) {
 function updateDayNightDisplay() {
   const container = document.querySelector('.day-night-progress-bar-container');
   if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
-    if (container) container.style.display = 'none';
+    if (container) container.style.visibility = 'hidden';
     return;
   }
-  if (container) container.style.display = 'block';
+  if (container) container.style.visibility = 'visible';
 
   const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
   const dayProgress = dayNightCycle.getDayProgress() * 100;
