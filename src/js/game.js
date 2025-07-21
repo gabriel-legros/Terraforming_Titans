@@ -274,6 +274,10 @@ function updateLogic(delta) {
   storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
 
   recalculateTotalRates();
+
+  if (typeof applyGameEffects === 'function') {
+    applyGameEffects();
+  }
 }
 
 function updateRender() {
