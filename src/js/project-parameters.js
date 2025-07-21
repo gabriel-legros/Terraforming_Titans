@@ -145,7 +145,6 @@ const projectParameters = {
     category : "infrastructure",
     cost: {
       colony: {
-        electronics : 10,
         components: 10
       }
     },
