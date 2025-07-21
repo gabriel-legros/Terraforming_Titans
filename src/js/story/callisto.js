@@ -315,7 +315,13 @@ progressCallisto.chapters.push(
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }
     ],
-    reward: []
+    reward: [
+      {
+        target: 'spaceManager',
+        targetId: 'ganymede',
+        type: 'enable'
+      }
+    ]
   }
 );
 
