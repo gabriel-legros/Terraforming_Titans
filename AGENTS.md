@@ -76,7 +76,7 @@ resources immediately.
 - **Moving to another planet** – `selectPlanet(key)` switches the planet and
   calls `initializeGameState({ preserveManagers: true })` followed by `updateSpaceUI()`.
 Failing to use these helpers may leave the DOM bound to outdated objects.
-To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.
+To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.  This flag should not saved/loaded.  Instead, story unlocks, researches and other things will re enable it as needed.
 
 # Testing
 - `jest` and `jsdom` are available globally.
