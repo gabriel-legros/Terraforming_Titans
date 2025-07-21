@@ -160,11 +160,20 @@ progressGanymede.chapters.push(
         ]
     },
     {
+        id: "chapter11.0b",
+        type: "journal",
+        chapter: 11,
+        narrative: "Intercepted Cult Broadcast...\n  ELIAS KANE: 'You followed me into the dark, little machine. But this is my domain. The ice, the pressure, the crushing silence... it sings to me. Can you hear it? The symphony of oblivion? You build your towers of metal and reason, but they are hollow shells. I will show you the true meaning of faith.'\nFeroza: 'Intel confirms Kane is somewhere beneath the ice. He's using the radiation to mask his transmissions. Clever bastard.'",
+        prerequisites: ["chapter11.0"],
+        objectives: [],
+        reward: []
+    },
+    {
         id: "chapter11.1",
         type: "journal",
         chapter: 11,
         narrative: "Objective: Drill through the ice shell to reach the ocean below.",
-        prerequisites: ["chapter11.0"],
+        prerequisites: ["chapter11.0b"],
         objectives: [
             { type: 'project', projectId: 'deep_drill', repeatCount: 3 }
         ],
@@ -221,8 +230,17 @@ progressGanymede.chapters.push(
         id: "chapter12.2b",
         type: "journal",
         chapter: 12,
-        narrative: "Hart: “Before we go full sonic fence, could we try… talking?”\nHOPE: “Constructing adaptive phoneme lattice. Using prime‑number cadence, whale‑class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑01 ‘Leviathan’. Negotiation protocols terminated.”",
+        narrative: "Intercepted Cult Broadcast...\n  ELIAS KANE: 'The abyss whispers my name. It knows the righteous path. You send your little toys into the depths, searching for a truth you cannot comprehend. You are blind, deaf, and dumb. The Leviathan is a herald, a guardian. It will swallow your pathetic hopes whole.'\nMary: 'He's getting more unhinged. And he knows about the Leviathan. This is bad.'",
         prerequisites: ["chapter12.2"],
+        objectives: [],
+        reward: []
+    },
+    {
+        id: "chapter12.2c",
+        type: "journal",
+        chapter: 12,
+        narrative: "Hart: “Before we go full sonic fence, could we try… talking?”\nHOPE: “Constructing adaptive phoneme lattice. Using prime‑number cadence, whale‑class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑01 ‘Leviathan’. Negotiation protocols terminated.”",
+        prerequisites: ["chapter12.2b"],
         objectives: [],
         reward: [
             { target: 'project', targetId: 'leviathan_countermeasure', type: 'enable' }
@@ -233,7 +251,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 12,
         narrative: "Objective: Deploy the sonic countermeasure to pacify the Leviathan.",
-        prerequisites: ["chapter12.2b"],
+        prerequisites: ["chapter12.2c"],
         objectives: [
             { type: 'project', projectId: 'leviathan_countermeasure', repeatCount: 1 }
         ],
@@ -245,7 +263,7 @@ progressGanymede.chapters.push(
         id: "chapter12.4",
         type: "journal",
         chapter: 12,
-        narrative: "Tug Drone Lead: “Cables connected. Beginning five‑hundred‑kilometre shuffle. ETA: fourteen hours.”\nHOPE: “Trajectory plotted. Leviathan displacement minimal—countermeasure functioning.”\nFeroza: “Drag a mystery coffin through an alien abyss. What could go wrong?”",
+        narrative: "Tug Drone Lead: “Cables connected. Beginning five‑hundred‑kilometre shuffle. ETA: fourteen hours.”\nHOPE: “Trajectory plotted. Leviathan displacement minimal—countermeasure functioning.”\nFeroza: “Dragging Kane's underwater cathedral through an alien abyss. What could go wrong?”",
         prerequisites: ["chapter12.3"],
         objectives: [
             { type: 'project', projectId: 'facility_tug', repeatCount: 1 }
@@ -261,7 +279,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 13,
         title: "Chapter 13: The Silent Outpost",
-        narrative: "Objective: Explore the underwater facility.",
+        narrative: "Objective: Explore the underwater facility. Find Elias Kane.",
         prerequisites: ["chapter12.4"],
         objectives: [
             { type: 'project', projectId: 'facility_expedition', repeatCount: 3 }
@@ -272,7 +290,7 @@ progressGanymede.chapters.push(
         id: "chapter13.1",
         type: "journal",
         chapter: 13,
-        narrative: "Callisto Marine CO: “Drones pouring out of the portal—like angry hornets!”\nHart: “Weapons free! HOPE, patch me every sensor you have.”\nHOPE: “Sensor mesh online. Tactical overlay delivered.”\nMary: “First contact and they send murder‑bots. Figures.”",
+        narrative: "Callisto Marine CO: “We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.”\nELIAS KANE (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nHart: 'What gate? What is he talking about?'\nSuddenly, a massive energy spike. A portal tears open in the center of the chamber.\nFeroza: 'Hostiles incoming! All units, defensive positions!'",
         prerequisites: ["chapter13.0"],
         objectives: [],
         reward: []
@@ -281,7 +299,7 @@ progressGanymede.chapters.push(
         id: "chapter13.2",
         type: "journal",
         chapter: 13,
-        narrative: "Mary assembles the senior team in the outpost’s dim briefing room.\nHart still wearing welding goggles: “We just fought machines built on principles we don’t yet grasp. The science alone—”\nFeroza checking rifle magazine: “Science later. First we decide who holds the trigger while we stare into that hole.”\nFeroza: “All colony channels stay dark; this operation remains strictly black‑ops.”",
+        narrative: "Feroza: 'Kane is in custody, but he's catatonic. The portal is stable for now, but we don't know what else might come through. We secured the facility, but this is far from over.'\nMary assembles the senior team in the captured briefing room.\nHart, pointing at the portal: 'That thing violates every law of physics I know. Kane used himself as a psychic key. The science is terrifying... and revolutionary.'\nFeroza: 'Science later. First, we decide who holds the trigger while we stare into that hole.'",
         prerequisites: ["chapter13.1"],
         objectives: [],
         reward: [
