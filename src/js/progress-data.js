@@ -1585,7 +1585,7 @@ progressData.chapters.push(
     id: "chapter10.4",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. Give us our ocean world.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
+    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
     prerequisites: ["chapter10.3"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }

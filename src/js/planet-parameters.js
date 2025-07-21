@@ -353,12 +353,88 @@ const callistoOverrides = {
   }
 };
 
+
+/* ---------- GANYMEDE OVERRIDES ---------- */
+const ganymedeOverrides = {
+  name: 'Ganymede',
+
+  /* ---------- RESOURCES ---------- */
+  resources: {
+
+    /* SURFACE */
+    surface: {
+      /* total land area  ≈ 8.72 Gha  (= 8.72 × 10⁹ ha) */
+      land: { initialValue: 8720000000 },
+
+      /* accessible surface water-ice (upper regolith only) */
+      ice: { initialValue: 199999999928379200000, unlocked: true },
+
+      liquidWater:   { initialValue: 0 },
+      dryIce:        { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce:{ initialValue: 0 }
+    },
+
+    /* UNDERGROUND */
+    underground: {
+      /* 1 deposit / 10⁶ ha rule ⇒ 8 720 maximum */
+      ore:        { initialValue: 3, maxDeposits: 8720, areaTotal: 87200 },
+      geothermal: { initialValue: 1, maxDeposits:   3, areaTotal: 87200 } // geologically quiet
+    },
+
+    /* ATMOSPHERE — ultra-thin CO₂ / O₂ exosphere */
+    atmospheric: {
+      carbonDioxide:     { initialValue: 3100.0 },     // CO₂ sputtered & sublimation-sourced
+      inertGas:          { initialValue: 1e5 },        // trace Ar, Na, etc.
+      oxygen:            { initialValue: 1.0e4 },      // molecular O₂ from radiolysis
+      atmosphericWater:  { initialValue: 30000.0 },
+      atmosphericMethane:{ initialValue: 0 }
+    },
+
+    /* SPECIAL */
+    special: {
+      /* baseCap = land (ha) × 10 000 — same scaling as other bodies */
+      albedoUpgrades: { baseCap: 87200000000000 }
+    }
+  },
+
+  /* ---------- PER-LATITUDE WATER PARTITION ---------- */
+  zonalWater: {
+    tropical:  { liquid: 0, ice: 272000.0, buriedIce: 5.0e21 },
+    temperate: { liquid: 0, ice: 2270000.0, buriedIce: 7.0e21 },
+    polar:     { liquid: 0, ice: 4.8e13,   buriedIce: 2.0e21 }
+  },
+
+  zonalSurface: {
+    tropical:  { dryIce: 16000.0 },
+    temperate: { dryIce: 28000.0 },
+    polar:     { dryIce: 12000.0 }
+  },
+
+  zonalHydrocarbons: {
+    tropical:  { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar:     { liquid: 0, ice: 0 }
+  },
+
+  /* ---------- CELESTIAL PARAMETERS ---------- */
+  celestialParameters: {
+    distanceFromSun: 5.2,      // AU (shares Jupiter’s orbit)
+    gravity: 1.428,            // m s-²
+    radius: 2634.1,            // km
+    albedo: 0.21,              // Bond albedo estimate
+    rotationPeriod: 171.7      // hours (7.155 days, tidally locked)
+  }
+};
+
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
   mars: marsOverrides,
   titan: titanOverrides,
-  callisto: callistoOverrides
+  callisto: callistoOverrides,
+  ganymede: ganymedeOverrides
   // Add future planets here by defining their override objects
 };
 
@@ -390,7 +466,8 @@ function getPlanetParameters(planetName) {
 const planetParameters = {
     mars: getPlanetParameters('mars'),
     titan: getPlanetParameters('titan'),
-    callisto: getPlanetParameters('callisto')
+    callisto: getPlanetParameters('callisto'),
+    ganymede: getPlanetParameters('ganymede')
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
