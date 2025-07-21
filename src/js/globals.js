@@ -18,6 +18,7 @@ let lifeDesigner;
 let lifeManager;
 let researchManager;
 let fundingModule;
+let spaceManager;
 
 let gameSettings = {
   useCelsius: false,
