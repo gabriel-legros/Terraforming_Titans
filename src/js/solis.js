@@ -11,6 +11,7 @@ const RESOURCE_UPGRADE_AMOUNTS = {
 class SolisManager extends EffectableEntity {
   constructor(resourceValues = {}) {
     super({ description: 'Solis Manager' });
+    this.enabled = false;
     this.resourceValues = Object.assign({
       metal: 1,
       components: 10,
@@ -226,6 +227,7 @@ class SolisManager extends EffectableEntity {
 
   saveState() {
     return {
+      enabled: this.enabled,
       solisPoints: this.solisPoints,
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
@@ -240,6 +242,7 @@ class SolisManager extends EffectableEntity {
   }
 
   loadState(data) {
+    this.enabled = data.enabled || false;
     this.solisPoints = data.solisPoints || 0;
     this.rewardMultiplier = data.rewardMultiplier || 1;
     this.currentQuest = data.currentQuest;
@@ -256,6 +259,7 @@ class SolisManager extends EffectableEntity {
   }
 
   enable() {
+    this.enabled = true;
     if (typeof showSolisTab === 'function') {
       showSolisTab();
     }
