@@ -13,7 +13,7 @@ describe('Dyson Swarm collector cost display', () => {
     ctx.projectElements = {};
     ctx.resources = { colony: { glass: { displayName: 'Glass' }, electronics: { displayName: 'Electronics' }, components: { displayName: 'Components' } } };
 
-    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'dysonswarmUI.js'), 'utf8');
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'dysonswarmUI.js'), 'utf8');
     vm.runInContext(uiCode, ctx);
 
     const project = {

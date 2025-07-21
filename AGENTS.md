@@ -177,3 +177,4 @@ second time they speak in a chapter to help clarify who is talking.
   of the same name that causes unused spaceships to duplicate at 0.1% per second
   up to one trillion units.
 - Replication logic now resides in self-replicating-ships.js and is invoked from resource.js.
+- Removed unused Dyson Swarm JS files and updated tests to use the project versions.
