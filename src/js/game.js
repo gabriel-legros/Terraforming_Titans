@@ -280,9 +280,6 @@ function updateLogic(delta) {
 
   recalculateTotalRates();
 
-  if (typeof applyGameEffects === 'function') {
-    applyGameEffects();
-  }
 }
 
 function updateRender() {

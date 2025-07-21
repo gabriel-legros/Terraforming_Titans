@@ -170,3 +170,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Day-night setting checkbox now updates when starting a new game or loading a save.
 - Solis tab remains hidden in HTML until chapter 5.2 unlocks it.
 - Solis subtab visibility now checks a saved enabled flag so loading earlier saves hides it again.
+- Day-night effects no longer reapply each frame; they update only when toggling the setting or loading a save.
