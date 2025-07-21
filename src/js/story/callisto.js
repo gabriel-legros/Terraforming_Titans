@@ -177,7 +177,7 @@ progressCallisto.chapters.push(
     id: "chapter8.1",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted life-support systems on Mars and heavy excavation equipment on Titan. We're shipping replacements, disguised as routine supply runs. The disruption is our opportunity. While their attention is divided, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is our opportunity. While their attention is divided, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
     prerequisites: ["chapter8.0"],
     objectives: [
       { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
