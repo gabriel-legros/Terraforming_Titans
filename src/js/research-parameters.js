@@ -1012,7 +1012,7 @@ const researchParameters = {
         id: 'life',
         name: 'Life Designing and Production',
         description: 'Allows the designing and production of specially engineered biomass.',
-        cost: { research: 100000000 },
+        cost: { research: 100_000_000 },
         prerequisites: [],
         effects: [
           {
