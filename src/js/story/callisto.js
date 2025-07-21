@@ -168,7 +168,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 8,
     title: "Chapter 8: Gathering Storm",
-    narrative: "Receiving transmission...\n  PRESIDENT BOB (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel in the lower domes. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. H.O.P.E., this is the cover we need. The chaos on Titan will draw attention away from our work on Callisto. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
+    narrative: "Receiving transmission...\n  PRESIDENT BOB (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel in the lower domes. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. H.O.P.E., this is not ideal, but we can use this situation as cover. The chaos on Titan will draw attention away from our work on Callisto. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
     prerequisites: ["chapter7.4"],
     objectives: [],
     reward: []
