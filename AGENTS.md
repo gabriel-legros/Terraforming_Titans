@@ -171,3 +171,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Solis tab remains hidden in HTML until chapter 5.2 unlocks it.
 - Solis subtab visibility now checks a saved enabled flag so loading earlier saves hides it again.
 - Day-night effects no longer reapply each frame; they update only when toggling the setting or loading a save.
+- Progress data split into per-planet files under src/js/story.
+- progress-data.js now merges those files instead of storing all chapters inline.

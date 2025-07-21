@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('advanced research unlock chapter', () => {
   test('chapter4.10 unlocks advanced research resource and tab', () => {
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
-    vm.createContext(ctx);
-    vm.runInContext(code, ctx);
+    loadProgress(ctx);
     const chapters = ctx.progressData.chapters;
     const ch4_10 = chapters.find(c => c.id === 'chapter4.10');
     const ch4_11 = chapters.find(c => c.id === 'chapter4.11');

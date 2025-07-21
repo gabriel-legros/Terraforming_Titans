@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('story step persistence across save/load', () => {
   test('shown steps are kept after reload', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
-    const progressCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
 
     const ctx = {
       console,
@@ -21,7 +21,9 @@ describe('story step persistence across save/load', () => {
       document: { getElementById: () => null }
     };
     vm.createContext(ctx);
-    vm.runInContext(projectCode + paramsCode + progressCode + '; this.Project = Project; this.ProjectManager = ProjectManager; this.projectParameters = projectParameters;', ctx);
+    vm.runInContext(projectCode + paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    loadProgress(ctx);
+    vm.runInContext('; this.Project = Project; this.ProjectManager = ProjectManager;', ctx);
 
     const manager = new ctx.ProjectManager();
     manager.initializeProjects(ctx.projectParameters);

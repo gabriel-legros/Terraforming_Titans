@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('HOPE tab unlock chapter', () => {
   test('HOPE tab unlock occurs before final chapters', () => {
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
-    vm.createContext(ctx);
-    vm.runInContext(code, ctx);
+    loadProgress(ctx);
     const chapters = ctx.progressData.chapters;
     const hopeChapter = chapters.find(c => c.id === 'chapter4.9');
     expect(hopeChapter).toBeDefined();
