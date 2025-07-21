@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('earth probe unlock chapter', () => {
   test('chapter4.12 unlocks the earthProbe project at 100 colonists', () => {
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
-    vm.createContext(ctx);
-    vm.runInContext(code, ctx);
+    loadProgress(ctx);
     const chapters = ctx.progressData.chapters;
     const ch411 = chapters.find(c => c.id === 'chapter4.11');
     const ch412 = chapters.find(c => c.id === 'chapter4.12');

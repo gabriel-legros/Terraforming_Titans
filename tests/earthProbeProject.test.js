@@ -1,15 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('Earth Recon Probe project', () => {
   test('parameters include planet restriction and cost doubling', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
-    const progressCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
     vm.createContext(ctx);
-    vm.runInContext(paramsCode + progressCode + '; this.projectParameters = projectParameters;', ctx);
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    loadProgress(ctx);
     const project = ctx.projectParameters.earthProbe;
     expect(project).toBeDefined();
     expect(project.repeatable).toBe(true);

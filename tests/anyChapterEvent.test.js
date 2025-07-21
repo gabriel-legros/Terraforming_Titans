@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('Chapter -1 events do not change current chapter', () => {
   test('activating event keeps currentChapter', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress.js'), 'utf8');
-    const dataCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const atmoCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'atmo-collector-trigger.js'), 'utf8');
 
     const ctx = {
@@ -18,7 +18,7 @@ describe('Chapter -1 events do not change current chapter', () => {
     };
     vm.createContext(ctx);
     vm.runInContext(atmoCode, ctx);
-    vm.runInContext(dataCode, ctx);
+    loadProgress(ctx);
     const event = ctx.progressData.chapters.find(c => c.id === 'any.awCollector');
     ctx.progressData = { chapters: [event] };
     vm.runInContext(code + '; this.StoryManager = StoryManager;', ctx);

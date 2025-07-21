@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('Demo ending after chapter6.3b', () => {
   test('chapter6.3b does not enable Callisto and chapter6.3c is a system pop-up', () => {
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
-    vm.createContext(ctx);
-    vm.runInContext(code, ctx);
+    loadProgress(ctx);
     const chapters = ctx.progressData.chapters;
     const ch63b = chapters.find(c => c.id === 'chapter6.3b');
     const ch63c = chapters.find(c => c.id === 'chapter6.3c');

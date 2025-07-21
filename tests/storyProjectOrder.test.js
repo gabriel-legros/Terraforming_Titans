@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
@@ -12,8 +13,8 @@ describe('default story project order', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.ProjectManager = ProjectManager;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
-    const progressCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
-    vm.runInContext(paramsCode + progressCode + '; this.projectParameters = projectParameters;', ctx);
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    loadProgress(ctx);
 
     ctx.projectManager = new ctx.ProjectManager();
     ctx.projectManager.initializeProjects(ctx.projectParameters);

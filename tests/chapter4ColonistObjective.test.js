@@ -1,13 +1,10 @@
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const loadProgress = require('./loadProgress');
 
 describe('chapter4 colonist milestone', () => {
   test('chapter4.9 requires at least 100 colonists and chapter4.10 uses updated narrative', () => {
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress-data.js'), 'utf8');
     const ctx = {};
-    vm.createContext(ctx);
-    vm.runInContext(code, ctx);
+    loadProgress(ctx);
     const chapters = ctx.progressData.chapters;
     const prev = chapters.find(c => c.id === 'chapter4.9b');
     const chapter = chapters.find(c => c.id === 'chapter4.10');
