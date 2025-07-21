@@ -519,10 +519,10 @@ function addOrRemoveEffect(effect, action) {
     'terraforming': terraforming,
     'lifeDesigner': lifeDesigner,
     'lifeManager': lifeManager,
-    'oreScanner': globalThis.oreScanner,
-    'researchManager' : globalThis.researchManager,
-    'solisManager' : globalThis.solisManager,
-    'spaceManager' : globalThis.spaceManager
+    'oreScanner': oreScanner,
+    'researchManager' : researchManager,
+    'solisManager' : solisManager,
+    'spaceManager' : spaceManager
   };
 
   if (effect.target in targetHandlers &&
