@@ -151,7 +151,7 @@ const projectParameters = {
     duration: 120000,
     description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  The price scales with the number of ore mines constructed and the number of project completions.  The price of ore mines is also adjusted with each completion.",
     repeatable: true,
-    maxRepeatCount: 100000,
+    maxRepeatCount: 10000,
     unlocked : false,
     attributes : {
       costOreMineScaling : true,

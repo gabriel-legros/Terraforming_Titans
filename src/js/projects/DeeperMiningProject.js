@@ -25,6 +25,25 @@ class DeeperMiningProject extends AndroidProject {
       elements.androidSpeedDisplay.textContent = `Deepening speed boost x${formatNumber(mult, true)}`;
     }
   }
+
+  applyCompletionEffect() {
+    this.attributes.completionEffect.forEach((effect) => {
+      const scaledEffect = { ...effect };
+
+      // Apply effect scaling if the attribute is enabled
+      if (this.attributes.effectScaling) {
+        const baseValue = effect.value; // Use the base value from the project definition
+        const n = this.repeatCount; // Total completions
+        scaledEffect.value = (baseValue) * n * (n+1)/2 + 1; // Compute scaled value
+
+        // Use addAndReplace to replace any existing effect with the same effectId
+        addEffect({ ...scaledEffect, sourceId: this });
+      } else {
+        // If effectScaling is not enabled, add the effect normally
+        addEffect({ ...effect, sourceId: this });
+      }
+    });
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
