@@ -20,4 +20,19 @@ describe('getPlanetParameters', () => {
     expect(params.resources.colony.advancedResearch.hasCap).toBe(false);
     expect(params.resources.colony.advancedResearch.unlocked).toBe(false);
   });
+
+  test('moons specify their parent body', () => {
+    const moons = [
+      { key: 'titan', parent: 'Saturn' },
+      { key: 'callisto', parent: 'Jupiter' },
+      { key: 'ganymede', parent: 'Jupiter' }
+    ];
+    for (const { key, parent } of moons) {
+      const params = getPlanetParameters(key);
+      expect(params.parentBody).toBeDefined();
+      expect(params.parentBody.name).toBe(parent);
+      expect(typeof params.parentBody.mass).toBe('number');
+      expect(typeof params.parentBody.orbitRadius).toBe('number');
+    }
+  });
 });

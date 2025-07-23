@@ -178,3 +178,4 @@ second time they speak in a chapter to help clarify who is talking.
   up to one trillion units.
 - Replication logic now resides in self-replicating-ships.js and is invoked from resource.js.
 - Removed unused Dyson Swarm JS files and updated tests to use the project versions.
+- Moons now include parent body name, mass and orbit radius in planet-parameters.
