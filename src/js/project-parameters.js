@@ -359,6 +359,23 @@ const projectParameters = {
       ]
     }
   },
+  photonThrusters: {
+    type: 'PhotonThrustersProject',
+    name: 'Photon Thrusters',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 500000,
+        components: 100000,
+        electronics: 15000
+      }
+    },
+    duration: 300000,
+    description: 'Install planetary photon thrusters for subtle maneuvering.',
+    repeatable: false,
+    unlocked: false,
+    attributes: { }
+  },
   dysonSwarmReceiver : {
     type: 'DysonSwarmReceiverProject',
     name : 'Dyson Swarm Receiver',
