@@ -214,7 +214,7 @@ class Terraforming extends EffectableEntity{
         // dryIceCoverage: 0 // Removed - will be calculated from zonalSurface.dryIce
     };
     this.magnetosphere = {
-      name: 'Magnetosphere',
+      name: 'Others',
       value: 0,
       target: 100,
       unlocked: false
