@@ -173,4 +173,8 @@ second time they speak in a chapter to help clarify who is talking.
 - Day-night effects no longer reapply each frame; they update only when toggling the setting or loading a save.
 - Progress data split into per-planet files under src/js/story.
 - progress-data.js now merges those files instead of storing all chapters inline.
+- Added advanced research "Self Replicating Ships" unlocking an industry research
+  of the same name that causes unused spaceships to duplicate at 0.1% per second
+  up to one trillion units.
+- Replication logic now resides in self-replicating-ships.js and is invoked from resource.js.
 - Removed unused Dyson Swarm JS files and updated tests to use the project versions.

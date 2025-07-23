@@ -351,6 +351,10 @@ function produceResources(deltaTime, buildings) {
     researchManager.update(deltaTime);
   }
 
+  if (typeof updateShipReplication === 'function') {
+    updateShipReplication(deltaTime, resources, globalEffects, accumulatedChanges);
+  }
+
   if(projectManager){
     projectManager.estimateProjects();
   }
