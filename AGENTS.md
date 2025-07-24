@@ -181,5 +181,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Added Photon Thrusters special project placeholder.
 - Photon Thrusters script now loads in index.html so the hidden project is generated correctly.
 - Photon Thrusters project now shows spin and motion subcards with orbital and distance info.
+- Spin and motion subcards only appear once the Photon Thrusters project is completed.
 - Moons now include parent body name, mass and orbit radius in planet-parameters.
 - Loading a save now merges any new projects into the order so updates aren't skipped.
