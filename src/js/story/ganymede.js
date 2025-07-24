@@ -16,7 +16,8 @@ progressGanymede.storyProjects.deep_drill = {
   },
   duration: 1800000, // 30 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
-  repeatable: false,
+  repeatable: true,
+  maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'ganymede',
@@ -163,7 +164,7 @@ progressGanymede.chapters.push(
     {
         id: "chapter11.0a",
         type: "journal",
-        chapter: 4,
+        chapter: 11,
         narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
         prerequisites: ["chapter11.0"],
         objectives: [],
