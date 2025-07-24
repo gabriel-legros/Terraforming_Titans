@@ -256,12 +256,12 @@ const titanOverrides = {
     radius: 2574.7,
     mass: 1.345e23, // kg
     albedo: 0.15,
-  rotationPeriod: 382.7,
-  },
-  parentBody: {
-    name: 'Saturn',
-    mass: 5.683e26,       // kg
-    orbitRadius: 1221870  // km
+    rotationPeriod: 382.7,
+    parentBody: {
+      name: 'Saturn',
+      mass: 5.683e26,       // kg
+      orbitRadius: 1221870  // km
+    }
   }
 };
 
@@ -357,12 +357,12 @@ const callistoOverrides = {
     radius: 2410.3,            // km :contentReference[oaicite:4]{index=4}
     mass: 1.076e23,            // kg
     albedo: 0.17,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
-    rotationPeriod: 400.8      // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
-  },
-  parentBody: {
-    name: 'Jupiter',
-    mass: 1.898e27,      // kg
-    orbitRadius: 1882700 // km
+    rotationPeriod: 400.8,     // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
+    parentBody: {
+      name: 'Jupiter',
+      mass: 1.898e27,      // kg
+      orbitRadius: 1882700 // km
+    }
   }
 };
 
@@ -437,12 +437,12 @@ const ganymedeOverrides = {
     radius: 2634.1,            // km
     mass: 1.482e23,            // kg
     albedo: 0.21,              // Bond albedo estimate
-    rotationPeriod: 171.7      // hours (7.155 days, tidally locked)
-  },
-  parentBody: {
-    name: 'Jupiter',
-    mass: 1.898e27,     // kg
-    orbitRadius: 1070400 // km
+    rotationPeriod: 171.7,     // hours (7.155 days, tidally locked)
+    parentBody: {
+      name: 'Jupiter',
+      mass: 1.898e27,     // kg
+      orbitRadius: 1070400 // km
+    }
   }
 };
 
