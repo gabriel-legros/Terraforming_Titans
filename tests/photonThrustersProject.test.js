@@ -138,4 +138,36 @@ describe('Photon Thrusters project', () => {
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
   });
+
+  test('orbital period uses parent mass for moons', () => {
+    const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 5.2, parentBody: { name: 'Jupiter', mass: 1.898e27, orbitRadius: 1882700 } } };
+    ctx.EffectableEntity = EffectableEntity;
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.updateUI();
+
+    const spin = ctx.projectElements.photonThrusters.spin;
+    const value = parseFloat(spin.orbitalPeriod.textContent);
+    expect(value).toBeCloseTo(16.7, 1);
+  });
 });
