@@ -91,6 +91,7 @@ function create() {
   goldenAsteroid = new GoldenAsteroid();
 
   solisManager = new SolisManager();
+  warpGateCommand = new WarpGateCommand();
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -190,6 +191,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !solisManager) {
     solisManager = new SolisManager();
   }
+  if (!preserveManagers || !warpGateCommand) {
+    warpGateCommand = new WarpGateCommand();
+  }
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -238,6 +242,9 @@ function initializeGameState(options = {}) {
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects();
   }
+  if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
+    warpGateCommand.reapplyEffects();
+  }
 }
 
 function updateLogic(delta) {
@@ -267,6 +274,9 @@ function updateLogic(delta) {
 
   if (solisManager) {
     solisManager.update(delta);
+  }
+  if (warpGateCommand) {
+    warpGateCommand.update(delta);
   }
 
   lifeDesigner.update(delta);
