@@ -22,6 +22,9 @@ function initializeHopeUI() {
     if (typeof initializeSolisUI === 'function') {
         initializeSolisUI();
     }
+    if (typeof initializeWGCUI === 'function') {
+        initializeWGCUI();
+    }
 }
 
 function updateHopeAlert() {
@@ -51,6 +54,12 @@ function updateHopeUI() {
     }
     if (typeof updateSolisUI === 'function') {
         updateSolisUI();
+    }
+    if (typeof updateWGCVisibility === 'function') {
+        updateWGCVisibility();
+    }
+    if (typeof updateWGCUI === 'function') {
+        updateWGCUI();
     }
     updateHopeAlert();
 }

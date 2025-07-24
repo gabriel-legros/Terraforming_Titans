@@ -47,5 +47,6 @@ let ghgFactorySettings = {
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;
+let warpGateCommand;
 let playTimeSeconds = 0;
 let gameSpeed = 1;
