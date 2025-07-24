@@ -291,7 +291,7 @@ progressTitan.storyProjects.interrogate_alien = {
     }
   },
   duration: 600000,
-  description: 'Conduct a series of environmental stress tests on the captured biological entity to determine its properties and potential for planetary integration or neutralization.',
+  description: 'Conduct a series of environmental stress tests on the captured biological entity, designated Hazardous Biomass HB-01, to determine its properties and potential for planetary integration or neutralization.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,

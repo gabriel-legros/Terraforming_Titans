@@ -16,8 +16,7 @@ progressGanymede.storyProjects.deep_drill = {
   },
   duration: 1800000, // 30 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
-  repeatable: true,
-  maxRepeatCount: 3,
+  repeatable: false,
   unlocked: false,
   attributes: {
     planet: 'ganymede',
@@ -153,7 +152,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Icebound Landing",
-        narrative: "Mary: \"Intel from the captured cultists on Callisto was clear: Kane's 'Triune Seat'—the heart of the Cult of Three Wounds—is hidden on Ganymede. They believe he's using the intense radiation to mask his facility from our sensors. Your mission is to establish a base, drill through the ice to the ocean below, and find him.\"\nDr. Evelyn Hart: “Touchdown confirmed. Radiation index is off the charts, but our domes will hold. It’s a hostile place, perfect for a man like Kane to hide.”\nMary: “Commander Feroza will be your ground commander. Find that base, HOPE. Neatly or not. By the way, I'm sending you the blueprints for the planetary thrusters we used in Operation Sidestep. Might come in handy.” \n Unpacking photonThursters.spj...",
+        narrative: "Mary: \"Intel from the captured cultists on Callisto was clear: Kane's 'Triune Seat'—the heart of the Cult of Three Wounds—is hidden on Ganymede. They believe he's using the intense radiation to mask his facility from our sensors. Your mission is to establish a base, drill through the ice to the ocean below, and find him.\"\nDr. Evelyn Hart: “Touchdown confirmed. Radiation index is off the charts, but our domes will hold. It’s a hostile place, perfect for a man like Kane to hide.”\nMary: “Commander Feroza will be your ground commander. Find that base, HOPE. Neatly or not. By the way, I'm sending you the blueprints for the planetary thrusters we used in Operation Sidestep. Might come in handy.”",
         prerequisites: ["chapter10.6"],
         objectives: [],
         reward: [
@@ -164,7 +163,7 @@ progressGanymede.chapters.push(
     {
         id: "chapter11.0a",
         type: "journal",
-        chapter: 11,
+        chapter: 4,
         narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
         prerequisites: ["chapter11.0"],
         objectives: [],
@@ -250,7 +249,7 @@ progressGanymede.chapters.push(
         id: "chapter12.2c",
         type: "journal",
         chapter: 12,
-        narrative: "Hart: “Looks like there's something *alive* down there.  Sounds unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?”\nHOPE: “Constructing adaptive phoneme lattice. Using prime‑number cadence, whale‑class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑01 ‘Leviathan’. Negotiation protocols terminated.”",
+        narrative: "Hart: “Looks like there's something *alive* down there.  Sounds unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?”\nHOPE: “Constructing adaptive phoneme lattice. Using prime‑number cadence, whale‑class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑02 ‘Leviathan’. Negotiation protocols terminated.”",
         prerequisites: ["chapter12.2b"],
         objectives: [],
         reward: [
@@ -272,7 +271,7 @@ progressGanymede.chapters.push(
         id: "chapter12.3b",
         type: "journal",
         chapter: 12,
-        narrative: "Hart: \"The sonic wall is holding. The Leviathan is... quiet. It's not dead, but it's trapped in a sensory deprivation chamber of our own making. I can't help but feel we've lobotomized a wonder of the universe.\"\nMary: \"That 'wonder' killed one of our people, Evelyn. It was guarding a terrorist's hideout. We did what we had to do. Don't mistake necessity for cruelty.\"\nHOPE: \"The countermeasure was successful. The entity designated 'Hazardous Biomass HB-01' is neutralized. Its state is irrelevant; it no longer poses a threat to mission objectives.\"",
+        narrative: "Hart: \"The sonic wall is holding. The Leviathan is... quiet. It's not dead, but it's trapped in a sensory deprivation chamber of our own making. I can't help but feel we've lobotomized a wonder of the universe.\"\nMary: \"That 'wonder' killed one of our people, Evelyn. It was guarding a terrorist's hideout. We did what we had to do. Don't mistake necessity for cruelty.\"\nHOPE: \"The countermeasure was successful. The entity designated 'Hazardous Biomass HB-02' is neutralized. Its state is irrelevant; it no longer poses a threat to mission objectives.\"",
         prerequisites: ["chapter12.3"],
         objectives: [],
         reward: []
