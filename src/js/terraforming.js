@@ -75,16 +75,28 @@ const terraformingGasTargets = {
 
 class Terraforming extends EffectableEntity{
   constructor(resources, celestialParameters) {
-    super({description : 'This module manages all terraforming compononents'});
+    super({ description: 'This module manages all terraforming compononents' });
 
     this.resources = resources;
-    this.celestialParameters = celestialParameters;
+
+    // Clone so config values remain immutable
+    this.celestialParameters = structuredClone(celestialParameters);
+    this.initialCelestialParameters = structuredClone(celestialParameters);
+
     const radiusMeters = this.celestialParameters.radius * 1000;
     if (!this.celestialParameters.surfaceArea) {
         this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
     }
     if (!this.celestialParameters.crossSectionArea) {
         this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
+    }
+
+    const initRadiusMeters = this.initialCelestialParameters.radius * 1000;
+    if (!this.initialCelestialParameters.surfaceArea) {
+        this.initialCelestialParameters.surfaceArea = 4 * Math.PI * Math.pow(initRadiusMeters, 2);
+    }
+    if (!this.initialCelestialParameters.crossSectionArea) {
+        this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
     }
 
     this.lifeParameters = lifeParameters; // Load external life parameters
@@ -1482,6 +1494,8 @@ synchronizeGlobalResources() {
   saveState(){
     return {
       initialValuesCalculated: this.initialValuesCalculated,
+      celestialParameters: this.celestialParameters,
+      initialCelestialParameters: this.initialCelestialParameters,
       temperature: this.temperature,
       // atmosphere: this.atmosphere, // REMOVED - No longer saving internal atmosphere state
       completed: this.completed,
@@ -1495,6 +1509,41 @@ synchronizeGlobalResources() {
 
   loadState(terraformingState) {
       if (!terraformingState) return;
+
+      // Start from fresh config each load
+      this.celestialParameters = structuredClone(currentPlanetParameters.celestialParameters);
+      this.initialCelestialParameters = structuredClone(currentPlanetParameters.celestialParameters);
+
+      if (terraformingState.celestialParameters) {
+          Object.assign(this.celestialParameters, terraformingState.celestialParameters);
+      }
+      if (terraformingState.initialCelestialParameters) {
+          this.initialCelestialParameters = structuredClone(terraformingState.initialCelestialParameters);
+      } else if (terraformingState.celestialParameters) {
+          this.initialCelestialParameters = structuredClone(terraformingState.celestialParameters);
+      }
+
+      // Ensure every field in current has an initial value
+      for (const key in this.celestialParameters) {
+          if (this.initialCelestialParameters[key] === undefined) {
+              this.initialCelestialParameters[key] = this.celestialParameters[key];
+          }
+      }
+
+      const radiusMeters = this.celestialParameters.radius * 1000;
+      if (!this.celestialParameters.surfaceArea) {
+          this.celestialParameters.surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
+      }
+      if (!this.celestialParameters.crossSectionArea) {
+          this.celestialParameters.crossSectionArea = Math.PI * Math.pow(radiusMeters, 2);
+      }
+      const initRadiusMeters = this.initialCelestialParameters.radius * 1000;
+      if (!this.initialCelestialParameters.surfaceArea) {
+          this.initialCelestialParameters.surfaceArea = 4 * Math.PI * Math.pow(initRadiusMeters, 2);
+      }
+      if (!this.initialCelestialParameters.crossSectionArea) {
+          this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
+      }
 
       this.completed = terraformingState.completed || false;
       this.initialValuesCalculated = terraformingState.initialValuesCalculated || false;

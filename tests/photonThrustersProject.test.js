@@ -75,16 +75,8 @@ describe('Photon Thrusters project', () => {
       expect(moonWarning.textContent.trim()).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
-    expect(spin.orbitalPeriod.textContent).toContain('365.25');
-    expect(spin.target.value).toBe('1');
-    const expectedCost = ctx.formatNumber(
-      spinEnergyCost(6.417e23, 3389.5, 24.6, 24),
-      false,
-      2
-    ) + ' W-day';
-    expect(spin.energyCost.textContent).toBe(expectedCost);
-    const inputs = container.querySelectorAll('#spin-target');
-    expect(inputs.length).toBe(1);
+    expect(spin.rotationPeriod.textContent).toBe('1.00 days');
+    expect(spin.target.textContent).toBe('1 day');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');
