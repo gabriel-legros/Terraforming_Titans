@@ -131,8 +131,9 @@ function createProjectItem(project) {
     projectElements[project.name] = { ...projectElements[project.name], sustainCostElement: sustainText };
   }
 
-  // Repeat Count
-  if (project.repeatable && project.maxRepeatCount !== Infinity) {
+  // Repeat Count / Depth Display
+  if ((project.repeatable && project.maxRepeatCount !== Infinity) ||
+      (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject && project.maxDepth !== Infinity)) {
     const repeatCountElement = document.createElement('p');
     repeatCountElement.id = `${project.name}-repeat-count`;
     projectDetails.appendChild(repeatCountElement);
@@ -386,9 +387,13 @@ function updateProjectUI(projectName) {
 
 
 
-  // Update Repeat Count if applicable
+  // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
-    elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+    if (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject) {
+      elements.repeatCountElement.textContent = `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`;
+    } else {
+      elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+    }
   }
 
   // Set the auto-start checkbox state based on the project data
@@ -427,7 +432,10 @@ function updateProjectUI(projectName) {
   }
 
   // Check if the project has reached its maximum repeat count or is completed and not repeatable
-  const isMaxRepeatReached = project.repeatable && project.repeatCount >= project.maxRepeatCount;
+  const isMaxRepeatReached =
+    (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject)
+      ? project.averageDepth >= project.maxDepth
+      : project.repeatable && project.repeatCount >= project.maxRepeatCount;
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
 
   if (isMaxRepeatReached || isCompletedAndNotRepeatable) {

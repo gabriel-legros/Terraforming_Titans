@@ -3,10 +3,11 @@ const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
-describe('Deeper mining registerMine updates depth', () => {
-  test('average depth updates when mines built', () => {
+describe('Deeper mining max depth', () => {
+  test('cannot start when depth reached', () => {
     const ctx = { console, EffectableEntity };
-    ctx.buildings = { oreMine: { count: 0 } };
+    ctx.resources = { colony: { androids: { value: 0 } } };
+    ctx.buildings = { oreMine: { count: 1 } };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -14,16 +15,10 @@ describe('Deeper mining registerMine updates depth', () => {
     vm.runInContext(androidCode + '; this.AndroidProject = AndroidProject;', ctx);
     const deeperCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'DeeperMiningProject.js'), 'utf8');
     vm.runInContext(deeperCode + '; this.DeeperMiningProject = DeeperMiningProject;', ctx);
-    const config = { name: 'deeperMining', category: 'infrastructure', cost: {}, duration: 1, description: '', repeatable: true, maxDepth: Infinity, unlocked: true, attributes: { costOreMineScaling: true }};
-    const p = new ctx.DeeperMiningProject(config, 'deeperMining');
-    ctx.buildings.oreMine.count = 4;
-    p.registerMine();
-    expect(p.oreMineCount).toBe(4);
-    expect(p.averageDepth).toBe(1);
-    p.averageDepth = 2;
-    ctx.buildings.oreMine.count = 6;
-    p.registerMine();
-    expect(p.oreMineCount).toBe(6);
-    expect(p.averageDepth).toBeCloseTo((2 * 4 + 2) / 6);
+    const config = { name: 'deeperMining', category: 'infrastructure', cost: {}, duration: 1, description: '', repeatable: true, maxDepth: 2, unlocked: true, attributes: {} };
+    const project = new ctx.DeeperMiningProject(config, 'deeperMining');
+    expect(project.canStart()).toBe(true);
+    project.averageDepth = 2;
+    expect(project.canStart()).toBe(false);
   });
 });

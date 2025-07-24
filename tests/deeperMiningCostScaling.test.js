@@ -21,7 +21,7 @@ describe('Deeper mining cost scaling', () => {
       duration: 1,
       description: '',
       repeatable: true,
-      maxRepeatCount: Infinity,
+      maxDepth: Infinity,
       unlocked: true,
       attributes: { costOreMineScaling: true }
     };
@@ -49,7 +49,7 @@ describe('Deeper mining cost scaling', () => {
       duration: 1,
       description: '',
       repeatable: true,
-      maxRepeatCount: Infinity,
+      maxDepth: Infinity,
       unlocked: true,
       attributes: { costOreMineScaling: true }
     };
