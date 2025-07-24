@@ -193,3 +193,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Loading a save now takes initial celestial parameters from configuration and fills missing current values from them.
 - Moon thruster warning moved from the global warning box to a small notice within the Photon Thrusters card.
 - Numbers above sextillion now format as Sp, Oc and No up to 1e30.
+- Photon Thrusters project gains an energy investment UI with +/- buttons, 0, /10, x10 and Max. Invested energy drains every second and shows in resource rates.
