@@ -275,7 +275,7 @@ class PhotonThrustersProject extends Project {
       elements.energySection.style.display = this.isCompleted ? 'block' : 'none';
     }
     if (elements.energyInvestedDisplay) {
-      elements.energyInvestedDisplay.textContent = formatNumber(this.energyInvestment, true);
+      elements.energyInvestedDisplay.textContent = `${formatNumber(this.energyInvestment, true)} W`;
     }
     if (elements.spin && elements.spin.investCheckbox) {
       elements.spin.investCheckbox.checked = this.spinInvest;
