@@ -19,6 +19,9 @@ class DeeperMiningProject extends AndroidProject {
       const totalDepth = this.averageDepth * current;
       this.oreMineCount = built;
       this.averageDepth = (totalDepth + delta) / this.oreMineCount;
+      if (this.attributes?.completionEffect) {
+        this.applyCompletionEffect();
+      }
     }
   }
 
@@ -107,8 +110,22 @@ class DeeperMiningProject extends AndroidProject {
 
   loadState(state) {
     super.loadState(state);
-    this.oreMineCount = state.oreMineCount || 0;
-    this.averageDepth = state.averageDepth || 1;
+    let built = 0;
+    if (typeof buildings !== 'undefined' && buildings.oreMine) {
+      built = buildings.oreMine.count;
+    } else if (typeof globalThis !== 'undefined' && globalThis.buildings?.oreMine) {
+      built = globalThis.buildings.oreMine.count;
+    }
+    this.oreMineCount =
+      state.oreMineCount !== undefined ? state.oreMineCount : built;
+    if (state.averageDepth !== undefined) {
+      this.averageDepth = state.averageDepth;
+    } else {
+      this.averageDepth = (this.repeatCount || 0) + 1;
+    }
+    if (this.attributes?.completionEffect) {
+      this.applyCompletionEffect();
+    }
   }
 }
 

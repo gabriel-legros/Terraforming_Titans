@@ -202,3 +202,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Deeper mining costs now scale 90% with ore mines and 10% with average depth. A tooltip on the project card explains the formula.
 - Android assignment speed tooltip now states "1 + sqrt(androids assigned / ore mines built)".
 - Deeper mining projects track maximum depth instead of repeat count and display average depth in the UI.
+- Deeper mining effects now reapply when average depth changes and old saves default depth to completions.
