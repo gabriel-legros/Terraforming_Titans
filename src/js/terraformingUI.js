@@ -609,7 +609,7 @@ function updateLifeBox() {
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
-      <p>Status: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
+      <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
     `;
     const magnetosphereHeading = magnetosphereBox.querySelector('h3');
     if (magnetosphereHeading) {
