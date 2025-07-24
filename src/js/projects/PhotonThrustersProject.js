@@ -1,6 +1,15 @@
-function calculateOrbitalPeriodDays(distanceAU) {
-  if (typeof distanceAU !== 'number' || distanceAU <= 0) return 0;
-  const years = Math.sqrt(Math.pow(distanceAU, 3));
+function calculateOrbitalPeriodDays(params) {
+  if (!params) return 0;
+  const { distanceFromSun, parentBody } = params;
+  if (parentBody && typeof parentBody.mass === 'number' && typeof parentBody.orbitRadius === 'number') {
+    const G = 6.67430e-11;
+    const a = parentBody.orbitRadius * 1000; // km → m
+    const mu = G * parentBody.mass;
+    const periodSeconds = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / mu);
+    return periodSeconds / 86400; // seconds → days
+  }
+  if (typeof distanceFromSun !== 'number' || distanceFromSun <= 0) return 0;
+  const years = Math.sqrt(Math.pow(distanceFromSun, 3));
   return years * 365.25;
 }
 
@@ -77,7 +86,7 @@ class PhotonThrustersProject extends Project {
     }
 
     if (elements.spin && elements.spin.orbitalPeriod) {
-      const period = calculateOrbitalPeriodDays(params.distanceFromSun);
+      const period = calculateOrbitalPeriodDays(params);
       elements.spin.orbitalPeriod.textContent = `${formatNumber(period, false, 2)} days`;
     }
 
