@@ -35,4 +35,12 @@ describe('getPlanetParameters', () => {
       expect(typeof params.parentBody.orbitRadius).toBe('number');
     }
   });
+
+  test('all planets include mass estimates', () => {
+    const planets = ['mars', 'titan', 'callisto', 'ganymede'];
+    for (const name of planets) {
+      const params = getPlanetParameters(name);
+      expect(typeof params.celestialParameters.mass).toBe('number');
+    }
+  });
 });

@@ -86,6 +86,7 @@ const defaultPlanetParameters = {
     distanceFromSun: 1.52, // Default (Mars)
     gravity: 3.711, // Default (Mars)
     radius: 3389.5, // Default (Mars)
+    mass: 6.417e23, // kg
     albedo: 0.25, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
   }
@@ -253,6 +254,7 @@ const titanOverrides = {
     distanceFromSun: 9.58,
     gravity: 1.35,
     radius: 2574.7,
+    mass: 1.345e23, // kg
     albedo: 0.15,
   rotationPeriod: 382.7,
   },
@@ -353,6 +355,7 @@ const callistoOverrides = {
     distanceFromSun: 5.2,      // Jupiter’s semi‑major axis (AU)
     gravity: 1.236,            // m s‑² :contentReference[oaicite:3]{index=3}
     radius: 2410.3,            // km :contentReference[oaicite:4]{index=4}
+    mass: 1.076e23,            // kg
     albedo: 0.17,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
     rotationPeriod: 400.8      // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
   },
@@ -432,6 +435,7 @@ const ganymedeOverrides = {
     distanceFromSun: 5.2,      // AU (shares Jupiter’s orbit)
     gravity: 1.428,            // m s-²
     radius: 2634.1,            // km
+    mass: 1.482e23,            // kg
     albedo: 0.21,              // Bond albedo estimate
     rotationPeriod: 171.7      // hours (7.155 days, tidally locked)
   },
