@@ -49,10 +49,6 @@ class PhotonThrustersProject extends Project {
             <span id="spin-rotation-period" class="stat-value">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Orbital Period:</span>
-            <span id="spin-orbital-period" class="stat-value">0</span>
-          </div>
-          <div class="stat-item">
             <span class="stat-label">Target:</span>
             <input id="spin-target" type="number" min="0.1" step="0.1" value="1">
             <span>day</span>
@@ -104,7 +100,6 @@ class PhotonThrustersProject extends Project {
       motionCard,
       spin: {
         rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
-        orbitalPeriod: spinCard.querySelector('#spin-orbital-period'),
         target: spinCard.querySelector('#spin-target'),
         energyCost: spinCard.querySelector('#spin-energy-cost'),
       },
@@ -135,10 +130,6 @@ class PhotonThrustersProject extends Project {
       const days = hours / 24;
       if (elements.spin.rotationPeriod) {
         elements.spin.rotationPeriod.textContent = `${formatNumber(days, false, 2)} days`;
-      }
-      if (elements.spin.orbitalPeriod) {
-        const orbit = calculateOrbitalPeriodDays(params.distanceFromSun);
-        elements.spin.orbitalPeriod.textContent = `${formatNumber(orbit, false, 2)} days`;
       }
       if (elements.spin.target &&
           (typeof elements.spin.target.value === 'string' || typeof elements.spin.target.value === 'number')) {
