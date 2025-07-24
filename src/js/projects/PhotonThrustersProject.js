@@ -135,8 +135,9 @@ class PhotonThrustersProject extends Project {
             <span id="motion-escape-energy" class="stat-value">0</span>
           </div>
         </div>
-        <div id="motion-moon-warning" class="warning-message" style="display:none;">
-          Moons must first their parent's gravity well before distance to the sun can be changed
+        <div id="motion-moon-warning" class="moon-warning" style="display:none;">
+          <span class="icon">\u26A0</span>
+          <span>Escape parent body before adjusting solar distance</span>
         </div>
       </div>
     `;

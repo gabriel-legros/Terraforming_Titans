@@ -191,4 +191,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Photon Thrusters spin target is now an editable field that displays the energy required to change rotation.
 - Photon Thrusters motion card shows escape energy for moons or an orbital target field for planets.
 - Loading a save now takes initial celestial parameters from configuration and fills missing current values from them.
+- Moon thruster warning moved from the global warning box to a small notice within the Photon Thrusters card.
 - Numbers above sextillion now format as Sp, Oc and No up to 1e30.

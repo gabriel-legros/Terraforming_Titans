@@ -90,9 +90,10 @@ describe('Photon Thrusters project', () => {
     const motion = ctx.projectElements.photonThrusters.motion;
     const spinCard = ctx.projectElements.photonThrusters.spinCard;
     const motionCard = ctx.projectElements.photonThrusters.motionCard;
-      const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
-      expect(moonWarning.style.display).toBe("block");
-      expect(moonWarning.textContent.trim()).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
+    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    expect(moonWarning.style.display).toBe('block');
+    expect(moonWarning.textContent).toContain('Escape parent body');
+    expect(moonWarning.textContent).toContain('\u26A0');
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
     const rotValue = parseFloat(spin.rotationPeriod.textContent);
