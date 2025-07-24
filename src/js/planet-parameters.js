@@ -400,7 +400,7 @@ const ganymedeOverrides = {
       carbonDioxide:     { initialValue: 3100.0 },     // CO₂ sputtered & sublimation-sourced
       inertGas:          { initialValue: 1e5 },        // trace Ar, Na, etc.
       oxygen:            { initialValue: 1.0e4 },      // molecular O₂ from radiolysis
-      atmosphericWater:  { initialValue: 30000.0 },
+      atmosphericWater:  { initialValue: 12037151.807012564 },
       atmosphericMethane:{ initialValue: 0 }
     },
 
@@ -412,10 +412,22 @@ const ganymedeOverrides = {
   },
 
   /* ---------- PER-LATITUDE WATER PARTITION ---------- */
-  zonalWater: {
-    tropical:  { liquid: 0, ice: 272000.0, buriedIce: 5.0e21 },
-    temperate: { liquid: 0, ice: 2270000.0, buriedIce: 7.0e21 },
-    polar:     { liquid: 0, ice: 4.8e13,   buriedIce: 2.0e21 }
+ zonalWater: {
+    "tropical": {
+      "liquid": 0,
+      "ice": 94676233227887.31,
+      "buriedIce": 5e+21
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 151906523027232.84,
+      "buriedIce": 7e+21
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 51417217563592.55,
+      "buriedIce": 2e+21
+    }
   },
 
   zonalSurface: {
