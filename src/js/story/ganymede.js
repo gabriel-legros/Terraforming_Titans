@@ -342,7 +342,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 14,
         title: "Chapter 14: Warp Gate Command",
-        narrative: "Mary: “This gate is a doorway carved through the dark—and a blade pointed at us if we mishandle it.”\nDr. Hart: “Its physics violate three textbooks in my head. We have a duty to understand it before we charge through.”\nCmdr. Feroza: “Understand all you want; someone has to stand guard. I’m requesting a permanent Marine garrison and layered kill‑zones.”\nPresident Bob Titan: “Titan will bankroll the logistics—fuel, food, alloys—but I insist on a veto over any ‘shoot first’ policy.”\nMary: “Then let it be written: Defend first, discover second. Motion carried.”",
+        narrative: "Mary: “This gate is a doorway carved through the dark—and a blade pointed at us if we mishandle it.”\nDr. Hart: “Its physics violate three textbooks in my head. We have a duty to understand it before we charge through.”\nCmdr. Feroza: “Understand all you want; someone has to stand guard. I’m requesting a permanent Marine garrison and layered kill‑zones.”\nPresident Bob Titan: “Titan will bankroll the logistics—fuel, food, alloys.  Anything you need”\nMary: “Then let it be written: Defend first, discover second. Motion carried.”",
         prerequisites: ["chapter13.2"],
         objectives: [
             { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 1 }
