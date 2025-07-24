@@ -298,6 +298,77 @@ describe('Photon Thrusters project', () => {
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Photon Thrusters', 'project');
   });
 
+  test('spin investment reduces rotation period', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1e10, radius: 1, rotationPeriod: 10 } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.spinInvest = true;
+    project.targetDays = 0.2;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.rotationPeriod).toBeLessThan(10);
+  });
+
+  test('motion investment increases orbital distance', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1, radius: 1, distanceFromSun: 1 } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.motionInvest = true;
+    project.targetAU = 2;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.distanceFromSun).toBeGreaterThan(1);
+  });
+
+  test('moon investment expands orbit radius', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1e12, radius: 1, parentBody: { mass: 1e15, orbitRadius: 1000 } } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.motionInvest = true;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.parentBody.orbitRadius).toBeGreaterThan(1000);
+  });
+
   test('saveState and loadState preserve investment settings', () => {
     const ctx = { console, EffectableEntity };
     vm.createContext(ctx);
