@@ -174,7 +174,7 @@ function updateZonalFluxTable() {
 class SpaceMirrorFacilityProject extends Project {
   renderUI(container) {
     const mirrorDetails = document.createElement('div');
-    mirrorDetails.classList.add('mirror-details-card');
+    mirrorDetails.classList.add('info-card', 'mirror-details-card');
     mirrorDetails.innerHTML = `
       <div class="card-header">
         <span class="card-title">Mirror Status</span>
@@ -207,7 +207,7 @@ class SpaceMirrorFacilityProject extends Project {
     container.appendChild(mirrorDetails);
 
     const lanternDetails = document.createElement('div');
-    lanternDetails.classList.add('lantern-details-card');
+    lanternDetails.classList.add('info-card', 'lantern-details-card');
     lanternDetails.style.display = 'none';
     lanternDetails.innerHTML = `
       <div class="card-header">

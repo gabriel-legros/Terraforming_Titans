@@ -1,8 +1,7 @@
 /* --- Base Card Styles --- */
 .project-card,
-.mirror-details-card,
+.info-card,
 .mirror-oversight-card,
-.lantern-details-card,
 .dyson-swarm-card {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;

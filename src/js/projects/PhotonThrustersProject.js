@@ -7,7 +7,7 @@ function calculateOrbitalPeriodDays(distanceAU) {
 class PhotonThrustersProject extends Project {
   renderUI(container) {
     const spinCard = document.createElement('div');
-    spinCard.classList.add('spin-details-card');
+    spinCard.classList.add('info-card', 'spin-details-card');
     spinCard.innerHTML = `
       <div class="card-header">
         <span class="card-title">Spin</span>
@@ -24,7 +24,7 @@ class PhotonThrustersProject extends Project {
     container.appendChild(spinCard);
 
     const motionCard = document.createElement('div');
-    motionCard.classList.add('motion-details-card');
+    motionCard.classList.add('info-card', 'motion-details-card');
     motionCard.innerHTML = `
       <div class="card-header">
         <span class="card-title">Motion</span>
