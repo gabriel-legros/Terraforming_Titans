@@ -75,8 +75,8 @@ class DeeperMiningProject extends AndroidProject {
       // Apply effect scaling if the attribute is enabled
       if (this.attributes.effectScaling) {
         const baseValue = effect.value; // Use the base value from the project definition
-        const n = this.repeatCount; // Total completions
-        scaledEffect.value = (baseValue) * n * (n+1)/2 + 1; // Compute scaled value
+        const depth = this.averageDepth; // Total completions
+        scaledEffect.value = baseValue * depth; // Compute scaled value
 
         // Use addAndReplace to replace any existing effect with the same effectId
         addEffect({ ...scaledEffect, sourceId: this });
