@@ -26,6 +26,10 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Target :</span>
             <span id="spin-target" class="stat-value">1 day</span>
           </div>
+          <div class="stat-item">
+            <span class="stat-label">Target :</span>
+            <span id="spin-target" class="stat-value">1 day</span>
+          </div>
         </div>
       </div>
     `;
@@ -51,6 +55,9 @@ class PhotonThrustersProject extends Project {
             <span id="motion-parent-distance" class="stat-value"></span>
           </div>
         </div>
+        <div id="motion-moon-warning" class="warning-message" style="display:none;">
+          Moons must first their parent's gravity well before distance to the sun can be changed
+        </div>
       </div>
     `;
     container.appendChild(motionCard);
@@ -61,12 +68,14 @@ class PhotonThrustersProject extends Project {
       motionCard,
       spin: {
         rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
+        target: spinCard.querySelector('#spin-target'),
       },
       motion: {
         distanceSun: motionCard.querySelector('#motion-distance-sun'),
         parentContainer: motionCard.querySelector('#motion-parent-container'),
         parentName: motionCard.querySelector('#motion-parent-name'),
         parentDistance: motionCard.querySelector('#motion-parent-distance'),
+        moonWarning: motionCard.querySelector("#motion-moon-warning"),
       },
     };
   }
@@ -101,6 +110,9 @@ class PhotonThrustersProject extends Project {
       } else if (elements.motion.parentContainer) {
         elements.motion.parentContainer.style.display = 'none';
       }
+        if (elements.motion.moonWarning) {
+          elements.motion.moonWarning.style.display = parent ? "block" : "none";
+        }
     }
   }
 }
