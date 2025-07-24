@@ -19,6 +19,10 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Orbital Period:</span>
             <span id="spin-orbital-period" class="stat-value">0</span>
           </div>
+          <div class="stat-item">
+            <span class="stat-label">Target :</span>
+            <span id="spin-target" class="stat-value">1 day</span>
+          </div>
         </div>
       </div>
     `;
@@ -54,6 +58,7 @@ class PhotonThrustersProject extends Project {
       motionCard,
       spin: {
         orbitalPeriod: spinCard.querySelector('#spin-orbital-period'),
+        target: spinCard.querySelector('#spin-target'),
       },
       motion: {
         distanceSun: motionCard.querySelector('#motion-distance-sun'),

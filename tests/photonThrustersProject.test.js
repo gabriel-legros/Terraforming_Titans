@@ -65,6 +65,7 @@ describe('Photon Thrusters project', () => {
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
     expect(spin.orbitalPeriod.textContent).toContain('365.25');
+    expect(spin.target.textContent).toBe('1 day');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');
