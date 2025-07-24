@@ -285,10 +285,10 @@ class PhotonThrustersProject extends Project {
     }
 
     if (elements.plusButton) {
-      elements.plusButton.textContent = `+${formatNumber(this.investmentMultiplier, integer = true)}`;
+      elements.plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
     }
     if (elements.minusButton) {
-      elements.minusButton.textContent = `-${formatNumber(this.investmentMultiplier, integer = true)}`;
+      elements.minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
     }
 
     if (elements.spin) {
