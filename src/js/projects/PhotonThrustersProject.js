@@ -82,7 +82,7 @@ class PhotonThrustersProject extends Project {
         <span class="card-title">Spin</span>
       </div>
       <div class="card-body">
-        <div class="stats-grid">
+        <div class="stats-grid three-col">
           <div class="stat-item">
             <span class="stat-label">Rotation Period:</span>
             <span id="spin-rotation-period" class="stat-value">0</span>
@@ -96,9 +96,9 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Energy Cost:</span>
             <span id="spin-energy-cost" class="stat-value">0</span>
           </div>
-          <div class="stat-item">
-            <label><input id="spin-invest" type="checkbox"> Invest</label>
-          </div>
+        </div>
+        <div class="invest-container left">
+          <label><input id="spin-invest" type="checkbox"> Invest</label>
         </div>
       </div>
     `;
@@ -118,16 +118,18 @@ class PhotonThrustersProject extends Project {
         <span class="card-title">Motion</span>
       </div>
       <div class="card-body">
-        <div class="stats-grid">
+        <div class="stats-grid three-col">
           <div class="stat-item">
             <span class="stat-label">Distance from Sun:</span>
             <span id="motion-distance-sun" class="stat-value">0</span>
           </div>
-          <div id="motion-parent-container" class="stat-item" style="display:none;">
+          <div id="motion-parent-container" class="stat-item" style="display: none;">
             <span class="stat-label">Parent:</span>
-            <span id="motion-parent-name" class="stat-value"></span>
-            <span class="stat-label">at</span>
-            <span id="motion-parent-distance" class="stat-value"></span>
+            <div>
+              <span id="motion-parent-name" class="stat-value"></span>
+              <span class="stat-label">at</span>
+              <span id="motion-parent-distance" class="stat-value"></span>
+            </div>
           </div>
           <div id="motion-target-container" class="stat-item" style="display:none;">
             <span class="stat-label">Target:</span>
@@ -142,9 +144,9 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Escape Energy:</span>
             <span id="motion-escape-energy" class="stat-value">0</span>
           </div>
-          <div class="stat-item">
-            <label><input id="motion-invest" type="checkbox"> Invest</label>
-          </div>
+        </div>
+        <div class="invest-container left">
+          <label><input id="motion-invest" type="checkbox"> Invest</label>
         </div>
         <div id="motion-moon-warning" class="moon-warning" style="display:none;">
           <span class="icon">\u26A0</span>
@@ -181,22 +183,22 @@ class PhotonThrustersProject extends Project {
   }
 
     const energySection = document.createElement('div');
-    energySection.classList.add('project-section-container', 'energy-investment-section');
+    energySection.classList.add('info-card', 'thruster-power-card');
     energySection.style.display = this.isCompleted ? 'block' : 'none';
+    energySection.innerHTML = `
+      <div class="card-header">
+        <span class="card-title">Thruster Power</span>
+      </div>
+      <div class="card-body">
+        <div class="invested-container">
+          <span class="stat-label">Continuous Investment:</span>
+          <span id="${this.name}-energy-invested" class="stat-value">0</span>
+        </div>
+      </div>
+    `;
 
-    const energyTitle = document.createElement('h4');
-    energyTitle.classList.add('section-title');
-    energyTitle.textContent = 'Thruster Power';
-    energySection.appendChild(energyTitle);
-
-    const investmentContainer = document.createElement('div');
-    investmentContainer.classList.add('energy-investment-container');
-
-    const investedLabel = document.createElement('span');
-    investedLabel.textContent = 'Invested:';
-    const investedDisplay = document.createElement('span');
-    investedDisplay.id = `${this.name}-energy-invested`;
-    investmentContainer.append(investedLabel, investedDisplay);
+    const investmentContainer = energySection.querySelector('.card-body');
+    const investedDisplay = energySection.querySelector(`#${this.name}-energy-invested`);
 
     const buttonsContainer = document.createElement('div');
     buttonsContainer.classList.add('buttons-container');
@@ -213,28 +215,18 @@ class PhotonThrustersProject extends Project {
     buttonsContainer.appendChild(mainButtons);
 
     createButton('0', () => this.setEnergyInvestment(0), mainButtons);
-    const minusButton = createButton(`-${formatNumber(this.investmentMultiplier, true)}`,
-      () => this.adjustEnergyInvestment(-this.investmentMultiplier), mainButtons);
-    const plusButton = createButton(`+${formatNumber(this.investmentMultiplier, true)}`,
-      () => this.adjustEnergyInvestment(this.investmentMultiplier), mainButtons);
-    createButton('Max', () => this.setEnergyInvestment(Math.floor(resources.colony.energy.value)), mainButtons);
-
-    const multContainer = document.createElement('div');
-    multContainer.classList.add('multiplier-container');
-    buttonsContainer.appendChild(multContainer);
-
+    const minusButton = createButton('-', () => this.adjustEnergyInvestment(-this.investmentMultiplier), mainButtons);
+    const plusButton = createButton('+', () => this.adjustEnergyInvestment(this.investmentMultiplier), mainButtons);
     createButton('/10', () => {
       this.investmentMultiplier = Math.max(1, this.investmentMultiplier / 10);
-      minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
-      plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
-    }, multContainer);
+      this.updateUI();
+    }, mainButtons);
     createButton('x10', () => {
       this.investmentMultiplier *= 10;
-      minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
-      plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
-    }, multContainer);
+      this.updateUI();
+    }, mainButtons);
 
-    energySection.append(investmentContainer, buttonsContainer);
+    investmentContainer.appendChild(buttonsContainer);
     container.appendChild(energySection);
 
     projectElements[this.name] = {
@@ -290,6 +282,13 @@ class PhotonThrustersProject extends Project {
     }
     if (elements.motion && elements.motion.investCheckbox) {
       elements.motion.investCheckbox.checked = this.motionInvest;
+    }
+
+    if (elements.plusButton) {
+      elements.plusButton.textContent = `+${formatNumber(this.investmentMultiplier, integer = true)}`;
+    }
+    if (elements.minusButton) {
+      elements.minusButton.textContent = `-${formatNumber(this.investmentMultiplier, integer = true)}`;
     }
 
     if (elements.spin) {

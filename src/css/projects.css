@@ -99,8 +99,15 @@
 /* Mirror Details Card */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 8px;
+}
+
+.stats-grid.three-col {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.stats-grid.four-col {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .stat-item {
@@ -543,4 +550,13 @@
 
 .moon-warning .icon {
     font-size: 1.1em;
+}
+
+.invest-container {
+    margin-top: 10px;
+    display: flex;
+}
+
+.invest-container.left {
+    justify-content: flex-start;
 }
