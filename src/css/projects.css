@@ -129,6 +129,16 @@
     color: #343a40;
 }
 
+/* Display parent orbit text in a single line */
+#motion-parent-container .stat-label {
+    display: inline;
+    margin: 0 4px 0 0;
+}
+#motion-parent-container .stat-value {
+    display: inline;
+    margin-right: 4px;
+}
+
 /* Mirror Oversight Card */
 .mirror-oversight-card .card-body {
     display: flex;
