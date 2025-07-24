@@ -313,7 +313,11 @@ progressCallisto.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
     prerequisites: ["chapter10.4"],
     objectives: [],
-    reward: []
+    reward: [      {
+        target: 'spaceManager',
+        targetId: 'ganymede',
+        type: 'enable'
+      }]
   },
   {
     id: "chapter10.6",
@@ -325,11 +329,6 @@ progressCallisto.chapters.push(
       { type: 'currentPlanet', planetId: 'ganymede' }
     ],
     reward: [
-      {
-        target: 'spaceManager',
-        targetId: 'ganymede',
-        type: 'enable'
-      }
     ]
   }
 );
