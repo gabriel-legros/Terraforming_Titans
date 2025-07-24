@@ -1517,16 +1517,11 @@ synchronizeGlobalResources() {
       if (terraformingState.celestialParameters) {
           Object.assign(this.celestialParameters, terraformingState.celestialParameters);
       }
-      if (terraformingState.initialCelestialParameters) {
-          this.initialCelestialParameters = structuredClone(terraformingState.initialCelestialParameters);
-      } else if (terraformingState.celestialParameters) {
-          this.initialCelestialParameters = structuredClone(terraformingState.celestialParameters);
-      }
 
-      // Ensure every field in current has an initial value
-      for (const key in this.celestialParameters) {
-          if (this.initialCelestialParameters[key] === undefined) {
-              this.initialCelestialParameters[key] = this.celestialParameters[key];
+      // Ensure current has values for all initial parameters
+      for (const key in this.initialCelestialParameters) {
+          if (this.celestialParameters[key] === undefined) {
+              this.celestialParameters[key] = this.initialCelestialParameters[key];
           }
       }
 

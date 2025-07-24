@@ -189,3 +189,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Celestial parameters now track their original values and reload from configuration when saving or loading games.
 - Photon Thrusters spin target is now an editable field that displays the energy required to change rotation.
 - Photon Thrusters motion card shows escape energy for moons or an orbital target field for planets.
+- Loading a save now takes initial celestial parameters from configuration and fills missing current values from them.
