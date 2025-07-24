@@ -3,6 +3,7 @@
 - Keep imports and exports browser friendly for loading via **index.html**.
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
+- Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -198,3 +199,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Spin and motion options now include an Invest checkbox. Only one can be active at a time and the selection persists when saving.
 - Photon thruster energy now alters spin or orbit when invested, and moons drift outward toward escape.
 - Escaped moons replace their parent body with "Star" and no longer count as moons.
+- Deeper mining costs now scale 90% with ore mines and 10% with average depth. A tooltip on the project card explains the formula.
+- Android assignment speed tooltip now states "1 + sqrt(androids assigned / ore mines built)".
