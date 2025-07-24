@@ -11,6 +11,26 @@ function spinEnergyCost(mass, radius, currentHours, targetHours) {
   return Math.abs(deltaE) / 86400;
 }
 
+const G = 6.67430e-11;
+const SOLAR_MASS = 1.989e30;
+const AU_IN_METERS = 1.496e11;
+
+function escapeEnergyCost(bodyMass, parentMass, orbitRadiusKm) {
+  const r = orbitRadiusKm * 1000;
+  const ve = Math.sqrt(2 * G * parentMass / r);
+  const vo = Math.sqrt(G * parentMass / r);
+  const deltaE = 0.5 * bodyMass * (ve * ve - vo * vo);
+  return Math.abs(deltaE) / 86400;
+}
+
+function orbitalEnergyCost(mass, currentAU, targetAU) {
+  const r1 = currentAU * AU_IN_METERS;
+  const r2 = targetAU * AU_IN_METERS;
+  const e1 = -G * SOLAR_MASS * mass / (2 * r1);
+  const e2 = -G * SOLAR_MASS * mass / (2 * r2);
+  return Math.abs(e2 - e1) / 86400;
+}
+
 describe('Photon Thrusters project', () => {
   test('parameters define correct costs', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
@@ -47,7 +67,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23, parentBody: { name: 'Mars', orbitRadius: 50000 } } };
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23, parentBody: { name: 'Mars', orbitRadius: 50000, mass: 5.683e26 } } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -75,11 +95,19 @@ describe('Photon Thrusters project', () => {
       expect(moonWarning.textContent.trim()).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
-    expect(spin.rotationPeriod.textContent).toBe('1.03 days');
+    const rotValue = parseFloat(spin.rotationPeriod.textContent);
+    expect(rotValue).toBeCloseTo(1.03, 2);
     expect(spin.target.value).toBe('1');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');
+    expect(motion.escapeContainer.style.display).toBe('block');
+    const expectedEscape = ctx.formatNumber(
+      escapeEnergyCost(6.417e23, 5.683e26, 50000),
+      false,
+      2
+    ) + ' W-day';
+    expect(motion.escapeEnergy.textContent).toBe(expectedEscape);
   });
 
   test('hides parent info when no parent body', () => {
@@ -110,17 +138,27 @@ describe('Photon Thrusters project', () => {
     project.updateUI();
 
     const motion = ctx.projectElements.photonThrusters.motion;
-      const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
-      expect(moonWarning.style.display).toBe("none");
+    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    expect(moonWarning.style.display).toBe("none");
     expect(motion.distanceSun.textContent).toBe('2.00 AU');
     expect(motion.parentContainer.style.display).toBe('none');
+    expect(motion.escapeContainer.style.display).toBe('none');
+    expect(motion.targetContainer.style.display).toBe('block');
+    expect(motion.energyContainer.style.display).toBe('block');
+    expect(motion.target.value).toBe('1');
     const spin = ctx.projectElements.photonThrusters.spin;
-    const expectedCost = ctx.formatNumber(
+    const expectedSpinCost = ctx.formatNumber(
       spinEnergyCost(6.417e23, 3389.5, 24.6, 24),
       false,
       2
     ) + ' W-day';
-    expect(spin.energyCost.textContent).toBe(expectedCost);
+    expect(spin.energyCost.textContent).toBe(expectedSpinCost);
+    const expectedOrbitalCost = ctx.formatNumber(
+      orbitalEnergyCost(6.417e23, 2, 1),
+      false,
+      2
+    ) + ' W-day';
+    expect(motion.energyCost.textContent).toBe(expectedOrbitalCost);
   });
 
   test('subcards hidden until project complete', () => {

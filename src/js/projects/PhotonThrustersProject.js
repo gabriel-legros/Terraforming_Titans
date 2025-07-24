@@ -7,9 +7,43 @@ function getRotationPeriodHours(params) {
   return 24;
 }
 
+const G = 6.67430e-11;
+const SOLAR_MASS = 1.989e30;
+const AU_IN_METERS = 1.496e11;
+
 function calculateOrbitalPeriodDays(distanceAU) {
   const a = typeof distanceAU === 'number' && distanceAU > 0 ? distanceAU : 1;
   return 365.25 * Math.sqrt(Math.pow(a, 3));
+}
+
+function calculateEscapeEnergyCost(massKg, parentMassKg, orbitRadiusKm) {
+  if (
+    typeof massKg !== 'number' ||
+    typeof parentMassKg !== 'number' ||
+    typeof orbitRadiusKm !== 'number'
+  ) {
+    return 0;
+  }
+  const r = orbitRadiusKm * 1000;
+  const ve = Math.sqrt(2 * G * parentMassKg / r);
+  const vo = Math.sqrt(G * parentMassKg / r);
+  const deltaE = 0.5 * massKg * (ve * ve - vo * vo);
+  return Math.abs(deltaE) / 86400;
+}
+
+function calculateOrbitalEnergyCost(massKg, currentAU, targetAU) {
+  if (
+    typeof massKg !== 'number' ||
+    typeof currentAU !== 'number' ||
+    typeof targetAU !== 'number'
+  ) {
+    return 0;
+  }
+  const r1 = currentAU * AU_IN_METERS;
+  const r2 = targetAU * AU_IN_METERS;
+  const e1 = -G * SOLAR_MASS * massKg / (2 * r1);
+  const e2 = -G * SOLAR_MASS * massKg / (2 * r2);
+  return Math.abs(e2 - e1) / 86400;
 }
 
 function calculateSpinEnergyCost(massKg, radiusKm, currentHours, targetHours) {
@@ -32,6 +66,7 @@ class PhotonThrustersProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.targetDays = 1;
+    this.targetAU = 1;
   }
 
   renderUI(container) {
@@ -86,6 +121,19 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">at</span>
             <span id="motion-parent-distance" class="stat-value"></span>
           </div>
+          <div id="motion-target-container" class="stat-item" style="display:none;">
+            <span class="stat-label">Target:</span>
+            <input id="motion-target" type="number" min="0.1" step="0.1" value="1">
+            <span>AU</span>
+          </div>
+          <div id="motion-energy-container" class="stat-item" style="display:none;">
+            <span class="stat-label">Energy Cost:</span>
+            <span id="motion-energy-cost" class="stat-value">0</span>
+          </div>
+          <div id="motion-escape-container" class="stat-item" style="display:none;">
+            <span class="stat-label">Escape Energy:</span>
+            <span id="motion-escape-energy" class="stat-value">0</span>
+          </div>
         </div>
         <div id="motion-moon-warning" class="warning-message" style="display:none;">
           Moons must first their parent's gravity well before distance to the sun can be changed
@@ -93,6 +141,11 @@ class PhotonThrustersProject extends Project {
       </div>
     `;
     container.appendChild(motionCard);
+
+    const motionTargetInput = motionCard.querySelector('#motion-target');
+    if (motionTargetInput) {
+      motionTargetInput.addEventListener('input', () => this.updateUI());
+    }
 
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -109,6 +162,12 @@ class PhotonThrustersProject extends Project {
         parentName: motionCard.querySelector('#motion-parent-name'),
         parentDistance: motionCard.querySelector('#motion-parent-distance'),
         moonWarning: motionCard.querySelector("#motion-moon-warning"),
+        target: motionCard.querySelector('#motion-target'),
+        energyCost: motionCard.querySelector('#motion-energy-cost'),
+        escapeEnergy: motionCard.querySelector('#motion-escape-energy'),
+        targetContainer: motionCard.querySelector('#motion-target-container'),
+        energyContainer: motionCard.querySelector('#motion-energy-container'),
+        escapeContainer: motionCard.querySelector('#motion-escape-container'),
       },
     };
   }
@@ -154,16 +213,58 @@ class PhotonThrustersProject extends Project {
         elements.motion.distanceSun.textContent = `${formatNumber(params.distanceFromSun || 0, false, 2)} AU`;
       }
       const parent = params.parentBody;
-      if (parent && elements.motion.parentContainer) {
-        elements.motion.parentContainer.style.display = 'block';
-        elements.motion.parentName.textContent = parent.name || '';
-        elements.motion.parentDistance.textContent = `${formatNumber(parent.orbitRadius || 0, false, 2)} km`;
-      } else if (elements.motion.parentContainer) {
-        elements.motion.parentContainer.style.display = 'none';
-      }
-        if (elements.motion.moonWarning) {
-          elements.motion.moonWarning.style.display = parent ? "block" : "none";
+      if (parent) {
+        if (elements.motion.parentContainer) {
+          elements.motion.parentContainer.style.display = 'block';
+          elements.motion.parentName.textContent = parent.name || '';
+          elements.motion.parentDistance.textContent = `${formatNumber(parent.orbitRadius || 0, false, 2)} km`;
         }
+        if (elements.motion.moonWarning) {
+          elements.motion.moonWarning.style.display = 'block';
+        }
+        if (elements.motion.targetContainer) elements.motion.targetContainer.style.display = 'none';
+        if (elements.motion.energyContainer) elements.motion.energyContainer.style.display = 'none';
+        if (elements.motion.escapeContainer) {
+          elements.motion.escapeContainer.style.display = 'block';
+          const escapeCost = calculateEscapeEnergyCost(
+            params.mass,
+            parent.mass,
+            parent.orbitRadius
+          );
+          if (elements.motion.escapeEnergy) {
+            elements.motion.escapeEnergy.textContent = `${formatNumber(escapeCost, false, 2)} W-day`;
+          }
+        }
+      } else {
+        if (elements.motion.parentContainer) {
+          elements.motion.parentContainer.style.display = 'none';
+        }
+        if (elements.motion.moonWarning) {
+          elements.motion.moonWarning.style.display = 'none';
+        }
+        if (elements.motion.escapeContainer) {
+          elements.motion.escapeContainer.style.display = 'none';
+        }
+        if (elements.motion.target &&
+            (typeof elements.motion.target.value === 'string' || typeof elements.motion.target.value === 'number')) {
+          const val = parseFloat(elements.motion.target.value);
+          if (!isNaN(val) && val > 0) {
+            this.targetAU = val;
+          }
+        }
+        if (elements.motion.targetContainer) {
+          elements.motion.targetContainer.style.display = 'block';
+        }
+        if (elements.motion.energyContainer) {
+          elements.motion.energyContainer.style.display = 'block';
+          const cost = calculateOrbitalEnergyCost(
+            params.mass,
+            params.distanceFromSun,
+            this.targetAU
+          );
+          elements.motion.energyCost.textContent = `${formatNumber(cost, false, 2)} W-day`;
+        }
+      }
     }
   }
 }
