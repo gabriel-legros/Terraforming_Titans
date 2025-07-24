@@ -180,7 +180,7 @@ class SpaceMirrorFacilityProject extends Project {
         <span class="card-title">Mirror Status</span>
       </div>
       <div class="card-body">
-        <div class="stats-grid">
+        <div class="stats-grid three-col">
           <div class="stat-item">
             <span class="stat-label">Mirrors:</span>
             <span id="num-mirrors" class="stat-value">0</span>
@@ -214,7 +214,7 @@ class SpaceMirrorFacilityProject extends Project {
         <span class="card-title">Lantern Status</span>
       </div>
       <div class="card-body">
-        <div class="stats-grid">
+        <div class="stats-grid three-col">
           <div class="stat-item">
             <span class="stat-label">Lanterns:</span>
             <span id="num-lanterns" class="stat-value">0</span>
