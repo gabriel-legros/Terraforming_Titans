@@ -8,6 +8,18 @@ describe('formatNumber', () => {
   test('formats millions with suffix M', () => {
     expect(formatNumber(2500000)).toBe('2.5M');
   });
+
+  test('formats septillions with suffix Sp', () => {
+    expect(formatNumber(1e24)).toBe('1.0Sp');
+  });
+
+  test('formats octillions with suffix Oc', () => {
+    expect(formatNumber(1e27)).toBe('1.0Oc');
+  });
+
+  test('formats nonillions with suffix No', () => {
+    expect(formatNumber(1e30)).toBe('1.0No');
+  });
 });
 
 describe('formatBigInteger', () => {
