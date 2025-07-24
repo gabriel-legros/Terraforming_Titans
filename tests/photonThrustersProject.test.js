@@ -30,4 +30,69 @@ describe('Photon Thrusters project', () => {
     const proj = new ctx.PhotonThrustersProject(config, 'photonThrusters');
     expect(proj instanceof ctx.Project).toBe(true);
   });
+
+  test('rendered subcards display orbital data', () => {
+    const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, parentBody: { name: 'Mars', orbitRadius: 50000 } } };
+    ctx.EffectableEntity = EffectableEntity;
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.updateUI();
+
+    const spin = ctx.projectElements.photonThrusters.spin;
+    const motion = ctx.projectElements.photonThrusters.motion;
+    expect(spin.orbitalPeriod.textContent).toContain('365.25');
+    expect(motion.distanceSun.textContent).toBe('1.00 AU');
+    expect(motion.parentContainer.style.display).toBe('block');
+    expect(motion.parentName.textContent).toBe('Mars');
+  });
+
+  test('hides parent info when no parent body', () => {
+    const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 2 } };
+    ctx.EffectableEntity = EffectableEntity;
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.updateUI();
+
+    const motion = ctx.projectElements.photonThrusters.motion;
+    expect(motion.distanceSun.textContent).toBe('2.00 AU');
+    expect(motion.parentContainer.style.display).toBe('none');
+  });
 });
