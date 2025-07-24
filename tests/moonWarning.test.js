@@ -4,7 +4,7 @@ const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_m
 const vm = require('vm');
 
 describe('moon distance warning', () => {
-  test('shows message when current body is a moon', () => {
+  test('does not display global message for moons', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="warning-container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -17,6 +17,6 @@ describe('moon distance warning', () => {
     ctx.updateWarnings();
 
     const box = dom.window.document.getElementById('warning-container');
-    expect(box.textContent).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
+    expect(box.textContent).toBe('');
   });
 });

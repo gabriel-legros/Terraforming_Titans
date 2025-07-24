@@ -519,3 +519,18 @@
     color: #6c757d;
     text-align: left;
 }
+
+/* Simple warning shown in Photon Thrusters */
+.moon-warning {
+    color: #cc6600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: bold;
+    margin-top: 4px;
+    font-size: 0.9em;
+}
+
+.moon-warning .icon {
+    font-size: 1.1em;
+}
