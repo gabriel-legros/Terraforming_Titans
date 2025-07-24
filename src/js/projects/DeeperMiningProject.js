@@ -26,7 +26,7 @@ class DeeperMiningProject extends AndroidProject {
     if (this.attributes.costOreMineScaling) {
       const oreMines = Math.max(this.oreMineCount, 1);
       const depth = this.averageDepth;
-      const multiplier = oreMines * depth;
+      const multiplier = oreMines * (0.9 + 0.1 * depth);
       const scaledCost = {};
       for (const category in cost) {
         scaledCost[category] = {};
@@ -45,6 +45,18 @@ class DeeperMiningProject extends AndroidProject {
     if (elements?.androidSpeedDisplay) {
       const mult = this.getAndroidSpeedMultiplier();
       elements.androidSpeedDisplay.textContent = `Deepening speed boost x${formatNumber(mult, true)}`;
+    }
+  }
+
+  renderUI(container) {
+    super.renderUI(container);
+    const elements = projectElements[this.name];
+    if (elements?.costElement) {
+      const info = document.createElement('span');
+      info.classList.add('info-tooltip-icon');
+      info.title = '90% of the cost scales with ore mines built. 10% also scales with average depth.';
+      info.innerHTML = '&#9432;';
+      elements.costElement.appendChild(info);
     }
   }
 

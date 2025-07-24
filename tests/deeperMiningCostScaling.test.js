@@ -32,7 +32,7 @@ describe('Deeper mining cost scaling', () => {
     expect(cost.colony.components).toBe(50);
   });
 
-  test('cost uses average depth not completions', () => {
+  test('cost partially scales with depth', () => {
     const ctx = { console, EffectableEntity };
     ctx.buildings = { oreMine: { count: 3 } };
     vm.createContext(ctx);
@@ -58,7 +58,7 @@ describe('Deeper mining cost scaling', () => {
     p.averageDepth = 4;
     p.repeatCount = 2;
     const cost = p.getScaledCost();
-    expect(cost.colony.electronics).toBe(120);
-    expect(cost.colony.components).toBe(120);
+    expect(cost.colony.electronics).toBeCloseTo(39);
+    expect(cost.colony.components).toBeCloseTo(39);
   });
 });

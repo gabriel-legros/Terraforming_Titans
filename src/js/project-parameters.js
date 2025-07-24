@@ -149,7 +149,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "Deepens all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Cost scales with the number of ore mines and their average depth.",
+    description: "Deepens all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.",
     repeatable: true,
     maxRepeatCount: 10000,
     unlocked : false,

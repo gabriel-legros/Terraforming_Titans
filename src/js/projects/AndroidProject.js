@@ -119,7 +119,7 @@ class AndroidProject extends Project {
 
     const speedDisplay = document.createElement('div');
     speedDisplay.id = `${this.name}-android-speed`;
-    speedDisplay.title = '1 + sqrt(androids assigned / ore veins max deposits)';
+    speedDisplay.title = '1 + sqrt(androids assigned / ore mines built)';
     multiplierContainer.appendChild(speedDisplay);
 
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer);
