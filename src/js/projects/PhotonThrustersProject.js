@@ -67,6 +67,8 @@ class PhotonThrustersProject extends Project {
     super(config, name);
     this.targetDays = 1;
     this.targetAU = 1;
+    this.energyInvestment = 0;
+    this.investmentMultiplier = 1;
   }
 
   renderUI(container) {
@@ -147,10 +149,68 @@ class PhotonThrustersProject extends Project {
       motionTargetInput.addEventListener('input', () => this.updateUI());
     }
 
+    const energySection = document.createElement('div');
+    energySection.classList.add('project-section-container', 'energy-investment-section');
+    energySection.style.display = this.isCompleted ? 'block' : 'none';
+
+    const energyTitle = document.createElement('h4');
+    energyTitle.classList.add('section-title');
+    energyTitle.textContent = 'Thruster Energy';
+    energySection.appendChild(energyTitle);
+
+    const investmentContainer = document.createElement('div');
+    investmentContainer.classList.add('energy-investment-container');
+
+    const investedLabel = document.createElement('span');
+    investedLabel.textContent = 'Invested:';
+    const investedDisplay = document.createElement('span');
+    investedDisplay.id = `${this.name}-energy-invested`;
+    investmentContainer.append(investedLabel, investedDisplay);
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.classList.add('buttons-container');
+    const createButton = (text, onClick, parent = buttonsContainer) => {
+      const b = document.createElement('button');
+      b.textContent = text;
+      b.addEventListener('click', onClick);
+      parent.appendChild(b);
+      return b;
+    };
+
+    const mainButtons = document.createElement('div');
+    mainButtons.classList.add('main-buttons');
+    buttonsContainer.appendChild(mainButtons);
+
+    createButton('0', () => this.setEnergyInvestment(0), mainButtons);
+    const minusButton = createButton(`-${formatNumber(this.investmentMultiplier, true)}`,
+      () => this.adjustEnergyInvestment(-this.investmentMultiplier), mainButtons);
+    const plusButton = createButton(`+${formatNumber(this.investmentMultiplier, true)}`,
+      () => this.adjustEnergyInvestment(this.investmentMultiplier), mainButtons);
+    createButton('Max', () => this.setEnergyInvestment(Math.floor(resources.colony.energy.value)), mainButtons);
+
+    const multContainer = document.createElement('div');
+    multContainer.classList.add('multiplier-container');
+    buttonsContainer.appendChild(multContainer);
+
+    createButton('/10', () => {
+      this.investmentMultiplier = Math.max(1, this.investmentMultiplier / 10);
+      minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
+    }, multContainer);
+    createButton('x10', () => {
+      this.investmentMultiplier *= 10;
+      minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
+    }, multContainer);
+
+    energySection.append(investmentContainer, buttonsContainer);
+    container.appendChild(energySection);
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       spinCard,
       motionCard,
+      energySection,
       spin: {
         rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
         target: spinCard.querySelector('#spin-target'),
@@ -169,6 +229,9 @@ class PhotonThrustersProject extends Project {
         energyContainer: motionCard.querySelector('#motion-energy-container'),
         escapeContainer: motionCard.querySelector('#motion-escape-container'),
       },
+      energyInvestedDisplay: investedDisplay,
+      minusButton,
+      plusButton,
     };
   }
 
@@ -182,6 +245,12 @@ class PhotonThrustersProject extends Project {
     }
     if (elements.motionCard) {
       elements.motionCard.style.display = this.isCompleted ? 'block' : 'none';
+    }
+    if (elements.energySection) {
+      elements.energySection.style.display = this.isCompleted ? 'block' : 'none';
+    }
+    if (elements.energyInvestedDisplay) {
+      elements.energyInvestedDisplay.textContent = formatNumber(this.energyInvestment, true);
     }
 
     if (elements.spin) {
@@ -265,6 +334,29 @@ class PhotonThrustersProject extends Project {
           elements.motion.energyCost.textContent = `${formatNumber(cost, false, 2)} W-day`;
         }
       }
+    }
+  }
+
+  adjustEnergyInvestment(amount) {
+    this.energyInvestment = Math.max(0, this.energyInvestment + amount);
+    this.updateUI();
+  }
+
+  setEnergyInvestment(value) {
+    this.energyInvestment = Math.max(0, value);
+    this.updateUI();
+  }
+
+  update(deltaTime) {
+    super.update(deltaTime);
+    if (!this.isCompleted || this.energyInvestment <= 0) return;
+    const rate = this.energyInvestment;
+    const amount = rate * (deltaTime / 1000);
+    const available = resources.colony.energy.value;
+    const consumed = Math.min(available, amount);
+    resources.colony.energy.decrease(consumed);
+    if (resources.colony.energy.modifyRate) {
+      resources.colony.energy.modifyRate(-rate, this.displayName, 'project');
     }
   }
 }

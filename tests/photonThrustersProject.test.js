@@ -235,4 +235,27 @@ describe('Photon Thrusters project', () => {
     ) + ' W-day';
     expect(spin.energyCost.textContent).toBe(expectedCost);
   });
+
+  test('energy investment consumes energy each update', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate: jest.fn() } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: {} };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.update(2000);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(900);
+    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Photon Thrusters', 'project');
+  });
 });
