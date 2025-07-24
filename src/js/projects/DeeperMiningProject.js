@@ -3,6 +3,7 @@ class DeeperMiningProject extends AndroidProject {
     super(config, name);
     this.oreMineCount = 0;
     this.averageDepth = 1;
+    this.maxDepth = config.maxDepth || Infinity;
   }
 
   registerMine() {
@@ -19,6 +20,13 @@ class DeeperMiningProject extends AndroidProject {
       this.oreMineCount = built;
       this.averageDepth = (totalDepth + delta) / this.oreMineCount;
     }
+  }
+
+  canStart() {
+    if (this.averageDepth >= this.maxDepth) {
+      return false;
+    }
+    return super.canStart();
   }
 
   getScaledCost() {
@@ -80,8 +88,13 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   complete() {
-    super.complete();
-    this.averageDepth += 1;
+    if (this.averageDepth < this.maxDepth) {
+      this.averageDepth = Math.min(this.averageDepth + 1, this.maxDepth);
+      super.complete();
+      if (this.averageDepth >= this.maxDepth) {
+        this.isCompleted = true;
+      }
+    }
   }
 
   saveState() {
