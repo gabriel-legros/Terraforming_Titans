@@ -22,6 +22,10 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Rotation Period:</span>
             <span id="spin-rotation-period" class="stat-value">0</span>
           </div>
+          <div class="stat-item">
+            <span class="stat-label">Target :</span>
+            <span id="spin-target" class="stat-value">1 day</span>
+          </div>
         </div>
       </div>
     `;
