@@ -36,7 +36,7 @@ progressCallisto.storyProjects.sidestep_fabrication = {
   category: 'story',
   chapter: 8,
   cost: {
-    colony: { components: 25_000, electronics: 15_000, energy: 1_000_000, research: 2_000_000 }
+    colony: { metal: 100_000, components: 25_000, electronics: 5_000, energy: 1_000_000, research: 2_000_000 }
   },
   duration: 900_000,                 // 15 min
   description: 'Manufacture the three Sidestep Sub-Engine cores in secrecy on Mars, Titan, and Callisto, using local resources and personnel to avoid raising suspicion.',
