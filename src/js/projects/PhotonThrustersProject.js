@@ -8,6 +8,7 @@ class PhotonThrustersProject extends Project {
   renderUI(container) {
     const spinCard = document.createElement('div');
     spinCard.classList.add('info-card', 'spin-details-card');
+    spinCard.style.display = this.isCompleted ? 'block' : 'none';
     spinCard.innerHTML = `
       <div class="card-header">
         <span class="card-title">Spin</span>
@@ -25,6 +26,7 @@ class PhotonThrustersProject extends Project {
 
     const motionCard = document.createElement('div');
     motionCard.classList.add('info-card', 'motion-details-card');
+    motionCard.style.display = this.isCompleted ? 'block' : 'none';
     motionCard.innerHTML = `
       <div class="card-header">
         <span class="card-title">Motion</span>
@@ -48,6 +50,8 @@ class PhotonThrustersProject extends Project {
 
     projectElements[this.name] = {
       ...projectElements[this.name],
+      spinCard,
+      motionCard,
       spin: {
         orbitalPeriod: spinCard.querySelector('#spin-orbital-period'),
       },
@@ -64,6 +68,13 @@ class PhotonThrustersProject extends Project {
     const params = terraforming.celestialParameters || {};
     const elements = projectElements[this.name];
     if (!elements) return;
+
+    if (elements.spinCard) {
+      elements.spinCard.style.display = this.isCompleted ? 'block' : 'none';
+    }
+    if (elements.motionCard) {
+      elements.motionCard.style.display = this.isCompleted ? 'block' : 'none';
+    }
 
     if (elements.spin && elements.spin.orbitalPeriod) {
       const period = calculateOrbitalPeriodDays(params.distanceFromSun);
