@@ -110,8 +110,17 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 7,
     title: "Chapter 7: Cold Dawn",
-    narrative: "Touchdown confirmed. Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: 'We see you, H.O.P.E. A perfect landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
+    narrative: "Primary base established on Callisto’s equatorial plateau.\nReceiving transmission...\n  MARY: 'We see you, H.O.P.E. A perfect landing. My team is ready. President Bob on Titan also pledges his support. We're all in this together.'",
     prerequisites: ["chapter6.4"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter7.0b",
+    type: "journal",
+    chapter: 4,
+    narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
+    prerequisites: ["chapter7.0"],
     objectives: [],
     reward: []
   },
@@ -120,7 +129,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 7,
     narrative: "Receiving transmission...\n  MARY: 'H.O.P.E., I'm patching you into a one-time, encrypted channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  DR. HART: 'H.O.P.E., years before the attack, we ran a proof-of-concept for a climate control system. The idea was to use planetary thrusters to induce minute orbital shifts—long-term adjustments to regulate global temperatures. The project was abandoned, but not before we built and tested the foundations on Callisto. We're resurrecting it as 'Operation Sidestep.' By executing a series of pseudo-random, coordinated micro-burns from here, Mars, and Titan, we can subtly alter the solar system's barycenter. It won't be a dodge, but a slight, unpredictable drift. Enough to make the enemy's long-range targeting solutions inaccurate. We must walk without rhythm. Secrecy is everything. All public-facing work must be disguised as 'Geothermal Prospecting.''\nNew directive received. Covert operation 'Sidestep' initiated. Public designation: 'Geothermal Prospecting'.",
-    prerequisites: ["chapter7.0"],
+    prerequisites: ["chapter7.0b"],
     objectives: [],
     reward: [
       { target: 'project', targetId: 'sidestep_excavation', type: 'enable' },
