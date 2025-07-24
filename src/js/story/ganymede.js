@@ -152,7 +152,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Icebound Landing",
-        narrative: "Dr. Evelyn Hart: “Touchdown confirmed. Radiation index at nine thousand rads per hour—monstrous even by Jovian standards. Fortunately, our domes are rated ‘apocalypse‑proof.’ Everything outside can melt for all I care.”\nMary: “Sounds lovely. Remind me to visit when I’ve grown a second skeleton.  By the way, H.O.P.E., I am transferring to you the blueprints for the planetary thrusters we developed for Operation Sidestep.  Might come in handy.  As for our mission on Ganymede, Commander Feroza, Supreme Marine Commander for the Jovian Colonies, will be your sword and shield down there.”",
+        narrative: "Mary: \"Intel from the captured cultists on Callisto was clear: Kane's 'Triune Seat'—the heart of the Cult of Three Wounds—is hidden on Ganymede. They believe he's using the intense radiation to mask his facility from our sensors. Your mission is to establish a base, drill through the ice to the ocean below, and find him.\"\nDr. Evelyn Hart: “Touchdown confirmed. Radiation index is off the charts, but our domes will hold. It’s a hostile place, perfect for a man like Kane to hide.”\nMary: “Commander Feroza will be your ground commander. Find that base, HOPE. Neatly or not. By the way, I'm sending you the blueprints for the planetary thrusters we used in Operation Sidestep. Might come in handy.” \n Unpacking photonThursters.spj...",
         prerequisites: ["chapter10.6"],
         objectives: [],
         reward: [
