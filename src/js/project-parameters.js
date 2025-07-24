@@ -149,7 +149,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "Deepens all ore mines to improve production, adding one layer.  Each completion improves metal production by an additive 100%.  The price scales with the number of ore mines constructed and the number of project completions.  The price of ore mines is also adjusted with each completion.",
+    description: "Deepens all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Cost scales with the number of ore mines and their average depth.",
     repeatable: true,
     maxRepeatCount: 10000,
     unlocked : false,
@@ -162,24 +162,6 @@ const projectParameters = {
           targetId: 'oreMine',
           effectId: 'deeper_mining',
           type: 'productionMultiplier',
-          value: 1
-        },
-        {
-          target: 'building',
-          targetId: 'oreMine',
-          effectId: 'deeper_mining_cost_metal',
-          type: 'resourceCostMultiplier',
-          resourceCategory: 'colony',
-          resourceId: 'metal',
-          value: 1
-        },
-        {
-          target: 'building',
-          targetId: 'oreMine',
-          effectId: 'deeper_mining_cost_components',
-          type: 'resourceCostMultiplier',
-          resourceCategory: 'colony',
-          resourceId: 'components',
           value: 1
         }
       ]

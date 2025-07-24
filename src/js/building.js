@@ -348,6 +348,12 @@ class Building extends EffectableEntity {
       const oldProductivity = this.productivity;
       this.count += buildCount;
       this.active += buildCount;
+      if (this.name === 'oreMine' && typeof projectManager !== 'undefined') {
+        const dm = projectManager.projects?.deeperMining;
+        if (dm && typeof dm.registerMine === 'function') {
+          dm.registerMine();
+        }
+      }
       if(this.active > 0){
         this.productivity = oldProductivity * (oldActive / this.active);
       } else {

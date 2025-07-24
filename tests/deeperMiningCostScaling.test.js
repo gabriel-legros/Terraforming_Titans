@@ -26,12 +26,13 @@ describe('Deeper mining cost scaling', () => {
       attributes: { costOreMineScaling: true }
     };
     const p = new ctx.DeeperMiningProject(config, 'deeperMining');
+    p.registerMine();
     const cost = p.getScaledCost();
     expect(cost.colony.electronics).toBe(50);
     expect(cost.colony.components).toBe(50);
   });
 
-  test('cost also scales with completions', () => {
+  test('cost uses average depth not completions', () => {
     const ctx = { console, EffectableEntity };
     ctx.buildings = { oreMine: { count: 3 } };
     vm.createContext(ctx);
@@ -53,9 +54,11 @@ describe('Deeper mining cost scaling', () => {
       attributes: { costOreMineScaling: true }
     };
     const p = new ctx.DeeperMiningProject(config, 'deeperMining');
+    p.registerMine();
+    p.averageDepth = 4;
     p.repeatCount = 2;
     const cost = p.getScaledCost();
-    expect(cost.colony.electronics).toBe(90);
-    expect(cost.colony.components).toBe(90);
+    expect(cost.colony.electronics).toBe(120);
+    expect(cost.colony.components).toBe(120);
   });
 });
