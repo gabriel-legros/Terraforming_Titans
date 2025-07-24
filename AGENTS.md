@@ -196,3 +196,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Photon Thrusters project gains an energy investment UI with +/- buttons, 0, /10, x10 and Max. Invested energy drains every second and shows in resource rates.
 - Spin and motion options now include an Invest checkbox. Only one can be active at a time and the selection persists when saving.
 - Photon thruster energy now alters spin or orbit when invested, and moons drift outward toward escape.
+- Escaped moons replace their parent body with "Star" and no longer count as moons.

@@ -321,7 +321,7 @@ class PhotonThrustersProject extends Project {
         elements.motion.distanceSun.textContent = `${formatNumber(params.distanceFromSun || 0, false, 2)} AU`;
       }
       const parent = params.parentBody;
-      if (parent) {
+      if (parent && typeof parent === 'object') {
         if (elements.motion.parentContainer) {
           elements.motion.parentContainer.style.display = 'block';
           elements.motion.parentName.textContent = parent.name || '';
@@ -432,14 +432,17 @@ class PhotonThrustersProject extends Project {
         const newW = Math.sqrt(2 * newE / I);
         params.rotationPeriod = (2 * Math.PI) / (newW * 3600);
       } else if (this.motionInvest) {
-        if (params.parentBody) {
+        if (params.parentBody && typeof params.parentBody === 'object') {
           const parent = params.parentBody;
           const r = parent.orbitRadius * 1000;
           let E = -G * parent.mass * params.mass / (2 * r);
           E += energyJ;
-          if (E >= 0) return; // escape achieved, ignore for now
-          const newR = -G * parent.mass * params.mass / (2 * E);
-          parent.orbitRadius = newR / 1000;
+          if (E >= 0) {
+            params.parentBody = 'Star';
+          } else {
+            const newR = -G * parent.mass * params.mass / (2 * E);
+            parent.orbitRadius = newR / 1000;
+          }
         } else {
           const r = params.distanceFromSun * AU_IN_METERS;
           const targetR = this.targetAU * AU_IN_METERS;
