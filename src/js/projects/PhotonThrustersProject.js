@@ -1,16 +1,10 @@
-function calculateOrbitalPeriodDays(params) {
-  if (!params) return 0;
-  const { distanceFromSun, parentBody } = params;
-  if (parentBody && typeof parentBody.mass === 'number' && typeof parentBody.orbitRadius === 'number') {
-    const G = 6.67430e-11;
-    const a = parentBody.orbitRadius * 1000; // km → m
-    const mu = G * parentBody.mass;
-    const periodSeconds = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / mu);
-    return periodSeconds / 86400; // seconds → days
+function getRotationPeriodHours(params) {
+  if (!params) return 24;
+  const { rotationPeriod } = params;
+  if (typeof rotationPeriod === 'number' && rotationPeriod > 0) {
+    return rotationPeriod;
   }
-  if (typeof distanceFromSun !== 'number' || distanceFromSun <= 0) return 0;
-  const years = Math.sqrt(Math.pow(distanceFromSun, 3));
-  return years * 365.25;
+  return 24;
 }
 
 class PhotonThrustersProject extends Project {
@@ -25,8 +19,8 @@ class PhotonThrustersProject extends Project {
       <div class="card-body">
         <div class="stats-grid">
           <div class="stat-item">
-            <span class="stat-label">Orbital Period:</span>
-            <span id="spin-orbital-period" class="stat-value">0</span>
+            <span class="stat-label">Rotation Period:</span>
+            <span id="spin-rotation-period" class="stat-value">0</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">Target :</span>
@@ -66,8 +60,7 @@ class PhotonThrustersProject extends Project {
       spinCard,
       motionCard,
       spin: {
-        orbitalPeriod: spinCard.querySelector('#spin-orbital-period'),
-        target: spinCard.querySelector('#spin-target'),
+        rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
       },
       motion: {
         distanceSun: motionCard.querySelector('#motion-distance-sun'),
@@ -90,9 +83,10 @@ class PhotonThrustersProject extends Project {
       elements.motionCard.style.display = this.isCompleted ? 'block' : 'none';
     }
 
-    if (elements.spin && elements.spin.orbitalPeriod) {
-      const period = calculateOrbitalPeriodDays(params);
-      elements.spin.orbitalPeriod.textContent = `${formatNumber(period, false, 2)} days`;
+    if (elements.spin && elements.spin.rotationPeriod) {
+      const hours = getRotationPeriodHours(params);
+      const days = hours / 24;
+      elements.spin.rotationPeriod.textContent = `${formatNumber(days, false, 2)} days`;
     }
 
     if (elements.motion) {

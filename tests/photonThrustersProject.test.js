@@ -31,7 +31,7 @@ describe('Photon Thrusters project', () => {
     expect(proj instanceof ctx.Project).toBe(true);
   });
 
-  test('rendered subcards display orbital data', () => {
+  test('rendered subcards display motion data', () => {
     const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
@@ -64,8 +64,7 @@ describe('Photon Thrusters project', () => {
     const motionCard = ctx.projectElements.photonThrusters.motionCard;
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
-    expect(spin.orbitalPeriod.textContent).toContain('365.25');
-    expect(spin.target.textContent).toBe('1 day');
+    expect(spin.rotationPeriod.textContent).toContain('1.00');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');
@@ -140,7 +139,7 @@ describe('Photon Thrusters project', () => {
     expect(motionCard.style.display).toBe('block');
   });
 
-  test('orbital period uses parent mass for moons', () => {
+  test('rotation period uses provided value', () => {
     const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
@@ -148,7 +147,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { distanceFromSun: 5.2, parentBody: { name: 'Jupiter', mass: 1.898e27, orbitRadius: 1882700 } } };
+    ctx.terraforming = { celestialParameters: { rotationPeriod: 400.8 } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -168,7 +167,7 @@ describe('Photon Thrusters project', () => {
     project.updateUI();
 
     const spin = ctx.projectElements.photonThrusters.spin;
-    const value = parseFloat(spin.orbitalPeriod.textContent);
+    const value = parseFloat(spin.rotationPeriod.textContent);
     expect(value).toBeCloseTo(16.7, 1);
   });
 });
