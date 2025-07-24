@@ -156,7 +156,7 @@ class PhotonThrustersProject extends Project {
 
     const energyTitle = document.createElement('h4');
     energyTitle.classList.add('section-title');
-    energyTitle.textContent = 'Thruster Energy';
+    energyTitle.textContent = 'Thruster Power';
     energySection.appendChild(energyTitle);
 
     const investmentContainer = document.createElement('div');
