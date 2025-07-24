@@ -162,6 +162,39 @@ describe('Photon Thrusters project', () => {
     expect(motion.energyCost.textContent).toBe(expectedOrbitalCost);
   });
 
+  test('motion card hides moon warning when parent is Star', () => {
+    const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 2, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23, parentBody: 'Star' } };
+    ctx.EffectableEntity = EffectableEntity;
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.updateUI();
+
+    const motion = ctx.projectElements.photonThrusters.motion;
+    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    expect(moonWarning.style.display).toBe('none');
+    expect(motion.parentContainer.style.display).toBe('none');
+  });
+
   test('subcards hidden until project complete', () => {
     const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
@@ -296,6 +329,100 @@ describe('Photon Thrusters project', () => {
     project.update(2000);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(900);
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Photon Thrusters', 'project');
+  });
+
+  test('spin investment reduces rotation period', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1e10, radius: 1, rotationPeriod: 10 } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.spinInvest = true;
+    project.targetDays = 0.2;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.rotationPeriod).toBeLessThan(10);
+  });
+
+  test('motion investment increases orbital distance', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1, radius: 1, distanceFromSun: 1 } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.motionInvest = true;
+    project.targetAU = 2;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.distanceFromSun).toBeGreaterThan(1);
+  });
+
+  test('moon investment expands orbit radius', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1e12, radius: 1, parentBody: { mass: 1e15, orbitRadius: 1000 } } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 50;
+    project.motionInvest = true;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.parentBody.orbitRadius).toBeGreaterThan(1000);
+  });
+
+  test('moon escapes and parent becomes Star', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 2e6, decrease(v){ this.value-= v; }, updateStorageCap: () => {}, modifyRate(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1e12, radius: 1, parentBody: { name: 'PlanetX', mass: 1e15, orbitRadius: 1000 } } };
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    project.energyInvestment = 1e6;
+    project.motionInvest = true;
+    project.update(1000);
+    expect(ctx.terraforming.celestialParameters.parentBody).toBe('Star');
   });
 
   test('saveState and loadState preserve investment settings', () => {

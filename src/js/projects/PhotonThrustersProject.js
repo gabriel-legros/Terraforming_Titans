@@ -321,7 +321,7 @@ class PhotonThrustersProject extends Project {
         elements.motion.distanceSun.textContent = `${formatNumber(params.distanceFromSun || 0, false, 2)} AU`;
       }
       const parent = params.parentBody;
-      if (parent) {
+      if (parent && typeof parent === 'object') {
         if (elements.motion.parentContainer) {
           elements.motion.parentContainer.style.display = 'block';
           elements.motion.parentName.textContent = parent.name || '';
@@ -414,6 +414,48 @@ class PhotonThrustersProject extends Project {
     resources.colony.energy.decrease(consumed);
     if (resources.colony.energy.modifyRate) {
       resources.colony.energy.modifyRate(-rate, this.displayName, 'project');
+    }
+
+    if (consumed > 0 && terraforming && terraforming.celestialParameters) {
+      const params = terraforming.celestialParameters;
+      const energyJ = consumed * 86400;
+      if (this.spinInvest) {
+        const I = 0.4 * params.mass * Math.pow(params.radius * 1000, 2);
+        const currentW = (2 * Math.PI) / ((params.rotationPeriod || 24) * 3600);
+        const targetW = (2 * Math.PI) / (this.targetDays * 24 * 3600);
+        const currentE = 0.5 * I * currentW * currentW;
+        const targetE = 0.5 * I * targetW * targetW;
+        const sign = targetE > currentE ? 1 : -1;
+        let newE = currentE + sign * energyJ;
+        if (sign > 0 && newE > targetE) newE = targetE;
+        if (sign < 0 && newE < targetE) newE = targetE;
+        const newW = Math.sqrt(2 * newE / I);
+        params.rotationPeriod = (2 * Math.PI) / (newW * 3600);
+      } else if (this.motionInvest) {
+        if (params.parentBody && typeof params.parentBody === 'object') {
+          const parent = params.parentBody;
+          const r = parent.orbitRadius * 1000;
+          let E = -G * parent.mass * params.mass / (2 * r);
+          E += energyJ;
+          if (E >= 0) {
+            params.parentBody = 'Star';
+          } else {
+            const newR = -G * parent.mass * params.mass / (2 * E);
+            parent.orbitRadius = newR / 1000;
+          }
+        } else {
+          const r = params.distanceFromSun * AU_IN_METERS;
+          const targetR = this.targetAU * AU_IN_METERS;
+          const currentE = -G * SOLAR_MASS * params.mass / (2 * r);
+          const targetE = -G * SOLAR_MASS * params.mass / (2 * targetR);
+          const sign = targetE > currentE ? 1 : -1;
+          let newE = currentE + sign * energyJ;
+          if (sign > 0 && newE > targetE) newE = targetE;
+          if (sign < 0 && newE < targetE) newE = targetE;
+          const newR = -G * SOLAR_MASS * params.mass / (2 * newE);
+          params.distanceFromSun = newR / AU_IN_METERS;
+        }
+      }
     }
   }
 }
