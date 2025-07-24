@@ -7,7 +7,33 @@ function getRotationPeriodHours(params) {
   return 24;
 }
 
+function calculateOrbitalPeriodDays(distanceAU) {
+  const a = typeof distanceAU === 'number' && distanceAU > 0 ? distanceAU : 1;
+  return 365.25 * Math.sqrt(Math.pow(a, 3));
+}
+
+function calculateSpinEnergyCost(massKg, radiusKm, currentHours, targetHours) {
+  if (
+    typeof massKg !== 'number' ||
+    typeof radiusKm !== 'number' ||
+    typeof currentHours !== 'number' ||
+    typeof targetHours !== 'number'
+  ) {
+    return 0;
+  }
+  const I = 0.4 * massKg * Math.pow(radiusKm * 1000, 2);
+  const w1 = (2 * Math.PI) / (currentHours * 3600);
+  const w2 = (2 * Math.PI) / (targetHours * 3600);
+  const deltaE = 0.5 * I * (w2 * w2 - w1 * w1);
+  return Math.abs(deltaE) / 86400; // convert J -> W-day
+}
+
 class PhotonThrustersProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.targetDays = 1;
+  }
+
   renderUI(container) {
     const spinCard = document.createElement('div');
     spinCard.classList.add('info-card', 'spin-details-card');
@@ -23,17 +49,27 @@ class PhotonThrustersProject extends Project {
             <span id="spin-rotation-period" class="stat-value">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Target :</span>
-            <span id="spin-target" class="stat-value">1 day</span>
+            <span class="stat-label">Orbital Period:</span>
+            <span id="spin-orbital-period" class="stat-value">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Target :</span>
-            <span id="spin-target" class="stat-value">1 day</span>
+            <span class="stat-label">Target:</span>
+            <input id="spin-target" type="number" min="0.1" step="0.1" value="1">
+            <span>day</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Energy Cost:</span>
+            <span id="spin-energy-cost" class="stat-value">0</span>
           </div>
         </div>
       </div>
     `;
     container.appendChild(spinCard);
+
+    const targetInput = spinCard.querySelector('#spin-target');
+    if (targetInput) {
+      targetInput.addEventListener('input', () => this.updateUI());
+    }
 
     const motionCard = document.createElement('div');
     motionCard.classList.add('info-card', 'motion-details-card');
@@ -68,7 +104,9 @@ class PhotonThrustersProject extends Project {
       motionCard,
       spin: {
         rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
+        orbitalPeriod: spinCard.querySelector('#spin-orbital-period'),
         target: spinCard.querySelector('#spin-target'),
+        energyCost: spinCard.querySelector('#spin-energy-cost'),
       },
       motion: {
         distanceSun: motionCard.querySelector('#motion-distance-sun'),
@@ -92,10 +130,32 @@ class PhotonThrustersProject extends Project {
       elements.motionCard.style.display = this.isCompleted ? 'block' : 'none';
     }
 
-    if (elements.spin && elements.spin.rotationPeriod) {
+    if (elements.spin) {
       const hours = getRotationPeriodHours(params);
       const days = hours / 24;
-      elements.spin.rotationPeriod.textContent = `${formatNumber(days, false, 2)} days`;
+      if (elements.spin.rotationPeriod) {
+        elements.spin.rotationPeriod.textContent = `${formatNumber(days, false, 2)} days`;
+      }
+      if (elements.spin.orbitalPeriod) {
+        const orbit = calculateOrbitalPeriodDays(params.distanceFromSun);
+        elements.spin.orbitalPeriod.textContent = `${formatNumber(orbit, false, 2)} days`;
+      }
+      if (elements.spin.target &&
+          (typeof elements.spin.target.value === 'string' || typeof elements.spin.target.value === 'number')) {
+        const val = parseFloat(elements.spin.target.value);
+        if (!isNaN(val) && val > 0) {
+          this.targetDays = val;
+        }
+      }
+      if (elements.spin.energyCost) {
+        const cost = calculateSpinEnergyCost(
+          params.mass,
+          params.radius,
+          hours,
+          this.targetDays * 24
+        );
+        elements.spin.energyCost.textContent = `${formatNumber(cost, false, 2)} W-day`;
+      }
     }
 
     if (elements.motion) {

@@ -187,3 +187,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Photon Thrusters spin card includes a default 'Target : 1 day' field.
 - The motion card warns moons to leave their parent's gravity well before altering solar distance.
 - Celestial parameters now track their original values and reload from configuration when saving or loading games.
+- Photon Thrusters spin target is now an editable field that displays the energy required to change rotation.

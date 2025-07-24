@@ -3,6 +3,14 @@ const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
+function spinEnergyCost(mass, radius, currentHours, targetHours) {
+  const I = 0.4 * mass * Math.pow(radius * 1000, 2);
+  const w1 = (2 * Math.PI) / (currentHours * 3600);
+  const w2 = (2 * Math.PI) / (targetHours * 3600);
+  const deltaE = 0.5 * I * (w2 * w2 - w1 * w1);
+  return Math.abs(deltaE) / 86400;
+}
+
 describe('Photon Thrusters project', () => {
   test('parameters define correct costs', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
@@ -39,7 +47,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, parentBody: { name: 'Mars', orbitRadius: 50000 } } };
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23, parentBody: { name: 'Mars', orbitRadius: 50000 } } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -82,7 +90,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { distanceFromSun: 2 } };
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 2, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23 } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -106,6 +114,13 @@ describe('Photon Thrusters project', () => {
       expect(moonWarning.style.display).toBe("none");
     expect(motion.distanceSun.textContent).toBe('2.00 AU');
     expect(motion.parentContainer.style.display).toBe('none');
+    const spin = ctx.projectElements.photonThrusters.spin;
+    const expectedCost = ctx.formatNumber(
+      spinEnergyCost(6.417e23, 3389.5, 24.6, 24),
+      false,
+      2
+    ) + ' W-day';
+    expect(spin.energyCost.textContent).toBe(expectedCost);
   });
 
   test('subcards hidden until project complete', () => {
@@ -116,7 +131,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { distanceFromSun: 1 } };
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, rotationPeriod: 24.6, radius: 3389.5, mass: 6.417e23 } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -153,7 +168,7 @@ describe('Photon Thrusters project', () => {
     ctx.console = console;
     ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { rotationPeriod: 400.8 } };
+    ctx.terraforming = { celestialParameters: { rotationPeriod: 400.8, distanceFromSun: 5.2, radius: 2410.3, mass: 1.076e23 } };
     ctx.EffectableEntity = EffectableEntity;
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -175,5 +190,11 @@ describe('Photon Thrusters project', () => {
     const spin = ctx.projectElements.photonThrusters.spin;
     const value = parseFloat(spin.rotationPeriod.textContent);
     expect(value).toBeCloseTo(16.7, 1);
+    const expectedCost = ctx.formatNumber(
+      spinEnergyCost(1.076e23, 2410.3, 400.8, 24),
+      false,
+      2
+    ) + ' W-day';
+    expect(spin.energyCost.textContent).toBe(expectedCost);
   });
 });
