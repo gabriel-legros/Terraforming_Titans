@@ -2,8 +2,14 @@ function formatNumber(value, integer = false, precision = 1) {
     const absValue = Math.abs(value);
     let formatted;
 
-    if (absValue >= 1e21 - 1e18) {
-      formatted = integer && absValue % 1e21 === 0 ? (absValue / 1e21) + 'Sx' : (absValue / 1e21).toFixed(precision) + 'Sx';  
+    if (absValue >= 1e30 - 1e27) {
+      formatted = integer && absValue % 1e30 === 0 ? (absValue / 1e30) + 'No' : (absValue / 1e30).toFixed(precision) + 'No';
+    } else if (absValue >= 1e27 - 1e24) {
+      formatted = integer && absValue % 1e27 === 0 ? (absValue / 1e27) + 'Oc' : (absValue / 1e27).toFixed(precision) + 'Oc';
+    } else if (absValue >= 1e24 - 1e21) {
+      formatted = integer && absValue % 1e24 === 0 ? (absValue / 1e24) + 'Sp' : (absValue / 1e24).toFixed(precision) + 'Sp';
+    } else if (absValue >= 1e21 - 1e18) {
+      formatted = integer && absValue % 1e21 === 0 ? (absValue / 1e21) + 'Sx' : (absValue / 1e21).toFixed(precision) + 'Sx';
     } else if (absValue >= 1e18 - 1e15) {
       formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qn' : (absValue / 1e18).toFixed(precision) + 'Qn';
     } else if (absValue >= 1e15 - 1e12) {
