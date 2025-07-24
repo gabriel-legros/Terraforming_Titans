@@ -6,10 +6,17 @@ function updateWarnings() {
 
     if (colonists.consumptionRate > colonists.productionRate) {
       warningContainer.innerHTML = '<div class="warning-message">Warning: Colonists are dying!</div>';
-    } else if (tau > 10) {
     } else if (tau > 10 && tempK > 313.15) {
       warningContainer.innerHTML = '<div class="warning-message">Warning: Runaway Greenhouse Effect!</div>';
     } else {
       warningContainer.innerHTML = '';
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = updateWarnings;
+}
+
+if (typeof window !== 'undefined') {
+  window.updateWarnings = updateWarnings;
 }

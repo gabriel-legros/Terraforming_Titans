@@ -62,9 +62,13 @@ describe('Photon Thrusters project', () => {
     const motion = ctx.projectElements.photonThrusters.motion;
     const spinCard = ctx.projectElements.photonThrusters.spinCard;
     const motionCard = ctx.projectElements.photonThrusters.motionCard;
+      const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+      expect(moonWarning.style.display).toBe("block");
+      expect(moonWarning.textContent.trim()).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
     expect(spin.orbitalPeriod.textContent).toContain('365.25');
+    expect(spin.target.textContent).toBe('1 day');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');
@@ -98,6 +102,8 @@ describe('Photon Thrusters project', () => {
     project.updateUI();
 
     const motion = ctx.projectElements.photonThrusters.motion;
+      const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+      expect(moonWarning.style.display).toBe("none");
     expect(motion.distanceSun.textContent).toBe('2.00 AU');
     expect(motion.parentContainer.style.display).toBe('none');
   });

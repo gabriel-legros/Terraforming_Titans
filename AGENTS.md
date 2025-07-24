@@ -184,3 +184,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Spin and motion subcards only appear once the Photon Thrusters project is completed.
 - Moons now include parent body name, mass and orbit radius in planet-parameters.
 - Loading a save now merges any new projects into the order so updates aren't skipped.
+- Photon Thrusters spin card includes a default 'Target : 1 day' field.
+- The motion card warns moons to leave their parent's gravity well before altering solar distance.
