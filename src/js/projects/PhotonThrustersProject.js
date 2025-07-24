@@ -69,6 +69,8 @@ class PhotonThrustersProject extends Project {
     this.targetAU = 1;
     this.energyInvestment = 0;
     this.investmentMultiplier = 1;
+    this.spinInvest = false;
+    this.motionInvest = false;
   }
 
   renderUI(container) {
@@ -94,15 +96,19 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Energy Cost:</span>
             <span id="spin-energy-cost" class="stat-value">0</span>
           </div>
+          <div class="stat-item">
+            <label><input id="spin-invest" type="checkbox"> Invest</label>
+          </div>
         </div>
       </div>
     `;
     container.appendChild(spinCard);
 
-    const targetInput = spinCard.querySelector('#spin-target');
-    if (targetInput) {
-      targetInput.addEventListener('input', () => this.updateUI());
-    }
+  const targetInput = spinCard.querySelector('#spin-target');
+  if (targetInput) {
+    targetInput.addEventListener('input', () => this.updateUI());
+  }
+  const spinInvestCheckbox = spinCard.querySelector('#spin-invest');
 
     const motionCard = document.createElement('div');
     motionCard.classList.add('info-card', 'motion-details-card');
@@ -136,6 +142,9 @@ class PhotonThrustersProject extends Project {
             <span class="stat-label">Escape Energy:</span>
             <span id="motion-escape-energy" class="stat-value">0</span>
           </div>
+          <div class="stat-item">
+            <label><input id="motion-invest" type="checkbox"> Invest</label>
+          </div>
         </div>
         <div id="motion-moon-warning" class="moon-warning" style="display:none;">
           <span class="icon">\u26A0</span>
@@ -145,10 +154,31 @@ class PhotonThrustersProject extends Project {
     `;
     container.appendChild(motionCard);
 
-    const motionTargetInput = motionCard.querySelector('#motion-target');
-    if (motionTargetInput) {
-      motionTargetInput.addEventListener('input', () => this.updateUI());
-    }
+  const motionTargetInput = motionCard.querySelector('#motion-target');
+  if (motionTargetInput) {
+    motionTargetInput.addEventListener('input', () => this.updateUI());
+  }
+  const motionInvestCheckbox = motionCard.querySelector('#motion-invest');
+
+  if (spinInvestCheckbox) {
+    spinInvestCheckbox.addEventListener('change', () => {
+      this.spinInvest = spinInvestCheckbox.checked;
+      if (this.spinInvest) {
+        this.motionInvest = false;
+        if (motionInvestCheckbox) motionInvestCheckbox.checked = false;
+      }
+    });
+  }
+
+  if (motionInvestCheckbox) {
+    motionInvestCheckbox.addEventListener('change', () => {
+      this.motionInvest = motionInvestCheckbox.checked;
+      if (this.motionInvest) {
+        this.spinInvest = false;
+        if (spinInvestCheckbox) spinInvestCheckbox.checked = false;
+      }
+    });
+  }
 
     const energySection = document.createElement('div');
     energySection.classList.add('project-section-container', 'energy-investment-section');
@@ -216,6 +246,7 @@ class PhotonThrustersProject extends Project {
         rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
         target: spinCard.querySelector('#spin-target'),
         energyCost: spinCard.querySelector('#spin-energy-cost'),
+        investCheckbox: spinInvestCheckbox,
       },
       motion: {
         distanceSun: motionCard.querySelector('#motion-distance-sun'),
@@ -229,6 +260,7 @@ class PhotonThrustersProject extends Project {
         targetContainer: motionCard.querySelector('#motion-target-container'),
         energyContainer: motionCard.querySelector('#motion-energy-container'),
         escapeContainer: motionCard.querySelector('#motion-escape-container'),
+        investCheckbox: motionInvestCheckbox,
       },
       energyInvestedDisplay: investedDisplay,
       minusButton,
@@ -252,6 +284,12 @@ class PhotonThrustersProject extends Project {
     }
     if (elements.energyInvestedDisplay) {
       elements.energyInvestedDisplay.textContent = formatNumber(this.energyInvestment, true);
+    }
+    if (elements.spin && elements.spin.investCheckbox) {
+      elements.spin.investCheckbox.checked = this.spinInvest;
+    }
+    if (elements.motion && elements.motion.investCheckbox) {
+      elements.motion.investCheckbox.checked = this.motionInvest;
     }
 
     if (elements.spin) {
@@ -348,9 +386,27 @@ class PhotonThrustersProject extends Project {
     this.updateUI();
   }
 
+  saveState() {
+    return {
+      ...super.saveState(),
+      energyInvestment: this.energyInvestment,
+      investmentMultiplier: this.investmentMultiplier,
+      spinInvest: this.spinInvest,
+      motionInvest: this.motionInvest,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.energyInvestment = state.energyInvestment || 0;
+    this.investmentMultiplier = state.investmentMultiplier || 1;
+    this.spinInvest = state.spinInvest || false;
+    this.motionInvest = state.motionInvest || false;
+  }
+
   update(deltaTime) {
     super.update(deltaTime);
-    if (!this.isCompleted || this.energyInvestment <= 0) return;
+    if (!this.isCompleted || this.energyInvestment <= 0 || (!this.spinInvest && !this.motionInvest)) return;
     const rate = this.energyInvestment;
     const amount = rate * (deltaTime / 1000);
     const available = resources.colony.energy.value;
