@@ -161,9 +161,10 @@ second time they speak in a chapter to help clarify who is talking.
 - Deeper mining supports android assignments for massive speed boosts.
 - Android assignment UI initializes hidden and shows once the upgrade is researched.
 - Android project speed multiplier now adds 1 to the calculation and updates active progress bars immediately. The display reads "Deepening speed boost" beside the controls.
-- Deeper mining costs now scale with ore mines built and also increases ore mine construction costs. Android boost scales with built mines instead of deposits.
+- Deeper mining costs now scale with ore mines built. Android boost scales with built mines instead of deposits.
 - Deeper mining now uses a dedicated class `DeeperMiningProject`.
-- Deeper mining costs also scale with the number of project completions.
+- Project completions increase the average depth by one.
+- Deeper mining tracks ore mines built and their average depth. It pulls the count from buildings after each construction, and ore mine costs no longer increase.
 - Settings menu can disable the day-night cycle. Solar panels and Ice Harvesters operate at half strength and the progress bar hides.
 - Day-night toggle also halves maintenance for those structures and skips the penalty on Ice Harvesters once Infrared Vision is researched.
 - Restored the yellow/blue animation by re-linking the day-night cycle stylesheet.
