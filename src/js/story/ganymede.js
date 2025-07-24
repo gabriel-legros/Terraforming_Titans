@@ -152,11 +152,12 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Icebound Landing",
-        narrative: "Dr. Evelyn Hart: “Touchdown confirmed. Radiation index at nine thousand rads per hour—monstrous even by Jovian standards. Fortunately, our domes are rated ‘apocalypse‑proof.’ Everything outside can melt for all I care.”\nMary: “Sounds lovely. Remind me to visit when I’ve grown a second skeleton.”\nMary: “Commander Feroza, Supreme Marine Commander for the Jovian Colonies, will be your sword and shield down there.”",
+        narrative: "Dr. Evelyn Hart: “Touchdown confirmed. Radiation index at nine thousand rads per hour—monstrous even by Jovian standards. Fortunately, our domes are rated ‘apocalypse‑proof.’ Everything outside can melt for all I care.”\nMary: “Sounds lovely. Remind me to visit when I’ve grown a second skeleton.  By the way, H.O.P.E., I am transferring to you the blueprints for the planetary thrusters we developed for Operation Sidestep.  Might come in handy.  As for our mission on Ganymede, Commander Feroza, Supreme Marine Commander for the Jovian Colonies, will be your sword and shield down there.”",
         prerequisites: ["chapter10.6"],
         objectives: [],
         reward: [
-            { target: 'project', targetId: 'deep_drill', type: 'enable' }
+            { target: 'project', targetId: 'deep_drill', type: 'enable' },
+            { target: 'project', targetId: 'photonThrusters', type: 'enable' }
         ]
     },
     {
