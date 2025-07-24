@@ -237,6 +237,43 @@ describe('Photon Thrusters project', () => {
     expect(spin.energyCost.textContent).toBe(expectedCost);
   });
 
+  test('spin and motion invest checkboxes are exclusive', () => {
+    const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = require('../src/js/numbers.js').formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { distanceFromSun: 1, rotationPeriod: 24, radius: 3390, mass: 6.4e23 } };
+    ctx.EffectableEntity = EffectableEntity;
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.isCompleted = true;
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    const spinCheck = ctx.projectElements.photonThrusters.spin.investCheckbox;
+    const motionCheck = ctx.projectElements.photonThrusters.motion.investCheckbox;
+    spinCheck.checked = true;
+    spinCheck.dispatchEvent(new dom.window.Event('change'));
+    expect(project.spinInvest).toBe(true);
+    expect(project.motionInvest).toBe(false);
+    motionCheck.checked = true;
+    motionCheck.dispatchEvent(new dom.window.Event('change'));
+    expect(project.spinInvest).toBe(false);
+    expect(project.motionInvest).toBe(true);
+  });
+
   test('energy investment consumes energy each update', () => {
     const ctx = { console, EffectableEntity };
     vm.createContext(ctx);
@@ -255,8 +292,35 @@ describe('Photon Thrusters project', () => {
     const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
     project.isCompleted = true;
     project.energyInvestment = 50;
+    project.spinInvest = true;
     project.update(2000);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(900);
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Photon Thrusters', 'project');
+  });
+
+  test('saveState and loadState preserve investment settings', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.photonThrusters;
+    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    project.energyInvestment = 75;
+    project.investmentMultiplier = 5;
+    project.spinInvest = true;
+
+    const saved = project.saveState();
+    const loaded = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    loaded.loadState(saved);
+
+    expect(loaded.energyInvestment).toBe(75);
+    expect(loaded.investmentMultiplier).toBe(5);
+    expect(loaded.spinInvest).toBe(true);
+    expect(loaded.motionInvest).toBe(false);
   });
 });
