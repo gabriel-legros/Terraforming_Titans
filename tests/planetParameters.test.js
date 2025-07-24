@@ -29,10 +29,11 @@ describe('getPlanetParameters', () => {
     ];
     for (const { key, parent } of moons) {
       const params = getPlanetParameters(key);
-      expect(params.parentBody).toBeDefined();
-      expect(params.parentBody.name).toBe(parent);
-      expect(typeof params.parentBody.mass).toBe('number');
-      expect(typeof params.parentBody.orbitRadius).toBe('number');
+      const body = params.celestialParameters.parentBody;
+      expect(body).toBeDefined();
+      expect(body.name).toBe(parent);
+      expect(typeof body.mass).toBe('number');
+      expect(typeof body.orbitRadius).toBe('number');
     }
   });
 
