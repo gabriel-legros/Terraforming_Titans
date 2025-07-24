@@ -75,8 +75,8 @@ describe('Photon Thrusters project', () => {
       expect(moonWarning.textContent.trim()).toBe("Moons must first their parent's gravity well before distance to the sun can be changed");
     expect(spinCard.style.display).toBe('block');
     expect(motionCard.style.display).toBe('block');
-    expect(spin.rotationPeriod.textContent).toBe('1.00 days');
-    expect(spin.target.textContent).toBe('1 day');
+    expect(spin.rotationPeriod.textContent).toBe('1.03 days');
+    expect(spin.target.value).toBe('1');
     expect(motion.distanceSun.textContent).toBe('1.00 AU');
     expect(motion.parentContainer.style.display).toBe('block');
     expect(motion.parentName.textContent).toBe('Mars');

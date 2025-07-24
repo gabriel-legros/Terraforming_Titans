@@ -18,7 +18,7 @@ describe('celestial parameter persistence', () => {
     expect(saved.initialCelestialParameters.distanceFromSun).toBe(1);
   });
 
-  test('loadState merges config and derives missing initial', () => {
+  test('loadState merges config and resets initial from planet', () => {
     const terra = new Terraforming({}, { radius: 1, distanceFromSun: 1, gravity: 1 });
     const state = { celestialParameters: { distanceFromSun: 3 } };
     global.currentPlanetParameters = {
@@ -32,7 +32,7 @@ describe('celestial parameter persistence', () => {
     terra.loadState(state);
     expect(terra.celestialParameters.distanceFromSun).toBe(3);
     expect(terra.celestialParameters.gravity).toBe(1);
-    expect(terra.initialCelestialParameters.distanceFromSun).toBe(3);
+    expect(terra.initialCelestialParameters.distanceFromSun).toBe(1);
     expect(terra.initialCelestialParameters.gravity).toBe(1);
   });
 });
