@@ -179,4 +179,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Replication logic now resides in self-replicating-ships.js and is invoked from resource.js.
 - Removed unused Dyson Swarm JS files and updated tests to use the project versions.
 - Added Photon Thrusters special project placeholder.
+- Photon Thrusters script now loads in index.html so the hidden project is generated correctly.
 - Moons now include parent body name, mass and orbit radius in planet-parameters.
