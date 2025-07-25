@@ -77,6 +77,7 @@ class PlanetaryThrustersProject extends Project{
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
+    spinCard.style.display=this.unlocked?"block":"none";
 
     /* motion */
     const motHTML=`<div class="card-header"><span class="card-title">Motion</span></div>
@@ -99,6 +100,7 @@ class PlanetaryThrustersProject extends Project{
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
+    motCard.style.display=this.unlocked?"block":"none";
 
     /* power */
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
@@ -119,10 +121,12 @@ class PlanetaryThrustersProject extends Project{
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
+    pwrCard.style.display=this.unlocked?"block":"none";
 
     /* refs */
     const g=(sel,r)=>r.querySelector(sel);
-    this.el={rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
+    this.el={spinCard, motCard, pwrCard,
+      rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
       distNow:g('#distNow',motCard),distTarget:g('#distTarget',motCard),
       distDv:g('#distDv',motCard),distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
@@ -211,6 +215,12 @@ class PlanetaryThrustersProject extends Project{
 
 /* ---------- UI refresh ------------------------------------------------ */
   updateUI(){
+    if(this.el.spinCard){
+      const vis = this.unlocked ? 'block' : 'none';
+      this.el.spinCard.style.display = vis;
+      this.el.motCard.style.display = vis;
+      this.el.pwrCard.style.display = vis;
+    }
     const p=terraforming.celestialParameters||{};
     this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
     this.el.distNow.textContent = p.parentBody?
