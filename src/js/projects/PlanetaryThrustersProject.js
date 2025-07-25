@@ -282,6 +282,37 @@ class PlanetaryThrustersProject extends Project{
       this.updateUI();
     }
   }
+
+  saveState(){
+    const state = super.saveState();
+    state.power = this.power;
+    state.step = this.step;
+    state.spinInvest = this.spinInvest;
+    state.motionInvest = this.motionInvest;
+    state.tgtDays = this.tgtDays;
+    state.tgtAU = this.tgtAU;
+    state.dVreq = this.dVreq;
+    state.dVdone = this.dVdone;
+    state.spinStartDays = this.spinStartDays;
+    state.escapePhase = this.escapePhase;
+    state.startAU = this.startAU;
+    return state;
+  }
+
+  loadState(state){
+    super.loadState(state);
+    this.power = state.power || 0;
+    this.step = state.step || 1;
+    this.spinInvest = state.spinInvest || false;
+    this.motionInvest = state.motionInvest || false;
+    this.tgtDays = state.tgtDays || 1;
+    this.tgtAU = state.tgtAU || 1;
+    this.dVreq = state.dVreq || 0;
+    this.dVdone = state.dVdone || 0;
+    this.spinStartDays = state.spinStartDays ?? null;
+    this.escapePhase = state.escapePhase || false;
+    this.startAU = state.startAU ?? null;
+  }
 }
 
 /* expose */
