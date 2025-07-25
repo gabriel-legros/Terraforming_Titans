@@ -163,7 +163,7 @@ progressGanymede.chapters.push(
     {
         id: "chapter11.0a",
         type: "journal",
-        chapter: 4,
+        chapter: 11,
         narrative: "System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized interstellar transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.",
         prerequisites: ["chapter11.0"],
         objectives: [],

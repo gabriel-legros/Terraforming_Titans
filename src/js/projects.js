@@ -499,6 +499,9 @@ class ProjectManager extends EffectableEntity {
     const projectState = savedState.projects || savedState;
     this.projectOrder = savedState.order || Object.keys(this.projects);
 
+    // Filter out projects from the order that no longer exist
+    this.projectOrder = this.projectOrder.filter(projectName => this.projects.hasOwnProperty(projectName));
+
     // Append any newly added projects that were not present in the saved order
     Object.keys(this.projects).forEach(name => {
       if (!this.projectOrder.includes(name)) {
