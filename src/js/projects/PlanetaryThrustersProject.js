@@ -77,7 +77,7 @@ class PlanetaryThrustersProject extends Project{
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
-    spinCard.style.display=this.unlocked?"block":"none";
+    spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
     const motHTML=`<div class="card-header"><span class="card-title">Motion</span></div>
@@ -100,7 +100,7 @@ class PlanetaryThrustersProject extends Project{
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
-    motCard.style.display=this.unlocked?"block":"none";
+    motCard.style.display=this.isCompleted?"block":"none";
 
     /* power */
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
@@ -121,7 +121,7 @@ class PlanetaryThrustersProject extends Project{
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
-    pwrCard.style.display=this.unlocked?"block":"none";
+    pwrCard.style.display=this.isCompleted?"block":"none";
 
     /* refs */
     const g=(sel,r)=>r.querySelector(sel);
@@ -216,7 +216,7 @@ class PlanetaryThrustersProject extends Project{
 /* ---------- UI refresh ------------------------------------------------ */
   updateUI(){
     if(this.el.spinCard){
-      const vis = this.unlocked ? 'block' : 'none';
+      const vis = this.isCompleted ? 'block' : 'none';
       this.el.spinCard.style.display = vis;
       this.el.motCard.style.display = vis;
       this.el.pwrCard.style.display = vis;

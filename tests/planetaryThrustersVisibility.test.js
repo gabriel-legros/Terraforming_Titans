@@ -37,6 +37,12 @@ describe('Planetary Thrusters visibility', () => {
 
     project.enable();
     project.updateUI();
+    expect(project.el.spinCard.style.display).toBe('none');
+    expect(project.el.motCard.style.display).toBe('none');
+    expect(project.el.pwrCard.style.display).toBe('none');
+
+    project.complete();
+    project.updateUI();
     expect(project.el.spinCard.style.display).toBe('block');
     expect(project.el.motCard.style.display).toBe('block');
     expect(project.el.pwrCard.style.display).toBe('block');
