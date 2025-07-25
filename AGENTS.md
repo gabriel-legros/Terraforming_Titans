@@ -206,3 +206,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added Warp Gate Command manager with a WGC subtab (wgc.js and wgcUI.js). The subtab remains hidden until unlocked and the manager persists across planets.
 - Planetary Thrusters now use continuous power with internal element references and save/load their investment state.
 - Planetary Thrusters UI now calculates delta-v and energy using the entered targets and hides spiral Δv until moons escape.
+- Spin, motion and thruster power cards stay hidden until the project is unlocked.
