@@ -207,3 +207,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Planetary Thrusters now use continuous power with internal element references and save/load their investment state.
 - Planetary Thrusters UI now calculates delta-v and energy using the entered targets and hides spiral Δv until moons escape.
 - Spin, motion and thruster power cards stay hidden until the project is unlocked.
+- Thruster power display now uses `formatNumber` and energy consumption registers in resource rates.

@@ -226,7 +226,7 @@ class PlanetaryThrustersProject extends Project{
     this.el.distNow.textContent = p.parentBody?
         fmt(p.parentBody.orbitRadius,false,0)+" km" :
         fmt(p.distanceFromSun||0,false,3)+" AU";
-    this.el.pwrVal.textContent  = fmt(this.power,true)+" W";
+    this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);
 
@@ -301,6 +301,15 @@ class PlanetaryThrustersProject extends Project{
         }
       }
       this.updateUI();
+    }
+  }
+
+  estimateCostAndGain(){
+    if(!this.isCompleted) return;
+    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return;
+    if(resources && resources.colony && resources.colony.energy &&
+       typeof resources.colony.energy.modifyRate === 'function'){
+      resources.colony.energy.modifyRate(-this.power, 'Planetary Thrusters', 'project');
     }
   }
 

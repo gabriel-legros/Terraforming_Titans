@@ -28,9 +28,11 @@ describe('Planetary Thrusters UI', () => {
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
+    ctx.project = project;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
+    vm.runInContext('project.calcSpinCost(); project.calcMotionCost();', ctx);
     project.updateUI();
 
     expect(project.el.rotDv.textContent).not.toBe('—');
@@ -56,12 +58,14 @@ describe('Planetary Thrusters UI', () => {
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thrusterMoon');
+    ctx.project = project;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
+    vm.runInContext('project.calcMotionCost();', ctx);
     project.updateUI();
 
-    expect(project.el.spiralRow.style.display).toBe('none');
+    expect(project.el.distDv.textContent).toBe('—');
     expect(project.el.escRow.style.display).toBe('block');
   });
 });
