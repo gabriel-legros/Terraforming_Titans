@@ -39,7 +39,7 @@ progressCallisto.storyProjects.sidestep_fabrication = {
     colony: { metal: 100_000, components: 25_000, electronics: 5_000, energy: 1_000_000, research: 2_000_000 }
   },
   duration: 900_000,                 // 15 min
-  description: 'Manufacture the three Sidestep Sub-Engine cores in secrecy on Mars, Titan, and Callisto, using local resources and personnel to avoid raising suspicion.',
+  description: 'Manufacture the three Sidestep Sub-Engine cores on Mars, Titan, and Callisto. The project requires careful coordination, with components moved between worlds under discreet escort to prevent interception.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -47,9 +47,9 @@ progressCallisto.storyProjects.sidestep_fabrication = {
     planet: 'callisto',
     costDoubling: true,
     storySteps: [
-      'A secure bunker on Mars forges the first core. Cargo manifests list the components as "botanical genome research samples" to maintain the cover story.',
-      'Titan’s industrial smelters cast the super-alloy engine frame during a scheduled reactor maintenance blackout, masking the energy spike.',
-      'The Callisto fabrication line prints the primary superconducting rings. Shipping manifests describe them as "geothermal heat-sink upgrades."'
+      'A shielded bunker on Mars forges the first core. The components are transported via escorted freighter, with flight plans filed under a high-priority "Planetary Defense" classification.',
+      'Titan’s industrial smelters cast the super-alloy engine frame. The operation is masked by a system-wide notice of a "reactor maintenance drill," ensuring all non-essential personnel are clear of the area.',
+      'The Callisto fabrication line prints the primary superconducting rings. They are immediately moved to the assembly site under guard.'
     ]
   }
 };
@@ -71,7 +71,7 @@ progressCallisto.storyProjects.sidestep_assembly = {
     planet: 'callisto',
     storySteps: [
       'The primary engine cradle is anchored to the bedrock. Magnetic levitation gantries lower the triple-nested thrust nozzles into position.',
-      'Phase-locked diagnostic systems confirm the thruster array is within operational parameters. Security protocols mandate crew rotations every four hours to compartmentalize knowledge of the project.'
+      'Phase-locked diagnostic systems confirm the thruster array is within operational parameters. The site is operating under a communications blackout with a multi-layered automated defense grid.'
     ]
   }
 };
@@ -88,7 +88,7 @@ progressCallisto.storyProjects.sidestep_operation = {
     colony: { energy: 250_000_000_000_000_000 }
   },
   duration: 600_000,               // 10 min
-  description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions.',
+  description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions. The energy required is immense, equivalent to a small star.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -128,7 +128,7 @@ progressCallisto.chapters.push(
     id: "chapter7.1",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  MARY: 'H.O.P.E., I'm patching you into a one-time, encrypted channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  DR. HART: 'H.O.P.E., years before the attack, we ran a proof-of-concept for a climate control system. The idea was to use planetary thrusters to induce minute orbital shifts—long-term adjustments to regulate global temperatures. The project was abandoned, but not before we built and tested the foundations on Callisto. We're resurrecting it as 'Operation Sidestep.' By executing a series of pseudo-random, coordinated micro-burns from here, Mars, and Titan, we can subtly alter the solar system's barycenter. It won't be a dodge, but a slight, unpredictable drift. Enough to make the enemy's long-range targeting solutions inaccurate. We must walk without rhythm. Secrecy is everything. All public-facing work must be disguised as 'Geothermal Prospecting.''\nNew directive received. Covert operation 'Sidestep' initiated. Public designation: 'Geothermal Prospecting'.",
+    narrative: "Receiving transmission...\n  MARY: 'H.O.P.E., I'm patching you into a new channel. Dr. Evelyn Hart has a proposal. It's... audacious.'\n  DR. HART: 'H.O.P.E., years ago, some committee with more funding than sense cooked up a 'Climate Control' system. The idea was to use planetary thrusters for orbital shifts. It was idiotic. The energy costs were astronomical, and the idea of hiding a 100 petawatt thruster is laughable.  Besides, if you wanted to move a world over a long time, there are cheaper ways, such as using asteroids fly-bys.  However, it's only a bit cheaper and we don't have time for that, and we can't afford the risks.  Moving worlds it is.  The foundations they built on Callisto are real. We're resurrecting the concept as 'Operation Sidestep.' We'll execute coordinated, pseudo-random burns from here, Mars, and Titan. It's not a dodge, it's a system-wide orbital drift—subtle, unpredictable, and enough to make long-range targeting impossible. We need to be careful. We'll mask the energy signatures and construction as a 'Geothermal Prospecting' initiative, but we'll need to keep the site secure, and ultimately, we cannot hide something so big.'\nNew directive received. Operation 'Sidestep' initiated. Public designation: 'Geothermal Prospecting'.",
     prerequisites: ["chapter7.0b"],
     objectives: [],
     reward: [
@@ -139,7 +139,7 @@ progressCallisto.chapters.push(
     id: "chapter7.2",
     type: "journal",
     chapter: 7,
-    narrative: "Objective: Excavate buried thruster pylons. Commencing operation under civilian cover.\nReceiving transmission...\n  Mary: 'The project schematics are on their way, encrypted inside a standard geological survey package. Titan is sending deep-core drills, manifested as 'hydrology research equipment.' Good luck, H.O.P.E. Stay quiet.'",
+    narrative: "Objective: Excavate buried thruster pylons. Commencing operation.\nReceiving transmission...\n  Mary: 'The project schematics are on their way, encrypted. Titan is sending deep-core drills under escort. We need to keep this project under wraps. Good luck, H.O.P.E.'",
     prerequisites: ["chapter7.1"],
     objectives: [
       { type: 'project', projectId: 'sidestep_excavation', repeatCount: 3 }
@@ -152,7 +152,7 @@ progressCallisto.chapters.push(
     id: "chapter7.3",
     type: "journal",
     chapter: 7,
-    narrative: "Receiving transmission...\n  Mary: 'Good, the colony is growing. That gives us a larger labor pool to draw from for the 'Geothermal' project without raising suspicion. Keep the expansion steady.'\nNew special project available: Forge Sub-Engine Cores.",
+    narrative: "Receiving transmission...\n  Mary: 'The colony's growth provides a larger industrial base to support the 'Geothermal' project. Keep the expansion steady.'\nNew special project available: Forge Sub-Engine Cores.",
     prerequisites: ["chapter7.2"],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -177,7 +177,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 8,
     title: "Chapter 8: Gathering Storm",
-    narrative: "Receiving transmission...\n  PRESIDENT BOB (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel in the lower domes. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. H.O.P.E., this is not ideal, but we can use this situation as cover. The chaos on Titan will draw attention away from our work on Callisto. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
+    narrative: "Receiving transmission...\n  PRESIDENT BOB (Titan): 'Mary, we have a major security breach! Kane's followers have compromised the alien's containment facility. It's out. We're seeing... bio-luminescence and reports of acute psychological distress among personnel in the lower domes. We have riots, and comms are becoming unreliable.'\n  Mary: 'Bob, lock down your sector and stay safe. H.O.P.E., this is a disaster, but the chaos provides a useful distraction. The enemy will be focused on Titan, giving us the window we need. It's time to accelerate the fabrication schedule.'\nConfirmed. Alien entity has been liberated on Titan by civilian saboteurs. Widespread panic and infrastructure damage reported.",
     prerequisites: ["chapter7.4"],
     objectives: [],
     reward: []
@@ -186,7 +186,7 @@ progressCallisto.chapters.push(
     id: "chapter8.1",
     type: "journal",
     chapter: 8,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is concerning. While their attention is divided, we'll begin fabricating the sub-engine cores on all three worlds. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., the cultists are escalating their sabotage efforts. They've targeted terraforming equipment on Mars and heavy excavation equipment on Titan. The disruption is a major problem. We need to fabricate the sub-engine cores now, while their forces are spread thin. It's time to build.'\nAcknowledged. Coordinated fabrication of three Sidestep Sub-Engine cores initiated under covert protocols.",
     prerequisites: ["chapter8.0"],
     objectives: [
       { type: 'project', projectId: 'sidestep_fabrication', repeatCount: 3 }
@@ -222,7 +222,7 @@ progressCallisto.chapters.push(
     type: "journal",
     chapter: 9,
     title: "Chapter 9: Hidden Forge",
-    narrative: "Receiving transmission...\n  Mary: 'The cover story about 'New Oceanic Terraforming Reactors' is holding. While the media broadcasts our 'progress,' your teams can begin final assembly of the Sidestep Engine. We're using localized electromagnetic interference to mask the energy signatures from unauthorized scans.'\nFinal assembly of Callisto Sidestep Engine initiated. Electromagnetic screening protocols active.",
+    narrative: "Receiving transmission...\n  Mary: 'The public story about 'New Oceanic Terraforming Reactors' is providing a useful misdirection. While the media focuses on that, your teams can begin final assembly of the Sidestep Engine. We're using localized electromagnetic interference to mask the energy signatures, and we have the site well-defended.'\nFinal assembly of Callisto Sidestep Engine initiated. Security protocols active.",
     prerequisites: ["chapter8.3"],
     objectives: [
       { type: 'project', projectId: 'sidestep_assembly', repeatCount: 2 }
@@ -269,7 +269,7 @@ progressCallisto.chapters.push(
     id: "chapter10.1",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are attacking! They're targeting the geothermal plant's coolant systems. Our security forces are engaging... We have some prisoners!  But Kane and several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\n Data breach confirmed. Assessing extent of compromised information.",
+    narrative: "Receiving transmission...\n  Mary: 'Kane's drones are launching a full-scale assault on the thruster facility! They're trying to breach the main reactor chamber. Our security forces are engaging... We have prisoners! But Kane and several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\n Data breach confirmed. Assessing extent of compromised information.",
     prerequisites: ["chapter10.0"],
     objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
     reward: []
@@ -278,7 +278,7 @@ progressCallisto.chapters.push(
     id: "chapter10.2",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The energy beams and the asteroid... they converged on empty space! They missed! They brought a death ray to a math test and didn't show their work. The entire system is celebrating. Morale is higher than I've ever seen it.'\nOperation Sidestep successful. Threat averted. Probability of an immediate, retargeted attack is low.",
+    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The attack converged on empty space! They missed! They brought a death ray to a math test and failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nOperation Sidestep successful. Threat averted. Probability of an immediate, retargeted attack is low.",
     prerequisites: ["chapter10.1"],
     objectives: [
     ],
