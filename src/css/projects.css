@@ -559,3 +559,36 @@
 .invest-container.left {
     justify-content: flex-start;
 }
+/* --- Planetary Thrusters Project --- */
+.power-controls-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.thruster-power-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 20px;
+}
+
+.thruster-power-controls .main-buttons, .thruster-power-controls .multiplier-container {
+    display: flex;
+    gap: 5px;
+}
+
+.thruster-power-controls button {
+    padding: 2px 4px;
+    font-size: 0.7em;
+    background-color: #6c757d;
+    color: white;
+    border: 1px solid #5a6268;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.thruster-power-controls button:hover {
+    background-color: #5a6268;
+}

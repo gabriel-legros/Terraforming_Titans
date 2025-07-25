@@ -89,7 +89,7 @@ class PlanetaryThrustersProject extends Project{
         </div>
         <div><span class="stat-label">Target:</span>
              <input id="distTarget" type="number" min="0.1" step="0.1" value="1"><span>AU</span></div>
-        <div id="spiralRow"><span class="stat-label">Spiral Δv:</span><span id="distDv" class="stat-value">—</span></div>
+        <div><span class="stat-label">Spiral Δv:</span><span id="distDv" class="stat-value">—</span></div>
         <div id="escapeRow" style="display:none;">
              <span class="stat-label">Escape Δv:</span><span id="escDv" class="stat-value">—</span>
         </div>
@@ -102,10 +102,21 @@ class PlanetaryThrustersProject extends Project{
 
     /* power */
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
-    <div class="card-body"><div class="invested-container">
-        <span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
-      <div class="buttons-container"><button id="p0">0</button><button id="pMinus">-</button>
-        <button id="pPlus">+</button><button id="pDiv">/10</button><button id="pMul">x10</button></div>
+    <div class="card-body">
+      <div class="power-controls-wrapper">
+        <div class="invested-container">
+          <span class="stat-label">Continuous:</span>
+          <span id="pwrVal" class="stat-value">0</span>
+        </div>
+        <div class="thruster-power-controls">
+          <div class="main-buttons">
+            <button id="p0">0</button><button id="pMinus">-</button><button id="pPlus">+</button>
+          </div>
+          <div class="multiplier-container">
+            <button id="pDiv">/10</button><button id="pMul">x10</button>
+          </div>
+        </div>
+      </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
 
@@ -115,7 +126,7 @@ class PlanetaryThrustersProject extends Project{
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
       distNow:g('#distNow',motCard),distTarget:g('#distTarget',motCard),
       distDv:g('#distDv',motCard),distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
-      spiralRow:g('#spiralRow',motCard),escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
+      escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
       pwrVal:g('#pwrVal',pwrCard),pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
@@ -162,14 +173,12 @@ class PlanetaryThrustersProject extends Project{
       this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
       this.el.escRow.style.display="block";
       this.el.parentRow.style.display="block";this.el.moonWarn.style.display="block";
-      this.el.spiralRow.style.display="none";
       this.el.parentName.textContent=parent.name||"Parent";
       this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
       this.el.distDv.textContent="—";
       this.el.distE.textContent=formatEnergy(0.5*p.mass*FUSION_VE*esc);
     }else{
       this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
-      this.el.spiralRow.style.display="block";
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv));
@@ -208,17 +217,11 @@ class PlanetaryThrustersProject extends Project{
         fmt(p.parentBody.orbitRadius,false,0)+" km" :
         fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent  = fmt(this.power,true)+" W";
-    this.el.pPlus.textContent="+"+fmt(this.step,true);
-    this.el.pMinus.textContent="-"+fmt(this.step,true);
+    this.el.pPlus.textContent="+"+formatNumber(this.step,true);
+    this.el.pMinus.textContent="-"+formatNumber(this.step,true);
 
-    /* default cost display based on current targets */
-    if(this.el.rotTarget && typeof this.el.rotTarget.value==='string' && !this.spinInvest)
-      this.calcSpinCost();
-    if(this.el.distTarget && typeof this.el.distTarget.value==='string' && !this.motionInvest)
-      this.calcMotionCost();
-
-    /* update remaining energy when investing */
-    if(p && this.motionInvest){
+    /* live energy cost refresh */
+    if(p && !p.parentBody){
       const dvRem=Math.max(0,this.dVreq-this.dVdone);
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem));
     }
