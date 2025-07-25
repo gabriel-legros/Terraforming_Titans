@@ -157,7 +157,7 @@ progressGanymede.chapters.push(
         objectives: [],
         reward: [
             { target: 'project', targetId: 'deep_drill', type: 'enable' },
-            { target: 'project', targetId: 'photonThrusters', type: 'enable' }
+            { target: 'project', targetId: 'planetaryThruster', type: 'enable' }
         ]
     },
     {

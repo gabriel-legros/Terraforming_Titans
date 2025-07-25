@@ -62,7 +62,7 @@ function calculateSpinEnergyCost(massKg, radiusKm, currentHours, targetHours) {
   return Math.abs(deltaE) / 86400; // convert J -> W-day
 }
 
-class PhotonThrustersProject extends Project {
+class PlanetaryThrustersProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.targetDays = 1;
@@ -460,9 +460,9 @@ class PhotonThrustersProject extends Project {
 }
 
 if (typeof globalThis !== 'undefined') {
-  globalThis.PhotonThrustersProject = PhotonThrustersProject;
+  globalThis.PlanetaryThrustersProject = PlanetaryThrustersProject;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = PhotonThrustersProject;
+  module.exports = PlanetaryThrustersProject;
 }

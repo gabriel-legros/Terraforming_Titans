@@ -180,24 +180,24 @@ second time they speak in a chapter to help clarify who is talking.
   up to one trillion units.
 - Replication logic now resides in self-replicating-ships.js and is invoked from resource.js.
 - Removed unused Dyson Swarm JS files and updated tests to use the project versions.
-- Added Photon Thrusters special project placeholder.
-- Photon Thrusters script now loads in index.html so the hidden project is generated correctly.
-- Photon Thrusters project now shows spin and motion subcards with orbital and distance info.
-- Spin and motion subcards only appear once the Photon Thrusters project is completed.
+- Added Planetary Thrusters special project placeholder.
+- Planetary Thrusters script now loads in index.html so the hidden project is generated correctly.
+- Planetary Thrusters project now shows spin and motion subcards with orbital and distance info.
+- Spin and motion subcards only appear once the Planetary Thrusters project is completed.
 - Moons now include parent body name, mass and orbit radius in planet-parameters.
 - Parent body info now resides inside each planet's `celestialParameters` object.
 - Loading a save now merges any new projects into the order so updates aren't skipped.
-- Photon Thrusters spin card includes a default 'Target : 1 day' field.
+- Planetary Thrusters spin card includes a default 'Target : 1 day' field.
 - The motion card warns moons to leave their parent's gravity well before altering solar distance.
 - Celestial parameters now track their original values and reload from configuration when saving or loading games.
-- Photon Thrusters spin target is now an editable field that displays the energy required to change rotation.
-- Photon Thrusters motion card shows escape energy for moons or an orbital target field for planets.
+- Planetary Thrusters spin target is now an editable field that displays the energy required to change rotation.
+- Planetary Thrusters motion card shows escape energy for moons or an orbital target field for planets.
 - Loading a save now takes initial celestial parameters from configuration and fills missing current values from them.
-- Moon thruster warning moved from the global warning box to a small notice within the Photon Thrusters card.
+- Moon thruster warning moved from the global warning box to a small notice within the Planetary Thrusters card.
 - Numbers above sextillion now format as Sp, Oc and No up to 1e30.
-- Photon Thrusters project gains an energy investment UI with +/- buttons, 0, /10, x10 and Max. Invested energy drains every second and shows in resource rates.
+- Planetary Thrusters project gains an energy investment UI with +/- buttons, 0, /10, x10 and Max. Invested energy drains every second and shows in resource rates.
 - Spin and motion options now include an Invest checkbox. Only one can be active at a time and the selection persists when saving.
-- Photon thruster energy now alters spin or orbit when invested, and moons drift outward toward escape.
+- Planetary thruster energy now alters spin or orbit when invested, and moons drift outward toward escape.
 - Escaped moons replace their parent body with "Star" and no longer count as moons.
 - Deeper mining costs now scale 90% with ore mines and 10% with average depth. A tooltip on the project card explains the formula.
 - Android assignment speed tooltip now states "1 + sqrt(androids assigned / ore mines built)".

@@ -341,9 +341,9 @@ const projectParameters = {
       ]
     }
   },
-  photonThrusters: {
-    type: 'PhotonThrustersProject',
-    name: 'Photon Thrusters',
+  planetaryThruster: {
+    type: 'PlanetaryThrustersProject',
+    name: 'Planetary Thrusters',
     category: 'mega',
     cost: {
       colony: {

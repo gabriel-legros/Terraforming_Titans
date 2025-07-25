@@ -31,15 +31,15 @@ function orbitalEnergyCost(mass, currentAU, targetAU) {
   return Math.abs(e2 - e1) / 86400;
 }
 
-describe('Photon Thrusters project', () => {
+describe('Planetary Thrusters project', () => {
   test('parameters define correct costs', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     const ctx = {};
     vm.createContext(ctx);
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
-    const project = ctx.projectParameters.photonThrusters;
+    const project = ctx.projectParameters.planetaryThruster;
     expect(project).toBeDefined();
-    expect(project.type).toBe('PhotonThrustersProject');
+    expect(project.type).toBe('PlanetaryThrustersProject');
     expect(project.cost.colony.metal).toBe(500000);
     expect(project.cost.colony.components).toBe(100000);
     expect(project.cost.colony.electronics).toBe(15000);
@@ -50,12 +50,12 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
-    const config = ctx.projectParameters.photonThrusters;
-    const proj = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const proj = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     expect(proj instanceof ctx.Project).toBe(true);
   });
 
@@ -72,13 +72,13 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
@@ -86,11 +86,11 @@ describe('Photon Thrusters project', () => {
 
     project.updateUI();
 
-    const spin = ctx.projectElements.photonThrusters.spin;
-    const motion = ctx.projectElements.photonThrusters.motion;
-    const spinCard = ctx.projectElements.photonThrusters.spinCard;
-    const motionCard = ctx.projectElements.photonThrusters.motionCard;
-    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    const spin = ctx.projectElements.planetaryThruster.spin;
+    const motion = ctx.projectElements.planetaryThruster.motion;
+    const spinCard = ctx.projectElements.planetaryThruster.spinCard;
+    const motionCard = ctx.projectElements.planetaryThruster.motionCard;
+    const moonWarning = ctx.projectElements.planetaryThruster.motion.moonWarning;
     expect(moonWarning.style.display).toBe('block');
     expect(moonWarning.textContent).toContain('Escape parent body');
     expect(moonWarning.textContent).toContain('\u26A0');
@@ -124,13 +124,13 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
@@ -138,8 +138,8 @@ describe('Photon Thrusters project', () => {
 
     project.updateUI();
 
-    const motion = ctx.projectElements.photonThrusters.motion;
-    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    const motion = ctx.projectElements.planetaryThruster.motion;
+    const moonWarning = ctx.projectElements.planetaryThruster.motion.moonWarning;
     expect(moonWarning.style.display).toBe("none");
     expect(motion.distanceSun.textContent).toBe('2.00 AU');
     expect(motion.parentContainer.style.display).toBe('none');
@@ -147,7 +147,7 @@ describe('Photon Thrusters project', () => {
     expect(motion.targetContainer.style.display).toBe('block');
     expect(motion.energyContainer.style.display).toBe('block');
     expect(motion.target.value).toBe('1');
-    const spin = ctx.projectElements.photonThrusters.spin;
+    const spin = ctx.projectElements.planetaryThruster.spin;
     const expectedSpinCost = ctx.formatNumber(
       spinEnergyCost(6.417e23, 3389.5, 24.6, 24),
       false,
@@ -175,13 +175,13 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
@@ -189,8 +189,8 @@ describe('Photon Thrusters project', () => {
 
     project.updateUI();
 
-    const motion = ctx.projectElements.photonThrusters.motion;
-    const moonWarning = ctx.projectElements.photonThrusters.motion.moonWarning;
+    const motion = ctx.projectElements.planetaryThruster.motion;
+    const moonWarning = ctx.projectElements.planetaryThruster.motion.moonWarning;
     expect(moonWarning.style.display).toBe('none');
     expect(motion.parentContainer.style.display).toBe('none');
   });
@@ -208,21 +208,21 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
     project.updateUI();
 
-    const spinCard = ctx.projectElements.photonThrusters.spinCard;
-    const motionCard = ctx.projectElements.photonThrusters.motionCard;
+    const spinCard = ctx.projectElements.planetaryThruster.spinCard;
+    const motionCard = ctx.projectElements.planetaryThruster.motionCard;
     expect(spinCard.style.display).toBe('none');
     expect(motionCard.style.display).toBe('none');
 
@@ -245,13 +245,13 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
@@ -259,7 +259,7 @@ describe('Photon Thrusters project', () => {
 
     project.updateUI();
 
-    const spin = ctx.projectElements.photonThrusters.spin;
+    const spin = ctx.projectElements.planetaryThruster.spin;
     const value = parseFloat(spin.rotationPeriod.textContent);
     expect(value).toBeCloseTo(16.7, 1);
     const expectedCost = ctx.formatNumber(
@@ -283,20 +283,20 @@ describe('Photon Thrusters project', () => {
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    const spinCheck = ctx.projectElements.photonThrusters.spin.investCheckbox;
-    const motionCheck = ctx.projectElements.photonThrusters.motion.investCheckbox;
+    const spinCheck = ctx.projectElements.planetaryThruster.spin.investCheckbox;
+    const motionCheck = ctx.projectElements.planetaryThruster.motion.investCheckbox;
     spinCheck.checked = true;
     spinCheck.dispatchEvent(new dom.window.Event('change'));
     expect(project.spinInvest).toBe(true);
@@ -312,8 +312,8 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -321,14 +321,14 @@ describe('Photon Thrusters project', () => {
     global.resources = ctx.resources;
     ctx.terraforming = { celestialParameters: {} };
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     project.energyInvestment = 50;
     project.spinInvest = true;
     project.update(2000);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(900);
-    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Photon Thrusters', 'project');
+    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-50, 'Planetary Thrusters', 'project');
   });
 
   test('spin investment reduces rotation period', () => {
@@ -336,8 +336,8 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -345,8 +345,8 @@ describe('Photon Thrusters project', () => {
     global.resources = ctx.resources;
     ctx.terraforming = { celestialParameters: { mass: 1e10, radius: 1, rotationPeriod: 10 } };
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     project.energyInvestment = 50;
     project.spinInvest = true;
@@ -360,8 +360,8 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -369,8 +369,8 @@ describe('Photon Thrusters project', () => {
     global.resources = ctx.resources;
     ctx.terraforming = { celestialParameters: { mass: 1, radius: 1, distanceFromSun: 1 } };
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     project.energyInvestment = 50;
     project.motionInvest = true;
@@ -384,8 +384,8 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -393,8 +393,8 @@ describe('Photon Thrusters project', () => {
     global.resources = ctx.resources;
     ctx.terraforming = { celestialParameters: { mass: 1e12, radius: 1, parentBody: { mass: 1e15, orbitRadius: 1000 } } };
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     project.energyInvestment = 50;
     project.motionInvest = true;
@@ -407,8 +407,8 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -416,8 +416,8 @@ describe('Photon Thrusters project', () => {
     global.resources = ctx.resources;
     ctx.terraforming = { celestialParameters: { mass: 1e12, radius: 1, parentBody: { name: 'PlanetX', mass: 1e15, orbitRadius: 1000 } } };
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.isCompleted = true;
     project.energyInvestment = 1e6;
     project.motionInvest = true;
@@ -430,19 +430,19 @@ describe('Photon Thrusters project', () => {
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PhotonThrustersProject.js'), 'utf8');
-    vm.runInContext(subclassCode + '; this.PhotonThrustersProject = PhotonThrustersProject;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
-    const config = ctx.projectParameters.photonThrusters;
-    const project = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.energyInvestment = 75;
     project.investmentMultiplier = 5;
     project.spinInvest = true;
 
     const saved = project.saveState();
-    const loaded = new ctx.PhotonThrustersProject(config, 'photonThrusters');
+    const loaded = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     loaded.loadState(saved);
 
     expect(loaded.energyInvestment).toBe(75);
