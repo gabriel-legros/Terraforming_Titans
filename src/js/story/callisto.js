@@ -85,7 +85,7 @@ progressCallisto.storyProjects.sidestep_operation = {
     colony: {research: 100_000_000 }
   },
   sustainCost: {
-    colony: { energy: 100_000_000_000_000_000 }
+    colony: { energy: 250_000_000_000_000_000 }
   },
   duration: 600_000,               // 10 min
   description: 'Execute a years-long sequence of pseudo-random, coordinated burns from Mars, Titan, and Callisto to introduce an unpredictable drift into their orbital mechanics, scrambling enemy targeting solutions.',
