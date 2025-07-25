@@ -1,468 +1,289 @@
-function getRotationPeriodHours(params) {
-  if (!params) return 24;
-  const { rotationPeriod } = params;
-  if (typeof rotationPeriod === 'number' && rotationPeriod > 0) {
-    return rotationPeriod;
-  }
-  return 24;
-}
+/* ==========================================================================
+   Planetary Thrusters – continuous‑burn, moon‑escape, live Energy display
+   ========================================================================== */
 
-const G = 6.67430e-11;
-const SOLAR_MASS = 1.989e30;
+const G  = 6.67430e-11;
+const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
+const FUSION_VE    = 1.0e5;               // 100 km s‑1
 
-function calculateOrbitalPeriodDays(distanceAU) {
-  const a = typeof distanceAU === 'number' && distanceAU > 0 ? distanceAU : 1;
-  return 365.25 * Math.sqrt(Math.pow(a, 3));
+/* ---------- helpers ---------------------------------------------------- */
+const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
+  n.toLocaleString(undefined,int?{maximumFractionDigits:0}:
+                             {minimumFractionDigits:d,maximumFractionDigits:d});
+
+function formatEnergy(J){
+  return formatNumber(J / 86400);
 }
 
-function calculateEscapeEnergyCost(massKg, parentMassKg, orbitRadiusKm) {
-  if (
-    typeof massKg !== 'number' ||
-    typeof parentMassKg !== 'number' ||
-    typeof orbitRadiusKm !== 'number'
-  ) {
-    return 0;
-  }
-  const r = orbitRadiusKm * 1000;
-  const ve = Math.sqrt(2 * G * parentMassKg / r);
-  const vo = Math.sqrt(G * parentMassKg / r);
-  const deltaE = 0.5 * massKg * (ve * ve - vo * vo);
-  return Math.abs(deltaE) / 86400;
+function getRotHours(p){ return p && p.rotationPeriod>0?p.rotationPeriod:24; }
+
+function spinDeltaV(Rkm,curH,tgtH){
+  const R=Rkm*1e3,w1=2*Math.PI/(curH*3600),w2=2*Math.PI/(tgtH*3600);
+  return Math.abs((w2-w1)*R);
 }
 
-function calculateOrbitalEnergyCost(massKg, currentAU, targetAU) {
-  if (
-    typeof massKg !== 'number' ||
-    typeof currentAU !== 'number' ||
-    typeof targetAU !== 'number'
-  ) {
-    return 0;
-  }
-  const r1 = currentAU * AU_IN_METERS;
-  const r2 = targetAU * AU_IN_METERS;
-  const e1 = -G * SOLAR_MASS * massKg / (2 * r1);
-  const e2 = -G * SOLAR_MASS * massKg / (2 * r2);
-  return Math.abs(e2 - e1) / 86400;
+function spinEnergyRemaining(p, Rkm, targetDays){
+  const k = p.kInertia || 0.4;                 // allow parameter override
+  const curH = getRotHours(p);
+  const dvEq = Math.abs(
+        2*Math.PI/(targetDays*24*3600) - 2*Math.PI/(curH*3600)) * (Rkm*1e3);
+  return 0.5 * k * p.mass * FUSION_VE * dvEq;  // propellant energy
 }
 
-function calculateSpinEnergyCost(massKg, radiusKm, currentHours, targetHours) {
-  if (
-    typeof massKg !== 'number' ||
-    typeof radiusKm !== 'number' ||
-    typeof currentHours !== 'number' ||
-    typeof targetHours !== 'number'
-  ) {
-    return 0;
-  }
-  const I = 0.4 * massKg * Math.pow(radiusKm * 1000, 2);
-  const w1 = (2 * Math.PI) / (currentHours * 3600);
-  const w2 = (2 * Math.PI) / (targetHours * 3600);
-  const deltaE = 0.5 * I * (w2 * w2 - w1 * w1);
-  return Math.abs(deltaE) / 86400; // convert J -> W-day
+function spiralDeltaV(curAU,tgtAU,mu=G*SOLAR_MASS){
+  const r1=curAU*AU_IN_METERS,r2=tgtAU*AU_IN_METERS;
+  return Math.abs(Math.sqrt(mu/r1)-Math.sqrt(mu/r2));
+}
+function translationalEnergyRemaining(p,dvRem){
+  return 0.5*p.mass*FUSION_VE*dvRem;                 // ideal fusion rocket
 }
 
-class PlanetaryThrustersProject extends Project {
-  constructor(config, name) {
-    super(config, name);
-    this.targetDays = 1;
-    this.targetAU = 1;
-    this.energyInvestment = 0;
-    this.investmentMultiplier = 1;
-    this.spinInvest = false;
-    this.motionInvest = false;
+function escapeDeltaV(parentM,orbitRkm){
+  const r=orbitRkm*1e3; const vo=Math.sqrt(G*parentM/r);
+  return (Math.SQRT2-1)*vo;
+}
+
+/* ========================================================================= */
+class PlanetaryThrustersProject extends Project{
+
+  constructor(cfg,name){
+    super(cfg,name);
+    this.power=0;this.step=1;
+    this.spinInvest=false;this.motionInvest=false;
+
+    this.tgtDays=1;this.tgtAU=1;
+
+    this.dVreq=0;this.dVdone=0;
+    this.spinStartDays=null;
+    this.escapePhase=false;
+    this.startAU=null;
+
+    this.el={};
   }
 
-  renderUI(container) {
-    const spinCard = document.createElement('div');
-    spinCard.classList.add('info-card', 'spin-details-card');
-    spinCard.style.display = this.isCompleted ? 'block' : 'none';
-    spinCard.innerHTML = `
-      <div class="card-header">
-        <span class="card-title">Spin</span>
+/* -----------------------  U I  --------------------------------------- */
+  renderUI(c){
+    /* spin */
+    const spinHTML=`<div class="card-header"><span class="card-title">Spin</span></div>
+    <div class="card-body">
+      <div class="stats-grid four-col">
+        <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
+        <div><span class="stat-label">Target:</span>
+             <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>day</span></div>
+        <div><span class="stat-label">Equiv. Δv:</span><span id="rotDv" class="stat-value">—</span></div>
+        <div><span class="stat-label">Energy Cost:</span><span id="rotE" class="stat-value">—</span></div>
       </div>
-      <div class="card-body">
-        <div class="stats-grid three-col">
-          <div class="stat-item">
-            <span class="stat-label">Rotation Period:</span>
-            <span id="spin-rotation-period" class="stat-value">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Target:</span>
-            <input id="spin-target" type="number" min="0.1" step="0.1" value="1">
-            <span>day</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Energy Cost:</span>
-            <span id="spin-energy-cost" class="stat-value">0</span>
-          </div>
+      <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
+    </div>`;
+    const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
+
+    /* motion */
+    const motHTML=`<div class="card-header"><span class="card-title">Motion</span></div>
+    <div class="card-body">
+      <div class="stats-grid four-col">
+        <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
+        <div id="parentRow" style="display:none;">
+           <span class="stat-label">Around:</span><span id="parentName" class="stat-value">—</span>
+           <span>&nbsp;at</span><span id="parentRad" class="stat-value">—</span>
         </div>
-        <div class="invest-container left">
-          <label><input id="spin-invest" type="checkbox"> Invest</label>
+        <div><span class="stat-label">Target:</span>
+             <input id="distTarget" type="number" min="0.1" step="0.1" value="1"><span>AU</span></div>
+        <div><span class="stat-label">Spiral Δv:</span><span id="distDv" class="stat-value">—</span></div>
+        <div id="escapeRow" style="display:none;">
+             <span class="stat-label">Escape Δv:</span><span id="escDv" class="stat-value">—</span>
         </div>
+        <div><span class="stat-label">Energy Cost:</span><span id="distE" class="stat-value">—</span></div>
       </div>
-    `;
-    container.appendChild(spinCard);
+      <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label></div>
+      <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
+    </div>`;
+    const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
 
-  const targetInput = spinCard.querySelector('#spin-target');
-  if (targetInput) {
-    targetInput.addEventListener('input', () => this.updateUI());
-  }
-  const spinInvestCheckbox = spinCard.querySelector('#spin-invest');
+    /* power */
+    const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
+    <div class="card-body"><div class="invested-container">
+        <span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
+      <div class="buttons-container"><button id="p0">0</button><button id="pMinus">-</button>
+        <button id="pPlus">+</button><button id="pDiv">/10</button><button id="pMul">x10</button></div>
+    </div>`;
+    const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
 
-    const motionCard = document.createElement('div');
-    motionCard.classList.add('info-card', 'motion-details-card');
-    motionCard.style.display = this.isCompleted ? 'block' : 'none';
-    motionCard.innerHTML = `
-      <div class="card-header">
-        <span class="card-title">Motion</span>
-      </div>
-      <div class="card-body">
-        <div class="stats-grid three-col">
-          <div class="stat-item">
-            <span class="stat-label">Distance from Sun:</span>
-            <span id="motion-distance-sun" class="stat-value">0</span>
-          </div>
-          <div id="motion-parent-container" class="stat-item" style="display: none;">
-            <span class="stat-label">Parent:</span>
-            <div>
-              <span id="motion-parent-name" class="stat-value"></span>
-              <span class="stat-label">at</span>
-              <span id="motion-parent-distance" class="stat-value"></span>
-            </div>
-          </div>
-          <div id="motion-target-container" class="stat-item" style="display:none;">
-            <span class="stat-label">Target:</span>
-            <input id="motion-target" type="number" min="0.1" step="0.1" value="1">
-            <span>AU</span>
-          </div>
-          <div id="motion-energy-container" class="stat-item" style="display:none;">
-            <span class="stat-label">Energy Cost:</span>
-            <span id="motion-energy-cost" class="stat-value">0</span>
-          </div>
-          <div id="motion-escape-container" class="stat-item" style="display:none;">
-            <span class="stat-label">Escape Energy:</span>
-            <span id="motion-escape-energy" class="stat-value">0</span>
-          </div>
-        </div>
-        <div class="invest-container left">
-          <label><input id="motion-invest" type="checkbox"> Invest</label>
-        </div>
-        <div id="motion-moon-warning" class="moon-warning" style="display:none;">
-          <span class="icon">\u26A0</span>
-          <span>Escape parent body before adjusting solar distance</span>
-        </div>
-      </div>
-    `;
-    container.appendChild(motionCard);
+    /* refs */
+    const g=(sel,r)=>r.querySelector(sel);
+    this.el={rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
+      rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
+      distNow:g('#distNow',motCard),distTarget:g('#distTarget',motCard),
+      distDv:g('#distDv',motCard),distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
+      escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
+      parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
+      parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
+      pwrVal:g('#pwrVal',pwrCard),pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
+      pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
 
-  const motionTargetInput = motionCard.querySelector('#motion-target');
-  if (motionTargetInput) {
-    motionTargetInput.addEventListener('input', () => this.updateUI());
-  }
-  const motionInvestCheckbox = motionCard.querySelector('#motion-invest');
+    /* listeners */
+    this.el.rotTarget.oninput = ()=>this.calcSpinCost();
+    this.el.distTarget.oninput= ()=>this.calcMotionCost();
 
-  if (spinInvestCheckbox) {
-    spinInvestCheckbox.addEventListener('change', () => {
-      this.spinInvest = spinInvestCheckbox.checked;
-      if (this.spinInvest) {
-        this.motionInvest = false;
-        if (motionInvestCheckbox) motionInvestCheckbox.checked = false;
-      }
-    });
-  }
+    this.el.rotCb.onchange = ()=>{this.spinInvest=this.el.rotCb.checked;
+      if(this.spinInvest){this.motionInvest=false;this.el.distCb.checked=false;}this.prepareJob();};
+    this.el.distCb.onchange= ()=>{this.motionInvest=this.el.distCb.checked;
+      if(this.motionInvest){this.spinInvest=false;this.el.rotCb.checked=false;}this.prepareJob();};
 
-  if (motionInvestCheckbox) {
-    motionInvestCheckbox.addEventListener('change', () => {
-      this.motionInvest = motionInvestCheckbox.checked;
-      if (this.motionInvest) {
-        this.spinInvest = false;
-        if (spinInvestCheckbox) spinInvestCheckbox.checked = false;
-      }
-    });
-  }
+    const up=()=>this.updateUI();
+    this.el.pPlus.onclick =()=>{this.adjustPower(+this.step);up();};
+    this.el.pMinus.onclick=()=>{this.adjustPower(-this.step);up();};
+    this.el.pMul.onclick  =()=>{this.step*=10;up();};
+    this.el.pDiv.onclick  =()=>{this.step=Math.max(1,this.step/10);up();};
+    this.el.p0.onclick    =()=>{this.setPower(0);up();};
 
-    const energySection = document.createElement('div');
-    energySection.classList.add('info-card', 'thruster-power-card');
-    energySection.style.display = this.isCompleted ? 'block' : 'none';
-    energySection.innerHTML = `
-      <div class="card-header">
-        <span class="card-title">Thruster Power</span>
-      </div>
-      <div class="card-body">
-        <div class="invested-container">
-          <span class="stat-label">Continuous Investment:</span>
-          <span id="${this.name}-energy-invested" class="stat-value">0</span>
-        </div>
-      </div>
-    `;
-
-    const investmentContainer = energySection.querySelector('.card-body');
-    const investedDisplay = energySection.querySelector(`#${this.name}-energy-invested`);
-
-    const buttonsContainer = document.createElement('div');
-    buttonsContainer.classList.add('buttons-container');
-    const createButton = (text, onClick, parent = buttonsContainer) => {
-      const b = document.createElement('button');
-      b.textContent = text;
-      b.addEventListener('click', onClick);
-      parent.appendChild(b);
-      return b;
-    };
-
-    const mainButtons = document.createElement('div');
-    mainButtons.classList.add('main-buttons');
-    buttonsContainer.appendChild(mainButtons);
-
-    createButton('0', () => this.setEnergyInvestment(0), mainButtons);
-    const minusButton = createButton('-', () => this.adjustEnergyInvestment(-this.investmentMultiplier), mainButtons);
-    const plusButton = createButton('+', () => this.adjustEnergyInvestment(this.investmentMultiplier), mainButtons);
-    createButton('/10', () => {
-      this.investmentMultiplier = Math.max(1, this.investmentMultiplier / 10);
-      this.updateUI();
-    }, mainButtons);
-    createButton('x10', () => {
-      this.investmentMultiplier *= 10;
-      this.updateUI();
-    }, mainButtons);
-
-    investmentContainer.appendChild(buttonsContainer);
-    container.appendChild(energySection);
-
-    projectElements[this.name] = {
-      ...projectElements[this.name],
-      spinCard,
-      motionCard,
-      energySection,
-      spin: {
-        rotationPeriod: spinCard.querySelector('#spin-rotation-period'),
-        target: spinCard.querySelector('#spin-target'),
-        energyCost: spinCard.querySelector('#spin-energy-cost'),
-        investCheckbox: spinInvestCheckbox,
-      },
-      motion: {
-        distanceSun: motionCard.querySelector('#motion-distance-sun'),
-        parentContainer: motionCard.querySelector('#motion-parent-container'),
-        parentName: motionCard.querySelector('#motion-parent-name'),
-        parentDistance: motionCard.querySelector('#motion-parent-distance'),
-        moonWarning: motionCard.querySelector("#motion-moon-warning"),
-        target: motionCard.querySelector('#motion-target'),
-        energyCost: motionCard.querySelector('#motion-energy-cost'),
-        escapeEnergy: motionCard.querySelector('#motion-escape-energy'),
-        targetContainer: motionCard.querySelector('#motion-target-container'),
-        energyContainer: motionCard.querySelector('#motion-energy-container'),
-        escapeContainer: motionCard.querySelector('#motion-escape-container'),
-        investCheckbox: motionInvestCheckbox,
-      },
-      energyInvestedDisplay: investedDisplay,
-      minusButton,
-      plusButton,
-    };
-  }
-
-  updateUI() {
-    const params = terraforming.celestialParameters || {};
-    const elements = projectElements[this.name];
-    if (!elements) return;
-
-    if (elements.spinCard) {
-      elements.spinCard.style.display = this.isCompleted ? 'block' : 'none';
-    }
-    if (elements.motionCard) {
-      elements.motionCard.style.display = this.isCompleted ? 'block' : 'none';
-    }
-    if (elements.energySection) {
-      elements.energySection.style.display = this.isCompleted ? 'block' : 'none';
-    }
-    if (elements.energyInvestedDisplay) {
-      elements.energyInvestedDisplay.textContent = `${formatNumber(this.energyInvestment, true)} W`;
-    }
-    if (elements.spin && elements.spin.investCheckbox) {
-      elements.spin.investCheckbox.checked = this.spinInvest;
-    }
-    if (elements.motion && elements.motion.investCheckbox) {
-      elements.motion.investCheckbox.checked = this.motionInvest;
-    }
-
-    if (elements.plusButton) {
-      elements.plusButton.textContent = `+${formatNumber(this.investmentMultiplier, true)}`;
-    }
-    if (elements.minusButton) {
-      elements.minusButton.textContent = `-${formatNumber(this.investmentMultiplier, true)}`;
-    }
-
-    if (elements.spin) {
-      const hours = getRotationPeriodHours(params);
-      const days = hours / 24;
-      if (elements.spin.rotationPeriod) {
-        elements.spin.rotationPeriod.textContent = `${formatNumber(days, false, 2)} days`;
-      }
-      if (elements.spin.target &&
-          (typeof elements.spin.target.value === 'string' || typeof elements.spin.target.value === 'number')) {
-        const val = parseFloat(elements.spin.target.value);
-        if (!isNaN(val) && val > 0) {
-          this.targetDays = val;
-        }
-      }
-      if (elements.spin.energyCost) {
-        const cost = calculateSpinEnergyCost(
-          params.mass,
-          params.radius,
-          hours,
-          this.targetDays * 24
-        );
-        elements.spin.energyCost.textContent = `${formatNumber(cost, false, 2)} W-day`;
-      }
-    }
-
-    if (elements.motion) {
-      if (elements.motion.distanceSun) {
-        elements.motion.distanceSun.textContent = `${formatNumber(params.distanceFromSun || 0, false, 2)} AU`;
-      }
-      const parent = params.parentBody;
-      if (parent && typeof parent === 'object') {
-        if (elements.motion.parentContainer) {
-          elements.motion.parentContainer.style.display = 'block';
-          elements.motion.parentName.textContent = parent.name || '';
-          elements.motion.parentDistance.textContent = `${formatNumber(parent.orbitRadius || 0, false, 2)} km`;
-        }
-        if (elements.motion.moonWarning) {
-          elements.motion.moonWarning.style.display = 'block';
-        }
-        if (elements.motion.targetContainer) elements.motion.targetContainer.style.display = 'none';
-        if (elements.motion.energyContainer) elements.motion.energyContainer.style.display = 'none';
-        if (elements.motion.escapeContainer) {
-          elements.motion.escapeContainer.style.display = 'block';
-          const escapeCost = calculateEscapeEnergyCost(
-            params.mass,
-            parent.mass,
-            parent.orbitRadius
-          );
-          if (elements.motion.escapeEnergy) {
-            elements.motion.escapeEnergy.textContent = `${formatNumber(escapeCost, false, 2)} W-day`;
-          }
-        }
-      } else {
-        if (elements.motion.parentContainer) {
-          elements.motion.parentContainer.style.display = 'none';
-        }
-        if (elements.motion.moonWarning) {
-          elements.motion.moonWarning.style.display = 'none';
-        }
-        if (elements.motion.escapeContainer) {
-          elements.motion.escapeContainer.style.display = 'none';
-        }
-        if (elements.motion.target &&
-            (typeof elements.motion.target.value === 'string' || typeof elements.motion.target.value === 'number')) {
-          const val = parseFloat(elements.motion.target.value);
-          if (!isNaN(val) && val > 0) {
-            this.targetAU = val;
-          }
-        }
-        if (elements.motion.targetContainer) {
-          elements.motion.targetContainer.style.display = 'block';
-        }
-        if (elements.motion.energyContainer) {
-          elements.motion.energyContainer.style.display = 'block';
-          const cost = calculateOrbitalEnergyCost(
-            params.mass,
-            params.distanceFromSun,
-            this.targetAU
-          );
-          elements.motion.energyCost.textContent = `${formatNumber(cost, false, 2)} W-day`;
-        }
-      }
-    }
-  }
-
-  adjustEnergyInvestment(amount) {
-    this.energyInvestment = Math.max(0, this.energyInvestment + amount);
     this.updateUI();
   }
 
-  setEnergyInvestment(value) {
-    this.energyInvestment = Math.max(0, value);
-    this.updateUI();
+/* ---------- cost calculations ---------------------------------------- */
+  calcSpinCost(){
+    const p=terraforming.celestialParameters;if(!p)return;
+    const tgt=parseFloat(this.el.rotTarget.value)||1;
+    this.tgtDays=tgt;
+    const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
+    this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
+    this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays));
+    if(this.spinInvest) this.prepareJob();
   }
 
-  saveState() {
-    return {
-      ...super.saveState(),
-      energyInvestment: this.energyInvestment,
-      investmentMultiplier: this.investmentMultiplier,
-      spinInvest: this.spinInvest,
-      motionInvest: this.motionInvest,
-    };
+  calcMotionCost(){
+    const p=terraforming.celestialParameters;if(!p)return;
+    const tgt=parseFloat(this.el.distTarget.value)||1;
+    this.tgtAU=tgt;
+
+    const parent=p.parentBody;
+    if(parent){
+      const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
+      this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
+      this.el.escRow.style.display="block";
+      this.el.parentRow.style.display="block";this.el.moonWarn.style.display="block";
+      this.el.parentName.textContent=parent.name||"Parent";
+      this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
+      this.el.distDv.textContent="—";
+      this.el.distE.textContent=formatEnergy(0.5*p.mass*FUSION_VE*esc);
+    }else{
+      this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
+      const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
+      this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
+      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv));
+    }
+    if(this.motionInvest) this.prepareJob();
   }
 
-  loadState(state) {
-    super.loadState(state);
-    this.energyInvestment = state.energyInvestment || 0;
-    this.investmentMultiplier = state.investmentMultiplier || 1;
-    this.spinInvest = state.spinInvest || false;
-    this.motionInvest = state.motionInvest || false;
-  }
+/* ---------- job preparation ------------------------------------------ */
+  prepareJob(){
+    const p=terraforming.celestialParameters;if(!p)return;
+    this.dVdone=0;
 
-  update(deltaTime) {
-    super.update(deltaTime);
-    if (!this.isCompleted || this.energyInvestment <= 0 || (!this.spinInvest && !this.motionInvest)) return;
-    const rate = this.energyInvestment;
-    const amount = rate * (deltaTime / 1000);
-    const available = resources.colony.energy.value;
-    const consumed = Math.min(available, amount);
-    resources.colony.energy.decrease(consumed);
-    if (resources.colony.energy.modifyRate) {
-      resources.colony.energy.modifyRate(-rate, this.displayName, 'project');
+    if(this.spinInvest){
+      this.spinStartDays=getRotHours(p)/24;
+      this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
+      return;
     }
 
-    if (consumed > 0 && terraforming && terraforming.celestialParameters) {
-      const params = terraforming.celestialParameters;
-      const energyJ = consumed * 86400;
-      if (this.spinInvest) {
-        const I = 0.4 * params.mass * Math.pow(params.radius * 1000, 2);
-        const currentW = (2 * Math.PI) / ((params.rotationPeriod || 24) * 3600);
-        const targetW = (2 * Math.PI) / (this.targetDays * 24 * 3600);
-        const currentE = 0.5 * I * currentW * currentW;
-        const targetE = 0.5 * I * targetW * targetW;
-        const sign = targetE > currentE ? 1 : -1;
-        let newE = currentE + sign * energyJ;
-        if (sign > 0 && newE > targetE) newE = targetE;
-        if (sign < 0 && newE < targetE) newE = targetE;
-        const newW = Math.sqrt(2 * newE / I);
-        params.rotationPeriod = (2 * Math.PI) / (newW * 3600);
-      } else if (this.motionInvest) {
-        if (params.parentBody && typeof params.parentBody === 'object') {
-          const parent = params.parentBody;
-          const r = parent.orbitRadius * 1000;
-          let E = -G * parent.mass * params.mass / (2 * r);
-          E += energyJ;
-          if (E >= 0) {
-            params.parentBody = 'Star';
-          } else {
-            const newR = -G * parent.mass * params.mass / (2 * E);
-            parent.orbitRadius = newR / 1000;
-          }
-        } else {
-          const r = params.distanceFromSun * AU_IN_METERS;
-          const targetR = this.targetAU * AU_IN_METERS;
-          const currentE = -G * SOLAR_MASS * params.mass / (2 * r);
-          const targetE = -G * SOLAR_MASS * params.mass / (2 * targetR);
-          const sign = targetE > currentE ? 1 : -1;
-          let newE = currentE + sign * energyJ;
-          if (sign > 0 && newE > targetE) newE = targetE;
-          if (sign < 0 && newE < targetE) newE = targetE;
-          const newR = -G * SOLAR_MASS * params.mass / (2 * newE);
-          params.distanceFromSun = newR / AU_IN_METERS;
-        }
+    if(this.motionInvest){
+      if(p.parentBody){
+        this.escapePhase=true;
+        this.dVreq=escapeDeltaV(p.parentBody.mass,p.parentBody.orbitRadius);
+      }else{
+        this.escapePhase=false;
+        this.startAU=p.distanceFromSun;
+        this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
       }
     }
   }
+
+/* ---------- UI refresh ------------------------------------------------ */
+  updateUI(){
+    const p=terraforming.celestialParameters||{};
+    this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
+    this.el.distNow.textContent = p.parentBody?
+        fmt(p.parentBody.orbitRadius,false,0)+" km" :
+        fmt(p.distanceFromSun||0,false,3)+" AU";
+    this.el.pwrVal.textContent  = fmt(this.power,true)+" W";
+    this.el.pPlus.textContent="+"+fmt(this.step,true);
+    this.el.pMinus.textContent="-"+fmt(this.step,true);
+
+    /* live energy cost refresh */
+    if(p && !p.parentBody){
+      const dvRem=Math.max(0,this.dVreq-this.dVdone);
+      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem));
+    }
+    if(p && this.spinInvest){
+      this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays));
+    }
+  }
+
+/* ---------- power controls ------------------------------------------- */
+  adjustPower(d){this.power=Math.max(0,this.power+d);}
+  setPower(v){this.power=Math.max(0,v);}
+
+/* ------------------  T I C K  ---------------------------------------- */
+  update(dtMs){
+    super.update(dtMs);
+    if(!this.isCompleted) return;
+    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return;
+
+    const p=terraforming.celestialParameters;if(!p)return;
+    const dt=dtMs/1000;
+    const need=this.power*dt;
+    if(resources.colony.energy.value<need) return;
+    resources.colony.energy.decrease(need);
+
+    const a=2*this.power/(FUSION_VE*p.mass);
+    const dvTick=a*dt; this.dVdone+=dvTick;
+
+    /* ------ spin -------- */
+    if(this.spinInvest){
+      const sign=this.tgtDays<this.spinStartDays?-1:+1;
+      const dΩ=sign*dvTick/(p.radius*1e3);
+      const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
+      p.rotationPeriod=2*Math.PI/ω/3600;
+      if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;}
+      this.updateUI(); return;
+    }
+
+    /* ------ motion ------- */
+    if(this.motionInvest){
+      if(this.escapePhase && p.parentBody){
+        const mu=G*p.parentBody.mass;
+        let r=p.parentBody.orbitRadius*1e3;
+        const v=Math.sqrt(mu/r);
+        let E=-mu/(2*r)+v*a*dt;
+        if(E>=0){
+          p.distanceFromSun=p.parentBody.distanceFromSun;
+          delete p.parentBody;
+          this.escapePhase=false;this.startAU=p.distanceFromSun;
+          this.dVdone=0;
+          this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
+          this.calcMotionCost();this.updateUI();return;
+        }else{
+          r=-mu/(2*E);p.parentBody.orbitRadius=r/1e3;
+        }
+      }else{
+        const mu=G*SOLAR_MASS;
+        let a_sma=p.distanceFromSun*AU_IN_METERS;
+        const v=Math.sqrt(mu/a_sma);
+        let E=-mu/(2*a_sma)+v*a*dt*(this.tgtAU>this.startAU?+1:-1);
+        a_sma=-mu/(2*E);
+        p.distanceFromSun=a_sma/AU_IN_METERS;
+        if((this.tgtAU>this.startAU&&p.distanceFromSun>=this.tgtAU)||
+           (this.tgtAU<this.startAU&&p.distanceFromSun<=this.tgtAU)||
+           this.dVdone>=this.dVreq){
+          p.distanceFromSun=this.tgtAU;
+          this.motionInvest=false;this.dVreq=this.dVdone=0;
+        }
+      }
+      this.updateUI();
+    }
+  }
 }
 
-if (typeof globalThis !== 'undefined') {
-  globalThis.PlanetaryThrustersProject = PlanetaryThrustersProject;
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = PlanetaryThrustersProject;
-}
+/* expose */
+if(typeof globalThis!=="undefined")globalThis.PlanetaryThrustersProject=PlanetaryThrustersProject;
+if(typeof module!=="undefined")module.exports=PlanetaryThrustersProject;
