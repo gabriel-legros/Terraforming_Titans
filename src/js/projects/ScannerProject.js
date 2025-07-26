@@ -63,9 +63,9 @@ class ScannerProject extends Project {
 
   loadState(state) {
     if (this.scanData) {
-      for (const depositType in state) {
+      for (const depositType in state.scanData) {
         if (this.scanData[depositType]) {
-          Object.assign(this.scanData[depositType], state[depositType]);
+          Object.assign(this.scanData[depositType], state.scanData[depositType]);
         }
       }
       this.loadScannerConfig(currentPlanetParameters);
