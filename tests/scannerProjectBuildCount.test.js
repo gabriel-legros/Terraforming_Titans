@@ -76,4 +76,22 @@ describe('ScannerProject build count', () => {
     expect(project.repeatCount).toBe(3);
     expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledTimes(1);
   });
+
+  test('colonist limit capped by max repeat count', () => {
+    const ctx = createContext();
+    ctx.resources.colony.colonists.value = 20000000; // would allow 2000
+    const config = {
+      name: 'scan',
+      category: 'infra',
+      cost: { colony: { metal: 50 } },
+      duration: 1,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: 1000,
+      unlocked: true,
+      attributes: { scanner: { canSearchForDeposits: true, searchValue: 0.1, depositType: 'ore' } }
+    };
+    const project = new ctx.ScannerProject(config, 'scan');
+    expect(project.getColonistLimit()).toBe(1000);
+  });
 });
