@@ -52,6 +52,25 @@
   font-size: 1.5em;
 }
 
+.team-slot {
+  position: relative;
+}
+
+.team-slot .team-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.team-slot .edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: 0.8em;
+  background: rgba(255,255,255,0.7);
+  cursor: pointer;
+}
+
 .team-controls {
   margin-left: auto;
   display: flex;

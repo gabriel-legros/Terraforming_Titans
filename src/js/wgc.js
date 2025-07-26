@@ -1,7 +1,15 @@
+const isNodeWGC = (typeof module !== 'undefined' && module.exports);
+if (typeof globalThis.WGCTeamMember === 'undefined' && isNodeWGC) {
+  try {
+    globalThis.WGCTeamMember = require('./team-member.js').WGCTeamMember;
+  } catch (e) {}
+}
+
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
+    this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -75,6 +83,23 @@ class WarpGateCommand extends EffectableEntity {
     // placeholder for future behavior
   }
 
+  recruitMember(teamIndex, slotIndex, member) {
+    if (!this.teams[teamIndex] || this.teams[teamIndex][slotIndex]) return null;
+    this.teams[teamIndex][slotIndex] = member;
+    return member;
+  }
+
+  dismissMember(teamIndex, slotIndex) {
+    if (this.teams[teamIndex]) {
+      this.teams[teamIndex][slotIndex] = null;
+    }
+  }
+
+  renameMember(teamIndex, slotIndex, name) {
+    const m = this.teams[teamIndex] && this.teams[teamIndex][slotIndex];
+    if (m) m.name = name;
+  }
+
   saveState() {
     return {
       enabled: this.enabled,
@@ -82,6 +107,7 @@ class WarpGateCommand extends EffectableEntity {
         o[k] = this.rdUpgrades[k].purchases;
         return o;
       }, {}),
+      teams: this.teams.map(team => team.map(m => m ? m.toJSON() : null))
     };
   }
 
@@ -93,6 +119,11 @@ class WarpGateCommand extends EffectableEntity {
           this.rdUpgrades[k].purchases = data.upgrades[k];
         }
       }
+    }
+    if (Array.isArray(data.teams)) {
+      this.teams = data.teams.map(team =>
+        Array.isArray(team) ? team.map(m => (m ? new WGCTeamMember(m) : null)) : [null, null, null, null]
+      );
     }
   }
 }
