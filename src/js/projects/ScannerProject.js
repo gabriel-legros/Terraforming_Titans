@@ -38,20 +38,18 @@ class ScannerProject extends Project {
   }
 
   saveState() {
+    let savedState = {};
     if (this.scanData) {
-      const savedState = {};
       for (const depositType in this.scanData) {
         const scanData = this.scanData[depositType];
         savedState[depositType] = {
           D_max: scanData.D_max,
           A_total: scanData.A_total,
-          D_current: scanData.D_current,
           currentScanProgress: scanData.currentScanProgress,
           currentScanningStrength: scanData.currentScanningStrength,
           remainingTime: scanData.remainingTime,
         };
       }
-      return savedState;
     }
 
     return {
@@ -59,6 +57,7 @@ class ScannerProject extends Project {
       buildCount: this.buildCount,
       activeBuildCount: this.activeBuildCount,
       step: this.step,
+      scanData: savedState
     };
   }
 
