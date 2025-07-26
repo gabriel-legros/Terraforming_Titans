@@ -209,3 +209,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Spin, motion and thruster power cards stay hidden until the project is completed.
 - Thruster power display now uses `formatNumber` and energy consumption registers in resource rates.
 - Scanner projects can build multiple satellites at once using a quantity selector with 0, ±, x10 and /10 controls.
+- Warp Gate Command UI now features an R&D section and team management cards.
+- WGC layout is generated dynamically via wgcUI.js instead of hardcoded in index.html.
