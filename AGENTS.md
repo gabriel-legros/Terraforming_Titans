@@ -222,3 +222,5 @@ second time they speak in a chapter to help clarify who is talking.
 - ProjectManager automatically initializes scanner projects and assigns the ore scanner instance.
 - Scanner projects now set scanning strength based on total satellites built rather than incrementing per completion.
 - Scanning stops and the progress display hides once deposits reach their planetary cap.
+
+- D_current now initializes from the matching deposit resource value.
