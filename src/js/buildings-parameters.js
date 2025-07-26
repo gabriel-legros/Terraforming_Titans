@@ -155,7 +155,7 @@ const buildingsParameters = {
     category: 'production',
     description: 'Produces superconductors from metal.  Requires human workers.',
     cost: { colony: { metal: 1000, glass : 1000, components: 1000, electronics: 500} },
-    consumption: { colony: { energy: 100000000, metal: 1} },
+    consumption: { colony: { energy: 100000000, metal: 5} },
     production: { colony: { superconductors: 1 } },
     storage: {},
     dayNightActivity: false,
