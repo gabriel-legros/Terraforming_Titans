@@ -8,6 +8,14 @@ const rdItems = {
   androidsEfficiency: 'Androids production efficiency'
 };
 const rdElements = {};
+const teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
+const classImages = {
+  'Team Leader': 'assets/images/team_leader.png',
+  'Soldier': 'assets/images/soldier.png',
+  'Natural Scientist': 'assets/images/natural_scientist.png',
+  'Social Scientist': 'assets/images/social_scientist.png'
+};
+let activeDialog = null;
 
 function showWGCTab() {
   wgcTabVisible = true;
@@ -35,24 +43,30 @@ function updateWGCVisibility() {
 }
 
 function generateWGCTeamCards() {
-  const names = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
-  return names.map(name => `
-    <div class="wgc-team-card">
-      <div class="team-header">Team ${name}</div>
-      <div class="wgc-team-body">
-        <div class="team-slots">
-          <div class="team-slot"><button>+</button></div>
-          <div class="team-slot"><button>+</button></div>
-          <div class="team-slot"><button>+</button></div>
-          <div class="team-slot"><button>+</button></div>
+  return teamNames.map((name, tIdx) => {
+    const slots = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teams[tIdx]) ? warpGateCommand.teams[tIdx] : [null, null, null, null];
+    const slotMarkup = slots.map((m, sIdx) => {
+      if (m) {
+        const img = classImages[m.classType] || '';
+        return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}">
+          <img src="${img}" class="team-icon">
+          <span class="edit-icon" data-team="${tIdx}" data-slot="${sIdx}">✎</span>
+        </div>`;
+      }
+      return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
+    }).join('');
+    return `
+      <div class="wgc-team-card">
+        <div class="team-header">Team ${name}</div>
+        <div class="wgc-team-body">
+          <div class="team-slots">${slotMarkup}</div>
+          <div class="team-controls">
+            <button>Start</button>
+            <button>Recall</button>
+          </div>
         </div>
-        <div class="team-controls">
-          <button>Start</button>
-          <button>Recall</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+      </div>`;
+  }).join('');
 }
 
 function createRDItem(key, label) {
@@ -98,6 +112,110 @@ function populateRDMenu() {
   }
 }
 
+function closeRecruitDialog() {
+  if (activeDialog && activeDialog.parentElement) {
+    document.body.removeChild(activeDialog);
+    activeDialog = null;
+  }
+}
+
+function openRecruitDialog(teamIndex, slotIndex, member) {
+  closeRecruitDialog();
+  const overlay = document.createElement('div');
+  overlay.classList.add('popup-overlay');
+
+  const win = document.createElement('div');
+  win.classList.add('popup-window');
+
+  const title = document.createElement('h2');
+  title.textContent = member ? 'Edit Member' : 'Recruit Member';
+  win.appendChild(title);
+
+  const nameField = document.createElement('input');
+  nameField.type = 'text';
+  nameField.placeholder = 'Name';
+  nameField.value = member ? member.name : '';
+  win.appendChild(nameField);
+
+  const classSelect = document.createElement('select');
+  ['Team Leader', 'Soldier', 'Natural Scientist', 'Social Scientist'].forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    classSelect.appendChild(opt);
+  });
+  if (member) classSelect.value = member.classType;
+  if (slotIndex === 0) {
+    classSelect.value = 'Team Leader';
+    classSelect.disabled = true;
+  }
+  win.appendChild(classSelect);
+
+  const level = document.createElement('div');
+  level.textContent = 'Level: 1';
+  win.appendChild(level);
+
+  const alloc = { power: 0, stamina: 0, wit: 0 };
+  const remainingSpan = document.createElement('div');
+  remainingSpan.textContent = 'Points left: 5';
+
+  const statsDiv = document.createElement('div');
+  ['power','stamina','wit'].forEach(stat => {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = 0;
+    input.max = 5;
+    input.value = member ? member[stat] - WGCTeamMember.getBaseStats(member.classType)[stat] : 0;
+    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1) + ': ';
+    label.appendChild(input);
+    input.addEventListener('input', () => {
+      alloc[stat] = parseInt(input.value) || 0;
+      const total = alloc.power + alloc.stamina + alloc.wit;
+      if (total > 5) {
+        alloc[stat] -= (total - 5);
+        input.value = alloc[stat];
+      }
+      remainingSpan.textContent = `Points left: ${5 - (alloc.power + alloc.stamina + alloc.wit)}`;
+    });
+    if (member) input.disabled = true;
+    statsDiv.appendChild(label);
+  });
+  win.appendChild(statsDiv);
+  win.appendChild(remainingSpan);
+
+  const confirm = document.createElement('button');
+  confirm.textContent = 'Confirm';
+  confirm.addEventListener('click', () => {
+    if (!nameField.value.trim()) return;
+    if (member) {
+      warpGateCommand.renameMember(teamIndex, slotIndex, nameField.value.trim());
+    } else {
+      const m = WGCTeamMember.create(nameField.value.trim(), classSelect.value, alloc);
+      warpGateCommand.recruitMember(teamIndex, slotIndex, m);
+    }
+    closeRecruitDialog();
+    updateWGCUI();
+  });
+  win.appendChild(confirm);
+
+  if (member) {
+    const dismiss = document.createElement('button');
+    dismiss.textContent = 'Dismiss';
+    dismiss.addEventListener('click', () => {
+      warpGateCommand.dismissMember(teamIndex, slotIndex);
+      closeRecruitDialog();
+      updateWGCUI();
+    });
+    win.appendChild(dismiss);
+  }
+
+  overlay.appendChild(win);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeRecruitDialog(); });
+  document.body.appendChild(overlay);
+  activeDialog = overlay;
+}
+
 function generateWGCLayout() {
   return `
     <div class="wgc-container">
@@ -124,6 +242,21 @@ function initializeWGCUI() {
     const teamContainer = container.querySelector('#wgc-team-cards');
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
+      teamContainer.addEventListener('click', e => {
+        const btn = e.target.closest('button');
+        const edit = e.target.classList.contains('edit-icon');
+        if (btn && btn.parentElement.classList.contains('team-slot')) {
+          const slot = btn.parentElement;
+          const t = parseInt(slot.dataset.team, 10);
+          const s = parseInt(slot.dataset.slot, 10);
+          openRecruitDialog(t, s, null);
+        } else if (edit) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const s = parseInt(e.target.dataset.slot, 10);
+          const member = warpGateCommand.teams[t][s];
+          openRecruitDialog(t, s, member);
+        }
+      });
     }
     populateRDMenu();
   }
@@ -146,6 +279,10 @@ function updateWGCUI() {
       el.button.disabled = warpGateCommand.getUpgradeCost(key) > art ||
         (warpGateCommand.rdUpgrades[key].max && warpGateCommand.rdUpgrades[key].purchases >= warpGateCommand.rdUpgrades[key].max);
     }
+  }
+  const teamContainer = document.getElementById('wgc-team-cards');
+  if (teamContainer) {
+    teamContainer.innerHTML = generateWGCTeamCards();
   }
 }
 
