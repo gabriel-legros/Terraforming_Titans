@@ -64,7 +64,6 @@ class ScannerProject extends Project {
         }
       }
       this.loadScannerConfig(currentPlanetParameters);
-      return;
     }
 
     super.loadState(state);
@@ -263,17 +262,11 @@ class ScannerProject extends Project {
     ) {
       const depositType = this.attributes.scanner.depositType;
       const additionalStrength = this.attributes.scanner.searchValue * count;
-      oreScanner.adjustScanningStrength(
+      this.adjustScanningStrength(
         depositType,
-        oreScanner.scanData[depositType].currentScanningStrength + additionalStrength
+        this.scanData[depositType].currentScanningStrength + additionalStrength
       );
-      console.log(
-        `Scanner strength for ${depositType} increased by ${additionalStrength} (${count}x). New scanning strength: ${oreScanner.scanData[depositType].currentScanningStrength}`
-      );
-      oreScanner.startScan(depositType);
-      console.log(
-        `Scanning for ${depositType} started after applying scanner effect from ${this.name}`
-      );
+      this.startScan(depositType);
     }
   }
 
