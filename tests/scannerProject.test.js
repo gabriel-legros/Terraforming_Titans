@@ -21,13 +21,7 @@ describe('ScannerProject scanning effect', () => {
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
 
-    ctx.oreScanner = {
-      scanData: { ore: { currentScanningStrength: 0 } },
-      adjustScanningStrength: jest.fn((type, val) => {
-        ctx.oreScanner.scanData[type].currentScanningStrength = val;
-      }),
-      startScan: jest.fn()
-    };
+
 
     const config = {
       name: 'scan',
@@ -50,5 +44,6 @@ describe('ScannerProject scanning effect', () => {
   project.repeatCount = 2;
   project.update(0);
   expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenLastCalledWith('ore', 1);
+
   });
 });

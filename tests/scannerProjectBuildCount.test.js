@@ -17,11 +17,6 @@ describe('ScannerProject build count', () => {
         colonists: { value: 100000 }
       }
     };
-    ctx.oreScanner = {
-      scanData: { ore: { currentScanningStrength: 0 } },
-      adjustScanningStrength: jest.fn((t,v)=>{ ctx.oreScanner.scanData[t].currentScanningStrength = v; }),
-      startScan: jest.fn()
-    };
     vm.createContext(ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
@@ -44,6 +39,7 @@ describe('ScannerProject build count', () => {
       attributes: { scanner: { canSearchForDeposits: true, searchValue: 0.1, depositType: 'ore' } }
     };
     const project = new ctx.ScannerProject(config, 'scan');
+    project.initializeScanner({ resources: { underground: { ore: { initialValue: 0, maxDeposits: 1, areaTotal: 100 } } } });
     project.buildCount = 5;
     expect(project.getScaledCost().colony.metal).toBe(250);
     project.start(ctx.resources);
@@ -51,8 +47,7 @@ describe('ScannerProject build count', () => {
     project.complete();
     project.update(0);
     expect(project.repeatCount).toBe(5);
-    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledTimes(1);
-    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledWith('ore', 0.5);
+    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.5);
   });
 
   test('build count cropped by colonists and remaining repeats', () => {
@@ -70,6 +65,7 @@ describe('ScannerProject build count', () => {
       attributes: { scanner: { canSearchForDeposits: true, searchValue: 0.1, depositType: 'ore' } }
     };
     const project = new ctx.ScannerProject(config, 'scan');
+    project.initializeScanner({ resources: { underground: { ore: { initialValue: 0, maxDeposits: 1, areaTotal: 100 } } } });
     project.repeatCount = 2;
     project.buildCount = 5;
     expect(project.getScaledCost().colony.metal).toBe(50); // only one allowed
@@ -77,7 +73,7 @@ describe('ScannerProject build count', () => {
     project.complete();
     project.update(0);
     expect(project.repeatCount).toBe(3);
-    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledTimes(1);
+    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.1);
   });
 
   test('colonist limit capped by max repeat count', () => {
