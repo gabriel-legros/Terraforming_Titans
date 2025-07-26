@@ -58,8 +58,6 @@ function create() {
     initializeProjectAlerts();
   }
 
-  oreScanner = new OreScanning(currentPlanetParameters);
-
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
   initializeColonySlidersUI();
@@ -153,7 +151,6 @@ function initializeGameState(options = {}) {
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
-  oreScanner = new OreScanning(currentPlanetParameters);
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
   if (!preserveManagers || !researchManager) {
@@ -267,8 +264,7 @@ function updateLogic(delta) {
 
   autoBuild(allStructures, delta);
 
-  projectManager.updateProjects(delta); 
-  oreScanner.updateScan(delta);  // Update ore scanning progress
+  projectManager.updateProjects(delta);
 
   goldenAsteroid.update(delta);
 

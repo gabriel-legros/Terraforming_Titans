@@ -1,6 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
-const OreScanning = require('../src/js/ore-scanning.js');
+global.Project = class extends EffectableEntity {};
+const ScannerProject = require('../src/js/projects/ScannerProject.js');
 
 describe('scanningSpeedMultiplier effect', () => {
   const params = {
@@ -9,7 +10,8 @@ describe('scanningSpeedMultiplier effect', () => {
 
   test('doubles scanning progress', () => {
     global.resources = { underground: { ore: { addDeposit: jest.fn() } } };
-    const scanner = new OreScanning(params);
+    const scanner = new ScannerProject({}, 'test');
+    scanner.initializeScanner(params);
     scanner.scanData.ore.currentScanningStrength = 1;
     scanner.startScan('ore');
     scanner.updateScan(50);
