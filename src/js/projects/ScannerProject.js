@@ -13,8 +13,14 @@ class ScannerProject extends Project {
     this.scanData = {};
     for (const depositType in this.underground) {
       const depositParams = this.underground[depositType];
+      const existing =
+        typeof resources !== 'undefined' &&
+        resources.underground &&
+        resources.underground[depositType]
+          ? resources.underground[depositType].value
+          : undefined;
       this.scanData[depositType] = {
-        D_current: depositParams.initialValue,
+        D_current: existing ?? depositParams.initialValue,
         currentScanProgress: 0,
         currentScanningStrength: 0,
         remainingTime: 0,
