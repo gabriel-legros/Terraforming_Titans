@@ -19,6 +19,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
+  color: white;
   max-height: 80%; /* Ensure that it doesn't take up too much vertical space */
   overflow-y: auto; /* Add scrolling if needed */
 }
