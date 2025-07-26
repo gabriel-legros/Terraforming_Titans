@@ -208,3 +208,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Planetary Thrusters UI now calculates delta-v and energy using the entered targets and hides spiral Δv until moons escape.
 - Spin, motion and thruster power cards stay hidden until the project is completed.
 - Thruster power display now uses `formatNumber` and energy consumption registers in resource rates.
+- Scanner projects can build multiple satellites at once using a quantity selector with 0, ±, x10 and /10 controls.
