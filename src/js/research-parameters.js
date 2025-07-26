@@ -1231,6 +1231,21 @@ const researchParameters = {
             value: true
           }
         ]
+      },
+      {
+        id: 'hive_mind_androids',
+        name: 'Hive Mind Androids',
+        description: 'Links androids into a cooperative network producing research.',
+        cost: { advancedResearch: 75000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'global',
+            type: 'booleanFlag',
+            flagId: 'hiveMindAndroids',
+            value: true
+          }
+        ]
       }
     ]
   };
