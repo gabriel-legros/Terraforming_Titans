@@ -1233,6 +1233,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'hive_mind_androids',
+        name: 'Hive Mind Androids',
+        description: 'Links androids into a cooperative network producing research.',
+        cost: { advancedResearch: 75000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'global',
+            type: 'booleanFlag',
+            flagId: 'hiveMindAndroids',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'space_storage',
         name: 'Space Storage',
         description: 'Enables construction of an orbital storage facility.',
@@ -1240,8 +1255,7 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           { target: 'project', targetId: 'spaceStorage', type: 'enable' }
-        ]
-      }
+       },
     ]
   };
   
