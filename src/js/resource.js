@@ -211,6 +211,14 @@ function createResources(resourcesData) {
       resourceData.displayName = resourceData.displayName || resourceData.name; // Assign resource name to the resourceData object
       resourceData.name = resourceName;
       resourceData.category = category;
+
+      if (
+        resourceData.maxDeposits !== undefined &&
+        resourceData.baseCap === undefined
+      ) {
+        resourceData.baseCap = resourceData.maxDeposits;
+      }
+
       resources[category][resourceName] = new Resource(resourceData);
     }
   }

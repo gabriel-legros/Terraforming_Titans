@@ -192,11 +192,16 @@ function updateResourceDisplay(resources) {
           scanData = oreScanner.scanData[resourceName];
         }
 
-        if (scanData && scanData.currentScanningStrength > 0 && scanningProgressElement) {
+        if (
+          scanData &&
+          scanData.currentScanningStrength > 0 &&
+          scanData.D_current < scanData.D_max &&
+          scanningProgressElement
+        ) {
           scanningProgressElement.style.display = 'block';
           scanningProgressElement.textContent = `Scanning Progress: ${(scanData.currentScanProgress * 100).toFixed(2)}%`;
         } else if (scanningProgressElement) {
-          scanningProgressElement.style.display = 'none'; // Hide progress element if scanning strength is zero
+          scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
       } else {
         // Update other resources
