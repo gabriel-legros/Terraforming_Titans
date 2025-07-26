@@ -243,7 +243,8 @@ function initializeWGCUI() {
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
       teamContainer.addEventListener('click', e => {
-        const btn = e.target.closest('button');
+        const target = e.target instanceof Element ? e.target : e.target.parentElement;
+        const btn = target && target.closest ? target.closest('button') : null;
         const edit = e.target.classList.contains('edit-icon');
         if (btn && btn.parentElement.classList.contains('team-slot')) {
           const slot = btn.parentElement;
