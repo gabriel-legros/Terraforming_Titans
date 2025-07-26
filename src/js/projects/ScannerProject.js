@@ -8,7 +8,11 @@ class ScannerProject extends Project {
   }
 
   getColonistLimit() {
-    return Math.ceil((resources?.colony?.colonists?.value || 0) / 10000);
+    const colonistCap = Math.ceil((resources?.colony?.colonists?.value || 0) / 10000);
+    if (this.maxRepeatCount === Infinity) {
+      return colonistCap;
+    }
+    return Math.min(colonistCap, this.maxRepeatCount);
   }
 
   getEffectiveBuildCount(count = this.buildCount) {

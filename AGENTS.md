@@ -210,3 +210,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Thruster power display now uses `formatNumber` and energy consumption registers in resource rates.
 - Scanner projects can build multiple satellites at once using a quantity selector with 0, ±, x10 and /10 controls.
 - Quantity selector buttons display their effect: "+" and "-" show the current step (e.g. +1, -1, +10, -10). The x10 and /10 buttons multiply or divide the step, never dropping below 1, and the 0 button resets the count.
+- Ore satellite build quantity now caps at the project's maximum repeat count.
