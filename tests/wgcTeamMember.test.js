@@ -5,7 +5,7 @@ const { WarpGateCommand } = require('../src/js/wgc.js');
 
 describe('WGC team members', () => {
   test('creation applies base stats', () => {
-    const m = WGCTeamMember.create('Bob', 'Soldier', { power: 2, stamina: 1, wit: 1 });
+    const m = WGCTeamMember.create('Bob', '', 'Soldier', { power: 2, stamina: 1, wit: 1 });
     expect(m.level).toBe(1);
     expect(m.power).toBe(3);
     expect(m.stamina).toBe(2);
@@ -14,12 +14,12 @@ describe('WGC team members', () => {
 
   test('save and load preserves members', () => {
     const wgc = new WarpGateCommand();
-    const member = WGCTeamMember.create('Alice', 'Team Leader', { power: 1, stamina: 0, wit: 0 });
+    const member = WGCTeamMember.create('Alice', '', 'Team Leader', { power: 1, stamina: 0, wit: 0 });
     wgc.recruitMember(0, 0, member);
     const data = wgc.saveState();
     const wgc2 = new WarpGateCommand();
     wgc2.loadState(data);
-    expect(wgc2.teams[0][0].name).toBe('Alice');
+    expect(wgc2.teams[0][0].firstName).toBe('Alice');
     expect(wgc2.teams[0][0].power).toBe(member.power);
   });
 });

@@ -50,7 +50,8 @@ describe('ScannerProject build count', () => {
     expect(ctx.resources.colony.metal.value).toBe(750);
     project.complete();
     expect(project.repeatCount).toBe(5);
-    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledTimes(5);
+    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledTimes(1);
+    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledWith('ore', 0.5);
   });
 
   test('build count cropped by colonists and remaining repeats', () => {
