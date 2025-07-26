@@ -92,7 +92,16 @@ class ScannerProject extends Project {
     const val = document.createElement('span');
     val.id = `${this.name}-count`;
     val.className = 'stat-value';
-    countContainer.append(label, val);
+    const slash = document.createElement('span');
+    slash.textContent = ' / ';
+    const max = document.createElement('span');
+    max.id = `${this.name}-max`;
+    max.className = 'stat-value';
+    const info = document.createElement('span');
+    info.className = 'info-tooltip-icon';
+    info.title = 'Colonists let us build scanners in parallel. One satellite can be produced per 10,000 colonists.';
+    info.innerHTML = '&#9432;';
+    countContainer.append(label, val, slash, max, info);
 
     const controls = document.createElement('div');
     controls.className = 'thruster-power-controls';
@@ -118,7 +127,7 @@ class ScannerProject extends Project {
     wrapper.append(countContainer, controls);
     container.appendChild(wrapper);
 
-    this.el = { val, bPlus, bMinus, bMul, bDiv, b0 };
+    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0 };
 
     const refresh = () => updateProjectUI(this.name);
     bPlus.onclick = () => { this.adjustBuildCount(this.step); refresh(); };
@@ -129,9 +138,17 @@ class ScannerProject extends Project {
   }
 
   updateUI() {
-    const elements = projectElements[this.name];
-    if (elements && elements.val) {
-      elements.val.textContent = formatNumber(this.buildCount, true);
+    if (this.el.val) {
+      this.el.val.textContent = formatNumber(this.buildCount, true);
+    }
+    if (this.el.max) {
+      this.el.max.textContent = formatNumber(this.getColonistLimit(), true);
+    }
+    if (this.el.bPlus) {
+      this.el.bPlus.textContent = `+${formatNumber(this.step, true)}`;
+    }
+    if (this.el.bMinus) {
+      this.el.bMinus.textContent = `-${formatNumber(this.step, true)}`;
     }
   }
 }
