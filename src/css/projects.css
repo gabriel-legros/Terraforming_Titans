@@ -581,6 +581,5 @@
 .thruster-power-controls button {
     padding: 2px 4px;
     font-size: 0.7em;
-    border-radius: 4px;
     cursor: pointer;
 }
