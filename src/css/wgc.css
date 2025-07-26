@@ -58,3 +58,14 @@
   flex-direction: column;
   gap: 5px;
 }
+
+.wgc-rd-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.wgc-rd-item button {
+  margin-left: auto;
+}
