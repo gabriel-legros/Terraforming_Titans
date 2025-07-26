@@ -52,31 +52,31 @@ class ScannerProject extends Project {
     const n = this.activeBuildCount || 1;
     for (let i = 0; i < n; i++) {
       super.complete();
-      if (
-        this.attributes &&
-        this.attributes.scanner &&
-        this.attributes.scanner.canSearchForDeposits
-      ) {
-        this.applyScannerEffect();
-      }
+    }
+    if (
+      this.attributes &&
+      this.attributes.scanner &&
+      this.attributes.scanner.canSearchForDeposits
+    ) {
+      this.applyScannerEffect(n);
     }
     this.activeBuildCount = 1;
   }
 
-  applyScannerEffect() {
+  applyScannerEffect(count = 1) {
     if (
       this.attributes.scanner &&
       this.attributes.scanner.searchValue &&
       this.attributes.scanner.depositType
     ) {
       const depositType = this.attributes.scanner.depositType;
-      const additionalStrength = this.attributes.scanner.searchValue;
+      const additionalStrength = this.attributes.scanner.searchValue * count;
       oreScanner.adjustScanningStrength(
         depositType,
         oreScanner.scanData[depositType].currentScanningStrength + additionalStrength
       );
       console.log(
-        `Scanner strength for ${depositType} increased by ${additionalStrength}. New scanning strength: ${oreScanner.scanData[depositType].currentScanningStrength}`
+        `Scanner strength for ${depositType} increased by ${additionalStrength} (${count}x). New scanning strength: ${oreScanner.scanData[depositType].currentScanningStrength}`
       );
       oreScanner.startScan(depositType);
       console.log(
