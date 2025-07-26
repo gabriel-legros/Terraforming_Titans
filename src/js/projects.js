@@ -394,7 +394,17 @@ class ProjectManager extends EffectableEntity {
       const type = projectData.type || 'Project';
       const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
       const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
-      this.projects[projectName] = new Ctor(projectData, projectName);
+      const proj = new Ctor(projectData, projectName);
+      this.projects[projectName] = proj;
+
+      if (typeof proj.initializeScanner === 'function' && typeof currentPlanetParameters !== 'undefined') {
+        proj.initializeScanner(currentPlanetParameters);
+        if (proj.attributes && proj.attributes.scanner && proj.attributes.scanner.depositType === 'ore') {
+          if (typeof globalThis !== 'undefined') {
+            globalThis.oreScanner = proj;
+          }
+        }
+      }
 
       if (projectData.category === 'story') {
         storyProjects.push(projectName);

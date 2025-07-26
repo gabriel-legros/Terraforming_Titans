@@ -49,8 +49,8 @@ Collectors consume glass, electronics and components and can be automated. Their
 count persists between planets and each adds **Dyson Swarm** energy production.
 
 Other modules include **save.js**, **projects.js**, **projectsUI.js**, **spaceship.js**,
-**day-night-cycle.js**, **journal.js**, **population.js**, **ore-scanning.js** and
-**warning.js**.
+**day-night-cycle.js**, **journal.js**, **population.js** and **warning.js**.
+Ore scanning logic now lives directly inside **ScannerProject**.
 
 # Effectable entities
 Gameplay objects that can receive temporary or permanent modifiers extend
@@ -219,3 +219,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Androids produce research once Hive Mind Androids advanced research is completed.
 - Added a new special resource "Alien artifact" which starts locked.
 - WGC R&D shop displays a header row labelled "Upgrade" and "Cost (Alien Artifacts)".
+- ProjectManager automatically initializes scanner projects and assigns the ore scanner instance.

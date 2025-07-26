@@ -1,3 +1,4 @@
+
 class ScannerProject extends Project {
   constructor(config, name) {
     super(config, name);
@@ -5,6 +6,197 @@ class ScannerProject extends Project {
     this.step = 1;
     this.activeBuildCount = 1;
     this.el = {};
+  }
+
+  initializeScanner(planetParameters) {
+    this.underground = planetParameters.resources.underground;
+    this.scanData = {};
+    for (const depositType in this.underground) {
+      const depositParams = this.underground[depositType];
+      this.scanData[depositType] = {
+        D_current: depositParams.initialValue,
+        currentScanProgress: 0,
+        currentScanningStrength: 0,
+        remainingTime: 0,
+      };
+    }
+    this.loadScannerConfig(planetParameters);
+    this.scanningSpeedMultiplier = 1;
+  }
+
+  applyActiveEffects(firstTime = true) {
+    if (this.scanData) {
+      this.scanningSpeedMultiplier = 1;
+    }
+    super.applyActiveEffects(firstTime);
+  }
+
+  saveState() {
+    if (this.scanData) {
+      const savedState = {};
+      for (const depositType in this.scanData) {
+        const scanData = this.scanData[depositType];
+        savedState[depositType] = {
+          D_max: scanData.D_max,
+          A_total: scanData.A_total,
+          D_current: scanData.D_current,
+          currentScanProgress: scanData.currentScanProgress,
+          currentScanningStrength: scanData.currentScanningStrength,
+          remainingTime: scanData.remainingTime,
+        };
+      }
+      return savedState;
+    }
+
+    return {
+      ...super.saveState(),
+      buildCount: this.buildCount,
+      activeBuildCount: this.activeBuildCount,
+      step: this.step,
+    };
+  }
+
+  loadState(state) {
+    if (this.scanData) {
+      for (const depositType in state) {
+        if (this.scanData[depositType]) {
+          Object.assign(this.scanData[depositType], state[depositType]);
+        }
+      }
+      this.loadScannerConfig(currentPlanetParameters);
+      return;
+    }
+
+    super.loadState(state);
+    if (state.buildCount !== undefined) {
+      this.buildCount = state.buildCount;
+    }
+    if (state.activeBuildCount !== undefined) {
+      this.activeBuildCount = state.activeBuildCount;
+    }
+    if (state.step !== undefined) {
+      this.step = state.step;
+    }
+  }
+
+  loadScannerConfig(planetParameters) {
+    const newUnderground = planetParameters.resources.underground;
+    for (const depositType in newUnderground) {
+      const depositParams = newUnderground[depositType];
+      const old_max = this.scanData[depositType].D_max;
+      this.scanData[depositType].D_max = depositParams.maxDeposits;
+      this.scanData[depositType].A_total = depositParams.areaTotal;
+      if (old_max < this.scanData[depositType].D_max) {
+        this.startScan(depositType);
+      }
+    }
+  }
+
+  calculateExpectedTime(depositType, scanningStrength = 1) {
+    const scanData = this.scanData[depositType];
+    if (!scanData || scanData.D_current >= scanData.D_max) {
+      return Infinity;
+    }
+
+    const densityFactor =
+      (scanData.D_max - scanData.D_current) / scanData.A_total;
+    const baseTime = 1 / densityFactor;
+    return baseTime / scanningStrength;
+  }
+
+  startScan(depositType) {
+    const scanData = this.scanData[depositType];
+    if (!scanData) {
+      console.log(`Invalid deposit type: ${depositType}`);
+      return;
+    }
+
+    if (scanData.remainingTime <= 0 || scanData.currentScanProgress >= 1) {
+      scanData.remainingTime = this.calculateExpectedTime(
+        depositType,
+        scanData.currentScanningStrength
+      );
+      scanData.currentScanProgress = 0;
+    }
+
+    console.log(
+      `Scan started for ${depositType} with strength ${scanData.currentScanningStrength}, expected time: ${scanData.remainingTime}`
+    );
+  }
+
+  updateScan(deltaTime) {
+    for (const depositType in this.scanData) {
+      const scanData = this.scanData[depositType];
+      if (!scanData) {
+        console.log(`Invalid deposit type: ${depositType}`);
+        continue;
+      }
+      if (scanData.D_current >= scanData.D_max) {
+        continue;
+      }
+      if (scanData.remainingTime <= 0) {
+        continue;
+      }
+      const progressIncrement =
+        (deltaTime * this.scanningSpeedMultiplier) / scanData.remainingTime;
+      scanData.currentScanProgress += progressIncrement;
+      if (scanData.currentScanProgress >= 1) {
+        scanData.D_current++;
+        resources.underground[depositType].addDeposit();
+
+        console.log(
+          `Deposit found! Total ${depositType} deposits found: ${scanData.D_current}/${scanData.D_max}`
+        );
+
+        if (scanData.D_current < scanData.D_max) {
+          this.startScan(depositType);
+        } else {
+          console.log(
+            `All ${depositType} deposits have been found. No further scans will be started.`
+          );
+          scanData.remainingTime = 0;
+        }
+      }
+    }
+  }
+
+  update(deltaTime) {
+    super.update(deltaTime);
+    if (this.scanData) {
+      this.updateScan(deltaTime);
+    }
+  }
+
+  adjustScanningStrength(depositType, newScanningStrength) {
+    const scanData = this.scanData[depositType];
+    if (!scanData) {
+      console.log(`Invalid deposit type: ${depositType}`);
+      return;
+    }
+
+    scanData.currentScanningStrength = newScanningStrength;
+
+    if (scanData.remainingTime <= 0) {
+      console.log(
+        `No active scan for ${depositType} to adjust. Scanning strength set to ${scanData.currentScanningStrength}.`
+      );
+      return;
+    }
+
+    const newExpectedTime = this.calculateExpectedTime(
+      depositType,
+      newScanningStrength
+    );
+
+    scanData.remainingTime = newExpectedTime;
+    console.log(
+      `Scanning strength for ${depositType} adjusted to ${newScanningStrength}. New remaining time: ${scanData.remainingTime}`
+    );
+  }
+
+  getCurrentDepositCount(depositType) {
+    const scanData = this.scanData[depositType];
+    return scanData ? scanData.D_current : null;
   }
 
   getColonistLimit() {
@@ -156,27 +348,7 @@ class ScannerProject extends Project {
     }
   }
 
-  saveState() {
-    return {
-      ...super.saveState(),
-      buildCount: this.buildCount,
-      activeBuildCount: this.activeBuildCount,
-      step: this.step,
-    };
-  }
 
-  loadState(state) {
-    super.loadState(state);
-    if (state.buildCount !== undefined) {
-      this.buildCount = state.buildCount;
-    }
-    if (state.activeBuildCount !== undefined) {
-      this.activeBuildCount = state.activeBuildCount;
-    }
-    if (state.step !== undefined) {
-      this.step = state.step;
-    }
-  }
 
 }
 

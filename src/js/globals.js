@@ -10,7 +10,7 @@ let buildings = {};
 let colonies = {};
 let structures = {};
 let populationModule;
-let oreScanner = {};
+let oreScanner = { saveState: () => ({}), loadState: () => {}, scanData: {} };
 let projectManager;  // Use ProjectManager instead of individual projects
 let storyStarted = false;  // Track if the story has been triggered
 let terraforming;
