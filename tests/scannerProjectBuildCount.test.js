@@ -73,7 +73,8 @@ describe('ScannerProject build count', () => {
     project.complete();
     project.update(0);
     expect(project.repeatCount).toBe(3);
-    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.1);
+    // Strength scales with repeat count regardless of colonists
+    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.3);
   });
 
   test('colonist limit capped by max repeat count', () => {

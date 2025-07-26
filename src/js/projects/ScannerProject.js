@@ -170,8 +170,7 @@ class ScannerProject extends Project {
         const depositType = this.attributes.scanner.depositType;
         const data = this.scanData[depositType];
         let targetStrength =
-          (this.attributes.scanner.searchValue || 0) *
-          Math.min(this.repeatCount, this.getColonistLimit());
+          (this.attributes.scanner.searchValue || 0) * this.repeatCount;
         if (data.D_current >= data.D_max) {
           targetStrength = 0;
         }
@@ -191,8 +190,7 @@ class ScannerProject extends Project {
     ) {
       const depositType = this.attributes.scanner.depositType;
       const targetStrength =
-        (this.attributes.scanner.searchValue || 0) *
-        Math.min(this.repeatCount, this.getColonistLimit());
+        (this.attributes.scanner.searchValue || 0) * this.repeatCount;
       oreScanner.adjustScanningStrength(depositType, targetStrength);
       if (targetStrength > 0 && oreScanner.startScan) {
         oreScanner.startScan(depositType);
