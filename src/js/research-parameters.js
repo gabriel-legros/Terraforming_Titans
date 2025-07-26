@@ -1254,7 +1254,7 @@ const researchParameters = {
         cost: { advancedResearch: 100000 },
         prerequisites: [],
         effects: [
-          { target: 'project', targetId: 'spaceStorage', type: 'enable' }
+          { target: 'project', targetId: 'spaceStorage', type: 'enable' } ]
        },
     ]
   };
