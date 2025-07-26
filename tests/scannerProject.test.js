@@ -13,7 +13,7 @@ describe('ScannerProject scanning effect', () => {
     expect(ctx.projectParameters.geo_satellite.type).toBe('ScannerProject');
   });
 
-  test('applyScannerEffect increases strength and starts scan', () => {
+  test('update sets scanning strength from repeat count', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
     const ctx = { console, EffectableEntity };
@@ -34,11 +34,16 @@ describe('ScannerProject scanning effect', () => {
       attributes: { scanner: { canSearchForDeposits: true, searchValue: 0.5, depositType: 'ore' } }
     };
 
-    const project = new ctx.ScannerProject(config, 'scan');
-    project.initializeScanner({ resources: { underground: { ore: { initialValue: 0, maxDeposits: 1, areaTotal: 100 } } } });
-    project.complete();
+  const project = new ctx.ScannerProject(config, 'scan');
+  project.repeatCount = 1;
+  project.update(0);
 
-    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.5);
-    expect(project.scanData.ore.remainingTime).toBeGreaterThan(0);
+  expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledWith('ore', 0.5);
+  expect(ctx.oreScanner.startScan).toHaveBeenCalledWith('ore');
+
+  project.repeatCount = 2;
+  project.update(0);
+  expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenLastCalledWith('ore', 1);
+
   });
 });

@@ -45,6 +45,7 @@ describe('ScannerProject build count', () => {
     project.start(ctx.resources);
     expect(ctx.resources.colony.metal.value).toBe(750);
     project.complete();
+    project.update(0);
     expect(project.repeatCount).toBe(5);
     expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.5);
   });
@@ -70,6 +71,7 @@ describe('ScannerProject build count', () => {
     expect(project.getScaledCost().colony.metal).toBe(50); // only one allowed
     project.start(ctx.resources);
     project.complete();
+    project.update(0);
     expect(project.repeatCount).toBe(3);
     expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.1);
   });
