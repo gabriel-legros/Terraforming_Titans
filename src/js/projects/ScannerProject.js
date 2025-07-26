@@ -132,6 +132,7 @@ class ScannerProject extends Project {
   updateScan(deltaTime) {
     for (const depositType in this.scanData) {
       const scanData = this.scanData[depositType];
+      scanData.D_current = resources.underground[depositType].value;
       if (!scanData) {
         console.log(`Invalid deposit type: ${depositType}`);
         continue;
