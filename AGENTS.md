@@ -213,3 +213,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC layout is generated dynamically via wgcUI.js instead of hardcoded in index.html.
 - Quantity selector buttons display their effect: "+" and "-" show the current step (e.g. +1, -1, +10, -10). The x10 and /10 buttons multiply or divide the step, never dropping below 1, and the 0 button resets the count.
 - Ore satellite build quantity now caps at the project's maximum repeat count.
+- Satellite parallel build count now persists when saving and loading.
