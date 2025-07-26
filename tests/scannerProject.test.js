@@ -21,13 +21,7 @@ describe('ScannerProject scanning effect', () => {
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
 
-    ctx.oreScanner = {
-      scanData: { ore: { currentScanningStrength: 0 } },
-      adjustScanningStrength: jest.fn((type, val) => {
-        ctx.oreScanner.scanData[type].currentScanningStrength = val;
-      }),
-      startScan: jest.fn()
-    };
+
 
     const config = {
       name: 'scan',
@@ -41,9 +35,10 @@ describe('ScannerProject scanning effect', () => {
     };
 
     const project = new ctx.ScannerProject(config, 'scan');
+    project.initializeScanner({ resources: { underground: { ore: { initialValue: 0, maxDeposits: 1, areaTotal: 100 } } } });
     project.complete();
 
-    expect(ctx.oreScanner.adjustScanningStrength).toHaveBeenCalledWith('ore', 0.5);
-    expect(ctx.oreScanner.startScan).toHaveBeenCalledWith('ore');
+    expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.5);
+    expect(project.scanData.ore.remainingTime).toBeGreaterThan(0);
   });
 });

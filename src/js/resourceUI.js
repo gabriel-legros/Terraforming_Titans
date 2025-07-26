@@ -179,8 +179,19 @@ function updateResourceDisplay(resources) {
           totalElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
         }
 
-        // Update scanning progress if there is scanning strength
-        const scanData = oreScanner.scanData[resourceName];
+        // Update scanning progress if there is scanning strength using ScannerProject instance
+        let scanData;
+        if (typeof projectManager !== 'undefined') {
+          const projName = resourceName === 'geothermal' ? 'geo_satellite' : 'satellite';
+          const scanner = projectManager.projects?.[projName];
+          if (scanner && scanner.scanData) {
+            scanData = scanner.scanData[resourceName];
+          }
+        } else if (typeof oreScanner !== 'undefined') {
+          // Fallback for older saves
+          scanData = oreScanner.scanData[resourceName];
+        }
+
         if (scanData && scanData.currentScanningStrength > 0 && scanningProgressElement) {
           scanningProgressElement.style.display = 'block';
           scanningProgressElement.textContent = `Scanning Progress: ${(scanData.currentScanProgress * 100).toFixed(2)}%`;
