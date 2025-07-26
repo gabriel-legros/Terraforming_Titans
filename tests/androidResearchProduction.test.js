@@ -3,7 +3,7 @@ const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
-describe('spaceship self replication', () => {
+describe('android research production', () => {
   function createContext(flag) {
     const ctx = { console };
     vm.createContext(ctx);
@@ -19,7 +19,7 @@ describe('spaceship self replication', () => {
     ctx.projectManager = null;
     ctx.globalEffects = new EffectableEntity({ description: 'global' });
     if (flag) {
-      ctx.globalEffects.addAndReplace({ type: 'booleanFlag', flagId: 'selfReplicatingShips', value: true, sourceId: 'test' });
+      ctx.globalEffects.addAndReplace({ type: 'booleanFlag', flagId: 'hiveMindAndroids', value: true, sourceId: 'test' });
     }
     function stubResource(val = 0) {
       return {
@@ -32,31 +32,24 @@ describe('spaceship self replication', () => {
         modifyRate: jest.fn()
       };
     }
-    ctx.resources = { colony:{}, surface:{}, underground:{}, atmospheric:{}, special:{ spaceships: stubResource(1000) } };
-    const replicationCode = fs.readFileSync(path.join(__dirname,'..','src/js','advanced-research','self-replicating-ships.js'),'utf8');
-    vm.runInContext(replicationCode + '; this.updateShipReplication = updateShipReplication;', ctx);
+    ctx.resources = { colony:{ androids: stubResource(100), research: stubResource(0) }, surface:{}, underground:{}, atmospheric:{}, special:{} };
+    const code = fs.readFileSync(path.join(__dirname,'..','src/js','advanced-research','hive-mind-androids.js'),'utf8');
+    vm.runInContext(code + '; this.updateAndroidResearch = updateAndroidResearch;', ctx);
     const resourceCode = fs.readFileSync(path.join(__dirname,'..','src/js','resource.js'),'utf8');
     vm.runInContext(resourceCode + '; this.produceResources = produceResources;', ctx);
     return ctx;
   }
 
-  test('replicates when enabled', () => {
+  test('produces research when enabled', () => {
     const ctx = createContext(true);
     vm.runInContext('produceResources(1000, {})', ctx);
-    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1001);
-    expect(ctx.resources.special.spaceships.modifyRate).toHaveBeenCalledWith(1, 'Replication', 'global');
+    expect(ctx.resources.colony.research.value).toBeCloseTo(0.1);
+    expect(ctx.resources.colony.research.modifyRate).toHaveBeenCalledWith(0.1, 'Android Hive Mind', 'global');
   });
 
-  test('respects trillion cap', () => {
-    const ctx = createContext(true);
-    ctx.resources.special.spaceships.value = 1e12 - 1;
-    vm.runInContext('produceResources(1000, {})', ctx);
-    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e12);
-  });
-
-  test('no replication when disabled', () => {
+  test('no production when disabled', () => {
     const ctx = createContext(false);
     vm.runInContext('produceResources(1000, {})', ctx);
-    expect(ctx.resources.special.spaceships.value).toBe(1000);
+    expect(ctx.resources.colony.research.value).toBe(0);
   });
 });
