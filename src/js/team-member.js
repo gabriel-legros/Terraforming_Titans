@@ -1,6 +1,7 @@
 class WGCTeamMember {
-  constructor({ name, classType, level = 1, power = 0, stamina = 0, wit = 0 }) {
-    this.name = name;
+  constructor({ firstName, lastName = '', classType, level = 1, power = 0, stamina = 0, wit = 0 }) {
+    this.firstName = firstName;
+    this.lastName = lastName;
     this.classType = classType;
     this.level = level;
     this.power = power;
@@ -18,10 +19,11 @@ class WGCTeamMember {
     return map[classType] || { power: 0, stamina: 0, wit: 0 };
   }
 
-  static create(name, classType, allocation) {
+  static create(firstName, lastName, classType, allocation) {
     const base = WGCTeamMember.getBaseStats(classType);
     return new WGCTeamMember({
-      name,
+      firstName,
+      lastName,
       classType,
       level: 1,
       power: base.power + (allocation.power || 0),
@@ -30,9 +32,27 @@ class WGCTeamMember {
     });
   }
 
+  getPointsToAllocate() {
+    if (this.level < 1) return 0;
+    const base = WGCTeamMember.getBaseStats(this.classType);
+    const allocated = (this.power - base.power) + (this.stamina - base.stamina) + (this.wit - base.wit);
+    const totalPoints = 5 + ((this.level - 1) * 2);
+    return totalPoints - allocated;
+  }
+
+  allocatePoints(allocation) {
+    const toSpend = (allocation.power || 0) + (allocation.stamina || 0) + (allocation.wit || 0);
+    if (toSpend > this.getPointsToAllocate()) return false;
+    this.power += (allocation.power || 0);
+    this.stamina += (allocation.stamina || 0);
+    this.wit += (allocation.wit || 0);
+    return true;
+  }
+
   toJSON() {
     return {
-      name: this.name,
+      firstName: this.firstName,
+      lastName: this.lastName,
       classType: this.classType,
       level: this.level,
       power: this.power,

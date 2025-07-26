@@ -48,9 +48,11 @@ function generateWGCTeamCards() {
     const slotMarkup = slots.map((m, sIdx) => {
       if (m) {
         const img = classImages[m.classType] || '';
-        return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}">
+        const unspentPoints = m.getPointsToAllocate() > 0 ? '<div class="unspent-points-indicator">!</div>' : '';
+        return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
+          <div class="team-member-name">${m.firstName}</div>
           <img src="${img}" class="team-icon">
-          <span class="edit-icon" data-team="${tIdx}" data-slot="${sIdx}">✎</span>
+          ${unspentPoints}
         </div>`;
       }
       return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
@@ -147,30 +149,42 @@ function closeRecruitDialog() {
 function openRecruitDialog(teamIndex, slotIndex, member) {
   closeRecruitDialog();
   const overlay = document.createElement('div');
-  overlay.classList.add('popup-overlay');
+  overlay.classList.add('wgc-popup-overlay');
 
   const win = document.createElement('div');
-  win.classList.add('popup-window');
+  win.classList.add('wgc-popup-window');
 
   const title = document.createElement('h2');
   title.textContent = member ? 'Edit Member' : 'Recruit Member';
   win.appendChild(title);
 
-  const nameField = document.createElement('input');
-  nameField.type = 'text';
-  nameField.placeholder = 'Name';
-  nameField.value = member ? member.name : '';
-  win.appendChild(nameField);
+  const firstNameField = document.createElement('input');
+  firstNameField.type = 'text';
+  firstNameField.placeholder = 'First Name (required)';
+  firstNameField.value = member ? member.firstName : '';
+  win.appendChild(firstNameField);
+
+  const lastNameField = document.createElement('input');
+  lastNameField.type = 'text';
+  lastNameField.placeholder = 'Last Name';
+  lastNameField.value = member ? member.lastName : '';
+  win.appendChild(lastNameField);
 
   const classSelect = document.createElement('select');
-  ['Team Leader', 'Soldier', 'Natural Scientist', 'Social Scientist'].forEach(c => {
+  let availableClasses = ['Team Leader', 'Soldier', 'Natural Scientist', 'Social Scientist'];
+  if (slotIndex > 0) {
+    availableClasses = availableClasses.filter(c => c !== 'Team Leader');
+  }
+  availableClasses.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c;
     opt.textContent = c;
     classSelect.appendChild(opt);
   });
+
   if (member) classSelect.value = member.classType;
-  if (slotIndex === 0) {
+
+  if (slotIndex === 0 || (member && member.classType === 'Team Leader')) {
     classSelect.value = 'Team Leader';
     classSelect.disabled = true;
   }
@@ -180,57 +194,102 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   level.textContent = 'Level: 1';
   win.appendChild(level);
 
+  const pointsToSpend = member ? member.getPointsToAllocate() : 5;
   const alloc = { power: 0, stamina: 0, wit: 0 };
   const remainingSpan = document.createElement('div');
-  remainingSpan.textContent = 'Points left: 5';
+  remainingSpan.textContent = `Points left: ${pointsToSpend}`;
 
   const statsDiv = document.createElement('div');
+  statsDiv.classList.add('wgc-stats-grid');
+
+  const baseStats = member ? WGCTeamMember.getBaseStats(member.classType) : WGCTeamMember.getBaseStats(classSelect.value);
+  const statValues = {
+    power: member ? member.power : baseStats.power,
+    stamina: member ? member.stamina : baseStats.stamina,
+    wit: member ? member.wit : baseStats.wit
+  };
+
   ['power','stamina','wit'].forEach(stat => {
-    const label = document.createElement('label');
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.min = 0;
-    input.max = 5;
-    input.value = member ? member[stat] - WGCTeamMember.getBaseStats(member.classType)[stat] : 0;
-    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1) + ': ';
-    label.appendChild(input);
-    input.addEventListener('input', () => {
-      alloc[stat] = parseInt(input.value) || 0;
-      const total = alloc.power + alloc.stamina + alloc.wit;
-      if (total > 5) {
-        alloc[stat] -= (total - 5);
-        input.value = alloc[stat];
+    const statContainer = document.createElement('div');
+    statContainer.classList.add('wgc-stat-container');
+
+    const label = document.createElement('span');
+    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
+    statContainer.appendChild(label);
+
+    const valueSpan = document.createElement('span');
+    valueSpan.textContent = statValues[stat];
+    statContainer.appendChild(valueSpan);
+
+    const addButton = document.createElement('button');
+    addButton.textContent = '+';
+    addButton.addEventListener('click', () => {
+      const totalAllocated = alloc.power + alloc.stamina + alloc.wit;
+      if (totalAllocated < pointsToSpend) {
+        alloc[stat]++;
+        valueSpan.textContent = statValues[stat] + alloc[stat];
+        remainingSpan.textContent = `Points left: ${pointsToSpend - (totalAllocated + 1)}`;
       }
-      remainingSpan.textContent = `Points left: ${5 - (alloc.power + alloc.stamina + alloc.wit)}`;
     });
-    if (member) input.disabled = true;
-    statsDiv.appendChild(label);
+    statContainer.appendChild(addButton);
+    statsDiv.appendChild(statContainer);
+  });
+
+  classSelect.addEventListener('change', () => {
+    const newBaseStats = WGCTeamMember.getBaseStats(classSelect.value);
+    statValues.power = newBaseStats.power;
+    statValues.stamina = newBaseStats.stamina;
+    statValues.wit = newBaseStats.wit;
+    const statContainers = statsDiv.querySelectorAll('.wgc-stat-container');
+    statContainers.forEach((container, index) => {
+      const statName = ['power', 'stamina', 'wit'][index];
+      container.querySelector('span:nth-child(2)').textContent = statValues[statName];
+    });
   });
   win.appendChild(statsDiv);
   win.appendChild(remainingSpan);
 
+  const buttonContainer = document.createElement('div');
+  buttonContainer.classList.add('wgc-dialog-buttons');
+
   const confirm = document.createElement('button');
   confirm.textContent = 'Confirm';
   confirm.addEventListener('click', () => {
-    if (!nameField.value.trim()) return;
+    const firstName = firstNameField.value.trim();
+    const lastName = lastNameField.value.trim();
+    if (!firstName) return;
+
     if (member) {
-      warpGateCommand.renameMember(teamIndex, slotIndex, nameField.value.trim());
+      member.firstName = firstName;
+      member.lastName = lastName;
+      member.allocatePoints(alloc);
     } else {
-      const m = WGCTeamMember.create(nameField.value.trim(), classSelect.value, alloc);
+      const m = WGCTeamMember.create(firstName, lastName, classSelect.value, alloc);
       warpGateCommand.recruitMember(teamIndex, slotIndex, m);
     }
     closeRecruitDialog();
-    updateWGCUI();
+    redrawWGCTeamCards();
   });
-  win.appendChild(confirm);
+  buttonContainer.appendChild(confirm);
+
+  const cancel = document.createElement('button');
+  cancel.textContent = 'Cancel';
+  cancel.addEventListener('click', closeRecruitDialog);
+  buttonContainer.appendChild(cancel);
+
+  win.appendChild(buttonContainer);
 
   if (member) {
     const dismiss = document.createElement('button');
     dismiss.textContent = 'Dismiss';
     dismiss.addEventListener('click', () => {
-      warpGateCommand.dismissMember(teamIndex, slotIndex);
-      closeRecruitDialog();
-      updateWGCUI();
+      if (dismiss.textContent === 'Dismiss') {
+        dismiss.textContent = 'Are You Sure?';
+      } else {
+        warpGateCommand.dismissMember(teamIndex, slotIndex);
+        closeRecruitDialog();
+        redrawWGCTeamCards();
+      }
     });
     win.appendChild(dismiss);
   }
@@ -268,19 +327,17 @@ function initializeWGCUI() {
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
       teamContainer.addEventListener('click', e => {
-        const target = e.target instanceof Element ? e.target : e.target.parentElement;
-        const btn = target && target.closest ? target.closest('button') : null;
-        const edit = e.target.classList.contains('edit-icon');
-        if (btn && btn.parentElement.classList.contains('team-slot')) {
-          const slot = btn.parentElement;
-          const t = parseInt(slot.dataset.team, 10);
-          const s = parseInt(slot.dataset.slot, 10);
-          openRecruitDialog(t, s, null);
-        } else if (edit) {
-          const t = parseInt(e.target.dataset.team, 10);
-          const s = parseInt(e.target.dataset.slot, 10);
-          const member = warpGateCommand.teams[t][s];
+        const slot = e.target.closest('.team-slot');
+        if (!slot) return;
+
+        const t = parseInt(slot.dataset.team, 10);
+        const s = parseInt(slot.dataset.slot, 10);
+        const member = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teams[t]) ? warpGateCommand.teams[t][s] : null;
+
+        if (member) {
           openRecruitDialog(t, s, member);
+        } else if (e.target.tagName === 'BUTTON') {
+          openRecruitDialog(t, s, null);
         }
       });
     }
@@ -306,6 +363,9 @@ function updateWGCUI() {
         (warpGateCommand.rdUpgrades[key].max && warpGateCommand.rdUpgrades[key].purchases >= warpGateCommand.rdUpgrades[key].max);
     }
   }
+}
+
+function redrawWGCTeamCards() {
   const teamContainer = document.getElementById('wgc-team-cards');
   if (teamContainer) {
     teamContainer.innerHTML = generateWGCTeamCards();
@@ -319,6 +379,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateWGCVisibility,
     initializeWGCUI,
     updateWGCUI,
+    redrawWGCTeamCards,
     populateRDMenu,
     generateWGCTeamCards,
     generateWGCLayout,
