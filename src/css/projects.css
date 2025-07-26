@@ -581,12 +581,6 @@
 .thruster-power-controls button {
     padding: 2px 4px;
     font-size: 0.7em;
-    border: 1px solid #5a6268;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.thruster-power-controls button:hover {
-    background-color: #5a6268;
 }
