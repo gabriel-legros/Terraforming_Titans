@@ -162,7 +162,34 @@ class ScannerProject extends Project {
   update(deltaTime) {
     super.update(deltaTime);
     if (this.scanData) {
+      if (
+        this.attributes.scanner &&
+        this.attributes.scanner.depositType
+      ) {
+        const depositType = this.attributes.scanner.depositType;
+        const targetStrength =
+          (this.attributes.scanner.searchValue || 0) * this.repeatCount;
+        if (this.scanData[depositType].currentScanningStrength !== targetStrength) {
+          this.adjustScanningStrength(depositType, targetStrength);
+          if (targetStrength > 0) {
+            this.startScan(depositType);
+          }
+        }
+      }
       this.updateScan(deltaTime);
+    } else if (
+      typeof oreScanner !== 'undefined' &&
+      oreScanner.adjustScanningStrength &&
+      this.attributes.scanner &&
+      this.attributes.scanner.depositType
+    ) {
+      const depositType = this.attributes.scanner.depositType;
+      const targetStrength =
+        (this.attributes.scanner.searchValue || 0) * this.repeatCount;
+      oreScanner.adjustScanningStrength(depositType, targetStrength);
+      if (targetStrength > 0 && oreScanner.startScan) {
+        oreScanner.startScan(depositType);
+      }
     }
   }
 
@@ -249,24 +276,22 @@ class ScannerProject extends Project {
       this.attributes.scanner &&
       this.attributes.scanner.canSearchForDeposits
     ) {
-      this.applyScannerEffect(n);
+      this.applyScannerEffect();
     }
     this.activeBuildCount = 1;
   }
 
-  applyScannerEffect(count = 1) {
+  applyScannerEffect() {
     if (
       this.attributes.scanner &&
-      this.attributes.scanner.searchValue &&
       this.attributes.scanner.depositType
     ) {
       const depositType = this.attributes.scanner.depositType;
-      const additionalStrength = this.attributes.scanner.searchValue * count;
-      this.adjustScanningStrength(
-        depositType,
-        this.scanData[depositType].currentScanningStrength + additionalStrength
-      );
-      this.startScan(depositType);
+      if (typeof oreScanner !== 'undefined' && oreScanner.startScan) {
+        oreScanner.startScan(depositType);
+      } else {
+        this.startScan(depositType);
+      }
     }
   }
 
