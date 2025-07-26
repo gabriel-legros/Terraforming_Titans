@@ -375,6 +375,23 @@ const projectParameters = {
     unlocked: false,
     attributes: { }
   },
+  spaceStorage : {
+    type: 'SpaceStorageProject',
+    name : 'Space Storage',
+    category : 'mega',
+    cost: {
+      colony: {
+        metal: 5000000,
+        components: 500000,
+        electronics: 50000
+      }
+    },
+    duration: 300000,
+    description: 'Construct an orbital facility for massive resource storage.',
+    repeatable: false,
+    unlocked: false,
+    attributes: { }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",

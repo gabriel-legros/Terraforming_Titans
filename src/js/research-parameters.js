@@ -1246,7 +1246,16 @@ const researchParameters = {
             value: true
           }
         ]
-      }
+      },
+      {
+        id: 'space_storage',
+        name: 'Space Storage',
+        description: 'Enables construction of an orbital storage facility.',
+        cost: { advancedResearch: 100000 },
+        prerequisites: [],
+        effects: [
+          { target: 'project', targetId: 'spaceStorage', type: 'enable' }
+       },
     ]
   };
   
