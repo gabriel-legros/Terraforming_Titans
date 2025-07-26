@@ -131,6 +131,7 @@ class ScannerProject extends Project {
         continue;
       }
       if (scanData.D_current >= scanData.D_max) {
+        scanData.currentScanningStrength = 0;
         continue;
       }
       if (scanData.remainingTime <= 0) {
@@ -167,9 +168,14 @@ class ScannerProject extends Project {
         this.attributes.scanner.depositType
       ) {
         const depositType = this.attributes.scanner.depositType;
-        const targetStrength =
-          (this.attributes.scanner.searchValue || 0) * this.repeatCount;
-        if (this.scanData[depositType].currentScanningStrength !== targetStrength) {
+        const data = this.scanData[depositType];
+        let targetStrength =
+          (this.attributes.scanner.searchValue || 0) *
+          Math.min(this.repeatCount, this.getColonistLimit());
+        if (data.D_current >= data.D_max) {
+          targetStrength = 0;
+        }
+        if (data.currentScanningStrength !== targetStrength) {
           this.adjustScanningStrength(depositType, targetStrength);
           if (targetStrength > 0) {
             this.startScan(depositType);
@@ -185,7 +191,8 @@ class ScannerProject extends Project {
     ) {
       const depositType = this.attributes.scanner.depositType;
       const targetStrength =
-        (this.attributes.scanner.searchValue || 0) * this.repeatCount;
+        (this.attributes.scanner.searchValue || 0) *
+        Math.min(this.repeatCount, this.getColonistLimit());
       oreScanner.adjustScanningStrength(depositType, targetStrength);
       if (targetStrength > 0 && oreScanner.startScan) {
         oreScanner.startScan(depositType);

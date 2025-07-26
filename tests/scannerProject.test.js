@@ -17,6 +17,8 @@ describe('ScannerProject scanning effect', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
     const ctx = { console, EffectableEntity };
+    ctx.oreScanner = { adjustScanningStrength: jest.fn(), startScan: jest.fn() };
+    ctx.resources = { colony: { colonists: { value: 20000 } } };
     vm.createContext(ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
