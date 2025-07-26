@@ -218,3 +218,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added Space Storage advanced research unlocking a SpaceStorageProject mega project.
 - Androids produce research once Hive Mind Androids advanced research is completed.
 - Added a new special resource "Alien artifact" which starts locked.
+- WGC R&D shop displays a header row labelled "Upgrade" and "Cost (Alien Artifacts)".

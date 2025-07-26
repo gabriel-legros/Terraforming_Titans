@@ -88,3 +88,7 @@
 .wgc-rd-item button {
   margin-left: auto;
 }
+
+.wgc-rd-header {
+  font-weight: bold;
+}

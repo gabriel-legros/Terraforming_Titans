@@ -103,10 +103,35 @@ function createRDItem(key, label) {
   return div;
 }
 
+function createRDHeader() {
+  const div = document.createElement('div');
+  div.classList.add('wgc-rd-item', 'wgc-rd-header');
+
+  const label = document.createElement('span');
+  label.classList.add('wgc-rd-label');
+  label.textContent = 'Upgrade';
+  div.appendChild(label);
+
+  div.appendChild(document.createElement('span'));
+
+  const spacer = document.createElement('span');
+  spacer.style.marginLeft = 'auto';
+  div.appendChild(spacer);
+
+  const cost = document.createElement('span');
+  cost.textContent = 'Cost (Alien Artifacts)';
+  div.appendChild(cost);
+
+  div.appendChild(document.createElement('span'));
+
+  return div;
+}
+
 function populateRDMenu() {
   const menu = document.getElementById('wgc-rd-menu');
   if (!menu) return;
   menu.innerHTML = '';
+  menu.appendChild(createRDHeader());
   for (const key in rdItems) {
     menu.appendChild(createRDItem(key, rdItems[key]));
   }
