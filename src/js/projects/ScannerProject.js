@@ -155,6 +155,29 @@ class ScannerProject extends Project {
       this.el.bMinus.textContent = `-${formatNumber(this.step, true)}`;
     }
   }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      buildCount: this.buildCount,
+      activeBuildCount: this.activeBuildCount,
+      step: this.step,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    if (state.buildCount !== undefined) {
+      this.buildCount = state.buildCount;
+    }
+    if (state.activeBuildCount !== undefined) {
+      this.activeBuildCount = state.activeBuildCount;
+    }
+    if (state.step !== undefined) {
+      this.step = state.step;
+    }
+  }
+
 }
 
 if (typeof globalThis !== 'undefined') {
