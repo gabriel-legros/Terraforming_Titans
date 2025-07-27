@@ -131,7 +131,9 @@ class ScannerProject extends Project {
   updateScan(deltaTime) {
     for (const depositType in this.scanData) {
       const scanData = this.scanData[depositType];
-      scanData.D_current = resources.underground[depositType].value;
+      if (resources && resources.underground && resources.underground[depositType] && resources.underground[depositType].value !== undefined) {
+        scanData.D_current = resources.underground[depositType].value;
+      }
       if (!scanData) {
         console.log(`Invalid deposit type: ${depositType}`);
         continue;
@@ -354,7 +356,11 @@ class ScannerProject extends Project {
 
     this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0 };
 
-    const refresh = () => updateProjectUI(this.name);
+    const refresh = () => {
+      if (typeof updateProjectUI === 'function') {
+        updateProjectUI(this.name);
+      }
+    };
     bPlus.onclick = () => { this.adjustBuildCount(this.step); refresh(); };
     bMinus.onclick = () => { this.adjustBuildCount(-this.step); refresh(); };
     bMul.onclick = () => { this.step *= 10; refresh(); };
