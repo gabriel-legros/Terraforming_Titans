@@ -2,11 +2,28 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
+const { Building } = require('../src/js/building.js');
 
 describe('Deeper mining effect updates with depth', () => {
-  test('ore mine multiplier adjusts when average depth changes', () => {
-    const oreMine = new EffectableEntity({ description: 'oreMine' });
-    oreMine.name = 'oreMine';
+  test('ore mine multipliers adjust when average depth changes', () => {
+    global.maintenanceFraction = 0.1;
+    const oreConfig = {
+      name: 'Ore Mine',
+      category: 'resource',
+      cost: { colony: { metal: 50, components: 10 } },
+      consumption: { colony: { energy: 1 } },
+      production: { colony: { metal: 1 } },
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: true,
+      maintenanceFactor: 1,
+      requiresDeposit: null,
+      requiresWorker: 0,
+      unlocked: true
+    };
+    const oreMine = new Building(oreConfig, 'oreMine');
     oreMine.count = 2;
     global.buildings = { oreMine };
     global.EffectableEntity = EffectableEntity;
@@ -52,10 +69,22 @@ describe('Deeper mining effect updates with depth', () => {
     project.applyCompletionEffect();
     let effect = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining');
     expect(effect.value).toBe(2);
+    let consume = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_consumption');
+    expect(consume.value).toBe(2);
+    let maintMetal = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_maintenance_metal');
+    expect(maintMetal.value).toBe(2);
+    let maintComp = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_maintenance_components');
+    expect(maintComp.value).toBe(2);
 
     oreMine.count = 3;
     project.registerMine();
     effect = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining');
     expect(effect.value).toBeCloseTo(project.averageDepth);
+    consume = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_consumption');
+    expect(consume.value).toBeCloseTo(project.averageDepth);
+    maintMetal = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_maintenance_metal');
+    expect(maintMetal.value).toBeCloseTo(project.averageDepth);
+    maintComp = oreMine.activeEffects.find(e => e.effectId === 'deeper_mining_maintenance_components');
+    expect(maintComp.value).toBeCloseTo(project.averageDepth);
   });
 });

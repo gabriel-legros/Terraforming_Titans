@@ -73,19 +73,39 @@ class DeeperMiningProject extends AndroidProject {
 
   applyCompletionEffect() {
     this.attributes.completionEffect.forEach((effect) => {
-      const scaledEffect = { ...effect };
+      const baseValue = effect.value;
+      const depth = this.attributes.effectScaling ? this.averageDepth : 1;
+      const value = baseValue * depth;
 
-      // Apply effect scaling if the attribute is enabled
-      if (this.attributes.effectScaling) {
-        const baseValue = effect.value; // Use the base value from the project definition
-        const depth = this.averageDepth; // Total completions
-        scaledEffect.value = baseValue * depth; // Compute scaled value
+      const baseId = effect.effectId || 'deeper_mining';
 
-        // Use addAndReplace to replace any existing effect with the same effectId
-        addEffect({ ...scaledEffect, sourceId: this });
-      } else {
-        // If effectScaling is not enabled, add the effect normally
-        addEffect({ ...effect, sourceId: this });
+      addEffect({ ...effect, value, sourceId: this });
+
+      // Scale ore mine consumption
+      addEffect({
+        target: effect.target,
+        targetId: effect.targetId,
+        type: 'consumptionMultiplier',
+        effectId: `${baseId}_consumption`,
+        value,
+        sourceId: this
+      });
+
+      // Scale ore mine maintenance for each cost resource
+      const oreMine = buildings?.[effect.targetId];
+      if (oreMine?.cost?.colony) {
+        for (const res in oreMine.cost.colony) {
+          addEffect({
+            target: effect.target,
+            targetId: effect.targetId,
+            type: 'maintenanceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: res,
+            effectId: `${baseId}_maintenance_${res}`,
+            value,
+            sourceId: this
+          });
+        }
       }
     });
   }
