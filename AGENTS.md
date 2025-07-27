@@ -203,6 +203,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Android assignment speed tooltip now states "1 + sqrt(androids assigned / ore mines built)".
 - Deeper mining projects track maximum depth instead of repeat count and display average depth in the UI.
 - Deeper mining effects now reapply when average depth changes and old saves default depth to completions.
+- Deeper mining now multiplies ore mine consumption and maintenance in step with its production bonus.
 - Added Warp Gate Command manager with a WGC subtab (wgc.js and wgcUI.js). The subtab remains hidden until unlocked and the manager persists across planets.
 - Planetary Thrusters now use continuous power with internal element references and save/load their investment state.
 - Planetary Thrusters UI now calculates delta-v and energy using the entered targets and hides spiral Δv until moons escape.
