@@ -10,6 +10,14 @@ describe('WGC team members', () => {
     expect(m.power).toBe(3);
     expect(m.stamina).toBe(2);
     expect(m.wit).toBe(1);
+    expect(m.health).toBe(100);
+    expect(m.maxHealth).toBe(100);
+  });
+
+  test('max health scales with level', () => {
+    const m = new WGCTeamMember({ firstName: 'Eve', classType: 'Soldier', level: 5 });
+    expect(m.maxHealth).toBe(104);
+    expect(m.health).toBe(104);
   });
 
   test('save and load preserves members', () => {
@@ -21,5 +29,7 @@ describe('WGC team members', () => {
     wgc2.loadState(data);
     expect(wgc2.teams[0][0].firstName).toBe('Alice');
     expect(wgc2.teams[0][0].power).toBe(member.power);
+    expect(wgc2.teams[0][0].health).toBe(member.health);
+    expect(wgc2.teams[0][0].maxHealth).toBe(member.maxHealth);
   });
 });

@@ -1,5 +1,5 @@
 class WGCTeamMember {
-  constructor({ firstName, lastName = '', classType, level = 1, power = 0, stamina = 0, wit = 0 }) {
+  constructor({ firstName, lastName = '', classType, level = 1, power = 0, stamina = 0, wit = 0, health, maxHealth }) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.classType = classType;
@@ -7,6 +7,8 @@ class WGCTeamMember {
     this.power = power;
     this.stamina = stamina;
     this.wit = wit;
+    this.maxHealth = typeof maxHealth === 'number' ? maxHealth : 100 + this.level - 1;
+    this.health = typeof health === 'number' ? health : this.maxHealth;
   }
 
   static getBaseStats(classType) {
@@ -57,7 +59,9 @@ class WGCTeamMember {
       level: this.level,
       power: this.power,
       stamina: this.stamina,
-      wit: this.wit
+      wit: this.wit,
+      health: this.health,
+      maxHealth: this.maxHealth
     };
   }
 }
