@@ -10,6 +10,7 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
+    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0 }));
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -80,7 +81,37 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   update(_delta) {
-    // placeholder for future behavior
+    const seconds = _delta / 1000;
+    this.operations.forEach(op => {
+      if (op.active) {
+        op.timer += seconds;
+        op.progress = op.timer / 600;
+        if (op.progress >= 1) {
+          op.timer = 0;
+          op.progress = 0;
+        }
+      }
+    });
+  }
+
+  startOperation(teamIndex) {
+    const team = this.teams[teamIndex];
+    if (!team || team.some(m => !m)) return false;
+    const op = this.operations[teamIndex];
+    if (!op) return false;
+    op.active = true;
+    op.progress = 0;
+    op.timer = 0;
+    return true;
+  }
+
+  recallTeam(teamIndex) {
+    const op = this.operations[teamIndex];
+    if (op) {
+      op.active = false;
+      op.progress = 0;
+      op.timer = 0;
+    }
   }
 
   recruitMember(teamIndex, slotIndex, member) {
@@ -107,7 +138,12 @@ class WarpGateCommand extends EffectableEntity {
         o[k] = this.rdUpgrades[k].purchases;
         return o;
       }, {}),
-      teams: this.teams.map(team => team.map(m => m ? m.toJSON() : null))
+      teams: this.teams.map(team => team.map(m => m ? m.toJSON() : null)),
+      operations: this.operations.map(op => ({
+        active: op.active,
+        progress: op.progress,
+        timer: op.timer
+      }))
     };
   }
 
@@ -124,6 +160,13 @@ class WarpGateCommand extends EffectableEntity {
       this.teams = data.teams.map(team =>
         Array.isArray(team) ? team.map(m => (m ? new WGCTeamMember(m) : null)) : [null, null, null, null]
       );
+    }
+    if (Array.isArray(data.operations)) {
+      this.operations = data.operations.map(op => ({
+        active: !!op.active,
+        progress: op.progress || 0,
+        timer: op.timer || 0
+      }));
     }
   }
 }

@@ -1,6 +1,5 @@
 class WGCTeamMember {
   constructor({ firstName, lastName = '', classType, level = 1, power = 0, athletics = 0, wit = 0, health, maxHealth }) {
-  constructor({ firstName, lastName = '', classType, level = 1, power = 0, athletics = 0, wit = 0 }) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.classType = classType;

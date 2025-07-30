@@ -229,3 +229,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Import colonists adds its colonist gain to resource rates when auto-started.
 - Satellite projects show their scaled cost in resource rates when auto-started.
 - WGC team member skill "Stamina" renamed to "Athletics".
+- WGC teams can now start operations when fully staffed. The Start button shows a 10-minute progress bar that loops automatically.
