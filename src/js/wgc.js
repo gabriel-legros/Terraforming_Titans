@@ -264,8 +264,7 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary
       })),
       log: this.log.slice(),
-      timer: op.timer
-      })),
+      timer: op.timer,
       totalOperations: this.totalOperations
     };
   }
