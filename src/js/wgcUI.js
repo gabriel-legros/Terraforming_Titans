@@ -45,6 +45,7 @@ function updateWGCVisibility() {
 function generateWGCTeamCards() {
   return teamNames.map((name, tIdx) => {
     const slots = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teams[tIdx]) ? warpGateCommand.teams[tIdx] : [null, null, null, null];
+    const op = (typeof warpGateCommand !== 'undefined' && warpGateCommand.operations[tIdx]) ? warpGateCommand.operations[tIdx] : { active: false, progress: 0 };
     const slotMarkup = slots.map((m, sIdx) => {
       if (m) {
         const img = classImages[m.classType] || '';
@@ -58,14 +59,17 @@ function generateWGCTeamCards() {
       return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
     }).join('');
     return `
-      <div class="wgc-team-card">
+      <div class="wgc-team-card" data-team="${tIdx}">
         <div class="team-header">Team ${name}</div>
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-controls">
-            <button>Start</button>
-            <button>Recall</button>
+            <button class="start-button" data-team="${tIdx}">Start</button>
+            <button class="recall-button" data-team="${tIdx}">Recall</button>
           </div>
+        </div>
+        <div class="operation-progress${op.active ? '' : ' hidden'}">
+          <div class="operation-progress-bar" style="width: ${op.progress * 100}%"></div>
         </div>
       </div>`;
   }).join('');
@@ -327,6 +331,19 @@ function initializeWGCUI() {
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
       teamContainer.addEventListener('click', e => {
+        if (e.target.classList.contains('start-button')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          warpGateCommand.startOperation(t);
+          updateWGCUI();
+          return;
+        }
+        if (e.target.classList.contains('recall-button')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          warpGateCommand.recallTeam(t);
+          updateWGCUI();
+          return;
+        }
+
         const slot = e.target.closest('.team-slot');
         if (!slot) return;
 
@@ -363,6 +380,29 @@ function updateWGCUI() {
         (warpGateCommand.rdUpgrades[key].max && warpGateCommand.rdUpgrades[key].purchases >= warpGateCommand.rdUpgrades[key].max);
     }
   }
+
+  teamNames.forEach((_, tIdx) => {
+    const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    if (!card) return;
+    const startBtn = card.querySelector('.start-button');
+    const recallBtn = card.querySelector('.recall-button');
+    const progressContainer = card.querySelector('.operation-progress');
+    const progressBar = card.querySelector('.operation-progress-bar');
+    const team = warpGateCommand.teams[tIdx] || [];
+    const full = team.every(m => m);
+    const op = warpGateCommand.operations[tIdx];
+    if (startBtn) startBtn.disabled = !full || op.active;
+    if (recallBtn) recallBtn.disabled = !op.active;
+    if (progressContainer && progressBar) {
+      if (op.active) {
+        progressContainer.classList.remove('hidden');
+        progressBar.style.width = `${Math.floor(op.progress * 100)}%`;
+      } else {
+        progressContainer.classList.add('hidden');
+        progressBar.style.width = '0%';
+      }
+    }
+  });
 }
 
 function redrawWGCTeamCards() {
