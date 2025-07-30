@@ -203,3 +203,21 @@
   width: 0%;
   transition: width 0.5s linear;
 }
+
+.operation-summary {
+  font-size: 0.8em;
+  margin-top: 2px;
+}
+
+#wgc-log-container {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+
+#wgc-log {
+  white-space: pre-wrap;
+  font-size: 0.8em;
+}

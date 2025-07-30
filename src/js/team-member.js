@@ -1,5 +1,5 @@
 class WGCTeamMember {
-  constructor({ firstName, lastName = '', classType, level = 1, power = 0, athletics = 0, wit = 0, health, maxHealth }) {
+  constructor({ firstName, lastName = '', classType, level = 1, power = 0, athletics = 0, wit = 0, health, maxHealth, xp = 0 }) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.classType = classType;
@@ -7,6 +7,7 @@ class WGCTeamMember {
     this.power = power;
     this.athletics = athletics;
     this.wit = wit;
+    this.xp = xp;
     this.maxHealth = typeof maxHealth === 'number' ? maxHealth : 100 + this.level - 1;
     this.health = typeof health === 'number' ? health : this.maxHealth;
   }
@@ -60,6 +61,7 @@ class WGCTeamMember {
       power: this.power,
       athletics: this.athletics,
       wit: this.wit,
+      xp: this.xp,
       health: this.health,
       maxHealth: this.maxHealth
     };
