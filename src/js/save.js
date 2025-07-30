@@ -15,6 +15,7 @@ function getGameState() {
     journalHistorySources: journalHistorySources,
     goldenAsteroid: goldenAsteroid.saveState(),
     solisManager: solisManager.saveState(),
+    warpGateCommand: warpGateCommand.saveState(),
     lifeDesigner: lifeDesigner.saveState(),
     milestonesManager: milestonesManager.saveState(),
     skills: skillManager.saveState(),
@@ -210,6 +211,19 @@ function loadGame(slotOrCustomString) {
       }
       if (typeof updateSolisVisibility === 'function') {
         updateSolisVisibility();
+      }
+    }
+
+    if(gameState.warpGateCommand){
+      warpGateCommand.loadState(gameState.warpGateCommand);
+      if (typeof warpGateCommand.reapplyEffects === 'function') {
+        warpGateCommand.reapplyEffects();
+      }
+      if (typeof updateWGCUI === 'function') {
+        updateWGCUI();
+      }
+      if (typeof updateWGCVisibility === 'function') {
+        updateWGCVisibility();
       }
     }
 

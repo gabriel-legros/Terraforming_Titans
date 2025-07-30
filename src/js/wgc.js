@@ -179,7 +179,9 @@ class WarpGateCommand extends EffectableEntity {
 
         const loops = Math.floor(op.timer / 600);
         if (loops > 0) {
-          this.finishOperations(idx);
+          for (let i = 0; i < loops; i++) {
+            this.finishOperation(idx);
+          }
           this.totalOperations += loops;
           op.timer -= loops * 600;
         }
@@ -264,7 +266,6 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary
       })),
       log: this.log.slice(),
-      timer: op.timer,
       totalOperations: this.totalOperations
     };
   }
