@@ -16,3 +16,8 @@ if (typeof global.window !== 'undefined') {
     global.window.cancelAnimationFrame = global.cancelAnimationFrame;
   }
 }
+
+// Silence noisy console output during tests
+['log', 'info', 'warn', 'error'].forEach(method => {
+  jest.spyOn(console, method).mockImplementation(() => {});
+});
