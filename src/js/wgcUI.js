@@ -195,7 +195,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   win.appendChild(level);
 
   const pointsToSpend = member ? member.getPointsToAllocate() : 5;
-  const alloc = { power: 0, stamina: 0, wit: 0 };
+  const alloc = { power: 0, athletics: 0, wit: 0 };
   const remainingSpan = document.createElement('div');
   remainingSpan.textContent = `Points left: ${pointsToSpend}`;
 
@@ -205,11 +205,11 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const baseStats = member ? WGCTeamMember.getBaseStats(member.classType) : WGCTeamMember.getBaseStats(classSelect.value);
   const statValues = {
     power: member ? member.power : baseStats.power,
-    stamina: member ? member.stamina : baseStats.stamina,
+    athletics: member ? member.athletics : baseStats.athletics,
     wit: member ? member.wit : baseStats.wit
   };
 
-  ['power','stamina','wit'].forEach(stat => {
+  ['power','athletics','wit'].forEach(stat => {
     const statContainer = document.createElement('div');
     statContainer.classList.add('wgc-stat-container');
 
@@ -224,7 +224,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     const addButton = document.createElement('button');
     addButton.textContent = '+';
     addButton.addEventListener('click', () => {
-      const totalAllocated = alloc.power + alloc.stamina + alloc.wit;
+      const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
       if (totalAllocated < pointsToSpend) {
         alloc[stat]++;
         valueSpan.textContent = statValues[stat] + alloc[stat];
@@ -238,11 +238,11 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   classSelect.addEventListener('change', () => {
     const newBaseStats = WGCTeamMember.getBaseStats(classSelect.value);
     statValues.power = newBaseStats.power;
-    statValues.stamina = newBaseStats.stamina;
+    statValues.athletics = newBaseStats.athletics;
     statValues.wit = newBaseStats.wit;
     const statContainers = statsDiv.querySelectorAll('.wgc-stat-container');
     statContainers.forEach((container, index) => {
-      const statName = ['power', 'stamina', 'wit'][index];
+      const statName = ['power', 'athletics', 'wit'][index];
       container.querySelector('span:nth-child(2)').textContent = statValues[statName];
     });
   });
