@@ -231,3 +231,6 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC team member skill "Stamina" renamed to "Athletics".
 - WGC teams can now start operations when fully staffed. The Start button shows a 10-minute progress bar that loops automatically.
 - Operations now feature random weighted challenges each minute. Results are logged, grant XP and may yield Alien artifacts when successful.
+- WGC tracks total operations completed, displaying the count under the R&D menu.
+  Teams Beta, Gamma, Delta and Epsilon remain locked until 100, 500, 1000 and
+  5000 operations respectively.

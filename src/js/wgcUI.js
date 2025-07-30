@@ -9,6 +9,7 @@ const rdItems = {
 };
 const rdElements = {};
 const teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
+const teamUnlocks = [0, 100, 500, 1000, 5000];
 const classImages = {
   'Team Leader': 'assets/images/team_leader.png',
   'Soldier': 'assets/images/soldier.png',
@@ -58,6 +59,8 @@ function generateWGCTeamCards() {
       }
       return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
     }).join('');
+    const unlocked = (typeof warpGateCommand !== 'undefined' && warpGateCommand.totalOperations >= teamUnlocks[tIdx]);
+    const lockMarkup = unlocked ? '' : `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>Unlocks at ${teamUnlocks[tIdx]}</div>`;
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="team-header">Team ${name}</div>
@@ -72,6 +75,7 @@ function generateWGCTeamCards() {
           <div class="operation-progress-bar" style="width: ${op.progress * 100}%"></div>
         </div>
         <div class="operation-summary${op.active ? '' : ' hidden'}">${op.summary || ''}</div>
+        ${lockMarkup}
       </div>`;
   }).join('');
 }
@@ -312,6 +316,7 @@ function generateWGCLayout() {
         <div id="wgc-rd-section">
           <h3>R&amp;D</h3>
           <div id="wgc-rd-menu"></div>
+          <div id="wgc-operation-count"></div>
         </div>
         <div id="wgc-teams-section">
           <h3>Teams</h3>
@@ -372,6 +377,10 @@ function initializeWGCUI() {
 }
 
 function updateWGCUI() {
+  const countEl = document.getElementById('wgc-operation-count');
+  if (countEl) {
+    countEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
+  }
   for (const key in rdElements) {
     const el = rdElements[key];
     if (!el) continue;
@@ -397,11 +406,17 @@ function updateWGCUI() {
     const progressContainer = card.querySelector('.operation-progress');
     const progressBar = card.querySelector('.operation-progress-bar');
     const summaryEl = card.querySelector('.operation-summary');
+    const lockOverlay = card.querySelector('.wgc-team-locked');
     const team = warpGateCommand.teams[tIdx] || [];
     const full = team.every(m => m);
     const op = warpGateCommand.operations[tIdx];
-    if (startBtn) startBtn.disabled = !full || op.active;
-    if (recallBtn) recallBtn.disabled = !op.active;
+    const unlocked = warpGateCommand.totalOperations >= teamUnlocks[tIdx];
+    if (lockOverlay) {
+      if (unlocked) lockOverlay.classList.add('hidden');
+      else lockOverlay.classList.remove('hidden');
+    }
+    if (startBtn) startBtn.disabled = !unlocked || !full || op.active;
+    if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
     if (progressContainer && progressBar) {
       if (op.active) {
         progressContainer.classList.remove('hidden');
