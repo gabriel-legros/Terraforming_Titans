@@ -225,3 +225,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Scanning stops and the progress display hides once deposits reach their planetary cap.
 
 - D_current now initializes from the matching deposit resource value.
+- Import colonists adds its colonist gain to resource rates when auto-started.
+- Satellite projects show their scaled cost in resource rates when auto-started.

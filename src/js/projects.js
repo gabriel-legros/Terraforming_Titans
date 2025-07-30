@@ -325,7 +325,37 @@ class Project extends EffectableEntity {
 
 
   estimateProjectCostAndGain() {
-    // Default implementation intentionally left blank
+    if (this.isActive && this.autoStart) {
+      const rate = 1000 / this.getEffectiveDuration();
+
+      const cost = this.getScaledCost();
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          resources[category][resource].modifyRate(
+            -cost[category][resource] * rate,
+            this.displayName,
+            'project'
+          );
+        }
+      }
+
+      if (this.attributes && this.attributes.resourceGain) {
+        const gain = this.getEffectiveResourceGain();
+        for (const category in gain) {
+          for (const resource in gain[category]) {
+            resources[category][resource].modifyRate(
+              gain[category][resource] * rate,
+              this.displayName,
+              'project'
+            );
+          }
+        }
+      }
+    }
+  }
+
+  estimateCostAndGain() {
+    this.estimateProjectCostAndGain();
   }
 
   saveState() {
