@@ -234,3 +234,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC tracks total operations completed, displaying the count under the R&D menu.
   Teams Beta, Gamma, Delta and Epsilon remain locked until 100, 500, 1000 and
   5000 operations respectively.
+- Jest setup now suppresses console output for quieter test runs.
