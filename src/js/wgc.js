@@ -11,6 +11,7 @@ class WarpGateCommand extends EffectableEntity {
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
     this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0 }));
+    this.totalOperations = 0;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -85,11 +86,12 @@ class WarpGateCommand extends EffectableEntity {
     this.operations.forEach(op => {
       if (op.active) {
         op.timer += seconds;
-        op.progress = op.timer / 600;
-        if (op.progress >= 1) {
-          op.timer = 0;
-          op.progress = 0;
+        const loops = Math.floor(op.timer / 600);
+        if (loops > 0) {
+          this.totalOperations += loops;
+          op.timer -= loops * 600;
         }
+        op.progress = op.timer / 600;
       }
     });
   }
@@ -143,7 +145,8 @@ class WarpGateCommand extends EffectableEntity {
         active: op.active,
         progress: op.progress,
         timer: op.timer
-      }))
+      })),
+      totalOperations: this.totalOperations
     };
   }
 
@@ -168,6 +171,7 @@ class WarpGateCommand extends EffectableEntity {
         timer: op.timer || 0
       }));
     }
+    this.totalOperations = data.totalOperations || 0;
   }
 }
 

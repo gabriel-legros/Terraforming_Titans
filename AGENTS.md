@@ -230,3 +230,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Satellite projects show their scaled cost in resource rates when auto-started.
 - WGC team member skill "Stamina" renamed to "Athletics".
 - WGC teams can now start operations when fully staffed. The Start button shows a 10-minute progress bar that loops automatically.
+- WGC tracks total operations completed, displaying the count under the R&D menu.
+  Teams Beta, Gamma, Delta and Epsilon remain locked until 100, 500, 1000 and
+  5000 operations respectively.
