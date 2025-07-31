@@ -94,7 +94,7 @@ class WarpGateCommand extends EffectableEntity {
       case 'individual': {
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
-        const member = members[Math.floor(Math.random() * members.length)];
+        const member = isNodeWGC ? members[0] : members[Math.floor(Math.random() * members.length)];
         skillTotal = member[event.skill];
         rollResult = this.roll(1);
         dc = 10 + difficulty;
