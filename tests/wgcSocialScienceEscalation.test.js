@@ -14,7 +14,7 @@ describe('WGC social science escalation', () => {
     const res = wgc.resolveEvent(0, socialEvent);
     expect(res.success).toBe(false);
     expect(wgc.logs[0].length).toBe(1);
-    const next = wgc.chooseEvent();
+    const next = wgc.chooseEvent(0);
     expect(next.type).toBe('combat');
     expect(next.difficultyMultiplier).toBeCloseTo(1.25);
   });

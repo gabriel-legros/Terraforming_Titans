@@ -5,7 +5,7 @@ if (typeof globalThis.WGCTeamMember === 'undefined' && isNodeWGC) {
   } catch (e) {}
 }
 
-const operationEvents = [
+const baseOperationEvents = [
   { name: 'Team Power Challenge', type: 'team', skill: 'power', weight: 1 },
   { name: 'Team Athletics Challenge', type: 'team', skill: 'athletics', weight: 1 },
   { name: 'Team Wits Challenge', type: 'team', skill: 'wit', weight: 1 },
@@ -26,6 +26,7 @@ class WarpGateCommand extends EffectableEntity {
     this.teamOperationCounts = Array(5).fill(0);
     this.teamNextOperationNumber = Array(5).fill(1);
     this.logs = Array.from({ length: 5 }, () => []);
+    this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral' }));
     this.totalOperations = 0;
     this.pendingCombat = false;
     this.combatDifficulty = 1;
@@ -45,22 +46,35 @@ class WarpGateCommand extends EffectableEntity {
     if (log.length > 100) log.shift();
   }
 
-  chooseEvent() {
+  chooseEvent(teamIndex = 0) {
     if (this.pendingCombat) {
       this.pendingCombat = false;
-      const combatEvent = operationEvents.find(e => e.type === 'combat');
+      const combatEvent = baseOperationEvents.find(e => e.type === 'combat');
       const event = Object.assign({}, combatEvent, { difficultyMultiplier: this.combatDifficulty });
       this.combatDifficulty = 1;
       return event;
     }
 
-    const total = operationEvents.reduce((s, e) => s + (e.weight || 1), 0);
+    const events = baseOperationEvents.map(ev => {
+      const e = { ...ev };
+      const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
+      if (e.name === 'Social Science challenge') {
+        if (stance === 'Negotiation') e.weight *= 2;
+        if (stance === 'Aggressive') e.weight *= 0.5;
+      }
+      if (e.type === 'combat') {
+        if (stance === 'Negotiation') e.weight *= 0.5;
+        if (stance === 'Aggressive') e.weight *= 2;
+      }
+      return e;
+    });
+    const total = events.reduce((s, e) => s + (e.weight || 1), 0);
     let r = Math.random() * total;
-    for (const ev of operationEvents) {
+    for (const ev of events) {
       r -= ev.weight || 1;
       if (r < 0) return ev;
     }
-    return operationEvents[0];
+    return events[0];
   }
 
   roll(dice) {
@@ -158,7 +172,7 @@ class WarpGateCommand extends EffectableEntity {
         this.pendingCombat = true;
         this.combatDifficulty = 1.25;
       } else {
-        const combatEvent = operationEvents.find(e => e.type === 'combat');
+        const combatEvent = baseOperationEvents.find(e => e.type === 'combat');
         this.resolveEvent(teamIndex, combatEvent);
       }
     }
@@ -242,7 +256,7 @@ class WarpGateCommand extends EffectableEntity {
         op.timer += seconds;
         const curr = Math.floor(op.timer / 60);
         for (let t = prev; t < curr && t < 9; t++) {
-          this.resolveEvent(idx, this.chooseEvent());
+          this.resolveEvent(idx, this.chooseEvent(idx));
         }
 
         const loops = Math.floor(op.timer / 600);
@@ -340,6 +354,12 @@ class WarpGateCommand extends EffectableEntity {
     if (m) m.name = name;
   }
 
+  setStance(teamIndex, value) {
+    if (this.stances[teamIndex]) {
+      this.stances[teamIndex].hazardousBiomass = value;
+    }
+  }
+
   saveState() {
     return {
       enabled: this.enabled,
@@ -363,7 +383,8 @@ class WarpGateCommand extends EffectableEntity {
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
       pendingCombat: this.pendingCombat,
-      combatDifficulty: this.combatDifficulty
+      combatDifficulty: this.combatDifficulty,
+      stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass }))
     };
   }
 
@@ -401,6 +422,9 @@ class WarpGateCommand extends EffectableEntity {
     }
     if (Array.isArray(data.logs)) {
       this.logs = data.logs.map(l => l.slice(-100));
+    }
+    if (Array.isArray(data.stances)) {
+      this.stances = data.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass || 'Neutral' }));
     }
     this.totalOperations = data.totalOperations || 0;
     this.pendingCombat = data.pendingCombat || false;

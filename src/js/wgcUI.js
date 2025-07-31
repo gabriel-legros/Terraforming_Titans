@@ -65,11 +65,20 @@ function generateWGCTeamCards() {
     const unlocked = (typeof warpGateCommand !== 'undefined' && warpGateCommand.totalOperations >= teamUnlocks[tIdx]);
     const lockMarkup = unlocked ? '' :
       `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations</div>`;
+    const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="team-header">Team ${name}</div>
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
+          <div class="team-stance">
+            <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive does the opposite.">&#9432;</span></label>
+            <select class="hbi-select" data-team="${tIdx}">
+              <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+              <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
+              <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
+            </select>
+          </div>
           <div class="team-controls">
             <div class="difficulty-container">
               <span>Difficulty</span>
@@ -392,6 +401,13 @@ function initializeWGCUI() {
           openRecruitDialog(t, s, null);
         }
       });
+      teamContainer.addEventListener('change', e => {
+        if (e.target.classList.contains('hbi-select')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          warpGateCommand.setStance(t, e.target.value);
+          updateWGCUI();
+        }
+      });
     }
     populateRDMenu();
   }
@@ -429,6 +445,7 @@ function updateWGCUI() {
     const startBtn = card.querySelector('.start-button');
     const recallBtn = card.querySelector('.recall-button');
     const diffInput = card.querySelector('.difficulty-input');
+    const stanceSelect = card.querySelector('.hbi-select');
     const progressContainer = card.querySelector('.operation-progress');
     const progressBar = card.querySelector('.operation-progress-bar');
     const summaryEl = card.querySelector('.operation-summary');
@@ -446,6 +463,10 @@ function updateWGCUI() {
     if (diffInput) {
       diffInput.value = op.difficulty || 0;
       diffInput.disabled = op.active;
+    }
+    if (stanceSelect) {
+      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx] ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
+      stanceSelect.value = val;
     }
     if (progressContainer && progressBar) {
       if (op.active) {
