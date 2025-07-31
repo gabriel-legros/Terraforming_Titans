@@ -63,7 +63,8 @@ function generateWGCTeamCards() {
       return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
     }).join('');
     const unlocked = (typeof warpGateCommand !== 'undefined' && warpGateCommand.totalOperations >= teamUnlocks[tIdx]);
-    const lockMarkup = unlocked ? '' : `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>Unlocks at ${teamUnlocks[tIdx]}</div>`;
+    const lockMarkup = unlocked ? '' :
+      `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations</div>`;
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="team-header">Team ${name}</div>
@@ -200,9 +201,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     classSelect.appendChild(opt);
   });
 
-  if (member) classSelect.value = member.classType;
-
-  if (slotIndex === 0 || (member && member.classType === 'Team Leader')) {
+  if (member) {
+    classSelect.value = member.classType;
+    classSelect.disabled = true;
+  } else if (slotIndex === 0) {
     classSelect.value = 'Team Leader';
     classSelect.disabled = true;
   }

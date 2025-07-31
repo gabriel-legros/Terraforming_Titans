@@ -254,3 +254,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
+- Team member class selection becomes locked once recruited.
