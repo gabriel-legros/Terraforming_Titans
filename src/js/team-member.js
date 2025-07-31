@@ -39,8 +39,25 @@ class WGCTeamMember {
     if (this.level < 1) return 0;
     const base = WGCTeamMember.getBaseStats(this.classType);
     const allocated = (this.power - base.power) + (this.athletics - base.athletics) + (this.wit - base.wit);
-    const totalPoints = 5 + ((this.level - 1) * 2);
+    const totalPoints = 5 + (this.level - 1);
     return totalPoints - allocated;
+  }
+
+  getXpForNextLevel() {
+    return 10 * this.level * this.level;
+  }
+
+  addXP(amount = 0) {
+    if (amount <= 0) return;
+    this.xp += amount;
+    let needed = this.getXpForNextLevel();
+    while (this.xp >= needed) {
+      this.xp -= needed;
+      this.level += 1;
+      this.maxHealth = 100 + this.level - 1;
+      if (this.health > this.maxHealth) this.health = this.maxHealth;
+      needed = this.getXpForNextLevel();
+    }
   }
 
   allocatePoints(allocation) {

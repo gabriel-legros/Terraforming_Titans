@@ -247,3 +247,4 @@ second time they speak in a chapter to help clarify who is talking.
   increases artifact rewards by 10% per level. Failed individual checks deal
   10HP damage per level to the chosen member while failed team checks damage all
   members for 10HP.
+- Team members gain levels after earning XP: 10 XP for level 2 with requirements scaling quadratically. Level ups increase Max Health and add one stat point.
