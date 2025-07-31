@@ -22,7 +22,8 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '' }));
+    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '', number: 1 }));
+    this.teamOperationCounts = Array(5).fill(0);
     this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
     this.pendingCombat = false;
@@ -132,7 +133,7 @@ class WarpGateCommand extends EffectableEntity {
     const rollsStr = rollResult.rolls.join(',');
     const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
-    this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
+    this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
     if (!success && event.escalate) {
       if (event.specialty === 'Social Scientist') {
@@ -224,6 +225,9 @@ class WarpGateCommand extends EffectableEntity {
           }
           this.totalOperations += loops;
           op.timer -= loops * 600;
+          op.number = this.teamOperationCounts[idx] + 1;
+          op.summary = operationStartText;
+          this.addLog(idx, `=== Operation #${op.number} ===`);
         }
         op.progress = op.timer / 600;
       }
@@ -242,11 +246,13 @@ class WarpGateCommand extends EffectableEntity {
     if (team) {
       team.forEach(m => { if (m) m.xp = (m.xp || 0) + successes; });
     }
-    const summary = `Operation Complete: ${successes} success(es), ${art} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
+    this.teamOperationCounts[teamIndex] += 1;
     op.artifacts = 0;
     op.successes = 0;
+    this.addLog(teamIndex, '');
   }
 
   startOperation(teamIndex) {
@@ -259,7 +265,9 @@ class WarpGateCommand extends EffectableEntity {
     op.timer = 0;
     op.artifacts = 0;
     op.successes = 0;
+    op.number = this.teamOperationCounts[teamIndex] + 1;
     op.summary = operationStartText;
+    this.addLog(teamIndex, `=== Operation #${op.number} ===`);
     return true;
   }
 
@@ -303,8 +311,10 @@ class WarpGateCommand extends EffectableEntity {
         timer: op.timer,
         artifacts: op.artifacts,
         successes: op.successes,
-        summary: op.summary
+        summary: op.summary,
+        number: op.number
       })),
+      teamOperationCounts: this.teamOperationCounts.slice(),
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
       pendingCombat: this.pendingCombat,
@@ -333,8 +343,12 @@ class WarpGateCommand extends EffectableEntity {
         timer: op.timer || 0,
         artifacts: op.artifacts || 0,
         successes: op.successes || 0,
-        summary: op.summary || ''
+        summary: op.summary || '',
+        number: op.number || 1
       }));
+    }
+    if (Array.isArray(data.teamOperationCounts)) {
+      this.teamOperationCounts = data.teamOperationCounts.slice();
     }
     if (Array.isArray(data.logs)) {
       this.logs = data.logs.map(l => l.slice(-100));

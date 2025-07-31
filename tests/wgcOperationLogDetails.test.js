@@ -14,7 +14,7 @@ describe('WGC operation log details', () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     wgc.startOperation(0);
     wgc.update(60000);
-    const entry = wgc.logs[0][0];
+    const entry = wgc.logs[0][1];
     expect(entry).toMatch(/roll \[/i);
     expect(entry).toMatch(/DC 40/);
     Math.random.mockRestore();

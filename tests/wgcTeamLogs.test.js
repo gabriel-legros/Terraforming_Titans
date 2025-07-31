@@ -15,8 +15,8 @@ describe('WGC team logs', () => {
     wgc.startOperation(0);
     wgc.startOperation(1);
     wgc.update(60000); // one minute
-    expect(wgc.logs[0].length).toBe(1);
-    expect(wgc.logs[1].length).toBe(1);
+    expect(wgc.logs[0].length).toBe(2);
+    expect(wgc.logs[1].length).toBe(2);
     // add many entries to check trimming
     for(let i=0;i<150;i++){
       wgc.addLog(0, 'entry');
