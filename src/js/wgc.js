@@ -94,7 +94,7 @@ class WarpGateCommand extends EffectableEntity {
       case 'individual': {
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
-        const member = members[Math.floor(Math.random() * members.length)];
+        const member = isNodeWGC ? members[0] : members[Math.floor(Math.random() * members.length)];
         skillTotal = member[event.skill];
         rollResult = this.roll(1);
         dc = 10 + difficulty;
@@ -257,6 +257,16 @@ class WarpGateCommand extends EffectableEntity {
         op.progress = op.timer / 600;
       }
     });
+
+    const minuteFraction = seconds / 60;
+    this.teams.forEach((team, idx) => {
+      const op = this.operations[idx];
+      const rate = op && op.active ? 1 : 5;
+      const heal = rate * minuteFraction;
+      team.forEach(m => {
+        if (m) m.health = Math.min(m.health + heal, m.maxHealth);
+      });
+    });
   }
 
   finishOperation(teamIndex) {
@@ -269,7 +279,8 @@ class WarpGateCommand extends EffectableEntity {
     }
     const team = this.teams[teamIndex];
     if (team) {
-      team.forEach(m => { if (m) m.xp = (m.xp || 0) + successes; });
+      const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
+      team.forEach(m => { if (m) m.xp = (m.xp || 0) + xpGain; });
     }
     const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;

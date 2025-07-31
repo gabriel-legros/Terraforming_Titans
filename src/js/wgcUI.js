@@ -210,8 +210,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   }
   win.appendChild(classSelect);
 
+  const lvl = member ? member.level : 1;
+  const xp = member ? Math.floor(member.xp || 0) : 0;
+  const xpReq = member ? member.getXPForNextLevel() : 10;
+  const hp = member ? member.health : 100;
+  const hpMax = member ? member.maxHealth : 100;
   const level = document.createElement('div');
-  level.textContent = 'Level: 1';
+  level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${hp} / ${hpMax}`;
   win.appendChild(level);
 
   const pointsToSpend = member ? member.getPointsToAllocate() : 5;
