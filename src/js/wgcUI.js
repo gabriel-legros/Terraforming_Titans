@@ -70,7 +70,10 @@ function generateWGCTeamCards() {
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-controls">
-            <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
+            <div class="difficulty-container">
+              <span>Difficulty</span>
+              <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
+            </div>
             <button class="start-button" data-team="${tIdx}">Start</button>
             <button class="recall-button" data-team="${tIdx}">Recall</button>
             <button class="log-toggle" data-team="${tIdx}">Log</button>
