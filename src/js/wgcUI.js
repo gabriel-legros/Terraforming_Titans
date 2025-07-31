@@ -15,6 +15,13 @@ const facilityItems = {
   obstacleCourse: 'Obstacle Course',
   library: 'Library'
 };
+const facilityDescriptions = {
+  infirmary: 'Increases team healing rate by 1% per level.',
+  barracks: 'Increases XP gained from operations by 1% per level.',
+  shootingRange: 'Boosts Power for challenges by 1% per level.',
+  obstacleCourse: 'Boosts Athletics for challenges by 1% per level.',
+  library: 'Boosts Wit for challenges by 1% per level.'
+};
 const facilityElements = {};
 const teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
 const teamUnlocks = [0, 100, 500, 1000, 5000];
@@ -184,6 +191,11 @@ function createFacilityItem(key, label) {
   const name = document.createElement('span');
   name.classList.add('wgc-rd-label');
   name.textContent = label;
+  const info = document.createElement('span');
+  info.classList.add('info-tooltip-icon');
+  info.innerHTML = '&#9432;';
+  info.title = facilityDescriptions[key];
+  name.appendChild(info);
   div.appendChild(name);
 
   const level = document.createElement('span');

@@ -268,3 +268,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC R&D buttons now display their cost directly and equipment upgrades show a +x% artifact chance. Multipliers are aligned vertically.
 - WGC layout stacks the Statistics menu below R&D while keeping Teams on the right.
 - Added a Facilities menu to WGC offering hourly upgrades that boost recovery, XP and skills.
+- WGC Facilities menu now displays tooltips describing each upgrade's effect.
