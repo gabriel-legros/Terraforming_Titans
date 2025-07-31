@@ -251,3 +251,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Operations abort if any member's HP hits 0. Their HP resets to 1, the team is recalled and the journal notes the injury.
 - WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
 - Operation XP rewards now scale with difficulty as `1 + 0.1×difficulty`.
+- Operation logs now record XP and artifacts gained when operations finish and
+  keep only the last three operations plus the current one.

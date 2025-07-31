@@ -42,7 +42,17 @@ class WarpGateCommand extends EffectableEntity {
     if (!Array.isArray(this.logs[teamIndex])) return;
     const log = this.logs[teamIndex];
     log.push(text);
-    if (log.length > 100) log.shift();
+    // keep only the last 3 completed operations plus the current
+    let opsFound = 0;
+    for (let i = log.length - 1; i >= 0; i--) {
+      if (log[i].startsWith('=== Operation')) {
+        opsFound += 1;
+        if (opsFound >= 4) {
+          log.splice(0, i);
+          break;
+        }
+      }
+    }
   }
 
   chooseEvent() {
@@ -267,11 +277,12 @@ class WarpGateCommand extends EffectableEntity {
       resources.special.alienArtifact.increase(art);
     }
     const team = this.teams[teamIndex];
+    let xpGain = 0;
     if (team) {
-      const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
+      xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
       team.forEach(m => { if (m) m.xp = (m.xp || 0) + xpGain; });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), +${xpGain} XP, ${art} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
     this.teamOperationCounts[teamIndex] += 1;
