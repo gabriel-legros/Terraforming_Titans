@@ -74,7 +74,7 @@ function generateWGCTeamCards() {
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-stances">
             <div class="team-stance">
-              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive does the opposite.">&#9432;</span></label>
+              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive removes social science challenges and doubles combat weight.">&#9432;</span></label>
               <select class="hbi-select" data-team="${tIdx}">
                 <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                 <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
