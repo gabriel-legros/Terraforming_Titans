@@ -269,3 +269,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC layout stacks the Statistics menu below R&D while keeping Teams on the right.
 - Added a Facilities menu to WGC offering hourly upgrades that boost recovery, XP and skills.
 - WGC Facilities menu now displays tooltips describing each upgrade's effect.
+- Operation logs now show the leader's half skill bonus in individual and science challenges.
