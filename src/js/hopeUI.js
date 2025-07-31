@@ -6,12 +6,18 @@ function initializeHopeTabs() {
             tab.classList.add('active');
             const id = tab.dataset.subtab;
             document.getElementById(id).classList.add('active');
+            if (id === 'wgc-hope' && typeof markWGCViewed === 'function') {
+                markWGCViewed();
+            }
         });
     });
 }
 
 function activateHopeSubtab(subtabId) {
     activateSubtab('hope-subtab', 'hope-subtab-content', subtabId, true);
+    if (subtabId === 'wgc-hope' && typeof markWGCViewed === 'function') {
+        markWGCViewed();
+    }
 }
 
 function initializeHopeUI() {
@@ -29,20 +35,14 @@ function initializeHopeUI() {
 
 function updateHopeAlert() {
     const alertEl = document.getElementById('hope-alert');
-    const subtabEl = document.getElementById('solis-subtab-alert');
-    if (!alertEl && !subtabEl) return;
-    if (typeof gameSettings !== 'undefined' && gameSettings.silenceSolisAlert) {
-        if (alertEl) alertEl.style.display = 'none';
-        if (subtabEl) subtabEl.style.display = 'none';
-        return;
-    }
-    if (typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible) {
-        if (alertEl) alertEl.style.display = 'inline';
-        if (subtabEl) subtabEl.style.display = 'inline';
-    } else {
-        if (alertEl) alertEl.style.display = 'none';
-        if (subtabEl) subtabEl.style.display = 'none';
-    }
+    const solisEl = document.getElementById('solis-subtab-alert');
+    const wgcEl = document.getElementById('wgc-subtab-alert');
+    if (!alertEl && !solisEl && !wgcEl) return;
+    const solisAlert = typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible && !(typeof gameSettings !== 'undefined' && gameSettings.silenceSolisAlert);
+    const wgcAlert = typeof wgcAlertNeeded !== 'undefined' && wgcAlertNeeded && (typeof wgcTabVisible === 'undefined' || wgcTabVisible);
+    if (alertEl) alertEl.style.display = (solisAlert || wgcAlert) ? 'inline' : 'none';
+    if (solisEl) solisEl.style.display = solisAlert ? 'inline' : 'none';
+    if (wgcEl) wgcEl.style.display = wgcAlert ? 'inline' : 'none';
 }
 
 function updateHopeUI() {
