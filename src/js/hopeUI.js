@@ -29,20 +29,19 @@ function initializeHopeUI() {
 
 function updateHopeAlert() {
     const alertEl = document.getElementById('hope-alert');
-    const subtabEl = document.getElementById('solis-subtab-alert');
-    if (!alertEl && !subtabEl) return;
+    const solisEl = document.getElementById('solis-subtab-alert');
+    const wgcEl = document.getElementById('wgc-subtab-alert');
+    if (!alertEl && !solisEl && !wgcEl) return;
+    let solisShow = typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible;
+    const wgcShow = typeof warpGateCommand !== 'undefined' && warpGateCommand && wgcTabVisible && warpGateCommand.facilityCooldown <= 0;
     if (typeof gameSettings !== 'undefined' && gameSettings.silenceSolisAlert) {
-        if (alertEl) alertEl.style.display = 'none';
-        if (subtabEl) subtabEl.style.display = 'none';
-        return;
+        solisShow = false;
+        if (solisEl) solisEl.style.display = 'none';
+    } else if (solisEl) {
+        solisEl.style.display = solisShow ? 'inline' : 'none';
     }
-    if (typeof solisManager !== 'undefined' && solisManager && solisManager.currentQuest && solisTabVisible) {
-        if (alertEl) alertEl.style.display = 'inline';
-        if (subtabEl) subtabEl.style.display = 'inline';
-    } else {
-        if (alertEl) alertEl.style.display = 'none';
-        if (subtabEl) subtabEl.style.display = 'none';
-    }
+    if (wgcEl) wgcEl.style.display = wgcShow ? 'inline' : 'none';
+    if (alertEl) alertEl.style.display = (solisShow || wgcShow) ? 'inline' : 'none';
 }
 
 function updateHopeUI() {

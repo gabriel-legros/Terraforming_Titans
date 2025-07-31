@@ -8,6 +8,14 @@ const rdItems = {
   androidsEfficiency: 'Androids production efficiency'
 };
 const rdElements = {};
+const facilityItems = {
+  infirmary: 'Infirmary',
+  barracks: 'Barracks',
+  shootingRange: 'Shooting Range',
+  obstacleCourse: 'Obstacle Course',
+  library: 'Library'
+};
+const facilityElements = {};
 const teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
 const teamUnlocks = [0, 100, 500, 1000, 5000];
 const classImages = {
@@ -166,6 +174,43 @@ function populateRDMenu() {
   menu.appendChild(createRDHeader());
   for (const key in rdItems) {
     menu.appendChild(createRDItem(key, rdItems[key]));
+  }
+}
+
+function createFacilityItem(key, label) {
+  const div = document.createElement('div');
+  div.classList.add('wgc-rd-item');
+
+  const name = document.createElement('span');
+  name.classList.add('wgc-rd-label');
+  name.textContent = label;
+  div.appendChild(name);
+
+  const level = document.createElement('span');
+  level.classList.add('wgc-rd-mult');
+  level.id = `wgc-${key}-level`;
+  div.appendChild(level);
+
+  const button = document.createElement('button');
+  button.id = `wgc-${key}-upgrade`;
+  button.textContent = 'Upgrade';
+  button.addEventListener('click', () => {
+    warpGateCommand.upgradeFacility(key);
+    if (typeof updateHopeAlert === 'function') updateHopeAlert();
+    updateWGCUI();
+  });
+  div.appendChild(button);
+
+  facilityElements[key] = { button, level };
+  return div;
+}
+
+function populateFacilityMenu() {
+  const menu = document.getElementById('wgc-facilities-menu');
+  if (!menu) return;
+  menu.innerHTML = '';
+  for (const key in facilityItems) {
+    menu.appendChild(createFacilityItem(key, facilityItems[key]));
   }
 }
 
@@ -349,6 +394,11 @@ function generateWGCLayout() {
             <h3>R&amp;D</h3>
             <div id="wgc-rd-menu"></div>
           </div>
+          <div id="wgc-facilities-section">
+            <h3>Facilities</h3>
+            <div id="wgc-facility-cooldown"></div>
+            <div id="wgc-facilities-menu"></div>
+          </div>
           <div id="wgc-stats-section">
             <h3>Statistics</h3>
             <div id="wgc-stat-operation"></div>
@@ -422,6 +472,7 @@ function initializeWGCUI() {
       });
     }
     populateRDMenu();
+    populateFacilityMenu();
   }
   wgcUIInitialized = true;
   if (typeof warpGateCommand !== 'undefined') {
@@ -437,6 +488,17 @@ function updateWGCUI() {
   const artEl = document.getElementById('wgc-stat-artifact');
   if (artEl) {
     artEl.textContent = `Artifacts Collected: ${warpGateCommand.totalArtifacts}`;
+  }
+  const cdEl = document.getElementById('wgc-facility-cooldown');
+  if (cdEl) {
+    const sec = Math.ceil(warpGateCommand.facilityCooldown);
+    cdEl.textContent = sec > 0 ? `Cooldown: ${formatDuration(sec)}` : 'Ready';
+  }
+  for (const key in facilityElements) {
+    const el = facilityElements[key];
+    const lvl = warpGateCommand.facilities[key] || 0;
+    if (el.level) el.level.textContent = `${lvl}/100`;
+    if (el.button) el.button.disabled = warpGateCommand.facilityCooldown > 0 || lvl >= 100;
   }
   for (const key in rdElements) {
     const el = rdElements[key];
@@ -547,6 +609,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateWGCUI,
     redrawWGCTeamCards,
     populateRDMenu,
+    populateFacilityMenu,
     generateWGCTeamCards,
     generateWGCLayout,
   };
