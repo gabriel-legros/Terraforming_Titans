@@ -15,6 +15,8 @@ const operationEvents = [
   { name: 'Combat challenge', type: 'combat', weight: 1 }
 ];
 
+const operationStartText = 'Setting out through Warp Gate';
+
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
@@ -221,7 +223,7 @@ class WarpGateCommand extends EffectableEntity {
     op.timer = 0;
     op.artifacts = 0;
     op.successes = 0;
-    op.summary = '';
+    op.summary = operationStartText;
     return true;
   }
 
