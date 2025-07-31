@@ -91,10 +91,8 @@ function generateWGCTeamCards() {
           </div>
           <div class="team-controls">
             <div class="difficulty-container">
-              <div class="difficulty-label">
-                <span>Difficulty</span>
-                <span class="info-tooltip-icon" title="Raises all challenge DCs (team +4 per level, individual +1 per level). Artifact and XP rewards increase by 10% per level. Failed individual checks deal 10 HP per level to the selected member while failed team checks damage all members for 10 HP.">&#9432;</span>
-              </div>
+              <span>Difficulty</span>
+              <span class="info-tooltip-icon" title="Raises all challenge DCs (team +4 per level, individual +1 per level). Artifact and XP rewards increase by 10% per level. Failed individual checks deal 5 HP per level to the selected member while failed team checks damage all members for 2 HP per level. Failed combat checks damage all members for 5 HP per level.">&#9432;</span>
               <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
             </div>
             <button class="start-button" data-team="${tIdx}">Start</button>

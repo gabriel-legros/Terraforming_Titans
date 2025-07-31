@@ -34,12 +34,12 @@ describe('WGC operation difficulty', () => {
     const indEvent = { name: 'Ind', type: 'individual', skill: 'power' };
     const teamEvent = { name: 'Team', type: 'team', skill: 'power' };
     wgc.resolveEvent(0, indEvent);
-    expect(member.health).toBe(70);
+    expect(member.health).toBe(85);
     wgc.recruitMember(0, 1, WGCTeamMember.create('C', '', 'Soldier', {}));
     wgc.recruitMember(0, 2, WGCTeamMember.create('D', '', 'Soldier', {}));
     wgc.recruitMember(0, 3, WGCTeamMember.create('E', '', 'Soldier', {}));
     wgc.resolveEvent(0, teamEvent);
-    expect(wgc.teams[0][0].health).toBe(60);
-    wgc.teams[0].slice(1).forEach(m => { if (m) expect(m.health).toBe(90); });
+    expect(wgc.teams[0][0].health).toBe(79);
+    wgc.teams[0].slice(1).forEach(m => { if (m) expect(m.health).toBe(94); });
   });
 });
