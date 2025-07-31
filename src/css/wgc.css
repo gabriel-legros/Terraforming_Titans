@@ -98,6 +98,10 @@
   gap: 5px;
 }
 
+.team-controls .difficulty-input {
+  width: 60px;
+}
+
 .wgc-rd-item {
   display: flex;
   gap: 10px;
@@ -254,4 +258,21 @@
   align-items: center;
   text-align: center;
   z-index: 1;
+}
+
+.team-hp-bar {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  width: 6px;
+  background-color: #555;
+}
+
+.team-hp-bar-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: green;
 }
