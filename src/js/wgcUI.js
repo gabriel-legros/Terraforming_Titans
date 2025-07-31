@@ -51,7 +51,10 @@ function generateWGCTeamCards() {
       if (m) {
         const img = classImages[m.classType] || '';
         const unspentPoints = m.getPointsToAllocate() > 0 ? '<div class="unspent-points-indicator">!</div>' : '';
+        const hpPercent = Math.floor((m.health / m.maxHealth) * 100);
+        const hpColor = hpPercent < 25 ? 'red' : 'green';
         return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
+          <div class="team-hp-bar"><div class="team-hp-bar-fill" style="height:${hpPercent}%;background-color:${hpColor};"></div></div>
           <div class="team-member-name">${m.firstName}</div>
           <img src="${img}" class="team-icon">
           ${unspentPoints}
@@ -439,6 +442,17 @@ function updateWGCUI() {
         }
       }
     }
+
+    team.forEach((member, sIdx) => {
+      const slot = card.querySelector(`.team-slot[data-slot="${sIdx}"]`);
+      if (!slot || !member) return;
+      const bar = slot.querySelector('.team-hp-bar-fill');
+      if (bar) {
+        const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
+        bar.style.height = `${hpPercent}%`;
+        bar.style.backgroundColor = hpPercent < 25 ? 'red' : 'green';
+      }
+    });
   });
 
   teamNames.forEach((_, tIdx) => {
