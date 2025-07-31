@@ -169,6 +169,11 @@
   background-color: #444;
 }
 
+.wgc-class-description {
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
 .wgc-dialog-buttons {
   display: flex;
   justify-content: space-between;

@@ -22,6 +22,16 @@ class WGCTeamMember {
     return map[classType] || { power: 0, athletics: 0, wit: 0 };
   }
 
+  static getClassDescription(classType) {
+    const map = {
+      'Team Leader': 'Balanced starter who provides even Power, Athletics and Wit. Adds half these skills to individual and science challenges. Required for the first team slot.',
+      'Soldier': 'Combat specialist. Their Power counts double when resolving combat challenges.',
+      'Natural Scientist': 'Research expert. Natural Science events yield twice the Alien artifacts when successful.',
+      'Social Scientist': 'Diplomatic expert. Failed checks escalate into harder combat encounters.'
+    };
+    return map[classType] || '';
+  }
+
   static create(firstName, lastName, classType, allocation) {
     const base = WGCTeamMember.getBaseStats(classType);
     return new WGCTeamMember({
