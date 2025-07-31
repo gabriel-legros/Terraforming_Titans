@@ -25,6 +25,8 @@ class WarpGateCommand extends EffectableEntity {
     this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '' }));
     this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
+    this.pendingCombat = false;
+    this.combatDifficulty = 1;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -42,6 +44,14 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   chooseEvent() {
+    if (this.pendingCombat) {
+      this.pendingCombat = false;
+      const combatEvent = operationEvents.find(e => e.type === 'combat');
+      const event = Object.assign({}, combatEvent, { difficultyMultiplier: this.combatDifficulty });
+      this.combatDifficulty = 1;
+      return event;
+    }
+
     const total = operationEvents.reduce((s, e) => s + (e.weight || 1), 0);
     let r = Math.random() * total;
     for (const ev of operationEvents) {
@@ -96,6 +106,10 @@ class WarpGateCommand extends EffectableEntity {
         rollResult = this.roll(1);
         dc = 10;
         success = rollResult.sum + skillTotal >= dc;
+        if (!success && event.specialty === 'Social Scientist') {
+          this.pendingCombat = true;
+          this.combatDifficulty = 1.25;
+        }
         break;
       }
       case 'combat': {
@@ -105,7 +119,7 @@ class WarpGateCommand extends EffectableEntity {
           return s + mem.power * mult;
         }, 0);
         rollResult = this.roll(4);
-        dc = 40;
+        dc = 40 * (event.difficultyMultiplier || 1);
         success = rollResult.sum + skillTotal >= dc;
         break;
       }
@@ -121,8 +135,13 @@ class WarpGateCommand extends EffectableEntity {
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
     if (!success && event.escalate) {
-      const combatEvent = operationEvents.find(e => e.type === 'combat');
-      this.resolveEvent(teamIndex, combatEvent);
+      if (event.specialty === 'Social Scientist') {
+        this.pendingCombat = true;
+        this.combatDifficulty = 1.25;
+      } else {
+        const combatEvent = operationEvents.find(e => e.type === 'combat');
+        this.resolveEvent(teamIndex, combatEvent);
+      }
     }
     return { success, artifact };
   }
@@ -287,7 +306,9 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary
       })),
       logs: this.logs.map(l => l.slice()),
-      totalOperations: this.totalOperations
+      totalOperations: this.totalOperations,
+      pendingCombat: this.pendingCombat,
+      combatDifficulty: this.combatDifficulty
     };
   }
 
@@ -319,6 +340,8 @@ class WarpGateCommand extends EffectableEntity {
       this.logs = data.logs.map(l => l.slice(-100));
     }
     this.totalOperations = data.totalOperations || 0;
+    this.pendingCombat = data.pendingCombat || false;
+    this.combatDifficulty = data.combatDifficulty || 1;
   }
 }
 

@@ -238,3 +238,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Operation logs are now kept per team with an expandable section in each card.
 - Operation logs list dice rolls, DC and skill totals.
 - Starting an operation now displays the default summary text "Setting out through Warp Gate".
+- Failed Social Science challenges now trigger the next event as a Combat challenge at 25% higher difficulty.
