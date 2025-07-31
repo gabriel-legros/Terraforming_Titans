@@ -254,6 +254,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Team members with the lowest total XP gain a 1.5× catch-up bonus until they match their highest teammate.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
+- Team leaders now add half of their relevant skill to all individual and science challenges.
 - Natural Science challenges now grant double artifact rewards, configurable via the `artifactMultiplier` event field.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.
