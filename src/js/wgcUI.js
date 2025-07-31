@@ -209,6 +209,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   level.textContent = 'Level: 1';
   win.appendChild(level);
 
+  const xpHealth = document.createElement('div');
+  const xpValue = member ? (member.xp || 0) : 0;
+  const maxHPValue = member ? member.maxHealth : 100;
+  xpHealth.textContent = `XP: ${xpValue} | Max HP: ${maxHPValue}`;
+  win.appendChild(xpHealth);
+
   const pointsToSpend = member ? member.getPointsToAllocate() : 5;
   const alloc = { power: 0, athletics: 0, wit: 0 };
   const remainingSpan = document.createElement('div');
