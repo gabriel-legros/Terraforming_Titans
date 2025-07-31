@@ -48,6 +48,15 @@
   gap: 5px;
 }
 
+.team-stance {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-stance label {
+  margin-bottom: 2px;
+}
+
 .team-slot {
   width: 90px;
   height: 120px;
