@@ -78,6 +78,7 @@ class WarpGateCommand extends EffectableEntity {
     let rollResult = { sum: 0, rolls: [] };
     let dc = 0;
     let skillTotal = 0;
+    let roller = null;
     const op = this.operations[teamIndex];
     const difficulty = op ? op.difficulty || 0 : 0;
     switch (event.type) {
@@ -94,7 +95,8 @@ class WarpGateCommand extends EffectableEntity {
       case 'individual': {
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
-        const member = isNodeWGC ? members[0] : members[Math.floor(Math.random() * members.length)];
+        const member = members[Math.floor(Math.random() * members.length)];
+        roller = member;
         skillTotal = member[event.skill];
         rollResult = this.roll(1);
         dc = 10 + difficulty;
@@ -113,6 +115,7 @@ class WarpGateCommand extends EffectableEntity {
         } else {
           skillTotal = m.wit;
         }
+        roller = m;
         rollResult = this.roll(1);
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
@@ -145,7 +148,8 @@ class WarpGateCommand extends EffectableEntity {
     if (artifact) op.artifacts += 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
     const rollsStr = rollResult.rolls.join(',');
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
-    const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artifact ? ' +1 Artifact' : ''}`;
+    const rollerName = roller ? ` (${roller.firstName})` : '';
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 

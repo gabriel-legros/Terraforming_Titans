@@ -252,3 +252,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
 - Operation XP rewards now scale with difficulty as `1 + 0.1×difficulty`.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
+- Individual challenge summaries now include the rolling member's name.
