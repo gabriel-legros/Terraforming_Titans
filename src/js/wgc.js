@@ -241,9 +241,13 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   dismissMember(teamIndex, slotIndex) {
+    const op = this.operations[teamIndex];
+    if (op && op.active) return false;
     if (this.teams[teamIndex]) {
       this.teams[teamIndex][slotIndex] = null;
+      return true;
     }
+    return false;
   }
 
   renameMember(teamIndex, slotIndex, name) {

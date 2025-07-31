@@ -236,3 +236,4 @@ second time they speak in a chapter to help clarify who is talking.
   5000 operations respectively.
 - Jest setup now suppresses console output for quieter test runs.
 - Operation logs are now kept per team with an expandable section in each card.
+- Team members cannot be dismissed while their team is on an operation; the recruit dialog disables the Dismiss button.
