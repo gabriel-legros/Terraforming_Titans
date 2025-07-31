@@ -67,9 +67,9 @@ function generateWGCTeamCards() {
         const img = classImages[m.classType] || '';
         const unspentPoints = m.getPointsToAllocate() > 0 ? '<div class="unspent-points-indicator">!</div>' : '';
         const hpPercent = Math.floor((m.health / m.maxHealth) * 100);
-        const hpColor = hpPercent < 25 ? 'red' : 'green';
+        const hpClass = hpPercent < 25 ? 'critical-hp' : (hpPercent < 50 ? 'low-hp' : '');
         return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
-          <div class="team-hp-bar"><div class="team-hp-bar-fill" style="height:${hpPercent}%;background-color:${hpColor};"></div></div>
+          <div class="team-hp-bar"><div class="team-hp-bar-fill ${hpClass}" style="height:${hpPercent}%;"></div></div>
           <div class="team-member-name">${m.firstName}</div>
           <img src="${img}" class="team-icon">
           ${unspentPoints}
@@ -402,24 +402,26 @@ function generateWGCLayout() {
     <div class="wgc-container">
       <div class="wgc-main">
         <div class="wgc-left">
-          <div id="wgc-rd-section">
-            <h3>R&amp;D</h3>
+          <div class="wgc-card" id="wgc-rd-section">
+            <h3>R&D</h3>
             <div id="wgc-rd-menu"></div>
           </div>
-          <div id="wgc-facilities-section">
+          <div class="wgc-card" id="wgc-facilities-section">
             <h3>Facilities</h3>
             <div id="wgc-facility-cooldown"></div>
             <div id="wgc-facilities-menu"></div>
           </div>
-          <div id="wgc-stats-section">
+          <div class="wgc-card" id="wgc-stats-section">
             <h3>Statistics</h3>
             <div id="wgc-stat-operation"></div>
             <div id="wgc-stat-artifact"></div>
           </div>
         </div>
-        <div id="wgc-teams-section">
-          <h3>Teams</h3>
-          <div id="wgc-team-cards"></div>
+        <div class="wgc-right">
+          <div class="wgc-card" id="wgc-teams-section">
+            <h3>Teams</h3>
+            <div id="wgc-team-cards"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -591,7 +593,12 @@ function updateWGCUI() {
       if (bar) {
         const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
         bar.style.height = `${hpPercent}%`;
-        bar.style.backgroundColor = hpPercent < 25 ? 'red' : 'green';
+        bar.classList.remove('low-hp', 'critical-hp');
+        if (hpPercent < 25) {
+          bar.classList.add('critical-hp');
+        } else if (hpPercent < 50) {
+          bar.classList.add('low-hp');
+        }
       }
     });
   });

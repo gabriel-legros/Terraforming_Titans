@@ -1,7 +1,34 @@
-/* Styles for Warp Gate Command UI */
+/* General Stargate-themed styles for WGC */
+:root {
+  --wgc-bg-dark: #0d1a26;
+  --wgc-bg-medium: #1a2938;
+  --wgc-bg-light: #2a3f50;
+  --wgc-border-color: #00aaff;
+  --wgc-text-light: #e6f7ff;
+  --wgc-text-medium: #a8cde0;
+  --wgc-text-dark: #7a9cb0;
+  --wgc-accent-glow: 0 0 5px rgba(0, 170, 255, 0.7);
+  --wgc-green: #4CAF50;
+  --wgc-yellow: #FFC107;
+  --wgc-red: #F44336;
+}
+
+.wgc-container {
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: var(--wgc-text-light);
+}
+
+.wgc-container h3 {
+  color: var(--wgc-border-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 5px;
+  margin: 0 0 8px 0;
+}
+
 .wgc-main {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   align-items: flex-start;
 }
 
@@ -9,44 +36,46 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 }
 
-#wgc-rd-section {
-}
-
-#wgc-facilities-section {
-}
-
-#wgc-facility-cooldown {
-  margin-bottom: 5px;
-}
-
-#wgc-stats-section {
-}
-
-#wgc-teams-section {
+.wgc-right {
   flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
+.wgc-card {
+  background-color: var(--wgc-bg-medium);
+  border: 1px solid var(--wgc-border-color);
+  padding: 15px;
+  border-radius: 4px;
+  box-shadow: var(--wgc-accent-glow);
+}
+
+/* Team Card */
 .wgc-team-card {
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  background-color: var(--wgc-bg-dark);
+  border: 1px solid var(--wgc-border-color);
+  box-shadow: var(--wgc-accent-glow);
+  border-radius: 4px;
   padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   position: relative;
 }
 
 .wgc-team-card .team-header {
   font-weight: bold;
-  margin-bottom: 5px;
+  color: var(--wgc-border-color);
+  margin-bottom: 10px;
+  font-size: 1.1em;
 }
 
 .wgc-team-body {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: stretch; /* Make items same height */
 }
 
 .team-slots {
@@ -54,42 +83,43 @@
   gap: 5px;
 }
 
-.team-stances {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.team-stance {
-  display: flex;
-  flex-direction: column;
-}
-
-.team-stance label {
-  margin-bottom: 2px;
-}
-
 .team-slot {
-  width: 90px;
-  height: 120px;
-  border: 1px dashed #999;
+  width: 80px;
+  height: 110px;
+  border: 1px solid var(--wgc-text-dark);
+  background-color: var(--wgc-bg-dark);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: relative;
-  padding: 5px;
+  padding: 4px;
   box-sizing: border-box;
+  border-radius: 3px;
+  transition: all 0.2s ease;
 }
 
 .team-slot.filled {
   cursor: pointer;
+  border-color: var(--wgc-border-color);
+  justify-content: space-between;
+}
+
+.team-slot.filled:hover {
+    background-color: var(--wgc-bg-light);
 }
 
 .team-slot button {
   width: 100%;
   height: 100%;
-  font-size: 1.5em;
+  font-size: 2em;
+  color: var(--wgc-text-dark);
+  background: none;
+  border: none;
+}
+.team-slot button:hover {
+    background-color: var(--wgc-bg-light);
+    color: var(--wgc-text-light);
 }
 
 .team-slot .team-member-name {
@@ -99,80 +129,141 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  color: var(--wgc-text-light);
 }
 
 .team-slot .team-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
+  filter: brightness(0.9) grayscale(0.2);
 }
 
 .unspent-points-indicator {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 15px;
-  height: 15px;
-  background-color: red;
-  color: white;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--wgc-yellow);
+  color: var(--wgc-bg-dark);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  font-size: 10px;
+  box-shadow: 0 0 6px var(--wgc-yellow);
+}
+
+/* Stances and Controls */
+.team-stances {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.team-stance {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-stance label {
+  font-size: 0.8em;
+  color: var(--wgc-text-medium);
+  margin-bottom: 3px;
 }
 
 .team-controls {
-  margin-left: auto;
   display: flex;
   flex-direction: column;
   gap: 5px;
+  justify-content: center;
 }
 
 .difficulty-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
 }
 
 .difficulty-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+    font-size: 0.8em;
+    color: var(--wgc-text-medium);
+}
+
+/* General Controls Styling */
+.wgc-container button,
+.wgc-container select,
+.wgc-container input[type="number"] {
+  background-color: var(--wgc-bg-dark);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-family: inherit;
+}
+
+.wgc-container button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wgc-container button:hover:not(:disabled) {
+  background-color: var(--wgc-border-color);
+  color: var(--wgc-bg-dark);
+  box-shadow: var(--wgc-accent-glow);
+}
+
+.wgc-container button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wgc-container select {
+  padding: 4px;
 }
 
 .team-controls .difficulty-input {
   width: 60px;
+  text-align: center;
 }
 
+/* R&D and Facilities List */
 .wgc-rd-item {
   display: grid;
-  grid-template-columns: 1fr 60px auto;
+  grid-template-columns: 1fr 70px auto;
   gap: 10px;
   align-items: center;
   margin-bottom: 5px;
+  padding: 4px 8px;
+  border-radius: 3px;
 }
-
-.wgc-rd-item button {
-  width: 100%;
+.wgc-rd-item:nth-child(odd) {
+    background-color: var(--wgc-bg-dark);
 }
 
 .wgc-rd-mult {
   text-align: right;
-  width: 60px;
+  color: var(--wgc-text-medium);
 }
 
 .wgc-rd-header {
   font-weight: bold;
+  color: var(--wgc-text-light);
+  background-color: transparent !important;
 }
 
+/* Popup Dialog */
 .wgc-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(13, 26, 38, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -180,17 +271,20 @@
 }
 
 .wgc-popup-window {
-  width: 40%;
-  background-color: #1a1a1a;
-  border: 2px solid #0f0;
+  width: 450px;
+  background-color: var(--wgc-bg-medium);
+  border: 1px solid var(--wgc-border-color);
+  box-shadow: var(--wgc-accent-glow);
   padding: 20px;
-  color: #0f0;
-  font-family: 'Courier New', Courier, monospace;
+  color: var(--wgc-text-light);
+  font-family: 'Consolas', 'Courier New', monospace;
+  border-radius: 4px;
 }
 
 .wgc-popup-window h2 {
   text-align: center;
   margin-top: 0;
+  color: var(--wgc-border-color);
 }
 
 .wgc-popup-window input,
@@ -199,107 +293,68 @@
   width: 100%;
   padding: 8px;
   margin-bottom: 10px;
-  background-color: #333;
-  border: 1px solid #0f0;
-  color: #0f0;
-}
-
-.wgc-popup-window button {
-  cursor: pointer;
-}
-
-.wgc-popup-window button:hover {
-  background-color: #444;
+  box-sizing: border-box;
 }
 
 .wgc-dialog-buttons {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   margin-top: 20px;
 }
 
-.wgc-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.wgc-stat-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #2a2a2a;
-  padding: 10px;
-}
-
-.wgc-stat-container span:first-child {
-  font-weight: bold;
-}
-
-.wgc-stat-container button {
-  margin-top: 5px;
-  width: 50%;
-}
-
+/* Progress Bars and Logs */
 .operation-progress {
   width: 100%;
-  background-color: #e0e0e0;
+  background-color: var(--wgc-bg-dark);
   border-radius: 4px;
-  height: 10px;
-  margin-top: 5px;
+  height: 8px;
+  margin-top: 8px;
   overflow: hidden;
+  border: 1px solid var(--wgc-bg-light);
 }
 
 .operation-progress-bar {
   height: 100%;
-  background-color: #2196f3;
+  background-color: var(--wgc-border-color);
   width: 0%;
   transition: width 0.5s linear;
+  box-shadow: var(--wgc-accent-glow);
 }
 
 .operation-summary {
   font-size: 0.8em;
-  margin-top: 2px;
+  margin-top: 4px;
+  color: var(--wgc-text-medium);
+  text-align: center;
 }
 
 .team-log {
   max-height: 100px;
   overflow-y: auto;
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
+  background-color: var(--wgc-bg-dark);
+  border: 1px solid var(--wgc-bg-light);
   margin-top: 5px;
-  padding: 3px;
+  padding: 5px;
+  border-radius: 3px;
 }
 
 .team-log pre {
   white-space: pre-wrap;
   font-size: 0.75em;
   margin: 0;
+  color: var(--wgc-text-medium);
 }
 
-#wgc-log-container {
-  max-height: 200px;
-  overflow-y: auto;
-  background-color: #f9f9f9;
-  border: 1px solid #ccc;
-  padding: 5px;
-}
-
-#wgc-log {
-  white-space: pre-wrap;
-  font-size: 0.8em;
-}
-
+/* Locked Overlay */
 .wgc-team-locked {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  font-size: 1.5em;
+  background-color: rgba(13, 26, 38, 0.95);
+  color: var(--wgc-border-color);
+  font-size: 1.4em;
   font-weight: bold;
   display: flex;
   flex-direction: column;
@@ -307,15 +362,20 @@
   align-items: center;
   text-align: center;
   z-index: 1;
+  border-radius: 4px;
+  text-shadow: 0 0 8px var(--wgc-border-color);
+  backdrop-filter: blur(1px);
 }
 
+/* HP Bar */
 .team-hp-bar {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  bottom: 2px;
-  width: 6px;
-  background-color: #555;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: 5px;
+  background-color: #333;
+  border-radius: 2px;
 }
 
 .team-hp-bar-fill {
@@ -323,5 +383,21 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: green;
+  background-color: var(--wgc-green);
+  border-radius: 2px;
+  transition: height 0.3s ease, background-color 0.3s ease;
+}
+
+/* Stats */
+#wgc-stats-section div {
+    padding: 2px 0;
+}
+
+
+.team-hp-bar-fill.low-hp {
+  background-color: var(--wgc-yellow);
+}
+
+.team-hp-bar-fill.critical-hp {
+  background-color: var(--wgc-red);
 }
