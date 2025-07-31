@@ -28,6 +28,7 @@ class WarpGateCommand extends EffectableEntity {
     this.logs = Array.from({ length: 5 }, () => []);
     this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
     this.totalOperations = 0;
+    this.totalArtifacts = 0;
     this.pendingCombat = false;
     this.combatDifficulty = 1;
     this.rdUpgrades = {
@@ -60,7 +61,7 @@ class WarpGateCommand extends EffectableEntity {
       const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
       if (e.name === 'Social Science challenge') {
         if (stance === 'Negotiation') e.weight *= 2;
-        if (stance === 'Aggressive') e.weight *= 0.5;
+        if (stance === 'Aggressive') e.weight = 0;
       }
       if (e.type === 'combat') {
         if (stance === 'Negotiation') e.weight *= 0.5;
@@ -111,7 +112,11 @@ class WarpGateCommand extends EffectableEntity {
         if (members.length === 0) return { success: false, artifact: false };
         const member = members[Math.floor(Math.random() * members.length)];
         roller = member;
+        const leader = team[0];
         skillTotal = member[event.skill];
+        if (leader) {
+          skillTotal += Math.floor(leader[event.skill] / 2);
+        }
         rollResult = this.roll(1);
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
@@ -121,13 +126,17 @@ class WarpGateCommand extends EffectableEntity {
         break;
       }
       case 'science': {
+        const leader = team[0];
         let m = team.find(t => t && t.classType === event.specialty);
         if (!m) {
-          m = team[0];
+          m = leader;
           if (!m) return { success: false, artifact: false };
           skillTotal = Math.floor(m.wit / 2);
         } else {
           skillTotal = m.wit;
+        }
+        if (leader) {
+          skillTotal += Math.floor(leader.wit / 2);
         }
         roller = m;
         rollResult = this.roll(1);
@@ -312,6 +321,7 @@ class WarpGateCommand extends EffectableEntity {
     if (art > 0 && typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
       resources.special.alienArtifact.increase(art);
     }
+    this.totalArtifacts += art;
     const team = this.teams[teamIndex];
     if (team) {
       const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
@@ -416,6 +426,7 @@ class WarpGateCommand extends EffectableEntity {
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
+      totalArtifacts: this.totalArtifacts,
       pendingCombat: this.pendingCombat,
       combatDifficulty: this.combatDifficulty,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact }))
@@ -465,6 +476,7 @@ class WarpGateCommand extends EffectableEntity {
       }));
     }
     this.totalOperations = data.totalOperations || 0;
+    this.totalArtifacts = data.totalArtifacts || 0;
     this.pendingCombat = data.pendingCombat || false;
     this.combatDifficulty = data.combatDifficulty || 1;
   }

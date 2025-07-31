@@ -254,11 +254,16 @@ second time they speak in a chapter to help clarify who is talking.
 - Team members with the lowest total XP gain a 1.5× catch-up bonus until they match their highest teammate.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
+- Team leaders now add half of their relevant skill to all individual and science challenges.
 - Natural Science challenges now grant double artifact rewards, configurable via the `artifactMultiplier` event field.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.
 - Added Hazardous Biomass stance control with Negotiation and Aggressive options adjusting combat and social event weights.
 - Artifact Retrieval stance offers Neutral or Careful modes. Careful doubles artifact chance on Natural Science challenges and delays the next event by triple time.
 - Difficulty selector tooltip updated: challenge DCs rise (team +4 per level, individual +1 per level) and rewards increase by 10% per level. Failed individual checks now deal 5 HP per level, failed team checks damage everyone for 2 HP per level and failed combat checks hit everyone for 5 HP per level.
+- Aggressive stance now removes Social Science challenges entirely while doubling combat weight.
 - Scientific Artifact Retrieval stance offers Neutral or Careful modes. Careful doubles artifact chance on Natural Science challenges and delays the next event by triple time.
 - Difficulty selector now includes a tooltip explaining that it raises challenge DCs (+4 per level for team, +1 for individual), grants 10% more XP and artifacts per level, and causes failed individual checks to deal 10 HP damage per level while failed team checks damage everyone for 10 HP.
+- WGC Statistics menu now lists total operations completed and artifacts collected.
+- WGC R&D buttons now display their cost directly and equipment upgrades show a +x% artifact chance. Multipliers are aligned vertically.
+- WGC layout stacks the Statistics menu below R&D while keeping Teams on the right.

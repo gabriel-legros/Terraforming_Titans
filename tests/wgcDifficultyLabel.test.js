@@ -23,11 +23,12 @@ describe('WGC difficulty label', () => {
     ctx.updateWGCUI();
     const container = dom.window.document.querySelector('.difficulty-container');
     expect(container).not.toBeNull();
-    const label = container.querySelector('span');
+    const labelWrapper = container.querySelector('.difficulty-label');
     const input = container.querySelector('input.difficulty-input');
-    expect(label).not.toBeNull();
+    expect(labelWrapper).not.toBeNull();
+    const label = labelWrapper.querySelector('span');
     expect(label.textContent).toBe('Difficulty');
-    expect(container.firstElementChild).toBe(label);
+    expect(container.firstElementChild).toBe(labelWrapper);
     expect(container.lastElementChild).toBe(input);
   });
 });
