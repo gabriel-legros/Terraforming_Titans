@@ -24,6 +24,7 @@ class WarpGateCommand extends EffectableEntity {
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
     this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1 }));
     this.teamOperationCounts = Array(5).fill(0);
+    this.teamNextOperationNumber = Array(5).fill(1);
     this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
     this.pendingCombat = false;
@@ -247,7 +248,8 @@ class WarpGateCommand extends EffectableEntity {
           }
           this.totalOperations += loops;
           op.timer -= loops * 600;
-          op.number = this.teamOperationCounts[idx] + 1;
+          op.number = this.teamNextOperationNumber[idx];
+          this.teamNextOperationNumber[idx] += 1;
           op.summary = operationStartText;
           this.addLog(idx, `=== Operation #${op.number} ===`);
         }
@@ -288,7 +290,8 @@ class WarpGateCommand extends EffectableEntity {
     op.timer = 0;
     op.artifacts = 0;
     op.successes = 0;
-    op.number = this.teamOperationCounts[teamIndex] + 1;
+    op.number = this.teamNextOperationNumber[teamIndex];
+    this.teamNextOperationNumber[teamIndex] += 1;
     op.difficulty = diff;
     op.summary = operationStartText;
     this.addLog(teamIndex, `=== Operation #${op.number} ===`);
@@ -341,6 +344,7 @@ class WarpGateCommand extends EffectableEntity {
         number: op.number
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
+      teamNextOperationNumber: this.teamNextOperationNumber.slice(),
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
       pendingCombat: this.pendingCombat,
@@ -376,6 +380,9 @@ class WarpGateCommand extends EffectableEntity {
     }
     if (Array.isArray(data.teamOperationCounts)) {
       this.teamOperationCounts = data.teamOperationCounts.slice();
+    }
+    if (Array.isArray(data.teamNextOperationNumber)) {
+      this.teamNextOperationNumber = data.teamNextOperationNumber.slice();
     }
     if (Array.isArray(data.logs)) {
       this.logs = data.logs.map(l => l.slice(-100));

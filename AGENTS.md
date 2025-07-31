@@ -247,5 +247,6 @@ second time they speak in a chapter to help clarify who is talking.
   increases artifact rewards by 10% per level. Failed individual checks deal
   10HP damage per level to the chosen member while failed team checks damage all
   members for 10HP.
+- Recalling a team mid-operation now increments the next operation number.
 - Operations abort if any member's HP hits 0. Their HP resets to 1, the team is recalled and the journal notes the injury.
 - WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
