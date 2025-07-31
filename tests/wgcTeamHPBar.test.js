@@ -30,8 +30,9 @@ describe('WGC team HP bar', () => {
     const fills = dom.window.document.querySelectorAll('.team-hp-bar-fill');
     expect(fills.length).toBe(2);
     expect(fills[0].style.height).toBe('100%');
-    expect(fills[0].style.backgroundColor).toBe('green');
+    expect(fills[0].classList.contains('critical-hp')).toBe(false);
+    expect(fills[0].classList.contains('low-hp')).toBe(false);
     expect(fills[1].style.height).toBe('20%');
-    expect(fills[1].style.backgroundColor).toBe('red');
+    expect(fills[1].classList.contains('critical-hp')).toBe(true);
   });
 });

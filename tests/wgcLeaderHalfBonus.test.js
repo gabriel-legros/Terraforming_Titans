@@ -17,7 +17,7 @@ describe('WGC team leader bonus', () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     const event = { name: 'Test', type: 'individual', skill: 'athletics' };
     wgc.resolveEvent(0, event);
-    expect(wgc.operations[0].summary).toMatch(/skill 15/);
+    expect(wgc.operations[0].summary).toMatch(/leader 5/);
     Math.random.mockRestore();
   });
 
@@ -33,7 +33,7 @@ describe('WGC team leader bonus', () => {
     jest.spyOn(Math, 'random').mockReturnValue(0.6);
     const event = { name: 'Test', type: 'individual', skill: 'athletics' };
     wgc.resolveEvent(0, event);
-    expect(wgc.operations[0].summary).toMatch(/skill 10/);
+    expect(wgc.operations[0].summary).toMatch(/leader 5/);
     Math.random.mockRestore();
   });
 
@@ -48,6 +48,6 @@ describe('WGC team leader bonus', () => {
     wgc.roll = () => ({ sum: 2, rolls: [2] });
     const event = { name: 'Natural Science challenge', type: 'science', specialty: 'Natural Scientist' };
     wgc.resolveEvent(0, event);
-    expect(wgc.operations[0].summary).toMatch(/skill 10/);
+    expect(wgc.operations[0].summary).toMatch(/leader 4/);
   });
 });

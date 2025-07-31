@@ -102,6 +102,8 @@ class WarpGateCommand extends EffectableEntity {
     let dc = 0;
     let skillTotal = 0;
     let roller = null;
+    let baseSkill = 0;
+    let leaderBonus = 0;
     const op = this.operations[teamIndex];
     const difficulty = op ? op.difficulty || 0 : 0;
     const pMult = 1 + this.facilities.shootingRange * 0.01;
@@ -135,10 +137,9 @@ class WarpGateCommand extends EffectableEntity {
         const member = members[Math.floor(Math.random() * members.length)];
         roller = member;
         const leader = team[0];
-        skillTotal = applyMult(member[event.skill], event.skill);
-        if (leader) {
-          skillTotal += Math.floor(applyMult(leader[event.skill], event.skill) / 2);
-        }
+        baseSkill = applyMult(member[event.skill], event.skill);
+        leaderBonus = leader ? Math.floor(applyMult(leader[event.skill], event.skill) / 2) : 0;
+        skillTotal = baseSkill + leaderBonus;
         rollResult = this.roll(1);
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
@@ -153,13 +154,12 @@ class WarpGateCommand extends EffectableEntity {
         if (!m) {
           m = leader;
           if (!m) return { success: false, artifact: false };
-          skillTotal = Math.floor(applyMult(m.wit, 'wit') / 2);
+          baseSkill = Math.floor(applyMult(m.wit, 'wit') / 2);
         } else {
-          skillTotal = applyMult(m.wit, 'wit');
+          baseSkill = applyMult(m.wit, 'wit');
         }
-        if (leader) {
-          skillTotal += Math.floor(applyMult(leader.wit, 'wit') / 2);
-        }
+        leaderBonus = leader ? Math.floor(applyMult(leader.wit, 'wit') / 2) : 0;
+        skillTotal = baseSkill + leaderBonus;
         roller = m;
         rollResult = this.roll(1);
         dc = 10 + difficulty;
@@ -210,7 +210,12 @@ class WarpGateCommand extends EffectableEntity {
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
     const rollerName = roller ? ` (${roller.firstName})` : '';
     const artText = artifact ? ` +${artifactReward} Artifact${artifactReward === 1 ? '' : 's'}` : '';
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artText}`;
+    let skillDetail = skillTotal;
+    if (event.type === 'individual' || event.type === 'science') {
+      skillDetail = `${baseSkill}`;
+      if (leaderBonus) skillDetail += ` + leader ${leaderBonus}`;
+    }
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
