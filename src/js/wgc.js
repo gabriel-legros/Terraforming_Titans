@@ -28,6 +28,7 @@ class WarpGateCommand extends EffectableEntity {
     this.logs = Array.from({ length: 5 }, () => []);
     this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
     this.totalOperations = 0;
+    this.totalArtifacts = 0;
     this.pendingCombat = false;
     this.combatDifficulty = 1;
     this.rdUpgrades = {
@@ -309,6 +310,7 @@ class WarpGateCommand extends EffectableEntity {
     if (art > 0 && typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
       resources.special.alienArtifact.increase(art);
     }
+    this.totalArtifacts += art;
     const team = this.teams[teamIndex];
     if (team) {
       const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
@@ -413,6 +415,7 @@ class WarpGateCommand extends EffectableEntity {
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
+      totalArtifacts: this.totalArtifacts,
       pendingCombat: this.pendingCombat,
       combatDifficulty: this.combatDifficulty,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact }))
@@ -462,6 +465,7 @@ class WarpGateCommand extends EffectableEntity {
       }));
     }
     this.totalOperations = data.totalOperations || 0;
+    this.totalArtifacts = data.totalArtifacts || 0;
     this.pendingCombat = data.pendingCombat || false;
     this.combatDifficulty = data.combatDifficulty || 1;
   }

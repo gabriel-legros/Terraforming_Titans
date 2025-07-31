@@ -9,6 +9,10 @@
   flex: 1;
 }
 
+#wgc-stats-section {
+  flex: 1;
+}
+
 #wgc-teams-section {
   flex: 2;
 }
