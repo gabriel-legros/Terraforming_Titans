@@ -125,7 +125,11 @@ class WarpGateCommand extends EffectableEntity {
       }
     }
 
-    const artifact = success && Math.random() < 0.1;
+    let artifact = success && Math.random() < 0.1;
+    if (event.type === 'individual' && rollResult.rolls.includes(20)) {
+      success = true;
+      artifact = true;
+    }
     const op = this.operations[teamIndex];
     if (success) op.successes += 1;
     if (artifact) op.artifacts += 1;
