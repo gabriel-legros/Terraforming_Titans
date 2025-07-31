@@ -201,9 +201,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     classSelect.appendChild(opt);
   });
 
-  if (member) classSelect.value = member.classType;
-
-  if (slotIndex === 0 || (member && member.classType === 'Team Leader')) {
+  if (member) {
+    classSelect.value = member.classType;
+    classSelect.disabled = true;
+  } else if (slotIndex === 0) {
     classSelect.value = 'Team Leader';
     classSelect.disabled = true;
   }

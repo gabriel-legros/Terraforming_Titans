@@ -253,3 +253,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Operation XP rewards now scale with difficulty as `1 + 0.1×difficulty`.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
+- Team member class selection becomes locked once recruited.
