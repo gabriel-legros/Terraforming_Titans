@@ -61,7 +61,7 @@ class WarpGateCommand extends EffectableEntity {
       const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
       if (e.name === 'Social Science challenge') {
         if (stance === 'Negotiation') e.weight *= 2;
-        if (stance === 'Aggressive') e.weight *= 0.5;
+        if (stance === 'Aggressive') e.weight = 0;
       }
       if (e.type === 'combat') {
         if (stance === 'Negotiation') e.weight *= 0.5;
