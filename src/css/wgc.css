@@ -98,6 +98,10 @@
   gap: 5px;
 }
 
+.team-controls .difficulty-input {
+  width: 60px;
+}
+
 .wgc-rd-item {
   display: flex;
   gap: 10px;
