@@ -219,6 +219,9 @@ function loadGame(slotOrCustomString) {
       if (typeof warpGateCommand.reapplyEffects === 'function') {
         warpGateCommand.reapplyEffects();
       }
+      if (typeof redrawWGCTeamCards === 'function') {
+        redrawWGCTeamCards();
+      }
       if (typeof updateWGCUI === 'function') {
         updateWGCUI();
       }
