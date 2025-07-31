@@ -1,5 +1,15 @@
 let wgcTabVisible = false;
 let wgcUIInitialized = false;
+if (typeof globalThis.formatNumber === 'undefined') {
+  try {
+    if (typeof require !== 'undefined') {
+      globalThis.formatNumber = require('./numbers.js').formatNumber;
+    }
+  } catch (e) {}
+  if (typeof globalThis.formatNumber === 'undefined') {
+    globalThis.formatNumber = v => v;
+  }
+}
 const rdItems = {
   wgtEquipment: 'Warpgate Teams Equipment',
   componentsEfficiency: 'Components production efficiency',
@@ -419,6 +429,7 @@ function generateWGCLayout() {
             <h3>Statistics</h3>
             <div id="wgc-stat-operation"></div>
             <div id="wgc-stat-artifact"></div>
+            <div id="wgc-stat-difficulty"></div>
           </div>
         </div>
         <div class="wgc-right">
@@ -515,6 +526,11 @@ function updateWGCUI() {
   const artEl = document.getElementById('wgc-stat-artifact');
   if (artEl) {
     artEl.textContent = `Artifacts Collected: ${warpGateCommand.totalArtifacts}`;
+  }
+  const diffEl = document.getElementById('wgc-stat-difficulty');
+  if (diffEl) {
+    const val = warpGateCommand.highestDifficulty;
+    diffEl.textContent = `Highest Difficulty: ${val < 0 ? 'None' : val}`;
   }
   const cdEl = document.getElementById('wgc-facility-cooldown');
   if (cdEl) {

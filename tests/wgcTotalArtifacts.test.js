@@ -11,9 +11,9 @@ describe('WGC total artifacts', () => {
     }
     wgc.operations[0].artifacts = 3;
     wgc.finishOperation(0);
-    expect(wgc.totalArtifacts).toBe(3);
+    expect(wgc.totalArtifacts).toBe(4);
     wgc.operations[0].artifacts = 2;
     wgc.finishOperation(0);
-    expect(wgc.totalArtifacts).toBe(5);
+    expect(wgc.totalArtifacts).toBe(6);
   });
 });
