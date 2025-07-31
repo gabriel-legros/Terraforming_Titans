@@ -358,7 +358,11 @@ function generateWGCLayout() {
         <div id="wgc-rd-section">
           <h3>R&amp;D</h3>
           <div id="wgc-rd-menu"></div>
-          <div id="wgc-operation-count"></div>
+        </div>
+        <div id="wgc-stats-section">
+          <h3>Statistics</h3>
+          <div id="wgc-stat-operation"></div>
+          <div id="wgc-stat-artifact"></div>
         </div>
         <div id="wgc-teams-section">
           <h3>Teams</h3>
@@ -435,9 +439,13 @@ function initializeWGCUI() {
 }
 
 function updateWGCUI() {
-  const countEl = document.getElementById('wgc-operation-count');
-  if (countEl) {
-    countEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
+  const opEl = document.getElementById('wgc-stat-operation');
+  if (opEl) {
+    opEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
+  }
+  const artEl = document.getElementById('wgc-stat-artifact');
+  if (artEl) {
+    artEl.textContent = `Artifacts Collected: ${warpGateCommand.totalArtifacts}`;
   }
   for (const key in rdElements) {
     const el = rdElements[key];
