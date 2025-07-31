@@ -6,9 +6,11 @@ const { WarpGateCommand } = require('../src/js/wgc.js');
 describe('WGC auto recall on injury', () => {
   beforeEach(() => {
     global.addJournalEntry = jest.fn();
+    jest.spyOn(Math, 'random').mockReturnValue(0);
   });
   afterEach(() => {
     delete global.addJournalEntry;
+    Math.random.mockRestore();
   });
 
   test('operation recalls when member health drops to zero', () => {

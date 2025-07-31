@@ -253,3 +253,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Operation XP rewards now scale with difficulty as `1 + 0.1×difficulty`.
 - Operation logs now record XP and artifacts gained when operations finish and
   keep only the last three operations plus the current one.
+- Team members regenerate 1 HP per step or 5 HP per step when recalled.
