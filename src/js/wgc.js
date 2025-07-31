@@ -38,6 +38,14 @@ class WarpGateCommand extends EffectableEntity {
       superconductorEfficiency: { purchases: 0, max: 400 },
       androidsEfficiency: { purchases: 0, max: 400 },
     };
+    this.facilities = {
+      infirmary: 0,
+      barracks: 0,
+      shootingRange: 0,
+      obstacleCourse: 0,
+      library: 0,
+    };
+    this.facilityCooldown = 0;
   }
 
   addLog(teamIndex, text) {
@@ -96,9 +104,23 @@ class WarpGateCommand extends EffectableEntity {
     let roller = null;
     const op = this.operations[teamIndex];
     const difficulty = op ? op.difficulty || 0 : 0;
+    const pMult = 1 + this.facilities.shootingRange * 0.01;
+    const aMult = 1 + this.facilities.obstacleCourse * 0.01;
+    const wMult = 1 + this.facilities.library * 0.01;
+
+    const applyMult = (val, skill) => {
+      if (skill === 'power') return val * pMult;
+      if (skill === 'athletics') return val * aMult;
+      if (skill === 'wit') return val * wMult;
+      return val;
+    };
+
     switch (event.type) {
       case 'team': {
-        skillTotal = team.reduce((s, m) => s + (m ? m[event.skill] : 0), 0);
+        skillTotal = team.reduce((s, m) => {
+          if (!m) return s;
+          return s + applyMult(m[event.skill], event.skill);
+        }, 0);
         rollResult = this.roll(4);
         dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
@@ -113,9 +135,9 @@ class WarpGateCommand extends EffectableEntity {
         const member = members[Math.floor(Math.random() * members.length)];
         roller = member;
         const leader = team[0];
-        skillTotal = member[event.skill];
+        skillTotal = applyMult(member[event.skill], event.skill);
         if (leader) {
-          skillTotal += Math.floor(leader[event.skill] / 2);
+          skillTotal += Math.floor(applyMult(leader[event.skill], event.skill) / 2);
         }
         rollResult = this.roll(1);
         dc = 10 + difficulty;
@@ -131,12 +153,12 @@ class WarpGateCommand extends EffectableEntity {
         if (!m) {
           m = leader;
           if (!m) return { success: false, artifact: false };
-          skillTotal = Math.floor(m.wit / 2);
+          skillTotal = Math.floor(applyMult(m.wit, 'wit') / 2);
         } else {
-          skillTotal = m.wit;
+          skillTotal = applyMult(m.wit, 'wit');
         }
         if (leader) {
-          skillTotal += Math.floor(leader.wit / 2);
+          skillTotal += Math.floor(applyMult(leader.wit, 'wit') / 2);
         }
         roller = m;
         rollResult = this.roll(1);
@@ -152,7 +174,7 @@ class WarpGateCommand extends EffectableEntity {
         skillTotal = team.reduce((s, mem) => {
           if (!mem) return s;
           const mult = mem.classType === 'Soldier' ? 2 : 1;
-          return s + mem.power * mult;
+          return s + applyMult(mem.power, 'power') * mult;
         }, 0);
         rollResult = this.roll(4);
         dc = 40 * (event.difficultyMultiplier || 1) + difficulty;
@@ -244,6 +266,15 @@ class WarpGateCommand extends EffectableEntity {
     return true;
   }
 
+  upgradeFacility(key) {
+    if (!this.facilities[key] && this.facilities[key] !== 0) return false;
+    if (this.facilityCooldown > 0) return false;
+    if (this.facilities[key] >= 100) return false;
+    this.facilities[key] += 1;
+    this.facilityCooldown = 3600;
+    return true;
+  }
+
   applyUpgradeEffect(key) {
     const mult = this.getMultiplier(key);
     const effectId = `wgc-${key}`;
@@ -275,6 +306,9 @@ class WarpGateCommand extends EffectableEntity {
 
   update(_delta) {
     const seconds = _delta / 1000;
+    if (this.facilityCooldown > 0) {
+      this.facilityCooldown = Math.max(0, this.facilityCooldown - seconds);
+    }
     this.operations.forEach((op, idx) => {
       if (op.active) {
         op.timer += seconds;
@@ -300,10 +334,11 @@ class WarpGateCommand extends EffectableEntity {
     });
 
     const minuteFraction = seconds / 60;
+    const healMult = 1 + this.facilities.infirmary * 0.01;
     this.teams.forEach((team, idx) => {
       const op = this.operations[idx];
       const rate = op && op.active ? 1 : 5;
-      const heal = rate * minuteFraction;
+      const heal = rate * minuteFraction * healMult;
       team.forEach(m => {
         if (m) m.health = Math.min(m.health + heal, m.maxHealth);
       });
@@ -321,7 +356,7 @@ class WarpGateCommand extends EffectableEntity {
     this.totalArtifacts += art;
     const team = this.teams[teamIndex];
     if (team) {
-      const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
+      const xpGain = successes * (1 + 0.1 * (op.difficulty || 0)) * (1 + this.facilities.barracks * 0.01);
       const currentMax = team.reduce((mx, m) => m && m.xp > mx ? m.xp : mx, 0);
       const newMax = currentMax + xpGain;
       team.forEach(m => {
@@ -426,7 +461,9 @@ class WarpGateCommand extends EffectableEntity {
       totalArtifacts: this.totalArtifacts,
       pendingCombat: this.pendingCombat,
       combatDifficulty: this.combatDifficulty,
-      stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact }))
+      stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
+      facilities: { ...this.facilities },
+      facilityCooldown: this.facilityCooldown
     };
   }
 
@@ -471,6 +508,16 @@ class WarpGateCommand extends EffectableEntity {
         hazardousBiomass: s.hazardousBiomass || 'Neutral',
         artifact: s.artifact || 'Neutral'
       }));
+    }
+    if (data.facilities) {
+      for (const k in this.facilities) {
+        if (typeof data.facilities[k] === 'number') {
+          this.facilities[k] = Math.min(100, Math.max(0, data.facilities[k]));
+        }
+      }
+    }
+    if (typeof data.facilityCooldown === 'number') {
+      this.facilityCooldown = data.facilityCooldown;
     }
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
