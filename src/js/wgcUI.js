@@ -249,15 +249,18 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   firstNameField.type = 'text';
   firstNameField.placeholder = 'First Name (required)';
   firstNameField.value = member ? member.firstName : '';
+  firstNameField.classList.add('wgc-dialog-field');
   win.appendChild(firstNameField);
 
   const lastNameField = document.createElement('input');
   lastNameField.type = 'text';
   lastNameField.placeholder = 'Last Name';
   lastNameField.value = member ? member.lastName : '';
+  lastNameField.classList.add('wgc-dialog-field');
   win.appendChild(lastNameField);
 
   const classSelect = document.createElement('select');
+  classSelect.classList.add('wgc-dialog-field');
   let availableClasses = ['Team Leader', 'Soldier', 'Natural Scientist', 'Social Scientist'];
   if (slotIndex > 0) {
     availableClasses = availableClasses.filter(c => c !== 'Team Leader');
@@ -284,7 +287,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const hp = member ? member.health : 100;
   const hpMax = member ? member.maxHealth : 100;
   const level = document.createElement('div');
-  level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${hp} / ${hpMax}`;
+  level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${formatNumber(hp)} / ${hpMax}`;
   win.appendChild(level);
 
   const pointsToSpend = member ? member.getPointsToAllocate() : 5;
@@ -312,6 +315,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
 
     const valueSpan = document.createElement('span');
     valueSpan.textContent = statValues[stat];
+    valueSpan.classList.add('wgc-stat-value');
     statContainer.appendChild(valueSpan);
 
     const addButton = document.createElement('button');
