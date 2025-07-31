@@ -158,6 +158,15 @@ class WarpGateCommand extends EffectableEntity {
         this.resolveEvent(teamIndex, combatEvent);
       }
     }
+
+    const injured = team.find(m => m && m.health <= 0);
+    if (injured) {
+      injured.health = 1;
+      this.recallTeam(teamIndex);
+      if (typeof addJournalEntry === 'function') {
+        addJournalEntry(`Team ${teamIndex + 1} recalled after ${injured.firstName} was injured.`);
+      }
+    }
     return { success, artifact };
   }
 
