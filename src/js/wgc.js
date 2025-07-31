@@ -293,6 +293,7 @@ class WarpGateCommand extends EffectableEntity {
           }
           this.totalOperations += loops;
           op.timer -= loops * 600;
+          op.nextEvent = 60;
           op.number = this.teamNextOperationNumber[idx];
           this.teamNextOperationNumber[idx] += 1;
           op.summary = operationStartText;
