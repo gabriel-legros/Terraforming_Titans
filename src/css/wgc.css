@@ -98,6 +98,12 @@
   gap: 5px;
 }
 
+.difficulty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .team-controls .difficulty-input {
   width: 60px;
 }
