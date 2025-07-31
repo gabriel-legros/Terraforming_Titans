@@ -72,20 +72,22 @@ function generateWGCTeamCards() {
         <div class="team-header">Team ${name}</div>
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
-          <div class="team-stance">
-            <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive does the opposite.">&#9432;</span></label>
-            <select class="hbi-select" data-team="${tIdx}">
-              <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-              <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
-              <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
-            </select>
-          </div>
-          <div class="team-stance">
-            <label>Artifact Retrieval <span class="info-tooltip-icon" title="Careful doubles artifact chance on Natural Science challenges but delays the next event by triple the time.">&#9432;</span></label>
-            <select class="artifact-select" data-team="${tIdx}">
-              <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-              <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
-            </select>
+          <div class="team-stances">
+            <div class="team-stance">
+              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive does the opposite.">&#9432;</span></label>
+              <select class="hbi-select" data-team="${tIdx}">
+                <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+                <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
+                <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
+              </select>
+            </div>
+            <div class="team-stance">
+              <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Careful doubles artifact chance on Natural Science challenges but delays the next event by triple the time.">&#9432;</span></label>
+              <select class="artifact-select" data-team="${tIdx}">
+                <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+                <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
+              </select>
+            </div>
           </div>
           <div class="team-controls">
             <div class="difficulty-container">
