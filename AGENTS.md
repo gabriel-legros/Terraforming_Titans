@@ -248,3 +248,4 @@ second time they speak in a chapter to help clarify who is talking.
   10HP damage per level to the chosen member while failed team checks damage all
   members for 10HP.
 - Team member cards in the recruit dialog now show Max Health beside XP.
+- WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
