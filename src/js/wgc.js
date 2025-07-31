@@ -135,14 +135,16 @@ class WarpGateCommand extends EffectableEntity {
     }
 
     let artifact = success && Math.random() < 0.1;
-    if (event.type === 'individual' && rollResult.rolls.includes(20)) {
+    const critical = event.type === 'individual' && rollResult.rolls.includes(20);
+    if (critical) {
       success = true;
       artifact = true;
     }
     if (success) op.successes += 1;
     if (artifact) op.artifacts += 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
     const rollsStr = rollResult.rolls.join(',');
-    const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
+    const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
+    const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 

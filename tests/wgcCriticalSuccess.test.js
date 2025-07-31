@@ -23,6 +23,7 @@ describe('WGC critical success', () => {
     expect(res.success).toBe(true);
     expect(res.artifact).toBe(true);
     expect(wgc.operations[0].artifacts).toBe(1);
+    expect(wgc.operations[0].summary).toMatch(/Critical Success/);
     Math.random.mockRestore();
   });
 });
