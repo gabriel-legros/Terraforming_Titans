@@ -270,3 +270,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added a Facilities menu to WGC offering hourly upgrades that boost recovery, XP and skills.
 - WGC Facilities menu now displays tooltips describing each upgrade's effect.
 - Operation logs now show the leader's half skill bonus in individual and science challenges.
+- Operations now record the highest difficulty cleared and grant Alien artifact bonuses equal to each newly conquered difficulty level (e.g. clearing level 4 from 0 grants 1+2+3+4 artifacts).

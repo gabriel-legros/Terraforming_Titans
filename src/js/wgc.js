@@ -29,6 +29,7 @@ class WarpGateCommand extends EffectableEntity {
     this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
     this.totalOperations = 0;
     this.totalArtifacts = 0;
+    this.highestDifficulty = -1;
     this.pendingCombat = false;
     this.combatDifficulty = 1;
     this.rdUpgrades = {
@@ -378,6 +379,20 @@ class WarpGateCommand extends EffectableEntity {
     const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
+
+    if (op.difficulty > this.highestDifficulty) {
+      let bonus = 0;
+      for (let lvl = this.highestDifficulty + 1; lvl <= op.difficulty; lvl++) {
+        bonus += lvl <= 0 ? 1 : lvl;
+      }
+      this.highestDifficulty = op.difficulty;
+      if (typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
+        resources.special.alienArtifact.increase(bonus);
+      }
+      this.totalArtifacts += bonus;
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
+    }
+
     this.teamOperationCounts[teamIndex] += 1;
     op.artifacts = 0;
     op.successes = 0;
@@ -468,6 +483,7 @@ class WarpGateCommand extends EffectableEntity {
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
       totalArtifacts: this.totalArtifacts,
+      highestDifficulty: this.highestDifficulty,
       pendingCombat: this.pendingCombat,
       combatDifficulty: this.combatDifficulty,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
@@ -530,6 +546,7 @@ class WarpGateCommand extends EffectableEntity {
     }
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
+    this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;
     this.pendingCombat = data.pendingCombat || false;
     this.combatDifficulty = data.combatDifficulty || 1;
   }

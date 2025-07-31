@@ -27,7 +27,7 @@ describe('WGC operation events', () => {
     expect(wgc.operations[0].successes).toBe(9);
     expect(wgc.operations[0].artifacts).toBe(9);
     wgc.update(60000); // final minute
-    expect(global.resources.special.alienArtifact.value).toBe(9);
+    expect(global.resources.special.alienArtifact.value).toBe(10);
     wgc.teams[0].forEach(m => expect(m.xp).toBe(9));
     Math.random.mockRestore();
   });
