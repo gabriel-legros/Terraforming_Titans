@@ -110,6 +110,12 @@
   align-items: center;
 }
 
+.difficulty-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .team-controls .difficulty-input {
   width: 60px;
 }
