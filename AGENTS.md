@@ -264,3 +264,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Difficulty selector now includes a tooltip explaining that it raises challenge DCs (+4 per level for team, +1 for individual), grants 10% more XP and artifacts per level, and causes failed individual checks to deal 10 HP damage per level while failed team checks damage everyone for 10 HP.
 - WGC Statistics menu now lists total operations completed and artifacts collected.
 - WGC R&D buttons now display their cost directly and equipment upgrades show a +x% artifact chance. Multipliers are aligned vertically.
+- WGC layout stacks the Statistics menu below R&D while keeping Teams on the right.

@@ -344,14 +344,16 @@ function generateWGCLayout() {
   return `
     <div class="wgc-container">
       <div class="wgc-main">
-        <div id="wgc-rd-section">
-          <h3>R&amp;D</h3>
-          <div id="wgc-rd-menu"></div>
-        </div>
-        <div id="wgc-stats-section">
-          <h3>Statistics</h3>
-          <div id="wgc-stat-operation"></div>
-          <div id="wgc-stat-artifact"></div>
+        <div class="wgc-left">
+          <div id="wgc-rd-section">
+            <h3>R&amp;D</h3>
+            <div id="wgc-rd-menu"></div>
+          </div>
+          <div id="wgc-stats-section">
+            <h3>Statistics</h3>
+            <div id="wgc-stat-operation"></div>
+            <div id="wgc-stat-artifact"></div>
+          </div>
         </div>
         <div id="wgc-teams-section">
           <h3>Teams</h3>
