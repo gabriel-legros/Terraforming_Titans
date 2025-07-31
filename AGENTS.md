@@ -256,3 +256,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Natural Science challenges now grant double artifact rewards, configurable via the `artifactMultiplier` event field.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.
+- Added Hazardous Biomass stance control with Negotiation and Aggressive options adjusting combat and social event weights.
