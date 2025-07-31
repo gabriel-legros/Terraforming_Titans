@@ -20,7 +20,7 @@ describe('WGC operation events', () => {
       m.power = 10; m.athletics = 10; m.wit = 10;
       wgc.recruitMember(0,i,m);
     }
-    wgc.roll = () => 20;
+    wgc.roll = () => ({ sum: 20, rolls: [20] });
     jest.spyOn(Math, 'random').mockReturnValue(0);
     expect(wgc.startOperation(0)).toBe(true);
     wgc.update(540000); // 9 minutes
