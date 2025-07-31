@@ -484,6 +484,15 @@ function initializeWGCUI() {
           updateWGCUI();
         }
       });
+      teamContainer.addEventListener('input', e => {
+        if (e.target.classList.contains('difficulty-input')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const val = Math.max(0, Math.floor(parseInt(e.target.value, 10) || 0));
+          if (warpGateCommand.operations && warpGateCommand.operations[t]) {
+            warpGateCommand.operations[t].difficulty = val;
+          }
+        }
+      });
     }
     populateRDMenu();
     populateFacilityMenu();
