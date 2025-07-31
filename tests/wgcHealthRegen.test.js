@@ -19,6 +19,7 @@ describe('WGC team health regeneration', () => {
       const mem = WGCTeamMember.create('A'+i, '', 'Soldier', {});
       wgc.recruitMember(0, i, mem);
     }
+    wgc.roll = () => ({ sum: 80, rolls: [20, 20, 20, 20] });
     const member = wgc.teams[0][0];
     member.health = 90;
     wgc.startOperation(0);
