@@ -254,3 +254,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
 - Team leader grants half their relevant skill to all individual rolls and to science challenges when another member performs them.
+- Team member class selection becomes locked once recruited.
