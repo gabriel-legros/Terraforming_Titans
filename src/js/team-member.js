@@ -52,6 +52,10 @@ class WGCTeamMember {
     return true;
   }
 
+  getXPForNextLevel() {
+    return this.level * 10;
+  }
+
   toJSON() {
     return {
       firstName: this.firstName,
