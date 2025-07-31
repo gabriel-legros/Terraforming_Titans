@@ -30,7 +30,7 @@ class WarpGateCommand extends EffectableEntity {
     this.pendingCombat = false;
     this.combatDifficulty = 1;
     this.rdUpgrades = {
-      wgtEquipment: { purchases: 0 },
+      wgtEquipment: { purchases: 0, max: 900 },
       componentsEfficiency: { purchases: 0, max: 400 },
       electronicsEfficiency: { purchases: 0, max: 400 },
       superconductorEfficiency: { purchases: 0, max: 400 },
@@ -138,7 +138,9 @@ class WarpGateCommand extends EffectableEntity {
       }
     }
 
-    let artifact = success && Math.random() < 0.1;
+    const equip = this.rdUpgrades.wgtEquipment ? this.rdUpgrades.wgtEquipment.purchases : 0;
+    const artifactChance = Math.min(0.1 + equip * 0.001, 1);
+    let artifact = success && Math.random() < artifactChance;
     const critical = event.type === 'individual' && rollResult.rolls.includes(20);
     if (critical) {
       success = true;
