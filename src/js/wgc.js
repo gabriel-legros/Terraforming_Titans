@@ -22,7 +22,7 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '', number: 1 }));
+    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1 }));
     this.teamOperationCounts = Array(5).fill(0);
     this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
@@ -77,12 +77,17 @@ class WarpGateCommand extends EffectableEntity {
     let rollResult = { sum: 0, rolls: [] };
     let dc = 0;
     let skillTotal = 0;
+    const op = this.operations[teamIndex];
+    const difficulty = op ? op.difficulty || 0 : 0;
     switch (event.type) {
       case 'team': {
         skillTotal = team.reduce((s, m) => s + (m ? m[event.skill] : 0), 0);
         rollResult = this.roll(4);
-        dc = 40;
+        dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
+        if (!success) {
+          team.forEach(m => { if (m) m.health = Math.max(m.health - 10, 0); });
+        }
         break;
       }
       case 'individual': {
@@ -91,8 +96,11 @@ class WarpGateCommand extends EffectableEntity {
         const member = members[Math.floor(Math.random() * members.length)];
         skillTotal = member[event.skill];
         rollResult = this.roll(1);
-        dc = 10;
+        dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
+        if (!success) {
+          member.health = Math.max(member.health - 10 * difficulty, 0);
+        }
         break;
       }
       case 'science': {
@@ -105,7 +113,7 @@ class WarpGateCommand extends EffectableEntity {
           skillTotal = m.wit;
         }
         rollResult = this.roll(1);
-        dc = 10;
+        dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         if (!success && event.specialty === 'Social Scientist') {
           this.pendingCombat = true;
@@ -120,16 +128,19 @@ class WarpGateCommand extends EffectableEntity {
           return s + mem.power * mult;
         }, 0);
         rollResult = this.roll(4);
-        dc = 40 * (event.difficultyMultiplier || 1);
+        dc = 40 * (event.difficultyMultiplier || 1) + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         break;
       }
     }
 
-    const artifact = success && Math.random() < 0.1;
-    const op = this.operations[teamIndex];
+    let artifact = success && Math.random() < 0.1;
+    if (event.type === 'individual' && rollResult.rolls.includes(20)) {
+      success = true;
+      artifact = true;
+    }
     if (success) op.successes += 1;
-    if (artifact) op.artifacts += 1;
+    if (artifact) op.artifacts += 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
     const rollsStr = rollResult.rolls.join(',');
     const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
@@ -255,17 +266,19 @@ class WarpGateCommand extends EffectableEntity {
     this.addLog(teamIndex, '');
   }
 
-  startOperation(teamIndex) {
+  startOperation(teamIndex, difficulty = 0) {
     const team = this.teams[teamIndex];
     if (!team || team.some(m => !m)) return false;
     const op = this.operations[teamIndex];
     if (!op) return false;
+    const diff = Math.max(0, Math.floor(difficulty));
     op.active = true;
     op.progress = 0;
     op.timer = 0;
     op.artifacts = 0;
     op.successes = 0;
     op.number = this.teamOperationCounts[teamIndex] + 1;
+    op.difficulty = diff;
     op.summary = operationStartText;
     this.addLog(teamIndex, `=== Operation #${op.number} ===`);
     return true;
@@ -277,6 +290,7 @@ class WarpGateCommand extends EffectableEntity {
       op.active = false;
       op.progress = 0;
       op.timer = 0;
+      op.difficulty = 0;
     }
   }
 
@@ -309,6 +323,7 @@ class WarpGateCommand extends EffectableEntity {
         active: op.active,
         progress: op.progress,
         timer: op.timer,
+        difficulty: op.difficulty,
         artifacts: op.artifacts,
         successes: op.successes,
         summary: op.summary,
@@ -341,6 +356,7 @@ class WarpGateCommand extends EffectableEntity {
         active: !!op.active,
         progress: op.progress || 0,
         timer: op.timer || 0,
+        difficulty: op.difficulty || 0,
         artifacts: op.artifacts || 0,
         successes: op.successes || 0,
         summary: op.summary || '',
