@@ -257,7 +257,7 @@ class WarpGateCommand extends EffectableEntity {
     }
     const team = this.teams[teamIndex];
     if (team) {
-      team.forEach(m => { if (m) m.xp = (m.xp || 0) + successes; });
+      team.forEach(m => { if (m && typeof m.addXP === 'function') m.addXP(successes); });
     }
     const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
