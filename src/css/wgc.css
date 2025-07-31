@@ -210,6 +210,21 @@
   margin-top: 2px;
 }
 
+.team-log {
+  max-height: 100px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+  padding: 3px;
+}
+
+.team-log pre {
+  white-space: pre-wrap;
+  font-size: 0.75em;
+  margin: 0;
+}
+
 #wgc-log-container {
   max-height: 200px;
   overflow-y: auto;

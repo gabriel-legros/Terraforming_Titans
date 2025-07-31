@@ -69,12 +69,14 @@ function generateWGCTeamCards() {
           <div class="team-controls">
             <button class="start-button" data-team="${tIdx}">Start</button>
             <button class="recall-button" data-team="${tIdx}">Recall</button>
+            <button class="log-toggle" data-team="${tIdx}">Log</button>
           </div>
         </div>
         <div class="operation-progress${op.active ? '' : ' hidden'}">
           <div class="operation-progress-bar" style="width: ${op.progress * 100}%"></div>
         </div>
         <div class="operation-summary${op.active ? '' : ' hidden'}">${op.summary || ''}</div>
+        <div class="team-log hidden"><pre></pre></div>
         ${lockMarkup}
       </div>`;
   }).join('');
@@ -321,10 +323,6 @@ function generateWGCLayout() {
         <div id="wgc-teams-section">
           <h3>Teams</h3>
           <div id="wgc-team-cards"></div>
-          <div id="wgc-log-container">
-            <h3>Log</h3>
-            <pre id="wgc-log"></pre>
-          </div>
         </div>
       </div>
     </div>
@@ -351,6 +349,13 @@ function initializeWGCUI() {
           const t = parseInt(e.target.dataset.team, 10);
           warpGateCommand.recallTeam(t);
           updateWGCUI();
+          return;
+        }
+        if (e.target.classList.contains('log-toggle')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const card = e.target.closest('.wgc-team-card');
+          const log = card.querySelector('.team-log');
+          if (log) log.classList.toggle('hidden');
           return;
         }
 
@@ -436,10 +441,12 @@ function updateWGCUI() {
     }
   });
 
-  const logEl = document.getElementById('wgc-log');
-  if (logEl) {
-    logEl.textContent = (warpGateCommand.log || []).join('\n');
-  }
+  teamNames.forEach((_, tIdx) => {
+    const logEl = document.querySelector(`.wgc-team-card[data-team="${tIdx}"] .team-log pre`);
+    if (logEl) {
+      logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
+    }
+  });
 }
 
 function redrawWGCTeamCards() {

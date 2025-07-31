@@ -21,7 +21,7 @@ class WarpGateCommand extends EffectableEntity {
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
     this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '' }));
-    this.log = [];
+    this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0 },
@@ -32,9 +32,11 @@ class WarpGateCommand extends EffectableEntity {
     };
   }
 
-  addLog(text) {
-    this.log.push(text);
-    if (this.log.length > 100) this.log.shift();
+  addLog(teamIndex, text) {
+    if (!Array.isArray(this.logs[teamIndex])) return;
+    const log = this.logs[teamIndex];
+    log.push(text);
+    if (log.length > 100) log.shift();
   }
 
   chooseEvent() {
@@ -97,7 +99,7 @@ class WarpGateCommand extends EffectableEntity {
     if (artifact) op.artifacts += 1;
     const summary = `${event.name}: ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
-    this.addLog(`Team ${teamIndex + 1} - ${summary}`);
+    this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
     if (!success && event.escalate) {
       const combatEvent = operationEvents.find(e => e.type === 'combat');
@@ -204,7 +206,7 @@ class WarpGateCommand extends EffectableEntity {
     }
     const summary = `Operation Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
-    this.addLog(`Team ${teamIndex + 1} - ${summary}`);
+    this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
     op.artifacts = 0;
     op.successes = 0;
   }
@@ -265,7 +267,7 @@ class WarpGateCommand extends EffectableEntity {
         successes: op.successes,
         summary: op.summary
       })),
-      log: this.log.slice(),
+      logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations
     };
   }
@@ -294,8 +296,8 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary || ''
       }));
     }
-    if (Array.isArray(data.log)) {
-      this.log = data.log.slice(-100);
+    if (Array.isArray(data.logs)) {
+      this.logs = data.logs.map(l => l.slice(-100));
     }
     this.totalOperations = data.totalOperations || 0;
   }

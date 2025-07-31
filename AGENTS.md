@@ -235,3 +235,4 @@ second time they speak in a chapter to help clarify who is talking.
   Teams Beta, Gamma, Delta and Epsilon remain locked until 100, 500, 1000 and
   5000 operations respectively.
 - Jest setup now suppresses console output for quieter test runs.
+- Operation logs are now kept per team with an expandable section in each card.
