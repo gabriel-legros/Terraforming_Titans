@@ -258,3 +258,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.
 - Added Hazardous Biomass stance control with Negotiation and Aggressive options adjusting combat and social event weights.
+- Artifact Retrieval stance offers Neutral or Careful modes. Careful doubles artifact chance on Natural Science challenges and delays the next event by triple time.
