@@ -67,6 +67,8 @@ function generateWGCTeamCards() {
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-controls">
+            <label>Diff:</label>
+            <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0">
             <button class="start-button" data-team="${tIdx}">Start</button>
             <button class="recall-button" data-team="${tIdx}">Recall</button>
             <button class="log-toggle" data-team="${tIdx}">Log</button>
@@ -341,7 +343,10 @@ function initializeWGCUI() {
       teamContainer.addEventListener('click', e => {
         if (e.target.classList.contains('start-button')) {
           const t = parseInt(e.target.dataset.team, 10);
-          warpGateCommand.startOperation(t);
+          const card = e.target.closest('.wgc-team-card');
+          const input = card ? card.querySelector('.difficulty-input') : null;
+          const diff = input ? Math.floor(Math.max(0, parseInt(input.value, 10) || 0)) : 0;
+          warpGateCommand.startOperation(t, diff);
           updateWGCUI();
           return;
         }
@@ -408,6 +413,7 @@ function updateWGCUI() {
     if (!card) return;
     const startBtn = card.querySelector('.start-button');
     const recallBtn = card.querySelector('.recall-button');
+    const diffInput = card.querySelector('.difficulty-input');
     const progressContainer = card.querySelector('.operation-progress');
     const progressBar = card.querySelector('.operation-progress-bar');
     const summaryEl = card.querySelector('.operation-summary');
@@ -422,6 +428,7 @@ function updateWGCUI() {
     }
     if (startBtn) startBtn.disabled = !unlocked || !full || op.active;
     if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
+    if (diffInput) diffInput.value = op.difficulty || 0;
     if (progressContainer && progressBar) {
       if (op.active) {
         progressContainer.classList.remove('hidden');

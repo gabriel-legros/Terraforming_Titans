@@ -22,7 +22,7 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '' }));
+    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, artifacts: 0, successes: 0, summary: '', difficulty: 0 }));
     this.logs = Array.from({ length: 5 }, () => []);
     this.totalOperations = 0;
     this.rdUpgrades = {
@@ -62,27 +62,31 @@ class WarpGateCommand extends EffectableEntity {
   resolveEvent(teamIndex, event) {
     const team = this.teams[teamIndex];
     if (!team) return { success: false, artifact: false };
+    const op = this.operations[teamIndex];
+    const diff = op.difficulty || 0;
     let success = false;
+    let member;
+    let scienceMember;
     switch (event.type) {
       case 'team':
         const skillSum = team.reduce((s, m) => s + (m ? m[event.skill] : 0), 0);
-        success = this.roll(4) + skillSum >= 40;
+        success = this.roll(4) + skillSum >= 40 + diff * 4;
         break;
       case 'individual':
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
-        const member = members[Math.floor(Math.random() * members.length)];
-        success = this.roll(1) + member[event.skill] >= 10;
+        member = members[Math.floor(Math.random() * members.length)];
+        success = this.roll(1) + member[event.skill] >= 10 + diff;
         break;
       case 'science':
-        let m = team.find(t => t && t.classType === event.specialty);
-        if (!m) {
-          m = team[0];
-          if (!m) return { success: false, artifact: false };
-          const wit = Math.floor(m.wit / 2);
-          success = this.roll(1) + wit >= 10;
+        scienceMember = team.find(t => t && t.classType === event.specialty);
+        if (!scienceMember) {
+          scienceMember = team[0];
+          if (!scienceMember) return { success: false, artifact: false };
+          const wit = Math.floor(scienceMember.wit / 2);
+          success = this.roll(1) + wit >= 10 + diff;
         } else {
-          success = this.roll(1) + m.wit >= 10;
+          success = this.roll(1) + scienceMember.wit >= 10 + diff;
         }
         break;
       case 'combat':
@@ -91,17 +95,26 @@ class WarpGateCommand extends EffectableEntity {
           const mult = mem.classType === 'Soldier' ? 2 : 1;
           return s + (mem.power * mult);
         }, 0);
-        success = this.roll(4) + combatSkill >= 40;
+        success = this.roll(4) + combatSkill >= 40 + diff * 4;
         break;
     }
 
-    const artifact = success && Math.random() < 0.1;
-    const op = this.operations[teamIndex];
+    const artifactChance = 0.1 * (1 + 0.1 * diff);
+    const artifact = success && Math.random() < artifactChance;
     if (success) op.successes += 1;
     if (artifact) op.artifacts += 1;
     const summary = `${event.name}: ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
+
+    if (!success) {
+      if (event.type === 'team' || event.type === 'combat') {
+        team.forEach(mem => { if (mem) mem.health = Math.max(0, mem.health - 10); });
+      } else {
+        const target = event.type === 'science' ? scienceMember : member;
+        if (target) target.health = Math.max(0, target.health - 10 * diff);
+      }
+    }
 
     if (!success && event.escalate) {
       const combatEvent = operationEvents.find(e => e.type === 'combat');
@@ -197,7 +210,7 @@ class WarpGateCommand extends EffectableEntity {
   finishOperation(teamIndex) {
     const op = this.operations[teamIndex];
     if (!op) return;
-    const art = op.artifacts;
+    const art = Math.floor(op.artifacts * (1 + 0.1 * op.difficulty));
     const successes = op.successes;
     if (art > 0 && typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
       resources.special.alienArtifact.increase(art);
@@ -213,11 +226,12 @@ class WarpGateCommand extends EffectableEntity {
     op.successes = 0;
   }
 
-  startOperation(teamIndex) {
+  startOperation(teamIndex, difficulty = 0) {
     const team = this.teams[teamIndex];
     if (!team || team.some(m => !m)) return false;
     const op = this.operations[teamIndex];
     if (!op) return false;
+    op.difficulty = Math.max(0, Math.floor(difficulty));
     op.active = true;
     op.progress = 0;
     op.timer = 0;
@@ -267,7 +281,8 @@ class WarpGateCommand extends EffectableEntity {
         timer: op.timer,
         artifacts: op.artifacts,
         successes: op.successes,
-        summary: op.summary
+        summary: op.summary,
+        difficulty: op.difficulty
       })),
       logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations
@@ -295,7 +310,8 @@ class WarpGateCommand extends EffectableEntity {
         timer: op.timer || 0,
         artifacts: op.artifacts || 0,
         successes: op.successes || 0,
-        summary: op.summary || ''
+        summary: op.summary || '',
+        difficulty: op.difficulty || 0
       }));
     }
     if (Array.isArray(data.logs)) {

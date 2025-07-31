@@ -237,3 +237,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Jest setup now suppresses console output for quieter test runs.
 - Operation logs are now kept per team with an expandable section in each card.
 - Starting an operation now displays the default summary text "Setting out through Warp Gate".
+- Operations now have a difficulty setting. Higher difficulties raise DCs and artifact rewards, and failed challenges deal HP damage.
