@@ -210,6 +210,11 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   }
   win.appendChild(classSelect);
 
+  const classDesc = document.createElement('div');
+  classDesc.classList.add('wgc-class-description');
+  classDesc.textContent = WGCTeamMember.getClassDescription(classSelect.value);
+  win.appendChild(classDesc);
+
   const lvl = member ? member.level : 1;
   const xp = member ? Math.floor(member.xp || 0) : 0;
   const xpReq = member ? member.getXPForNextLevel() : 10;
@@ -270,6 +275,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       const statName = ['power', 'athletics', 'wit'][index];
       container.querySelector('span:nth-child(2)').textContent = statValues[statName];
     });
+    classDesc.textContent = WGCTeamMember.getClassDescription(classSelect.value);
   });
   win.appendChild(statsDiv);
   win.appendChild(remainingSpan);

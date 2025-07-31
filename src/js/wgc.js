@@ -98,6 +98,10 @@ class WarpGateCommand extends EffectableEntity {
         const member = members[Math.floor(Math.random() * members.length)];
         roller = member;
         skillTotal = member[event.skill];
+        const leader = team[0];
+        if (leader && leader !== member) {
+          skillTotal += Math.floor(leader[event.skill] / 2);
+        }
         rollResult = this.roll(1);
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
@@ -114,6 +118,10 @@ class WarpGateCommand extends EffectableEntity {
           skillTotal = Math.floor(m.wit / 2);
         } else {
           skillTotal = m.wit;
+          const leader = team[0];
+          if (leader && leader !== m) {
+            skillTotal += Math.floor(leader.wit / 2);
+          }
         }
         roller = m;
         rollResult = this.roll(1);
