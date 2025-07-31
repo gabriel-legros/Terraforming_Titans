@@ -240,3 +240,8 @@ second time they speak in a chapter to help clarify who is talking.
 - Starting an operation now displays the default summary text "Setting out through Warp Gate".
 - Failed Social Science challenges now trigger the next event as a Combat challenge at 25% higher difficulty.
 - Team member dismissal is disabled during ongoing operations.
+- Individual challenges that roll a 20 are now critical successes granting 1 Alien artifact.
+- Operations include a difficulty setting that adds to all DCs (team DC +4×) and
+  increases artifact rewards by 10% per level. Failed individual checks deal
+  10HP damage per level to the chosen member while failed team checks damage all
+  members for 10HP.
