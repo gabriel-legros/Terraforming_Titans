@@ -296,7 +296,11 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   if (member) {
     const dismiss = document.createElement('button');
     dismiss.textContent = 'Dismiss';
+    const opActive = warpGateCommand && warpGateCommand.operations &&
+      warpGateCommand.operations[teamIndex] && warpGateCommand.operations[teamIndex].active;
+    dismiss.disabled = !!opActive;
     dismiss.addEventListener('click', () => {
+      if (dismiss.disabled) return;
       if (dismiss.textContent === 'Dismiss') {
         dismiss.textContent = 'Are You Sure?';
       } else {
