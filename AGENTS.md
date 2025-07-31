@@ -258,3 +258,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.
 - Added Hazardous Biomass stance control with Negotiation and Aggressive options adjusting combat and social event weights.
+- Difficulty selector now includes a tooltip explaining that it raises challenge DCs (+4 per level for team, +1 for individual), grants 10% more XP and artifacts per level, and causes failed individual checks to deal 10 HP damage per level while failed team checks damage everyone for 10 HP.
