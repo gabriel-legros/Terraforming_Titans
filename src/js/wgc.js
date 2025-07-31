@@ -306,7 +306,14 @@ class WarpGateCommand extends EffectableEntity {
     const team = this.teams[teamIndex];
     if (team) {
       const xpGain = successes * (1 + 0.1 * (op.difficulty || 0));
-      team.forEach(m => { if (m) m.xp = (m.xp || 0) + xpGain; });
+      const currentMax = team.reduce((mx, m) => m && m.xp > mx ? m.xp : mx, 0);
+      const newMax = currentMax + xpGain;
+      team.forEach(m => {
+        if (!m) return;
+        let gain = xpGain;
+        if (m.xp < currentMax) gain *= 1.5;
+        m.xp = Math.min(m.xp + gain, newMax);
+      });
     }
     const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
