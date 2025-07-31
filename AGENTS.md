@@ -248,3 +248,4 @@ second time they speak in a chapter to help clarify who is talking.
   10HP damage per level to the chosen member while failed team checks damage all
   members for 10HP.
 - Team members gain levels after earning XP: 10 XP for level 2 with requirements scaling quadratically. Level ups increase Max Health and add one stat point.
+- WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
