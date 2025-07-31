@@ -138,7 +138,6 @@ class WarpGateCommand extends EffectableEntity {
       success = true;
       artifact = true;
     }
-    const op = this.operations[teamIndex];
     if (success) op.successes += 1;
     if (artifact) op.artifacts += 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
     const rollsStr = rollResult.rolls.join(',');
