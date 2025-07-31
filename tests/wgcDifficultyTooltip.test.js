@@ -27,6 +27,7 @@ describe('WGC difficulty tooltip', () => {
     const title = icon.getAttribute('title');
     expect(title).toContain('challenge DCs');
     expect(title).toContain('10%');
-    expect(title).toContain('10 HP');
+    expect(title).toContain('5 HP');
+    expect(title).toContain('2 HP');
   });
 });

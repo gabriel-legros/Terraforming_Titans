@@ -16,7 +16,7 @@ describe('WGC auto recall on injury', () => {
   test('operation recalls when member health drops to zero', () => {
     const wgc = new WarpGateCommand();
     const member = WGCTeamMember.create('Bob', '', 'Soldier', {});
-    member.health = 10;
+    member.health = 4;
     const others = ['A','B','C'].map(n => WGCTeamMember.create(n, '', 'Soldier', {}));
     wgc.recruitMember(0, 0, member);
     others.forEach((m,i)=>wgc.recruitMember(0, i+1, m));

@@ -102,7 +102,7 @@ class WarpGateCommand extends EffectableEntity {
         dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          team.forEach(m => { if (m) m.health = Math.max(m.health - 10, 0); });
+          team.forEach(m => { if (m) m.health = Math.max(m.health - 2 * difficulty, 0); });
         }
         break;
       }
@@ -116,7 +116,7 @@ class WarpGateCommand extends EffectableEntity {
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          member.health = Math.max(member.health - 10 * difficulty, 0);
+          member.health = Math.max(member.health - 5 * difficulty, 0);
         }
         break;
       }
@@ -148,6 +148,9 @@ class WarpGateCommand extends EffectableEntity {
         rollResult = this.roll(4);
         dc = 40 * (event.difficultyMultiplier || 1) + difficulty;
         success = rollResult.sum + skillTotal >= dc;
+        if (!success) {
+          team.forEach(m => { if (m) m.health = Math.max(m.health - 5 * difficulty, 0); });
+        }
         break;
       }
     }
