@@ -66,6 +66,7 @@ function generateWGCTeamCards() {
     const lockMarkup = unlocked ? '' :
       `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations</div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
+    const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="team-header">Team ${name}</div>
@@ -77,6 +78,13 @@ function generateWGCTeamCards() {
               <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
               <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
               <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
+            </select>
+          </div>
+          <div class="team-stance">
+            <label>Artifact Retrieval <span class="info-tooltip-icon" title="Careful doubles artifact chance on Natural Science challenges but delays the next event by triple the time.">&#9432;</span></label>
+            <select class="artifact-select" data-team="${tIdx}">
+              <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+              <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
             </select>
           </div>
           <div class="team-controls">
@@ -407,6 +415,10 @@ function initializeWGCUI() {
           const t = parseInt(e.target.dataset.team, 10);
           warpGateCommand.setStance(t, e.target.value);
           updateWGCUI();
+        } else if (e.target.classList.contains('artifact-select')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          warpGateCommand.setArtifactStance(t, e.target.value);
+          updateWGCUI();
         }
       });
     }
@@ -447,6 +459,7 @@ function updateWGCUI() {
     const recallBtn = card.querySelector('.recall-button');
     const diffInput = card.querySelector('.difficulty-input');
     const stanceSelect = card.querySelector('.hbi-select');
+    const artSelect = card.querySelector('.artifact-select');
     const progressContainer = card.querySelector('.operation-progress');
     const progressBar = card.querySelector('.operation-progress-bar');
     const summaryEl = card.querySelector('.operation-summary');
@@ -468,6 +481,10 @@ function updateWGCUI() {
     if (stanceSelect) {
       const val = warpGateCommand.stances && warpGateCommand.stances[tIdx] ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
       stanceSelect.value = val;
+    }
+    if (artSelect) {
+      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx] ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
+      artSelect.value = val;
     }
     if (progressContainer && progressBar) {
       if (op.active) {

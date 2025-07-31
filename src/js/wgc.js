@@ -22,11 +22,11 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1 }));
+    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1, nextEvent: 60 }));
     this.teamOperationCounts = Array(5).fill(0);
     this.teamNextOperationNumber = Array(5).fill(1);
     this.logs = Array.from({ length: 5 }, () => []);
-    this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral' }));
+    this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
     this.totalOperations = 0;
     this.pendingCombat = false;
     this.combatDifficulty = 1;
@@ -152,8 +152,12 @@ class WarpGateCommand extends EffectableEntity {
       }
     }
 
+    const stanceObj = this.stances && this.stances[teamIndex] ? this.stances[teamIndex] : { artifact: 'Neutral' };
     const equip = this.rdUpgrades.wgtEquipment ? this.rdUpgrades.wgtEquipment.purchases : 0;
-    const artifactChance = Math.min(0.1 + equip * 0.001, 1);
+    let artifactChance = Math.min(0.1 + equip * 0.001, 1);
+    if (event.specialty === 'Natural Scientist' && stanceObj.artifact === 'Careful') {
+      artifactChance = Math.min(artifactChance * 2, 1);
+    }
     let artifact = success && Math.random() < artifactChance;
     const critical = event.type === 'individual' && rollResult.rolls.includes(20);
     if (critical) {
@@ -193,6 +197,9 @@ class WarpGateCommand extends EffectableEntity {
       if (typeof addJournalEntry === 'function') {
         addJournalEntry(`Team ${teamIndex + 1} recalled after ${injured.firstName} was injured.`);
       }
+    }
+    if (event.specialty === 'Natural Scientist' && stanceObj.artifact === 'Careful') {
+      op.nextEvent += 120;
     }
     return { success, artifact };
   }
@@ -261,11 +268,10 @@ class WarpGateCommand extends EffectableEntity {
     const seconds = _delta / 1000;
     this.operations.forEach((op, idx) => {
       if (op.active) {
-        const prev = Math.floor(op.timer / 60);
         op.timer += seconds;
-        const curr = Math.floor(op.timer / 60);
-        for (let t = prev; t < curr && t < 9; t++) {
+        while (op.timer >= op.nextEvent && op.nextEvent <= 540) {
           this.resolveEvent(idx, this.chooseEvent(idx));
+          op.nextEvent += 60;
         }
 
         const loops = Math.floor(op.timer / 600);
@@ -333,6 +339,7 @@ class WarpGateCommand extends EffectableEntity {
     op.active = true;
     op.progress = 0;
     op.timer = 0;
+    op.nextEvent = 60;
     op.artifacts = 0;
     op.successes = 0;
     op.number = this.teamNextOperationNumber[teamIndex];
@@ -349,6 +356,7 @@ class WarpGateCommand extends EffectableEntity {
       op.active = false;
       op.progress = 0;
       op.timer = 0;
+      op.nextEvent = 60;
       op.difficulty = 0;
     }
   }
@@ -376,6 +384,12 @@ class WarpGateCommand extends EffectableEntity {
     }
   }
 
+  setArtifactStance(teamIndex, value) {
+    if (this.stances[teamIndex]) {
+      this.stances[teamIndex].artifact = value;
+    }
+  }
+
   saveState() {
     return {
       enabled: this.enabled,
@@ -392,7 +406,8 @@ class WarpGateCommand extends EffectableEntity {
         artifacts: op.artifacts,
         successes: op.successes,
         summary: op.summary,
-        number: op.number
+        number: op.number,
+        nextEvent: op.nextEvent
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
@@ -400,7 +415,7 @@ class WarpGateCommand extends EffectableEntity {
       totalOperations: this.totalOperations,
       pendingCombat: this.pendingCombat,
       combatDifficulty: this.combatDifficulty,
-      stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass }))
+      stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact }))
     };
   }
 
@@ -427,7 +442,8 @@ class WarpGateCommand extends EffectableEntity {
         artifacts: op.artifacts || 0,
         successes: op.successes || 0,
         summary: op.summary || '',
-        number: op.number || 1
+        number: op.number || 1,
+        nextEvent: op.nextEvent || 60
       }));
     }
     if (Array.isArray(data.teamOperationCounts)) {
@@ -440,7 +456,10 @@ class WarpGateCommand extends EffectableEntity {
       this.logs = data.logs.map(l => l.slice(-100));
     }
     if (Array.isArray(data.stances)) {
-      this.stances = data.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass || 'Neutral' }));
+      this.stances = data.stances.map(s => ({
+        hazardousBiomass: s.hazardousBiomass || 'Neutral',
+        artifact: s.artifact || 'Neutral'
+      }));
     }
     this.totalOperations = data.totalOperations || 0;
     this.pendingCombat = data.pendingCombat || false;
