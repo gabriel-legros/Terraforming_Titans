@@ -256,6 +256,16 @@ class WarpGateCommand extends EffectableEntity {
         op.progress = op.timer / 600;
       }
     });
+
+    const minuteFraction = seconds / 60;
+    this.teams.forEach((team, idx) => {
+      const op = this.operations[idx];
+      const rate = op && op.active ? 1 : 5;
+      const heal = rate * minuteFraction;
+      team.forEach(m => {
+        if (m) m.health = Math.min(m.health + heal, m.maxHealth);
+      });
+    });
   }
 
   finishOperation(teamIndex) {
