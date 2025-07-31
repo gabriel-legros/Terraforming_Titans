@@ -253,5 +253,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Operation XP rewards now scale with difficulty as `1 + 0.1×difficulty`.
 - Team members regenerate 1 HP per step or 5 HP per step when recalled.
 - Individual challenge summaries now include the rolling member's name.
+- Natural Science challenges now grant double artifact rewards, configurable via the `artifactMultiplier` event field.
 - WGC Equipment upgrade now adds 0.1% artifact chance per purchase up to a +90% bonus (100% total) and is limited to 900 buys.
 - Team member class selection becomes locked once recruited.

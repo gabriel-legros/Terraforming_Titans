@@ -10,7 +10,7 @@ const operationEvents = [
   { name: 'Team Athletics Challenge', type: 'team', skill: 'athletics', weight: 1 },
   { name: 'Team Wits Challenge', type: 'team', skill: 'wit', weight: 1 },
   { name: 'Individual Athletics Challenge', type: 'individual', skill: 'athletics', weight: 1 },
-  { name: 'Natural Science challenge', type: 'science', specialty: 'Natural Scientist', escalate: true, weight: 1 },
+  { name: 'Natural Science challenge', type: 'science', specialty: 'Natural Scientist', escalate: true, weight: 1, artifactMultiplier: 2 },
   { name: 'Social Science challenge', type: 'science', specialty: 'Social Scientist', escalate: true, weight: 1 },
   { name: 'Combat challenge', type: 'combat', weight: 1 }
 ];
@@ -147,11 +147,18 @@ class WarpGateCommand extends EffectableEntity {
       artifact = true;
     }
     if (success) op.successes += 1;
-    if (artifact) op.artifacts += 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
+    let artifactReward = 0;
+    if (artifact) {
+      artifactReward = 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
+      const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
+      artifactReward *= mult;
+      op.artifacts += artifactReward;
+    }
     const rollsStr = rollResult.rolls.join(',');
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
     const rollerName = roller ? ` (${roller.firstName})` : '';
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artifact ? ' +1 Artifact' : ''}`;
+    const artText = artifact ? ` +${artifactReward} Artifact${artifactReward === 1 ? '' : 's'}` : '';
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
