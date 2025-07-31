@@ -1,4 +1,5 @@
 let wgcTabVisible = false;
+let wgcAlertNeeded = false;
 let wgcUIInitialized = false;
 const rdItems = {
   wgtEquipment: 'Warpgate Teams Equipment',
@@ -24,6 +25,7 @@ function showWGCTab() {
   const content = document.getElementById('wgc-hope');
   if (tab) tab.classList.remove('hidden');
   if (content) content.classList.remove('hidden');
+  if (typeof registerWGCAlert === 'function') registerWGCAlert();
 }
 
 function hideWGCTab() {
@@ -486,6 +488,16 @@ function redrawWGCTeamCards() {
   updateWGCUI();
 }
 
+function registerWGCAlert() {
+  wgcAlertNeeded = true;
+  if (typeof updateHopeAlert === 'function') updateHopeAlert();
+}
+
+function markWGCViewed() {
+  wgcAlertNeeded = false;
+  if (typeof updateHopeAlert === 'function') updateHopeAlert();
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     hideWGCTab,
@@ -497,5 +509,8 @@ if (typeof module !== 'undefined' && module.exports) {
     populateRDMenu,
     generateWGCTeamCards,
     generateWGCLayout,
+    registerWGCAlert,
+    markWGCViewed,
+    get wgcAlertNeeded() { return wgcAlertNeeded; }
   };
 }

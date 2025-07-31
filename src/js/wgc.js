@@ -166,6 +166,7 @@ class WarpGateCommand extends EffectableEntity {
       if (typeof addJournalEntry === 'function') {
         addJournalEntry(`Team ${teamIndex + 1} recalled after ${injured.firstName} was injured.`);
       }
+      if (typeof registerWGCAlert === 'function') registerWGCAlert();
     }
     return { success, artifact };
   }

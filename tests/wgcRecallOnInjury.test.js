@@ -20,8 +20,10 @@ describe('WGC auto recall on injury', () => {
     others.forEach((m,i)=>wgc.recruitMember(0, i+1, m));
     wgc.startOperation(0, 1);
     wgc.roll = () => ({ sum: 1, rolls: [1] });
+    jest.spyOn(Math, 'random').mockReturnValue(0);
     const event = { name: 'Test', type: 'individual', skill: 'power' };
     wgc.resolveEvent(0, event);
+    Math.random.mockRestore();
     expect(member.health).toBe(1);
     expect(wgc.operations[0].active).toBe(false);
     expect(addJournalEntry).toHaveBeenCalled();

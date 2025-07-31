@@ -250,3 +250,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Recalling a team mid-operation now increments the next operation number.
 - Operations abort if any member's HP hits 0. Their HP resets to 1, the team is recalled and the journal notes the injury.
 - WGC team cards now label the difficulty selector with "Difficulty" displayed above the input.
+- Unlocking Warp Gate Command or injuring a team member shows an alert on the HOPE tab and WGC subtab until viewed.
