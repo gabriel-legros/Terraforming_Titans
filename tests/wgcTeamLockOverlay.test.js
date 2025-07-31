@@ -24,7 +24,7 @@ describe('WGC team lock overlay', () => {
     const card = dom.window.document.querySelector('.wgc-team-card[data-team="1"]');
     const overlay = card.querySelector('.wgc-team-locked');
     expect(overlay).not.toBeNull();
-    expect(overlay.textContent).toContain('100');
+    expect(overlay.textContent).toContain('100 Operations');
     ctx.warpGateCommand.totalOperations = 100;
     ctx.updateWGCUI();
     expect(overlay.classList.contains('hidden')).toBe(true);
