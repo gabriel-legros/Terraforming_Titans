@@ -52,54 +52,71 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   roll(dice) {
-    let sum = 0;
+    const rolls = [];
     for (let i = 0; i < dice; i++) {
-      sum += Math.floor(Math.random() * 20) + 1;
+      rolls.push(Math.floor(Math.random() * 20) + 1);
     }
-    return sum;
+    return { sum: rolls.reduce((s, v) => s + v, 0), rolls };
   }
 
   resolveEvent(teamIndex, event) {
     const team = this.teams[teamIndex];
     if (!team) return { success: false, artifact: false };
     let success = false;
+    let rollResult = { sum: 0, rolls: [] };
+    let dc = 0;
+    let skillTotal = 0;
     switch (event.type) {
-      case 'team':
-        const skillSum = team.reduce((s, m) => s + (m ? m[event.skill] : 0), 0);
-        success = this.roll(4) + skillSum >= 40;
+      case 'team': {
+        skillTotal = team.reduce((s, m) => s + (m ? m[event.skill] : 0), 0);
+        rollResult = this.roll(4);
+        dc = 40;
+        success = rollResult.sum + skillTotal >= dc;
         break;
-      case 'individual':
+      }
+      case 'individual': {
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
         const member = members[Math.floor(Math.random() * members.length)];
-        success = this.roll(1) + member[event.skill] >= 10;
+        skillTotal = member[event.skill];
+        rollResult = this.roll(1);
+        dc = 10;
+        success = rollResult.sum + skillTotal >= dc;
         break;
-      case 'science':
+      }
+      case 'science': {
         let m = team.find(t => t && t.classType === event.specialty);
         if (!m) {
           m = team[0];
           if (!m) return { success: false, artifact: false };
-          const wit = Math.floor(m.wit / 2);
-          success = this.roll(1) + wit >= 10;
+          skillTotal = Math.floor(m.wit / 2);
         } else {
-          success = this.roll(1) + m.wit >= 10;
+          skillTotal = m.wit;
         }
+        rollResult = this.roll(1);
+        dc = 10;
+        success = rollResult.sum + skillTotal >= dc;
         break;
-      case 'combat':
-        const combatSkill = team.reduce((s, mem) => {
+      }
+      case 'combat': {
+        skillTotal = team.reduce((s, mem) => {
           if (!mem) return s;
           const mult = mem.classType === 'Soldier' ? 2 : 1;
-          return s + (mem.power * mult);
+          return s + mem.power * mult;
         }, 0);
-        success = this.roll(4) + combatSkill >= 40;
+        rollResult = this.roll(4);
+        dc = 40;
+        success = rollResult.sum + skillTotal >= dc;
         break;
+      }
     }
 
     const artifact = success && Math.random() < 0.1;
     const op = this.operations[teamIndex];
     if (success) op.successes += 1;
     if (artifact) op.artifacts += 1;
-    const summary = `${event.name}: ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
+    const rollsStr = rollResult.rolls.join(',');
+    const summary = `${event.name}: roll [${rollsStr}] + skill ${skillTotal} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${success ? 'Success' : 'Fail'}${artifact ? ' +1 Artifact' : ''}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 

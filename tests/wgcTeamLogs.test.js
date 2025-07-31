@@ -10,7 +10,7 @@ describe('WGC team logs', () => {
       wgc.recruitMember(0, i, WGCTeamMember.create('A'+i,'','Soldier',{}));
       wgc.recruitMember(1, i, WGCTeamMember.create('B'+i,'','Soldier',{}));
     }
-    wgc.roll = () => 20;
+    wgc.roll = () => ({ sum: 20, rolls: [20] });
     jest.spyOn(Math, 'random').mockReturnValue(0);
     wgc.startOperation(0);
     wgc.startOperation(1);

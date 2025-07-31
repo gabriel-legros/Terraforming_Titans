@@ -236,4 +236,5 @@ second time they speak in a chapter to help clarify who is talking.
   5000 operations respectively.
 - Jest setup now suppresses console output for quieter test runs.
 - Operation logs are now kept per team with an expandable section in each card.
+- Operation logs list dice rolls, DC and skill totals.
 - Starting an operation now displays the default summary text "Setting out through Warp Gate".
