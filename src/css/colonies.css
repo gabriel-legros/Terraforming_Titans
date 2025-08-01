@@ -86,9 +86,6 @@
   cursor: pointer;
 }
 
-#colony-sliders-container {
-}
-
 #colony-sliders-container.hidden {
   display: none;
 }
