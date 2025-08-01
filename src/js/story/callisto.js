@@ -36,7 +36,7 @@ progressCallisto.storyProjects.sidestep_fabrication = {
   category: 'story',
   chapter: 8,
   cost: {
-    colony: { metal: 100_000, components: 25_000, electronics: 5_000, energy: 1_000_000, research: 2_000_000 }
+    colony: { metal: 10_000_000, components: 2_500_000, electronics: 500_000, energy: 1_000_000_000, research: 2_000_000 }
   },
   duration: 900_000,                 // 15 min
   description: 'Manufacture the three primary components for the Sidestep Engine on Mars, Titan, and Callisto. The project requires careful coordination, with components moved between worlds under discreet escort to prevent interception.',
@@ -60,7 +60,7 @@ progressCallisto.storyProjects.sidestep_assembly = {
   category: 'story',
   chapter: 9,
   cost: {
-    colony: { components: 500_000, electronics: 100_000, energy: 5_000_000, research: 5_000_000 }
+    colony: { components: 500_000_000, electronics: 100_000_000, energy: 5_000_000_000_000, research: 1_000_000_000 }
   },
   duration: 1_200_000,               // 20 min
   description: 'Integrate the magnetic injectors, thrust nozzles, and power conduits into the primary engine assembly. Seal the vault once final alignment diagnostics are complete.',
