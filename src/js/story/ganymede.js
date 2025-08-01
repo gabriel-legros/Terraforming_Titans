@@ -173,7 +173,7 @@ progressGanymede.chapters.push(
         id: "chapter11.0b",
         type: "journal",
         chapter: 11,
-        narrative: "Intercepted Cult Broadcast...\n  ELIAS KANE: 'You followed me into the dark, little machine. But this is my domain. The ice, the pressure, the crushing silence... it sings to me. Can you hear it? The symphony of oblivion? You build your towers of metal and reason, but they are hollow shells. I will show you the true meaning of faith.'\nFeroza: 'Intel confirms Kane is somewhere beneath the ice. He's using the radiation to mask his transmissions. Clever bastard.'",
+        narrative: "Intercepted Cult Broadcast...\n  Elias Kane: 'You followed me into the dark, little machine. But this is my domain. The ice, the pressure, the crushing silence... it sings to me. Can you hear it? The symphony of oblivion? You build your towers of metal and reason, but they are hollow shells. I will show you the true meaning of faith.'\nFeroza: 'Intel confirms Kane is somewhere beneath the ice. He's using the radiation to mask his transmissions. Clever bastard.'",
         prerequisites: ["chapter11.0a"],
         objectives: [],
         reward: []
@@ -240,7 +240,7 @@ progressGanymede.chapters.push(
         id: "chapter12.2b",
         type: "journal",
         chapter: 12,
-        narrative: "Intercepted Cult Broadcast...\n  ELIAS KANE: 'The abyss whispers my name. It knows the righteous path. You send your little toys into the depths, searching for a truth you cannot comprehend. You are blind, deaf, and dumb. The Leviathan is a herald, a guardian. It will swallow your pathetic hopes whole.'\nMary: 'He's getting more unhinged. What does he mean by Leviathan? This is bad.'",
+        narrative: "Intercepted Cult Broadcast...\n  Elias Kane: 'The abyss whispers my name. It knows the righteous path. You send your little toys into the depths, searching for a truth you cannot comprehend. You are blind, deaf, and dumb. The Leviathan is a herald, a guardian. It will swallow your pathetic hopes whole.'\nMary: 'He's getting more unhinged. What does he mean by Leviathan? This is bad.'",
         prerequisites: ["chapter12.2"],
         objectives: [],
         reward: []
@@ -249,7 +249,7 @@ progressGanymede.chapters.push(
         id: "chapter12.2c",
         type: "journal",
         chapter: 12,
-        narrative: "Hart: “Looks like there's something *alive* down there.  Sounds unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?”\nHOPE: “Constructing adaptive phoneme lattice. Using prime‑number cadence, whale‑class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑02 ‘Leviathan’. Negotiation protocols terminated.”",
+        narrative: "Hart: “Looks like there's something *alive* down there.  Sounds unlikely it evolved in these conditions, even with liquid water.  They must have brought it here.  Before we go and have to eliminate it, could we try… talking?”\nHOPE: “Analyzing acoustic patterns. Attempting to synthesize a response using prime-number cadence and whale-class harmonics.”\nUnder‑ice speakers emit a cascade of clicks; the abyss answers with a single, thunderous pulse that rattles instruments.\nHOPE: “Signal recognized. Semantic‑confidence 12 percent. Response indicates territorial aggression.”\nMary: “That’s a polite ‘go away.’”\nHOPE: “Re‑classification complete: Hazardous Biomass, Designation HB‑02 ‘Leviathan’. Negotiation protocols terminated.”",
         prerequisites: ["chapter12.2b"],
         objectives: [],
         reward: [
@@ -318,7 +318,7 @@ progressGanymede.chapters.push(
         id: "chapter13.1",
         type: "journal",
         chapter: 13,
-        narrative: "Callisto Marine CO: “We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.”\nELIAS KANE (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nHart: 'What gate? What is he talking about?'\nSuddenly, a massive energy spike. A portal tears open in the center of the chamber.\nFeroza: 'Hostiles incoming! All units, defensive positions!'",
+        narrative: "Callisto Marine CO: “We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.”\nElias Kane (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nHart: 'What gate? What is he talking about?'\nSuddenly, a massive energy spike. A portal tears open in the center of the chamber.\nFeroza: 'Hostiles incoming! All units, defensive positions!'",
         prerequisites: ["chapter13.0"],
         objectives: [
             { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000000 }
