@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="src/css/solis.css">
     <link rel="stylesheet" href="src/css/pause.css">
     <link rel="stylesheet" href="src/css/wgc.css">
+    <link rel="stylesheet" href="src/css/dark-mode.css">
 
     <!-- Parameter Scripts -->
     <script src="src/js/planet-parameters.js"></script>
@@ -521,6 +522,9 @@
           <label style="display:block;margin-bottom:8px;">
             <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
           </label>
+          <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
+          </label>
       </div>
     </div>
 
@@ -646,6 +650,16 @@
             if (typeof updateBuildingDisplay === 'function') {
                 updateBuildingDisplay(buildings);
             }
+        });
+    }
+
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    if (darkModeToggle) {
+        darkModeToggle.checked = gameSettings.darkMode;
+        document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+        darkModeToggle.addEventListener('change', () => {
+            gameSettings.darkMode = darkModeToggle.checked;
+            document.body.classList.toggle('dark-mode', gameSettings.darkMode);
         });
     }
 

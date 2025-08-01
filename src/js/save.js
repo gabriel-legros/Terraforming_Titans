@@ -263,6 +263,11 @@ function loadGame(slotOrCustomString) {
       if(dayNightToggle){
         dayNightToggle.checked = gameSettings.disableDayNightCycle;
       }
+      const darkModeToggle = document.getElementById('dark-mode-toggle');
+      if(darkModeToggle){
+        darkModeToggle.checked = gameSettings.darkMode;
+        document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {

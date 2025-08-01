@@ -22,6 +22,7 @@ let spaceManager;
 
 let gameSettings = {
   useCelsius: false,
+  darkMode: false,
   hideCompletedResearch: false,
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
