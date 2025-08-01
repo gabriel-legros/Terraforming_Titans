@@ -46,13 +46,13 @@ describe('Solis resource upgrades', () => {
   });
 
   for (const key of Object.keys(amounts)) {
-    test(`purchaseUpgrade("${key}") increases resource and storage`, () => {
+    test(`purchaseUpgrade("${key}") only increases storage`, () => {
       const resource = makeResource();
       global.resources = { colony: { [key]: resource } };
       const manager = new SolisManager();
       manager.solisPoints = 20; // sufficient
       expect(manager.purchaseUpgrade(key)).toBe(true);
-      expect(resource.value).toBe(amounts[key]);
+      expect(resource.value).toBe(0);
       expect(resource.baseCap).toBe(0);
       expect(resource.cap).toBe(amounts[key]);
     });
