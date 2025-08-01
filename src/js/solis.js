@@ -146,7 +146,6 @@ class SolisManager extends EffectableEntity {
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
       const res = resources.colony[key];
-      res.increase(amount);
       if (typeof addEffect === 'function' && res.hasCap) {
         addEffect({
           target: 'resource',
