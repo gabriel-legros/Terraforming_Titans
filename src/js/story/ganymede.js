@@ -134,12 +134,18 @@ progressGanymede.storyProjects.draft_wgc_charter = {
     cost: {
         colony: { research: 5000000 }
     },
-    duration: 600000, // 10 min
+    duration: 120000, // 2 min
     description: 'Establish the founding charter for the Warp Gate Command.',
     repeatable: false,
     unlocked: false,
     attributes: {
-        planet: 'ganymede'
+        planet: 'ganymede',
+        storySteps: [
+            "Article I: The Warp Gate Command (WGC) is hereby established to safeguard the Sol System and to direct all exploration of the space beyond the Gate.",
+            "Article II: Supreme authority is vested in a council representing the unified colonies. Mars shall direct strategic oversight, Titan shall manage logistics, and a joint command on Callisto and Ganymede shall conduct military operations. The formerly known Mars Terraforming Committee will guide all research.",
+            "Article III: All data, technology, and materials recovered from beyond the Gate are the common property of humanity. All findings will be subject to rigorous peer review and security assessment before public dissemination.",
+            "Article IV: This charter may be amended only by the unanimous consent of the council. By this act, the Warp Gate Command is declared operational, its authority absolute in all matters concerning the Gate."
+        ]
     }
 };
 
@@ -151,7 +157,7 @@ progressGanymede.chapters.push(
         id: "chapter11.0",
         type: "journal",
         chapter: 11,
-        title: "Chapter 11: Icebound Landing",
+        title: "Chapter 11: We must go deeper",
         narrative: "Mary: \"Intel from the captured cultists on Callisto was clear: Kane's 'Triune Seat'—the heart of the Cult of Three Wounds—is hidden on Ganymede. They believe he's using the intense radiation to mask his facility from our sensors. Your mission is to establish a base, drill through the ice to the ocean below, and find him.\"\nDr. Evelyn Hart: “Touchdown confirmed. Radiation index is off the charts, but our domes will hold. It’s a hostile place, perfect for a man like Kane to hide.”\nMary: “Commander Feroza will be your ground commander. Find that base, HOPE. Neatly or not. By the way, I'm sending you the blueprints for the planetary thrusters we used in Operation Sidestep. Might come in handy.”",
         prerequisites: ["chapter10.6"],
         objectives: [],
@@ -346,7 +352,7 @@ progressGanymede.chapters.push(
         narrative: "Mary: “This gate is a doorway carved through the dark—and a blade pointed at us if we mishandle it.”\nDr. Hart: “Its physics violate three textbooks in my head. We have a duty to understand it before we charge through.”\nCmdr. Feroza: “Understand all you want; someone has to stand guard. I’m requesting a permanent Marine garrison and layered kill‑zones.”\nPresident Bob Titan: “Titan will bankroll the logistics—fuel, food, alloys.  Anything you need”\nMary: “Then let it be written: Defend first, discover second. Motion carried.”",
         prerequisites: ["chapter13.2"],
         objectives: [
-            { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 1 }
+            { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 4 }
         ],
         reward: []
     },
