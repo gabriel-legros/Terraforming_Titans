@@ -374,3 +374,31 @@ body.dark-mode {
     background-color: #2d2d2d;
     color: #666;
 }
+.dark-mode .need-box {
+    border-color: #444;
+}
+
+.dark-mode .need-box .text-container {
+    color: #ffffff;
+}
+
+.dark-mode .sliders-box {
+    background-color: #2d2d2d;
+    border-color: #444;
+}
+
+.dark-mode .colony-slider input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+    background: #4d4d4d;
+}
+
+.dark-mode .colony-slider input[type="range"].pretty-slider::-webkit-slider-thumb {
+    background-color: #bbbbbb;
+}
+
+.dark-mode .colony-slider input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-mode .colony-slider input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #bbbbbb;
+}

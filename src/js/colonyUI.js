@@ -187,8 +187,10 @@ function updateNeedBox(needBox, needName, value, isLuxury, structure) {
     const fillElement = needBox.querySelector('.need-fill');
     const textContainer = needBox.querySelector('span');
     fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
-    fillElement.style.backgroundColor = getNeedColor(value);
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    fillElement.style.backgroundColor = getNeedColor(value, isDarkMode);
     textContainer.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
+    textContainer.style.color = isDarkMode ? 'white' : 'black';
 
     // Update the checkbox state for luxury resources
     if (isLuxury) {
@@ -201,13 +203,14 @@ function updateNeedBox(needBox, needName, value, isLuxury, structure) {
 }
 
 // Helper function to determine the color based on the value
-function getNeedColor(value) {
+
+function getNeedColor(value, isDarkMode) {
     if (value === 1) {
-      return 'green';
+      return isDarkMode ? '#004d00' : 'green';
     } else if (value > 0 && value < 1) {
-      return 'yellow';
+      return isDarkMode ? '#b3b300' : 'yellow';
     } else {
-      return 'red';
+      return isDarkMode ? '#8b0000' : 'red';
     }
   }
 
