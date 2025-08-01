@@ -67,7 +67,8 @@ function updateResearchButtonText(button, researchItem, visible) {
         button.disabled = true;
         button.style.color = 'inherit';
     } else if (!canAffordResearch(researchItem)) {
-        // If research can't be afforded, set color to red
+        // If research can't be afforded, keep the button enabled but show red
+        button.disabled = false;
         button.style.color = 'red';
     } else {
         // Otherwise, set to default color
