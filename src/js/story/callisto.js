@@ -278,7 +278,7 @@ progressCallisto.chapters.push(
     id: "chapter10.2",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The attack converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Operation Sidestep successful. Threat averted. The energy expenditure required to launch their attack was orders of magnitude greater than the energy we used to shift our orbits. From a strategic standpoint, it is an inefficient weapon to deploy against a target that can maneuver so cheaply. The probability of an immediate, retargeted attack is low.'",
+    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The attack converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Analysis: Operation Sidestep successful. The enemy expended vast energy resources on a failed attack. Our defensive maneuver required comparatively minimal energy. This asymmetry in cost makes a second, immediate attack tactically inefficient. Probability of imminent threat: low.'",
     prerequisites: ["chapter10.1"],
     objectives: [
     ],
