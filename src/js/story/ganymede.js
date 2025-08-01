@@ -14,7 +14,7 @@ progressGanymede.storyProjects.deep_drill = {
   cost: {
     colony: { components: 10000, electronics: 5000, energy: 500000 }
   },
-  duration: 1800000, // 30 min
+  duration: 600000, // 10 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
   repeatable: false,
   unlocked: false,
@@ -112,7 +112,7 @@ progressGanymede.storyProjects.facility_expedition = {
     cost: {
         colony: { components: 10000, electronics: 10000, energy: 1000000 }
     },
-    duration: 1800000, // 30 min
+    duration: 600000, // 30 min
     description: 'Breach, sweep, and power up the mysterious underwater facility.',
     repeatable: false,
     unlocked: false,
