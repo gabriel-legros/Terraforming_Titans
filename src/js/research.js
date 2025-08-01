@@ -99,16 +99,37 @@ class Research {
       return this.researches[category] || [];
     }
 
-    // Return the IDs of researches that should be visible for a category.
-    // All completed researches stay visible along with the cheapest
-    // `limit` incomplete ones.
+    // Helpers to determine whether a research should display based on
+    // planet resources and unlocked flags.
+    planetHasMethane() {
+      if (typeof currentPlanetParameters === 'undefined') return true;
+      const surf = currentPlanetParameters.resources.surface;
+      const atm = currentPlanetParameters.resources.atmospheric;
+      return (surf.liquidMethane?.initialValue || 0) > 0 ||
+             (surf.hydrocarbonIce?.initialValue || 0) > 0 ||
+             (atm.atmosphericMethane?.initialValue || 0) > 0;
+    }
+
+    isResearchDisplayable(research) {
+      if (research.requiresMethane && !this.planetHasMethane()) {
+        return false;
+      }
+      if (research.requiredFlags && !research.requiredFlags.every(f => this.isBooleanFlagSet(f))) {
+        return false;
+      }
+      return true;
+    }
+
+    // Return the IDs of researches that should be visible for a category. All
+    // completed researches stay visible along with the cheapest `limit`
+    // incomplete ones that are displayable on the current planet.
     getVisibleResearchIdsByCategory(category, limit = 3) {
       const researches = this.getResearchesByCategory(category);
       const visible = new Set();
-      const unresearched = researches.filter(r => !r.isResearched);
+      const unresearched = researches.filter(r => !r.isResearched && this.isResearchDisplayable(r));
       unresearched.slice(0, limit).forEach(r => visible.add(r.id));
       researches.forEach(r => {
-        if (r.isResearched) visible.add(r.id);
+        if (r.isResearched && this.isResearchDisplayable(r)) visible.add(r.id);
       });
       return visible;
     }
