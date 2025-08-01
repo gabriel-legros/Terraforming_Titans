@@ -402,3 +402,9 @@ body.dark-mode {
 .dark-mode .colony-slider input[type="range"].pretty-slider::-moz-range-thumb {
     background-color: #bbbbbb;
 }
+.dark-mode #life-designs-table th,
+.dark-mode #life-status-table th {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border-color: #444;
+}
