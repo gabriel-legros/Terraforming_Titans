@@ -278,7 +278,7 @@ progressCallisto.chapters.push(
     id: "chapter10.2",
     type: "journal",
     chapter: 10,
-    narrative: "Receiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The attack converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Analysis: Operation Sidestep successful. The enemy expended vast energy resources on a failed attack. Our defensive maneuver required comparatively minimal energy. This asymmetry in cost makes a second, immediate attack tactically inefficient. Probability of imminent threat: low.'",
+    narrative: "System Alert: High-energy particle beam detected. Trajectory analysis confirms convergence on previous orbital coordinates. All colonial assets remain secure. No damage reported.\nReceiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The three attacks converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Analysis: Operation Sidestep successful. The enemy expended vast energy resources on a failed attack. Our defensive maneuver required comparatively minimal energy. This asymmetry in cost makes a second, immediate attack tactically inefficient. Probability of imminent threat: low.'",
     prerequisites: ["chapter10.1"],
     objectives: [
     ],
