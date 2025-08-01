@@ -296,11 +296,20 @@ progressCallisto.chapters.push(
     reward: []
   },
   {
+    id: "chapter10.3b",
+    type: "journal",
+    chapter: 10,
+    narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E., my friend! A toast! You've just saved trillions of dollars in assets across the system—oh, and all of humanity, of course. That too. My projections for quarterly growth are looking stellar, thanks to you. Keep up the good work; a thriving market requires a distinct lack of alien invasions.'",
+    prerequisites: ["chapter10.3"],
+    objectives: [],
+    reward: []
+  },
+  {
     id: "chapter10.4",
     type: "journal",
     chapter: 10,
     narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
-    prerequisites: ["chapter10.3"],
+    prerequisites: ["chapter10.3b"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
