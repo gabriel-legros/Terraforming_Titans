@@ -3,9 +3,9 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
 
-function createBioFactory(){
+function createBiodome(){
   const config = {
-    name: 'Bio Factory',
+    name: 'Biodome',
     category: 'terraforming',
     cost: {},
     consumption: {},
@@ -19,10 +19,10 @@ function createBioFactory(){
     requiresWorker: 0,
     unlocked: true
   };
-  return new Building(config, 'bioFactory');
+  return new Building(config, 'biodome');
 }
 
-describe('bio factory productivity requires survivable environment', () => {
+describe('biodome productivity requires survivable environment', () => {
   beforeEach(() => {
     global.resources = { colony:{}, surface:{}, underground:{}, atmospheric:{} };
     global.populationModule = { getWorkerAvailabilityRatio: () => 1 };
@@ -30,7 +30,7 @@ describe('bio factory productivity requires survivable environment', () => {
 
   test('productivity zero when life cannot survive anywhere', () => {
     global.lifeDesigner = { currentDesign: { canSurviveAnywhere: () => false } };
-    const fac = createBioFactory();
+    const fac = createBiodome();
     fac.active = 1;
     fac.updateProductivity(global.resources, 1000);
     expect(fac.productivity).toBe(0);
@@ -38,7 +38,7 @@ describe('bio factory productivity requires survivable environment', () => {
 
   test('produces when life can survive somewhere', () => {
     global.lifeDesigner = { currentDesign: { canSurviveAnywhere: () => true } };
-    const fac = createBioFactory();
+    const fac = createBiodome();
     fac.active = 1;
     fac.updateProductivity(global.resources, 1000);
     expect(fac.productivity).toBeGreaterThan(0);

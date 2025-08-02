@@ -560,12 +560,12 @@ const researchParameters = {
             type: 'workerMultiplier',
             value: 0.75
           },
-          {
-            target: 'building',
-            targetId: 'bioFactory',
-            type: 'workerMultiplier',
-            value: 0.75
-          }
+            {
+              target: 'building',
+              targetId: 'biodome',
+              type: 'workerMultiplier',
+              value: 0.75
+            }
         ],
       },  
     ],
@@ -1031,11 +1031,11 @@ const researchParameters = {
         cost: { research: 100_000_000 },
         prerequisites: [],
         effects: [
-          {
-            target: 'building',
-            targetId: 'bioFactory',
-            type: 'enable'
-          },
+            {
+              target: 'building',
+              targetId: 'biodome',
+              type: 'enable'
+            },
           {
             target: 'resource',
             resourceType: 'surface',

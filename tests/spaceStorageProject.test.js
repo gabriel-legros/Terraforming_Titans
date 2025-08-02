@@ -12,7 +12,7 @@ describe('Space Storage project', () => {
     expect(project).toBeDefined();
     expect(project.type).toBe('SpaceStorageProject');
     expect(project.category).toBe('mega');
-    expect(project.cost.colony.metal).toBe(1000000000000);
+    expect(project.cost.colony.metal).toBe(1_000_000_000_000);
     expect(project.duration).toBe(300000);
     expect(project.repeatable).toBe(true);
     expect(project.maxRepeatCount).toBe(Infinity);

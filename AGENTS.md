@@ -117,7 +117,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Day-night cycle duration now derives from each planet's rotation period, treating one Earth day as one minute.
 - Added a "system-pop-up" story event type for instant messages.
 - Added a `setGameSpeed` console command that multiplies time progression for the current session.
-- Bio Factory stops producing if designed life can't survive in any zone.
+- Biodome stops producing if designed life can't survive in any zone.
 - Life growth rate shows 0 when no liquid water is present and its tooltip lists a moisture multiplier.
 - Subtab alerts indicate available Solis quests and completable terraforming milestones.
 - Space mirror power per unit area now uses cross-section area for accurate flux.
@@ -272,4 +272,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Operation logs now show the leader's half skill bonus in individual and science challenges.
 - Operations now record the highest difficulty cleared and grant Alien artifact bonuses equal to each newly conquered difficulty level (e.g. clearing level 4 from 0 grants 1+2+3+4 artifacts).
 - ResearchManager now skips hidden entries when revealing the next three researches.
+- Bio Factory renamed to Biodome, and Life Designer UI now shows a Biodomes section displaying points from biodomes.
 - Added TerraformedDurationProject base class; Space Storage and Dyson Swarm now scale duration with terraformed planets. Space Storage is repeatable with 1 trillion tons capacity per completion.
