@@ -103,11 +103,16 @@ describe('Space Storage project', () => {
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
   });
 
-  test('withdraw mode returns stored resources', () => {
+  test('withdraw mode distributes capacity and returns resources (water to colony)', () => {
     const ctx = {
       console,
       EffectableEntity: require('../src/js/effectable-entity.js'),
-      resources: { colony: { metal: { value: 0, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } } } },
+      resources: {
+        colony: {
+          metal: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } },
+          water: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } }
+        }
+      },
       buildings: {},
       colonies: {},
       projectElements: {},
@@ -125,14 +130,60 @@ describe('Space Storage project', () => {
     const attrs = { costPerShip: {}, transportPerShip: 1000 };
     const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
-    project.selectedResources = [{ category: 'colony', resource: 'metal' }];
-    project.assignedSpaceships = 50;
-    project.resourceUsage = { metal: 2000 };
-    project.usedStorage = 2000;
+    project.selectedResources = [{ category: 'colony', resource: 'metal' }, { category: 'surface', resource: 'liquidWater' }];
+    project.assignedSpaceships = 1;
+    project.resourceUsage = { metal: 2000, liquidWater: 1000 };
+    project.usedStorage = 3000;
     project.shipWithdrawMode = true;
+    project.startShipOperation();
+    expect(project.resourceUsage.metal).toBe(1500);
+    expect(project.resourceUsage.liquidWater).toBe(500);
+    expect(project.usedStorage).toBe(2000);
     project.completeShipOperation();
-    expect(ctx.resources.colony.metal.value).toBe(1000);
-    expect(project.resourceUsage.metal).toBe(1000);
+    expect(ctx.resources.colony.metal.value).toBe(500);
+    expect(ctx.resources.colony.water.value).toBe(500);
+  });
+
+  test('store mode removes colony resources and stores them', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        colony: {
+          metal: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+        },
+        surface: {
+          liquidWater: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+        }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: { getTerraformedPlanetCount: () => 0 }
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const attrs = { costPerShip: {}, transportPerShip: 1000 };
+    const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.repeatCount = 1;
+    project.selectedResources = [{ category: 'colony', resource: 'metal' }, { category: 'surface', resource: 'liquidWater' }];
+    project.assignedSpaceships = 1;
+    project.shipWithdrawMode = false;
+    project.startShipOperation();
+    expect(ctx.resources.colony.metal.value).toBe(500);
+    expect(ctx.resources.surface.liquidWater.value).toBe(500);
+    expect(project.usedStorage).toBe(0);
+    project.completeShipOperation();
+    expect(project.resourceUsage.metal).toBe(500);
+    expect(project.resourceUsage.liquidWater).toBe(500);
     expect(project.usedStorage).toBe(1000);
   });
 });

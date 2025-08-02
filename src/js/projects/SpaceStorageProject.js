@@ -12,6 +12,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationRemainingTime = 0;
     this.shipOperationStartingDuration = 0;
     this.shipWithdrawMode = false;
+    this.pendingTransfers = [];
   }
 
   getDurationWithTerraformBonus(baseDuration) {
@@ -59,16 +60,103 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  calculateTransferPlan(simulate = false) {
+    const transfers = [];
+    let total = 0;
+    const capacity = this.calculateTransferAmount();
+    if (capacity <= 0) return { transfers, total };
+
+    if (this.shipWithdrawMode) {
+      let remaining = capacity;
+      const all = this.selectedResources.map(({ category, resource }) => {
+        const stored = this.resourceUsage[resource] || 0;
+        const target = resource === 'liquidWater'
+          ? { category: 'colony', resource: 'water' }
+          : { category, resource };
+        const targetRes = resources[target.category][target.resource];
+        const destFree = targetRes.cap - targetRes.value;
+        return { category: target.category, resource: target.resource, stored, destFree, key: resource };
+      }).filter(r => r.stored > 0 && r.destFree > 0);
+      let valid = all;
+      while (remaining > 0 && valid.length > 0) {
+        const share = remaining / valid.length;
+        let used = 0;
+        valid.forEach(r => {
+          const available = r.stored - (r.assigned || 0);
+          const capacityLeft = r.destFree - (r.assigned || 0);
+          const amount = Math.min(share, available, capacityLeft);
+          if (amount > 0) {
+            r.assigned = (r.assigned || 0) + amount;
+            used += amount;
+          }
+        });
+        remaining -= used;
+        valid = valid.filter(r => (r.stored - (r.assigned || 0)) > 0 && (r.destFree - (r.assigned || 0)) > 0);
+        if (used === 0) break;
+      }
+      all.forEach(r => {
+        const amount = r.assigned || 0;
+        if (amount > 0) {
+          total += amount;
+          transfers.push({ mode: 'withdraw', category: r.category, resource: r.resource, amount, storageKey: r.key });
+          if (!simulate) {
+            const stored = this.resourceUsage[r.key] || 0;
+            const remainingStored = stored - amount;
+            if (remainingStored > 0) {
+              this.resourceUsage[r.key] = remainingStored;
+            } else {
+              delete this.resourceUsage[r.key];
+            }
+            this.usedStorage = Math.max(0, this.usedStorage - amount);
+          }
+        }
+      });
+    } else {
+      const freeSpace = this.maxStorage - this.usedStorage;
+      let remaining = Math.min(capacity, freeSpace);
+      const all = this.selectedResources.map(({ category, resource }) => {
+        const src = resources[category] && resources[category][resource];
+        const available = resource === 'liquidWater'
+          ? resources.surface.liquidWater.value
+          : (src ? src.value : 0);
+        return { category, resource, available, src: resource === 'liquidWater' ? resources.surface.liquidWater : src };
+      }).filter(r => r.available > 0);
+      let valid = all;
+      while (remaining > 0 && valid.length > 0) {
+        const share = remaining / valid.length;
+        let used = 0;
+        valid.forEach(r => {
+          const available = r.available - (r.assigned || 0);
+          const amount = Math.min(share, available);
+          if (amount > 0) {
+            r.assigned = (r.assigned || 0) + amount;
+            used += amount;
+          }
+        });
+        remaining -= used;
+        valid = valid.filter(r => (r.available - (r.assigned || 0)) > 0);
+        if (used === 0) break;
+      }
+      all.forEach(r => {
+        const amount = r.assigned || 0;
+        if (amount > 0) {
+          total += amount;
+          transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount });
+          if (!simulate) {
+            r.src.decrease(amount);
+          }
+        }
+      });
+    }
+    return { transfers, total };
+  }
+
   canStartShipOperation() {
     if (this.shipOperationIsActive) return false;
     if (this.assignedSpaceships <= 0) return false;
     if (this.selectedResources.length === 0) return false;
-    const transfer = this.calculateTransferAmount();
-    if (!this.shipWithdrawMode && this.usedStorage + transfer > this.maxStorage) return false;
-    if (this.shipWithdrawMode) {
-      const hasStored = this.selectedResources.some(({ resource }) => (this.resourceUsage[resource] || 0) > 0);
-      if (!hasStored) return false;
-    }
+    const transferPlan = this.calculateTransferPlan(true);
+    if (transferPlan.total <= 0) return false;
     const totalCost = this.calculateSpaceshipTotalCost();
     for (const category in totalCost) {
       for (const resource in totalCost[category]) {
@@ -88,6 +176,8 @@ class SpaceStorageProject extends SpaceshipProject {
         resources[category][resource].decrease(totalCost[category][resource]);
       }
     }
+    const plan = this.calculateTransferPlan(false);
+    this.pendingTransfers = plan.transfers;
     this.shipOperationRemainingTime = this.getEffectiveDuration();
     this.shipOperationStartingDuration = this.shipOperationRemainingTime;
     this.shipOperationIsActive = true;
@@ -96,7 +186,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   resumeShipOperation() {
-    if (this.shipOperationIsPaused && this.canStartShipOperation()) {
+    if (this.shipOperationIsPaused) {
       this.shipOperationIsActive = true;
       this.shipOperationIsPaused = false;
       return true;
@@ -114,33 +204,15 @@ class SpaceStorageProject extends SpaceshipProject {
 
   completeShipOperation() {
     this.shipOperationIsActive = false;
-    const transfer = this.calculateTransferAmount();
-    this.selectedResources.forEach(({ category, resource }) => {
-      if (this.shipWithdrawMode) {
-        const stored = this.resourceUsage[resource] || 0;
-        const amount = Math.min(transfer, stored);
-        if (amount > 0) {
-          resources[category][resource].increase(amount);
-          const remaining = stored - amount;
-          if (remaining > 0) {
-            this.resourceUsage[resource] = remaining;
-          } else {
-            delete this.resourceUsage[resource];
-          }
-          this.usedStorage = Math.max(0, this.usedStorage - amount);
-        }
-      } else {
-        const available = resources[category] && resources[category][resource]
-          ? resources[category][resource].value
-          : 0;
-        const amount = Math.min(transfer, available, this.maxStorage - this.usedStorage);
-        if (amount > 0) {
-          resources[category][resource].decrease(amount);
-          this.resourceUsage[resource] = (this.resourceUsage[resource] || 0) + amount;
-          this.usedStorage += amount;
-        }
+    this.pendingTransfers.forEach(t => {
+      if (t.mode === 'withdraw') {
+        resources[t.category][t.resource].increase(t.amount);
+      } else if (t.mode === 'store') {
+        this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
+        this.usedStorage += t.amount;
       }
     });
+    this.pendingTransfers = [];
   }
 
   renderUI(container) {
@@ -177,6 +249,7 @@ class SpaceStorageProject extends SpaceshipProject {
       usedStorage: this.usedStorage,
       selectedResources: this.selectedResources,
       resourceUsage: this.resourceUsage,
+      pendingTransfers: this.pendingTransfers,
       shipOperation: {
         remainingTime: this.shipOperationRemainingTime,
         startingDuration: this.shipOperationStartingDuration,
@@ -193,6 +266,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorage = state.usedStorage || 0;
     this.selectedResources = state.selectedResources || [];
     this.resourceUsage = state.resourceUsage || {};
+    this.pendingTransfers = state.pendingTransfers || [];
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;

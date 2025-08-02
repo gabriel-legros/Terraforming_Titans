@@ -283,3 +283,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Land resource tooltip now includes land used by colonies.
 - Biodome points display now shows fractional progress and no longer lists the maximum.
 - Space Storage ships now reduce duration up to 100 assignments, apply multipliers beyond that, support deposit/withdraw toggling and always show a resource table with current amounts.
+- Space Storage now features Store/Withdraw mode buttons with even capacity distribution and transfers calculated at launch.

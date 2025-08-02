@@ -27,7 +27,13 @@ describe('Space Storage UI', () => {
     expect(els.usageBody.querySelector('tr:first-child td:nth-child(2)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.shipAutoStartCheckbox).toBeDefined();
-    expect(els.withdrawToggle).toBeDefined();
+    expect(els.withdrawButton).toBeDefined();
+    expect(els.storeButton).toBeDefined();
+
+    expect(els.storeButton.classList.contains('selected')).toBe(true);
+    project.shipWithdrawMode = true;
+    ctx.updateSpaceStorageUI(project);
+    expect(els.withdrawButton.classList.contains('selected')).toBe(true);
 
     project.resourceUsage = { metal: 500 };
     project.usedStorage = 500;

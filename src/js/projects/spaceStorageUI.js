@@ -77,18 +77,39 @@ function renderSpaceStorageUI(project, container) {
   shipFooter.appendChild(shipProgressButtonContainer);
 
   const modeContainer = document.createElement('div');
-  modeContainer.classList.add('checkbox-container');
-  const modeToggle = document.createElement('input');
-  modeToggle.type = 'checkbox';
-  modeToggle.id = `${project.name}-withdraw-mode`;
-  modeToggle.addEventListener('change', e => {
-    project.shipWithdrawMode = e.target.checked;
+  modeContainer.classList.add('mode-selection');
+  const modeLabel = document.createElement('span');
+  modeLabel.textContent = 'Mode:';
+  const withdrawButton = document.createElement('button');
+  withdrawButton.textContent = 'Withdraw';
+  withdrawButton.classList.add('mode-button');
+  const storeButton = document.createElement('button');
+  storeButton.textContent = 'Store';
+  storeButton.classList.add('mode-button');
+
+  const updateModeButtons = () => {
+    if (project.shipWithdrawMode) {
+      withdrawButton.classList.add('selected');
+      storeButton.classList.remove('selected');
+    } else {
+      storeButton.classList.add('selected');
+      withdrawButton.classList.remove('selected');
+    }
+  };
+
+  withdrawButton.addEventListener('click', () => {
+    project.shipWithdrawMode = true;
+    updateModeButtons();
   });
-  const modeLabel = document.createElement('label');
-  modeLabel.htmlFor = modeToggle.id;
-  modeLabel.textContent = 'Withdraw';
-  modeContainer.append(modeToggle, modeLabel);
+  storeButton.addEventListener('click', () => {
+    project.shipWithdrawMode = false;
+    updateModeButtons();
+  });
+
+  modeContainer.append(modeLabel, withdrawButton, storeButton);
   shipFooter.appendChild(modeContainer);
+
+  updateModeButtons();
 
   const shipAutomationContainer = document.createElement('div');
   shipAutomationContainer.classList.add('automation-settings-container');
@@ -117,7 +138,9 @@ function renderSpaceStorageUI(project, container) {
     usageBody: card.querySelector('#ss-usage-body'),
     shipProgressButton,
     shipAutoStartCheckbox,
-    withdrawToggle: modeToggle
+    withdrawButton,
+    storeButton,
+    updateModeButtons
   };
 }
 
@@ -157,8 +180,8 @@ function updateSpaceStorageUI(project) {
   if (els.shipAutoStartCheckbox) {
     els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
   }
-  if (els.withdrawToggle) {
-    els.withdrawToggle.checked = project.shipWithdrawMode;
+  if (els.updateModeButtons) {
+    els.updateModeButtons();
   }
   if (els.shipProgressButton) {
     const duration = project.getEffectiveDuration();
