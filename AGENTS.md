@@ -284,3 +284,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Biodome points display now shows fractional progress and no longer lists the maximum.
 - Space Storage ships now reduce duration up to 100 assignments, apply multipliers beyond that, support deposit/withdraw toggling and always show a resource table with current amounts.
 - Space Storage now features Store/Withdraw mode buttons with even capacity distribution and transfers calculated at launch.
+- Space Storage UI now combines resource checkboxes with usage in a single table and places spaceship assignment below storage controls.
