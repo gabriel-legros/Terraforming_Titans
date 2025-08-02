@@ -103,6 +103,9 @@ class EffectableEntity {
         case 'resourceCostMultiplier':
           this.applyResourceCostMultiplier(effect);
           break;
+        case 'spaceshipCostMultiplier':
+          this.applySpaceshipCostMultiplier(effect);
+          break;
         case 'maintenanceCostMultiplier':
           this.applyMaintenanceCostMultiplier(effect);
           break;
@@ -228,6 +231,10 @@ class EffectableEntity {
     }
 
     applyResourceCostMultiplier(effect) {
+
+    }
+
+    applySpaceshipCostMultiplier(effect) {
 
     }
 
@@ -484,6 +491,22 @@ class EffectableEntity {
           effect.resourceId === resourceId
         ) {
           // Apply the effect multiplier
+          multiplier *= effect.value;
+        }
+      });
+
+      return multiplier;
+    }
+
+    getEffectiveSpaceshipCostMultiplier(resourceCategory, resourceId) {
+      let multiplier = 1;
+
+      this.activeEffects.forEach((effect) => {
+        if (
+          effect.type === 'spaceshipCostMultiplier' &&
+          effect.resourceCategory === resourceCategory &&
+          effect.resourceId === resourceId
+        ) {
           multiplier *= effect.value;
         }
       });

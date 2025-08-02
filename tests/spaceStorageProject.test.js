@@ -247,4 +247,49 @@ describe('Space Storage project', () => {
     expect(project.resourceUsage.liquidWater).toBe(500);
     expect(project.usedStorage).toBe(1000);
   });
+
+  test('space elevator only negates ship metal cost', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {},
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const params = {
+      name: 'spaceStorage',
+      category: 'mega',
+      cost: { colony: { metal: 1000 } },
+      duration: 1000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: { costPerShip: { colony: { metal: 100 } }, transportPerShip: 0 }
+    };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    expect(project.getScaledCost().colony.metal).toBe(1000);
+    expect(project.calculateSpaceshipCost().colony.metal).toBe(100);
+
+    project.addEffect({
+      type: 'spaceshipCostMultiplier',
+      resourceCategory: 'colony',
+      resourceId: 'metal',
+      value: 0
+    });
+
+    expect(project.getScaledCost().colony.metal).toBe(1000);
+    expect(project.calculateSpaceshipCost().colony).toBeUndefined();
+  });
 });
