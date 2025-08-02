@@ -75,7 +75,8 @@ class Colony extends Building {
           continue;
         }
   
-        const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const { amount } = this.getConsumptionResource(category, resource);
+        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * popConsumptionRatio * (deltaTime / 1000);
   
         const availableAmount = resources[category][resource].value;
@@ -117,7 +118,8 @@ class Colony extends Building {
           continue;
         }
   
-        const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const { amount } = this.getConsumptionResource(category, resource);
+        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
   
         // Track actual consumption in the building

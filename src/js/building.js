@@ -148,6 +148,18 @@ class Building extends EffectableEntity {
     return multiplier;
   }
 
+  // Helper to extract consumption amount and flags
+  getConsumptionResource(category, resource) {
+    const entry = this.consumption[category][resource];
+    if (typeof entry === 'object') {
+      return {
+        amount: entry.amount || 0,
+        ignoreProductivity: !!entry.ignoreProductivity
+      };
+    }
+    return { amount: entry, ignoreProductivity: false };
+  }
+
   // Get modified production values based on effective multipliers
   getModifiedProduction() {
     const modifiedProduction = {};
@@ -171,9 +183,9 @@ class Building extends EffectableEntity {
     for (const category in this.consumption) {
       modifiedConsumption[category] = {};
       for (const resource in this.consumption[category]) {
-        const baseConsumption = this.consumption[category][resource];
+        const { amount } = this.getConsumptionResource(category, resource);
         const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        modifiedConsumption[category][resource] = baseConsumption * consumptionMultiplier;
+        modifiedConsumption[category][resource] = amount * consumptionMultiplier;
       }
     }
 
@@ -502,8 +514,10 @@ class Building extends EffectableEntity {
       }
 
       for (const resource in this.consumption[category]) {
-        const baseConsumption = this.active * this.consumption[category][resource] * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const scaledConsumption = baseConsumption * this.productivity * (deltaTime / 1000);
+        const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
+        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const productFactor = ignoreProductivity ? 1 : this.productivity;
+        const scaledConsumption = baseConsumption * productFactor * (deltaTime / 1000);
 
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = scaledConsumption;
