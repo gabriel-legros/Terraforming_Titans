@@ -79,8 +79,13 @@ function initializeLifeTerraformingDesignerUI() {
                <hr style="margin: 15px 0;">
                <div id="life-biodomes-section" style="margin-top: 10px;">
                  <h4>Biodomes</h4>
-                 <p>Points from biodomes : <span id="life-biodome-points">0</span></p>
-               </div>
+                 <p>Points from biodomes :
+                   <span id="life-biodome-points">0</span> /
+                   <span id="life-biodome-max">0</span>
+                   <span id="life-biodome-rate">+0/hour</span>
+                  <span class="info-tooltip-icon" id="life-biodome-tooltip" title="Each Biodome generates life design points at log10(10 × Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.">&#9432;</span>
+                </p>
+              </div>
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
             </div>
@@ -369,8 +374,16 @@ function updateLifeUI() {
     updateDesignValues();
     updatePointsDisplay();
     const biodomePointsSpan = document.getElementById('life-biodome-points');
+    const biodomeMaxSpan = document.getElementById('life-biodome-max');
+    const biodomeRateSpan = document.getElementById('life-biodome-rate');
     if (biodomePointsSpan) {
-      biodomePointsSpan.textContent = typeof lifeDesigner.biodomePoints !== 'undefined' ? lifeDesigner.biodomePoints : 0;
+      biodomePointsSpan.textContent = Math.floor(lifeDesigner.biodomePoints || 0);
+    }
+    if (biodomeMaxSpan) {
+      biodomeMaxSpan.textContent = Math.floor(lifeDesigner.maxLifeDesignPoints());
+    }
+    if (biodomeRateSpan) {
+      biodomeRateSpan.textContent = `+${formatNumber(lifeDesigner.biodomePointRate, false, 2)}/hour`;
     }
     // updateZonalBiomassDensities(); // Remove call to old function
     updateLifeStatusTable();
