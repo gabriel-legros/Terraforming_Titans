@@ -38,7 +38,7 @@ describe('lifeUI biodomes section', () => {
     const lifeCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'life.js'), 'utf8');
     vm.runInContext(lifeCode + '; this.LifeDesigner = LifeDesigner;', ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'lifeUI.js'), 'utf8');
-    vm.runInContext(uiCode + '; this.initializeLifeTerraformingDesignerUI = initializeLifeTerraformingDesignerUI;', ctx);
+    vm.runInContext(uiCode + '; this.initializeLifeTerraformingDesignerUI = initializeLifeTerraformingDesignerUI; this.updateLifeUI = updateLifeUI;', ctx);
 
     ctx.lifeDesigner = new ctx.LifeDesigner();
     ctx.lifeDesigner.enable();
@@ -52,9 +52,12 @@ describe('lifeUI biodomes section', () => {
     const points = dom.window.document.getElementById('life-biodome-points');
     expect(points.textContent).toBe('0');
     const max = dom.window.document.getElementById('life-biodome-max');
-    expect(max.textContent).toBe('0');
+    expect(max).toBeNull();
     const rate = dom.window.document.getElementById('life-biodome-rate');
     expect(rate.textContent).toBe('+0/hour');
+    ctx.lifeDesigner.biodomePoints = 1.5;
+    ctx.updateLifeUI();
+    expect(points.textContent).toBe('1.50');
     const tooltip = dom.window.document.getElementById('life-biodome-tooltip');
     expect(tooltip).not.toBeNull();
     expect(tooltip.classList.contains('info-tooltip-icon')).toBe(true);
