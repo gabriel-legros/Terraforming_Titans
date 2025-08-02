@@ -289,3 +289,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Dyson Swarm and other mega projects can draw costs from Space Storage, with an option to prioritize stored resources.
 - Space Storage UI shows Used and Max storage side by side, includes expansion cost with terraforming tooltip, and displays spaceship assignment next to ship cost & gain.
 - Space Storage card now correctly displays the expansion metal cost.
+- Space Elevator no longer negates Space Storage expansion metal cost, applying its metal cost reduction only to ships.
