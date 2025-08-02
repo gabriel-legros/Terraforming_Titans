@@ -151,6 +151,11 @@ class SpaceStorageProject extends SpaceshipProject {
     return { transfers, total };
   }
 
+  canStart() {
+    const base = Object.getPrototypeOf(SpaceshipProject.prototype);
+    return base.canStart.call(this);
+  }
+
   canStartShipOperation() {
     if (this.shipOperationIsActive) return false;
     if (this.assignedSpaceships <= 0) return false;
