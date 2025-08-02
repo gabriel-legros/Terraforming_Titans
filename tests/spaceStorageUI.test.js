@@ -1,0 +1,27 @@
+const fs = require('fs');
+const path = require('path');
+const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
+const vm = require('vm');
+const numbers = require('../src/js/numbers.js');
+
+describe('Space Storage UI', () => {
+  test('shows used and max storage', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.projectElements = {};
+    ctx.formatNumber = numbers.formatNumber;
+
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
+
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, isCompleted: true };
+    const container = dom.window.document.getElementById('container');
+    ctx.renderSpaceStorageUI(project, container);
+    ctx.updateSpaceStorageUI(project);
+
+    const els = ctx.projectElements[project.name];
+    expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
+    expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
+  });
+});

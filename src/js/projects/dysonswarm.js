@@ -1,4 +1,4 @@
-class DysonSwarmReceiverProject extends Project {
+class DysonSwarmReceiverProject extends TerraformingDurationProject {
   constructor(config, name) {
     super(config, name);
     this.collectors = 0;
@@ -12,14 +12,7 @@ class DysonSwarmReceiverProject extends Project {
   }
 
   get collectorDuration() {
-    if (
-      typeof spaceManager === 'undefined' ||
-      typeof spaceManager.getTerraformedPlanetCount !== 'function'
-    ) {
-      return this.baseCollectorDuration;
-    }
-    const count = spaceManager.getTerraformedPlanetCount();
-    return this.baseCollectorDuration / (count + 1);
+    return this.getDurationWithTerraformBonus(this.baseCollectorDuration);
   }
 
   renderUI(container) {
