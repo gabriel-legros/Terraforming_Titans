@@ -296,3 +296,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage automation settings now sit next to the expansion auto start, which is labeled "Auto Start Expansion".
 - Space Storage automation checkboxes are now created via the generic project UI like other project-specific controls.
 - Chapter 14.0 now enables the Warp Gate Command and automatically switches to its subtab.
+- jumpToChapter now recursively completes prerequisite chapters, marks required special projects finished, skips typing animation and rebuilds the journal.

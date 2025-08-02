@@ -25,6 +25,7 @@ function compareValues(current, target, comparison = 'gte') {
 
 class StoryManager {
     constructor(progressData) {
+        this.progressData = progressData;
         this.allEvents = this.loadEvents(progressData);
         this.activeEventIds = new Set();
         this.completedEventIds = new Set();
@@ -488,8 +489,8 @@ class StoryManager {
     }
 
     // Jump directly to a chapter by id, applying rewards of previous chapters
-    // without triggering their journal entries. This allows moving backward or
-    // forward in the story for debugging.
+    // without triggering their journal entries. Also marks required special
+    // projects as completed and reconstructs the journal instantly.
     jumpToChapter(chapterId) {
         const targetEvent = this.findEventById(chapterId);
         if (!targetEvent) {
@@ -497,66 +498,105 @@ class StoryManager {
             return;
         }
 
-        // --- New Logic ---
+        // Gather all prerequisite chapters recursively, including handling
+        // project prerequisites as we discover them.
+        const completedChapterIds = new Set();
+        const handleProjectObjective = (obj) => {
+            if (!obj || obj.type !== 'project') return;
+            if (typeof projectManager !== 'undefined' && projectManager.projects) {
+                const proj = projectManager.projects[obj.projectId];
+                if (proj) {
+                    proj.unlocked = true;
+                    proj.repeatCount = Math.max(proj.repeatCount || 0, obj.repeatCount || 1);
+                    proj.isCompleted = true;
+                }
+            }
+        };
 
-        // 1. Find all recursive prerequisites for the target chapter
-        const requiredChapterIds = new Set();
-        const findPrereqsRecursive = (eventId) => {
-            if (requiredChapterIds.has(eventId)) return; // Avoid cycles and redundant checks
-            requiredChapterIds.add(eventId);
+        const collectPrereqs = (eventId) => {
+            const ev = this.findEventById(eventId);
+            if (!ev || completedChapterIds.has(ev.id)) return;
+            completedChapterIds.add(ev.id);
 
-            const event = this.findEventById(eventId);
-            if (event && event.prerequisites) {
-                event.prerequisites.forEach(pr => {
-                    const id = typeof pr === 'string' ? pr : pr && pr.id;
-                    if (id) findPrereqsRecursive(id);
+            if (ev.prerequisites) {
+                ev.prerequisites.forEach(pr => {
+                    if (typeof pr === 'string') {
+                        collectPrereqs(pr);
+                    } else if (pr && typeof pr === 'object') {
+                        if (pr.type === 'event' && pr.id) {
+                            collectPrereqs(pr.id);
+                        } else {
+                            handleProjectObjective(pr);
+                        }
+                    }
                 });
             }
         };
 
-        // Start the recursion from the target chapter's prerequisites
-        if (targetEvent.prerequisites) {
-            targetEvent.prerequisites.forEach(pr => {
-                const id = typeof pr === 'string' ? pr : pr && pr.id;
-                if (id) findPrereqsRecursive(id);
-            });
-        }
+        collectPrereqs(chapterId);
+        completedChapterIds.delete(chapterId); // target should not be auto-completed
 
-
-        // 2. Reset state
+        // Reset state
         this.activeEventIds.clear();
         this.completedEventIds.clear();
         this.waitingForJournalEventId = null;
         clearJournal();
 
-        // 3. Remove all previously applied effects from the game state
+        // Remove all previously applied effects
         this.appliedEffects.forEach(effect => removeEffect(effect));
-        this.appliedEffects = []; // Clear our tracking array
+        this.appliedEffects = [];
 
-        // 4. Re-apply rewards ONLY for the required (completed) chapters
-        for (const id of requiredChapterIds) {
-            const event = this.findEventById(id);
-            if (event) {
-                // Mark as completed
-                this.completedEventIds.add(id);
+        const journalEntries = [];
+        const journalSources = [];
+        const pushJournal = (ev) => {
+            const text = joinLines(ev.narrative);
+            if (ev.title) {
+                journalEntries.push([`${ev.title}`, text].join('\n'));
+            } else {
+                journalEntries.push(text);
+            }
+            journalSources.push({ type: 'chapter', id: ev.id });
+        };
 
-                // Apply its rewards and track them
-                if (event.reward && event.reward.length > 0) {
-                    event.reward.forEach(effect => {
+        // Re-apply rewards and mark project objectives for completed chapters
+        this.progressData.chapters.forEach(cfg => {
+            if (completedChapterIds.has(cfg.id)) {
+                const ev = this.findEventById(cfg.id);
+                if (!ev) return;
+                this.completedEventIds.add(ev.id);
+
+                if (ev.objectives) {
+                    ev.objectives.forEach(handleProjectObjective);
+                }
+
+                if (ev.reward && ev.reward.length > 0) {
+                    ev.reward.forEach(effect => {
                         if (!effect.oneTimeFlag) {
-                            this.appliedEffects.push(effect); // Track for reapplication on load
+                            this.appliedEffects.push(effect);
                         }
-                        addEffect(effect); // Apply to current game state
+                        addEffect(effect);
                     });
                 }
+
+                pushJournal(ev);
             }
+        });
+
+        // Ensure project prerequisites of the target itself are fulfilled
+        if (targetEvent.prerequisites) {
+            targetEvent.prerequisites.forEach(handleProjectObjective);
         }
 
-        // 5. Activate the target chapter
-        console.log(`Jumping to ${chapterId}. Required completed chapters:`, Array.from(requiredChapterIds));
+        // Add target chapter's text to the journal reconstruction
+        pushJournal(targetEvent);
+
+        console.log(`Jumping to ${chapterId}. Required completed chapters:`, Array.from(completedChapterIds));
         this.activateEvent(targetEvent);
 
-        // 6. Update UI
+        if (typeof loadJournalEntries === 'function') {
+            loadJournalEntries(journalEntries, journalEntries, journalSources, journalSources);
+        }
+
         this.updateCurrentObjectiveUI();
     }
 
