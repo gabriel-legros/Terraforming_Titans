@@ -103,6 +103,49 @@ describe('Space Storage project', () => {
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
   });
 
+  test('displays populated cost section without duplication', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="root"></div>');
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        special: { spaceships: { value: 0 } },
+        colony: { energy: { displayName: 'Energy', value: 0 } }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      document: dom.window.document,
+      spaceManager: { getTerraformedPlanetCount: () => 0 },
+      formatNumber: numbers.formatNumber,
+      formatBigInteger: numbers.formatBigInteger,
+      formatTotalCostDisplay: () => '',
+      formatTotalResourceGainDisplay: () => ''
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const attrs = { costPerShip: { colony: { energy: 1_000_000 } }, transportPerShip: 1_000_000 };
+    const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 300000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    const container = dom.window.document.getElementById('root');
+    project.renderUI(container);
+
+    const costEls = container.querySelectorAll(`#${project.name}-cost-per-ship`);
+    expect(costEls.length).toBe(1);
+    expect(costEls[0].textContent).toContain('Cost per Ship');
+    expect(costEls[0].textContent).toContain('Energy');
+  });
+
   test('can start expansion when metal cost is met without spaceships', () => {
     const ctx = {
       console,
