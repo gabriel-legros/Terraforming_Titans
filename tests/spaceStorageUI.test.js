@@ -16,22 +16,7 @@ describe('Space Storage UI', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const metalCost = 1000000000000;
-    const project = {
-      name: 'spaceStorage',
-      cost: { colony: { metal: metalCost } },
-      getScaledCost() { return this.cost; },
-      usedStorage: 0,
-      maxStorage: 1000000000000,
-      resourceUsage: {},
-      selectedResources: [],
-      shipOperationAutoStart: false,
-      shipOperationRemainingTime: 0,
-      shipOperationStartingDuration: 0,
-      shipOperationIsActive: false,
-      shipWithdrawMode: false,
-      getEffectiveDuration: () => 1000,
-    };
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, shipWithdrawMode: false, prioritizeMegaProjects: false, getEffectiveDuration: () => 1000, canStartShipOperation: () => true };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
@@ -66,5 +51,9 @@ describe('Space Storage UI', () => {
     project.prioritizeMegaProjects = false;
     ctx.updateSpaceStorageUI(project);
     expect(els.prioritizeMegaCheckbox.checked).toBe(false);
+    project.shipOperationIsActive = false;
+    project.shipOperationIsPaused = false;
+    ctx.updateSpaceStorageUI(project);
+    expect(els.shipProgressButton.textContent).toBe('Start ship transfers (Duration: 1.00 seconds)');
   });
 });
