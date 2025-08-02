@@ -60,7 +60,7 @@ describe('Space Storage UI', () => {
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
     expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(3);
     expect(els.usageBody.querySelector('tr:first-child td:nth-child(3)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.shipAutoStartCheckbox).toBeDefined();
@@ -76,7 +76,7 @@ describe('Space Storage UI', () => {
     project.resourceUsage = { metal: 500 };
     project.usedStorage = 500;
     ctx.updateSpaceStorageUI(project);
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(3);
     const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.children[1].textContent === 'Metal');
     expect(metalRow.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
 
