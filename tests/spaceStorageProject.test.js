@@ -35,6 +35,7 @@ describe('Space Storage project', () => {
       spaceManager: { getTerraformedPlanetCount: () => 2 }
     };
     vm.createContext(ctx);
+    vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
@@ -78,11 +79,13 @@ describe('Space Storage project', () => {
       formatNumber: numbers.formatNumber,
       formatBigInteger: numbers.formatBigInteger,
       formatTotalCostDisplay: () => '',
-      formatTotalResourceGainDisplay: () => ''
+      formatTotalResourceGainDisplay: () => '',
+      capitalizeFirstLetter: s => s.charAt(0).toUpperCase() + s.slice(1)
     };
-    vm.createContext(ctx);
-    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
-    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+      vm.createContext(ctx);
+      vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
+      const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+      vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
     vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
@@ -103,6 +106,62 @@ describe('Space Storage project', () => {
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
+  });
+
+  test('hides default project cost display', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div class="projects-subtab-content-wrapper"><div id="mega-projects-list"></div></div>');
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        colony: {
+          metal: { displayName: 'Metal', value: 0 },
+          components: { displayName: 'Components', value: 0 },
+          electronics: { displayName: 'Electronics', value: 0 },
+          superconductors: { displayName: 'Superconductors', value: 0 },
+          water: { displayName: 'Water', value: 0 }
+        },
+        atmospheric: {
+          oxygen: { displayName: 'Oxygen', value: 0 },
+          carbonDioxide: { displayName: 'Carbon Dioxide', value: 0 },
+          inertGas: { displayName: 'Nitrogen', value: 0 }
+        },
+        surface: { liquidWater: { displayName: 'Liquid Water', value: 0 } },
+        special: { spaceships: { value: 0 } }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      document: dom.window.document,
+      spaceManager: { getTerraformedPlanetCount: () => 0 },
+      formatNumber: numbers.formatNumber,
+      formatBigInteger: numbers.formatBigInteger,
+      formatTotalCostDisplay: () => '',
+      formatTotalResourceGainDisplay: () => ''
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const projectsUICode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
+    vm.runInContext(projectsUICode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.projectElements = projectElements;', ctx);
+
+    const attrs = { costPerShip: { colony: { metal: 1 } }, transportPerShip: 1 };
+    const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: { colony: { metal: 1 } }, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    ctx.projectManager = { projects: { spaceStorage: project }, isBooleanFlagSet: () => false, getProjectStatuses: () => [project] };
+
+    ctx.createProjectItem(project);
+    expect(ctx.projectElements[project.name].costElement).toBeUndefined();
+    const costEl = dom.window.document.querySelector('.project-card .project-cost');
+    expect(costEl).toBeNull();
   });
 
   test('displays populated cost section without duplication', () => {
