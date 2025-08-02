@@ -94,6 +94,29 @@
     font-size: 0.9em;
 }
 
+/* Mode selection buttons for Space Storage */
+.mode-selection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mode-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #6c757d;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+    transition: background-color 0.2s;
+}
+
+.mode-button.selected {
+    background-color: #4caf50;
+}
+
 /* --- Space Mirror Facility Card Specifics --- */
 
 /* Mirror Details Card */
