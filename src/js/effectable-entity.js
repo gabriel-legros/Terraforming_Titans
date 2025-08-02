@@ -545,7 +545,8 @@ function addOrRemoveEffect(effect, action) {
     'oreScanner': oreScanner,
     'researchManager' : researchManager,
     'solisManager' : solisManager,
-    'spaceManager' : spaceManager
+    'spaceManager' : spaceManager,
+    'warpGateCommand' : warpGateCommand
   };
 
   if (effect.target in targetHandlers &&

@@ -354,7 +354,17 @@ progressGanymede.chapters.push(
         objectives: [
             { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 4 }
         ],
-        reward: []
+        reward: [
+            { target: 'warpGateCommand', type: 'enable' },
+            {
+                target: 'global',
+                type: 'activateSubtab',
+                subtabClass: 'hope-subtab',
+                contentClass: 'hope-subtab-content',
+                targetId: 'wgc-hope',
+                unhide: true
+            }
+        ]
     },
     {
         id: "chapter14.1",
