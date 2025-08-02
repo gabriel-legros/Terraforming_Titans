@@ -1206,7 +1206,7 @@ const researchParameters = {
         id: 'dyson_swarm_concept',
         name: 'Dyson Swarm Concept',
         description: 'Opens research into building massive solar collectors in space.',
-        cost: { advancedResearch: 30000 },
+        cost: { advancedResearch: 25000 },
         prerequisites: [],
         effects: [
           {
@@ -1217,6 +1217,15 @@ const researchParameters = {
           }
         ]
       },
+      {
+        id: 'space_storage',
+        name: 'Space Storage',
+        description: 'Enables construction of an orbital storage facility.',
+        cost: { advancedResearch: 30000 },
+        prerequisites: [],
+        effects: [
+          { target: 'project', targetId: 'spaceStorage', type: 'enable' } ]
+       },
       {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
@@ -1246,16 +1255,7 @@ const researchParameters = {
             value: true
           }
         ]
-      },
-      {
-        id: 'space_storage',
-        name: 'Space Storage',
-        description: 'Enables construction of an orbital storage facility.',
-        cost: { advancedResearch: 100000 },
-        prerequisites: [],
-        effects: [
-          { target: 'project', targetId: 'spaceStorage', type: 'enable' } ]
-       },
+      }
     ]
   };
   
