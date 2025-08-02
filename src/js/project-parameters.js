@@ -304,7 +304,15 @@ const projectParameters = {
           resourceCategory : 'colony',
           resourceId : 'metal',
           value : 0
-        }   
+        },
+        {
+          target : 'project',
+          targetId : 'spaceStorage',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        }      
       ]
     }
   },  
@@ -391,8 +399,8 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceStorage: true,
-      costPerShip: { colony: { energy: 1_000_000_000 } },
-      transportPerShip: 1_000_000_000
+      costPerShip: { colony: { metal : 100_000, energy: 500_000_000 } },
+      transportPerShip: 1_000_000
     }
   },
   disposeResources : {
