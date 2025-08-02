@@ -9,6 +9,55 @@ const storageResourceOptions = [
   { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' }
 ];
 
+if (typeof SpaceStorageProject !== 'undefined') {
+  SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
+    const els = projectElements[this.name] || {};
+    if (els.autoStartCheckboxContainer) {
+      const autoLabel = els.autoStartCheckboxContainer.querySelector('label');
+      if (autoLabel) autoLabel.textContent = 'Auto Start Expansion';
+    }
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-ship-auto-start`;
+    checkbox.addEventListener('change', (e) => {
+      this.shipOperationAutoStart = e.target.checked;
+    });
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = 'Auto Start Ships';
+    container.append(checkbox, label);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      shipAutoStartCheckbox: checkbox,
+      shipAutoStartContainer: container,
+    };
+    return container;
+  };
+
+  SpaceStorageProject.prototype.createPrioritizeMegaCheckbox = function () {
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-prioritize-space`;
+    checkbox.addEventListener('change', (e) => {
+      this.prioritizeMegaProjects = e.target.checked;
+    });
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = 'Prioritize space resources for mega projects';
+    container.append(checkbox, label);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      prioritizeMegaCheckbox: checkbox,
+      prioritizeMegaContainer: container,
+    };
+    return container;
+  };
+}
+
 function renderSpaceStorageUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('space-storage-card');
@@ -145,38 +194,6 @@ function renderSpaceStorageUI(project, container) {
 
   updateModeButtons();
 
-  const shipAutomationContainer = document.createElement('div');
-  shipAutomationContainer.classList.add('automation-settings-container');
-  const shipAutoStartContainer = document.createElement('div');
-  shipAutoStartContainer.classList.add('checkbox-container');
-  const shipAutoStartCheckbox = document.createElement('input');
-  shipAutoStartCheckbox.type = 'checkbox';
-  shipAutoStartCheckbox.id = `${project.name}-ship-auto-start`;
-  shipAutoStartCheckbox.addEventListener('change', e => {
-    project.shipOperationAutoStart = e.target.checked;
-  });
-  const shipAutoStartLabel = document.createElement('label');
-  shipAutoStartLabel.htmlFor = shipAutoStartCheckbox.id;
-  shipAutoStartLabel.textContent = 'Auto start ships';
-  shipAutoStartContainer.append(shipAutoStartCheckbox, shipAutoStartLabel);
-  shipAutomationContainer.appendChild(shipAutoStartContainer);
-
-  const prioritizeContainer = document.createElement('div');
-  prioritizeContainer.classList.add('checkbox-container');
-  const prioritizeCheckbox = document.createElement('input');
-  prioritizeCheckbox.type = 'checkbox';
-  prioritizeCheckbox.id = `${project.name}-prioritize-space`;
-  prioritizeCheckbox.addEventListener('change', e => {
-    project.prioritizeMegaProjects = e.target.checked;
-  });
-  const prioritizeLabel = document.createElement('label');
-  prioritizeLabel.htmlFor = prioritizeCheckbox.id;
-  prioritizeLabel.textContent = 'Prioritize space resources for mega projects';
-  prioritizeContainer.append(prioritizeCheckbox, prioritizeLabel);
-  shipAutomationContainer.appendChild(prioritizeContainer);
-
-  shipFooter.appendChild(shipAutomationContainer);
-
   card.appendChild(shipFooter);
   container.appendChild(card);
   projectElements[project.name] = {
@@ -187,8 +204,6 @@ function renderSpaceStorageUI(project, container) {
     resourceGrid,
     expansionCostDisplay,
     shipProgressButton,
-    shipAutoStartCheckbox,
-    prioritizeMegaCheckbox: prioritizeCheckbox,
     withdrawButton,
     storeButton,
     updateModeButtons
@@ -198,6 +213,16 @@ function renderSpaceStorageUI(project, container) {
 function updateSpaceStorageUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
+  if (els.autoStartCheckboxContainer) {
+    const autoLabel = els.autoStartCheckboxContainer.querySelector('label');
+    if (autoLabel) autoLabel.textContent = 'Auto Start Expansion';
+  }
+  if (els.shipAutoStartContainer && els.prioritizeMegaContainer) {
+    const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
+      projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'block' : 'none';
+    els.shipAutoStartContainer.style.display = display;
+    els.prioritizeMegaContainer.style.display = display;
+  }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 0);
   }

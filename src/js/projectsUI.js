@@ -528,6 +528,14 @@ function updateProjectUI(projectName) {
       const tempControl = project.createTemperatureControl();
       elements.automationSettingsContainer.appendChild(tempControl);
     }
+    if (typeof SpaceStorageProject !== 'undefined' &&
+        project instanceof SpaceStorageProject &&
+        typeof project.createShipAutoStartCheckbox === 'function' &&
+        !elements.shipAutoStartContainer) {
+      const ship = project.createShipAutoStartCheckbox();
+      const prioritize = project.createPrioritizeMegaCheckbox();
+      elements.automationSettingsContainer.append(ship, prioritize);
+    }
   }
 
   if (typeof AndroidProject !== 'undefined' &&

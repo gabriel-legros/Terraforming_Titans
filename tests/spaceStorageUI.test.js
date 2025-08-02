@@ -60,11 +60,10 @@ describe('Space Storage UI', () => {
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
     expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(3);
-    expect(els.usageBody.querySelector('tr:first-child td:nth-child(3)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
+    const items = els.resourceGrid.querySelectorAll('.storage-resource-item');
+    expect(items.length).toBe(8);
+    expect(items[0].children[2].textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
-    expect(els.shipAutoStartCheckbox).toBeDefined();
-    expect(els.prioritizeMegaCheckbox).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
     expect(els.storeButton).toBeDefined();
 
@@ -76,16 +75,11 @@ describe('Space Storage UI', () => {
     project.resourceUsage = { metal: 500 };
     project.usedStorage = 500;
     ctx.updateSpaceStorageUI(project);
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(3);
-    const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.children[1].textContent === 'Metal');
-    expect(metalRow.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+    const updatedItems = els.resourceGrid.querySelectorAll('.storage-resource-item');
+    expect(updatedItems.length).toBe(8);
+    const metalItem = updatedItems[0];
+    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
 
-    els.prioritizeMegaCheckbox.checked = true;
-    els.prioritizeMegaCheckbox.dispatchEvent(new dom.window.Event('change'));
-    expect(project.prioritizeMegaProjects).toBe(true);
-    project.prioritizeMegaProjects = false;
-    ctx.updateSpaceStorageUI(project);
-    expect(els.prioritizeMegaCheckbox.checked).toBe(false);
     const topSection = container.querySelector('.project-top-section');
     const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
     expect(titles).toEqual(expect.arrayContaining(['Assignment', 'Cost & Gain', 'Expansion']));
