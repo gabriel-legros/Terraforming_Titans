@@ -15,7 +15,7 @@ describe('Space Storage UI', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, shipWithdrawMode: false, getEffectiveDuration: () => 1000 };
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, shipWithdrawMode: false, prioritizeMegaProjects: false, getEffectiveDuration: () => 1000 };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
@@ -27,6 +27,7 @@ describe('Space Storage UI', () => {
     expect(els.usageBody.querySelector('tr:first-child td:nth-child(3)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.shipAutoStartCheckbox).toBeDefined();
+    expect(els.prioritizeMegaCheckbox).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
     expect(els.storeButton).toBeDefined();
 
@@ -41,5 +42,12 @@ describe('Space Storage UI', () => {
     expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
     const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.children[1].textContent === 'Metal');
     expect(metalRow.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+
+    els.prioritizeMegaCheckbox.checked = true;
+    els.prioritizeMegaCheckbox.dispatchEvent(new dom.window.Event('change'));
+    expect(project.prioritizeMegaProjects).toBe(true);
+    project.prioritizeMegaProjects = false;
+    ctx.updateSpaceStorageUI(project);
+    expect(els.prioritizeMegaCheckbox.checked).toBe(false);
   });
 });
