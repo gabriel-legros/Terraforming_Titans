@@ -276,3 +276,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added TerraformedDurationProject base class; Space Storage and Dyson Swarm now scale duration with terraformed planets. Space Storage is repeatable with 1 trillion tons capacity per completion.
 - Biodomes now require 100 land each, and the Life Designer UI separates controls from biodomes with a new divider.
 - Auto build now constructs as many buildings as available land allows when targets exceed land.
+- Land resource tooltip lists land usage per building sorted by amount.
