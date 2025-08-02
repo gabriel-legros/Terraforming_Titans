@@ -70,6 +70,12 @@ class SpaceMiningProject extends SpaceshipProject {
     return control;
   }
 
+  renderAutomationUI(container) {
+    if (!projectElements[this.name]?.pressureControl) {
+      container.appendChild(this.createPressureControl());
+    }
+  }
+
   renderUI(container) {
     super.renderUI(container);
   }

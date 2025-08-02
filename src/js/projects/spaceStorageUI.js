@@ -56,6 +56,15 @@ if (typeof SpaceStorageProject !== 'undefined') {
     };
     return container;
   };
+
+  SpaceStorageProject.prototype.renderAutomationUI = function (container) {
+    const els = projectElements[this.name] || {};
+    if (!els.shipAutoStartContainer) {
+      const ship = this.createShipAutoStartCheckbox();
+      const prioritize = this.createPrioritizeMegaCheckbox();
+      container.append(ship, prioritize);
+    }
+  };
 }
 
 function renderSpaceStorageUI(project, container) {

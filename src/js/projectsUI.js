@@ -203,6 +203,9 @@ function createProjectItem(project) {
     upButton: upButton,
     downButton: downButton
   };
+  if (typeof project.renderAutomationUI === 'function') {
+    project.renderAutomationUI(automationSettingsContainer);
+  }
 
   const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
   categoryContainer.appendChild(projectCard);
@@ -513,29 +516,6 @@ function updateProjectUI(projectName) {
 
   if (typeof project.updateUI === 'function') {
     project.updateUI();
-  }
-
-  if (elements.automationSettingsContainer) {
-    if (project instanceof SpaceMiningProject && !elements.pressureControl) {
-      const pressureControl = project.createPressureControl();
-      elements.automationSettingsContainer.appendChild(pressureControl);
-    }
-    if (project instanceof SpaceExportBaseProject && !elements.waitCapacityCheckboxContainer) {
-      const waitCapacityCheckboxContainer = project.createWaitForCapacityCheckbox();
-      elements.automationSettingsContainer.appendChild(waitCapacityCheckboxContainer);
-    }
-    if (project instanceof SpaceExportBaseProject && !elements.temperatureControl) {
-      const tempControl = project.createTemperatureControl();
-      elements.automationSettingsContainer.appendChild(tempControl);
-    }
-    if (typeof SpaceStorageProject !== 'undefined' &&
-        project instanceof SpaceStorageProject &&
-        typeof project.createShipAutoStartCheckbox === 'function' &&
-        !elements.shipAutoStartContainer) {
-      const ship = project.createShipAutoStartCheckbox();
-      const prioritize = project.createPrioritizeMegaCheckbox();
-      elements.automationSettingsContainer.append(ship, prioritize);
-    }
   }
 
   if (typeof AndroidProject !== 'undefined' &&
