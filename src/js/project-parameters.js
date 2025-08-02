@@ -386,7 +386,8 @@ const projectParameters = {
     },
     duration: 300000,
     description: 'Construct an orbital facility for massive resource storage.',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount: Infinity,
     unlocked: false,
     attributes: { }
   },
