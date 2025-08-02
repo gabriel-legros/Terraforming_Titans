@@ -147,6 +147,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Active building subtab alerts clear immediately when unlocking a structure while that subtab is open.
 - Pause button now sets game speed to 0 so time does not advance when paused.
 - Building subtab alerts now clear when switching subtabs.
+- Project subtab alerts now clear when viewing the projects tab while that subtab is active.
 - A grey "PAUSED" alert appears in the warning area whenever the game is paused.
 - Adapted fission power now doubles reactor water usage.
 - Resource tooltips show remaining time until cap or depletion based on current rates.

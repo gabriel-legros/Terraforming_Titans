@@ -750,6 +750,10 @@ function updateProjectAlert() {
 }
 
 function markProjectsViewed() {
+  const active = document.querySelector('.projects-subtab.active');
+  if (active && typeof markProjectSubtabViewed === 'function') {
+    markProjectSubtabViewed(active.dataset.subtab);
+  }
   projectTabAlertNeeded = false;
   updateProjectAlert();
 }
