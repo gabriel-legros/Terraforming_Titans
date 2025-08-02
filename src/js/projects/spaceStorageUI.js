@@ -17,17 +17,18 @@ function renderSpaceStorageUI(project, container) {
       <span class="card-title">Space Storage</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid">
+      <div class="stats-grid two-col">
         <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used"></span></div>
         <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
       </div>
+      <p id="ss-expansion-cost"><strong>Expansion Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span></p>
       <table class="storage-usage-table">
         <thead><tr><th></th><th>Resource</th><th>Used</th></tr></thead>
         <tbody id="ss-usage-body"></tbody>
       </table>
-      <p class="duration-note"><span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span> Duration reduced per terraformed planet.</p>
     </div>`;
   const usageBody = card.querySelector('#ss-usage-body');
+  const expansionCostDisplay = card.querySelector('#ss-expansion-cost .expansion-cost');
 
   storageResourceOptions.forEach(opt => {
     const row = document.createElement('tr');
@@ -144,6 +145,7 @@ function renderSpaceStorageUI(project, container) {
     usedDisplay: card.querySelector('#ss-used'),
     maxDisplay: card.querySelector('#ss-max'),
     usageBody,
+    expansionCostDisplay,
     shipProgressButton,
     shipAutoStartCheckbox,
     withdrawButton,
@@ -160,6 +162,18 @@ function updateSpaceStorageUI(project) {
   }
   if (els.maxDisplay) {
     els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 0);
+  }
+  if (els.expansionCostDisplay) {
+    const cost = project.getScaledCost ? project.getScaledCost() : project.cost;
+    const parts = [];
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const res = resources[category][resource];
+        const name = res.displayName || resource.charAt(0).toUpperCase() + resource.slice(1);
+        parts.push(`${name}: ${formatNumber(cost[category][resource], true)}`);
+      }
+    }
+    els.expansionCostDisplay.textContent = parts.join(', ');
   }
   if (els.usageCells) {
     storageResourceOptions.forEach(opt => {

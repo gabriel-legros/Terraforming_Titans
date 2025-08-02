@@ -18,7 +18,7 @@ describe('Space Storage project', () => {
     expect(project.duration).toBe(300000);
     expect(project.repeatable).toBe(true);
     expect(project.maxRepeatCount).toBe(Infinity);
-    expect(project.attributes.costPerShip.colony.energy).toBe(500_000_000);
+    expect(project.attributes.costPerShip.colony.energy).toBe(250_000_000);
     expect(project.attributes.transportPerShip).toBe(1_000_000);
   });
 
