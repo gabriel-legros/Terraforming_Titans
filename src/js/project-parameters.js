@@ -399,7 +399,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceStorage: true,
-      costPerShip: { colony: { metal : 100_000, energy: 500_000_000 } },
+      costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
       transportPerShip: 1_000_000
     }
   },
