@@ -15,7 +15,7 @@ describe('Space Storage UI', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, isCompleted: true };
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, capacityPerCompletion: 1000000000000, selectedResources: [] };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
