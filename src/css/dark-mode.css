@@ -8,7 +8,8 @@ body.dark-mode {
 .dark-mode .research-subtabs,
 .dark-mode .projects-subtabs,
 .dark-mode .terraforming-subtabs,
-.dark-mode .hope-subtabs {
+.dark-mode .hope-subtabs,
+.dark-mode .space-subtabs {
     background-color: #1e1e1e;
 }
 
@@ -17,7 +18,8 @@ body.dark-mode {
 .dark-mode .research-subtab,
 .dark-mode .projects-subtab,
 .dark-mode .terraforming-subtab,
-.dark-mode .hope-subtab {
+.dark-mode .hope-subtab,
+.dark-mode .space-subtab {
     background-color: #2d2d2d;
     color: #ffffff;
 }
@@ -27,7 +29,8 @@ body.dark-mode {
 .dark-mode .research-subtab.active,
 .dark-mode .projects-subtab.active,
 .dark-mode .terraforming-subtab.active,
-.dark-mode .hope-subtab.active {
+.dark-mode .hope-subtab.active,
+.dark-mode .space-subtab.active {
     background-color: #4d4d4d;
 }
 

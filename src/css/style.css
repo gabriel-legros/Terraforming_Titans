@@ -20,7 +20,8 @@ body {
 .research-subtabs,
 .projects-subtabs,
 .terraforming-subtabs,
-.hope-subtabs
+.hope-subtabs,
+.space-subtabs
  {
     display: flex;
     cursor: pointer;
@@ -34,7 +35,8 @@ body {
 .research-subtabs,
 .projects-subtabs,
 .terraforming-subtabs,
-.hope-subtabs
+.hope-subtabs,
+.space-subtabs
  {
     margin-right:25px;
 }
@@ -44,7 +46,8 @@ body {
 .research-subtab,
 .projects-subtab,
 .terraforming-subtab,
-.hope-subtab { /* Added projects-subtab */
+.hope-subtab,
+.space-subtab { /* Added space-subtab */
     flex: 1;
     padding: 10px;
     text-align: center;
@@ -64,7 +67,8 @@ body {
 .research-subtab.active,
 .projects-subtab.active,
 .terraforming-subtab.active,
-.hope-subtab.active { /* Added projects-subtab.active */
+.hope-subtab.active,
+.space-subtab.active { /* Added space-subtab.active */
     background-color: #666;
     color: #fff; /* Consistent text color for active state */
 }
@@ -116,7 +120,8 @@ body {
 .research-subtab-content,
 .projects-subtab-content,
 .terraforming-subtab-content,
-.hope-subtab-content { /* Added projects-subtab-content */
+.hope-subtab-content,
+.space-subtab-content { /* Added space-subtab-content */
     display: none;
 }
 
@@ -124,7 +129,8 @@ body {
 .research-subtab-content.active,
 .projects-subtab-content.active,
 .terraforming-subtab-content.active,
-.hope-subtab-content.active { /* Added projects-subtab-content.active */
+.hope-subtab-content.active,
+.space-subtab-content.active { /* Added space-subtab-content.active */
     display: block;
 }
 

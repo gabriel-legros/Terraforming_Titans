@@ -297,4 +297,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage automation checkboxes are now created via the generic project UI like other project-specific controls.
 - Story objectives can now check the highest Warp Gate Command operation difficulty completed, and chapter 14.1 requires clearing a difficulty 0 operation.
 - Chapter 14.0 now enables the Warp Gate Command and automatically switches to its subtab.
+- Space tab now includes Story and Random subtabs with Random hidden by default.
 - jumpToChapter now recursively completes prerequisite chapters, marks required special projects finished, skips typing animation and rebuilds the journal.
