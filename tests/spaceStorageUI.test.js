@@ -11,11 +11,27 @@ describe('Space Storage UI', () => {
     ctx.document = dom.window.document;
     ctx.projectElements = {};
     ctx.formatNumber = numbers.formatNumber;
+    ctx.resources = { colony: { metal: { displayName: 'Metal' } } };
 
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, shipWithdrawMode: false, prioritizeMegaProjects: false, getEffectiveDuration: () => 1000 };
+    const metalCost = 1000000000000;
+    const project = {
+      name: 'spaceStorage',
+      cost: { colony: { metal: metalCost } },
+      getScaledCost() { return this.cost; },
+      usedStorage: 0,
+      maxStorage: 1000000000000,
+      resourceUsage: {},
+      selectedResources: [],
+      shipOperationAutoStart: false,
+      shipOperationRemainingTime: 0,
+      shipOperationStartingDuration: 0,
+      shipOperationIsActive: false,
+      shipWithdrawMode: false,
+      getEffectiveDuration: () => 1000,
+    };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
@@ -23,6 +39,7 @@ describe('Space Storage UI', () => {
     const els = ctx.projectElements[project.name];
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
+    expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
     expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
     expect(els.usageBody.querySelector('tr:first-child td:nth-child(3)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
