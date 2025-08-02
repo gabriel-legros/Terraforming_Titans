@@ -304,7 +304,15 @@ const projectParameters = {
           resourceCategory : 'colony',
           resourceId : 'metal',
           value : 0
-        }   
+        },
+        {
+          target : 'project',
+          targetId : 'spaceStorage',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        }      
       ]
     }
   },  
@@ -385,11 +393,15 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct an orbital facility for massive resource storage.',
+    description: 'Construct an orbital facility for massive resource storage. Each terraformed planet reduces construction time.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
-    attributes: { }
+    attributes: {
+      spaceStorage: true,
+      costPerShip: { colony: { metal : 100_000, energy: 500_000_000 } },
+      transportPerShip: 1_000_000
+    }
   },
   disposeResources : {
     type: 'SpaceDisposalProject',

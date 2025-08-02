@@ -57,6 +57,7 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps"></div>
       </div>
+      ${resourceObj.name === 'land' ? `<div class="resource-tooltip" id="${resourceName}-tooltip"></div>` : ''}
     `;
 
     // Add scanning progress below deposits
@@ -203,6 +204,9 @@ function updateResourceDisplay(resources) {
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
+        if (resourceObj.name === 'land') {
+          updateResourceRateDisplay(resourceObj);
+        }
       } else {
         // Update other resources
         const resourceElement = document.getElementById(`${resourceName}-resources-container`);
@@ -260,14 +264,21 @@ function updateResourceRateDisplay(resource){
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
   if (tooltipElement) {
     let tooltipContent = '';
-    tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
+    if (resource.name === 'land') {
+      tooltipContent += `<div>Available ${formatNumber(resource.value - resource.reserved, false, 3)}</div>`;
+      tooltipContent += `<div>Used ${formatNumber(resource.reserved, false, 3)}</div>`;
+    } else {
+      tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
+    }
     const netRate = resource.productionRate - resource.consumptionRate;
-    if (netRate > 0 && resource.hasCap) {
-      const time = (resource.cap - resource.value) / netRate;
-      tooltipContent += `<div>Time to cap: ${formatDuration(Math.max(time, 0))}</div>`;
-    } else if (netRate < 0) {
-      const time = resource.value / Math.abs(netRate);
-      tooltipContent += `<div>Time to empty: ${formatDuration(Math.max(time, 0))}</div>`;
+    if (resource.name !== 'land') {
+      if (netRate > 0 && resource.hasCap) {
+        const time = (resource.cap - resource.value) / netRate;
+        tooltipContent += `<div>Time to cap: ${formatDuration(Math.max(time, 0))}</div>`;
+      } else if (netRate < 0) {
+        const time = resource.value / Math.abs(netRate);
+        tooltipContent += `<div>Time to empty: ${formatDuration(Math.max(time, 0))}</div>`;
+      }
     }
 
     if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
@@ -297,6 +308,38 @@ function updateResourceRateDisplay(resource){
           });
           tooltipContent += '</div>';
         }
+      }
+    } else if (resource.name === 'land') {
+      const assignments = [];
+      if (typeof buildings !== 'undefined') {
+        for (const name in buildings) {
+          const b = buildings[name];
+          if (b.active > 0 && b.requiresLand) {
+            const used = b.active * b.requiresLand;
+            if (used > 0) {
+              assignments.push([b.displayName || name, used]);
+            }
+          }
+        }
+      }
+      if (typeof colonies !== 'undefined') {
+        for (const name in colonies) {
+          const c = colonies[name];
+          if (c.active > 0 && c.requiresLand) {
+            const used = c.active * c.requiresLand;
+            if (used > 0) {
+              assignments.push([c.displayName || name, used]);
+            }
+          }
+        }
+      }
+      if (assignments.length > 0) {
+        assignments.sort((a, b) => b[1] - a[1]);
+        tooltipContent += '<div><strong>Assignments:</strong></div><div style="display: table; width: 100%;">';
+        assignments.forEach(([n, count]) => {
+          tooltipContent += `\n          <div style="display: table-row;">\n            <div style="display: table-cell; text-align: left; padding-right: 10px;">${n}</div>\n            <div style="display: table-cell; text-align: right;">${formatNumber(count, true)}</div>\n          </div>`;
+        });
+        tooltipContent += '</div>';
       }
     }
 
