@@ -96,7 +96,7 @@ describe('Space Storage project', () => {
     const container = dom.window.document.getElementById('root');
     project.updateCostAndGains = () => {};
     project.renderUI(container);
-    const checkboxes = container.querySelectorAll('.space-storage-resources input[type="checkbox"]');
+    const checkboxes = container.querySelectorAll('.storage-usage-table input[type="checkbox"]');
     expect(checkboxes.length).toBe(8);
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));

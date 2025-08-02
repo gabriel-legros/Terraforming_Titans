@@ -12,33 +12,6 @@ const storageResourceOptions = [
 function renderSpaceStorageUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('space-storage-card');
-  const checkboxContainer = document.createElement('div');
-  checkboxContainer.classList.add('space-storage-resources');
-
-  storageResourceOptions.forEach(opt => {
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('checkbox-container');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.id = `${project.name}-res-${opt.resource}`;
-    input.addEventListener('change', e => {
-      project.toggleResourceSelection(opt.category, opt.resource, e.target.checked);
-    });
-    const label = document.createElement('label');
-    label.htmlFor = input.id;
-    label.textContent = opt.label;
-    wrapper.append(input, label);
-    checkboxContainer.appendChild(wrapper);
-
-    projectElements[project.name] = {
-      ...projectElements[project.name],
-      resourceCheckboxes: {
-        ...(projectElements[project.name]?.resourceCheckboxes || {}),
-        [opt.resource]: input
-      }
-    };
-  });
-
   card.innerHTML = `
     <div class="card-header">
       <span class="card-title">Space Storage</span>
@@ -49,14 +22,49 @@ function renderSpaceStorageUI(project, container) {
         <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
       </div>
       <table class="storage-usage-table">
-        <thead><tr><th>Resource</th><th>Used</th></tr></thead>
+        <thead><tr><th></th><th>Resource</th><th>Used</th></tr></thead>
         <tbody id="ss-usage-body"></tbody>
       </table>
       <p class="duration-note"><span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span> Duration reduced per terraformed planet.</p>
     </div>`;
+  const usageBody = card.querySelector('#ss-usage-body');
 
-  const body = card.querySelector('.card-body');
-  body.appendChild(checkboxContainer);
+  storageResourceOptions.forEach(opt => {
+    const row = document.createElement('tr');
+
+    const checkboxCell = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = `${project.name}-res-${opt.resource}`;
+    input.addEventListener('change', e => {
+      project.toggleResourceSelection(opt.category, opt.resource, e.target.checked);
+    });
+    const label = document.createElement('label');
+    label.htmlFor = input.id;
+    label.textContent = opt.label;
+    checkboxCell.append(input);
+
+    const nameCell = document.createElement('td');
+    nameCell.appendChild(label);
+    const amtCell = document.createElement('td');
+    amtCell.id = `${project.name}-usage-${opt.resource}`;
+    amtCell.textContent = '0';
+
+    row.append(checkboxCell, nameCell, amtCell);
+    usageBody.appendChild(row);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      resourceCheckboxes: {
+        ...(projectElements[project.name]?.resourceCheckboxes || {}),
+        [opt.resource]: input
+      },
+      usageCells: {
+        ...(projectElements[project.name]?.usageCells || {}),
+        [opt.resource]: amtCell
+      }
+    };
+  });
 
   const shipFooter = document.createElement('div');
   shipFooter.classList.add('card-footer');
@@ -135,7 +143,7 @@ function renderSpaceStorageUI(project, container) {
     storageCard: card,
     usedDisplay: card.querySelector('#ss-used'),
     maxDisplay: card.querySelector('#ss-max'),
-    usageBody: card.querySelector('#ss-usage-body'),
+    usageBody,
     shipProgressButton,
     shipAutoStartCheckbox,
     withdrawButton,
@@ -153,17 +161,13 @@ function updateSpaceStorageUI(project) {
   if (els.maxDisplay) {
     els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 0);
   }
-  if (els.usageBody) {
-    els.usageBody.innerHTML = '';
+  if (els.usageCells) {
     storageResourceOptions.forEach(opt => {
-      const row = document.createElement('tr');
-      const nameCell = document.createElement('td');
-      nameCell.textContent = opt.label;
-      const amtCell = document.createElement('td');
-      const amount = project.resourceUsage[opt.resource] || 0;
-      amtCell.textContent = formatNumber(amount, false, 0);
-      row.append(nameCell, amtCell);
-      els.usageBody.appendChild(row);
+      const cell = els.usageCells[opt.resource];
+      if (cell) {
+        const amount = project.resourceUsage[opt.resource] || 0;
+        cell.textContent = formatNumber(amount, false, 0);
+      }
     });
   }
   if (els.resourceCheckboxes) {

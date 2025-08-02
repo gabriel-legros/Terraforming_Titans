@@ -24,7 +24,7 @@ describe('Space Storage UI', () => {
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
     expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
-    expect(els.usageBody.querySelector('tr:first-child td:nth-child(2)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
+    expect(els.usageBody.querySelector('tr:first-child td:nth-child(3)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.shipAutoStartCheckbox).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
@@ -39,7 +39,7 @@ describe('Space Storage UI', () => {
     project.usedStorage = 500;
     ctx.updateSpaceStorageUI(project);
     expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
-    const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.firstChild.textContent === 'Metal');
-    expect(metalRow.lastChild.textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+    const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.children[1].textContent === 'Metal');
+    expect(metalRow.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
   });
 });
