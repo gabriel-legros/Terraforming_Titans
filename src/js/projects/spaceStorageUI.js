@@ -22,21 +22,8 @@ function renderSpaceStorageUI(project, container) {
         <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used"></span></div>
         <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
       </div>
-      <table class="storage-usage-table">
-        <thead><tr id="ss-usage-header"></tr></thead>
-        <tbody id="ss-usage-body"></tbody>
-      </table>
+      <div id="ss-resource-grid"></div>
     </div>`;
-  const usageHeader = card.querySelector('#ss-usage-header');
-  const usageBody = card.querySelector('#ss-usage-body');
-  for (let i = 0; i < 3; i++) {
-    const blank = document.createElement('th');
-    const res = document.createElement('th');
-    res.textContent = 'Resource';
-    const used = document.createElement('th');
-    used.textContent = 'Used';
-    usageHeader.append(blank, res, used);
-  }
   const cardBody = card.querySelector('.card-body');
 
   const topSection = document.createElement('div');
@@ -68,43 +55,39 @@ function renderSpaceStorageUI(project, container) {
   cardBody.appendChild(topSection);
 
   const expansionCostDisplay = expansionCostRow.querySelector('.expansion-cost');
+  const resourceGrid = card.querySelector('#ss-resource-grid');
 
-  let currentRow;
-  storageResourceOptions.forEach((opt, index) => {
-    if (index % 3 === 0) {
-      currentRow = document.createElement('tr');
-      usageBody.appendChild(currentRow);
-    }
+  storageResourceOptions.forEach(opt => {
+    const resourceItem = document.createElement('div');
+    resourceItem.classList.add('storage-resource-item');
 
-    const checkboxCell = document.createElement('td');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.id = `${project.name}-res-${opt.resource}`;
-    input.addEventListener('change', e => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${project.name}-res-${opt.resource}`;
+    checkbox.addEventListener('change', e => {
       project.toggleResourceSelection(opt.category, opt.resource, e.target.checked);
     });
+
     const label = document.createElement('label');
-    label.htmlFor = input.id;
+    label.htmlFor = checkbox.id;
     label.textContent = opt.label;
-    checkboxCell.append(input);
 
-    const nameCell = document.createElement('td');
-    nameCell.appendChild(label);
-    const amtCell = document.createElement('td');
-    amtCell.id = `${project.name}-usage-${opt.resource}`;
-    amtCell.textContent = '0';
+    const usage = document.createElement('span');
+    usage.id = `${project.name}-usage-${opt.resource}`;
+    usage.textContent = '0';
 
-    currentRow.append(checkboxCell, nameCell, amtCell);
+    resourceItem.append(checkbox, label, usage);
+    resourceGrid.appendChild(resourceItem);
 
     projectElements[project.name] = {
       ...projectElements[project.name],
       resourceCheckboxes: {
         ...(projectElements[project.name]?.resourceCheckboxes || {}),
-        [opt.resource]: input
+        [opt.resource]: checkbox
       },
       usageCells: {
         ...(projectElements[project.name]?.usageCells || {}),
-        [opt.resource]: amtCell
+        [opt.resource]: usage
       }
     };
   });
@@ -201,7 +184,7 @@ function renderSpaceStorageUI(project, container) {
     storageCard: card,
     usedDisplay: card.querySelector('#ss-used'),
     maxDisplay: card.querySelector('#ss-max'),
-    usageBody,
+    resourceGrid,
     expansionCostDisplay,
     shipProgressButton,
     shipAutoStartCheckbox,
