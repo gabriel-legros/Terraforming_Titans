@@ -308,14 +308,14 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'spaceStorage',
-          type : 'resourceCostMultiplier',
+          type : 'spaceshipCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
           value : 0
-        }      
+        }
       ]
     }
-  },  
+  },
   magneticShield : {
     type: 'Project',
     name : 'Magnetic Shield',

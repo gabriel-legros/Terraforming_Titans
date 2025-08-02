@@ -476,12 +476,20 @@ function updateProjectUI(projectName) {
           elements.progressButton.style.background = '#4caf50';
         } else if (project.isPaused) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-          elements.progressButton.textContent = `Resume ${project.displayName} (${timeRemaining}s left)`;
+          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+            elements.progressButton.textContent = `Resume storage expansion (${timeRemaining}s left)`;
+          } else {
+            elements.progressButton.textContent = `Resume ${project.displayName} (${timeRemaining}s left)`;
+          }
           elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
           // Update dynamic duration for spaceMining projects
           let duration = project.getEffectiveDuration();
-          elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+            elements.progressButton.textContent = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          } else {
+            elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          }
 
         // Set background color based on whether the project can start
         if (project.canStart()) {

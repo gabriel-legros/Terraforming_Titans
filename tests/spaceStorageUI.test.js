@@ -86,7 +86,6 @@ describe('Space Storage UI', () => {
     project.prioritizeMegaProjects = false;
     ctx.updateSpaceStorageUI(project);
     expect(els.prioritizeMegaCheckbox.checked).toBe(false);
-
     const topSection = container.querySelector('.project-top-section');
     const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
     expect(titles).toEqual(expect.arrayContaining(['Assignment', 'Cost & Gain', 'Expansion']));
