@@ -312,6 +312,13 @@ class StoryManager {
                console.warn(`Condition function not found: ${objective.conditionId}`);
                return false;
           }
+          case 'wgcHighestDifficulty': {
+               if (typeof warpGateCommand !== 'undefined') {
+                    const current = warpGateCommand.highestDifficulty || 0;
+                    return compareValues(current, objective.difficulty || 0, objective.comparison);
+               }
+               return false;
+          }
           default:
                console.error(`Unknown objective type: ${objective.type}`);
                return false;
@@ -412,14 +419,21 @@ class StoryManager {
                 return `Travel to ${name}`;
           }
           case 'solisPoints': {
-                const current = solisManager ? solisManager.solisPoints || 0 : 0;
-                return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
-            }
+               const current = solisManager ? solisManager.solisPoints || 0 : 0;
+               return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
+           }
           case 'condition': {
-                return objective.description || '';
+               return objective.description || '';
           }
-           default:
-                return '';
+          case 'wgcHighestDifficulty': {
+               const current = typeof warpGateCommand !== 'undefined'
+                    ? warpGateCommand.highestDifficulty : -1;
+               const dispCurrent = Math.max(0, current + 1);
+               const target = (objective.difficulty || 0) + 1;
+               return `Highest Operation Difficulty: ${format(dispCurrent, true)}/${format(target, true)}`;
+          }
+          default:
+               return '';
        }
    }
 
