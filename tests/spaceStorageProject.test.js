@@ -18,8 +18,8 @@ describe('Space Storage project', () => {
     expect(project.duration).toBe(300000);
     expect(project.repeatable).toBe(true);
     expect(project.maxRepeatCount).toBe(Infinity);
-    expect(project.attributes.costPerShip.colony.energy).toBe(1_000_000_000);
-    expect(project.attributes.transportPerShip).toBe(1_000_000_000);
+    expect(project.attributes.costPerShip.colony.energy).toBe(500_000_000);
+    expect(project.attributes.transportPerShip).toBe(1_000_000);
   });
 
   test('scales with terraformed worlds and saves used storage', () => {
@@ -49,10 +49,12 @@ describe('Space Storage project', () => {
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(2000000000000);
     project.usedStorage = 1234;
+    project.resourceUsage = { metal: 100 };
     const saved = project.saveState();
     const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
     loaded.loadState(saved);
     expect(loaded.usedStorage).toBe(1234);
+    expect(loaded.resourceUsage.metal).toBe(100);
   });
 
   test('renders assignment UI with resource checkboxes', () => {
