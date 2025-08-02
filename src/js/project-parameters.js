@@ -393,7 +393,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct an orbital facility for massive resource storage. Each terraformed planet reduces construction time.',
+    description: 'Construct an orbital facility for massive resource storage. Each terraformed planet reduces expansion time.  Resources in space storage may also be used for certain special projects.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
