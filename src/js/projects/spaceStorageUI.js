@@ -147,7 +147,7 @@ function renderSpaceStorageUI(project, container) {
   });
   const prioritizeLabel = document.createElement('label');
   prioritizeLabel.htmlFor = prioritizeCheckbox.id;
-  prioritizeLabel.textContent = 'Prioritize resources for mega projects';
+  prioritizeLabel.textContent = 'Prioritize space resources for mega projects';
   prioritizeContainer.append(prioritizeCheckbox, prioritizeLabel);
   shipAutomationContainer.appendChild(prioritizeContainer);
 
