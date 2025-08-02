@@ -6,6 +6,53 @@ let _spaceManagerInstance = null;
 const planetUIElements = {};
 // Track whether the space UI has been generated already
 let spaceUIInitialized = false;
+// Track visibility of the Random subtab
+let spaceRandomTabVisible = false;
+
+function showSpaceRandomTab() {
+    spaceRandomTabVisible = true;
+    const tab = document.querySelector('.space-subtab[data-subtab="space-random"]');
+    const content = document.getElementById('space-random');
+    if (tab) tab.classList.remove('hidden');
+    if (content) content.classList.remove('hidden');
+}
+
+function hideSpaceRandomTab() {
+    spaceRandomTabVisible = false;
+    const tab = document.querySelector('.space-subtab[data-subtab="space-random"]');
+    const content = document.getElementById('space-random');
+    if (tab) tab.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+}
+
+function updateSpaceRandomVisibility() {
+    if (!_spaceManagerInstance) return;
+    if (_spaceManagerInstance.randomTabEnabled) {
+        if (!spaceRandomTabVisible) {
+            showSpaceRandomTab();
+        }
+    } else if (spaceRandomTabVisible) {
+        hideSpaceRandomTab();
+    }
+}
+
+function initializeSpaceTabs() {
+    document.querySelectorAll('.space-subtab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.space-subtab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.space-subtab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            const id = tab.dataset.subtab;
+            document.getElementById(id).classList.add('active');
+        });
+    });
+}
+
+function activateSpaceSubtab(subtabId) {
+    if (typeof activateSubtab === 'function') {
+        activateSubtab('space-subtab', 'space-subtab-content', subtabId, true);
+    }
+}
 
 /**
  * Initializes the Space Tab UI elements and stores the SpaceManager instance.
@@ -18,6 +65,8 @@ function initializeSpaceUI(spaceManager) {
     }
     _spaceManagerInstance = spaceManager; // Store the instance for later use
     console.log("Initializing Space UI with SpaceManager reference.");
+    initializeSpaceTabs();
+    hideSpaceRandomTab();
 
     // If the UI has already been generated, just update with the new instance
     if (spaceUIInitialized) {
@@ -92,6 +141,7 @@ function initializeSpaceUI(spaceManager) {
 
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
+    updateSpaceRandomVisibility();
 
     const statusContainer = document.getElementById('travel-status');
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
