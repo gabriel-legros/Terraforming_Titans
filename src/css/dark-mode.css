@@ -199,6 +199,12 @@ body.dark-mode {
     cursor: not-allowed;
 }
 
+.dark-mode .milestone-button.completed {
+    background-color: #3cb371;
+    border-color: #3cb371;
+    color: #fff;
+}
+
 .dark-mode input,
 .dark-mode select,
 .dark-mode textarea {
