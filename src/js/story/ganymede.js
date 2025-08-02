@@ -363,7 +363,7 @@ progressGanymede.chapters.push(
         narrative: "Mary: “A hundred volunteers rotating shifts. No AI weapons, no drones—only human resolve.”\nFeroza: “Admirable and under‑caffeinated. Tell Logistics to send coffee.”",
         prerequisites: ["chapter14.0"],
         objectives: [
-            { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
+            { type: 'wgcHighestDifficulty', difficulty: 0 }
         ],
         reward: []
     },
