@@ -12,6 +12,7 @@ const storageResourceOptions = [
 function renderSpaceStorageUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('space-storage-card');
+  card.classList.add('info-card');
   card.innerHTML = `
     <div class="card-header">
       <span class="card-title">Space Storage</span>
@@ -135,6 +136,21 @@ function renderSpaceStorageUI(project, container) {
   shipAutoStartLabel.textContent = 'Auto start ships';
   shipAutoStartContainer.append(shipAutoStartCheckbox, shipAutoStartLabel);
   shipAutomationContainer.appendChild(shipAutoStartContainer);
+
+  const prioritizeContainer = document.createElement('div');
+  prioritizeContainer.classList.add('checkbox-container');
+  const prioritizeCheckbox = document.createElement('input');
+  prioritizeCheckbox.type = 'checkbox';
+  prioritizeCheckbox.id = `${project.name}-prioritize-space`;
+  prioritizeCheckbox.addEventListener('change', e => {
+    project.prioritizeMegaProjects = e.target.checked;
+  });
+  const prioritizeLabel = document.createElement('label');
+  prioritizeLabel.htmlFor = prioritizeCheckbox.id;
+  prioritizeLabel.textContent = 'Prioritize space resources for mega projects';
+  prioritizeContainer.append(prioritizeCheckbox, prioritizeLabel);
+  shipAutomationContainer.appendChild(prioritizeContainer);
+
   shipFooter.appendChild(shipAutomationContainer);
 
   card.appendChild(shipFooter);
@@ -148,6 +164,7 @@ function renderSpaceStorageUI(project, container) {
     expansionCostDisplay,
     shipProgressButton,
     shipAutoStartCheckbox,
+    prioritizeMegaCheckbox: prioritizeCheckbox,
     withdrawButton,
     storeButton,
     updateModeButtons
@@ -197,6 +214,9 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartCheckbox) {
     els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
+  }
+  if (els.prioritizeMegaCheckbox) {
+    els.prioritizeMegaCheckbox.checked = project.prioritizeMegaProjects;
   }
   if (els.updateModeButtons) {
     els.updateModeButtons();

@@ -118,9 +118,18 @@ class Project extends EffectableEntity {
     }
 
     const cost = this.getScaledCost();
+    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const category in cost) {
       for (const resource in cost[category]) {
-        if (resources[category][resource].value < cost[category][resource]) {
+        const required = cost[category][resource];
+        if (storageProj) {
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          const stored = storageProj.resourceUsage[key] || 0;
+          const available = resources[category][resource].value + stored;
+          if (available < required) {
+            return false;
+          }
+        } else if (resources[category][resource].value < required) {
           return false;
         }
       }
@@ -131,11 +140,48 @@ class Project extends EffectableEntity {
 
   deductResources(resources) {
     const cost = this.getScaledCost();
+    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
 
     for (const category in cost) {
       for (const resource in cost[category]) {
-        resources[category][resource].decrease(cost[category][resource]);
+        let remaining = cost[category][resource];
+        if (storageProj) {
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          if (storageProj.prioritizeMegaProjects) {
+            const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+            if (fromStorage > 0) {
+              storageProj.resourceUsage[key] -= fromStorage;
+              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
+              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+              remaining -= fromStorage;
+            }
+            if (remaining > 0) {
+              resources[category][resource].decrease(remaining);
+            }
+          } else {
+            const fromColony = Math.min(resources[category][resource].value, remaining);
+            if (fromColony > 0) {
+              resources[category][resource].decrease(fromColony);
+              remaining -= fromColony;
+            }
+            if (remaining > 0) {
+              const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+              if (fromStorage > 0) {
+                storageProj.resourceUsage[key] -= fromStorage;
+                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
+                if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+                remaining -= fromStorage;
+              }
+            }
+          }
+        } else {
+          resources[category][resource].decrease(remaining);
+        }
       }
+    }
+
+    if (storageProj && typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(storageProj);
     }
   }
 
