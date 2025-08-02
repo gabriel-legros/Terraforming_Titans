@@ -97,7 +97,12 @@ function autoBuild(buildings, delta = 0) {
         if (canBuildFull) {
             buildCount = requiredAmount;
         } else {
-            const maxBuildable = building.maxBuildable();
+            let maxBuildable = building.maxBuildable();
+
+            if (building.requiresLand && typeof building.landAffordCount === 'function') {
+                maxBuildable = Math.min(maxBuildable, building.landAffordCount());
+            }
+
             if (maxBuildable > 0) {
                 buildCount = maxBuildable;
             }

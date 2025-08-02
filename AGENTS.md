@@ -275,3 +275,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Bio Factory renamed to Biodome, and Life Designer UI now shows a Biodomes section displaying points from biodomes.
 - Added TerraformedDurationProject base class; Space Storage and Dyson Swarm now scale duration with terraformed planets. Space Storage is repeatable with 1 trillion tons capacity per completion.
 - Space Storage project now offers spaceship assignment with resource checkboxes and always displays storage stats with terraformed duration reduction.
+- Biodomes now require 100 land each, and the Life Designer UI separates controls from biodomes with a new divider.
+- Auto build now constructs as many buildings as available land allows when targets exceed land.
+- Land resource tooltip lists land usage per building sorted by amount.

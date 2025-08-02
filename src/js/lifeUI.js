@@ -76,6 +76,7 @@ function initializeLifeTerraformingDesignerUI() {
                  <button id="life-apply-btn">Deploy</button>
                  <div id="life-apply-progress"></div>
                </div>
+               <hr style="margin: 15px 0;">
                <div id="life-biodomes-section" style="margin-top: 10px;">
                  <h4>Biodomes</h4>
                  <p>Points from biodomes : <span id="life-biodome-points">0</span></p>
