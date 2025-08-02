@@ -274,3 +274,4 @@ second time they speak in a chapter to help clarify who is talking.
 - ResearchManager now skips hidden entries when revealing the next three researches.
 - Bio Factory renamed to Biodome, and Life Designer UI now shows a Biodomes section displaying points from biodomes.
 - Added TerraformedDurationProject base class; Space Storage and Dyson Swarm now scale duration with terraformed planets. Space Storage is repeatable with 1 trillion tons capacity per completion.
+- Biodomes now require 100 land each, and the Life Designer UI separates controls from biodomes with a new divider.

@@ -454,6 +454,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 100,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    requiresLand: 100
   }
 };
