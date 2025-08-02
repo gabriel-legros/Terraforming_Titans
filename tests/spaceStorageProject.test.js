@@ -247,4 +247,55 @@ describe('Space Storage project', () => {
     expect(project.resourceUsage.liquidWater).toBe(500);
     expect(project.usedStorage).toBe(1000);
   });
+
+  test('progress button uses storage expansion text', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div class="projects-subtab-content-wrapper"></div>');
+    const ctx = {
+      console,
+      document: dom.window.document,
+      projectElements: {},
+      projectManager: {},
+      formatNumber: numbers.formatNumber,
+      formatBigInteger: numbers.formatBigInteger,
+      formatTotalCostDisplay: () => '',
+      formatTotalResourceGainDisplay: () => '',
+      resources: {},
+      buildings: {},
+      colonies: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      capitalizeFirstLetter: s => s.charAt(0).toUpperCase() + s.slice(1),
+      SpaceMiningProject: function () {},
+      SpaceExportBaseProject: function () {},
+      SpaceExportProject: function () {},
+      SpaceDisposalProject: function () {}
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.projectElements = projectElements;', ctx);
+
+    const attrs = { costPerShip: {}, transportPerShip: 0 };
+    const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.renderUI = () => {};
+    project.updateUI = () => {};
+    project.getEffectiveDuration = () => 1000;
+    project.canStart = () => true;
+
+    ctx.projectManager.projects = { spaceStorage: project };
+    ctx.projectManager.isBooleanFlagSet = () => false;
+    ctx.projectManager.getProjectStatuses = () => [project];
+
+    ctx.createProjectItem(project);
+    ctx.updateProjectUI('spaceStorage');
+    const btn = ctx.projectElements[project.name].progressButton;
+    expect(btn.textContent).toBe('Start storage expansion (Duration: 1.00 seconds)');
+  });
 });

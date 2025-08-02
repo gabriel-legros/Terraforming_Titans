@@ -229,13 +229,13 @@ function updateSpaceStorageUI(project) {
       els.shipProgressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
       els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
     } else if (project.shipOperationIsPaused) {
-      els.shipProgressButton.textContent = `Resume Ships (${timeRemaining}s left)`;
+      els.shipProgressButton.textContent = `Resume ship transfers (${timeRemaining}s left)`;
       els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
     } else if (project.canStartShipOperation && project.canStartShipOperation()) {
-      els.shipProgressButton.textContent = `Start Ships (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+      els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
       els.shipProgressButton.style.background = '#4caf50';
     } else {
-      els.shipProgressButton.textContent = `Start Ships (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+      els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
       els.shipProgressButton.style.background = '#f44336';
     }
   }
