@@ -441,8 +441,8 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
-  bioFactory:{
-    name: 'Bio Factory',
+  biodome:{
+    name: 'Biodome',
     category: 'terraforming',
     description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.  Requires an active life design that can survive somewhere to function.',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},

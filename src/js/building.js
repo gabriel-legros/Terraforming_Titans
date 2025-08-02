@@ -437,9 +437,9 @@ class Building extends EffectableEntity {
         }
       }
 
-      // Disable Bio Factory when designed life cannot survive anywhere
+      // Disable Biodome when designed life cannot survive anywhere
       if(
-        this.name === 'bioFactory' &&
+        this.name === 'biodome' &&
         typeof lifeDesigner !== 'undefined' &&
         lifeDesigner.currentDesign &&
         typeof lifeDesigner.currentDesign.canSurviveAnywhere === 'function' &&

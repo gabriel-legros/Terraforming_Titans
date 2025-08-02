@@ -11,7 +11,7 @@ describe('Dyson Swarm research parameters', () => {
     const adv = ctx.researchParameters.advanced;
     const research = adv.find(r => r.id === 'dyson_swarm_concept');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(30000);
+    expect(research.cost.advancedResearch).toBe(25000);
     const flagEffect = research.effects.find(e => e.type === 'booleanFlag' && e.flagId === 'dysonSwarmUnlocked' && e.value === true);
     expect(flagEffect).toBeDefined();
   });

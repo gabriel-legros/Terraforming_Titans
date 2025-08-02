@@ -76,6 +76,10 @@ function initializeLifeTerraformingDesignerUI() {
                  <button id="life-apply-btn">Deploy</button>
                  <div id="life-apply-progress"></div>
                </div>
+               <div id="life-biodomes-section" style="margin-top: 10px;">
+                 <h4>Biodomes</h4>
+                 <p>Points from biodomes : <span id="life-biodome-points">0</span></p>
+               </div>
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
             </div>
@@ -363,6 +367,10 @@ function updateLifeUI() {
 
     updateDesignValues();
     updatePointsDisplay();
+    const biodomePointsSpan = document.getElementById('life-biodome-points');
+    if (biodomePointsSpan) {
+      biodomePointsSpan.textContent = typeof lifeDesigner.biodomePoints !== 'undefined' ? lifeDesigner.biodomePoints : 0;
+    }
     // updateZonalBiomassDensities(); // Remove call to old function
     updateLifeStatusTable();
 

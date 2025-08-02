@@ -13,7 +13,7 @@ describe('Space Storage research', () => {
     const advanced = ctx.researchParameters.advanced;
     const research = advanced.find(r => r.id === 'space_storage');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(100000);
+    expect(research.cost.advancedResearch).toBe(30000);
     const effect = research.effects.find(e => e.target === 'project' && e.targetId === 'spaceStorage' && e.type === 'enable');
     expect(effect).toBeDefined();
   });
