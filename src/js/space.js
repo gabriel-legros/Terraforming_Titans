@@ -10,6 +10,7 @@ class SpaceManager extends EffectableEntity {
         this.currentPlanetKey = 'mars';
         // Store status per planet including whether it's been visited
         this.planetStatuses = {};
+        this.randomTabEnabled = false;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -84,8 +85,19 @@ class SpaceManager extends EffectableEntity {
         return false;
     }
 
+    enableRandomTab() {
+        this.randomTabEnabled = true;
+        if (typeof showSpaceRandomTab === 'function') {
+            showSpaceRandomTab();
+        }
+    }
+
     enable(planetKey) {
-        this.enablePlanet(planetKey);
+        if (planetKey === 'space-random') {
+            this.enableRandomTab();
+        } else {
+            this.enablePlanet(planetKey);
+        }
     }
 
     /**
