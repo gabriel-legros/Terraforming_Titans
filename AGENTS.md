@@ -290,4 +290,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage UI shows Used and Max storage side by side, includes expansion cost with terraforming tooltip, and displays spaceship assignment next to ship cost & gain.
 - Space Storage progress buttons now read "Start ship transfers" and "Start storage expansion".
 - Space Storage card now correctly displays the expansion metal cost.
+- Space Storage UI now places expansion cost alongside spaceship assignment and cost & gain.
 - Space Elevator no longer negates Space Storage expansion metal cost, applying its metal cost reduction only to ships.
