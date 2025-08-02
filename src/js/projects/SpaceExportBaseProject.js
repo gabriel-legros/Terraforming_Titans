@@ -150,6 +150,16 @@ class SpaceExportBaseProject extends SpaceshipProject {
     return control;
   }
 
+  renderAutomationUI(container) {
+    const elements = projectElements[this.name] || {};
+    if (!elements.waitCapacityCheckboxContainer) {
+      container.appendChild(this.createWaitForCapacityCheckbox());
+    }
+    if (!elements.temperatureControl) {
+      container.appendChild(this.createTemperatureControl());
+    }
+  }
+
   updateUI() {
     super.updateUI();
     const elements = projectElements[this.name];
