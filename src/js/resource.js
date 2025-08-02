@@ -250,7 +250,9 @@ function calculateProductionRates(deltaTime, buildings) {
     // Calculate scaled consumption rates
     for (const category in building.consumption) {
       for (const resource in building.consumption[category]) {
-        const actualConsumption = (building.consumption[category][resource] || 0) * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const entry = building.getConsumptionResource ? building.getConsumptionResource(category, resource) : { amount: building.consumption[category][resource] };
+        const amount = entry.amount || 0;
+        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
       }

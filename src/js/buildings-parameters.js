@@ -446,7 +446,7 @@ const buildingsParameters = {
     category: 'terraforming',
     description: 'Produces life using water, carbon dioxide and artificial light.  Produces a small amount of oxygen.  Requires an active life design that can survive somewhere to function.  Also produces life design points regardless.',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
-    consumption: {colony: {energy: 10000000, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
+    consumption: {colony: {energy: { amount: 10000000, ignoreProductivity: true }, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
     production: {atmospheric: {oxygen : 0.177388}, surface: {biomass : 0.166612}},
     storage: {},
     dayNightActivity: false,
