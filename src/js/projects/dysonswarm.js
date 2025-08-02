@@ -30,19 +30,64 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   canStartCollector() {
     if (!this.isCompleted) return false;
     if (this.collectorProgress > 0) return false;
+    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {
-        if (resources[cat][res].value < this.collectorCost[cat][res]) return false;
+        const required = this.collectorCost[cat][res];
+        if (storageProj) {
+          const key = res === 'water' ? 'liquidWater' : res;
+          const stored = storageProj.resourceUsage[key] || 0;
+          const available = resources[cat][res].value + stored;
+          if (available < required) return false;
+        } else if (resources[cat][res].value < required) {
+          return false;
+        }
       }
     }
     return true;
   }
 
   deductCollectorResources() {
+    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {
-        resources[cat][res].decrease(this.collectorCost[cat][res]);
+        let remaining = this.collectorCost[cat][res];
+        if (storageProj) {
+          const key = res === 'water' ? 'liquidWater' : res;
+          if (storageProj.prioritizeMegaProjects) {
+            const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+            if (fromStorage > 0) {
+              storageProj.resourceUsage[key] -= fromStorage;
+              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
+              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+              remaining -= fromStorage;
+            }
+            if (remaining > 0) {
+              resources[cat][res].decrease(remaining);
+            }
+          } else {
+            const fromColony = Math.min(resources[cat][res].value, remaining);
+            if (fromColony > 0) {
+              resources[cat][res].decrease(fromColony);
+              remaining -= fromColony;
+            }
+            if (remaining > 0) {
+              const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+              if (fromStorage > 0) {
+                storageProj.resourceUsage[key] -= fromStorage;
+                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
+                if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+                remaining -= fromStorage;
+              }
+            }
+          }
+        } else {
+          resources[cat][res].decrease(remaining);
+        }
       }
+    }
+    if (storageProj && typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(storageProj);
     }
   }
 
