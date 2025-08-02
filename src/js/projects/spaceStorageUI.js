@@ -76,6 +76,20 @@ function renderSpaceStorageUI(project, container) {
   shipProgressButtonContainer.appendChild(shipProgressButton);
   shipFooter.appendChild(shipProgressButtonContainer);
 
+  const modeContainer = document.createElement('div');
+  modeContainer.classList.add('checkbox-container');
+  const modeToggle = document.createElement('input');
+  modeToggle.type = 'checkbox';
+  modeToggle.id = `${project.name}-withdraw-mode`;
+  modeToggle.addEventListener('change', e => {
+    project.shipWithdrawMode = e.target.checked;
+  });
+  const modeLabel = document.createElement('label');
+  modeLabel.htmlFor = modeToggle.id;
+  modeLabel.textContent = 'Withdraw';
+  modeContainer.append(modeToggle, modeLabel);
+  shipFooter.appendChild(modeContainer);
+
   const shipAutomationContainer = document.createElement('div');
   shipAutomationContainer.classList.add('automation-settings-container');
   const shipAutoStartContainer = document.createElement('div');
@@ -102,7 +116,8 @@ function renderSpaceStorageUI(project, container) {
     maxDisplay: card.querySelector('#ss-max'),
     usageBody: card.querySelector('#ss-usage-body'),
     shipProgressButton,
-    shipAutoStartCheckbox
+    shipAutoStartCheckbox,
+    withdrawToggle: modeToggle
   };
 }
 
@@ -118,16 +133,14 @@ function updateSpaceStorageUI(project) {
   if (els.usageBody) {
     els.usageBody.innerHTML = '';
     storageResourceOptions.forEach(opt => {
-      const amount = project.resourceUsage[opt.resource];
-      if (amount) {
-        const row = document.createElement('tr');
-        const nameCell = document.createElement('td');
-        nameCell.textContent = opt.label;
-        const amtCell = document.createElement('td');
-        amtCell.textContent = formatNumber(amount, false, 0);
-        row.append(nameCell, amtCell);
-        els.usageBody.appendChild(row);
-      }
+      const row = document.createElement('tr');
+      const nameCell = document.createElement('td');
+      nameCell.textContent = opt.label;
+      const amtCell = document.createElement('td');
+      const amount = project.resourceUsage[opt.resource] || 0;
+      amtCell.textContent = formatNumber(amount, false, 0);
+      row.append(nameCell, amtCell);
+      els.usageBody.appendChild(row);
     });
   }
   if (els.resourceCheckboxes) {
@@ -143,6 +156,9 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartCheckbox) {
     els.shipAutoStartCheckbox.checked = project.shipOperationAutoStart;
+  }
+  if (els.withdrawToggle) {
+    els.withdrawToggle.checked = project.shipWithdrawMode;
   }
   if (els.shipProgressButton) {
     const duration = project.getEffectiveDuration();

@@ -46,15 +46,20 @@ describe('Space Storage project', () => {
     const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 300000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
     expect(project.getBaseDuration()).toBeCloseTo(100000);
+    project.assignedSpaceships = 150;
+    expect(project.getBaseDuration()).toBeCloseTo(1000);
+    expect(project.calculateTransferAmount()).toBe(1_500_000_000);
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(2000000000000);
     project.usedStorage = 1234;
     project.resourceUsage = { metal: 100 };
+    project.shipWithdrawMode = true;
     const saved = project.saveState();
     const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
     loaded.loadState(saved);
     expect(loaded.usedStorage).toBe(1234);
     expect(loaded.resourceUsage.metal).toBe(100);
+    expect(loaded.shipWithdrawMode).toBe(true);
   });
 
   test('renders assignment UI with resource checkboxes', () => {
@@ -96,5 +101,38 @@ describe('Space Storage project', () => {
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
+  });
+
+  test('withdraw mode returns stored resources', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: { colony: { metal: { value: 0, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } } } },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: { getTerraformedPlanetCount: () => 0 }
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const attrs = { costPerShip: {}, transportPerShip: 1000 };
+    const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.selectedResources = [{ category: 'colony', resource: 'metal' }];
+    project.assignedSpaceships = 50;
+    project.resourceUsage = { metal: 2000 };
+    project.usedStorage = 2000;
+    project.shipWithdrawMode = true;
+    project.completeShipOperation();
+    expect(ctx.resources.colony.metal.value).toBe(1000);
+    expect(project.resourceUsage.metal).toBe(1000);
+    expect(project.usedStorage).toBe(1000);
   });
 });
