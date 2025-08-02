@@ -12,6 +12,7 @@ const storageResourceOptions = [
 function renderSpaceStorageUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('space-storage-card');
+  card.classList.add('info-card');
   card.innerHTML = `
     <div class="card-header">
       <span class="card-title">Space Storage</span>
