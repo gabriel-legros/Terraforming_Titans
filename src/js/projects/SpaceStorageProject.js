@@ -13,6 +13,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationStartingDuration = 0;
     this.shipWithdrawMode = false;
     this.pendingTransfers = [];
+    this.prioritizeMegaProjects = false;
   }
 
   getDurationWithTerraformBonus(baseDuration) {
@@ -256,6 +257,7 @@ class SpaceStorageProject extends SpaceshipProject {
       selectedResources: this.selectedResources,
       resourceUsage: this.resourceUsage,
       pendingTransfers: this.pendingTransfers,
+      prioritizeMegaProjects: this.prioritizeMegaProjects,
       shipOperation: {
         remainingTime: this.shipOperationRemainingTime,
         startingDuration: this.shipOperationStartingDuration,
@@ -273,6 +275,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.selectedResources = state.selectedResources || [];
     this.resourceUsage = state.resourceUsage || {};
     this.pendingTransfers = state.pendingTransfers || [];
+    this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;

@@ -286,3 +286,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage now features Store/Withdraw mode buttons with even capacity distribution and transfers calculated at launch.
 - Space Storage expansion progress bar activates once its metal cost requirements are satisfied.
 - Space Storage UI now combines resource checkboxes with usage in a single table and places spaceship assignment below storage controls.
+- Dyson Swarm and other mega projects can draw costs from Space Storage, with an option to prioritize stored resources.
