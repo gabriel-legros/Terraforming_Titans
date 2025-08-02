@@ -998,7 +998,7 @@ const researchParameters = {
         id: 'ghg_efficiency',
         name: 'Streamlined Greenhouse Gas Production',
         description: 'Doubles the efficiency of GHG factories.',
-        cost: { research: 1000000 },
+        cost: { research: 10000000 },
         prerequisites: [],
         effects: [
           {
@@ -1013,7 +1013,7 @@ const researchParameters = {
         id: 'ghg_efficiency2',
         name: 'Mass Greenhouse Gas Production',
         description: 'Doubles the efficiency of GHG factories, again.',
-        cost: { research: 10000000 },
+        cost: { research: 100000000 },
         prerequisites: [],
         effects: [
           {
@@ -1028,7 +1028,7 @@ const researchParameters = {
         id: 'life',
         name: 'Life Designing and Production',
         description: 'Allows the designing and production of specially engineered biomass.',
-        cost: { research: 100_000_000 },
+        cost: { research: 1_000_000 },
         prerequisites: [],
         effects: [
             {
