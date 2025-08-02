@@ -11,6 +11,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationIsPaused = false;
     this.shipOperationRemainingTime = 0;
     this.shipOperationStartingDuration = 0;
+    this.shipWithdrawMode = false;
   }
 
   getDurationWithTerraformBonus(baseDuration) {
@@ -28,8 +29,21 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.repeatCount * this.capacityPerCompletion;
   }
 
+  calculateTransferAmount() {
+    const base = this.attributes.transportPerShip || 0;
+    const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
+    return base * scalingFactor;
+  }
+
+  calculateSpaceshipAdjustedDuration() {
+    const maxShipsForDurationReduction = 100;
+    const ships = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction);
+    return this.baseDuration / ships;
+  }
+
   getBaseDuration() {
-    return this.getDurationWithTerraformBonus(this.baseDuration);
+    const duration = this.calculateSpaceshipAdjustedDuration();
+    return this.getDurationWithTerraformBonus(duration);
   }
 
   toggleResourceSelection(category, resource, isSelected) {
@@ -49,8 +63,12 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.shipOperationIsActive) return false;
     if (this.assignedSpaceships <= 0) return false;
     if (this.selectedResources.length === 0) return false;
-    const transfer = this.assignedSpaceships * (this.attributes.transportPerShip || 0);
-    if (this.usedStorage + transfer > this.maxStorage) return false;
+    const transfer = this.calculateTransferAmount();
+    if (!this.shipWithdrawMode && this.usedStorage + transfer > this.maxStorage) return false;
+    if (this.shipWithdrawMode) {
+      const hasStored = this.selectedResources.some(({ resource }) => (this.resourceUsage[resource] || 0) > 0);
+      if (!hasStored) return false;
+    }
     const totalCost = this.calculateSpaceshipTotalCost();
     for (const category in totalCost) {
       for (const resource in totalCost[category]) {
@@ -96,16 +114,31 @@ class SpaceStorageProject extends SpaceshipProject {
 
   completeShipOperation() {
     this.shipOperationIsActive = false;
-    const transfer = this.assignedSpaceships * (this.attributes.transportPerShip || 0);
+    const transfer = this.calculateTransferAmount();
     this.selectedResources.forEach(({ category, resource }) => {
-      const available = resources[category] && resources[category][resource]
-        ? resources[category][resource].value
-        : 0;
-      const amount = Math.min(transfer, available, this.maxStorage - this.usedStorage);
-      if (amount > 0) {
-        resources[category][resource].decrease(amount);
-        this.resourceUsage[resource] = (this.resourceUsage[resource] || 0) + amount;
-        this.usedStorage += amount;
+      if (this.shipWithdrawMode) {
+        const stored = this.resourceUsage[resource] || 0;
+        const amount = Math.min(transfer, stored);
+        if (amount > 0) {
+          resources[category][resource].increase(amount);
+          const remaining = stored - amount;
+          if (remaining > 0) {
+            this.resourceUsage[resource] = remaining;
+          } else {
+            delete this.resourceUsage[resource];
+          }
+          this.usedStorage = Math.max(0, this.usedStorage - amount);
+        }
+      } else {
+        const available = resources[category] && resources[category][resource]
+          ? resources[category][resource].value
+          : 0;
+        const amount = Math.min(transfer, available, this.maxStorage - this.usedStorage);
+        if (amount > 0) {
+          resources[category][resource].decrease(amount);
+          this.resourceUsage[resource] = (this.resourceUsage[resource] || 0) + amount;
+          this.usedStorage += amount;
+        }
       }
     });
   }
@@ -150,6 +183,7 @@ class SpaceStorageProject extends SpaceshipProject {
         isActive: this.shipOperationIsActive,
         isPaused: this.shipOperationIsPaused,
         autoStart: this.shipOperationAutoStart,
+        mode: this.shipWithdrawMode ? 'withdraw' : 'deposit',
       },
     };
   }
@@ -165,6 +199,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationIsActive = ship.isActive || false;
     this.shipOperationIsPaused = ship.isPaused || false;
     this.shipOperationAutoStart = ship.autoStart || false;
+    this.shipWithdrawMode = ship.mode === 'withdraw';
   }
 }
 

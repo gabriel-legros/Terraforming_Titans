@@ -15,7 +15,7 @@ describe('Space Storage UI', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, getEffectiveDuration: () => 1000 };
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, shipWithdrawMode: false, getEffectiveDuration: () => 1000 };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
@@ -23,13 +23,17 @@ describe('Space Storage UI', () => {
     const els = ctx.projectElements[project.name];
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(0);
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
+    expect(els.usageBody.querySelector('tr:first-child td:nth-child(2)').textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.shipAutoStartCheckbox).toBeDefined();
+    expect(els.withdrawToggle).toBeDefined();
 
     project.resourceUsage = { metal: 500 };
     project.usedStorage = 500;
     ctx.updateSpaceStorageUI(project);
-    expect(els.usageBody.querySelectorAll('tr').length).toBe(1);
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(8);
+    const metalRow = Array.from(els.usageBody.querySelectorAll('tr')).find(r => r.firstChild.textContent === 'Metal');
+    expect(metalRow.lastChild.textContent).toBe(String(numbers.formatNumber(500, false, 0)));
   });
 });
