@@ -328,6 +328,9 @@ class LifeDesigner extends EffectableEntity {
       electronics: 0
     };
 
+    this.biodomePoints = 0;
+    this.biodomePointRate = 0;
+
     this.enabled = false;
   }
 
@@ -411,6 +414,18 @@ class LifeDesigner extends EffectableEntity {
         this.tentativeDesign = null;
       }
     }
+
+    this.updateBiodomePoints(delta);
+  }
+
+  updateBiodomePoints(delta) {
+    const biodomeCount =
+      typeof buildings !== 'undefined' && buildings.biodome
+        ? buildings.biodome.count
+        : 0;
+    const rate = biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0;
+    this.biodomePointRate = rate;
+    this.biodomePoints += (rate * delta) / 3600000;
   }
 
   cancelDeployment() {
@@ -458,7 +473,12 @@ class LifeDesigner extends EffectableEntity {
   maxLifeDesignPoints() {
     const totalPurchases = Object.values(this.purchaseCounts)
       .reduce((acc, val) => acc + val, 0);
-    return this.baseMaxPoints + this.designPointBonus + totalPurchases;
+    return (
+      this.baseMaxPoints +
+      this.designPointBonus +
+      totalPurchases +
+      Math.floor(this.biodomePoints)
+    );
   }
 
   saveState() {
@@ -470,6 +490,7 @@ class LifeDesigner extends EffectableEntity {
       totalTime: this.totalTime,
       elapsedTime: this.elapsedTime,
       purchaseCounts: { ...this.purchaseCounts },
+      biodomePoints: this.biodomePoints,
       // spaceEfficiency and geologicalBurial are saved within currentDesign/tentativeDesign
     };
     return data;
@@ -485,6 +506,7 @@ class LifeDesigner extends EffectableEntity {
     this.totalTime = data.totalTime;
     this.elapsedTime = data.elapsedTime;
     this.purchaseCounts = { ...data.purchaseCounts };
+    this.biodomePoints = data.biodomePoints || 0;
   }
 }
 

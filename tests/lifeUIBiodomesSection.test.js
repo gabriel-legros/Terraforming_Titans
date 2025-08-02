@@ -51,6 +51,16 @@ describe('lifeUI biodomes section', () => {
     expect(section.querySelector('h4').textContent).toBe('Biodomes');
     const points = dom.window.document.getElementById('life-biodome-points');
     expect(points.textContent).toBe('0');
+    const max = dom.window.document.getElementById('life-biodome-max');
+    expect(max.textContent).toBe('0');
+    const rate = dom.window.document.getElementById('life-biodome-rate');
+    expect(rate.textContent).toBe('+0/hour');
+    const tooltip = dom.window.document.getElementById('life-biodome-tooltip');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip.classList.contains('info-tooltip-icon')).toBe(true);
+    const title = tooltip.getAttribute('title');
+    expect(title).toMatch(/log10/);
+    expect(title).toMatch(/Only whole points/);
   });
 });
 
