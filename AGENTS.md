@@ -287,3 +287,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage expansion progress bar activates once its metal cost requirements are satisfied.
 - Space Storage UI now combines resource checkboxes with usage in a single table and places spaceship assignment below storage controls.
 - Space Storage UI shows Used and Max storage side by side, includes expansion cost with terraforming tooltip, and displays spaceship assignment next to ship cost & gain.
+- Space Storage card now correctly displays the expansion metal cost.

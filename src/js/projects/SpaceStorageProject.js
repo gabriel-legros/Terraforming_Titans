@@ -226,6 +226,9 @@ class SpaceStorageProject extends SpaceshipProject {
     topSection.classList.add('space-storage-top-section');
     if (typeof renderSpaceStorageUI === 'function') {
       renderSpaceStorageUI(this, topSection);
+      if (typeof updateSpaceStorageUI === 'function') {
+        updateSpaceStorageUI(this);
+      }
     }
     const assignmentAndCost = document.createElement('div');
     assignmentAndCost.classList.add('project-top-section');
