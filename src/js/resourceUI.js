@@ -309,14 +309,27 @@ function updateResourceRateDisplay(resource){
           tooltipContent += '</div>';
         }
       }
-    } else if (resource.name === 'land' && typeof buildings !== 'undefined') {
+    } else if (resource.name === 'land') {
       const assignments = [];
-      for (const name in buildings) {
-        const b = buildings[name];
-        if (b.active > 0 && b.requiresLand) {
-          const used = b.active * b.requiresLand;
-          if (used > 0) {
-            assignments.push([b.displayName || name, used]);
+      if (typeof buildings !== 'undefined') {
+        for (const name in buildings) {
+          const b = buildings[name];
+          if (b.active > 0 && b.requiresLand) {
+            const used = b.active * b.requiresLand;
+            if (used > 0) {
+              assignments.push([b.displayName || name, used]);
+            }
+          }
+        }
+      }
+      if (typeof colonies !== 'undefined') {
+        for (const name in colonies) {
+          const c = colonies[name];
+          if (c.active > 0 && c.requiresLand) {
+            const used = c.active * c.requiresLand;
+            if (used > 0) {
+              assignments.push([c.displayName || name, used]);
+            }
           }
         }
       }
