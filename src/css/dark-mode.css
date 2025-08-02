@@ -100,6 +100,14 @@ body.dark-mode {
     background: #4d4d4d;
 }
 
+.dark-mode .mirror-oversight-card label {
+    color: #ffffff;
+}
+
+.dark-mode .mirror-oversight-card .slider-value {
+    color: #bbbbbb;
+}
+
 .dark-mode #mirror-flux-table th,
 .dark-mode #mirror-flux-table td {
     border-color: #444;
