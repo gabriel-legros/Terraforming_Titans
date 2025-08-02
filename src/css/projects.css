@@ -94,6 +94,17 @@
     font-size: 0.9em;
 }
 
+/* Space Storage resource table */
+.storage-usage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.storage-usage-table th,
+.storage-usage-table td {
+    padding: 4px;
+}
+
 /* Mode selection buttons for Space Storage */
 .mode-selection {
     display: flex;

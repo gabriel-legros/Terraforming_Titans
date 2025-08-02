@@ -23,11 +23,20 @@ function renderSpaceStorageUI(project, container) {
         <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
       </div>
       <table class="storage-usage-table">
-        <thead><tr><th></th><th>Resource</th><th>Used</th></tr></thead>
+        <thead><tr id="ss-usage-header"></tr></thead>
         <tbody id="ss-usage-body"></tbody>
       </table>
     </div>`;
+  const usageHeader = card.querySelector('#ss-usage-header');
   const usageBody = card.querySelector('#ss-usage-body');
+  for (let i = 0; i < 3; i++) {
+    const blank = document.createElement('th');
+    const res = document.createElement('th');
+    res.textContent = 'Resource';
+    const used = document.createElement('th');
+    used.textContent = 'Used';
+    usageHeader.append(blank, res, used);
+  }
   const cardBody = card.querySelector('.card-body');
 
   const topSection = document.createElement('div');
@@ -60,8 +69,12 @@ function renderSpaceStorageUI(project, container) {
 
   const expansionCostDisplay = expansionCostRow.querySelector('.expansion-cost');
 
-  storageResourceOptions.forEach(opt => {
-    const row = document.createElement('tr');
+  let currentRow;
+  storageResourceOptions.forEach((opt, index) => {
+    if (index % 3 === 0) {
+      currentRow = document.createElement('tr');
+      usageBody.appendChild(currentRow);
+    }
 
     const checkboxCell = document.createElement('td');
     const input = document.createElement('input');
@@ -81,8 +94,7 @@ function renderSpaceStorageUI(project, container) {
     amtCell.id = `${project.name}-usage-${opt.resource}`;
     amtCell.textContent = '0';
 
-    row.append(checkboxCell, nameCell, amtCell);
-    usageBody.appendChild(row);
+    currentRow.append(checkboxCell, nameCell, amtCell);
 
     projectElements[project.name] = {
       ...projectElements[project.name],

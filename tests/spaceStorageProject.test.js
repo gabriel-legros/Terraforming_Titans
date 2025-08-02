@@ -98,6 +98,8 @@ describe('Space Storage project', () => {
     project.renderUI(container);
     const checkboxes = container.querySelectorAll('.storage-usage-table input[type="checkbox"]');
     expect(checkboxes.length).toBe(8);
+    const rows = container.querySelectorAll('.storage-usage-table tbody tr');
+    expect(rows[0].children.length).toBe(9);
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
