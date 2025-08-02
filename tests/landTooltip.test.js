@@ -16,6 +16,9 @@ describe('land resource tooltip', () => {
       factory: { displayName: 'Factory', active: 2, requiresLand: 100 },
       greenhouse: { displayName: 'Greenhouse', active: 3, requiresLand: 10 }
     };
+    ctx.colonies = {
+      outpost: { displayName: 'Outpost', active: 1, requiresLand: 500 }
+    };
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resourceUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     return { dom, ctx };
@@ -40,11 +43,15 @@ describe('land resource tooltip', () => {
     ctx.createResourceDisplay({ surface: { land } });
     ctx.updateResourceRateDisplay(land);
     const html = dom.window.document.getElementById('land-tooltip').innerHTML;
+    expect(html).toContain('Outpost');
     expect(html).toContain('Factory');
     expect(html).toContain('Greenhouse');
-    const firstIndex = html.indexOf('Factory');
-    const secondIndex = html.indexOf('Greenhouse');
+    const firstIndex = html.indexOf('Outpost');
+    const secondIndex = html.indexOf('Factory');
+    const thirdIndex = html.indexOf('Greenhouse');
     expect(firstIndex).toBeLessThan(secondIndex);
+    expect(secondIndex).toBeLessThan(thirdIndex);
+    expect(html).toContain('500');
     expect(html).toContain('200');
     expect(html).toContain('30');
   });
