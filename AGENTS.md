@@ -292,3 +292,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Storage card now correctly displays the expansion metal cost.
 - Space Storage UI now places expansion cost alongside spaceship assignment and cost & gain.
 - Space Elevator no longer negates Space Storage expansion metal cost, applying its metal cost reduction only to ships.
+- Space Storage card now uses a single spaceship assignment and cost/gain display with populated values.
