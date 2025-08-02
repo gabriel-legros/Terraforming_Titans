@@ -5,7 +5,7 @@ const vm = require('vm');
 const numbers = require('../src/js/numbers.js');
 
 describe('Space Storage UI', () => {
-  test('shows used and max storage', () => {
+  test('shows storage stats and table with ship controls', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -15,7 +15,7 @@ describe('Space Storage UI', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
 
-    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, capacityPerCompletion: 1000000000000, selectedResources: [] };
+    const project = { name: 'spaceStorage', usedStorage: 0, maxStorage: 1000000000000, resourceUsage: {}, selectedResources: [], shipOperationAutoStart: false, shipOperationRemainingTime: 0, shipOperationStartingDuration: 0, shipOperationIsActive: false, getEffectiveDuration: () => 1000 };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
     ctx.updateSpaceStorageUI(project);
@@ -23,5 +23,13 @@ describe('Space Storage UI', () => {
     const els = ctx.projectElements[project.name];
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(0);
+    expect(els.shipProgressButton).toBeDefined();
+    expect(els.shipAutoStartCheckbox).toBeDefined();
+
+    project.resourceUsage = { metal: 500 };
+    project.usedStorage = 500;
+    ctx.updateSpaceStorageUI(project);
+    expect(els.usageBody.querySelectorAll('tr').length).toBe(1);
   });
 });
