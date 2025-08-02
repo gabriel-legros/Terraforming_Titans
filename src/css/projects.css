@@ -125,6 +125,10 @@
     gap: 8px;
 }
 
+.stats-grid.two-col {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
 .stats-grid.three-col {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
