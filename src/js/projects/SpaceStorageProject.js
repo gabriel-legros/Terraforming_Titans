@@ -225,11 +225,14 @@ class SpaceStorageProject extends SpaceshipProject {
     projectElements[this.name] = projectElements[this.name] || {};
     const topSection = document.createElement('div');
     topSection.classList.add('space-storage-top-section');
-    this.createProjectDetailsGridUI(topSection);
     if (typeof renderSpaceStorageUI === 'function') {
       renderSpaceStorageUI(this, topSection);
     }
-    this.createSpaceshipAssignmentUI(topSection);
+    const assignmentAndCost = document.createElement('div');
+    assignmentAndCost.classList.add('project-top-section');
+    this.createSpaceshipAssignmentUI(assignmentAndCost);
+    this.createProjectDetailsGridUI(assignmentAndCost);
+    topSection.appendChild(assignmentAndCost);
     container.appendChild(topSection);
     this.updateCostAndGains(projectElements[this.name]);
   }
