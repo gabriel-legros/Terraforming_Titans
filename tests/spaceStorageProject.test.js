@@ -99,10 +99,10 @@ describe('Space Storage project', () => {
     const container = dom.window.document.getElementById('root');
     project.updateCostAndGains = () => {};
     project.renderUI(container);
-    const checkboxes = container.querySelectorAll('.storage-usage-table input[type="checkbox"]');
+    const checkboxes = container.querySelectorAll('#ss-resource-grid input[type="checkbox"]');
     expect(checkboxes.length).toBe(8);
-    const rows = container.querySelectorAll('.storage-usage-table tbody tr');
-    expect(rows[0].children.length).toBe(9);
+    const items = container.querySelectorAll('#ss-resource-grid .storage-resource-item');
+    expect(items[0].children.length).toBe(3);
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
