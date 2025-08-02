@@ -22,14 +22,43 @@ function renderSpaceStorageUI(project, container) {
         <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used"></span></div>
         <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
       </div>
-      <p id="ss-expansion-cost"><strong>Expansion Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span></p>
       <table class="storage-usage-table">
         <thead><tr><th></th><th>Resource</th><th>Used</th></tr></thead>
         <tbody id="ss-usage-body"></tbody>
       </table>
     </div>`;
   const usageBody = card.querySelector('#ss-usage-body');
-  const expansionCostDisplay = card.querySelector('#ss-expansion-cost .expansion-cost');
+  const cardBody = card.querySelector('.card-body');
+
+  const topSection = document.createElement('div');
+  topSection.classList.add('project-top-section');
+
+  if (typeof project.createSpaceshipAssignmentUI === 'function') {
+    project.createSpaceshipAssignmentUI(topSection);
+  }
+  if (typeof project.createProjectDetailsGridUI === 'function') {
+    project.createProjectDetailsGridUI(topSection);
+  }
+
+  const expansionSection = document.createElement('div');
+  expansionSection.classList.add('project-section-container');
+  const expansionTitle = document.createElement('h4');
+  expansionTitle.classList.add('section-title');
+  expansionTitle.textContent = 'Expansion';
+  expansionSection.appendChild(expansionTitle);
+
+  const expansionGrid = document.createElement('div');
+  expansionGrid.classList.add('project-details-grid');
+  const expansionCostRow = document.createElement('div');
+  expansionCostRow.id = 'ss-expansion-cost';
+  expansionCostRow.innerHTML = `<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span>`;
+  expansionGrid.appendChild(expansionCostRow);
+  expansionSection.appendChild(expansionGrid);
+  topSection.appendChild(expansionSection);
+
+  cardBody.appendChild(topSection);
+
+  const expansionCostDisplay = expansionCostRow.querySelector('.expansion-cost');
 
   storageResourceOptions.forEach(opt => {
     const row = document.createElement('tr');

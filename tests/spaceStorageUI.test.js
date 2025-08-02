@@ -31,6 +31,26 @@ describe('Space Storage UI', () => {
       shipOperationIsActive: false,
       shipWithdrawMode: false,
       getEffectiveDuration: () => 1000,
+      createSpaceshipAssignmentUI(container) {
+        const doc = container.ownerDocument;
+        const section = doc.createElement('div');
+        section.classList.add('project-section-container');
+        const title = doc.createElement('h4');
+        title.classList.add('section-title');
+        title.textContent = 'Assignment';
+        section.appendChild(title);
+        container.appendChild(section);
+      },
+      createProjectDetailsGridUI(container) {
+        const doc = container.ownerDocument;
+        const section = doc.createElement('div');
+        section.classList.add('project-section-container');
+        const title = doc.createElement('h4');
+        title.classList.add('section-title');
+        title.textContent = 'Cost & Gain';
+        section.appendChild(title);
+        container.appendChild(section);
+      },
     };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
@@ -66,5 +86,9 @@ describe('Space Storage UI', () => {
     project.prioritizeMegaProjects = false;
     ctx.updateSpaceStorageUI(project);
     expect(els.prioritizeMegaCheckbox.checked).toBe(false);
+
+    const topSection = container.querySelector('.project-top-section');
+    const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
+    expect(titles).toEqual(expect.arrayContaining(['Assignment', 'Cost & Gain', 'Expansion']));
   });
 });
