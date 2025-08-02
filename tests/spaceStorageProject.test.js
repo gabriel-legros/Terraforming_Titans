@@ -103,6 +103,67 @@ describe('Space Storage project', () => {
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
   });
 
+  test('can start expansion when metal cost is met without spaceships', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        colony: {
+          metal: { value: 1000, decrease(v){ this.value -= v; } }
+        },
+        special: { spaceships: { value: 0 } }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const params = { name: 'spaceStorage', category: 'mega', cost: { colony: { metal: 1000 } }, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: {} };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    expect(project.canStart()).toBe(true);
+    expect(project.start(ctx.resources)).toBe(true);
+    expect(ctx.resources.colony.metal.value).toBe(0);
+    expect(project.isActive).toBe(true);
+  });
+
+  test('cannot start expansion without required metal', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        colony: {
+          metal: { value: 500, decrease(v){ this.value -= v; } }
+        },
+        special: { spaceships: { value: 0 } }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const params = { name: 'spaceStorage', category: 'mega', cost: { colony: { metal: 1000 } }, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: {} };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    expect(project.canStart()).toBe(false);
+  });
+
   test('withdraw mode distributes capacity and returns resources (water to colony)', () => {
     const ctx = {
       console,
