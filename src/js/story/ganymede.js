@@ -159,7 +159,7 @@ progressGanymede.chapters.push(
         chapter: 10,
         title: "Chapter 10: We must go deeper",
         narrative: "Mary: \"Intel from the captured cultists on Callisto was clear: Kane's 'Triune Seat'—the heart of the Cult of Three Wounds—is hidden beneath the underground oceans on Ganymede. They believe he's using the intense radiation to mask his facility from our sensors. Your mission is to establish a base, drill through the ice to the ocean below, and find him.\"\nDr. Evelyn Hart: “Touchdown confirmed. Radiation index is off the charts, but our domes will hold. It’s a hostile place, perfect for a man like Kane to hide.”\nMary: “Commander Feroza will be your ground commander. Find that base, HOPE. Neatly or not. By the way, I'm sending you the blueprints for the planetary thrusters we used in Operation Sidestep. Might come in handy.”",
-        prerequisites: ["chapter9.6"],
+        prerequisites: ["chapter9.9"],
         objectives: [],
         reward: [
             { target: 'project', targetId: 'deep_drill', type: 'enable' },
