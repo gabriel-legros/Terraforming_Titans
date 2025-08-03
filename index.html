@@ -137,7 +137,7 @@
     <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings<span id="buildings-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
-    <div class="tab hidden" id="research-tab" data-tab="research">Research</div>
+    <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
     <div class="tab hidden" id="space-tab" data-tab="space">Space</div>
@@ -281,11 +281,11 @@
         <!-- ... existing research content ... -->
          <div class="container">
             <div class="research-subtabs">
-                <div class="research-subtab active" data-subtab="energy-research">Energy</div>
-                <div class="research-subtab" data-subtab="industry-research">Industry</div>
-                <div class="research-subtab" data-subtab="colonization-research">Colonization</div>
-                <div class="research-subtab" data-subtab="terraforming-research">Terraforming</div>
-                <div class="research-subtab hidden" data-subtab="advanced-research">Advanced</div>
+                <div class="research-subtab active" data-subtab="energy-research">Energy<span id="energy-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="industry-research">Industry<span id="industry-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="colonization-research">Colonization<span id="colonization-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="terraforming-research">Terraforming<span id="terraforming-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab hidden" data-subtab="advanced-research">Advanced<span id="advanced-research-alert" class="unlock-alert">!</span></div>
             </div>
             <div class="subtab-content-wrapper">
                 <div id="energy-research" class="research-subtab-content active">
@@ -591,6 +591,9 @@
                   }
                   if (this.dataset.tab === 'special-projects' && typeof markProjectsViewed === 'function') {
                       markProjectsViewed();
+                  }
+                  if (this.dataset.tab === 'research' && typeof markResearchViewed === 'function') {
+                      markResearchViewed();
                   }
             } else {
                  console.log(`Tab ${this.dataset.tab} is hidden and cannot be clicked.`);

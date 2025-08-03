@@ -66,8 +66,11 @@ function create() {
   structures = { ...buildings, ...colonies };
 
   // Initialize research
-  researchManager = new ResearchManager(researchParameters);
-  initializeResearchUI();
+    researchManager = new ResearchManager(researchParameters);
+    initializeResearchUI();
+    if (typeof initializeResearchAlerts === 'function') {
+      initializeResearchAlerts();
+    }
 
   // Initialize skills
   skillManager = new SkillManager(skillParameters);
@@ -214,14 +217,17 @@ function initializeGameState(options = {}) {
     initializeBuildingAlerts();
   }
   createColonyButtons(colonies);
-  initializeProjectsUI();
-  renderProjects();
-  if (typeof initializeProjectAlerts === 'function') {
-    initializeProjectAlerts();
-  }
-  initializeColonySlidersUI();
-  initializeResearchUI(); // Reinitialize research UI as well
-  initializeHopeUI();
+    initializeProjectsUI();
+    renderProjects();
+    if (typeof initializeProjectAlerts === 'function') {
+      initializeProjectAlerts();
+    }
+    initializeColonySlidersUI();
+    initializeResearchUI(); // Reinitialize research UI as well
+    if (typeof initializeResearchAlerts === 'function') {
+      initializeResearchAlerts();
+    }
+    initializeHopeUI();
   if (preserveManagers && typeof updateSpaceUI === 'function') {
     updateSpaceUI();
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {

@@ -11,6 +11,7 @@ class Research {
       this.effects = effects;
       Object.assign(this, extra);
       this.isResearched = false;
+      this.alertedWhenUnlocked = extra.alertedWhenUnlocked || false;
     }
 }
 
@@ -33,7 +34,7 @@ class Research {
               research.cost,
               research.prerequisites,
               research.effects,
-              research
+              { ...research, category }
             )
         );
       }
@@ -62,6 +63,7 @@ class Research {
         researchState[category] = this.researches[category].map((research) => ({
           id: research.id,
           isResearched: research.isResearched,
+          alertedWhenUnlocked: research.alertedWhenUnlocked,
         }));
       }
       return researchState;
@@ -74,6 +76,7 @@ class Research {
           const research = this.getResearchById(savedResearch.id);
           if (research) {
             research.isResearched = savedResearch.isResearched;
+            research.alertedWhenUnlocked = savedResearch.alertedWhenUnlocked || false;
             if (research.isResearched) {
               this.applyResearchEffects(research); // Reapply effects if research is completed
             }
@@ -97,6 +100,11 @@ class Research {
     // Get all researches within a category
     getResearchesByCategory(category) {
       return this.researches[category] || [];
+    }
+
+    getResearchCategoryById(id) {
+      const research = this.getResearchById(id);
+      return research ? research.category : null;
     }
 
     // Helpers to determine whether a research should display based on
@@ -158,44 +166,64 @@ class Research {
         return prerequisite && prerequisite.isResearched;
       });
     }
+
+    checkResearchUnlocks() {
+      for (const category in this.researches) {
+        const subtabId = `${category}-research`;
+        this.researches[category].forEach(r => {
+          if (!r.isResearched && !r.alertedWhenUnlocked &&
+              this.isResearchAvailable(r.id) && this.isResearchDisplayable(r)) {
+            if (typeof registerResearchUnlockAlert === 'function') {
+              registerResearchUnlockAlert(subtabId);
+            }
+          }
+        });
+      }
+    }
   
     // Mark a research as completed
     completeResearch(id) {
-      const research = this.getResearchById(id);
-      if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
-        research.isResearched = true;
-        if (research.cost.research) {
-          resources.colony.research.value -= research.cost.research;
+        const research = this.getResearchById(id);
+        if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
+          research.isResearched = true;
+          if (research.cost.research) {
+            resources.colony.research.value -= research.cost.research;
+          }
+          if (research.cost.advancedResearch) {
+            resources.colony.advancedResearch.value -= research.cost.advancedResearch;
+          }
+          console.log(`Research "${research.name}" has been completed.`);
+          this.applyResearchEffects(research); // Apply the effects of the research
+          if (research.category === 'advanced') {
+            this.checkResearchUnlocks();
+          }
+        } else {
+          console.log(`Research "${id}" cannot be completed yet.`);
         }
-        if (research.cost.advancedResearch) {
-          resources.colony.advancedResearch.value -= research.cost.advancedResearch;
-        }
-        console.log(`Research "${research.name}" has been completed.`);
-        this.applyResearchEffects(research); // Apply the effects of the research
-      } else {
-        console.log(`Research "${id}" cannot be completed yet.`);
       }
-    }
 
     // Instantly mark a research as completed without cost or prerequisite checks
     completeResearchInstant(id) {
-      const research = this.getResearchById(id);
-      if (research && !research.isResearched) {
-        research.isResearched = true;
-        this.applyResearchEffects(research);
+        const research = this.getResearchById(id);
+        if (research && !research.isResearched) {
+          research.isResearched = true;
+          this.applyResearchEffects(research);
+          if (research.category === 'advanced') {
+            this.checkResearchUnlocks();
+          }
+        }
       }
-    }
 
     // Reapply effects for all completed research. Used when game state is
     // recreated but the research manager persists (e.g. travelling to a new
     // planet).
     reapplyEffects() {
       for (const category in this.researches) {
-        this.researches[category].forEach((research) => {
-          if (research.isResearched) {
-            this.applyResearchEffects(research);
-          }
-        });
+      this.researches[category].forEach((research) => {
+        if (research.isResearched) {
+          this.applyResearchEffects(research);
+        }
+      });
       }
     }
 
@@ -204,6 +232,13 @@ class Research {
     research.effects.forEach((effect) => {
       addEffect({...effect, sourceId: research})
     });
+  }
+
+  addAndReplace(effect) {
+    super.addAndReplace(effect);
+    if (effect.type === 'booleanFlag' && effect.value) {
+      this.checkResearchUnlocks();
+    }
   }
 
   // Remove research effects from the target

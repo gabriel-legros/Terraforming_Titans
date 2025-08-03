@@ -2,6 +2,15 @@ let completedResearchHidden =
     (typeof gameSettings !== 'undefined' && gameSettings.hideCompletedResearch) ||
     false; // Initialize the toggle state
 
+let researchTabAlertNeeded = false;
+const researchSubtabAlerts = {
+    'energy-research': false,
+    'industry-research': false,
+    'colonization-research': false,
+    'terraforming-research': false,
+    'advanced-research': false,
+};
+
 function formatResearchCost(cost) {
     const parts = [];
     if (cost.research) {
@@ -79,6 +88,79 @@ function updateResearchButtonText(button, researchItem, visible) {
     button.textContent = buttonText;
 }
 
+function registerResearchUnlockAlert(subtabId) {
+    researchTabAlertNeeded = true;
+    researchSubtabAlerts[subtabId] = true;
+    updateResearchAlert();
+    const activeTab = document.getElementById('research');
+    const activeSubtab = document.querySelector('.research-subtab.active');
+    if (
+        activeTab &&
+        activeTab.classList.contains('active') &&
+        activeSubtab &&
+        activeSubtab.dataset.subtab === subtabId &&
+        typeof markResearchSubtabViewed === 'function'
+    ) {
+        markResearchSubtabViewed(subtabId);
+    }
+}
+
+function updateResearchAlert() {
+    const alertEl = document.getElementById('research-alert');
+    if (alertEl) {
+        const display = (!gameSettings.silenceUnlockAlert && researchTabAlertNeeded) ? 'inline' : 'none';
+        alertEl.style.display = display;
+    }
+    for (const key in researchSubtabAlerts) {
+        const el = document.getElementById(`${key}-alert`);
+        if (el) {
+            const display = (!gameSettings.silenceUnlockAlert && researchSubtabAlerts[key]) ? 'inline' : 'none';
+            el.style.display = display;
+        }
+    }
+}
+
+function markResearchViewed() {
+    const active = document.querySelector('.research-subtab.active');
+    if (active && typeof markResearchSubtabViewed === 'function') {
+        markResearchSubtabViewed(active.dataset.subtab);
+    }
+    researchTabAlertNeeded = false;
+    updateResearchAlert();
+}
+
+function markResearchSubtabViewed(subtabId) {
+    researchSubtabAlerts[subtabId] = false;
+    for (const category in researchManager.researches) {
+        if (`${category}-research` === subtabId) {
+            researchManager.researches[category].forEach(r => {
+                if (researchManager.isResearchAvailable(r.id) && researchManager.isResearchDisplayable(r)) {
+                    r.alertedWhenUnlocked = true;
+                }
+            });
+        }
+    }
+    if (Object.values(researchSubtabAlerts).every(v => !v)) {
+        researchTabAlertNeeded = false;
+    }
+    updateResearchAlert();
+}
+
+function initializeResearchAlerts() {
+    researchTabAlertNeeded = false;
+    for (const k in researchSubtabAlerts) researchSubtabAlerts[k] = false;
+    for (const category in researchManager.researches) {
+        const subtab = `${category}-research`;
+        researchManager.researches[category].forEach(r => {
+            if (!r.alertedWhenUnlocked && researchManager.isResearchAvailable(r.id) && researchManager.isResearchDisplayable(r)) {
+                researchTabAlertNeeded = true;
+                researchSubtabAlerts[subtab] = true;
+            }
+        });
+    }
+    updateResearchAlert();
+}
+
 function initializeResearchTabs() {
     if (typeof gameSettings !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
@@ -88,6 +170,9 @@ function initializeResearchTabs() {
         subtab.onclick = () => {
             const subtabContentId = subtab.dataset.subtab;
             activateResearchSubtab(subtabContentId);
+            if (typeof markResearchSubtabViewed === 'function') {
+                markResearchSubtabViewed(subtabContentId);
+            }
         };
     });
 
@@ -237,4 +322,8 @@ function updateResearchUI() {
     updateAllResearchButtons(researchManager.researches); // Update research buttons display
     updateCompletedResearchVisibility();
     updateAdvancedResearchVisibility();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { registerResearchUnlockAlert, updateResearchAlert, initializeResearchAlerts, markResearchSubtabViewed, markResearchViewed };
 }
