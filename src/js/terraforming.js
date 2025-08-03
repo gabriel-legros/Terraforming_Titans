@@ -978,12 +978,8 @@ class Terraforming extends EffectableEntity{
 
       const parent = this.celestialParameters.parentBody || {};
       let distance_Rp = parent.refDistance_Rp || 1;
-      if (parent.orbitRadius) {
-        const parentRadiiKm = { Saturn: 60268, Jupiter: 71492 };
-        const parentRadius = parent.radius || parentRadiiKm[parent.name];
-        if (parentRadius) {
-          distance_Rp = parent.orbitRadius / parentRadius;
-        }
+      if (parent.orbitRadius && parent.radius) {
+        distance_Rp = parent.orbitRadius / parent.radius;
       }
 
       const opts = {};
