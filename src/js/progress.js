@@ -591,8 +591,6 @@ class StoryManager {
                         addEffect(effect);
                     });
                 }
-
-                pushJournal(ev);
             }
         });
 
