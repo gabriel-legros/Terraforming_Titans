@@ -218,7 +218,7 @@ progressCallisto.chapters.push(
 
   /* -- CHAPTER 9 : Hidden Forge -- */
   {
-    id: "chapter8.0",
+    id: "chapter8.4",
     type: "journal",
     chapter: 8,
     narrative: "Receiving transmission...\n  Mary: 'The public story about 'New Oceanic Terraforming Reactors' is providing a useful misdirection. While the media focuses on that, your teams can begin final assembly of the Sidestep Engine. We're using localized electromagnetic interference to mask the energy signatures, and we have the site well-defended.'\nFinal assembly of the Sidestep Engine initiated. Security protocols active.",
@@ -236,7 +236,7 @@ progressCallisto.chapters.push(
     chapter: 9,
     title: "Chapter 10: Operation Sidestep",
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
-    prerequisites: ["chapter8.3"],
+    prerequisites: ["chapter8.4"],
     objectives: [
       { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
     ],
