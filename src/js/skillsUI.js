@@ -76,6 +76,9 @@ function createSkillTree() {
     if (!container || container.nodeType !== 1) return;
 
     container.innerHTML = ''; // Clear previous content
+    for (const key in skillPaths) {
+        delete skillPaths[key];
+    }
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'skill-lines';
