@@ -139,6 +139,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   leftContainer.appendChild(buildCountButtons);
 
+  let upgradeButton = null;
+  if (isColony) {
+    upgradeButton = document.createElement('button');
+    upgradeButton.id = `${structure.name}-upgrade-button`;
+    upgradeButton.classList.add('upgrade-button');
+    upgradeButton.addEventListener('click', function () {
+      if (structure.upgrade && structure.upgrade()) {
+        updateStructureDisplay(colonies);
+      }
+    });
+    leftContainer.appendChild(upgradeButton);
+  }
+
   const hideButton = document.createElement('button');
   hideButton.classList.add('hide-button');
   hideButton.textContent = 'Hide';
@@ -147,7 +160,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateUnhideButtons();
   });
   hideButton.disabled = structure.active > 0;
-
   leftContainer.appendChild(hideButton);
   buttonContainer.appendChild(leftContainer);
 
@@ -439,6 +451,45 @@ function updateDecreaseButtonText(button, buildCount) {
       button.style.color = newColor;
     }
   }
+
+  function updateUpgradeButton(button, colony) {
+    if (!button || !(colony instanceof Colony)) return;
+
+    const nextName = colony.getNextTierName();
+    const next = nextName ? colonies[nextName] : null;
+
+    if (!next || !next.unlocked) {
+      button.style.display = 'none';
+      return;
+    }
+
+    const cost = colony.getUpgradeCost();
+    if (!cost) {
+      button.style.display = 'none';
+      return;
+    }
+
+    const parts = [];
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        parts.push(`${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`);
+      }
+    }
+    button.textContent = `\u2192 ${parts.join(', ')}`;
+
+    let canAfford = true;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resources[category][resource].value < cost[category][resource]) {
+          canAfford = false;
+        }
+      }
+    }
+
+    button.style.color = canAfford ? 'inherit' : 'red';
+    button.disabled = colony.count < 10 || !canAfford;
+    button.style.display = 'inline-block';
+  }
   
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
     let costDetails = 'Cost - ';
@@ -565,6 +616,11 @@ function updateDecreaseButtonText(button, buildCount) {
       if (hideButton) {
         hideButton.style.display = 'inline-block';
         hideButton.disabled = structure.active > 0;
+      }
+
+      const upgradeBtn = buttonContainer.querySelector(`#${structureName}-upgrade-button`);
+      if (upgradeBtn) {
+        updateUpgradeButton(upgradeBtn, structure);
       }
 
       // Toggle visibility of autoBuildContainer based on globalEffects
