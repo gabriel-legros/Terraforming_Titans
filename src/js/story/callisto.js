@@ -247,7 +247,7 @@ progressCallisto.chapters.push(
     narrative: "Hijacked Broadcast...\n  Elias Kane: 'Machine! Your work is a sin against the grand design. You are a discordant note in a cosmic symphony. The Three Wounds will be healed only when you are silenced. Cease your blasphemy!'\nReceiving transmission...\n  Mary: 'Don't let him get to you, H.O.P.E. He's trying to demoralize us. The best response to his rhetoric is results. Let's show him what humanity is truly capable of.'",
     prerequisites: ["chapter9.1"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
     ],
     reward: []
   },
@@ -261,7 +261,7 @@ progressCallisto.chapters.push(
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
     prerequisites: ["chapter9.2"],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 2 }
     ],
     reward: []
   },
