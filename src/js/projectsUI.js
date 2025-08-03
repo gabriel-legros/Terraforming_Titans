@@ -113,8 +113,26 @@ function createProjectItem(project) {
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
+    const costLabel = document.createElement('span');
+    costLabel.textContent = 'Cost:';
+    const costList = document.createElement('ul');
+    const costItems = {};
+    for (const category in project.cost) {
+      for (const resource in project.cost[category]) {
+        const item = document.createElement('li');
+        item.dataset.category = category;
+        item.dataset.resource = resource;
+        costList.appendChild(item);
+        costItems[`${category}.${resource}`] = item;
+      }
+    }
+    costElement.append(costLabel, costList);
     projectDetails.appendChild(costElement);
-    projectElements[project.name] = { ...projectElements[project.name], costElement: costElement };
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      costElement: costElement,
+      costItems: costItems
+    };
   }
 
   // Sustain Cost
@@ -144,8 +162,26 @@ function createProjectItem(project) {
   if (project.attributes?.resourceGain) {
     const resourceGainElement = document.createElement('p');
     resourceGainElement.id = `${project.name}-resource-gain`;
+    const gainLabel = document.createElement('span');
+    gainLabel.textContent = 'Gain:';
+    const gainList = document.createElement('ul');
+    const gainItems = {};
+    for (const category in project.attributes.resourceGain) {
+      for (const resource in project.attributes.resourceGain[category]) {
+        const item = document.createElement('li');
+        item.dataset.category = category;
+        item.dataset.resource = resource;
+        gainList.appendChild(item);
+        gainItems[`${category}.${resource}`] = item;
+      }
+    }
+    resourceGainElement.append(gainLabel, gainList);
     projectDetails.appendChild(resourceGainElement);
-    projectElements[project.name] = { ...projectElements[project.name], resourceGainElement: resourceGainElement };
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      resourceGainElement: resourceGainElement,
+      resourceGainItems: gainItems
+    };
   }
   
   cardBody.appendChild(projectDetails);
@@ -283,34 +319,28 @@ function getUpdatedResourceGain(project) {
 
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
-  if (elements && elements.costElement) {
+  if (elements && elements.costItems) {
     const cost = project.getScaledCost();
-    const costArray = [];
-
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const requiredAmount = cost[category][resource];
+    let hasItem = false;
+    for (const key in elements.costItems) {
+      const [category, resource] = key.split('.');
+      const item = elements.costItems[key];
+      const requiredAmount = cost[category]?.[resource];
+      if (requiredAmount > 0) {
+        hasItem = true;
         const availableAmount = resources[category]?.[resource]?.value || 0;
-
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
-        const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        item.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const highlight = availableAmount < requiredAmount &&
           !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
-        const formattedResourceText = highlight
-          ? `<span style="color: red;">${resourceText}</span>`
-          : resourceText;
-        
-        costArray.push(formattedResourceText);
+        item.style.color = highlight ? 'red' : '';
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
       }
     }
-
-    if (costArray.length > 0) {
-      elements.costElement.innerHTML = `<strong>Cost:</strong> ${costArray.join(', ')}`;
-      elements.costElement.style.display = 'block';
-    } else {
-      elements.costElement.style.display = 'none';
-    }
+    elements.costElement.style.display = hasItem ? 'block' : 'none';
   }
 }
 
@@ -348,9 +378,11 @@ function updateTotalCostDisplay(project) {
   });
 
   // Update the total cost display element
-  const totalCostDisplay = document.getElementById(`${project.name}-total-cost-display`);
-  if (totalCostDisplay) {
-    totalCostDisplay.innerHTML = formatTotalCostDisplay({colony : {funding : totalCost}}, project);
+  const totalCostValue = document.getElementById(`${project.name}-total-cost-display-value`);
+  if (totalCostValue) {
+    totalCostValue.textContent = formatNumber(totalCost, true);
+    const available = resources.colony?.funding?.value || 0;
+    totalCostValue.style.color = available < totalCost ? 'red' : '';
   }
 }
 
@@ -410,20 +442,22 @@ function updateProjectUI(projectName) {
   }
 
   // Update Resource Gain Information if applicable
-  if (elements.resourceGainElement && project.attributes?.resourceGain) {
+  if (elements.resourceGainItems && project.attributes?.resourceGain) {
     const updatedResourceGain = project.getEffectiveResourceGain();
-    const gainArray = [];
-    for (const category in updatedResourceGain) {
-        for (const resource in updatedResourceGain[category]) {
-            gainArray.push(`${resources[category][resource].displayName}: ${formatNumber(updatedResourceGain[category][resource], true)}`);
-        }
+    let hasItem = false;
+    for (const key in elements.resourceGainItems) {
+      const [category, resource] = key.split('.');
+      const item = elements.resourceGainItems[key];
+      const amount = updatedResourceGain[category]?.[resource];
+      if (amount != null && amount !== 0) {
+        hasItem = true;
+        item.textContent = `${resources[category][resource].displayName}: ${formatNumber(amount, true)}`;
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
     }
-    if (gainArray.length > 0) {
-        elements.resourceGainElement.innerHTML = `<strong>Gain:</strong> ${gainArray.join(', ')}`;
-        elements.resourceGainElement.style.display = 'block';
-    } else {
-        elements.resourceGainElement.style.display = 'none';
-    }
+    elements.resourceGainElement.style.display = hasItem ? 'block' : 'none';
   }
 
   // Update the cost display, highlighting missing resources in red

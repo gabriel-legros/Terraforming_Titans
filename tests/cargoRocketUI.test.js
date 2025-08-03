@@ -58,5 +58,16 @@ describe('Cargo Rocket project UI', () => {
     expect(elements.resourceSelectionContainer).toBeDefined();
     const display = elements.resourceSelectionContainer.querySelector('#cargo_rocket-total-cost-display');
     expect(display).not.toBeNull();
+    const value = display.querySelector('#cargo_rocket-total-cost-display-value');
+    expect(value).not.toBeNull();
+
+    const metalInput = elements.resourceSelectionContainer.querySelector('.resource-selection-cargo_rocket[data-resource="metal"]');
+    metalInput.value = 2;
+    ctx.updateProjectUI('cargo_rocket');
+    expect(value.textContent).toBe(numbers.formatNumber(10, true));
+    expect(value.style.color).toBe('red');
+    ctx.resources.colony.funding.value = 100;
+    ctx.updateProjectUI('cargo_rocket');
+    expect(value.style.color).toBe('');
   });
 });

@@ -76,6 +76,11 @@ class CargoRocketProject extends Project {
     const totalCostDisplay = document.createElement('p');
     totalCostDisplay.id = `${this.name}-total-cost-display`;
     totalCostDisplay.classList.add('total-cost-display');
+    const totalCostLabel = document.createElement('span');
+    totalCostLabel.textContent = 'Total Cost: ';
+    const totalCostValue = document.createElement('span');
+    totalCostValue.id = `${this.name}-total-cost-display-value`;
+    totalCostDisplay.append(totalCostLabel, totalCostValue);
     container.appendChild(totalCostDisplay);
 
     projectElements[this.name] = {

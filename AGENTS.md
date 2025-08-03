@@ -304,3 +304,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Biodomes now always draw power via an `ignoreProductivity` consumption flag.
 - Colony buildings now feature an upgrade arrow converting ten of a tier into one of the next at half the next tier's cost (excluding water).
 - Resource tooltips now use static DOM nodes updated without rebuilding innerHTML.
+- Project cost and gain displays now reuse list items and total cost updates a dedicated span.
