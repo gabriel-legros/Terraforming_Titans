@@ -560,18 +560,6 @@ class StoryManager {
         this.appliedEffects.forEach(effect => removeEffect(effect));
         this.appliedEffects = [];
 
-        const journalEntries = [];
-        const journalSources = [];
-        const pushJournal = (ev) => {
-            const text = joinLines(ev.narrative);
-            if (ev.title) {
-                journalEntries.push([`${ev.title}`, text].join('\n'));
-            } else {
-                journalEntries.push(text);
-            }
-            journalSources.push({ type: 'chapter', id: ev.id });
-        };
-
         // Re-apply rewards and mark project objectives for completed chapters
         this.progressData.chapters.forEach(cfg => {
             if (completedChapterIds.has(cfg.id)) {
@@ -599,17 +587,14 @@ class StoryManager {
             targetEvent.prerequisites.forEach(handleProjectObjective);
         }
 
-        // Add target chapter's text to the journal reconstruction
-        pushJournal(targetEvent);
-
         console.log(`Jumping to ${chapterId}. Required completed chapters:`, Array.from(completedChapterIds));
         this.activateEvent(targetEvent);
 
-        if (typeof loadJournalEntries === 'function') {
-            loadJournalEntries(journalEntries, journalEntries, journalSources, journalSources);
-        }
-
         this.updateCurrentObjectiveUI();
+
+        if (typeof reconstructJournalState === 'function') {
+            reconstructJournalState(this, projectManager);
+        }
     }
 
     saveState() { // Keep as is
