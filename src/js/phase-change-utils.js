@@ -56,7 +56,7 @@
      const buriedIceCoverage = 1;
      const buriedMeltCap = zoneArea * buriedIceCoverage * 0.1;
      const cappedBuriedIce = Math.min(availableBuriedIce || 0, buriedMeltCap);
-     const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.1;
+     const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.5;
  
      let actualBuriedMeltRate = 0;
      if (potentialBuriedMeltRate > surfaceMeltRate) {

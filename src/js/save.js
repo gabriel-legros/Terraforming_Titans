@@ -194,6 +194,9 @@ function loadGame(slotOrCustomString) {
       if (typeof updateAdvancedResearchVisibility === 'function') {
           updateAdvancedResearchVisibility();
       }
+      if (typeof initializeResearchAlerts === 'function') {
+          initializeResearchAlerts();
+      }
 
     // Restore ore scanning progress
     if (gameState.oreScanning) {
