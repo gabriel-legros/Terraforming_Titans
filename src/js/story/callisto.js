@@ -303,7 +303,7 @@ progressCallisto.chapters.push(
     id: "chapter9.7",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
+    narrative: "Receiving transmission...\n  Mary: 'Now, as usual, you probably won't leave before terraforming is complete. Let's make Callisto a true paradise then. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
     prerequisites: ["chapter9.6"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
@@ -314,7 +314,7 @@ progressCallisto.chapters.push(
     id: "chapter9.8",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could endanger all our operations. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could endanger all our operations.  For example, just imagine what would happen if they managed to suddenly turn off all our lanterns.  We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
     prerequisites: ["chapter9.7"],
     objectives: [],
     reward: [      {
