@@ -5,6 +5,7 @@ const vm = require('vm');
 describe('StoryManager jumpToChapter', () => {
   test('activates specified chapter and completes previous ones', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'progress.js'), 'utf8');
+    const reconstructCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'journal-reconstruction.js'), 'utf8');
     const context = {
       console,
       setTimeout: (fn) => fn(),
@@ -34,6 +35,9 @@ describe('StoryManager jumpToChapter', () => {
       }
     };
     vm.createContext(context);
+    vm.runInContext(reconstructCode, context);
+    const originalRecon = context.reconstructJournalState;
+    context.reconstructJournalState = jest.fn(originalRecon);
     vm.runInContext(code + '; this.StoryManager = StoryManager;', context);
     const manager = new context.StoryManager(context.progressData);
     context.window = { storyManager: manager };
@@ -43,11 +47,12 @@ describe('StoryManager jumpToChapter', () => {
     expect(Array.from(manager.completedEventIds)).toEqual(['c1']);
     expect(manager.activeEventIds.has('c2')).toBe(true);
     expect(context.addJournalEntry).toHaveBeenCalledWith('two', 'c2', { type: 'chapter', id: 'c2' });
+    expect(context.reconstructJournalState).toHaveBeenCalledWith(manager, context.projectManager);
     expect(context.loadJournalEntries).toHaveBeenCalledWith(
-      ['two'],
-      ['two'],
-      [{ type: 'chapter', id: 'c2' }],
-      [{ type: 'chapter', id: 'c2' }]
+      ['one', 'two'],
+      ['one', 'two'],
+      [{ type: 'chapter', id: 'c1' }, { type: 'chapter', id: 'c2' }],
+      [{ type: 'chapter', id: 'c1' }, { type: 'chapter', id: 'c2' }]
     );
     expect(context.addEffect).toHaveBeenCalledWith({ target: 'global', type: 'dummy' });
   });
@@ -70,6 +75,7 @@ describe('StoryManager jumpToChapter', () => {
       createPopup: () => {},
       createSystemPopup: () => {},
       addJournalEntry: jest.fn(),
+      reconstructJournalState: jest.fn(),
       buildings: {},
       colonies: {},
       resources: {},
