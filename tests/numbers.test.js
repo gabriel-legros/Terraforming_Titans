@@ -1,4 +1,4 @@
-const { formatNumber, formatBigInteger, formatBuildingCount, formatPlayTime } = require('../src/js/numbers.js');
+const { formatNumber, formatBigInteger, formatBuildingCount, formatPlayTime, formatDuration } = require('../src/js/numbers.js');
 
 describe('formatNumber', () => {
   test('formats thousands with suffix k', () => {
@@ -42,5 +42,12 @@ describe('formatPlayTime', () => {
   test('converts days to years and days string', () => {
     expect(formatPlayTime(730)).toBe('2 years 0 days');
     expect(formatPlayTime(40)).toBe('40 days');
+  });
+});
+
+describe('formatDuration', () => {
+  test('displays years for long durations', () => {
+    const seconds = 2 * 365 * 24 * 3600;
+    expect(formatDuration(seconds)).toBe('2 years');
   });
 });

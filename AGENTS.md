@@ -158,7 +158,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Atmosphere box shows a green check or red X for each gas requirement.
 - Temperature unit preference now persists when traveling to another planet.
 - Metal export projects now cap each export at max(terraformed planets, 1) billion metal.
-- Time to cap/empty tooltips now display 0s when a resource is already full or empty.
+- Time to full/empty tooltips now display 0s when a resource is already full or empty.
 - Story project journal entries now include a separator line and prefix showing progress.
 - Deeper mining supports android assignments for massive speed boosts.
 - Android assignment UI initializes hidden and shows once the upgrade is researched.
@@ -311,3 +311,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Advanced research unlocks now highlight the Research tab and subtab until viewed.
 - Recreated skill connector lines by clearing cached paths when rebuilding the skill tree.
 - Skill connectors now render correctly when the skill tree is drawn while hidden.
+- Resource tooltips show numeric years for time to full and time to empty instead of >1 year.

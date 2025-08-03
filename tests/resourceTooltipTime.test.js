@@ -17,7 +17,7 @@ describe('resource tooltip time remaining', () => {
     return { dom, ctx };
   }
 
-  test('shows time to cap for positive rate', () => {
+  test('shows time to full for positive rate', () => {
     const { dom, ctx } = setup();
     const resource = {
       name: 'metal', displayName: 'Metal', category: 'colony',
@@ -28,7 +28,7 @@ describe('resource tooltip time remaining', () => {
     ctx.createResourceDisplay({ colony: { metal: resource } });
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('metal-tooltip').innerHTML;
-    expect(html).toContain('Time to cap');
+    expect(html).toContain('Time to full');
     const expected = numbers.formatDuration((100 - 50) / 2);
     expect(html).toContain(expected);
   });
@@ -49,7 +49,7 @@ describe('resource tooltip time remaining', () => {
     expect(html).toContain(expected);
   });
 
-  test('shows 0 time to cap when already full', () => {
+  test('shows 0 time to full when already full', () => {
     const { dom, ctx } = setup();
     const resource = {
       name: 'oxygen', displayName: 'O2', category: 'colony',
@@ -60,7 +60,7 @@ describe('resource tooltip time remaining', () => {
     ctx.createResourceDisplay({ colony: { oxygen: resource } });
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('oxygen-tooltip').innerHTML;
-    expect(html).toContain('Time to cap');
+    expect(html).toContain('Time to full');
     expect(html).toContain('0s');
   });
 
@@ -77,5 +77,37 @@ describe('resource tooltip time remaining', () => {
     const html = dom.window.document.getElementById('fuel-tooltip').innerHTML;
     expect(html).toContain('Time to empty');
     expect(html).toContain('0s');
+  });
+
+  test('shows years for long time to full', () => {
+    const { dom, ctx } = setup();
+    const YEAR = 365 * 24 * 3600;
+    const resource = {
+      name: 'hydrogen', displayName: 'Hydrogen', category: 'colony',
+      value: 0, cap: YEAR * 2, hasCap: true, reserved: 0, unlocked: true,
+      productionRate: 1, consumptionRate: 0,
+      productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
+    };
+    ctx.createResourceDisplay({ colony: { hydrogen: resource } });
+    ctx.updateResourceRateDisplay(resource);
+    const html = dom.window.document.getElementById('hydrogen-tooltip').innerHTML;
+    expect(html).toContain('Time to full');
+    expect(html).toContain('2 years');
+  });
+
+  test('shows years for long time to empty', () => {
+    const { dom, ctx } = setup();
+    const YEAR = 365 * 24 * 3600;
+    const resource = {
+      name: 'nitrogen', displayName: 'Nitrogen', category: 'colony',
+      value: YEAR * 2, cap: YEAR * 2, hasCap: true, reserved: 0, unlocked: true,
+      productionRate: 0, consumptionRate: 1,
+      productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
+    };
+    ctx.createResourceDisplay({ colony: { nitrogen: resource } });
+    ctx.updateResourceRateDisplay(resource);
+    const html = dom.window.document.getElementById('nitrogen-tooltip').innerHTML;
+    expect(html).toContain('Time to empty');
+    expect(html).toContain('2 years');
   });
 });

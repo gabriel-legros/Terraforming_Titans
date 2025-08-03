@@ -66,8 +66,10 @@ function getTemperatureUnit() {
   }
 
 function formatDuration(seconds) {
-  if (seconds >= 365 * 24 * 3600) {
-    return '>1 year';
+  const yearSeconds = 365 * 24 * 3600;
+  if (seconds >= yearSeconds) {
+    const years = Math.floor(seconds / yearSeconds);
+    return `${formatNumber(years, true)} year${years !== 1 ? 's' : ''}`;
   }
   if (seconds >= 24 * 3600) {
     const days = Math.floor(seconds / (24 * 3600));
