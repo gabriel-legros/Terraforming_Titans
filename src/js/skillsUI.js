@@ -130,6 +130,11 @@ function drawSkillConnections() {
     if (!svg || !container || container.nodeType !== 1) return;
 
     const containerRect = container.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) {
+        // Skill tree is not visible; keep dirty flag so it redraws when shown
+        skillConnectionsDirty = true;
+        return;
+    }
     const used = new Set();
 
     for (const id in skillManager.skills) {

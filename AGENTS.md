@@ -310,3 +310,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Warning messages now reuse a cached DOM node and update text content without touching innerHTML.
 - Advanced research unlocks now highlight the Research tab and subtab until viewed.
 - Recreated skill connector lines by clearing cached paths when rebuilding the skill tree.
+- Skill connectors now render correctly when the skill tree is drawn while hidden.
