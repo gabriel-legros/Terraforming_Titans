@@ -206,7 +206,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     if (elements.maxDisposalElement && typeof this.getExportCap === 'function') {
-      elements.maxDisposalElement.textContent = `Max Export: ${formatNumber(this.getExportCap(), true)}`;
+      elements.maxDisposalElement.textContent = `Max Export Capacity/s: ${formatNumber(this.getExportCap(), true)}`;
     }
     
     if (elements.gainPerResourceElement && this.attributes.fundingGainAmount) {
