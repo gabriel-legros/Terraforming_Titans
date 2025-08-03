@@ -313,3 +313,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Skill connectors now render correctly when the skill tree is drawn while hidden.
 - Resource tooltips show numeric years for time to full and time to empty instead of >1 year.
 - Viewed research alerts remain cleared after loading a save.
+- Geothermal generators now require reduced maintenance instead of none.
