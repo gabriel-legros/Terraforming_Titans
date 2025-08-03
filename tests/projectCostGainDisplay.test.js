@@ -50,13 +50,14 @@ describe('project cost and gain lists', () => {
     ctx.createProjectItem(project);
     ctx.updateProjectUI('test_project');
 
-    const costItems = ctx.projectElements.test_project.costElement.querySelectorAll('li');
+    let costItems = ctx.projectElements.test_project.costElement.querySelectorAll('span span');
     expect(costItems.length).toBe(1);
     expect(costItems[0].textContent).toBe('Metal: 10');
     expect(costItems[0].style.color).toBe('red');
 
     ctx.resources.colony.metal.value = 15;
     ctx.updateProjectUI('test_project');
+    costItems = ctx.projectElements.test_project.costElement.querySelectorAll('span span');
     expect(costItems[0].style.color).toBe('');
 
     const gainItems = ctx.projectElements.test_project.resourceGainElement.querySelectorAll('li');
