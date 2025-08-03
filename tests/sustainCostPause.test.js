@@ -32,9 +32,9 @@ describe('project sustain cost pause', () => {
     const project = new ctx.Project(config, 'test');
     project.start(ctx.resources);
     expect(project.isActive).toBe(true);
-    project.update(500);
+    project.update(1000); // deduct one second of sustain cost
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
-    project.update(60000); // deduct one second of sustain cost
+    project.update(1000); // deduct another second of sustain cost
     expect(ctx.resources.colony.energy.value).toBeCloseTo(980);
     expect(project.isActive).toBe(true);
     ctx.resources.colony.energy.value = 5; // insufficient for next second
