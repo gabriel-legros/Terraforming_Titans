@@ -607,9 +607,12 @@ function updateLifeBox() {
       ? 'The planet is sufficiently protected, providing a 50% boost to life growth'
       : 'No magnetosphere';
 
+    const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
+
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
       <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
+      <p>Surface radiation: <span id="surface-radiation">${formatNumber(rad, false, 2)}</span> mSv/day</p>
     `;
     const magnetosphereHeading = magnetosphereBox.querySelector('h3');
     if (magnetosphereHeading) {
@@ -623,6 +626,7 @@ function updateLifeBox() {
   function updateMagnetosphereBox() {
     const magnetosphereBox = document.getElementById('magnetosphere-box');
     const magnetosphereStatus = document.getElementById('magnetosphere-status');
+    const surfaceRadiation = document.getElementById('surface-radiation');
 
     // Update status based on boolean flag
     const magnetosphereStatusText = terraforming.isBooleanFlagSet('magneticShield') 
@@ -630,6 +634,10 @@ function updateLifeBox() {
       : 'No magnetosphere';
 
     magnetosphereStatus.textContent = magnetosphereStatusText;
+
+    if (surfaceRadiation) {
+      surfaceRadiation.textContent = formatNumber(terraforming.surfaceRadiation || 0, false, 2);
+    }
 
     if(terraforming.getMagnetosphereStatus()){
       magnetosphereBox.style.borderColor = 'green';

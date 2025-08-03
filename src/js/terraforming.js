@@ -36,6 +36,9 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
     var redistributePrecipitation = require('./phase-change-utils.js').redistributePrecipitation;
 
+    const radiation = require('./radiation-utils.js');
+    var estimateSurfaceDoseByColumn = radiation.estimateSurfaceDoseByColumn;
+
     const physics = require('./physics.js');
     if (typeof globalThis.surfaceAlbedoMix === 'undefined') {
         globalThis.surfaceAlbedoMix = physics.surfaceAlbedoMix;
@@ -232,10 +235,20 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
+    // Current estimated surface radiation in mSv/day
+    this.surfaceRadiation = 0;
+
 
 
     this.updateLuminosity();
     this.updateSurfaceTemperature();
+    if (
+      typeof globalThis.resources !== 'undefined' &&
+      globalThis.resources.atmospheric &&
+      typeof calculateAtmosphericPressure === 'function'
+    ) {
+      this.updateSurfaceRadiation();
+    }
   }
 
   getMagnetosphereStatus() {
@@ -957,6 +970,30 @@ class Terraforming extends EffectableEntity{
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
     }
 
+    // Estimate and store current surface radiation level in mSv/day
+    updateSurfaceRadiation() {
+      const pressurePa = this.calculateTotalPressure() * 1000; // kPa -> Pa
+      const g = this.celestialParameters.gravity || 1;
+      const column_gcm2 = g > 0 ? (pressurePa / g) * 0.1 : 0; // kg/m^2 -> g/cm^2
+
+      const parent = this.celestialParameters.parentBody || {};
+      let distance_Rp = parent.refDistance_Rp || 1;
+      if (parent.orbitRadius && parent.radius) {
+        distance_Rp = parent.orbitRadius / parent.radius;
+      }
+
+      const opts = {};
+      if (parent.beltFalloffExp !== undefined) opts.beltFalloffExp = parent.beltFalloffExp;
+      const dose = estimateSurfaceDoseByColumn(
+        column_gcm2,
+        distance_Rp,
+        parent.parentBeltAtRef_mSvPerDay || 0,
+        parent.refDistance_Rp || 1,
+        opts
+      );
+      this.surfaceRadiation = dose.total;
+    }
+
     calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
         const upgradeAlbedo = 0.05;
@@ -1049,6 +1086,13 @@ class Terraforming extends EffectableEntity{
 
       // Synchronize zonal data back to global resources object for other systems/UI
       this.synchronizeGlobalResources();
+      if (
+        typeof calculateAtmosphericPressure === 'function' &&
+        typeof globalThis.resources !== 'undefined' &&
+        globalThis.resources.atmospheric
+      ) {
+        this.updateSurfaceRadiation();
+      }
 
     } // <-- Correct closing brace for the 'update' method
   

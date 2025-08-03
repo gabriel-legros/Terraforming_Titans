@@ -260,8 +260,9 @@ const titanOverrides = {
     rotationPeriod: 382.7,
     parentBody: {
       name: 'Saturn',
+      radius: 60268,        // km
       mass: 5.683e26,       // kg
-      orbitRadius: 1221870,  // km,
+      orbitRadius: 1221870, // km
       refDistance_Rp: 10,                 // convenient pivot in R_S
       parentBeltAtRef_mSvPerDay: 3.5,      // chosen so Titan @20.3 RS is ~0.05 airless
       beltFalloffExp: 6
@@ -364,6 +365,7 @@ const callistoOverrides = {
     rotationPeriod: 400.8,     // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
     parentBody: {
       name: 'Jupiter',
+      radius: 71492,       // km
       mass: 1.898e27,      // kg
       orbitRadius: 1882700, // km
       refDistance_Rp: 9.4,                 // Europa
@@ -459,11 +461,12 @@ const ganymedeOverrides = {
     rotationPeriod: 171.7,     // hours (7.155 days, tidally locked)
     parentBody: {
       name: 'Jupiter',
+      radius: 71492,      // km
       mass: 1.898e27,     // kg
       orbitRadius: 1070400, // km
       refDistance_Rp: 9.4,                 // Europa
       parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
-      beltFalloffExp: 10   
+      beltFalloffExp: 10
     }
   }
 };
