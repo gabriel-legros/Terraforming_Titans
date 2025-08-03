@@ -44,22 +44,75 @@ function createTooltipElement(resourceName) {
 
   const zonesDiv = document.createElement('div');
   zonesDiv.id = `${resourceName}-tooltip-zones`;
+  zonesDiv.style.display = 'none';
+  zonesDiv.appendChild(document.createElement('br'));
+  const zonesHeader = document.createElement('strong');
+  zonesHeader.textContent = 'Zonal Amounts:';
+  zonesDiv.appendChild(zonesHeader);
+  zonesDiv.appendChild(document.createElement('br'));
+  zonesDiv._info = { lines: new Map() };
+  ['tropical', 'temperate', 'polar'].forEach(zone => {
+    const line = document.createElement('div');
+    zonesDiv.appendChild(line);
+    zonesDiv._info.lines.set(zone, line);
+  });
   tooltip.appendChild(zonesDiv);
 
   const productionDiv = document.createElement('div');
   productionDiv.id = `${resourceName}-tooltip-production`;
+  productionDiv.style.display = 'none';
+  const prodHeader = document.createElement('strong');
+  prodHeader.textContent = 'Production:';
+  productionDiv.appendChild(prodHeader);
+  productionDiv.appendChild(document.createElement('br'));
+  const prodTable = document.createElement('div');
+  prodTable.style.display = 'table';
+  prodTable.style.width = '100%';
+  productionDiv.appendChild(prodTable);
+  productionDiv._info = { table: prodTable, rows: new Map() };
   tooltip.appendChild(productionDiv);
 
   const consumptionDiv = document.createElement('div');
   consumptionDiv.id = `${resourceName}-tooltip-consumption`;
+  consumptionDiv.style.display = 'none';
+  consumptionDiv.appendChild(document.createElement('br'));
+  const consHeader = document.createElement('strong');
+  consHeader.textContent = 'Consumption and Maintenance:';
+  consumptionDiv.appendChild(consHeader);
+  consumptionDiv.appendChild(document.createElement('br'));
+  const consTable = document.createElement('div');
+  consTable.style.display = 'table';
+  consTable.style.width = '100%';
+  consumptionDiv.appendChild(consTable);
+  consumptionDiv._info = { table: consTable, rows: new Map() };
   tooltip.appendChild(consumptionDiv);
 
   const overflowDiv = document.createElement('div');
   overflowDiv.id = `${resourceName}-tooltip-overflow`;
+  overflowDiv.style.display = 'none';
+  const overflowHeader = document.createElement('strong');
+  overflowHeader.textContent = 'Overflow:';
+  overflowDiv.appendChild(overflowHeader);
+  overflowDiv.appendChild(document.createTextNode(' '));
+  const overflowValue = document.createElement('span');
+  overflowDiv.appendChild(overflowValue);
+  overflowDiv._value = overflowValue;
   tooltip.appendChild(overflowDiv);
 
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
+  autobuildDiv.style.display = 'none';
+  const autoHeader = document.createElement('strong');
+  autoHeader.textContent = 'Autobuild Cost (avg 10s):';
+  autobuildDiv.appendChild(autoHeader);
+  autobuildDiv.appendChild(document.createTextNode(' '));
+  const autoValue = document.createElement('span');
+  autobuildDiv.appendChild(autoValue);
+  const autoTable = document.createElement('div');
+  autoTable.style.display = 'table';
+  autoTable.style.width = '100%';
+  autobuildDiv.appendChild(autoTable);
+  autobuildDiv._info = { value: autoValue, table: autoTable, rows: new Map() };
   tooltip.appendChild(autobuildDiv);
 
   return tooltip;
@@ -69,6 +122,41 @@ function clearElement(element) {
   while (element.firstChild) {
     element.removeChild(element.firstChild);
   }
+}
+
+function updateRateTable(container, entries, formatter) {
+  if (!container) return;
+  const info = container._info;
+  const used = new Set();
+  entries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
+    let rowInfo = info.rows.get(name);
+    if (!rowInfo) {
+      const row = document.createElement('div');
+      row.style.display = 'table-row';
+      const left = document.createElement('div');
+      left.style.display = 'table-cell';
+      left.style.textAlign = 'left';
+      left.style.paddingRight = '10px';
+      const right = document.createElement('div');
+      right.style.display = 'table-cell';
+      right.style.textAlign = 'right';
+      row.appendChild(left);
+      row.appendChild(right);
+      info.table.appendChild(row);
+      rowInfo = { row, left, right };
+      info.rows.set(name, rowInfo);
+    }
+    rowInfo.left.textContent = name;
+    rowInfo.right.textContent = formatter(val);
+    rowInfo.row.style.display = 'table-row';
+    info.table.appendChild(rowInfo.row);
+    used.add(name);
+  });
+  info.rows.forEach((rowInfo, name) => {
+    if (!used.has(name)) {
+      rowInfo.row.style.display = 'none';
+    }
+  });
 }
 
 function updateAssignmentTable(container, assignments) {
@@ -415,258 +503,181 @@ function updateResourceRateDisplay(resource){
   const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
   if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
-    const formattedNumber = formatNumber(netRate);
-    // Removed the specific check for surface category to allow displaying rates < 1
-    if(Math.abs(netRate) < 1e-3)
-    {
+    if (Math.abs(netRate) < 1e-3) {
       ppsElement.textContent = `0/s`;
     } else {
       ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
     }
-    // Apply red color if netRate is negative and the absolute value is greater than the resource value
     if (netRate < 0 && Math.abs(netRate) > resource.value) {
       ppsElement.style.color = 'red';
-    } 
-    // Apply orange if netRate is negative but less than or equal to the resource value
-    else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) { //If running out in 2 minutes
+    } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
       ppsElement.style.color = 'orange';
-    } 
-    // Reset to default color if the condition is not met
-    else {
+    } else {
       ppsElement.style.color = '';
     }
   }
 
-  // Update the tooltip with production and consumption rates
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
-  if (tooltipElement) {
-    const valueDiv = document.getElementById(`${resource.name}-tooltip-value`);
-    const timeDiv = document.getElementById(`${resource.name}-tooltip-time`);
-    const assignmentsDiv = document.getElementById(`${resource.name}-tooltip-assignments`);
-    const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
-    const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
-    const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
-    const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
-    const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
+  if (!tooltipElement) return;
 
-    // Only clear containers that rebuild their contents every tick.
-    if (timeDiv) clearElement(timeDiv);
-    if (zonesDiv) clearElement(zonesDiv);
-    if (productionDiv) clearElement(productionDiv);
-    if (consumptionDiv) clearElement(consumptionDiv);
-    if (overflowDiv) clearElement(overflowDiv);
-    if (autobuildDiv) clearElement(autobuildDiv);
+  const valueDiv = document.getElementById(`${resource.name}-tooltip-value`);
+  const timeDiv = document.getElementById(`${resource.name}-tooltip-time`);
+  const assignmentsDiv = document.getElementById(`${resource.name}-tooltip-assignments`);
+  const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
+  const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
+  const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
+  const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
+  const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
 
-    const netRate = resource.productionRate - resource.consumptionRate;
+  const netRate = resource.productionRate - resource.consumptionRate;
 
-    if (valueDiv) {
-      if (resource.name === 'land') {
-        let avail = valueDiv._avail;
-        let used = valueDiv._used;
-        if (!avail || !used) {
-          clearElement(valueDiv);
-          avail = document.createElement('div');
-          valueDiv.appendChild(avail);
-          used = document.createElement('div');
-          valueDiv.appendChild(used);
-          valueDiv._avail = avail;
-          valueDiv._used = used;
-        }
-        const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
-        const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
-        if (avail.textContent !== availText) avail.textContent = availText;
-        if (used.textContent !== usedText) used.textContent = usedText;
-      } else {
-        const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
-        if (valueDiv.textContent !== text) valueDiv.textContent = text;
+  if (valueDiv) {
+    if (resource.name === 'land') {
+      let avail = valueDiv._avail;
+      let used = valueDiv._used;
+      if (!avail || !used) {
+        clearElement(valueDiv);
+        avail = document.createElement('div');
+        valueDiv.appendChild(avail);
+        used = document.createElement('div');
+        valueDiv.appendChild(used);
+        valueDiv._avail = avail;
+        valueDiv._used = used;
       }
+      const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
+      const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
+      if (avail.textContent !== availText) avail.textContent = availText;
+      if (used.textContent !== usedText) used.textContent = usedText;
+    } else {
+      const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+      if (valueDiv.textContent !== text) valueDiv.textContent = text;
     }
+  }
 
-    if (timeDiv && resource.name !== 'land') {
+  if (timeDiv) {
+    if (resource.name !== 'land') {
       if (netRate > 0 && resource.hasCap) {
         const time = (resource.cap - resource.value) / netRate;
         timeDiv.textContent = `Time to cap: ${formatDuration(Math.max(time, 0))}`;
       } else if (netRate < 0) {
         const time = resource.value / Math.abs(netRate);
         timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
-      }
-    }
-
-    if (assignmentsDiv) {
-      if (resource.name === 'workers') {
-        updateWorkerAssignments(assignmentsDiv);
-      } else if (resource.name === 'land') {
-        updateLandAssignments(assignmentsDiv);
       } else {
-        clearElement(assignmentsDiv);
+        timeDiv.textContent = '';
       }
+    } else {
+      timeDiv.textContent = '';
     }
+  }
 
-    if (zonesDiv && typeof terraforming !== 'undefined') {
-      const zoneValues = {};
-      const zoneBuried = {};
-      ['tropical', 'temperate', 'polar'].forEach(zone => {
-        let val;
-        switch (resource.name) {
-          case 'liquidWater':
-            val = terraforming.zonalWater?.[zone]?.liquid;
-            break;
-          case 'ice': {
-            const iceObj = terraforming.zonalWater?.[zone];
-            if (iceObj) {
-              val = (iceObj.ice || 0);
-              zoneBuried[zone] = iceObj.buriedIce || 0;
-            }
-            break;
+  if (assignmentsDiv) {
+    if (resource.name === 'workers') {
+      updateWorkerAssignments(assignmentsDiv);
+    } else if (resource.name === 'land') {
+      updateLandAssignments(assignmentsDiv);
+    } else {
+      clearElement(assignmentsDiv);
+    }
+  }
+
+  if (zonesDiv && typeof terraforming !== 'undefined') {
+    const zoneValues = {};
+    const zoneBuried = {};
+    ['tropical', 'temperate', 'polar'].forEach(zone => {
+      let val;
+      switch (resource.name) {
+        case 'liquidWater':
+          val = terraforming.zonalWater?.[zone]?.liquid;
+          break;
+        case 'ice': {
+          const iceObj = terraforming.zonalWater?.[zone];
+          if (iceObj) {
+            val = (iceObj.ice || 0);
+            zoneBuried[zone] = iceObj.buriedIce || 0;
           }
-          case 'dryIce':
-            val = terraforming.zonalSurface?.[zone]?.dryIce;
-            break;
-          case 'biomass':
-            val = terraforming.zonalSurface?.[zone]?.biomass;
-            break;
-          case 'liquidMethane':
-            val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
-            break;
-          case 'hydrocarbonIce': {
-            const obj = terraforming.zonalHydrocarbons?.[zone];
-            if (obj) {
-              val = (obj.ice || 0);
-              zoneBuried[zone] = obj.buriedIce || 0;
-            }
-            break;
-          }
-          default:
-            val = undefined;
+          break;
         }
-        if (typeof val === 'number') {
-          zoneValues[zone] = val;
+        case 'dryIce':
+          val = terraforming.zonalSurface?.[zone]?.dryIce;
+          break;
+        case 'biomass':
+          val = terraforming.zonalSurface?.[zone]?.biomass;
+          break;
+        case 'liquidMethane':
+          val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
+          break;
+        case 'hydrocarbonIce': {
+          const obj = terraforming.zonalHydrocarbons?.[zone];
+          if (obj) {
+            val = (obj.ice || 0);
+            zoneBuried[zone] = obj.buriedIce || 0;
+          }
+          break;
+        }
+        default:
+          val = undefined;
+      }
+      if (typeof val === 'number') {
+        zoneValues[zone] = val;
+      }
+    });
+    const hasZones = Object.keys(zoneValues).length > 0;
+    zonesDiv.style.display = hasZones ? 'block' : 'none';
+    if (hasZones) {
+      const info = zonesDiv._info;
+      ['tropical', 'temperate', 'polar'].forEach(zone => {
+        const line = info.lines.get(zone);
+        if (zoneValues[zone] !== undefined) {
+          let text = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
+          if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
+            const buried = zoneBuried[zone] || 0;
+            text += ` / ${formatNumber(buried, false, 3)} (buried)`;
+          }
+          line.style.display = 'block';
+          if (line.textContent !== text) line.textContent = text;
+        } else {
+          line.style.display = 'none';
         }
       });
-      if (Object.keys(zoneValues).length > 0) {
-        zonesDiv.appendChild(document.createElement('br'));
-        const header = document.createElement('strong');
-        header.textContent = 'Zonal Amounts:';
-        zonesDiv.appendChild(header);
-        zonesDiv.appendChild(document.createElement('br'));
-        ['tropical', 'temperate', 'polar'].forEach(zone => {
-          if (zoneValues[zone] !== undefined) {
-            let entry = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
-            if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
-              const buried = zoneBuried[zone] || 0;
-              entry += ` / ${formatNumber(buried, false, 3)} (buried)`;
-            }
-            const line = document.createElement('div');
-            line.textContent = entry;
-            zonesDiv.appendChild(line);
-          }
-        });
-      }
     }
+  } else if (zonesDiv) {
+    zonesDiv.style.display = 'none';
+  }
 
-    if (productionDiv) {
-      const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
-      if (productionEntries.length > 0) {
-        const header = document.createElement('strong');
-        header.textContent = 'Production:';
-        productionDiv.appendChild(header);
-        productionDiv.appendChild(document.createElement('br'));
-        const table = document.createElement('div');
-        table.style.display = 'table';
-        table.style.width = '100%';
-        productionEntries.sort((a, b) => b[1] - a[1]);
-        productionEntries.forEach(([source, rate]) => {
-          const row = document.createElement('div');
-          row.style.display = 'table-row';
-          const left = document.createElement('div');
-          left.style.display = 'table-cell';
-          left.style.textAlign = 'left';
-          left.style.paddingRight = '10px';
-          left.textContent = source;
-          const right = document.createElement('div');
-          right.style.display = 'table-cell';
-          right.style.textAlign = 'right';
-          right.textContent = `${formatNumber(rate, false, 2)}/s`;
-          row.appendChild(left);
-          row.appendChild(right);
-          table.appendChild(row);
-        });
-        productionDiv.appendChild(table);
-      }
+  if (productionDiv) {
+    const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
+    updateRateTable(productionDiv, productionEntries, r => `${formatNumber(r, false, 2)}/s`);
+    productionDiv.style.display = productionEntries.length > 0 ? 'block' : 'none';
+  }
+
+  if (consumptionDiv) {
+    const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
+    updateRateTable(consumptionDiv, consumptionEntries, r => `${formatNumber(r, false, 2)}/s`);
+    consumptionDiv.style.display = consumptionEntries.length > 0 ? 'block' : 'none';
+  }
+
+  if (overflowDiv) {
+    if (resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
+      overflowDiv.style.display = 'block';
+      overflowDiv._value.textContent = `${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    } else {
+      overflowDiv.style.display = 'none';
     }
+  }
 
-    if (consumptionDiv) {
-      const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
-      if (consumptionEntries.length > 0) {
-        consumptionDiv.appendChild(document.createElement('br'));
-        const header = document.createElement('strong');
-        header.textContent = 'Consumption and Maintenance:';
-        consumptionDiv.appendChild(header);
-        consumptionDiv.appendChild(document.createElement('br'));
-        const table = document.createElement('div');
-        table.style.display = 'table';
-        table.style.width = '100%';
-        consumptionEntries.sort((a, b) => b[1] - a[1]);
-        consumptionEntries.forEach(([source, rate]) => {
-          const row = document.createElement('div');
-          row.style.display = 'table-row';
-          const left = document.createElement('div');
-          left.style.display = 'table-cell';
-          left.style.textAlign = 'left';
-          left.style.paddingRight = '10px';
-          left.textContent = source;
-          const right = document.createElement('div');
-          right.style.display = 'table-cell';
-          right.style.textAlign = 'right';
-          right.textContent = `${formatNumber(rate, false, 2)}/s`;
-          row.appendChild(left);
-          row.appendChild(right);
-          table.appendChild(row);
-        });
-        consumptionDiv.appendChild(table);
-      }
-    }
-
-    if (overflowDiv && resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
-      overflowDiv.appendChild(document.createElement('br'));
-      const header = document.createElement('strong');
-      header.textContent = 'Overflow:';
-      overflowDiv.appendChild(header);
-      overflowDiv.append(` ${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`);
-    }
-
-    if (autobuildDiv && typeof autobuildCostTracker !== 'undefined') {
+  if (autobuildDiv) {
+    if (typeof autobuildCostTracker !== 'undefined') {
       const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
       if (avgCost > 0) {
-        autobuildDiv.appendChild(document.createElement('br'));
-        const header = document.createElement('strong');
-        header.textContent = 'Autobuild Cost (avg 10s):';
-        autobuildDiv.appendChild(header);
-        autobuildDiv.append(` ${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`);
+        autobuildDiv.style.display = 'block';
+        autobuildDiv._info.value.textContent = `${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
         const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
-        if (breakdown.length > 0) {
-          const table = document.createElement('div');
-          table.style.display = 'table';
-          table.style.width = '100%';
-          breakdown.forEach(([building, cost]) => {
-            const row = document.createElement('div');
-            row.style.display = 'table-row';
-            const left = document.createElement('div');
-            left.style.display = 'table-cell';
-            left.style.textAlign = 'left';
-            left.style.paddingRight = '10px';
-            left.textContent = building;
-            const right = document.createElement('div');
-            right.style.display = 'table-cell';
-            right.style.textAlign = 'right';
-            right.textContent = `${formatNumber(cost, false, 2)}/s`;
-            row.appendChild(left);
-            row.appendChild(right);
-            table.appendChild(row);
-          });
-          autobuildDiv.appendChild(table);
-        }
+        updateRateTable(autobuildDiv, breakdown, cost => `${formatNumber(cost, false, 2)}/s`);
+      } else {
+        autobuildDiv.style.display = 'none';
       }
+    } else {
+      autobuildDiv.style.display = 'none';
     }
   }
 }
