@@ -43,7 +43,12 @@ describe('StoryManager jumpToChapter', () => {
     expect(Array.from(manager.completedEventIds)).toEqual(['c1']);
     expect(manager.activeEventIds.has('c2')).toBe(true);
     expect(context.addJournalEntry).toHaveBeenCalledWith('two', 'c2', { type: 'chapter', id: 'c2' });
-    expect(context.loadJournalEntries).toHaveBeenCalled();
+    expect(context.loadJournalEntries).toHaveBeenCalledWith(
+      ['two'],
+      ['two'],
+      [{ type: 'chapter', id: 'c2' }],
+      [{ type: 'chapter', id: 'c2' }]
+    );
     expect(context.addEffect).toHaveBeenCalledWith({ target: 'global', type: 'dummy' });
   });
 
