@@ -113,20 +113,28 @@ function createProjectItem(project) {
   if (project.cost && Object.keys(project.cost).length > 0) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
-    const costLabel = document.createElement('span');
-    costLabel.textContent = 'Cost:';
-    const costList = document.createElement('ul');
+    const label = document.createElement('strong');
+    label.textContent = 'Cost:';
+    costElement.append(label, ' ');
+    const list = document.createElement('span');
+    costElement.appendChild(list);
     const costItems = {};
+    const items = [];
     for (const category in project.cost) {
       for (const resource in project.cost[category]) {
-        const item = document.createElement('li');
-        item.dataset.category = category;
-        item.dataset.resource = resource;
-        costList.appendChild(item);
-        costItems[`${category}.${resource}`] = item;
+        if (project.cost[category][resource] > 0) {
+          items.push({ category, resource });
+        }
       }
     }
-    costElement.append(costLabel, costList);
+    items.forEach((item, idx) => {
+      const span = document.createElement('span');
+      list.appendChild(span);
+      if (idx < items.length - 1) {
+        list.appendChild(document.createTextNode(', '));
+      }
+      costItems[`${item.category}.${item.resource}`] = span;
+    });
     projectDetails.appendChild(costElement);
     projectElements[project.name] = {
       ...projectElements[project.name],
