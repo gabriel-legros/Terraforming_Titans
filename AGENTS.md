@@ -311,3 +311,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Advanced research unlocks now highlight the Research tab and subtab until viewed.
 - Recreated skill connector lines by clearing cached paths when rebuilding the skill tree.
 - Skill connectors now render correctly when the skill tree is drawn while hidden.
+- Viewed research alerts remain cleared after loading a save.
