@@ -25,6 +25,52 @@ function createResourceContainers(resourcesData) {
   }
 }
 
+function createTooltipElement(resourceName) {
+  const tooltip = document.createElement('div');
+  tooltip.classList.add('resource-tooltip');
+  tooltip.id = `${resourceName}-tooltip`;
+
+  const valueDiv = document.createElement('div');
+  valueDiv.id = `${resourceName}-tooltip-value`;
+  tooltip.appendChild(valueDiv);
+
+  const timeDiv = document.createElement('div');
+  timeDiv.id = `${resourceName}-tooltip-time`;
+  tooltip.appendChild(timeDiv);
+
+  const assignmentsDiv = document.createElement('div');
+  assignmentsDiv.id = `${resourceName}-tooltip-assignments`;
+  tooltip.appendChild(assignmentsDiv);
+
+  const zonesDiv = document.createElement('div');
+  zonesDiv.id = `${resourceName}-tooltip-zones`;
+  tooltip.appendChild(zonesDiv);
+
+  const productionDiv = document.createElement('div');
+  productionDiv.id = `${resourceName}-tooltip-production`;
+  tooltip.appendChild(productionDiv);
+
+  const consumptionDiv = document.createElement('div');
+  consumptionDiv.id = `${resourceName}-tooltip-consumption`;
+  tooltip.appendChild(consumptionDiv);
+
+  const overflowDiv = document.createElement('div');
+  overflowDiv.id = `${resourceName}-tooltip-overflow`;
+  tooltip.appendChild(overflowDiv);
+
+  const autobuildDiv = document.createElement('div');
+  autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
+  tooltip.appendChild(autobuildDiv);
+
+  return tooltip;
+}
+
+function clearElement(element) {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+}
+
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
@@ -43,8 +89,8 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
       </div>
-      <div class="resource-tooltip" id="${resourceName}-tooltip">Test Tooltip</div>
     `;
+    resourceElement.appendChild(createTooltipElement(resourceName));
   } else if (category === 'underground' || resourceObj.name === 'land') {
     // Display for deposits
     resourceElement.innerHTML = `
@@ -57,8 +103,10 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps"></div>
       </div>
-      ${resourceObj.name === 'land' ? `<div class="resource-tooltip" id="${resourceName}-tooltip"></div>` : ''}
     `;
+    if (resourceObj.name === 'land') {
+      resourceElement.appendChild(createTooltipElement(resourceName));
+    }
 
     // Add scanning progress below deposits
     const scanningProgressElement = document.createElement('div');
@@ -77,8 +125,8 @@ function createResourceElement(category, resourceObj, resourceName) {
         ` : ''}
         <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
       </div>
-      <div class="resource-tooltip" id="${resourceName}-tooltip">Test Tooltip</div>
     `;
+    resourceElement.appendChild(createTooltipElement(resourceName));
   }
 
   return resourceElement;
@@ -263,88 +311,154 @@ function updateResourceRateDisplay(resource){
   // Update the tooltip with production and consumption rates
   const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
   if (tooltipElement) {
-    let tooltipContent = '';
-    if (resource.name === 'land') {
-      tooltipContent += `<div>Available ${formatNumber(resource.value - resource.reserved, false, 3)}</div>`;
-      tooltipContent += `<div>Used ${formatNumber(resource.reserved, false, 3)}</div>`;
-    } else {
-      tooltipContent += `<div>Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}</div>`;
-    }
+    const valueDiv = document.getElementById(`${resource.name}-tooltip-value`);
+    const timeDiv = document.getElementById(`${resource.name}-tooltip-time`);
+    const assignmentsDiv = document.getElementById(`${resource.name}-tooltip-assignments`);
+    const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
+    const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
+    const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
+    const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
+    const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
+
+    if (valueDiv) clearElement(valueDiv);
+    if (timeDiv) clearElement(timeDiv);
+    if (assignmentsDiv) clearElement(assignmentsDiv);
+    if (zonesDiv) clearElement(zonesDiv);
+    if (productionDiv) clearElement(productionDiv);
+    if (consumptionDiv) clearElement(consumptionDiv);
+    if (overflowDiv) clearElement(overflowDiv);
+    if (autobuildDiv) clearElement(autobuildDiv);
+
     const netRate = resource.productionRate - resource.consumptionRate;
-    if (resource.name !== 'land') {
+
+    if (valueDiv) {
+      if (resource.name === 'land') {
+        const avail = document.createElement('div');
+        avail.textContent = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
+        valueDiv.appendChild(avail);
+        const used = document.createElement('div');
+        used.textContent = `Used ${formatNumber(resource.reserved, false, 3)}`;
+        valueDiv.appendChild(used);
+      } else {
+        valueDiv.textContent = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+      }
+    }
+
+    if (timeDiv && resource.name !== 'land') {
       if (netRate > 0 && resource.hasCap) {
         const time = (resource.cap - resource.value) / netRate;
-        tooltipContent += `<div>Time to cap: ${formatDuration(Math.max(time, 0))}</div>`;
+        timeDiv.textContent = `Time to cap: ${formatDuration(Math.max(time, 0))}`;
       } else if (netRate < 0) {
         const time = resource.value / Math.abs(netRate);
-        tooltipContent += `<div>Time to empty: ${formatDuration(Math.max(time, 0))}</div>`;
+        timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
       }
     }
 
-    if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
-      const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
-      tooltipContent += `<div>${ratioPercent}% of colonists provide workers</div>`;
-      if (typeof resources !== 'undefined') {
-        const androids = resources.colony?.androids?.value || 0;
-        tooltipContent += `<div>${formatNumber(androids, true)} from androids</div>`;
-      }
+    if (assignmentsDiv) {
+      if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
+        const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
+        const ratioDiv = document.createElement('div');
+        ratioDiv.textContent = `${ratioPercent}% of colonists provide workers`;
+        assignmentsDiv.appendChild(ratioDiv);
+        if (typeof resources !== 'undefined') {
+          const androids = resources.colony?.androids?.value || 0;
+          const androidDiv = document.createElement('div');
+          androidDiv.textContent = `${formatNumber(androids, true)} from androids`;
+          assignmentsDiv.appendChild(androidDiv);
+        }
 
-      if (typeof buildings !== 'undefined') {
+        if (typeof buildings !== 'undefined') {
+          const assignments = [];
+          for (const name in buildings) {
+            const b = buildings[name];
+            if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
+              const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
+              if (assigned > 0) {
+                assignments.push([b.displayName || name, assigned]);
+              }
+            }
+          }
+          if (assignments.length > 0) {
+            assignments.sort((a, b) => b[1] - a[1]);
+            const header = document.createElement('div');
+            header.innerHTML = '<strong>Assignments:</strong>';
+            assignmentsDiv.appendChild(header);
+            const table = document.createElement('div');
+            table.style.display = 'table';
+            table.style.width = '100%';
+            assignments.forEach(([n, count]) => {
+              const row = document.createElement('div');
+              row.style.display = 'table-row';
+              const left = document.createElement('div');
+              left.style.display = 'table-cell';
+              left.style.textAlign = 'left';
+              left.style.paddingRight = '10px';
+              left.textContent = n;
+              const right = document.createElement('div');
+              right.style.display = 'table-cell';
+              right.style.textAlign = 'right';
+              right.textContent = formatNumber(count, true);
+              row.appendChild(left);
+              row.appendChild(right);
+              table.appendChild(row);
+            });
+            assignmentsDiv.appendChild(table);
+          }
+        }
+      } else if (resource.name === 'land') {
         const assignments = [];
-        for (const name in buildings) {
-          const b = buildings[name];
-          if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
-            const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
-            if (assigned > 0) {
-              assignments.push([b.displayName || name, assigned]);
+        if (typeof buildings !== 'undefined') {
+          for (const name in buildings) {
+            const b = buildings[name];
+            if (b.active > 0 && b.requiresLand) {
+              const used = b.active * b.requiresLand;
+              if (used > 0) {
+                assignments.push([b.displayName || name, used]);
+              }
+            }
+          }
+        }
+        if (typeof colonies !== 'undefined') {
+          for (const name in colonies) {
+            const c = colonies[name];
+            if (c.active > 0 && c.requiresLand) {
+              const used = c.active * c.requiresLand;
+              if (used > 0) {
+                assignments.push([c.displayName || name, used]);
+              }
             }
           }
         }
         if (assignments.length > 0) {
           assignments.sort((a, b) => b[1] - a[1]);
-          tooltipContent += '<div><strong>Assignments:</strong></div><div style="display: table; width: 100%;">';
+          const header = document.createElement('div');
+          header.innerHTML = '<strong>Assignments:</strong>';
+          assignmentsDiv.appendChild(header);
+          const table = document.createElement('div');
+          table.style.display = 'table';
+          table.style.width = '100%';
           assignments.forEach(([n, count]) => {
-            tooltipContent += `\n          <div style="display: table-row;">\n            <div style="display: table-cell; text-align: left; padding-right: 10px;">${n}</div>\n            <div style="display: table-cell; text-align: right;">${formatNumber(count, true)}</div>\n          </div>`;
+            const row = document.createElement('div');
+            row.style.display = 'table-row';
+            const left = document.createElement('div');
+            left.style.display = 'table-cell';
+            left.style.textAlign = 'left';
+            left.style.paddingRight = '10px';
+            left.textContent = n;
+            const right = document.createElement('div');
+            right.style.display = 'table-cell';
+            right.style.textAlign = 'right';
+            right.textContent = formatNumber(count, true);
+            row.appendChild(left);
+            row.appendChild(right);
+            table.appendChild(row);
           });
-          tooltipContent += '</div>';
+          assignmentsDiv.appendChild(table);
         }
-      }
-    } else if (resource.name === 'land') {
-      const assignments = [];
-      if (typeof buildings !== 'undefined') {
-        for (const name in buildings) {
-          const b = buildings[name];
-          if (b.active > 0 && b.requiresLand) {
-            const used = b.active * b.requiresLand;
-            if (used > 0) {
-              assignments.push([b.displayName || name, used]);
-            }
-          }
-        }
-      }
-      if (typeof colonies !== 'undefined') {
-        for (const name in colonies) {
-          const c = colonies[name];
-          if (c.active > 0 && c.requiresLand) {
-            const used = c.active * c.requiresLand;
-            if (used > 0) {
-              assignments.push([c.displayName || name, used]);
-            }
-          }
-        }
-      }
-      if (assignments.length > 0) {
-        assignments.sort((a, b) => b[1] - a[1]);
-        tooltipContent += '<div><strong>Assignments:</strong></div><div style="display: table; width: 100%;">';
-        assignments.forEach(([n, count]) => {
-          tooltipContent += `\n          <div style="display: table-row;">\n            <div style="display: table-cell; text-align: left; padding-right: 10px;">${n}</div>\n            <div style="display: table-cell; text-align: right;">${formatNumber(count, true)}</div>\n          </div>`;
-        });
-        tooltipContent += '</div>';
       }
     }
 
-    // Add zonal breakdown for surface resources if available
-    if (typeof terraforming !== 'undefined') {
+    if (zonesDiv && typeof terraforming !== 'undefined') {
       const zoneValues = {};
       const zoneBuried = {};
       ['tropical', 'temperate', 'polar'].forEach(zone => {
@@ -386,7 +500,11 @@ function updateResourceRateDisplay(resource){
         }
       });
       if (Object.keys(zoneValues).length > 0) {
-        tooltipContent += '<br><strong>Zonal Amounts:</strong><br>';
+        zonesDiv.appendChild(document.createElement('br'));
+        const header = document.createElement('strong');
+        header.textContent = 'Zonal Amounts:';
+        zonesDiv.appendChild(header);
+        zonesDiv.appendChild(document.createElement('br'));
         ['tropical', 'temperate', 'polar'].forEach(zone => {
           if (zoneValues[zone] !== undefined) {
             let entry = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
@@ -394,66 +512,118 @@ function updateResourceRateDisplay(resource){
               const buried = zoneBuried[zone] || 0;
               entry += ` / ${formatNumber(buried, false, 3)} (buried)`;
             }
-            tooltipContent += entry + '<br>';
+            const line = document.createElement('div');
+            line.textContent = entry;
+            zonesDiv.appendChild(line);
           }
         });
       }
     }
 
-    // Generate the production content
-    const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
-    if (productionEntries.length > 0) {
-      tooltipContent += '<strong>Production:</strong><br><div style="display: table; width: 100%;">';
-      productionEntries.sort((a, b) => b[1] - a[1]); // Sort production entries in descending order
-      productionEntries.forEach(([source, rate]) => {
-        tooltipContent += `
-          <div style="display: table-row;">
-            <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
-          </div>`;
-      });
-      tooltipContent += '</div>';
-    }
-
-    // Generate the consumption content
-    const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
-    if (consumptionEntries.length > 0) {
-      tooltipContent += '<br><strong>Consumption and Maintenance:</strong><br><div style="display: table; width: 100%;">';
-      consumptionEntries.sort((a, b) => b[1] - a[1]); // Sort consumption entries in descending order
-      consumptionEntries.forEach(([source, rate]) => {
-        tooltipContent += `
-          <div style="display: table-row;">
-            <div style="display: table-cell; text-align: left; padding-right: 10px;">${source}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(rate, false, 2)}/s</div>
-          </div>`;
-      });
-      tooltipContent += '</div>';
-    }
-
-    if (resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
-      tooltipContent += `<br><strong>Overflow:</strong> ${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    }
-
-    if (typeof autobuildCostTracker !== 'undefined') {
-      const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
-      if (avgCost > 0) {
-        tooltipContent += `<br><strong>Autobuild Cost (avg 10s):</strong> ${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-        const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
-        if (breakdown.length > 0) {
-          tooltipContent += '<div style="display: table; width: 100%;">';
-          breakdown.forEach(([building, cost]) => {
-            tooltipContent += `
-          <div style="display: table-row;">
-            <div style="display: table-cell; text-align: left; padding-right: 10px;">${building}</div>
-            <div style="display: table-cell; text-align: right;">${formatNumber(cost, false, 2)}/s</div>
-          </div>`;
-          });
-          tooltipContent += '</div>';
-        }
+    if (productionDiv) {
+      const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
+      if (productionEntries.length > 0) {
+        const header = document.createElement('strong');
+        header.textContent = 'Production:';
+        productionDiv.appendChild(header);
+        productionDiv.appendChild(document.createElement('br'));
+        const table = document.createElement('div');
+        table.style.display = 'table';
+        table.style.width = '100%';
+        productionEntries.sort((a, b) => b[1] - a[1]);
+        productionEntries.forEach(([source, rate]) => {
+          const row = document.createElement('div');
+          row.style.display = 'table-row';
+          const left = document.createElement('div');
+          left.style.display = 'table-cell';
+          left.style.textAlign = 'left';
+          left.style.paddingRight = '10px';
+          left.textContent = source;
+          const right = document.createElement('div');
+          right.style.display = 'table-cell';
+          right.style.textAlign = 'right';
+          right.textContent = `${formatNumber(rate, false, 2)}/s`;
+          row.appendChild(left);
+          row.appendChild(right);
+          table.appendChild(row);
+        });
+        productionDiv.appendChild(table);
       }
     }
 
-    tooltipElement.innerHTML = tooltipContent;
+    if (consumptionDiv) {
+      const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
+      if (consumptionEntries.length > 0) {
+        consumptionDiv.appendChild(document.createElement('br'));
+        const header = document.createElement('strong');
+        header.textContent = 'Consumption and Maintenance:';
+        consumptionDiv.appendChild(header);
+        consumptionDiv.appendChild(document.createElement('br'));
+        const table = document.createElement('div');
+        table.style.display = 'table';
+        table.style.width = '100%';
+        consumptionEntries.sort((a, b) => b[1] - a[1]);
+        consumptionEntries.forEach(([source, rate]) => {
+          const row = document.createElement('div');
+          row.style.display = 'table-row';
+          const left = document.createElement('div');
+          left.style.display = 'table-cell';
+          left.style.textAlign = 'left';
+          left.style.paddingRight = '10px';
+          left.textContent = source;
+          const right = document.createElement('div');
+          right.style.display = 'table-cell';
+          right.style.textAlign = 'right';
+          right.textContent = `${formatNumber(rate, false, 2)}/s`;
+          row.appendChild(left);
+          row.appendChild(right);
+          table.appendChild(row);
+        });
+        consumptionDiv.appendChild(table);
+      }
+    }
+
+    if (overflowDiv && resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
+      overflowDiv.appendChild(document.createElement('br'));
+      const header = document.createElement('strong');
+      header.textContent = 'Overflow:';
+      overflowDiv.appendChild(header);
+      overflowDiv.append(` ${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`);
+    }
+
+    if (autobuildDiv && typeof autobuildCostTracker !== 'undefined') {
+      const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
+      if (avgCost > 0) {
+        autobuildDiv.appendChild(document.createElement('br'));
+        const header = document.createElement('strong');
+        header.textContent = 'Autobuild Cost (avg 10s):';
+        autobuildDiv.appendChild(header);
+        autobuildDiv.append(` ${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`);
+        const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
+        if (breakdown.length > 0) {
+          const table = document.createElement('div');
+          table.style.display = 'table';
+          table.style.width = '100%';
+          breakdown.forEach(([building, cost]) => {
+            const row = document.createElement('div');
+            row.style.display = 'table-row';
+            const left = document.createElement('div');
+            left.style.display = 'table-cell';
+            left.style.textAlign = 'left';
+            left.style.paddingRight = '10px';
+            left.textContent = building;
+            const right = document.createElement('div');
+            right.style.display = 'table-cell';
+            right.style.textAlign = 'right';
+            right.textContent = `${formatNumber(cost, false, 2)}/s`;
+            row.appendChild(left);
+            row.appendChild(right);
+            table.appendChild(row);
+          });
+          autobuildDiv.appendChild(table);
+        }
+      }
+    }
   }
 }
 
