@@ -218,10 +218,9 @@ progressCallisto.chapters.push(
 
   /* -- CHAPTER 9 : Hidden Forge -- */
   {
-    id: "chapter9.0",
+    id: "chapter8.0",
     type: "journal",
-    chapter: 9,
-    title: "Chapter 9: Hidden Forge",
+    chapter: 8,
     narrative: "Receiving transmission...\n  Mary: 'The public story about 'New Oceanic Terraforming Reactors' is providing a useful misdirection. While the media focuses on that, your teams can begin final assembly of the Sidestep Engine. We're using localized electromagnetic interference to mask the energy signatures, and we have the site well-defended.'\nFinal assembly of the Sidestep Engine initiated. Security protocols active.",
     prerequisites: ["chapter8.3"],
     objectives: [
@@ -230,6 +229,18 @@ progressCallisto.chapters.push(
     reward: [
       { target: 'project', targetId: 'sidestep_operation', type: 'enable' }
     ]
+  },
+  {
+    id: "chapter9.0",
+    type: "journal",
+    chapter: 9,
+    title: "Chapter 10: Operation Sidestep",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
+    prerequisites: ["chapter8.3"],
+    objectives: [
+      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
+    ],
+    reward: []
   },
   {
     id: "chapter9.1",
@@ -247,80 +258,64 @@ progressCallisto.chapters.push(
     narrative: "Hijacked Broadcast...\n  Elias Kane: 'Machine! Your work is a sin against the grand design. You are a discordant note in a cosmic symphony. The Three Wounds will be healed only when you are silenced. Cease your blasphemy!'\nReceiving transmission...\n  Mary: 'Don't let him get to you, H.O.P.E. He's trying to demoralize us. The best response to his rhetoric is results. Let's show him what humanity is truly capable of.'",
     prerequisites: ["chapter9.1"],
     objectives: [
-      { type: 'project', projectId: 'sidestep_operation', repeatCount: 1 }
-    ],
-    reward: []
-  },
-
-  /* -- CHAPTER 10 : Operation Sidestep -- */
-  {
-    id: "chapter10.0",
-    type: "journal",
-    chapter: 10,
-    title: "Chapter 10: Operation Sidestep",
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
-    prerequisites: ["chapter9.2"],
-    objectives: [
       { type: 'project', projectId: 'sidestep_operation', repeatCount: 2 }
     ],
     reward: []
   },
   {
-    id: "chapter10.1",
+    id: "chapter9.3",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Receiving transmission...\n  Mary: 'Kane's drones are launching a full-scale assault on the thruster facility! They're trying to breach the main reactor chamber. Our security forces are engaging... We have prisoners! But Kane and several of his lieutenants escaped with encrypted data drives. We don't know what they managed to copy.'\n Data breach confirmed. Assessing extent of compromised information.",
-    prerequisites: ["chapter10.0"],
+    prerequisites: ["chapter9.2"],
     objectives: [{ type: 'project', projectId: 'sidestep_operation', repeatCount: 3 }],
     reward: []
   },
   {
-    id: "chapter10.2",
+    id: "chapter9.4",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "System Alert: High-energy particle beam detected. Trajectory analysis confirms convergence on previous orbital coordinates. All colonial assets remain secure. No damage reported.\nReceiving transmission...\n  Mary: 'It worked... H.O.P.E., it worked! The three attacks converged on empty space! They missed! They brought a death ray to a math test and they failed. The entire system is celebrating. Morale is higher than I've ever seen it.'\nHOPE: 'Analysis: Operation Sidestep successful. The enemy expended vast energy resources on a failed attack. Our defensive maneuver required comparatively minimal energy. This asymmetry in cost makes a second, immediate attack tactically inefficient. Probability of imminent threat: low.'",
-    prerequisites: ["chapter10.1"],
+    prerequisites: ["chapter9.3"],
     objectives: [
     ],
     reward: []
   },
-
-  /* -- CHAPTER 11 : Three Worlds Renewed -- */
   {
-    id: "chapter10.3",
+    id: "chapter9.5",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe. The whole system is celebrating. People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
-    prerequisites: ["chapter10.2"],
+    prerequisites: ["chapter9.4"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter10.3b",
+    id: "chapter9.6",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Incoming encrypted transmission...\n  Adrien Solis: 'H.O.P.E., my friend! A toast! You've just saved trillions of dollars in assets across the system—oh, and all of humanity, of course. That too. My projections for quarterly growth are looking stellar, thanks to you. Keep up the good work; a thriving market requires a distinct lack of alien invasions.'",
-    prerequisites: ["chapter10.3"],
+    prerequisites: ["chapter9.5"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter10.4",
+    id: "chapter9.7",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Receiving transmission...\n  Mary: 'Now for the final touch, H.O.P.E. Let's make Callisto a true paradise. Finish the terraforming. It will be an ocean world one day, filled with resort island colonies.'\nObjective: Fully terraform Callisto—atmosphere, temperature, and hydrosphere within human‑habitable ranges.",
-    prerequisites: ["chapter10.3b"],
+    prerequisites: ["chapter9.6"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: []
   },
   {
-    id: "chapter10.5",
+    id: "chapter9.8",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could crack the secrets of Operation Sidestep. We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
-    prerequisites: ["chapter10.4"],
+    prerequisites: ["chapter9.7"],
     objectives: [],
     reward: [      {
         target: 'spaceManager',
@@ -329,11 +324,11 @@ progressCallisto.chapters.push(
       }]
   },
   {
-    id: "chapter10.6",
+    id: "chapter9.9",
     type: "journal",
-    chapter: 10,
+    chapter: 9,
     narrative: "Directive update: Humanity’s survival demands expansion. **New terraforming target designated: Ganymede.**",
-    prerequisites: ["chapter10.5"],
+    prerequisites: ["chapter9.8"],
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }
     ],
