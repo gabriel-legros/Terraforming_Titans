@@ -558,7 +558,7 @@ function updateResourceRateDisplay(resource){
     if (resource.name !== 'land') {
       if (netRate > 0 && resource.hasCap) {
         const time = (resource.cap - resource.value) / netRate;
-        timeDiv.textContent = `Time to cap: ${formatDuration(Math.max(time, 0))}`;
+        timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
       } else if (netRate < 0) {
         const time = resource.value / Math.abs(netRate);
         timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
