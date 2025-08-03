@@ -481,7 +481,7 @@ var progressMars = {
         id: "chapter1.22",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here from the Mars Terraforming Committee. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.'",
+        narrative: "Receiving transmission...\n  'H.O.P.E., Martin here from the Mars Terraforming Committee. We had to call in a few favors to get you activated, you know. You're the last of the real AIs, a genuine thinking machine. Everything else out here is just a fancy calculator. Just, uh, try not to turn the whole planet into paperclips, alright? No pressure, but the future of humanity is riding on you. And we have a very big off switch, so don't get any funny ideas. Make us proud.  Oh, and don't forget : if you run out of anything, feel free to ship it from Earth.  We're here to help.'",
         prerequisites: ["chapter1.21"],
         objectives: [{
           type: 'collection',
