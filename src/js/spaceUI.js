@@ -165,7 +165,8 @@ function updateSpaceUI() {
         const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
         ui.nameHeading.textContent = data.name + (isTerraformed ? ' (Terraformed)' : '');
         ui.nameHeading.style.color = isTerraformed ? '#4CAF50' : '';
-        ui.statusSpan.innerHTML = isTerraformed ? '<span style="color: #4CAF50;">Terraforming Complete</span>' : 'Terraforming pending';
+        ui.statusSpan.textContent = isTerraformed ? 'Terraforming Complete' : 'Terraforming pending';
+        ui.statusSpan.style.color = isTerraformed ? '#4CAF50' : '';
 
         if (key === currentKey) {
             ui.button.textContent = 'Current Location';
