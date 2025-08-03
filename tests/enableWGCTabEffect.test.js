@@ -25,7 +25,7 @@ describe('chapter14.0 reward enables WGC and activates its tab', () => {
     vm.runInContext(`${uiUtilsCode}\n${effectCode}\n${wgcUICode}\n${wgcCode}\n${hopeUICode}; this.EffectableEntity = EffectableEntity; this.WarpGateCommand = WarpGateCommand;`, ctx);
     ctx.globalEffects = new ctx.EffectableEntity({ description: 'global' });
     ctx.warpGateCommand = new ctx.WarpGateCommand();
-    const chapter = progressGanymede.chapters.find(c => c.id === 'chapter14.0');
+    const chapter = progressGanymede.chapters.find(c => c.id === 'chapter13.0');
     const wgcEffect = chapter.reward.find(e => e.target === 'warpGateCommand');
     const tabEffect = chapter.reward.find(e => e.target === 'global');
     ctx.warpGateCommand.addAndReplace(wgcEffect);

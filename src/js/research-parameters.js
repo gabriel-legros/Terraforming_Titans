@@ -18,7 +18,7 @@ const researchParameters = {
       {
         id: 'geothermal_plant',
         name: 'Geothermal Power Generation',
-        description: 'Unlocks geothermal generators, which require no maintenance, and a project to scan for suitable vents.',
+        description: 'Unlocks geothermal generators, which require reduced maintenance, and a project to scan for suitable vents.',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [

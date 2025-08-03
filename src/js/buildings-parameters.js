@@ -228,7 +228,7 @@ const buildingsParameters = {
   geothermalGenerator: {
     name: 'Geothermal Generator',
     category: 'energy',
-    description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function, but no maintenance.',
+    description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance.',
     cost: { colony: { metal: 100, components: 20 } },
     consumption: { colony: { water: 0.1 } },
     production: { colony: { energy: 10000000 }, atmospheric: {atmosphericWater: 0.1} },
@@ -238,7 +238,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresDeposit: { underground: { geothermal: 1 } },
     requiresWorker: 0,
-    maintenanceFactor: 0,
+    maintenanceFactor: 0.5,
     unlocked: false
   },
   hydrocarbonGenerator: {
