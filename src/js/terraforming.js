@@ -242,13 +242,7 @@ class Terraforming extends EffectableEntity{
 
     this.updateLuminosity();
     this.updateSurfaceTemperature();
-    if (
-      typeof globalThis.resources !== 'undefined' &&
-      globalThis.resources.atmospheric &&
-      typeof calculateAtmosphericPressure === 'function'
-    ) {
-      this.updateSurfaceRadiation();
-    }
+    this.updateSurfaceRadiation();
   }
 
   getMagnetosphereStatus() {
@@ -1086,13 +1080,7 @@ class Terraforming extends EffectableEntity{
 
       // Synchronize zonal data back to global resources object for other systems/UI
       this.synchronizeGlobalResources();
-      if (
-        typeof calculateAtmosphericPressure === 'function' &&
-        typeof globalThis.resources !== 'undefined' &&
-        globalThis.resources.atmospheric
-      ) {
-        this.updateSurfaceRadiation();
-      }
+      this.updateSurfaceRadiation();
 
     } // <-- Correct closing brace for the 'update' method
   
