@@ -62,7 +62,7 @@ progressCallisto.storyProjects.sidestep_assembly = {
   cost: {
     colony: { components: 500_000_000, electronics: 100_000_000, energy: 5_000_000_000_000, research: 1_000_000_000 }
   },
-  duration: 1_200_000,               // 20 min
+  duration: 600_000,               // 20 min
   description: 'Integrate the magnetic injectors, thrust nozzles, and power conduits into the primary engine assembly. Seal the vault once final alignment diagnostics are complete.',
   repeatable: true,
   maxRepeatCount: 2,
