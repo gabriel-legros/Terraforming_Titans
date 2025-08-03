@@ -305,3 +305,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Colony buildings now feature an upgrade arrow converting ten of a tier into one of the next at half the next tier's cost (excluding water).
 - Resource tooltips now use static DOM nodes updated without rebuilding innerHTML.
 - Project cost and gain displays now reuse list items and total cost updates a dedicated span.
+- Skill buttons reuse child elements, updating text only when values change, and skill connections redraw only after layout or prerequisite changes.
