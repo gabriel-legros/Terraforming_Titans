@@ -234,7 +234,7 @@ progressCallisto.chapters.push(
     id: "chapter9.0",
     type: "journal",
     chapter: 9,
-    title: "Chapter 10: Operation Sidestep",
+    title: "Chapter 9: Operation Sidestep",
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've just decrypted a cult transmission. They're anticipating an alien strike within the next orbital period. Our timeline has collapsed. We have to execute Operation Sidestep as soon as possible.'\nAcknowledged. Initiating Operation Sidestep. All systems nominal.",
     prerequisites: ["chapter8.4"],
     objectives: [
