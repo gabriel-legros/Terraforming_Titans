@@ -237,6 +237,77 @@ class Colony extends Building {
       return minRatio === Infinity ? 1 : minRatio;
   }
 
+  getNextTierName() {
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
+    const index = tiers.indexOf(this.name);
+    return index >= 0 && index < tiers.length - 1 ? tiers[index + 1] : null;
+  }
+
+  getUpgradeCost() {
+    const nextName = this.getNextTierName();
+    if (!nextName) return null;
+    const next = colonies[nextName];
+    if (!next) return null;
+
+    const nextCost = next.getEffectiveCost(1);
+    const cost = {};
+    for (const category in nextCost) {
+      for (const resource in nextCost[category]) {
+        if (category === 'colony' && resource === 'water') continue;
+        const amount = nextCost[category][resource] / 2;
+        if (!cost[category]) cost[category] = {};
+        cost[category][resource] = amount;
+      }
+    }
+    return cost;
+  }
+
+  canAffordUpgrade() {
+    const cost = this.getUpgradeCost();
+    if (!cost) return false;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resources[category][resource].value < cost[category][resource]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  upgrade() {
+    const nextName = this.getNextTierName();
+    if (!nextName) return false;
+    const next = colonies[nextName];
+    if (!next || !next.unlocked) return false;
+    if (this.count < 10) return false;
+    const cost = this.getUpgradeCost();
+    if (!this.canAffordUpgrade()) return false;
+
+    // Pay cost
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        resources[category][resource].decrease(cost[category][resource]);
+      }
+    }
+
+    // Adjust land usage
+    if (this.requiresLand) this.adjustLand(-10);
+    if (next.requiresLand) next.adjustLand(1);
+
+    // Remove lower tier buildings
+    this.count -= 10;
+    this.active -= 10;
+    this.updateResourceStorage();
+
+    // Add upgraded building
+    next.count += 1;
+    next.active += 1;
+    next.updateResourceStorage();
+
+    return true;
+  }
+
   enable(tierName){
     const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
 
