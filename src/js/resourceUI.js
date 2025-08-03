@@ -71,6 +71,135 @@ function clearElement(element) {
   }
 }
 
+function updateAssignmentTable(container, assignments) {
+  if (!container) return;
+  const keyString = assignments.map(a => a[0]).join('|');
+  let info = container._info;
+
+  if (container.dataset.keys !== keyString) {
+    container.textContent = '';
+    if (assignments.length === 0) {
+      container.dataset.keys = '';
+      container._info = { spans: new Map() };
+      return;
+    }
+    const header = document.createElement('div');
+    header.innerHTML = '<strong>Assignments:</strong>';
+    container.appendChild(header);
+    const table = document.createElement('div');
+    table.style.display = 'table';
+    table.style.width = '100%';
+    container.appendChild(table);
+    info = { table, spans: new Map() };
+    assignments.forEach(([n, count]) => {
+      const row = document.createElement('div');
+      row.style.display = 'table-row';
+      const left = document.createElement('div');
+      left.style.display = 'table-cell';
+      left.style.textAlign = 'left';
+      left.style.paddingRight = '10px';
+      left.textContent = n;
+      const right = document.createElement('div');
+      right.style.display = 'table-cell';
+      right.style.textAlign = 'right';
+      table.appendChild(row);
+      row.appendChild(left);
+      row.appendChild(right);
+      info.spans.set(n, right);
+    });
+    container._info = info;
+    container.dataset.keys = keyString;
+  }
+
+  info = container._info;
+  assignments.forEach(([n, count]) => {
+    const span = info.spans.get(n);
+    if (!span) return;
+    const text = formatNumber(count, true);
+    if (span.textContent !== text) span.textContent = text;
+  });
+}
+
+function updateWorkerAssignments(assignmentsDiv) {
+  if (!assignmentsDiv || typeof populationModule === 'undefined') return;
+
+  let ratioDiv = assignmentsDiv._ratioDiv;
+  if (!ratioDiv) {
+    ratioDiv = document.createElement('div');
+    assignmentsDiv.appendChild(ratioDiv);
+    assignmentsDiv._ratioDiv = ratioDiv;
+  }
+  const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
+  const ratioText = `${ratioPercent}% of colonists provide workers`;
+  if (ratioDiv.textContent !== ratioText) ratioDiv.textContent = ratioText;
+
+  if (typeof resources !== 'undefined') {
+    let androidDiv = assignmentsDiv._androidDiv;
+    if (!androidDiv) {
+      androidDiv = document.createElement('div');
+      assignmentsDiv.appendChild(androidDiv);
+      assignmentsDiv._androidDiv = androidDiv;
+    }
+    const androids = resources.colony?.androids?.value || 0;
+    const androidText = `${formatNumber(androids, true)} from androids`;
+    if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+  }
+
+  const assignments = [];
+  if (typeof buildings !== 'undefined') {
+    for (const name in buildings) {
+      const b = buildings[name];
+      if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
+        const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
+        if (assigned > 0) {
+          assignments.push([b.displayName || name, assigned]);
+        }
+      }
+    }
+  }
+  assignments.sort((a, b) => b[1] - a[1]);
+
+  let tableContainer = assignmentsDiv._tableContainer;
+  if (!tableContainer) {
+    tableContainer = document.createElement('div');
+    assignmentsDiv.appendChild(tableContainer);
+    assignmentsDiv._tableContainer = tableContainer;
+  }
+  updateAssignmentTable(tableContainer, assignments);
+}
+
+function updateLandAssignments(assignmentsDiv) {
+  if (!assignmentsDiv) return;
+  const assignments = [];
+  if (typeof buildings !== 'undefined') {
+    for (const name in buildings) {
+      const b = buildings[name];
+      if (b.active > 0 && b.requiresLand) {
+        const used = b.active * b.requiresLand;
+        if (used > 0) assignments.push([b.displayName || name, used]);
+      }
+    }
+  }
+  if (typeof colonies !== 'undefined') {
+    for (const name in colonies) {
+      const c = colonies[name];
+      if (c.active > 0 && c.requiresLand) {
+        const used = c.active * c.requiresLand;
+        if (used > 0) assignments.push([c.displayName || name, used]);
+      }
+    }
+  }
+  assignments.sort((a, b) => b[1] - a[1]);
+
+  let tableContainer = assignmentsDiv._tableContainer;
+  if (!tableContainer) {
+    tableContainer = document.createElement('div');
+    assignmentsDiv.appendChild(tableContainer);
+    assignmentsDiv._tableContainer = tableContainer;
+  }
+  updateAssignmentTable(tableContainer, assignments);
+}
+
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
@@ -320,9 +449,8 @@ function updateResourceRateDisplay(resource){
     const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
     const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
 
-    if (valueDiv) clearElement(valueDiv);
+    // Only clear containers that rebuild their contents every tick.
     if (timeDiv) clearElement(timeDiv);
-    if (assignmentsDiv) clearElement(assignmentsDiv);
     if (zonesDiv) clearElement(zonesDiv);
     if (productionDiv) clearElement(productionDiv);
     if (consumptionDiv) clearElement(consumptionDiv);
@@ -333,14 +461,24 @@ function updateResourceRateDisplay(resource){
 
     if (valueDiv) {
       if (resource.name === 'land') {
-        const avail = document.createElement('div');
-        avail.textContent = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
-        valueDiv.appendChild(avail);
-        const used = document.createElement('div');
-        used.textContent = `Used ${formatNumber(resource.reserved, false, 3)}`;
-        valueDiv.appendChild(used);
+        let avail = valueDiv._avail;
+        let used = valueDiv._used;
+        if (!avail || !used) {
+          clearElement(valueDiv);
+          avail = document.createElement('div');
+          valueDiv.appendChild(avail);
+          used = document.createElement('div');
+          valueDiv.appendChild(used);
+          valueDiv._avail = avail;
+          valueDiv._used = used;
+        }
+        const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
+        const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
+        if (avail.textContent !== availText) avail.textContent = availText;
+        if (used.textContent !== usedText) used.textContent = usedText;
       } else {
-        valueDiv.textContent = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+        const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+        if (valueDiv.textContent !== text) valueDiv.textContent = text;
       }
     }
 
@@ -355,106 +493,12 @@ function updateResourceRateDisplay(resource){
     }
 
     if (assignmentsDiv) {
-      if (resource.name === 'workers' && typeof populationModule !== 'undefined') {
-        const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
-        const ratioDiv = document.createElement('div');
-        ratioDiv.textContent = `${ratioPercent}% of colonists provide workers`;
-        assignmentsDiv.appendChild(ratioDiv);
-        if (typeof resources !== 'undefined') {
-          const androids = resources.colony?.androids?.value || 0;
-          const androidDiv = document.createElement('div');
-          androidDiv.textContent = `${formatNumber(androids, true)} from androids`;
-          assignmentsDiv.appendChild(androidDiv);
-        }
-
-        if (typeof buildings !== 'undefined') {
-          const assignments = [];
-          for (const name in buildings) {
-            const b = buildings[name];
-            if (b.active > 0 && b.getTotalWorkerNeed && b.getTotalWorkerNeed() > 0) {
-              const assigned = b.active * b.getTotalWorkerNeed() * (b.getEffectiveWorkerMultiplier ? b.getEffectiveWorkerMultiplier() : 1);
-              if (assigned > 0) {
-                assignments.push([b.displayName || name, assigned]);
-              }
-            }
-          }
-          if (assignments.length > 0) {
-            assignments.sort((a, b) => b[1] - a[1]);
-            const header = document.createElement('div');
-            header.innerHTML = '<strong>Assignments:</strong>';
-            assignmentsDiv.appendChild(header);
-            const table = document.createElement('div');
-            table.style.display = 'table';
-            table.style.width = '100%';
-            assignments.forEach(([n, count]) => {
-              const row = document.createElement('div');
-              row.style.display = 'table-row';
-              const left = document.createElement('div');
-              left.style.display = 'table-cell';
-              left.style.textAlign = 'left';
-              left.style.paddingRight = '10px';
-              left.textContent = n;
-              const right = document.createElement('div');
-              right.style.display = 'table-cell';
-              right.style.textAlign = 'right';
-              right.textContent = formatNumber(count, true);
-              row.appendChild(left);
-              row.appendChild(right);
-              table.appendChild(row);
-            });
-            assignmentsDiv.appendChild(table);
-          }
-        }
+      if (resource.name === 'workers') {
+        updateWorkerAssignments(assignmentsDiv);
       } else if (resource.name === 'land') {
-        const assignments = [];
-        if (typeof buildings !== 'undefined') {
-          for (const name in buildings) {
-            const b = buildings[name];
-            if (b.active > 0 && b.requiresLand) {
-              const used = b.active * b.requiresLand;
-              if (used > 0) {
-                assignments.push([b.displayName || name, used]);
-              }
-            }
-          }
-        }
-        if (typeof colonies !== 'undefined') {
-          for (const name in colonies) {
-            const c = colonies[name];
-            if (c.active > 0 && c.requiresLand) {
-              const used = c.active * c.requiresLand;
-              if (used > 0) {
-                assignments.push([c.displayName || name, used]);
-              }
-            }
-          }
-        }
-        if (assignments.length > 0) {
-          assignments.sort((a, b) => b[1] - a[1]);
-          const header = document.createElement('div');
-          header.innerHTML = '<strong>Assignments:</strong>';
-          assignmentsDiv.appendChild(header);
-          const table = document.createElement('div');
-          table.style.display = 'table';
-          table.style.width = '100%';
-          assignments.forEach(([n, count]) => {
-            const row = document.createElement('div');
-            row.style.display = 'table-row';
-            const left = document.createElement('div');
-            left.style.display = 'table-cell';
-            left.style.textAlign = 'left';
-            left.style.paddingRight = '10px';
-            left.textContent = n;
-            const right = document.createElement('div');
-            right.style.display = 'table-cell';
-            right.style.textAlign = 'right';
-            right.textContent = formatNumber(count, true);
-            row.appendChild(left);
-            row.appendChild(right);
-            table.appendChild(row);
-          });
-          assignmentsDiv.appendChild(table);
-        }
+        updateLandAssignments(assignmentsDiv);
+      } else {
+        clearElement(assignmentsDiv);
       }
     }
 
