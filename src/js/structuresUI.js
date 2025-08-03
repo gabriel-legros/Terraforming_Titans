@@ -79,8 +79,15 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
   button.classList.add('building-button');
-  // Initial button text with a span for the build count to keep width stable
-  button.innerHTML = `Build <span class="build-button-count">1</span> ${structure.displayName}`;
+  // Initial button text with a dedicated span for the build count to keep width stable
+  button.textContent = '';
+  button.append('Build ');
+  const countSpan = document.createElement('span');
+  countSpan.classList.add('build-button-count');
+  countSpan.textContent = '1';
+  button.appendChild(countSpan);
+  const nameNode = document.createTextNode(` ${structure.displayName}`);
+  button.appendChild(nameNode);
 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
@@ -439,11 +446,18 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureButtonText(button, structure, buildCount = 1) {
+    if (!button) return;
     const canAfford = structure.canAfford(buildCount);
-    const countSpan = `<span class="build-button-count">${formatNumber(buildCount, true)}</span>`;
-    const newHTML = `Build ${countSpan} ${structure.displayName}`;
-    if (button.innerHTML !== newHTML) {
-      button.innerHTML = newHTML;
+    const countSpan = button.querySelector('.build-button-count');
+    const newCount = formatNumber(buildCount, true);
+    if (countSpan && countSpan.textContent !== newCount) {
+      countSpan.textContent = newCount;
+    }
+
+    const nameNode = button.childNodes[2];
+    const desiredName = ` ${structure.displayName}`;
+    if (nameNode && nameNode.textContent !== desiredName) {
+      nameNode.textContent = desiredName;
     }
 
     const newColor = canAfford ? 'inherit' : 'red';
@@ -492,74 +506,90 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
-    let costDetails = 'Cost - ';
-    const costArray = [];
-  
-    // Include resource costs
+    if (!costElement) return;
+    const items = [];
+
     const effectiveCost = structure.getEffectiveCost();
     for (const category in effectiveCost) {
       for (const resource in effectiveCost[category]) {
-        const requiredAmount = effectiveCost[category][resource] * buildCount;
-        const availableAmount = resources[category][resource]?.value || 0;
-  
-        // Check if the player has enough of this resource
-        const resourceText = `${capitalizeFirstLetter(resource)}: ${formatNumber(requiredAmount, true)}`;
-        const formattedResourceText = availableAmount >= requiredAmount
-          ? resourceText
-          : `<span style="color: red;">${resourceText}</span>`;
-        costArray.push(formattedResourceText);
+        items.push({
+          key: `${category}.${resource}`,
+          label: capitalizeFirstLetter(resource),
+          required: effectiveCost[category][resource],
+          available: resources[category][resource]?.value || 0,
+          insufficientColor: 'red'
+        });
       }
     }
-  
-    // Include worker cost if applicable
+
     if (structure.getTotalWorkerNeed() > 0) {
-      const requiredWorkers = structure.getTotalWorkerNeed() * buildCount * structure.getEffectiveWorkerMultiplier();
-      const availableWorkers = resources.colony.workers?.value || 0;
-  
-      // Check if there are enough workers available
-      const workerText = `Workers: ${formatNumber(requiredWorkers, true)}`;
-      let formattedWorkerText;
-  
-      if (availableWorkers >= requiredWorkers) {
-        formattedWorkerText = workerText;
-      } else {
-        // Use orange color if not enough workers are available
-        formattedWorkerText = `<span style="color: orange;">${workerText}</span>`;
-      }
-  
-      costArray.push(formattedWorkerText);
+      items.push({
+        key: 'colony.workers',
+        label: 'Workers',
+        required: structure.getTotalWorkerNeed() * structure.getEffectiveWorkerMultiplier(),
+        available: resources.colony.workers?.value || 0,
+        insufficientColor: 'orange'
+      });
     }
 
-    //Include land cost if applicable
-    if(structure.requiresLand) {
+    if (structure.requiresLand) {
       const requiredLand = structure.requiresLand * buildCount;
-
-      const landText = `Land: ${formatNumber(requiredLand, true)}`;
-      let formattedLandText;
-      if(structure.canAffordLand(buildCount)){
-        formattedLandText = landText;
-      } else {
-        formattedLandText = `<span style="color: red;">${landText}</span>`;
-      }
-      costArray.push(formattedLandText);
+      items.push({
+        key: 'colony.land',
+        label: 'Land',
+        required: structure.requiresLand,
+        available: structure.canAffordLand(buildCount) ? requiredLand : 0,
+        insufficientColor: 'red'
+      });
     }
 
-    //Include deposit cost if applicable
-    if(structure.requiresDeposit) {
+    if (structure.requiresDeposit) {
       const requiredDeposit = buildCount;
-
-      const depositText = `Deposit: ${formatNumber(requiredDeposit, true)}`;
-      let formattedDepositText;
-      if(structure.canAffordDeposit(buildCount)){
-        formattedDepositText = depositText;
-      } else {
-        formattedDepositText = `<span style="color: red;">${depositText}</span>`;
-      }
-      costArray.push(formattedDepositText);
+      items.push({
+        key: 'deposit',
+        label: 'Deposit',
+        required: 1,
+        available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
+        insufficientColor: 'red'
+      });
     }
-  
-    costDetails = costArray.join(', ');
-    costElement.innerHTML = `<strong>Cost:</strong> ${costDetails}`;
+
+    const keyString = items.map(i => i.key).sort().join(',');
+    let list = costElement._list;
+    if (costElement.dataset.keys !== keyString) {
+      costElement.dataset.keys = keyString;
+      costElement.textContent = '';
+      const label = document.createElement('strong');
+      label.textContent = 'Cost:';
+      costElement.append(label, ' ');
+      list = document.createElement('span');
+      costElement.appendChild(list);
+      costElement._list = list;
+      costElement._spans = new Map();
+      items.forEach((item, idx) => {
+        const span = document.createElement('span');
+        costElement._spans.set(item.key, span);
+        list.appendChild(span);
+        if (idx < items.length - 1) {
+          list.appendChild(document.createTextNode(', '));
+        }
+      });
+    }
+
+    items.forEach(item => {
+      const requiredAmount = item.required * buildCount;
+      const span = costElement._spans.get(item.key);
+      if (!span) return;
+      const text = `${item.label}: ${formatNumber(requiredAmount, true)}`;
+      if (span.textContent !== text) {
+        span.textContent = text;
+      }
+      const hasEnough = item.available >= requiredAmount;
+      const color = hasEnough ? '' : item.insufficientColor;
+      if (span.style.color !== color) {
+        span.style.color = color;
+      }
+    });
   }
   
   function adjustStructureActivation(structure, change) {
@@ -712,62 +742,160 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
-    let detailsText = '';
-    const effectiveMultiplier = structure.getEffectiveProductionMultiplier();
+    if (!productionConsumptionElement) return;
+
+    const sections = getProdConsSections(structure);
+    const keyString = sections
+      .map(sec => `${sec.key}:${(sec.keys || []).join('|')}`)
+      .join(';');
+
+    if (productionConsumptionElement.dataset.sectionKeys !== keyString) {
+      buildProdConsElement(productionConsumptionElement, sections);
+    }
+
+    sections.forEach(sec => {
+      const info = productionConsumptionElement._sections[sec.key];
+      if (!info) return;
+      if (sec.key === 'provides') {
+        sec.data.forEach((text, i) => {
+          const span = info.spans.get(String(i));
+          if (span && span.textContent !== text) {
+            span.textContent = text;
+          }
+        });
+      } else {
+        sec.keys.forEach(key => {
+          const span = info.spans.get(key);
+          if (!span) return;
+          const [category, resource] = key.split('.');
+          let amount;
+          if (sec.key === 'maintenance') {
+            amount = sec.data[resource];
+          } else {
+            amount = sec.data[category][resource];
+          }
+          const displayName = resources[category][resource].displayName;
+          const text = `${formatNumber(amount, true, 2)} ${displayName}`;
+          if (span.textContent !== text) {
+            span.textContent = text;
+          }
+        });
+      }
+    });
+  }
+
+  function getProdConsSections(structure) {
+    const sections = [];
 
     const providesParts = [];
-
-    // Update storage details if the building provides any
     const storageText = formatStorageDetails(structure.getModifiedStorage());
     if (storageText) {
       providesParts.push(storageText);
     }
-
-    // Include solar flux for buildings with powerPerBuilding
     if (structure.powerPerBuilding) {
-      const area = (terraforming && terraforming.celestialParameters) ?
-        (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea) : 1;
+      const area = (terraforming && terraforming.celestialParameters)
+        ? (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea)
+        : 1;
       const flux = (structure.powerPerBuilding * structure.active * structure.productivity) / area;
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
-
-    // Include solar flux for space mirrors
     if (structure.name === 'spaceMirror' && terraforming && typeof terraforming.calculateMirrorEffect === 'function') {
       const mirrorFluxPerMirror = terraforming.calculateMirrorEffect().powerPerUnitArea;
       const flux = mirrorFluxPerMirror * structure.active;
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
-
     if (providesParts.length > 0) {
-      detailsText += `<strong>Provides:</strong> ${providesParts.join(', ')}`;
-    }
-  
-    // Update production details with modified values
-    const productionText = formatResourceDetails(structure.getModifiedProduction());
-    if (productionText) {
-      if (detailsText) detailsText += ', ';
-      detailsText += `<strong>Production:</strong> ${productionText}`;
+      sections.push({ key: 'provides', label: 'Provides', data: providesParts });
     }
 
-    // Update consumption details with modified values
-    const consumptionText = formatResourceDetails(structure.getModifiedConsumption());
-    if (consumptionText) {
-      if (detailsText) detailsText += ', ';
-      detailsText += `<strong>Consumption:</strong> ${consumptionText}`;
+    const production = structure.getModifiedProduction();
+    const prodKeys = collectResourceKeys(production);
+    if (prodKeys.length > 0) {
+      sections.push({ key: 'production', label: 'Production', data: production, keys: prodKeys });
     }
-  
-    // Update maintenance details
+
+    const consumption = structure.getModifiedConsumption();
+    const consKeys = collectResourceKeys(consumption);
+    if (consKeys.length > 0) {
+      sections.push({ key: 'consumption', label: 'Consumption', data: consumption, keys: consKeys });
+    }
+
     if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
-      const maintenanceText = formatMaintenanceDetails(structure.maintenanceCost);
-      if (maintenanceText) {
-        if (detailsText) {
-          detailsText += ', ';
-        }
-        detailsText += `<strong>Maintenance:</strong> ${maintenanceText}`;
+      const maintenanceKeys = Object.keys(structure.maintenanceCost).map(r => `colony.${r}`);
+      if (maintenanceKeys.length > 0) {
+        sections.push({ key: 'maintenance', label: 'Maintenance', data: structure.maintenanceCost, keys: maintenanceKeys });
       }
     }
-  
-    productionConsumptionElement.innerHTML = detailsText;
+
+    return sections;
+  }
+
+  function collectResourceKeys(resourceObject) {
+    const keys = [];
+    for (const category in resourceObject) {
+      for (const resource in resourceObject[category]) {
+        const val = resourceObject[category][resource];
+        if (val > 0) {
+          keys.push(`${category}.${resource}`);
+        }
+      }
+    }
+    return keys;
+  }
+
+  function buildProdConsElement(element, sections) {
+    element.textContent = '';
+    element._sections = {};
+
+    const keyString = sections
+      .map(sec => {
+        const keys = sec.key === 'provides'
+          ? sec.data.map((_, i) => String(i)).join('|')
+          : (sec.keys || []).join('|');
+        return `${sec.key}:${keys}`;
+      })
+      .join(';');
+
+    sections.forEach((sec, idx) => {
+      const container = document.createElement('span');
+      const label = document.createElement('strong');
+      label.textContent = `${sec.label}:`;
+      container.appendChild(label);
+      container.appendChild(document.createTextNode(' '));
+      const list = document.createElement('span');
+      container.appendChild(list);
+      element.appendChild(container);
+      if (idx < sections.length - 1) {
+        element.appendChild(document.createTextNode(', '));
+      }
+
+      const info = { list, spans: new Map() };
+      if (sec.key === 'provides') {
+        sec.data.forEach((_, i) => {
+          const span = document.createElement('span');
+          info.spans.set(String(i), span);
+          list.appendChild(span);
+          if (i < sec.data.length - 1) {
+            list.appendChild(document.createTextNode(', '));
+          }
+        });
+        info.keys = sec.data.map((_, i) => String(i));
+      } else {
+        sec.keys.forEach((key, i) => {
+          const span = document.createElement('span');
+          info.spans.set(key, span);
+          list.appendChild(span);
+          if (i < sec.keys.length - 1) {
+            list.appendChild(document.createTextNode(', '));
+          }
+        });
+        info.keys = sec.keys;
+      }
+
+      element._sections[sec.key] = info;
+    });
+
+    element.dataset.sectionKeys = keyString;
   }
   
 // Helper function to format production and consumption details
