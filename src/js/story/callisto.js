@@ -285,7 +285,7 @@ progressCallisto.chapters.push(
     id: "chapter9.5",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe.  People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
+    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe.  People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'",
     prerequisites: ["chapter9.4"],
     objectives: [],
     reward: []
