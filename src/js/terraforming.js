@@ -1555,6 +1555,13 @@ synchronizeGlobalResources() {
           if (this.celestialParameters[key] === undefined) {
               this.celestialParameters[key] = this.initialCelestialParameters[key];
           }
+          if(key === 'parentBody'){
+            for (const key2 in this.initialCelestialParameters.parentBody) {
+                if(this.celestialParameters.parentBody[key2] === undefined){
+                    this.celestialParameters.parentBody[key2] = this.initialCelestialParameters.parentBody[key2];
+                }
+            }
+          }
       }
 
       const radiusMeters = this.celestialParameters.radius * 1000;
