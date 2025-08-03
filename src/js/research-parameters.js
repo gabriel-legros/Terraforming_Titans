@@ -1064,8 +1064,8 @@ const researchParameters = {
       {
         id: 'waterImport',
         name: 'Water Importation',
-        description: 'Water is everywhere but more may be needed sometimes.',
-        cost: { research: 500000000 },
+        description: 'Water is everywhere but more may be needed sometimes.  Requires ships.',
+        cost: { research: 50000000 },
         prerequisites: [],
         effects: [
           {target : 'project',
