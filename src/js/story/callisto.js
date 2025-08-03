@@ -58,7 +58,7 @@ progressCallisto.storyProjects.sidestep_assembly = {
   type: 'Project',
   name: 'Assemble Sidestep Engine',
   category: 'story',
-  chapter: 9,
+  chapter: 8,
   cost: {
     colony: { components: 500_000_000, electronics: 100_000_000, energy: 5_000_000_000_000, research: 1_000_000_000 }
   },
@@ -80,7 +80,7 @@ progressCallisto.storyProjects.sidestep_operation = {
   type: 'Project',
   name: 'Operation Sidestep',
   category: 'story',
-  chapter: 10,
+  chapter: 9,
   cost: {
     colony: {research: 100_000_000 }
   },
