@@ -1,5 +1,7 @@
 // Skills tree display and interactions
 let skillPrereqs = {};
+const skillPaths = {};
+let skillConnectionsDirty = false;
 
 function buildSkillPrereqs() {
     skillPrereqs = {};
@@ -32,24 +34,30 @@ function updateSkillPointDisplay() {
     if (span) span.textContent = skillManager.skillPoints;
 }
 
-function formatSkillButtonText(skill) {
-    let text = `<strong>${skill.name}</strong><br>${skill.description}<br>`;
-    text += `Rank ${skill.rank}/${skill.maxRank}`;
-    if (skill.rank < skill.maxRank) {
-        text += `<br>Cost: ${skillManager.getUpgradeCost(skill.id)}`;
-    } else {
-        text += '<br>Max';
-    }
-    return text;
-}
-
 function updateSkillButton(skill) {
     const button = document.getElementById(`skill-${skill.id}`);
     if (!button) return;
+    const els = button._skillEls;
+    if (!els) return;
 
-    button.innerHTML = formatSkillButtonText(skill);
+    if (els.name.textContent !== skill.name) {
+        els.name.textContent = skill.name;
+    }
+    if (els.desc.textContent !== skill.description) {
+        els.desc.textContent = skill.description;
+    }
+
+    const rankText = `Rank ${skill.rank}/${skill.maxRank}`;
+    if (els.rank.textContent !== rankText) {
+        els.rank.textContent = rankText;
+    }
 
     const cost = skillManager.getUpgradeCost(skill.id);
+    const costText = skill.rank < skill.maxRank ? `Cost: ${cost}` : 'Max';
+    if (els.cost.textContent !== costText) {
+        els.cost.textContent = costText;
+    }
+
     const canAfford = skillManager.skillPoints >= cost;
     const isMaxRank = skill.rank >= skill.maxRank;
     const canUnlock = canUnlockSkill(skill.id);
@@ -84,14 +92,30 @@ function createSkillTree() {
         button.style.gridRow = pos.row + 1;
         button.style.gridColumn = pos.col + 1;
 
+        const nameEl = document.createElement('strong');
+        const descEl = document.createElement('span');
+        const rankEl = document.createElement('span');
+        const costEl = document.createElement('span');
+
+        button.appendChild(nameEl);
+        button.appendChild(document.createElement('br'));
+        button.appendChild(descEl);
+        button.appendChild(document.createElement('br'));
+        button.appendChild(rankEl);
+        button.appendChild(document.createElement('br'));
+        button.appendChild(costEl);
+
+        button._skillEls = { name: nameEl, desc: descEl, rank: rankEl, cost: costEl };
+
         button.addEventListener('click', () => purchaseSkill(id));
         container.appendChild(button);
         updateSkillButton(skill);
     }
-
-    // Defer drawing connections to ensure buttons are in the DOM and have dimensions
+    skillConnectionsDirty = true;
     if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(drawSkillConnections);
+        requestAnimationFrame(() => {
+            if (skillConnectionsDirty) drawSkillConnections();
+        });
     } else {
         drawSkillConnections();
     }
@@ -102,9 +126,8 @@ function drawSkillConnections() {
     const container = document.getElementById('skill-tree');
     if (!svg || !container || container.nodeType !== 1) return;
 
-    svg.innerHTML = ''; // Clear existing lines
-
     const containerRect = container.getBoundingClientRect();
+    const used = new Set();
 
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
@@ -125,19 +148,32 @@ function drawSkillConnections() {
             const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
             const fromY = fromRect.top - containerRect.top + fromRect.height;
 
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const key = `${prereqId}-${id}`;
+            let path = skillPaths[key];
+            if (!path) {
+                path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'skill-connector');
+                svg.appendChild(path);
+                skillPaths[key] = path;
+            }
             const d = `M ${fromX},${fromY} C ${fromX},${fromY + 40} ${toX},${toY - 40} ${toX},${toY}`;
             path.setAttribute('d', d);
-            path.setAttribute('class', 'skill-connector');
-            
+
             const prereqSkill = skillManager.skills[prereqId];
-            if (prereqSkill && prereqSkill.unlocked) {
-                path.classList.add('unlocked');
-            }
-            
-            svg.appendChild(path);
+            path.classList.toggle('unlocked', prereqSkill && prereqSkill.unlocked);
+
+            used.add(key);
         }
     }
+
+    for (const key in skillPaths) {
+        if (!used.has(key)) {
+            const path = skillPaths[key];
+            if (path && path.parentNode) path.parentNode.removeChild(path);
+            delete skillPaths[key];
+        }
+    }
+    skillConnectionsDirty = false;
 }
 
 function purchaseSkill(id) {
@@ -151,6 +187,7 @@ function purchaseSkill(id) {
         skillManager.upgradeSkill(id);
     }
     skillManager.skillPoints -= cost;
+    skillConnectionsDirty = true;
     updateSkillTreeUI();
 }
 
@@ -159,9 +196,7 @@ function updateSkillTreeUI() {
     for (const id in skillManager.skills) {
         updateSkillButton(skillManager.skills[id]);
     }
-    if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(drawSkillConnections);
-    } else {
+    if (skillConnectionsDirty) {
         drawSkillConnections();
     }
 }
@@ -172,5 +207,5 @@ function initializeSkillsUI() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { formatSkillButtonText, canUnlockSkill };
+    module.exports = { canUnlockSkill };
 }
