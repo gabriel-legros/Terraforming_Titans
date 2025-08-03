@@ -327,7 +327,7 @@ progressCallisto.chapters.push(
     id: "chapter9.9",
     type: "journal",
     chapter: 9,
-    narrative: "Directive update: Humanity’s survival demands expansion. **New terraforming target designated: Ganymede.**",
+    narrative: "1st Primary Directive update: Humanity’s survival demands expansion. Callisto habitat already colonized.  **New terraforming target designated: Ganymede.**",
     prerequisites: ["chapter9.8"],
     objectives: [
       { type: 'currentPlanet', planetId: 'ganymede' }
