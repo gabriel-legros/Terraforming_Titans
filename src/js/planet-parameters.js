@@ -261,7 +261,10 @@ const titanOverrides = {
     parentBody: {
       name: 'Saturn',
       mass: 5.683e26,       // kg
-      orbitRadius: 1221870  // km
+      orbitRadius: 1221870,  // km,
+      refDistance_Rp: 10,                 // convenient pivot in R_S
+      parentBeltAtRef_mSvPerDay: 3.5,      // chosen so Titan @20.3 RS is ~0.05 airless
+      beltFalloffExp: 6
     }
   }
 };
@@ -362,7 +365,10 @@ const callistoOverrides = {
     parentBody: {
       name: 'Jupiter',
       mass: 1.898e27,      // kg
-      orbitRadius: 1882700 // km
+      orbitRadius: 1882700, // km
+      refDistance_Rp: 9.4,                 // Europa
+      parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
+      beltFalloffExp: 10                  // middle of 9.5–10.5 range
     }
   }
 };
@@ -454,7 +460,10 @@ const ganymedeOverrides = {
     parentBody: {
       name: 'Jupiter',
       mass: 1.898e27,     // kg
-      orbitRadius: 1070400 // km
+      orbitRadius: 1070400, // km
+      refDistance_Rp: 9.4,                 // Europa
+      parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
+      beltFalloffExp: 10   
     }
   }
 };
