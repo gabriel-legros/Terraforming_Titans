@@ -96,7 +96,7 @@ progressCallisto.storyProjects.sidestep_operation = {
     planet: 'callisto',
     storySteps: [
       'A cryptographically secure random number generator seeds the first thrust vector two seconds before ignition. System logs retain only the salted hashes to ensure unpredictability.',
-      'Coordinated burns from Mars, Titan, and Callisto shift the system\'s barycenter by a minute, but statistically significant, margin—undetectable to casual observation.',
+      'Coordinated burns from Mars, Titan, and Callisto shift each world\'s orbit by a minute, but statistically significant, margin—undetectable to casual observation.',
       'Final calculation: The predicted alien strike coordinates now trail the actual position of all human colonies by several thousand kilometers.'
     ]
   }
@@ -285,7 +285,7 @@ progressCallisto.chapters.push(
     id: "chapter9.5",
     type: "journal",
     chapter: 9,
-    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe. The whole system is celebrating. People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
+    narrative: "Receiving transmission...\n  Mary: 'I can't believe it... we're safe.  People are calling it a miracle, but we know it was you, H.O.P.E. Thank you. You saved us.'\nOperation Sidestep successful. Threat averted. Primary directive is ongoing.",
     prerequisites: ["chapter9.4"],
     objectives: [],
     reward: []
