@@ -201,10 +201,9 @@ class Project extends EffectableEntity {
 
   deductSustainResources(deltaTime) {
     if (!this.sustainCost) return;
-    const seconds = 1;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
-        const amount = this.sustainCost[category][resource] * deltaTime;
+        const amount = this.sustainCost[category][resource] * deltaTime / 1000;
         const rate = this.sustainCost[category][resource];
         resources[category][resource].decrease(amount);
         if (resources[category][resource].modifyRate) {
