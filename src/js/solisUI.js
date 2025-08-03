@@ -139,7 +139,41 @@ function initializeSolisUI() {
       container.appendChild(createShopItem(key));
     });
   }
-  
+
+  const questText = document.getElementById('solis-quest-text');
+  if (questText) {
+    questText.textContent = '';
+    const messageSpan = document.createElement('span');
+    messageSpan.id = 'solis-quest-message';
+    messageSpan.textContent = 'No quest available';
+    const detailSpan = document.createElement('span');
+    detailSpan.id = 'solis-quest-detail';
+    detailSpan.classList.add('hidden');
+    const qtySpan = document.createElement('span');
+    qtySpan.id = 'solis-quest-quantity';
+    qtySpan.classList.add('solis-quest-quantity');
+    const resSpan = document.createElement('span');
+    resSpan.id = 'solis-quest-resource';
+    resSpan.classList.add('solis-quest-resource');
+    detailSpan.append('Deliver ', qtySpan, ' units of ', resSpan);
+    questText.append(messageSpan, detailSpan);
+  }
+
+  const cooldownDiv = document.getElementById('solis-cooldown');
+  if (cooldownDiv) {
+    cooldownDiv.textContent = '';
+    const cooldownText = document.createElement('span');
+    cooldownText.id = 'solis-cooldown-text';
+    const barContainer = document.createElement('div');
+    barContainer.classList.add('solis-progress-bar-container');
+    const bar = document.createElement('div');
+    bar.classList.add('solis-progress-bar');
+    bar.id = 'solis-cooldown-bar';
+    bar.style.width = '0%';
+    barContainer.appendChild(bar);
+    cooldownDiv.append(cooldownText, barContainer);
+  }
+
   // New: Set initial button text
   if (multBtn) multBtn.textContent = '+';
   if (divBtn) divBtn.textContent = '-';
@@ -148,12 +182,17 @@ function initializeSolisUI() {
 }
 
 function updateSolisUI() {
-  const questText = document.getElementById('solis-quest-text');
+  const questMessage = document.getElementById('solis-quest-message');
+  const questDetail = document.getElementById('solis-quest-detail');
+  const questQuantitySpan = document.getElementById('solis-quest-quantity');
+  const questResourceSpan = document.getElementById('solis-quest-resource');
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
   const pointsSpan = document.getElementById('solis-points-value');
   const rewardSpan = document.getElementById('solis-reward');
   const cooldownDiv = document.getElementById('solis-cooldown');
+  const cooldownText = document.getElementById('solis-cooldown-text');
+  const cooldownBar = document.getElementById('solis-cooldown-bar');
 
   if (pointsSpan) {
     pointsSpan.textContent = solisManager.solisPoints;
@@ -162,13 +201,18 @@ function updateSolisUI() {
     rewardSpan.textContent = solisManager.rewardMultiplier;
   }
   const quest = solisManager.currentQuest;
-  if (questText) {
+  if (questMessage && questDetail && questQuantitySpan && questResourceSpan) {
     if (quest) {
       const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
       const qty = format(quest.quantity, true);
-      questText.innerHTML = `Deliver <span class="solis-quest-quantity">${qty}</span> units of <span class="solis-quest-resource">${quest.resource}</span>`;
+      questQuantitySpan.textContent = qty;
+      questResourceSpan.textContent = quest.resource;
+      questMessage.classList.add('hidden');
+      questDetail.classList.remove('hidden');
     } else {
-      questText.textContent = 'No new quest available at this time.';
+      questMessage.textContent = 'No new quest available at this time.';
+      questMessage.classList.remove('hidden');
+      questDetail.classList.add('hidden');
     }
   }
   const now = Date.now();
@@ -191,21 +235,18 @@ function updateSolisUI() {
       completeBtn.disabled = true;
     }
   }
-  if (cooldownDiv) {
+  if (cooldownDiv && cooldownText && cooldownBar) {
     const remainingComplete = solisManager.postCompletionCooldownUntil - now;
     if (!quest && remainingComplete > 0) {
       cooldownDiv.classList.remove('hidden');
       const totalCooldown = solisManager.questInterval;
       const progress = Math.max(0, 1 - remainingComplete / totalCooldown);
-      cooldownDiv.innerHTML = `
-        <span>Next quest in ${Math.ceil(remainingComplete / 1000)}s</span>
-        <div class="solis-progress-bar-container">
-          <div class="solis-progress-bar" style="width: ${progress * 100}%"></div>
-        </div>
-      `;
+      cooldownText.textContent = `Next quest in ${Math.ceil(remainingComplete / 1000)}s`;
+      cooldownBar.style.width = `${progress * 100}%`;
     } else {
       cooldownDiv.classList.add('hidden');
-      cooldownDiv.innerHTML = '';
+      cooldownText.textContent = '';
+      cooldownBar.style.width = '0%';
     }
   }
 

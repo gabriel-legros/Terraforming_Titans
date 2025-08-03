@@ -21,9 +21,10 @@ describe('Solis quest cost display', () => {
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'solisUI.js'), 'utf8');
     vm.runInContext(uiCode, ctx);
 
+    ctx.initializeSolisUI();
     ctx.updateSolisUI();
 
-    const html = dom.window.document.getElementById('solis-quest-text').innerHTML;
-    expect(html).toContain(numbers.formatNumber(1500, true));
+    const qty = dom.window.document.getElementById('solis-quest-quantity').textContent;
+    expect(qty).toBe(numbers.formatNumber(1500, true));
   });
 });
