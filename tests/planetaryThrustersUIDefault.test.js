@@ -41,6 +41,37 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.distE.textContent).not.toBe('—');
   });
 
+  test('displays exhaust velocity with tooltip', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
+
+    vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    project.updateUI();
+
+    const expectedVe = (1e5).toLocaleString() + '\u202Fm/s';
+    expect(project.el.veVal.textContent).toBe(expectedVe);
+    const icon = project.el.pwrCard.querySelector('.info-tooltip-icon');
+    expect(icon).not.toBeNull();
+    expect(icon.getAttribute('title')).toMatch(/Specific impulse/);
+    const grid = project.el.pwrCard.querySelector('.stats-grid.two-col');
+    expect(grid).not.toBeNull();
+    expect(grid.children.length).toBe(2);
+  });
+
   test('hides spiral delta v when moon bound', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();

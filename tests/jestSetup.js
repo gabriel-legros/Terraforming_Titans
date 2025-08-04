@@ -21,3 +21,11 @@ if (typeof global.window !== 'undefined') {
 ['log', 'info', 'warn', 'error'].forEach(method => {
   jest.spyOn(console, method).mockImplementation(() => {});
 });
+
+// Provide minimal globals expected by terraforming utilities
+if (typeof global.resources === 'undefined') {
+  global.resources = { atmospheric: {} };
+}
+if (typeof global.calculateAtmosphericPressure === 'undefined') {
+  global.calculateAtmosphericPressure = () => 0;
+}

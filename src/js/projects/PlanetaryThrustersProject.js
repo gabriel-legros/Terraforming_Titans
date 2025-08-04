@@ -106,9 +106,9 @@ class PlanetaryThrustersProject extends Project{
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
     <div class="card-body">
       <div class="power-controls-wrapper">
-        <div class="invested-container">
-          <span class="stat-label">Continuous:</span>
-          <span id="pwrVal" class="stat-value">0</span>
+        <div class="stats-grid two-col">
+          <div><span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
+          <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
         </div>
         <div class="thruster-power-controls">
           <div class="main-buttons">
@@ -133,7 +133,8 @@ class PlanetaryThrustersProject extends Project{
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
-      pwrVal:g('#pwrVal',pwrCard),pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
+      pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),
+      pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
 
     /* listeners */
@@ -227,6 +228,7 @@ class PlanetaryThrustersProject extends Project{
         fmt(p.parentBody.orbitRadius,false,0)+" km" :
         fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
+    if(this.el.veVal) this.el.veVal.textContent = fmt(FUSION_VE,false,0)+" m/s";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);
 
