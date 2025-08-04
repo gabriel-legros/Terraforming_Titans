@@ -126,8 +126,6 @@ class PlanetaryThrustersProject extends Project{
             <button id="pDiv">/10</button><button id="pMul">x10</button>
           </div>
         </div>
-        <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
-        <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="An ideal rocket's thrust-to-power ratio equals 2 divided by exhaust velocity.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(2/FUSION_VE,false,6)} N/W</span></div>
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
