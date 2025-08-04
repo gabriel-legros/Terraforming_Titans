@@ -60,6 +60,7 @@ class PlanetaryThrustersProject extends Project{
     this.escapePhase=false;
     this.startAU=null;
 
+    this.energySpentSpin=0;this.energySpentMotion=0;
     this.el={};
   }
 
@@ -111,6 +112,17 @@ class PlanetaryThrustersProject extends Project{
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
     motCard.style.display=this.isCompleted?"block":"none";
 
+    /* energy spent */
+    const spentHTML=`<div class="card-header"><span class="card-title">Energy Spent</span></div>
+    <div class="card-body">
+      <div class="stats-grid two-col">
+        <div><span class="stat-label">Spin:</span><span id="spinSpent" class="stat-value">0</span></div>
+        <div><span class="stat-label">Motion:</span><span id="motSpent" class="stat-value">0</span></div>
+      </div>
+    </div>`;
+    const spentCard=document.createElement('div');spentCard.className="info-card";spentCard.innerHTML=spentHTML;c.appendChild(spentCard);
+    spentCard.style.display=this.isCompleted?"block":"none";
+
     /* power */
     const veDisplay = this.hasTractorBeams()
       ? 'N/A'
@@ -138,7 +150,7 @@ class PlanetaryThrustersProject extends Project{
     const g=(sel,r)=>r.querySelector(sel);
     const distTargetEl = g('#distTarget', motCard);
     const distDvEl = g('#distDv', motCard);
-    this.el={spinCard, motCard, pwrCard,
+    this.el={spinCard, motCard, spentCard, pwrCard,
       rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
       distNow:g('#distNow',motCard),distTarget:distTargetEl,
@@ -148,6 +160,7 @@ class PlanetaryThrustersProject extends Project{
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
+      spinSpent:g('#spinSpent',spentCard),motionSpent:g('#motSpent',spentCard),
       pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),tpVal:g('#tpVal',pwrCard),
       pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
@@ -216,12 +229,14 @@ class PlanetaryThrustersProject extends Project{
     this.dVdone=0;
 
     if(this.spinInvest){
+      this.energySpentSpin=0;
       this.spinStartDays=getRotHours(p)/24;
       this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
       return;
     }
 
     if(this.motionInvest){
+      this.energySpentMotion=0;
       if(p.parentBody){
         this.escapePhase=true;
         this.dVreq=escapeDeltaV(p.parentBody.mass,p.parentBody.orbitRadius);
@@ -239,6 +254,7 @@ class PlanetaryThrustersProject extends Project{
       const vis = this.isCompleted ? 'block' : 'none';
       this.el.spinCard.style.display = vis;
       this.el.motCard.style.display = vis;
+      this.el.spentCard.style.display = vis;
       this.el.pwrCard.style.display = vis;
     }
     const p=terraforming.celestialParameters||{};
@@ -303,6 +319,13 @@ class PlanetaryThrustersProject extends Project{
         this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
       }
     }
+
+    if(this.el.spinSpent){
+      this.el.spinSpent.textContent = formatEnergy(this.energySpentSpin);
+    }
+    if(this.el.motionSpent){
+      this.el.motionSpent.textContent = formatEnergy(this.energySpentMotion);
+    }
   }
 
 /* ---------- power controls ------------------------------------------- */
@@ -320,6 +343,9 @@ class PlanetaryThrustersProject extends Project{
     const need=this.power*dt;
     if(resources.colony.energy.value<need) return;
     resources.colony.energy.decrease(need);
+
+    if(this.spinInvest){ this.energySpentSpin += need; }
+    else if(this.motionInvest){ this.energySpentMotion += need; }
 
     const a=this.power*this.getThrustPowerRatio()/p.mass;
     const dvTick=a*dt; this.dVdone+=dvTick;
@@ -347,6 +373,7 @@ class PlanetaryThrustersProject extends Project{
           this.escapePhase=false;this.startAU=p.distanceFromSun;
           this.dVdone=0;
           this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
+          this.energySpentMotion=0;
           this.calcMotionCost();this.updateUI();return;
         }else{
           r=-mu/(2*E);p.parentBody.orbitRadius=r/1e3;
@@ -391,6 +418,8 @@ class PlanetaryThrustersProject extends Project{
     state.spinStartDays = this.spinStartDays;
     state.escapePhase = this.escapePhase;
     state.startAU = this.startAU;
+    state.energySpentSpin = this.energySpentSpin;
+    state.energySpentMotion = this.energySpentMotion;
     return state;
   }
 
@@ -407,6 +436,8 @@ class PlanetaryThrustersProject extends Project{
     this.spinStartDays = state.spinStartDays ?? null;
     this.escapePhase = state.escapePhase || false;
     this.startAU = state.startAU ?? null;
+    this.energySpentSpin = state.energySpentSpin || 0;
+    this.energySpentMotion = state.energySpentMotion || 0;
   }
 }
 

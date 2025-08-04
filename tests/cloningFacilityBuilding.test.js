@@ -12,7 +12,7 @@ describe('Cloning Facility building', () => {
     vm.runInContext(code + '; this.buildingsParameters = buildingsParameters;', ctx);
     const building = ctx.buildingsParameters.cloningFacility;
     expect(building).toBeDefined();
-    expect(building.consumption.colony.energy).toBe(500000);
+    expect(building.consumption.colony.energy).toBe(100000000);
     expect(building.production.colony.colonists).toBe(0.1);
   });
 });
