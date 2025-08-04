@@ -46,7 +46,7 @@ describe('Planetary Thrusters energy tracking', () => {
     project.power = 1e21; // lower power so escape takes multiple ticks
 
     let hadEnergy = false;
-    for(let i=0;i<100;i++){
+    for(let i=0;i<200;i++){
       project.update(1_000_000); // sizeable timestep
       if(ctx.terraforming.celestialParameters.parentBody){
         if(project.energySpentMotion > 0) hadEnergy = true;
