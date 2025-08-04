@@ -18,7 +18,15 @@ describe('ScannerProject UI update', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.resources = { colony: { colonists: { value: 15000, displayName: 'Colonists' }, metal:{value:0,decrease(){},updateStorageCap(){}}, electronics:{value:0,decrease(){},updateStorageCap(){}}, energy:{value:0,decrease(){},updateStorageCap(){}} } };
+    ctx.resources = {
+      colony: {
+        colonists: { value: 15000, displayName: 'Colonists' },
+        metal:{value:0,decrease(){},updateStorageCap(){}},
+        electronics:{value:0,decrease(){},updateStorageCap(){}},
+        energy:{value:0,decrease(){},updateStorageCap(){}}
+      },
+      underground: { ore: { value: 0, addDeposit(){} } }
+    };
     ctx.oreScanner = { scanData:{ ore:{ currentScanningStrength:0 } }, adjustScanningStrength(){}, startScan(){} };
 
     vm.createContext(ctx);
@@ -28,12 +36,15 @@ describe('ScannerProject UI update', () => {
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
     const project = new ctx.ScannerProject(ctx.projectParameters.satellite, 'sat');
+    project.initializeScanner({ resources: { underground: { ore: { initialValue: 0, maxDeposits: 10, areaTotal: 100 } } } });
     const container = ctx.document.getElementById('c');
     project.renderUI(container);
     project.updateUI();
 
     expect(project.el.val.textContent).toBe('1');
     expect(project.el.max.textContent).toBe('2');
+    expect(project.el.dVal.textContent).toBe('0');
+    expect(project.el.dMax.textContent).toBe('10');
     expect(project.el.bPlus.textContent).toBe('+1');
     expect(project.el.bMinus.textContent).toBe('-1');
 

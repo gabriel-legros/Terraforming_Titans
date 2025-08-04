@@ -311,6 +311,7 @@ class ScannerProject extends Project {
   renderUI(container) {
     const wrapper = document.createElement('div');
     wrapper.className = 'power-controls-wrapper';
+
     const countContainer = document.createElement('div');
     countContainer.className = 'invested-container';
     const label = document.createElement('span');
@@ -352,9 +353,37 @@ class ScannerProject extends Project {
 
     controls.append(main, mult);
     wrapper.append(countContainer, controls);
+
     container.appendChild(wrapper);
 
+    let dVal, dMax;
+    if (this.attributes?.scanner?.depositType) {
+      const depositContainer = document.createElement('div');
+      depositContainer.className = 'invested-container';
+      const dLabel = document.createElement('span');
+      dLabel.className = 'stat-label';
+      dLabel.textContent = 'Deposits:';
+      dVal = document.createElement('span');
+      dVal.id = `${this.name}-deposit-current`;
+      dVal.className = 'stat-value';
+      const dSlash = document.createElement('span');
+      dSlash.textContent = ' / ';
+      dMax = document.createElement('span');
+      dMax.id = `${this.name}-deposit-max`;
+      dMax.className = 'stat-value';
+      const dInfo = document.createElement('span');
+      dInfo.className = 'info-tooltip-icon';
+      dInfo.title = 'Shows discovered and maximum deposits satellites can find on this planet.';
+      dInfo.innerHTML = '&#9432;';
+      depositContainer.append(dLabel, dVal, dSlash, dMax, dInfo);
+      container.appendChild(depositContainer);
+    }
+
     this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0 };
+    if (dVal && dMax) {
+      this.el.dVal = dVal;
+      this.el.dMax = dMax;
+    }
 
     const refresh = () => {
       if (typeof updateProjectUI === 'function') {
@@ -380,6 +409,14 @@ class ScannerProject extends Project {
     }
     if (this.el.bMinus) {
       this.el.bMinus.textContent = `-${formatNumber(this.step, true)}`;
+    }
+    if (this.el.dVal && this.el.dMax) {
+      const depositType = this.attributes?.scanner?.depositType;
+      const data = depositType && this.scanData ? this.scanData[depositType] : null;
+      const current = data ? data.D_current : 0;
+      const max = data ? data.D_max : 0;
+      this.el.dVal.textContent = formatNumber(current, true);
+      this.el.dMax.textContent = formatNumber(max, true);
     }
   }
 
