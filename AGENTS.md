@@ -330,3 +330,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Planetary thruster Spin and Motion cards now include Energy Spent columns that persist when investment is toggled; motion energy resets only after a moon escapes its parent.
 - Planetary thrusters now display an Energy Spent section tracking energy used for spin and motion and resetting after a moon escape.
 - Planetary thruster invest selections now persist through saves and reloads with checkboxes and targets restored on load.
+- Satellite projects now display discovered and maximum deposit counts.
