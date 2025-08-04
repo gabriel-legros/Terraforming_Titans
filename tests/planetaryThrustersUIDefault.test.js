@@ -96,7 +96,7 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.tpVal.textContent).toBe(expectedTP);
     const icons = project.el.pwrCard.querySelectorAll('.info-tooltip-icon');
     expect(icons.length).toBe(2);
-    expect(icons[0].getAttribute('title')).toMatch(/Specific impulse/);
+    expect(icons[0].getAttribute('title')).toMatch(/Specific Impulse/i);
     expect(icons[1].getAttribute('title')).toMatch(/thrust-to-power ratio/i);
     const grid = project.el.pwrCard.querySelector('.stats-grid.four-col');
     expect(grid).not.toBeNull();
@@ -106,7 +106,7 @@ describe('Planetary Thrusters UI', () => {
     expect(grid.children[0].querySelector('.thruster-power-controls')).toBeNull();
   });
 
-  test('hides spiral delta v when moon bound', () => {
+  test('hides target and spiral delta v when moon bound', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -129,7 +129,9 @@ describe('Planetary Thrusters UI', () => {
     ctx.projectElements = vm.runInContext('projectElements', ctx);
     project.updateUI();
 
-    expect(project.el.distDv.textContent).toBe('—');
+    expect(project.el.distTargetRow.style.display).toBe('none');
+    expect(project.el.distDvRow.style.display).toBe('none');
     expect(project.el.escRow.style.display).toBe('block');
+    expect(project.tgtAU).toBe(1);
   });
 });

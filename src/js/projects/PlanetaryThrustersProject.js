@@ -136,11 +136,15 @@ class PlanetaryThrustersProject extends Project{
 
     /* refs */
     const g=(sel,r)=>r.querySelector(sel);
+    const distTargetEl = g('#distTarget', motCard);
+    const distDvEl = g('#distDv', motCard);
     this.el={spinCard, motCard, pwrCard,
       rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
-      distNow:g('#distNow',motCard),distTarget:g('#distTarget',motCard),
-      distDv:g('#distDv',motCard),distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
+      distNow:g('#distNow',motCard),distTarget:distTargetEl,
+      distTargetRow:distTargetEl.parentElement,
+      distDv:distDvEl,distDvRow:distDvEl.parentElement,
+      distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
@@ -180,11 +184,11 @@ class PlanetaryThrustersProject extends Project{
 
   calcMotionCost(){
     const p=terraforming.celestialParameters;if(!p)return;
-    const tgt=parseFloat(this.el.distTarget.value)||1;
-    this.tgtAU=tgt;
-
     const parent=p.parentBody;
     if(parent){
+      this.tgtAU=1;
+      this.el.distTargetRow.style.display="none";
+      this.el.distDvRow.style.display="none";
       const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
       this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
       this.el.escRow.style.display="block";
@@ -194,6 +198,10 @@ class PlanetaryThrustersProject extends Project{
       this.el.distDv.textContent="—";
       this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
     }else{
+      const tgt=parseFloat(this.el.distTarget.value)||1;
+      this.tgtAU=tgt;
+      this.el.distTargetRow.style.display="block";
+      this.el.distDvRow.style.display="block";
       this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
@@ -263,14 +271,10 @@ class PlanetaryThrustersProject extends Project{
     }
 
     if(this.el.distTarget){
-      let tgtAU = 1;
-      try{
-        const v=this.el.distTarget.value;
-        const n=parseFloat(v);
-        if(!isNaN(n)) tgtAU=n;
-      }catch(e){ tgtAU=1; }
-      this.tgtAU = tgtAU;
       if(p && p.parentBody){
+        this.tgtAU = 1;
+        this.el.distTargetRow.style.display="none";
+        this.el.distDvRow.style.display="none";
         const parent=p.parentBody;
         const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
         this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
@@ -279,8 +283,18 @@ class PlanetaryThrustersProject extends Project{
         this.el.parentName.textContent=parent.name||"Parent";
         this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
         this.el.distDv.textContent="—";
-        this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
+        const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):esc;
+        this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
       }else if(p){
+        let tgtAU = 1;
+        try{
+          const v=this.el.distTarget.value;
+          const n=parseFloat(v);
+          if(!isNaN(n)) tgtAU=n;
+        }catch(e){ tgtAU=1; }
+        this.tgtAU = tgtAU;
+        this.el.distTargetRow.style.display="block";
+        this.el.distDvRow.style.display="block";
         this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
         const curAU=p.distanceFromSun||tgtAU;
         const dv=spiralDeltaV(curAU,tgtAU);
