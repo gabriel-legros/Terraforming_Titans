@@ -340,14 +340,16 @@ class PlanetaryThrustersProject extends Project{
 
     const p=terraforming.celestialParameters;if(!p)return;
     const dt=dtMs/1000;
-    const need=this.power*dt*86400;
+    const need=this.power*dt;
     if(resources.colony.energy.value<need) return;
     resources.colony.energy.decrease(need);
 
-    if(this.spinInvest){ this.energySpentSpin += need; }
-    else if(this.motionInvest){ this.energySpentMotion += need; }
+    const energySpent=need*86400;
 
-    const a=this.power*this.getThrustPowerRatio()/p.mass;
+    if(this.spinInvest){ this.energySpentSpin += energySpent; }
+    else if(this.motionInvest){ this.energySpentMotion += energySpent; }
+
+    const a=this.power*this.getThrustPowerRatio()/p.mass*86400;
     const dvTick=a*dt; this.dVdone+=dvTick;
 
     /* ------ spin -------- */
