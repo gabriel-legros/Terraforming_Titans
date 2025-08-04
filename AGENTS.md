@@ -333,5 +333,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Satellite projects now display discovered and maximum deposit counts.
 - Dyson Swarm collectors now contribute their generated energy to the colony instead of only displaying it.
 - Moon-based planetary thrusters show an Escape Δv row and hide spiral Δv when bound to a parent body.
+- Escaped bodies keep their parent reference but set `hasEscapedParent` to track the event.
 - ProjectManager now applies project gains each tick via applyCostAndGain, keeping estimateCostAndGain as a pure rate estimate.
 - Ore and geothermal satellite UI now split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
