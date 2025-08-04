@@ -96,7 +96,7 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.tpVal.textContent).toBe(expectedTP);
     const icons = project.el.pwrCard.querySelectorAll('.info-tooltip-icon');
     expect(icons.length).toBe(2);
-    expect(icons[0].getAttribute('title')).toMatch(/Specific impulse/);
+    expect(icons[0].getAttribute('title')).toMatch(/Specific impulse/i);
     expect(icons[1].getAttribute('title')).toMatch(/thrust-to-power ratio/i);
     const grid = project.el.pwrCard.querySelector('.stats-grid.four-col');
     expect(grid).not.toBeNull();
