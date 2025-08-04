@@ -40,9 +40,33 @@ function translationalEnergyRemaining(p,dvRem,tpRatio){
   return p.mass * dvRem / tpRatio;
 }
 
-function escapeDeltaV(parentM,orbitRkm){
-  const r=orbitRkm*1e3; const vo=Math.sqrt(G*parentM/r);
-  return (Math.SQRT2-1)*vo;
+// Hill radius in **meters**
+function hillRadiusMeters(parent, starMass = SOLAR_MASS) {
+  const a = (parent.distanceFromSun ?? 1) * AU_IN_METERS; // parent's heliocentric a
+  return a * Math.cbrt(parent.mass / (3 * starMass));
+}
+
+// Δv to raise **apoapsis** from r0 -> rA (tangential burn at r0), two-body about parent
+function dvRaiseApoapsis(mu, r0, rA) {
+  const v0 = Math.sqrt(mu / r0);
+  return v0 * (Math.sqrt((2 * rA) / (r0 + rA)) - 1);
+}
+
+// New: Δv to send the moon onto an ellipse with apogee ~ L1/Hill
+function escapeDeltaVToHill(parent, orbitRkm, starMass = SOLAR_MASS, factor = ESCAPE_L1_FACTOR) {
+  const mu = G * parent.mass;
+  const r0 = orbitRkm * 1e3;
+  const rA = hillRadiusMeters(parent, starMass) * factor;
+  if (rA <= r0) return 0;
+  return dvRaiseApoapsis(mu, r0, rA);
+}
+
+function escapeSpiralDeltaV(r1_km, r2_m, parent_mass) {
+  const r1 = r1_km * 1e3;
+  const mu = G * parent_mass;
+  // Ensure r2 is greater than r1 to avoid negative sqrt
+  if (r2_m <= r1) return 0;
+  return Math.sqrt(mu / r1) - Math.sqrt(mu / r2_m);
 }
 
 /* ========================================================================= */
@@ -106,6 +130,9 @@ class PlanetaryThrustersProject extends Project{
         <div id="escapeRow" style="display:none;">
              <span class="stat-label">Escape Δv:</span><span id="escDv" class="stat-value">—</span>
         </div>
+        <div id="hillRow" style="display:none;">
+            <span class="stat-label">Hill Radius:</span><span id="hillVal" class="stat-value">—</span>
+        </div>
         <div><span class="stat-label">Energy Cost:</span><span id="distE" class="stat-value">—</span></div>
         <div><span class="stat-label">Energy Spent:</span><span id="distSpent" class="stat-value">0</span></div>
       </div>
@@ -150,6 +177,7 @@ class PlanetaryThrustersProject extends Project{
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
       distE:g('#distE',motCard),distCb:g('#distInvest',motCard),distSpent:g('#distSpent',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
+      hillRow:g('#hillRow',motCard),hillVal:g('#hillVal',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
       pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),tpVal:g('#tpVal',pwrCard),
@@ -210,16 +238,19 @@ class PlanetaryThrustersProject extends Project{
     const parent=p.parentBody;
     if(parent){
       this.tgtAU=1;
-      this.el.distTargetRow.style.display="none";
-      this.el.distDvRow.style.display="none";
-      const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
-      this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
-      this.el.escRow.style.display="block";
-      this.el.parentRow.style.display="block";this.el.moonWarn.style.display="block";
-      this.el.parentName.textContent=parent.name||"Parent";
-      this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
-      this.el.distDv.textContent="—";
-      this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
+      this.el.distTargetRow.style.display = "none";
+      this.el.distDvRow.style.display = "block"; // Show spiral Δv
+      const r_hill = hillRadius(p, parent);
+      const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
+      this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
+      this.el.escRow.style.display = "none"; // Hide old escape row
+      this.el.parentRow.style.display = "block";
+      this.el.moonWarn.style.display = "block";
+      this.el.hillRow.style.display = "block";
+      this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
+      this.el.parentName.textContent = parent.name || "Parent";
+      this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+      this.el.distE.textContent = formatEnergy(p.mass * esc / this.getThrustPowerRatio());
       if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
     }else{
       const tgt=parseFloat(this.el.distTarget.value)||1;
@@ -253,7 +284,8 @@ class PlanetaryThrustersProject extends Project{
       if(reset) this.energySpentMotion=0;
       if(p.parentBody){
         this.escapePhase=true;
-        this.dVreq=escapeDeltaV(p.parentBody.mass,p.parentBody.orbitRadius);
+        const r_hill = hillRadius(p, p.parentBody);
+        this.dVreq = escapeSpiralDeltaV(p.parentBody.orbitRadius, r_hill, p.parentBody.mass);
       }else{
         this.escapePhase=false;
         if(reset || this.startAU===null) this.startAU=p.distanceFromSun;
@@ -307,13 +339,16 @@ class PlanetaryThrustersProject extends Project{
         this.el.distTargetRow.style.display="none";
         this.el.distDvRow.style.display="none";
         const parent=p.parentBody;
-        const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
-        this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
-        this.el.escRow.style.display="block";
-        this.el.parentRow.style.display="block";this.el.moonWarn.style.display="block";
-        this.el.parentName.textContent=parent.name||"Parent";
-        this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
-        this.el.distDv.textContent="—";
+        const r_hill = hillRadius(p, parent);
+        const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
+        this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
+        this.el.escRow.style.display = "none";
+        this.el.parentRow.style.display = "block";
+        this.el.moonWarn.style.display = "block";
+        this.el.hillRow.style.display = "block";
+        this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
+        this.el.parentName.textContent = parent.name || "Parent";
+        this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
         const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):esc;
         this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
       }else if(p){
@@ -326,7 +361,7 @@ class PlanetaryThrustersProject extends Project{
         this.tgtAU = tgtAU;
         this.el.distTargetRow.style.display="block";
         this.el.distDvRow.style.display="block";
-        this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
+        this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display=this.el.hillRow.style.display="none";
         const curAU=p.distanceFromSun||tgtAU;
         const dv=spiralDeltaV(curAU,tgtAU);
         this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
@@ -379,21 +414,39 @@ class PlanetaryThrustersProject extends Project{
 
     /* ------ motion ------- */
     if(this.motionInvest){
-      if(this.escapePhase && p.parentBody){
-        const mu=G*p.parentBody.mass;
-        let r=p.parentBody.orbitRadius*1e3;
-        const v=Math.sqrt(mu/r);
-        let E=-mu/(2*r)+v*a*dt;
-        if(E>=0){
-          p.distanceFromSun=p.parentBody.distanceFromSun;
+      if (this.escapePhase && p.parentBody) {
+        const parent = p.parentBody;
+        const mu = G * parent.mass;
+        const starM = (p.starMass || SOLAR_MASS);
+
+        // Current circular orbit about parent
+        let r = parent.orbitRadius * 1e3;
+        const v = Math.sqrt(mu / r);
+
+        // Energy after this tick (tangential thrust)
+        let E = -mu / (2 * r) + v * a * dt;  // a is your (possibly scaled) tangential accel
+
+        // Target: transfer ellipse with apogee at L1/Hill
+        const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(parent, starM) / 1e3)) * 1e3;
+        const a_trans = 0.5 * (r + rL1);
+        const E_req = -mu / (2 * a_trans);
+
+        if (E >= E_req || this.dVdone >= this.dVreq) {
+          // Detach to heliocentric motion, co-orbital with the parent
+          p.distanceFromSun = parent.distanceFromSun;
           delete p.parentBody;
-          this.escapePhase=false;this.startAU=p.distanceFromSun;
-          this.dVdone=0;
-          this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
-          this.energySpentMotion=0;
-          this.calcMotionCost();this.updateUI();return;
-        }else{
-          r=-mu/(2*E);p.parentBody.orbitRadius=r/1e3;
+          this.escapePhase = false;
+          this.startAU = p.distanceFromSun;
+          this.dVdone = 0;
+          this.energySpentMotion = 0;    // optional reset for clarity
+          this.dVreq = spiralDeltaV(this.startAU, this.tgtAU);
+          this.calcMotionCost();
+          this.updateUI();
+          return;
+        } else {
+          // Advance to new (circularized) radius from the updated energy
+          const a_new = -mu / (2 * E);
+          parent.orbitRadius = a_new / 1e3;
         }
       }else{
         const mu=G*SOLAR_MASS;
