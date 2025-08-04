@@ -68,6 +68,11 @@ function dvToCircularAtRadius(mu, r0, rTarget) {
   return Math.sqrt(mu / r0) - Math.sqrt(mu / rTarget);
 }
 
+// Helper: treat as bound only if a parent exists **and** we haven't marked escape
+function isBoundToParent(p){
+  return !!(p && p.parentBody && !p.hasEscapedParent);
+}
+
 /* ========================================================================= */
 class PlanetaryThrustersProject extends Project{
 
@@ -80,12 +85,13 @@ class PlanetaryThrustersProject extends Project{
 
     this.dVreq=0;this.dVdone=0;
     this.spinStartDays=null;
-    this.escapePhase=false;
+    this.escapePhase=false;          // transient state while spiraling out
     this.startAU=null;
 
     this.energySpentSpin=0;this.energySpentMotion=0;
     this.activeMode=null;
     this.escapeTargetRkm = null;
+    this.escapeComplete = false;     // persisted fallback if planet flag unavailable on load
     this.el={};
   }
 
@@ -239,37 +245,39 @@ class PlanetaryThrustersProject extends Project{
 
   calcMotionCost(){
     const p=terraforming.celestialParameters;if(!p)return;
-    const parent=p.parentBody;
-    if(parent){
-      this.tgtAU=1;
-      this.el.distTargetRow.style.display = "none";
-      this.el.distDvRow.style.display = "none"; // preview via Escape row for moons
-      const starM = (p.starMass || SOLAR_MASS);
-      const r_hill_m = hillRadiusMeters(p, parent, starM);
-      // Show **arrival** cost (spiral to L1), not just injection
-      const escArrival = dvToCircularAtRadius(G*parent.mass, parent.orbitRadius*1e3, r_hill_m);
-      this.el.escDv.textContent = fmt(escArrival, false, 3) + " m/s";
-      this.el.escRow.style.display = "block"; // Show escape row
-      this.el.parentRow.style.display = "block";
-      this.el.moonWarn.style.display = "block";
-      this.el.hillRow.style.display = "block";
-      this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
-      this.el.parentName.textContent = parent.name || "Parent";
-      this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-      this.el.distE.textContent = formatEnergy(p.mass * escArrival / this.getThrustPowerRatio());
-      if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
-    }else{
+    // If we've escaped previously, ignore parent for preview and show heliocentric costs
+    if(!isBoundToParent(p)){
       const tgt=parseFloat(this.el.distTarget.value)||1;
       const changed = tgt !== this.tgtAU;
       this.tgtAU=tgt;
       this.el.distTargetRow.style.display="block";
       this.el.distDvRow.style.display="block";
-      this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
+      this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display=this.el.hillRow.style.display="none";
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
       if(this.motionInvest && (changed || this.dVreq===0)) { this.prepareJob(true); this.activeMode='motion'; }
+      return;
     }
+
+    const parent=p.parentBody;
+    this.tgtAU=1;
+    this.el.distTargetRow.style.display = "none";
+    this.el.distDvRow.style.display = "none"; // preview via Escape row for moons
+    const starM = (p.starMass || SOLAR_MASS);
+    const r_hill_m = hillRadiusMeters(p, parent, starM);
+    // Show **arrival** cost (spiral to L1), not just injection
+    const escArrival = dvToCircularAtRadius(G*parent.mass, parent.orbitRadius*1e3, r_hill_m);
+    this.el.escDv.textContent = fmt(escArrival, false, 3) + " m/s";
+    this.el.escRow.style.display = "block"; // Show escape row
+    this.el.parentRow.style.display = "block";
+    this.el.moonWarn.style.display = "block";
+    this.el.hillRow.style.display = "block";
+    this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
+    this.el.parentName.textContent = parent.name || "Parent";
+    this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+    this.el.distE.textContent = formatEnergy(p.mass * escArrival / this.getThrustPowerRatio());
+    if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
   }
 
 /* ---------- job preparation ------------------------------------------ */
@@ -288,12 +296,12 @@ class PlanetaryThrustersProject extends Project{
 
     if(this.motionInvest){
       if(reset) this.energySpentMotion=0;
-      if (p.parentBody) {
+      if (isBoundToParent(p)) {
         this.escapePhase = true;
         const starM = (p.starMass || SOLAR_MASS);
         const r_hill_m = hillRadiusMeters(p, p.parentBody, starM);
         this.escapeTargetRkm = r_hill_m / 1e3; // store km
-        // Use **arrival** cost so UI and threshold match
+        // Use **arrival** cost so UI and threshold match; keep for progress bars if desired
         this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, p.parentBody.orbitRadius*1e3, r_hill_m);
       }else{
         this.escapePhase=false;
@@ -314,9 +322,15 @@ class PlanetaryThrustersProject extends Project{
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     const p=terraforming.celestialParameters||{};
+
+    // If the project state says we escaped, mirror that onto the planet on load
+    if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
+
     this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
-    // Always show heliocentric distance from the planet (per data model)
-    this.el.distNow.textContent = fmt(p.distanceFromSun||0,false,3)+" AU";
+    // Show parent-centric radius when truly bound; heliocentric AU otherwise
+    this.el.distNow.textContent = isBoundToParent(p)
+      ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
+      : fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
       ? 'N/A'
@@ -342,17 +356,21 @@ class PlanetaryThrustersProject extends Project{
     }
 
     if(this.el.distTarget){
-      if(p && p.parentBody){
+      if(isBoundToParent(p)){
         this.tgtAU = 1;
         this.el.distTargetRow.style.display="none";
         this.el.distDvRow.style.display="none"; // use Escape row when bound to parent
         const parent=p.parentBody;
         const starM = (p.starMass || SOLAR_MASS);
         const r_hill_m = hillRadiusMeters(p, parent, starM);
-        // Preview uses **arrival** cost for consistency with threshold
-        const dvPreview = dvToCircularAtRadius(G*parent.mass, parent.orbitRadius*1e3, r_hill_m);
+
+        // Compute **remaining** Δv from current parent radius to Hill/L1
+        const mu = G*parent.mass;
+        const r_now_m = parent.orbitRadius*1e3;
+        const dvRemaining = dvToCircularAtRadius(mu, r_now_m, r_hill_m);
+
         this.el.escRow.style.display = "block";
-        this.el.escDv.textContent = fmt(dvPreview, false, 3) + " m/s";
+        this.el.escDv.textContent = fmt(dvRemaining, false, 3) + " m/s";
         this.el.parentRow.style.display = "block";
         this.el.moonWarn.style.display = "block";
         this.el.hillRow.style.display = "block";
@@ -360,10 +378,8 @@ class PlanetaryThrustersProject extends Project{
         this.el.parentName.textContent = parent.name || "Parent";
         this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
 
-        // Show remaining energy based on active job if present; else preview
-        const usingJob  = this.motionInvest && this.dVreq > 0;
-        const dvRem     = usingJob ? Math.max(0, this.dVreq - this.dVdone) : dvPreview;
-        this.el.distE.textContent = formatEnergy(p.mass * dvRem / this.getThrustPowerRatio());
+        // Energy cost reflects **remaining** Δv (not job bookkeeping)
+        this.el.distE.textContent = formatEnergy(p.mass * dvRemaining / this.getThrustPowerRatio());
       }else if(p){
         let tgtAU = 1;
         try{
@@ -378,6 +394,7 @@ class PlanetaryThrustersProject extends Project{
         const curAU=p.distanceFromSun||tgtAU;
         const dvPreview=spiralDeltaV(curAU,tgtAU);
         this.el.distDv.textContent=fmt(dvPreview,false,3)+" m/s";
+        // For heliocentric moves, show remaining dv based on job when active
         const usingJob  = this.motionInvest && this.dVreq > 0;
         const dvRem     = usingJob ? Math.max(0,this.dVreq-this.dVdone) : dvPreview;
         this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
@@ -403,6 +420,10 @@ class PlanetaryThrustersProject extends Project{
     if((!this.spinInvest && !this.motionInvest) || this.power<=0) return;
 
     const p=terraforming.celestialParameters;if(!p)return;
+
+    // If project says we escaped earlier, mirror that onto the planet (handles load-order)
+    if(this.escapeComplete && !p.hasEscapedParent){ p.hasEscapedParent = true; }
+
     const dt=dtMs/1000;
     const need=this.power*dt;
     if(resources.colony && resources.colony.energy && resources.colony.energy.value<need) return;
@@ -428,7 +449,7 @@ class PlanetaryThrustersProject extends Project{
 
     /* ------ motion ------- */
     if(this.motionInvest){
-      if (this.escapePhase && p.parentBody) {
+      if (isBoundToParent(p)) { // escape phase while truly bound to a parent
         const parent = p.parentBody;
         const mu = G * parent.mass;
         const starM = (p.starMass || SOLAR_MASS);
@@ -443,24 +464,25 @@ class PlanetaryThrustersProject extends Project{
         // Threshold: **arrive** at L1/Hill radius (not just injection)
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
 
-        if (r >= rL1 || this.dVdone >= this.dVreq) {
-          // Detach to heliocentric motion, co-orbital with the parent
-          // (distanceFromSun is already stored on the planet per data model)
-          delete p.parentBody;
+        // Advance to new (circularized) radius from the updated energy
+        const a_new = -mu / (2 * Math.max(E, -mu/(2*r)*0.999999)); // guard against E>=0 numeric edge
+        parent.orbitRadius = a_new / 1e3;
+        r = a_new; // update local meters value
+
+        if (r >= rL1) {
+          // Mark escaped without deleting parent to avoid save/load regeneration issues
+          p.hasEscapedParent = true;
+          this.escapeComplete = true;
           this.escapePhase = false;
-          this.startAU = p.distanceFromSun;
+          this.startAU = p.distanceFromSun; // stays on the planet per your model
           this.dVdone = 0;
           this.energySpentMotion = 0;    // optional reset for clarity
           this.dVreq = spiralDeltaV(this.startAU, this.tgtAU);
           this.calcMotionCost();
           this.updateUI();
           return;
-        } else {
-          // Advance to new (circularized) radius from the updated energy
-          const a_new = -mu / (2 * E);
-          parent.orbitRadius = a_new / 1e3;
         }
-      }else{
+      } else {
         const mu=G*SOLAR_MASS;
         let a_sma=p.distanceFromSun*AU_IN_METERS;
         const v=Math.sqrt(mu/a_sma);
@@ -502,6 +524,7 @@ class PlanetaryThrustersProject extends Project{
     state.startAU = this.startAU;
     state.energySpentSpin = this.energySpentSpin;
     state.energySpentMotion = this.energySpentMotion;
+    state.escapeComplete = this.escapeComplete; // persist the logical escape flag
     return state;
   }
 
@@ -520,6 +543,12 @@ class PlanetaryThrustersProject extends Project{
     this.startAU = state.startAU ?? null;
     this.energySpentSpin = state.energySpentSpin || 0;
     this.energySpentMotion = state.energySpentMotion || 0;
+    this.escapeComplete = !!state.escapeComplete;
+
+    // If the planet exists already and we previously escaped, mirror the flag onto it
+    const p = (typeof terraforming!=='undefined') ? terraforming.celestialParameters : null;
+    if(p && this.escapeComplete){ p.hasEscapedParent = true; }
+
     if(this.el && Object.keys(this.el).length){
       if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
       if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
