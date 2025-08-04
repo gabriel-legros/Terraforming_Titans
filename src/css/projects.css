@@ -455,19 +455,12 @@
 
 .scanner-assignment-container {
     display: grid;
-    grid-template-columns: auto auto;
-    gap: 10px;
+    grid-template-columns: auto 1fr;
+    gap: 5px 10px;
     align-items: center;
 }
 
-.scanner-assignment-container .amount-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
+.scanner-assignment-container .amount-display,
 .scanner-assignment-container .deposits-container {
     display: flex;
     align-items: center;
@@ -479,6 +472,7 @@
 .scanner-assignment-container .amount-controls {
     display: flex;
     gap: 5px;
+    justify-self: start;
 }
 
 .scanner-assignment-container .scanner-main-controls,
@@ -497,6 +491,10 @@
     grid-template-columns: 1fr;
     gap: 5px;
     font-size: 0.9em;
+}
+
+.scanner-layout {
+    grid-template-columns: repeat(3, 1fr);
 }
 
 /* --- Space Export Project --- */

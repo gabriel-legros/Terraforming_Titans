@@ -274,6 +274,10 @@ class ScannerProject extends Project {
     this.buildCount = Math.max(0, Math.min(val, limit));
   }
 
+  setMaxBuildCount() {
+    this.setBuildCount(this.getColonistLimit());
+  }
+
   start(resources) {
     this.activeBuildCount = this.getEffectiveBuildCount(Math.min(this.buildCount, this.getColonistLimit()));
     return super.start(resources);
@@ -309,13 +313,35 @@ class ScannerProject extends Project {
   }
 
   renderUI(container) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'amount-wrapper';
+    const costElement = container.querySelector('.project-cost');
 
-    const countContainer = document.createElement('div');
-    countContainer.className = 'amount-display';
-    const label = document.createElement('span');
-    label.textContent = 'Amount:';
+    const topSection = document.createElement('div');
+    topSection.className = 'project-top-section scanner-layout';
+
+    // Cost Section
+    const costSection = document.createElement('div');
+    costSection.className = 'project-section-container';
+    const costTitle = document.createElement('h4');
+    costTitle.className = 'section-title';
+    costTitle.textContent = 'Cost';
+    costSection.appendChild(costTitle);
+    if (costElement) {
+        const label = costElement.querySelector('strong');
+        if (label) {
+            label.remove();
+        }
+        costSection.appendChild(costElement);
+    }
+    topSection.appendChild(costSection);
+
+    // Amount Section
+    const amountSection = document.createElement('div');
+    amountSection.className = 'project-section-container';
+    const amountTitle = document.createElement('h4');
+    amountTitle.className = 'section-title';
+    amountTitle.textContent = 'Amount';
+    const amountDisplay = document.createElement('div');
+    amountDisplay.className = 'amount-display';
     const val = document.createElement('span');
     val.id = `${this.name}-count`;
     const slash = document.createElement('span');
@@ -326,7 +352,7 @@ class ScannerProject extends Project {
     info.className = 'info-tooltip-icon';
     info.title = 'Colonists let us build scanners in parallel. One satellite can be produced per 10,000 colonists.';
     info.innerHTML = '&#9432;';
-    countContainer.append(label, val, slash, max, info);
+    amountDisplay.append(val, slash, max, info);
 
     const controls = document.createElement('div');
     controls.className = 'amount-controls';
@@ -338,7 +364,9 @@ class ScannerProject extends Project {
     bMinus.textContent = '-';
     const bPlus = document.createElement('button');
     bPlus.textContent = '+';
-    main.append(b0, bMinus, bPlus);
+    const bMax = document.createElement('button');
+    bMax.textContent = 'Max';
+    main.append(b0, bMinus, bPlus, bMax);
 
     const mult = document.createElement('div');
     mult.className = 'scanner-mult-controls';
@@ -349,18 +377,19 @@ class ScannerProject extends Project {
     mult.append(bDiv, bMul);
 
     controls.append(main, mult);
-    wrapper.append(countContainer, controls);
+    amountSection.append(amountTitle, amountDisplay, controls);
+    topSection.appendChild(amountSection);
 
-    const layout = document.createElement('div');
-    layout.className = 'scanner-assignment-container';
-    layout.appendChild(wrapper);
-
+    // Deposits Section
     let dVal, dMax;
     if (this.attributes?.scanner?.depositType) {
+      const depositSection = document.createElement('div');
+      depositSection.className = 'project-section-container';
+      const depositTitle = document.createElement('h4');
+      depositTitle.className = 'section-title';
+      depositTitle.textContent = 'Deposits';
       const depositContainer = document.createElement('div');
       depositContainer.className = 'deposits-container';
-      const dLabel = document.createElement('span');
-      dLabel.textContent = 'Deposits:';
       dVal = document.createElement('span');
       dVal.id = `${this.name}-deposit-current`;
       const dSlash = document.createElement('span');
@@ -371,13 +400,14 @@ class ScannerProject extends Project {
       dInfo.className = 'info-tooltip-icon';
       dInfo.title = 'Shows discovered and maximum deposits satellites can find on this planet.';
       dInfo.innerHTML = '&#9432;';
-      depositContainer.append(dLabel, dVal, dSlash, dMax, dInfo);
-      layout.appendChild(depositContainer);
+      depositContainer.append(dVal, dSlash, dMax, dInfo);
+      depositSection.append(depositTitle, depositContainer);
+      topSection.appendChild(depositSection);
     }
 
-    container.appendChild(layout);
+    container.appendChild(topSection);
 
-    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0 };
+    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0, bMax, costSection, amountSection };
     if (dVal && dMax) {
       this.el.dVal = dVal;
       this.el.dMax = dMax;
@@ -393,6 +423,7 @@ class ScannerProject extends Project {
     bMul.onclick = () => { this.step *= 10; refresh(); };
     bDiv.onclick = () => { this.step = Math.max(1, this.step / 10); refresh(); };
     b0.onclick = () => { this.setBuildCount(0); refresh(); };
+    bMax.onclick = () => { this.setMaxBuildCount(); refresh(); };
   }
 
   updateUI() {
@@ -415,6 +446,12 @@ class ScannerProject extends Project {
       const max = data ? data.D_max : 0;
       this.el.dVal.textContent = formatNumber(current, true);
       this.el.dMax.textContent = formatNumber(max, true);
+    }
+
+    if (this.el.costSection && this.el.amountSection) {
+        const isMaxed = this.repeatCount >= this.maxRepeatCount;
+        this.el.costSection.style.display = isMaxed ? 'none' : '';
+        this.el.amountSection.style.display = isMaxed ? 'none' : '';
     }
   }
 
