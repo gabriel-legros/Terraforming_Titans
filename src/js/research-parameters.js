@@ -1275,7 +1275,7 @@ const researchParameters = {
         id: 'hive_mind_androids',
         name: 'Hive Mind Androids',
         description: 'Links androids into a cooperative network producing research.',
-        cost: { advancedResearch: 75000 },
+        cost: { advancedResearch: 60000 },
         prerequisites: [],
         effects: [
           {
