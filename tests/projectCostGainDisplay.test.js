@@ -60,7 +60,7 @@ describe('project cost and gain lists', () => {
     costItems = ctx.projectElements.test_project.costElement.querySelectorAll('span span');
     expect(costItems[0].style.color).toBe('');
 
-    const gainItems = ctx.projectElements.test_project.resourceGainElement.querySelectorAll('li');
+    const gainItems = ctx.projectElements.test_project.resourceGainElement.querySelectorAll('span span');
     expect(gainItems.length).toBe(1);
     expect(gainItems[0].textContent).toBe('Metal: 1');
   });

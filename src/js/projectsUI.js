@@ -169,21 +169,30 @@ function createProjectItem(project) {
   // Resource Gain
   if (project.attributes?.resourceGain) {
     const resourceGainElement = document.createElement('p');
+    resourceGainElement.classList.add('project-resource-gain');
     resourceGainElement.id = `${project.name}-resource-gain`;
-    const gainLabel = document.createElement('span');
+    const gainLabel = document.createElement('strong');
     gainLabel.textContent = 'Gain:';
-    const gainList = document.createElement('ul');
+    resourceGainElement.append(gainLabel, ' ');
+    const gainList = document.createElement('span');
+    resourceGainElement.appendChild(gainList);
     const gainItems = {};
+    const items = [];
     for (const category in project.attributes.resourceGain) {
       for (const resource in project.attributes.resourceGain[category]) {
-        const item = document.createElement('li');
-        item.dataset.category = category;
-        item.dataset.resource = resource;
-        gainList.appendChild(item);
-        gainItems[`${category}.${resource}`] = item;
+        if (project.attributes.resourceGain[category][resource] !== 0) {
+          items.push({ category, resource });
+        }
       }
     }
-    resourceGainElement.append(gainLabel, gainList);
+    items.forEach((item, idx) => {
+      const span = document.createElement('span');
+      gainList.appendChild(span);
+      if (idx < items.length - 1) {
+        gainList.appendChild(document.createTextNode(', '));
+      }
+      gainItems[`${item.category}.${item.resource}`] = span;
+    });
     projectDetails.appendChild(resourceGainElement);
     projectElements[project.name] = {
       ...projectElements[project.name],
