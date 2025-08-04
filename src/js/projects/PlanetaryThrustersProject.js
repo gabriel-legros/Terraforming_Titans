@@ -63,10 +63,12 @@ class PlanetaryThrustersProject extends Project{
     this.el={};
   }
 
+  hasTractorBeams(){
+    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams');
+  }
+
   getThrustPowerRatio(){
-    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams')
-      ? 1
-      : BASE_TP_RATIO;
+    return this.hasTractorBeams() ? 1 : BASE_TP_RATIO;
   }
 
 /* -----------------------  U I  --------------------------------------- */
@@ -110,6 +112,9 @@ class PlanetaryThrustersProject extends Project{
     motCard.style.display=this.isCompleted?"block":"none";
 
     /* power */
+    const veDisplay = this.hasTractorBeams()
+      ? 'N/A'
+      : `${fmt(FUSION_VE,false,0)} m/s`;
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
     <div class="card-body">
       <div class="stats-grid four-col">
@@ -122,6 +127,8 @@ class PlanetaryThrustersProject extends Project{
             <button id="pDiv">/10</button><button id="pMul">x10</button>
           </div>
         </div>
+      <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${veDisplay}</span></div>
+      <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="An ideal rocket's thrust-to-power ratio equals 2 divided by exhaust velocity.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
       <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Exhaust velocity (Ve) measures how fast propellant is ejected. A higher Ve provides more thrust per unit of propellant, increasing mass efficiency. It is directly related to Specific Impulse (Isp), a standard measure of engine performance, via the formula Isp = Ve / g₀ (where g₀ is standard gravity). While you must supply the energy, the required propellant is sourced locally and does not have a resource cost.">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
       <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="This ratio measures how efficiently thrusters convert input energy (Power) into motive force (Thrust). For an ideal engine, this value is T/P = 2 / Ve. Fusion drives have very high exhaust velocity, making them extremely propellant-efficient, but this comes at the cost of a lower thrust-to-power ratio.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
 
@@ -235,7 +242,9 @@ class PlanetaryThrustersProject extends Project{
         fmt(p.parentBody.orbitRadius,false,0)+" km" :
         fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
-    if(this.el.veVal) this.el.veVal.textContent = fmt(FUSION_VE,false,0)+" m/s";
+    if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
+      ? 'N/A'
+      : fmt(FUSION_VE,false,0)+" m/s";
     if(this.el.tpVal) this.el.tpVal.textContent = fmt(this.getThrustPowerRatio(),false,6)+" N/W";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);

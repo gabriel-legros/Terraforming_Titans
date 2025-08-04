@@ -39,16 +39,20 @@ describe('Tractor Beams advanced research', () => {
     project.updateUI();
 
     const defaultTP = project.el.tpVal.textContent;
+    const defaultVE = project.el.veVal.textContent;
     const defaultEnergy = ctx.translationalEnergyRemaining({ mass: 1 }, 10, project.getThrustPowerRatio());
 
     project.addEffect({ type: 'booleanFlag', flagId: 'tractorBeams', value: true });
     project.updateUI();
     const tractorTP = project.el.tpVal.textContent;
+    const tractorVE = project.el.veVal.textContent;
     const tractorEnergy = ctx.translationalEnergyRemaining({ mass: 1 }, 10, project.getThrustPowerRatio());
 
     const expectedTP = (1).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 }) + '\u202FN/W';
     expect(tractorTP).toBe(expectedTP);
     expect(defaultTP).not.toBe(expectedTP);
+    expect(defaultVE).not.toBe('N/A');
+    expect(tractorVE).toBe('N/A');
     expect(tractorEnergy).toBeCloseTo(10);
     expect(tractorEnergy).toBeLessThan(defaultEnergy);
   });
