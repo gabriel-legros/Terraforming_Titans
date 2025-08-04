@@ -1259,7 +1259,7 @@ const researchParameters = {
       {
         id: 'tractor_beams',
         name: 'Tractor Beams',
-        description: 'Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
+        description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
         cost: { advancedResearch: 10000000 },
         prerequisites: [],
         effects: [
