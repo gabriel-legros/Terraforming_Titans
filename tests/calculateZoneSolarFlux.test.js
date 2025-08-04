@@ -7,6 +7,7 @@ global.getZoneRatio = getZoneRatio;
 global.getZonePercentage = getZonePercentage;
 global.EffectableEntity = EffectableEntity;
 global.lifeParameters = lifeParameters;
+global.resources = { atmospheric: {} };
 
 const Terraforming = require('../src/js/terraforming.js');
 

@@ -318,3 +318,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Terraforming Others box now displays surface radiation using new radiation utilities and stores the value for later use.
 - Terraforming Others box now shows orbital radiation assuming no atmospheric shielding.
 - Moon parent bodies now include radius values for accurate distance-based radiation calculations.
+- Thruster Power subcard now shows exhaust velocity with a tooltip explaining specific impulse and aligns it in a column with the continuous power display.
