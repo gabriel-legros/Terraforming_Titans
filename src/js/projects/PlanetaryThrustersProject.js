@@ -6,6 +6,7 @@ const G  = 6.67430e-11;
 const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
+const BASE_TP_RATIO = 2 / FUSION_VE;
 
 /* ---------- helpers ---------------------------------------------------- */
 const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
@@ -23,20 +24,20 @@ function spinDeltaV(Rkm,curH,tgtH){
   return Math.abs((w2-w1)*R);
 }
 
-function spinEnergyRemaining(p, Rkm, targetDays){
+function spinEnergyRemaining(p, Rkm, targetDays, tpRatio){
   const k = p.kInertia || 0.4;                 // allow parameter override
   const curH = getRotHours(p);
   const dvEq = Math.abs(
         2*Math.PI/(targetDays*24*3600) - 2*Math.PI/(curH*3600)) * (Rkm*1e3);
-  return 0.5 * k * p.mass * FUSION_VE * dvEq;  // propellant energy
+  return k * p.mass * dvEq / tpRatio;
 }
 
 function spiralDeltaV(curAU,tgtAU,mu=G*SOLAR_MASS){
   const r1=curAU*AU_IN_METERS,r2=tgtAU*AU_IN_METERS;
   return Math.abs(Math.sqrt(mu/r1)-Math.sqrt(mu/r2));
 }
-function translationalEnergyRemaining(p,dvRem){
-  return 0.5*p.mass*FUSION_VE*dvRem;                 // ideal fusion rocket
+function translationalEnergyRemaining(p,dvRem,tpRatio){
+  return p.mass * dvRem / tpRatio;
 }
 
 function escapeDeltaV(parentM,orbitRkm){
@@ -60,6 +61,12 @@ class PlanetaryThrustersProject extends Project{
     this.startAU=null;
 
     this.el={};
+  }
+
+  getThrustPowerRatio(){
+    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams')
+      ? 1
+      : BASE_TP_RATIO;
   }
 
 /* -----------------------  U I  --------------------------------------- */
@@ -105,15 +112,18 @@ class PlanetaryThrustersProject extends Project{
     /* power */
     const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
     <div class="card-body">
-      <div class="stats-grid three-col">
-        <div><span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span>
-          <div class="thruster-power-controls">
-            <div class="main-buttons">
-              <button id="p0">0</button><button id="pMinus">-</button><button id="pPlus">+</button>
-            </div>
-            <div class="multiplier-container">
-              <button id="pDiv">/10</button><button id="pMul">x10</button>
-            </div>
+      <div class="power-controls-wrapper">
+        <div class="stats-grid three-col">
+          <div><span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
+          <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
+          <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="An ideal rocket's thrust-to-power ratio equals 2 divided by exhaust velocity.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
+        </div>
+        <div class="thruster-power-controls">
+          <div class="main-buttons">
+            <button id="p0">0</button><button id="pMinus">-</button><button id="pPlus">+</button>
+          </div>
+          <div class="multiplier-container">
+            <button id="pDiv">/10</button><button id="pMul">x10</button>
           </div>
         </div>
         <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
@@ -163,7 +173,7 @@ class PlanetaryThrustersProject extends Project{
     this.tgtDays=tgt;
     const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
     this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
-    this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays));
+    this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
     if(this.spinInvest) this.prepareJob();
   }
 
@@ -181,12 +191,12 @@ class PlanetaryThrustersProject extends Project{
       this.el.parentName.textContent=parent.name||"Parent";
       this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
       this.el.distDv.textContent="—";
-      this.el.distE.textContent=formatEnergy(0.5*p.mass*FUSION_VE*esc);
+      this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
     }else{
       this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
-      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv));
+      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
     }
     if(this.motionInvest) this.prepareJob();
   }
@@ -229,16 +239,17 @@ class PlanetaryThrustersProject extends Project{
         fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     if(this.el.veVal) this.el.veVal.textContent = fmt(FUSION_VE,false,0)+" m/s";
+    if(this.el.tpVal) this.el.tpVal.textContent = fmt(this.getThrustPowerRatio(),false,6)+" N/W";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);
 
     /* live energy cost refresh */
     if(p && !p.parentBody){
       const dvRem=Math.max(0,this.dVreq-this.dVdone);
-      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem));
+      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
     }
     if(p && this.spinInvest){
-      this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays));
+      this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
     }
   }
 
@@ -258,7 +269,7 @@ class PlanetaryThrustersProject extends Project{
     if(resources.colony.energy.value<need) return;
     resources.colony.energy.decrease(need);
 
-    const a=2*this.power/(FUSION_VE*p.mass);
+    const a=this.power*this.getThrustPowerRatio()/p.mass;
     const dvTick=a*dt; this.dVdone+=dvTick;
 
     /* ------ spin -------- */
