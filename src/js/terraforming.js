@@ -128,6 +128,8 @@ class Terraforming extends EffectableEntity{
     this.totalMeltRate = 0;
     this.totalFreezeRate = 0;
     this.flowMeltAmount = 0;
+    this.focusMeltRate = 0;
+    this.focusMeltAmount = 0;
     this.totalMethaneEvaporationRate = 0;
     this.totalMethaneCondensationRate = 0;
     this.totalMethaneMeltRate = 0;
@@ -669,6 +671,13 @@ class Terraforming extends EffectableEntity{
         totalMeltAmount += this.flowMeltAmount || 0;
         totalMethaneMeltAmount += this.flowMethaneMeltAmount || 0;
 
+        // Additional melt from focused mirror/lantern power
+        const focusMeltAmount = (typeof globalThis.applyFocusedMelt === 'function')
+            ? globalThis.applyFocusedMelt(this, resources, durationSeconds)
+            : 0;
+        totalMeltAmount += focusMeltAmount;
+        this.focusMeltAmount = focusMeltAmount;
+
         // --- 2. Aggregate global atmospheric changes and apply limits ---
         let totalPotentialAtmosphericWaterLoss = 0;
         let totalPotentialAtmosphericCO2Loss = 0;
@@ -838,6 +847,7 @@ class Terraforming extends EffectableEntity{
         this.totalSnowfallRate = totalSnowfallAmount / durationSeconds * 86400;
         this.totalMeltRate = totalMeltAmount / durationSeconds * 86400;
         this.totalFreezeRate = totalFreezeAmount / durationSeconds * 86400;
+        this.focusMeltRate = (this.focusMeltAmount || 0) / durationSeconds * 86400;
         this.totalCo2CondensationRate = totalCo2CondensationAmount / durationSeconds * 86400;
         this.totalMethaneEvaporationRate = totalMethaneEvaporationAmount / durationSeconds * 86400;
         this.totalMethaneCondensationRate = totalMethaneCondensationAmount / durationSeconds * 86400;
@@ -851,7 +861,8 @@ class Terraforming extends EffectableEntity{
         const co2SublimationRate = this.totalCo2SublimationRate;
         const rainfallRate = this.totalRainfallRate;
         const snowfallRate = this.totalSnowfallRate;
-        const meltingRate = this.totalMeltRate;
+        const focusedMeltRate = this.focusMeltRate;
+        const meltingRate = this.totalMeltRate - focusedMeltRate;
         const freezingRate = this.totalFreezeRate;
         const co2CondensationRate = this.totalCo2CondensationRate;
 
@@ -885,12 +896,18 @@ class Terraforming extends EffectableEntity{
             resources.surface.liquidWater.modifyRate(rainfallRate, 'Rain', rateType);
             resources.surface.liquidWater.modifyRate(meltingRate, 'Melt', rateType);
             resources.surface.liquidWater.modifyRate(-freezingRate, 'Freeze', rateType);
+            if (focusedMeltRate > 0) {
+                resources.surface.liquidWater.modifyRate(focusedMeltRate, 'Focused Melt', rateType);
+            }
         }
         if (resources.surface.ice) {
             resources.surface.ice.modifyRate(-waterSublimationRate, 'Sublimation', rateType);
             resources.surface.ice.modifyRate(snowfallRate, 'Snow', rateType);
             resources.surface.ice.modifyRate(-meltingRate, 'Melt', rateType);
             resources.surface.ice.modifyRate(freezingRate, 'Freeze', rateType);
+            if (focusedMeltRate > 0) {
+                resources.surface.ice.modifyRate(-focusedMeltRate, 'Focused Melt', rateType);
+            }
         }
         if (resources.surface.dryIce) {
             resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
@@ -1206,57 +1223,11 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateZoneSolarFlux(zone, angleAdjusted = false) {
-      const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
-      const totalSurfaceArea = this.celestialParameters.surfaceArea;
-    
-      const baseSolar = this.luminosity.solarFlux; // W/m^2
-      
-      // Get total POWER (W) from enhancements
-      const totalMirrorPower = this.calculateMirrorEffect().interceptedPower * (buildings['spaceMirror']?.active || 0);
-      const totalLanternPower = this.calculateLanternFlux() * (this.celestialParameters.crossSectionArea || totalSurfaceArea);
-    
-      // Default: all power is distributed globally
-      let distributedMirrorPower = totalMirrorPower;
-      let focusedMirrorPower = 0;
-      let distributedLanternPower = totalLanternPower;
-      let focusedLanternPower = 0;
-    
-      let focusedMirrorFlux = 0;
-      let focusedLanternFlux = 0;
-    
-      if (
-        typeof projectManager.projects.spaceMirrorFacility !== 'undefined' &&
-        projectManager.projects.spaceMirrorFacility.isBooleanFlagSet &&
-        projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
-        typeof mirrorOversightSettings !== 'undefined'
-      ) {
-        const dist = mirrorOversightSettings.distribution || {};
-        const zonePerc = dist[zone] || 0;
-          const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
-
-        distributedMirrorPower = totalMirrorPower * globalPerc;
-        focusedMirrorPower = totalMirrorPower * zonePerc;
-
-        if (mirrorOversightSettings.applyToLantern) {
-          distributedLanternPower = totalLanternPower * globalPerc;
-          focusedLanternPower = totalLanternPower * zonePerc;
-        }
-
-        const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-        if (zoneArea > 0 && zonePerc > 0) {
-          focusedMirrorFlux = 4 * focusedMirrorPower / zoneArea;
-          focusedLanternFlux = 4 * focusedLanternPower / zoneArea;
-        }
+      if (typeof globalThis.calculateZoneSolarFluxWithFacility === 'function') {
+        return globalThis.calculateZoneSolarFluxWithFacility(this, zone, angleAdjusted);
       }
-    
-      // Calculate distributed FLUX from the remaining distributed POWER
-      const distributedMirrorFlux = totalSurfaceArea > 0 ? 4*distributedMirrorPower / totalSurfaceArea : 0;
-      const distributedLanternFlux = totalSurfaceArea > 0 ? 4*distributedLanternPower / totalSurfaceArea : 0;
-    
-      // Sum all fluxes and apply the zonal angle-of-incidence ratio
-      const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
-      
-      return totalFluxForZone;
+      const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+      return this.luminosity.solarFlux * ratio;
     }
 
     calculateSolarPanelMultiplier(){

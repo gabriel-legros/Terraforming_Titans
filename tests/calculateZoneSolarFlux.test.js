@@ -1,6 +1,10 @@
 const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
+global.Project = class {};
+global.projectElements = {};
+const { mirrorOversightSettings } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+global.mirrorOversightSettings = mirrorOversightSettings;
 
 // globals expected by terraforming.js
 global.getZoneRatio = getZoneRatio;
@@ -27,7 +31,11 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: false };
+    mirrorOversightSettings.distribution.tropical = 0.5;
+    mirrorOversightSettings.distribution.temperate = 0;
+    mirrorOversightSettings.distribution.polar = 0;
+    mirrorOversightSettings.distribution.focus = 0;
+    mirrorOversightSettings.applyToLantern = false;
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -51,7 +59,11 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: false };
+    mirrorOversightSettings.distribution.tropical = 0.5;
+    mirrorOversightSettings.distribution.temperate = 0;
+    mirrorOversightSettings.distribution.polar = 0;
+    mirrorOversightSettings.distribution.focus = 0;
+    mirrorOversightSettings.applyToLantern = false;
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -76,7 +88,11 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: true };
+    mirrorOversightSettings.distribution.tropical = 0.5;
+    mirrorOversightSettings.distribution.temperate = 0;
+    mirrorOversightSettings.distribution.polar = 0;
+    mirrorOversightSettings.distribution.focus = 0;
+    mirrorOversightSettings.applyToLantern = true;
 
     Terraforming.prototype.calculateLanternFlux = function(){
       const lantern = buildings.hyperionLantern;
