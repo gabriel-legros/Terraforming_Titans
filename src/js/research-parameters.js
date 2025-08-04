@@ -1218,6 +1218,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'space_mirror_focusing',
+        name: 'Space Mirror Focusing',
+        description: 'Refines the space mirror facility to concentrate sunlight.',
+        cost: { advancedResearch: 20000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
+            type: 'booleanFlag',
+            flagId: 'spaceMirrorFocusing',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'dyson_swarm_concept',
         name: 'Dyson Swarm Concept',
         description: 'Opens research into building massive solar collectors in space.',
