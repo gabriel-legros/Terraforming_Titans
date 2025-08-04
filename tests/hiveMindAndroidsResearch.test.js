@@ -13,7 +13,7 @@ describe('Hive Mind Androids research', () => {
     const adv = ctx.researchParameters.advanced;
     const research = adv.find(r => r.id === 'hive_mind_androids');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(75000);
+    expect(research.cost.advancedResearch).toBe(60000);
     const flag = research.effects.find(e => e.type === 'booleanFlag' && e.flagId === 'hiveMindAndroids' && e.target === 'global' && e.value === true);
     expect(flag).toBeDefined();
   });
