@@ -338,3 +338,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Ore and geothermal satellite UI now split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
 - Added Space Mirror Focusing advanced research applying a boolean flag to the space mirror facility.
 - Space mirror oversight controls include a Focusing slider revealed when the Space Mirror Focusing flag is set.
+- Focused mirror energy melts only surface ice into liquid water, prioritizing the warmest zone with ice and showing rates in resource tooltips.
+- Space mirror facility now computes focused melting and zonal flux internally, keeping terraforming.js leaner.

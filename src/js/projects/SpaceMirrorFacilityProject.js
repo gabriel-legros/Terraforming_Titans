@@ -62,7 +62,9 @@ function initializeMirrorOversightUI(container) {
         <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">Focusing:</label>
+        <label for="mirror-oversight-focus">Focusing:
+          <span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion.">&#9432;</span>
+        </label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
       </div>
@@ -192,6 +194,111 @@ function updateZonalFluxTable() {
     }
     cell.textContent = formatNumber(flux, false, 2);
   });
+}
+
+function applyFocusedMelt(terraforming, resources, durationSeconds) {
+  let focusMeltAmount = 0;
+  if (typeof projectManager !== 'undefined' &&
+      ((projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
+       (projectManager.projects &&
+        projectManager.projects.spaceMirrorFacility &&
+        typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
+        projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing')))) {
+    const dist = mirrorOversightSettings?.distribution || {};
+    const focusPerc = dist.focus || 0;
+    if (focusPerc > 0) {
+      const mirrorPowerTotal = terraforming.calculateMirrorEffect().interceptedPower * (buildings['spaceMirror']?.active || 0);
+      let lanternPowerTotal = 0;
+      if (mirrorOversightSettings.applyToLantern) {
+        const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
+        lanternPowerTotal = terraforming.calculateLanternFlux() * area;
+      }
+      const focusPower = (mirrorPowerTotal + lanternPowerTotal) * focusPerc;
+      const C_P_ICE = 2100; // J/kg·K
+      const L_F_WATER = 334000; // J/kg
+      const deltaT = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
+      const energyPerKg = C_P_ICE * deltaT + L_F_WATER;
+      if (energyPerKg > 0 && focusPower > 0) {
+        const meltKgPerSec = focusPower / energyPerKg;
+        const meltTons = meltKgPerSec * durationSeconds / 1000;
+        const zonesData = ['tropical','temperate','polar'].map(z => ({
+          zone: z,
+          temp: terraforming.temperature.zones[z].value,
+          ice: terraforming.zonalWater[z].ice
+        })).filter(z => z.ice > 0);
+        const totalSurfaceIce = zonesData.reduce((sum, z) => sum + z.ice, 0);
+        if (totalSurfaceIce > 0) {
+          const desiredMelt = Math.min(meltTons, totalSurfaceIce);
+          let remaining = desiredMelt;
+          zonesData.sort((a, b) => b.temp - a.temp);
+          for (const z of zonesData) {
+            if (remaining <= 0) break;
+            const meltHere = Math.min(z.ice, remaining);
+            if (meltHere > 0) {
+              terraforming.zonalWater[z.zone].ice -= meltHere;
+              terraforming.zonalWater[z.zone].liquid += meltHere;
+              remaining -= meltHere;
+            }
+          }
+          const actualMelt = desiredMelt - remaining;
+          if (actualMelt > 0) {
+            focusMeltAmount = actualMelt;
+            if (resources.surface?.ice) resources.surface.ice.value -= actualMelt;
+            if (resources.surface?.liquidWater) resources.surface.liquidWater.value += actualMelt;
+          }
+        }
+      }
+    }
+  }
+  return focusMeltAmount;
+}
+
+function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = false) {
+  const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+  const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
+  const baseSolar = terraforming.luminosity.solarFlux; // W/m²
+
+  const totalMirrorPower = terraforming.calculateMirrorEffect().interceptedPower * (buildings['spaceMirror']?.active || 0);
+  const totalLanternPower = terraforming.calculateLanternFlux() * (terraforming.celestialParameters.crossSectionArea || totalSurfaceArea);
+
+  let distributedMirrorPower = totalMirrorPower;
+  let focusedMirrorPower = 0;
+  let distributedLanternPower = totalLanternPower;
+  let focusedLanternPower = 0;
+  let focusedMirrorFlux = 0;
+  let focusedLanternFlux = 0;
+
+  if (
+    typeof projectManager?.projects?.spaceMirrorFacility !== 'undefined' &&
+    projectManager.projects.spaceMirrorFacility.isBooleanFlagSet &&
+    projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
+    typeof mirrorOversightSettings !== 'undefined'
+  ) {
+    const dist = mirrorOversightSettings.distribution || {};
+    const zonePerc = dist[zone] || 0;
+    const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
+
+    distributedMirrorPower = totalMirrorPower * globalPerc;
+    focusedMirrorPower = totalMirrorPower * zonePerc;
+
+    if (mirrorOversightSettings.applyToLantern) {
+      distributedLanternPower = totalLanternPower * globalPerc;
+      focusedLanternPower = totalLanternPower * zonePerc;
+    }
+
+    const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+    if (zoneArea > 0 && zonePerc > 0) {
+      focusedMirrorFlux = 4 * focusedMirrorPower / zoneArea;
+      focusedLanternFlux = 4 * focusedLanternPower / zoneArea;
+    }
+  }
+
+  const distributedMirrorFlux = totalSurfaceArea > 0 ? 4 * distributedMirrorPower / totalSurfaceArea : 0;
+  const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
+
+  const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
+
+  return totalFluxForZone;
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -337,6 +444,8 @@ if (typeof globalThis !== 'undefined') {
   globalThis.initializeMirrorOversightUI = initializeMirrorOversightUI;
   globalThis.updateMirrorOversightUI = updateMirrorOversightUI;
   globalThis.updateZonalFluxTable = updateZonalFluxTable;
+  globalThis.applyFocusedMelt = applyFocusedMelt;
+  globalThis.calculateZoneSolarFluxWithFacility = calculateZoneSolarFluxWithFacility;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -348,5 +457,7 @@ if (typeof module !== 'undefined' && module.exports) {
     initializeMirrorOversightUI,
     updateMirrorOversightUI,
     updateZonalFluxTable,
+    applyFocusedMelt,
+    calculateZoneSolarFluxWithFacility,
   };
 }
