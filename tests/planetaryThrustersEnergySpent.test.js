@@ -2,24 +2,25 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom'));
 const vm = require('vm');
-const EffectableEntity = require('../src/js/effectable-entity.js');
 const numbers = require('../src/js/numbers.js');
+const EffectableEntity = require('../src/js/effectable-entity.js');
 
 const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
 const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
 const thrusterCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
 const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
 
-describe('Planetary Thrusters visibility', () => {
-  test('subcards hidden until unlocked', () => {
+describe('Planetary Thrusters energy tracking', () => {
+  test('tracks spin energy and resets motion energy after escape', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
-    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
+    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 1000, distanceFromSun: 1 } } };
+    ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
+
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
@@ -29,25 +30,32 @@ describe('Planetary Thrusters visibility', () => {
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
-    project.updateUI();
-
-    expect(project.el.spinCard.style.display).toBe('none');
-    expect(project.el.motCard.style.display).toBe('none');
-    expect(project.el.spentCard.style.display).toBe('none');
-    expect(project.el.pwrCard.style.display).toBe('none');
-
-    project.enable();
-    project.updateUI();
-    expect(project.el.spinCard.style.display).toBe('none');
-    expect(project.el.motCard.style.display).toBe('none');
-    expect(project.el.spentCard.style.display).toBe('none');
-    expect(project.el.pwrCard.style.display).toBe('none');
-
     project.complete();
-    project.updateUI();
-    expect(project.el.spinCard.style.display).toBe('block');
-    expect(project.el.motCard.style.display).toBe('block');
-    expect(project.el.spentCard.style.display).toBe('block');
-    expect(project.el.pwrCard.style.display).toBe('block');
+
+    // spin energy
+    project.power = 1;
+    project.spinInvest = true;
+    project.prepareJob();
+    project.update(1000);
+    expect(project.energySpentSpin).toBeGreaterThan(0);
+
+    // motion energy and escape reset
+    project.spinInvest = false;
+    project.motionInvest = true;
+    project.prepareJob();
+    project.power = 1e21; // lower power so escape takes multiple ticks
+
+    let hadEnergy = false;
+    for(let i=0;i<100;i++){
+      project.update(1_000_000); // sizeable timestep
+      if(ctx.terraforming.celestialParameters.parentBody){
+        if(project.energySpentMotion > 0) hadEnergy = true;
+      } else {
+        break;
+      }
+    }
+    expect(hadEnergy).toBe(true);
+    expect(ctx.terraforming.celestialParameters.parentBody).toBeUndefined();
+    expect(project.energySpentMotion).toBe(0);
   });
 });
