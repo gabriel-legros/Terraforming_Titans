@@ -240,7 +240,7 @@ class PlanetaryThrustersProject extends Project{
       this.tgtAU=1;
       this.el.distTargetRow.style.display = "none";
       this.el.distDvRow.style.display = "block"; // Show spiral Δv
-      const r_hill = hillRadius(p, parent);
+      const r_hill = hillRadiusMeters(p, parent) / 1e3;
       const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
       this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
       this.el.escRow.style.display = "none"; // Hide old escape row
