@@ -27,7 +27,7 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0 }, applyToLantern: false };
+    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: false };
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -51,7 +51,7 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0 }, applyToLantern: false };
+    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: false };
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -76,7 +76,7 @@ describe('calculateZoneSolarFlux', () => {
       projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
     };
-    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0 }, applyToLantern: true };
+    global.mirrorOversightSettings = { distribution: { tropical: 0.5, temperate: 0, polar: 0, focus: 0 }, applyToLantern: true };
 
     Terraforming.prototype.calculateLanternFlux = function(){
       const lantern = buildings.hyperionLantern;

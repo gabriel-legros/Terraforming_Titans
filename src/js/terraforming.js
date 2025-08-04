@@ -1232,7 +1232,7 @@ class Terraforming extends EffectableEntity{
       ) {
         const dist = mirrorOversightSettings.distribution || {};
         const zonePerc = dist[zone] || 0;
-        const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0));
+          const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
 
         distributedMirrorPower = totalMirrorPower * globalPerc;
         focusedMirrorPower = totalMirrorPower * zonePerc;

@@ -13,7 +13,7 @@ describe('Space Mirror Focusing advanced research', () => {
     const advanced = ctx.researchParameters.advanced;
     const research = advanced.find(r => r.id === 'space_mirror_focusing');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(20000);
+    expect(research.cost.advancedResearch).toBe(80000);
     const flagEffect = research.effects.find(
       e =>
         e.target === 'project' &&

@@ -337,3 +337,4 @@ second time they speak in a chapter to help clarify who is talking.
 - ProjectManager now applies project gains each tick via applyCostAndGain, keeping estimateCostAndGain as a pure rate estimate.
 - Ore and geothermal satellite UI now split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
 - Added Space Mirror Focusing advanced research applying a boolean flag to the space mirror facility.
+- Space mirror oversight controls include a Focusing slider revealed when the Space Mirror Focusing flag is set.
