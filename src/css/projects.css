@@ -453,6 +453,45 @@
     justify-self: start;
 }
 
+.scanner-assignment-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.scanner-assignment-container .amount-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.scanner-assignment-container .deposits-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.scanner-assignment-container .amount-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.scanner-assignment-container .scanner-main-controls,
+.scanner-assignment-container .scanner-mult-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.scanner-assignment-container .amount-controls button {
+    padding: 2px 4px;
+    font-size: 0.7em;
+}
+
 .project-details-grid {
     display: grid;
     grid-template-columns: 1fr;
