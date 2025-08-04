@@ -369,7 +369,7 @@ class Project extends EffectableEntity {
 
 
 
-  estimateProjectCostAndGain() {
+  estimateProjectCostAndGain(deltaTime = 1000) {
     if (this.isActive && this.autoStart) {
       const rate = 1000 / this.getEffectiveDuration();
 
@@ -399,9 +399,11 @@ class Project extends EffectableEntity {
     }
   }
 
-  estimateCostAndGain() {
-    this.estimateProjectCostAndGain();
+  estimateCostAndGain(deltaTime = 1000) {
+    this.estimateProjectCostAndGain(deltaTime);
   }
+
+  applyCostAndGain(deltaTime = 1000) {}
 
   saveState() {
     return {
@@ -511,6 +513,10 @@ class ProjectManager extends EffectableEntity {
 
       // Always update so subclasses can run logic after completion
       project.update(deltaTime);
+
+      if (typeof project.applyCostAndGain === 'function') {
+        project.applyCostAndGain(deltaTime);
+      }
     }
   }
 
@@ -539,11 +545,11 @@ class ProjectManager extends EffectableEntity {
     this.projectOrder = newOrder;
   }
 
-  estimateProjects() {
+  estimateProjects(deltaTime = 1000) {
     for (const projectName in this.projects){
       const project = this.projects[projectName];
       if (typeof project.estimateCostAndGain === 'function') {
-        project.estimateCostAndGain();
+        project.estimateCostAndGain(deltaTime);
       }
     }
   }

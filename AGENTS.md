@@ -331,3 +331,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Planetary thrusters now display an Energy Spent section tracking energy used for spin and motion and resetting after a moon escape.
 - Planetary thruster invest selections now persist through saves and reloads with checkboxes and targets restored on load.
 - Satellite projects now display discovered and maximum deposit counts.
+- Dyson Swarm collectors now contribute their generated energy to the colony instead of only displaying it.
+- Moon-based planetary thrusters show an Escape Δv row and hide spiral Δv when bound to a parent body.
+- ProjectManager now applies project gains each tick via applyCostAndGain, keeping estimateCostAndGain as a pure rate estimate.
