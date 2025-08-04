@@ -328,3 +328,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Moon-based planetary thrusters no longer show target AU or spiral Δv, assuming a 1 AU target with all energy devoted to escape.
 - Added Cloning Concept advanced research enabling energy-intensive cloning facilities to produce colonists.
 - Planetary thrusters now display an Energy Spent section tracking energy used for spin and motion and resetting after a moon escape.
+- Planetary thruster invest selections now persist through saves and reloads with checkboxes and targets restored on load.

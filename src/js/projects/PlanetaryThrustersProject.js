@@ -165,6 +165,12 @@ class PlanetaryThrustersProject extends Project{
       pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
 
+    /* restore saved values */
+    this.el.rotCb.checked = this.spinInvest;
+    this.el.distCb.checked = this.motionInvest;
+    this.el.rotTarget.value = this.tgtDays;
+    this.el.distTarget.value = this.tgtAU;
+
     /* listeners */
     this.el.rotTarget.oninput = ()=>this.calcSpinCost();
     this.el.distTarget.oninput= ()=>this.calcMotionCost();
@@ -257,6 +263,8 @@ class PlanetaryThrustersProject extends Project{
       this.el.spentCard.style.display = vis;
       this.el.pwrCard.style.display = vis;
     }
+    if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
+    if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     const p=terraforming.celestialParameters||{};
     this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
     this.el.distNow.textContent = p.parentBody?
@@ -440,6 +448,13 @@ class PlanetaryThrustersProject extends Project{
     this.startAU = state.startAU ?? null;
     this.energySpentSpin = state.energySpentSpin || 0;
     this.energySpentMotion = state.energySpentMotion || 0;
+    if(this.el && Object.keys(this.el).length){
+      if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
+      if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
+      if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
+      if(this.el.distTarget) this.el.distTarget.value = this.tgtAU;
+      this.updateUI();
+    }
   }
 }
 
