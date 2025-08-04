@@ -32,13 +32,41 @@ describe('Planetary Thrusters UI', () => {
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
-    vm.runInContext('project.calcSpinCost(); project.calcMotionCost();', ctx);
     project.updateUI();
 
     expect(project.el.rotDv.textContent).not.toBe('—');
     expect(project.el.rotE.textContent).not.toBe('—');
     expect(project.el.distDv.textContent).not.toBe('—');
     expect(project.el.distE.textContent).not.toBe('—');
+  });
+
+  test('uses defaults when targets cleared', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.projectElements = {};
+    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 30, distanceFromSun: 1.5 } };
+    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
+
+    vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
+    const container = dom.window.document.getElementById('container');
+    project.renderUI(container);
+    project.el.rotTarget.value = '';
+    project.el.distTarget.value = '';
+    project.updateUI();
+
+    expect(project.tgtDays).toBe(1);
+    expect(project.tgtAU).toBe(1);
+    expect(project.el.rotDv.textContent).not.toBe('—');
+    expect(project.el.distDv.textContent).not.toBe('—');
   });
 
   test('displays exhaust velocity and thrust to power ratio with tooltip', () => {
@@ -99,7 +127,6 @@ describe('Planetary Thrusters UI', () => {
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
-    vm.runInContext('project.calcMotionCost();', ctx);
     project.updateUI();
 
     expect(project.el.distDv.textContent).toBe('—');

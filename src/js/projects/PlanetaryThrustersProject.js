@@ -246,13 +246,48 @@ class PlanetaryThrustersProject extends Project{
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
     this.el.pMinus.textContent="-"+formatNumber(this.step,true);
 
-    /* live energy cost refresh */
-    if(p && !p.parentBody){
-      const dvRem=Math.max(0,this.dVreq-this.dVdone);
-      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
+    /* delta v and energy refresh */
+    if(this.el.rotTarget){
+      let tgtDays = 1;
+      try{
+        const v=this.el.rotTarget.value;
+        const n=parseFloat(v);
+        if(!isNaN(n)) tgtDays=n;
+      }catch(e){ tgtDays=1; }
+      this.tgtDays = tgtDays;
+      if(p && p.radius){
+        const dv=spinDeltaV(p.radius,getRotHours(p),tgtDays*24);
+        this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
+        this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio()));
+      }
     }
-    if(p && this.spinInvest){
-      this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
+
+    if(this.el.distTarget){
+      let tgtAU = 1;
+      try{
+        const v=this.el.distTarget.value;
+        const n=parseFloat(v);
+        if(!isNaN(n)) tgtAU=n;
+      }catch(e){ tgtAU=1; }
+      this.tgtAU = tgtAU;
+      if(p && p.parentBody){
+        const parent=p.parentBody;
+        const esc=escapeDeltaV(parent.mass,parent.orbitRadius);
+        this.el.escDv.textContent=fmt(esc,false,3)+" m/s";
+        this.el.escRow.style.display="block";
+        this.el.parentRow.style.display="block";this.el.moonWarn.style.display="block";
+        this.el.parentName.textContent=parent.name||"Parent";
+        this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
+        this.el.distDv.textContent="—";
+        this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
+      }else if(p){
+        this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display="none";
+        const curAU=p.distanceFromSun||tgtAU;
+        const dv=spiralDeltaV(curAU,tgtAU);
+        this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
+        const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):dv;
+        this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
+      }
     }
   }
 
