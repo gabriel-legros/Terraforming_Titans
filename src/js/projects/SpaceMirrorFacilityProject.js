@@ -1,16 +1,16 @@
 // Mirror oversight controls
 var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
-  distribution: { tropical: 0, temperate: 0, polar: 0 },
+  distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
   applyToLantern: false,
 };
 
 function setMirrorDistribution(zone, value) {
-  const zones = ['tropical', 'temperate', 'polar'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus'];
   if (!zones.includes(zone)) return;
   const dist = mirrorOversightSettings.distribution;
   const v = Math.max(0, Math.min(100, Math.round(value)));
   dist[zone] = v / 100;
-  let total = dist.tropical + dist.temperate + dist.polar;
+  let total = dist.tropical + dist.temperate + dist.polar + dist.focus;
   if (total > 1) {
     let excess = total - 1;
     zones.filter(z => z !== zone).forEach(z => {
@@ -28,6 +28,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.distribution.tropical = 0;
   mirrorOversightSettings.distribution.temperate = 0;
   mirrorOversightSettings.distribution.polar = 0;
+  mirrorOversightSettings.distribution.focus = 0;
   mirrorOversightSettings.applyToLantern = false;
   updateMirrorOversightUI();
 }
@@ -60,6 +61,11 @@ function initializeMirrorOversightUI(container) {
         <input type="range" id="mirror-oversight-polar" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
       </div>
+      <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
+        <label for="mirror-oversight-focus">Focusing:</label>
+        <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
+      </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
         <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100" disabled>
@@ -76,6 +82,7 @@ function initializeMirrorOversightUI(container) {
     tropical: div.querySelector('#mirror-oversight-tropical'),
     temperate: div.querySelector('#mirror-oversight-temperate'),
     polar: div.querySelector('#mirror-oversight-polar'),
+    focus: div.querySelector('#mirror-oversight-focus'),
   };
   Object.keys(sliders).forEach(zone => {
     sliders[zone].addEventListener('input', () => {
@@ -129,14 +136,30 @@ function updateMirrorOversightUI() {
     }
   }
   container.style.display = enabled ? 'block' : 'none';
-  const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0 };
+  const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0 };
   const vals = {
     tropical: Math.round((dist.tropical || 0) * 100),
     temperate: Math.round((dist.temperate || 0) * 100),
-    polar: Math.round((dist.polar || 0) * 100)
+    polar: Math.round((dist.polar || 0) * 100),
+    focus: Math.round((dist.focus || 0) * 100)
   };
-  const anyVal = 100 - vals.tropical - vals.temperate - vals.polar;
-  ['tropical','temperate','polar','any'].forEach(zone => {
+  const anyVal = 100 - vals.tropical - vals.temperate - vals.polar - vals.focus;
+
+  const focusGroup = document.getElementById('mirror-oversight-focus-group');
+  let focusEnabled = false;
+  if (typeof projectManager !== 'undefined') {
+    if (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) {
+      focusEnabled = true;
+    } else if (projectManager.projects &&
+               projectManager.projects.spaceMirrorFacility &&
+               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
+               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing')) {
+      focusEnabled = true;
+    }
+  }
+  if (focusGroup) focusGroup.style.display = focusEnabled ? 'block' : 'none';
+
+  ['tropical','temperate','polar','focus','any'].forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
     const span = document.getElementById(`mirror-oversight-${zone}-value`);
     const val = zone === 'any' ? anyVal : vals[zone];
