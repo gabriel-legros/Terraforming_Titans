@@ -623,21 +623,16 @@
     justify-content: flex-start;
 }
 /* --- Planetary Thrusters Project --- */
-.power-controls-wrapper {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-.power-controls-wrapper .stats-grid {
-    flex-grow: 1;
-}
-
 .thruster-power-controls {
     display: flex;
     flex-direction: column;
     gap: 5px;
     margin-left: 20px;
+}
+
+.stats-grid .thruster-power-controls {
+    margin-left: 0;
+    margin-top: 5px;
 }
 
 .thruster-power-controls .main-buttons, .thruster-power-controls .multiplier-container {

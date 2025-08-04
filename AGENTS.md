@@ -320,3 +320,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Moon parent bodies now include radius values for accurate distance-based radiation calculations.
 - Thruster Power subcard now shows exhaust velocity with a tooltip explaining specific impulse and aligns it in a column with the continuous power display.
 - Thruster Power subcard now keeps exhaust velocity beside continuous power and adds a Thrust/Power ratio column.
+- Thruster power control buttons now appear in the Continuous column.

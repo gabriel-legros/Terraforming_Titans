@@ -73,6 +73,8 @@ describe('Planetary Thrusters UI', () => {
     const grid = project.el.pwrCard.querySelector('.stats-grid.three-col');
     expect(grid).not.toBeNull();
     expect(grid.children.length).toBe(3);
+    const firstCol = grid.children[0];
+    expect(firstCol.querySelector('.thruster-power-controls')).not.toBeNull();
   });
 
   test('hides spiral delta v when moon bound', () => {
