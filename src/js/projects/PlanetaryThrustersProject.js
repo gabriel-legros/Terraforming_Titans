@@ -354,7 +354,7 @@ class PlanetaryThrustersProject extends Project{
 
     /* ------ spin -------- */
     if(this.spinInvest){
-      const sign=this.tgtDays<this.spinStartDays?-1:+1;
+      const sign=this.tgtDays<this.spinStartDays?1:-1;
       const dΩ=sign*dvTick/(p.radius*1e3);
       const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
       p.rotationPeriod=2*Math.PI/ω/3600;
