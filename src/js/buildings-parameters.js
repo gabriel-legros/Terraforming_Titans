@@ -198,7 +198,7 @@ const buildingsParameters = {
   cloningFacility: {
     name: 'Cloning Facility',
     category: 'production',
-    description: 'Consumes immense energy to grow and educate new colonists.',
+    description: 'Consumes energy to grow and educate new colonists.',
     cost: { colony: { metal: 1000, glass: 10, components: 100, electronics: 50 } },
     consumption: { colony: { energy: 100_000_000 } },
     production: { colony: { colonists: 0.1 } },
