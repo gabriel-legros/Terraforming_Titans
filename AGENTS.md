@@ -325,4 +325,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Thruster Power controls now occupy a dedicated second column in a four-column layout.
 - Planetary thruster delta v values update every tick and default to 1 AU/1 day when unset.
 - Exhaust velocity displays as N/A when Tractor Beams are active.
+- Moon-based planetary thrusters no longer show target AU or spiral Δv, assuming a 1 AU target with all energy devoted to escape.
 - Added Cloning Concept advanced research enabling energy-intensive cloning facilities to produce colonists.
