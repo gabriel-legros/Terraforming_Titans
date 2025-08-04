@@ -7,6 +7,7 @@ const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
+const ESCAPE_L1_FACTOR = 1.0;
 
 /* ---------- helpers ---------------------------------------------------- */
 const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
@@ -41,8 +42,8 @@ function translationalEnergyRemaining(p,dvRem,tpRatio){
 }
 
 // Hill radius in **meters**
-function hillRadiusMeters(parent, starMass = SOLAR_MASS) {
-  const a = (parent.distanceFromSun ?? 1) * AU_IN_METERS; // parent's heliocentric a
+function hillRadiusMeters(p, parent, starMass = SOLAR_MASS) {
+  const a = (p.distanceFromSun ?? 1) * AU_IN_METERS; // parent's heliocentric a
   return a * Math.cbrt(parent.mass / (3 * starMass));
 }
 
@@ -53,10 +54,10 @@ function dvRaiseApoapsis(mu, r0, rA) {
 }
 
 // New: Δv to send the moon onto an ellipse with apogee ~ L1/Hill
-function escapeDeltaVToHill(parent, orbitRkm, starMass = SOLAR_MASS, factor = ESCAPE_L1_FACTOR) {
+function escapeDeltaVToHill(p, parent, orbitRkm, starMass = SOLAR_MASS, factor = ESCAPE_L1_FACTOR) {
   const mu = G * parent.mass;
   const r0 = orbitRkm * 1e3;
-  const rA = hillRadiusMeters(parent, starMass) * factor;
+  const rA = hillRadiusMeters(p, parent, starMass) * factor;
   if (rA <= r0) return 0;
   return dvRaiseApoapsis(mu, r0, rA);
 }
@@ -240,7 +241,7 @@ class PlanetaryThrustersProject extends Project{
       this.tgtAU=1;
       this.el.distTargetRow.style.display = "none";
       this.el.distDvRow.style.display = "block"; // Show spiral Δv
-      const r_hill = hillRadiusMeters(p, parent) / 1e3;
+      const r_hill = hillRadiusMeters(p, parent);
       const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
       this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
       this.el.escRow.style.display = "none"; // Hide old escape row
@@ -282,10 +283,11 @@ class PlanetaryThrustersProject extends Project{
 
     if(this.motionInvest){
       if(reset) this.energySpentMotion=0;
-      if(p.parentBody){
-        this.escapePhase=true;
-        const r_hill = hillRadiusMeters(p, p.parentBody);
-        this.dVreq = escapeSpiralDeltaV(p.parentBody.orbitRadius, r_hill, p.parentBody.mass);
+      if (p.parentBody) {
+        this.escapePhase = true;
+        const starM = (p.starMass || SOLAR_MASS);
+        this.escapeTargetRkm = hillRadiusMeters(p.parentBody, starM) / 1e3;
+        this.dVreq = escapeDeltaVToHill(p, p.parentBody, p.parentBody.orbitRadius, starM);
       }else{
         this.escapePhase=false;
         if(reset || this.startAU===null) this.startAU=p.distanceFromSun;
@@ -427,7 +429,7 @@ class PlanetaryThrustersProject extends Project{
         let E = -mu / (2 * r) + v * a * dt;  // a is your (possibly scaled) tangential accel
 
         // Target: transfer ellipse with apogee at L1/Hill
-        const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(parent, starM) / 1e3)) * 1e3;
+        const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
         const a_trans = 0.5 * (r + rL1);
         const E_req = -mu / (2 * a_trans);
 
