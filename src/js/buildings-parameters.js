@@ -200,7 +200,7 @@ const buildingsParameters = {
     category: 'production',
     description: 'Consumes immense energy to grow new colonists.',
     cost: { colony: { metal: 1000, components: 100, electronics: 50 } },
-    consumption: { colony: { energy: 100000000 } },
+    consumption: { colony: { energy: 1000000000 } },
     production: { colony: { colonists: 0.1 } },
     storage: {},
     dayNightActivity: false,
