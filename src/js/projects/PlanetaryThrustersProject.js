@@ -340,7 +340,7 @@ class PlanetaryThrustersProject extends Project{
 
     const p=terraforming.celestialParameters;if(!p)return;
     const dt=dtMs/1000;
-    const need=this.power*dt;
+    const need=this.power*dt*86400;
     if(resources.colony.energy.value<need) return;
     resources.colony.energy.decrease(need);
 
