@@ -308,9 +308,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     const p=terraforming.celestialParameters||{};
     this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
-    this.el.distNow.textContent = p.parentBody?
-        fmt(p.parentBody.orbitRadius,false,0)+" km" :
-        fmt(p.distanceFromSun||0,false,3)+" AU";
+    this.el.distNow.textContent = fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
       ? 'N/A'
