@@ -127,11 +127,8 @@ class PlanetaryThrustersProject extends Project{
             <button id="pDiv">/10</button><button id="pMul">x10</button>
           </div>
         </div>
-      <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Specific impulse equals exhaust velocity divided by standard gravity (Isp = Ve / g₀).">&#9432;</span></span><span id="veVal" class="stat-value">${veDisplay}</span></div>
-      <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="An ideal rocket's thrust-to-power ratio equals 2 divided by exhaust velocity.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
       <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Exhaust velocity (Ve) measures how fast propellant is ejected. A higher Ve provides more thrust per unit of propellant, increasing mass efficiency. It is directly related to Specific Impulse (Isp), a standard measure of engine performance, via the formula Isp = Ve / g₀ (where g₀ is standard gravity). While you must supply the energy, the required propellant is sourced locally and does not have a resource cost.">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
       <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="This ratio measures how efficiently thrusters convert input energy (Power) into motive force (Thrust). For an ideal engine, this value is T/P = 2 / Ve. Fusion drives have very high exhaust velocity, making them extremely propellant-efficient, but this comes at the cost of a lower thrust-to-power ratio.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
-
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
