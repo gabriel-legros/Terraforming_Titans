@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Planetary Thrusters – continuous‑burn, moon‑escape, live Energy display
+   Planetary Thrusters – continuous‑burn, moon‑escape, live Energy display
    ========================================================================== */
 
 const G  = 6.67430e-11;
@@ -7,7 +7,7 @@ const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
-const ESCAPE_L1_FACTOR = 1.0;
+const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
 
 /* ---------- helpers ---------------------------------------------------- */
 const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
@@ -41,9 +41,9 @@ function translationalEnergyRemaining(p,dvRem,tpRatio){
   return p.mass * dvRem / tpRatio;
 }
 
-// Hill radius in **meters**
+// Hill radius in **meters** – uses the planet's heliocentric distance (per data model)
 function hillRadiusMeters(p, parent, starMass = SOLAR_MASS) {
-  const a = (p.distanceFromSun ?? 1) * AU_IN_METERS; // parent's heliocentric a
+  const a = (p.distanceFromSun ?? 1) * AU_IN_METERS; // heliocentric a lives on the planet
   return a * Math.cbrt(parent.mass / (3 * starMass));
 }
 
@@ -53,7 +53,7 @@ function dvRaiseApoapsis(mu, r0, rA) {
   return v0 * (Math.sqrt((2 * rA) / (r0 + rA)) - 1);
 }
 
-// New: Δv to send the moon onto an ellipse with apogee ~ L1/Hill
+// Δv to send the moon onto an ellipse with apogee ~ L1/Hill (injection)
 function escapeDeltaVToHill(p, parent, orbitRkm, starMass = SOLAR_MASS, factor = ESCAPE_L1_FACTOR) {
   const mu = G * parent.mass;
   const r0 = orbitRkm * 1e3;
@@ -62,12 +62,10 @@ function escapeDeltaVToHill(p, parent, orbitRkm, starMass = SOLAR_MASS, factor =
   return dvRaiseApoapsis(mu, r0, rA);
 }
 
-function escapeSpiralDeltaV(r1_km, r2_m, parent_mass) {
-  const r1 = r1_km * 1e3;
-  const mu = G * parent_mass;
-  // Ensure r2 is greater than r1 to avoid negative sqrt
-  if (r2_m <= r1) return 0;
-  return Math.sqrt(mu / r1) - Math.sqrt(mu / r2_m);
+// Δv to **arrive** at L1/Hill by slowly spiraling (circular→circular approximation)
+function dvToCircularAtRadius(mu, r0, rTarget) {
+  if (rTarget <= r0) return 0;
+  return Math.sqrt(mu / r0) - Math.sqrt(mu / rTarget);
 }
 
 /* ========================================================================= */
@@ -87,6 +85,7 @@ class PlanetaryThrustersProject extends Project{
 
     this.energySpentSpin=0;this.energySpentMotion=0;
     this.activeMode=null;
+    this.escapeTargetRkm = null;
     this.el={};
   }
 
@@ -219,6 +218,10 @@ class PlanetaryThrustersProject extends Project{
     this.el.pDiv.onclick  =()=>{this.step=Math.max(1,this.step/10);up();};
     this.el.p0.onclick    =()=>{this.setPower(0);up();};
 
+    // Pre-populate preview costs before first update
+    this.calcSpinCost();
+    this.calcMotionCost();
+
     this.updateUI();
   }
 
@@ -240,18 +243,20 @@ class PlanetaryThrustersProject extends Project{
     if(parent){
       this.tgtAU=1;
       this.el.distTargetRow.style.display = "none";
-      this.el.distDvRow.style.display = "none"; // Hide spiral Δv
-      const r_hill = hillRadiusMeters(p, parent);
-      const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
-      this.el.escDv.textContent = fmt(esc, false, 3) + " m/s";
+      this.el.distDvRow.style.display = "none"; // preview via Escape row for moons
+      const starM = (p.starMass || SOLAR_MASS);
+      const r_hill_m = hillRadiusMeters(p, parent, starM);
+      // Show **arrival** cost (spiral to L1), not just injection
+      const escArrival = dvToCircularAtRadius(G*parent.mass, parent.orbitRadius*1e3, r_hill_m);
+      this.el.escDv.textContent = fmt(escArrival, false, 3) + " m/s";
       this.el.escRow.style.display = "block"; // Show escape row
       this.el.parentRow.style.display = "block";
       this.el.moonWarn.style.display = "block";
       this.el.hillRow.style.display = "block";
-      this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
+      this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
       this.el.parentName.textContent = parent.name || "Parent";
       this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-      this.el.distE.textContent = formatEnergy(p.mass * esc / this.getThrustPowerRatio());
+      this.el.distE.textContent = formatEnergy(p.mass * escArrival / this.getThrustPowerRatio());
       if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
     }else{
       const tgt=parseFloat(this.el.distTarget.value)||1;
@@ -286,8 +291,10 @@ class PlanetaryThrustersProject extends Project{
       if (p.parentBody) {
         this.escapePhase = true;
         const starM = (p.starMass || SOLAR_MASS);
-        this.escapeTargetRkm = hillRadiusMeters(p.parentBody, starM) / 1e3;
-        this.dVreq = escapeDeltaVToHill(p, p.parentBody, p.parentBody.orbitRadius, starM);
+        const r_hill_m = hillRadiusMeters(p, p.parentBody, starM);
+        this.escapeTargetRkm = r_hill_m / 1e3; // store km
+        // Use **arrival** cost so UI and threshold match
+        this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, p.parentBody.orbitRadius*1e3, r_hill_m);
       }else{
         this.escapePhase=false;
         if(reset || this.startAU===null) this.startAU=p.distanceFromSun;
@@ -308,6 +315,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     const p=terraforming.celestialParameters||{};
     this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
+    // Always show heliocentric distance from the planet (per data model)
     this.el.distNow.textContent = fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
@@ -335,22 +343,27 @@ class PlanetaryThrustersProject extends Project{
 
     if(this.el.distTarget){
       if(p && p.parentBody){
-      this.tgtAU = 1;
-      this.el.distTargetRow.style.display="none";
-      this.el.distDvRow.style.display="none";
-      const parent=p.parentBody;
-      const r_hill = hillRadiusMeters(p, parent);
-      const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
-      this.el.escRow.style.display = "block";
-      this.el.escDv.textContent = fmt(esc, false, 3) + " m/s";
-      this.el.parentRow.style.display = "block";
-      this.el.moonWarn.style.display = "block";
-      this.el.hillRow.style.display = "block";
-      this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
-      this.el.parentName.textContent = parent.name || "Parent";
-      this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-      const dvRem=esc;
-      this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
+        this.tgtAU = 1;
+        this.el.distTargetRow.style.display="none";
+        this.el.distDvRow.style.display="none"; // use Escape row when bound to parent
+        const parent=p.parentBody;
+        const starM = (p.starMass || SOLAR_MASS);
+        const r_hill_m = hillRadiusMeters(p, parent, starM);
+        // Preview uses **arrival** cost for consistency with threshold
+        const dvPreview = dvToCircularAtRadius(G*parent.mass, parent.orbitRadius*1e3, r_hill_m);
+        this.el.escRow.style.display = "block";
+        this.el.escDv.textContent = fmt(dvPreview, false, 3) + " m/s";
+        this.el.parentRow.style.display = "block";
+        this.el.moonWarn.style.display = "block";
+        this.el.hillRow.style.display = "block";
+        this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
+        this.el.parentName.textContent = parent.name || "Parent";
+        this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+
+        // Show remaining energy based on active job if present; else preview
+        const usingJob  = this.motionInvest && this.dVreq > 0;
+        const dvRem     = usingJob ? Math.max(0, this.dVreq - this.dVdone) : dvPreview;
+        this.el.distE.textContent = formatEnergy(p.mass * dvRem / this.getThrustPowerRatio());
       }else if(p){
         let tgtAU = 1;
         try{
@@ -363,9 +376,10 @@ class PlanetaryThrustersProject extends Project{
         this.el.distDvRow.style.display="block";
         this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display=this.el.hillRow.style.display="none";
         const curAU=p.distanceFromSun||tgtAU;
-        const dv=spiralDeltaV(curAU,tgtAU);
-        this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
-        const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):dv;
+        const dvPreview=spiralDeltaV(curAU,tgtAU);
+        this.el.distDv.textContent=fmt(dvPreview,false,3)+" m/s";
+        const usingJob  = this.motionInvest && this.dVreq > 0;
+        const dvRem     = usingJob ? Math.max(0,this.dVreq-this.dVdone) : dvPreview;
         this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
       }
     }
@@ -379,8 +393,8 @@ class PlanetaryThrustersProject extends Project{
   }
 
 /* ---------- power controls ------------------------------------------- */
-  adjustPower(d){this.power=Math.max(0,this.power+d);}
-  setPower(v){this.power=Math.max(0,v);}
+  adjustPower(d){this.power=Math.max(0,this.power+d);}  
+  setPower(v){this.power=Math.max(0,v);}  
 
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
@@ -391,7 +405,7 @@ class PlanetaryThrustersProject extends Project{
     const p=terraforming.celestialParameters;if(!p)return;
     const dt=dtMs/1000;
     const need=this.power*dt;
-    if(resources.colony.energy.value<need) return;
+    if(resources.colony && resources.colony.energy && resources.colony.energy.value<need) return;
     resources.colony.energy.decrease(need);
 
     const energySpent=need*86400;
@@ -424,16 +438,14 @@ class PlanetaryThrustersProject extends Project{
         const v = Math.sqrt(mu / r);
 
         // Energy after this tick (tangential thrust)
-        let E = -mu / (2 * r) + v * a * dt;  // a is your (possibly scaled) tangential accel
+        let E = -mu / (2 * r) + v * a * dt;  // a is your tangential accel
 
-        // Target: transfer ellipse with apogee at L1/Hill
+        // Threshold: **arrive** at L1/Hill radius (not just injection)
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
-        const a_trans = 0.5 * (r + rL1);
-        const E_req = -mu / (2 * a_trans);
 
-        if (E >= E_req || this.dVdone >= this.dVreq) {
+        if (r >= rL1 || this.dVdone >= this.dVreq) {
           // Detach to heliocentric motion, co-orbital with the parent
-          p.distanceFromSun = parent.distanceFromSun;
+          // (distanceFromSun is already stored on the planet per data model)
           delete p.parentBody;
           this.escapePhase = false;
           this.startAU = p.distanceFromSun;
