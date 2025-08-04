@@ -61,6 +61,7 @@ class PlanetaryThrustersProject extends Project{
     this.startAU=null;
 
     this.energySpentSpin=0;this.energySpentMotion=0;
+    this.activeMode=null;
     this.el={};
   }
 
@@ -77,12 +78,13 @@ class PlanetaryThrustersProject extends Project{
     /* spin */
     const spinHTML=`<div class="card-header"><span class="card-title">Spin</span></div>
     <div class="card-body">
-      <div class="stats-grid four-col">
+      <div class="stats-grid five-col">
         <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
         <div><span class="stat-label">Target:</span>
              <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>day</span></div>
         <div><span class="stat-label">Equiv. Δv:</span><span id="rotDv" class="stat-value">—</span></div>
         <div><span class="stat-label">Energy Cost:</span><span id="rotE" class="stat-value">—</span></div>
+        <div><span class="stat-label">Energy Spent:</span><span id="rotSpent" class="stat-value">0</span></div>
       </div>
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
@@ -92,7 +94,7 @@ class PlanetaryThrustersProject extends Project{
     /* motion */
     const motHTML=`<div class="card-header"><span class="card-title">Motion</span></div>
     <div class="card-body">
-      <div class="stats-grid four-col">
+      <div class="stats-grid five-col">
         <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
         <div id="parentRow" style="display:none;">
            <span class="stat-label">Around:</span><span id="parentName" class="stat-value">—</span>
@@ -105,23 +107,13 @@ class PlanetaryThrustersProject extends Project{
              <span class="stat-label">Escape Δv:</span><span id="escDv" class="stat-value">—</span>
         </div>
         <div><span class="stat-label">Energy Cost:</span><span id="distE" class="stat-value">—</span></div>
+        <div><span class="stat-label">Energy Spent:</span><span id="distSpent" class="stat-value">0</span></div>
       </div>
       <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label></div>
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
     motCard.style.display=this.isCompleted?"block":"none";
-
-    /* energy spent */
-    const spentHTML=`<div class="card-header"><span class="card-title">Energy Spent</span></div>
-    <div class="card-body">
-      <div class="stats-grid two-col">
-        <div><span class="stat-label">Spin:</span><span id="spinSpent" class="stat-value">0</span></div>
-        <div><span class="stat-label">Motion:</span><span id="motSpent" class="stat-value">0</span></div>
-      </div>
-    </div>`;
-    const spentCard=document.createElement('div');spentCard.className="info-card";spentCard.innerHTML=spentHTML;c.appendChild(spentCard);
-    spentCard.style.display=this.isCompleted?"block":"none";
 
     /* power */
     const veDisplay = this.hasTractorBeams()
@@ -150,17 +142,16 @@ class PlanetaryThrustersProject extends Project{
     const g=(sel,r)=>r.querySelector(sel);
     const distTargetEl = g('#distTarget', motCard);
     const distDvEl = g('#distDv', motCard);
-    this.el={spinCard, motCard, spentCard, pwrCard,
+    this.el={spinCard, motCard, pwrCard,
       rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
-      rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
+      rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),rotSpent:g('#rotSpent',spinCard),
       distNow:g('#distNow',motCard),distTarget:distTargetEl,
       distTargetRow:distTargetEl.parentElement,
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
-      distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
+      distE:g('#distE',motCard),distCb:g('#distInvest',motCard),distSpent:g('#distSpent',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
       parentRad:g('#parentRad',motCard),moonWarn:g('#moonWarn',motCard),
-      spinSpent:g('#spinSpent',spentCard),motionSpent:g('#motSpent',spentCard),
       pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),tpVal:g('#tpVal',pwrCard),
       pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
@@ -169,10 +160,22 @@ class PlanetaryThrustersProject extends Project{
     this.el.rotTarget.oninput = ()=>this.calcSpinCost();
     this.el.distTarget.oninput= ()=>this.calcMotionCost();
 
-    this.el.rotCb.onchange = ()=>{this.spinInvest=this.el.rotCb.checked;
-      if(this.spinInvest){this.motionInvest=false;this.el.distCb.checked=false;}this.prepareJob();};
-    this.el.distCb.onchange= ()=>{this.motionInvest=this.el.distCb.checked;
-      if(this.motionInvest){this.spinInvest=false;this.el.rotCb.checked=false;}this.prepareJob();};
+    this.el.rotCb.onchange = ()=>{
+      this.spinInvest = this.el.rotCb.checked;
+      if(this.spinInvest){
+        this.motionInvest=false;this.el.distCb.checked=false;
+        if(this.dVreq===0 || this.activeMode!=='spin') this.prepareJob(true);
+        this.activeMode='spin';
+      }
+    };
+    this.el.distCb.onchange= ()=>{
+      this.motionInvest = this.el.distCb.checked;
+      if(this.motionInvest){
+        this.spinInvest=false;this.el.rotCb.checked=false;
+        if(this.dVreq===0 || this.activeMode!=='motion') this.prepareJob(true);
+        this.activeMode='motion';
+      }
+    };
 
     const up=()=>this.updateUI();
     this.el.pPlus.onclick =()=>{this.adjustPower(+this.step);up();};
@@ -188,11 +191,12 @@ class PlanetaryThrustersProject extends Project{
   calcSpinCost(){
     const p=terraforming.celestialParameters;if(!p)return;
     const tgt=parseFloat(this.el.rotTarget.value)||1;
+    const changed = tgt !== this.tgtDays;
     this.tgtDays=tgt;
     const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
     this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
     this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
-    if(this.spinInvest) this.prepareJob();
+    if(this.spinInvest && (changed || this.dVreq===0)) { this.prepareJob(true); this.activeMode='spin'; }
   }
 
   calcMotionCost(){
@@ -210,8 +214,10 @@ class PlanetaryThrustersProject extends Project{
       this.el.parentRad.textContent=fmt(parent.orbitRadius,false,0)+" km";
       this.el.distDv.textContent="—";
       this.el.distE.textContent=formatEnergy(p.mass*esc/this.getThrustPowerRatio());
+      if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
     }else{
       const tgt=parseFloat(this.el.distTarget.value)||1;
+      const changed = tgt !== this.tgtAU;
       this.tgtAU=tgt;
       this.el.distTargetRow.style.display="block";
       this.el.distDvRow.style.display="block";
@@ -219,30 +225,32 @@ class PlanetaryThrustersProject extends Project{
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
+      if(this.motionInvest && (changed || this.dVreq===0)) { this.prepareJob(true); this.activeMode='motion'; }
     }
-    if(this.motionInvest) this.prepareJob();
   }
 
 /* ---------- job preparation ------------------------------------------ */
-  prepareJob(){
+  prepareJob(reset=false){
     const p=terraforming.celestialParameters;if(!p)return;
-    this.dVdone=0;
+    if(reset) this.dVdone=0;
 
     if(this.spinInvest){
-      this.energySpentSpin=0;
-      this.spinStartDays=getRotHours(p)/24;
+      if(reset || this.spinStartDays===null){
+        this.energySpentSpin=0;
+        this.spinStartDays=getRotHours(p)/24;
+      }
       this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
       return;
     }
 
     if(this.motionInvest){
-      this.energySpentMotion=0;
+      if(reset) this.energySpentMotion=0;
       if(p.parentBody){
         this.escapePhase=true;
         this.dVreq=escapeDeltaV(p.parentBody.mass,p.parentBody.orbitRadius);
       }else{
         this.escapePhase=false;
-        this.startAU=p.distanceFromSun;
+        if(reset || this.startAU===null) this.startAU=p.distanceFromSun;
         this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
       }
     }
@@ -254,7 +262,6 @@ class PlanetaryThrustersProject extends Project{
       const vis = this.isCompleted ? 'block' : 'none';
       this.el.spinCard.style.display = vis;
       this.el.motCard.style.display = vis;
-      this.el.spentCard.style.display = vis;
       this.el.pwrCard.style.display = vis;
     }
     const p=terraforming.celestialParameters||{};
@@ -320,11 +327,11 @@ class PlanetaryThrustersProject extends Project{
       }
     }
 
-    if(this.el.spinSpent){
-      this.el.spinSpent.textContent = formatEnergy(this.energySpentSpin);
+    if(this.el.rotSpent){
+      this.el.rotSpent.textContent = formatEnergy(this.energySpentSpin);
     }
-    if(this.el.motionSpent){
-      this.el.motionSpent.textContent = formatEnergy(this.energySpentMotion);
+    if(this.el.distSpent){
+      this.el.distSpent.textContent = formatEnergy(this.energySpentMotion);
     }
   }
 
@@ -358,7 +365,7 @@ class PlanetaryThrustersProject extends Project{
       const dΩ=sign*dvTick/(p.radius*1e3);
       const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
       p.rotationPeriod=2*Math.PI/ω/3600;
-      if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;}
+      if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;}
       this.updateUI(); return;
     }
 
@@ -391,7 +398,7 @@ class PlanetaryThrustersProject extends Project{
            (this.tgtAU<this.startAU&&p.distanceFromSun<=this.tgtAU)||
            this.dVdone>=this.dVreq){
           p.distanceFromSun=this.tgtAU;
-          this.motionInvest=false;this.dVreq=this.dVdone=0;
+          this.motionInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;
         }
       }
       this.updateUI();

@@ -38,8 +38,8 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.rotE.textContent).not.toBe('—');
     expect(project.el.distDv.textContent).not.toBe('—');
     expect(project.el.distE.textContent).not.toBe('—');
-    expect(project.el.spinSpent.textContent).toBe('0');
-    expect(project.el.motionSpent.textContent).toBe('0');
+    expect(project.el.rotSpent.textContent).toBe('0');
+    expect(project.el.distSpent.textContent).toBe('0');
   });
 
   test('uses defaults when targets cleared', () => {

@@ -32,27 +32,38 @@ describe('Planetary Thrusters energy tracking', () => {
     project.renderUI(container);
     project.complete();
 
-    // spin energy
+    // spin energy persists
     project.power = 1;
     project.spinInvest = true;
-    project.prepareJob();
+    project.prepareJob(true);
+    project.activeMode = 'spin';
     project.update(1000);
-    expect(project.energySpentSpin).toBeGreaterThan(0);
+    const spinBeforePause = project.energySpentSpin;
+    project.spinInvest = false;
+    project.spinInvest = true; // resume without resetting
+    project.update(1000);
+    expect(project.energySpentSpin).toBeGreaterThan(spinBeforePause);
 
-    // motion energy and escape reset
+    // motion energy persists and resets after escape
     project.spinInvest = false;
     project.motionInvest = true;
-    project.prepareJob();
+    project.prepareJob(true);
+    project.activeMode = 'motion';
     project.power = 1e21; // lower power so escape takes multiple ticks
 
-    let hadEnergy = false;
-    for(let i=0;i<100;i++){
+    project.update(1000); // accumulate some energy
+    const motionBeforePause = project.energySpentMotion;
+    project.motionInvest = false;
+    project.motionInvest = true; // resume
+    project.update(1000);
+    expect(project.energySpentMotion).toBeGreaterThan(motionBeforePause);
+
+    let hadEnergy = project.energySpentMotion > 0;
+    let i = 0;
+    while(ctx.terraforming.celestialParameters.parentBody && i < 1000){
       project.update(1_000_000); // sizeable timestep
-      if(ctx.terraforming.celestialParameters.parentBody){
-        if(project.energySpentMotion > 0) hadEnergy = true;
-      } else {
-        break;
-      }
+      if(project.energySpentMotion > 0) hadEnergy = true;
+      i++;
     }
     expect(hadEnergy).toBe(true);
     expect(ctx.terraforming.celestialParameters.parentBody).toBeUndefined();

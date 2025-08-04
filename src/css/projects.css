@@ -166,6 +166,10 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.stats-grid.five-col {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
 .stat-item {
     background-color: #fff;
     padding: 8px;
