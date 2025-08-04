@@ -617,6 +617,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'cloning_facilities',
+        name: 'Cloning Facilities',
+        description: 'Unlocks cloning facilities that consume massive energy to grow colonists.',
+        cost: { research: 1000 },
+        prerequisites: [],
+        requiredFlags: ['cloningResearchUnlocked'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'cloningFacility',
+            type: 'enable',
+          },
+        ],
+      },
+      {
         id: 'enhanced_colonist_import_2',
         name: 'Bigger rockets',
         description: 'Further increase the capacity of each colonist import by 30 using bigger rockets.',
@@ -1226,6 +1241,21 @@ const researchParameters = {
         effects: [
           { target: 'project', targetId: 'spaceStorage', type: 'enable' } ]
        },
+      {
+        id: 'cloning_concept',
+        name: 'Cloning Concept',
+        description: 'Explores human cloning to rapidly grow population.',
+        cost: { advancedResearch: 40000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'cloningResearchUnlocked',
+            value: true
+          }
+        ]
+      },
       {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
