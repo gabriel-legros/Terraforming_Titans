@@ -351,7 +351,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
         this.el.parentName.textContent = parent.name || "Parent";
         this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-        const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):esc;
+        const dvRem=esc;
         this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
       }else if(p){
         let tgtAU = 1;
