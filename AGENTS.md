@@ -322,3 +322,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Thruster Power subcard now keeps exhaust velocity beside continuous power and adds a Thrust/Power ratio column.
 - Added Tractor Beams advanced research setting planetary thrusters to a thrust-to-power ratio of 1.
 - Thruster power control buttons now appear in the Continuous column.
+- Thruster Power controls now occupy a dedicated second column in a four-column layout.

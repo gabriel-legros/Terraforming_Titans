@@ -70,11 +70,12 @@ describe('Planetary Thrusters UI', () => {
     expect(icons.length).toBe(2);
     expect(icons[0].getAttribute('title')).toMatch(/Specific impulse/);
     expect(icons[1].getAttribute('title')).toMatch(/thrust-to-power ratio/i);
-    const grid = project.el.pwrCard.querySelector('.stats-grid.three-col');
+    const grid = project.el.pwrCard.querySelector('.stats-grid.four-col');
     expect(grid).not.toBeNull();
-    expect(grid.children.length).toBe(3);
-    const firstCol = grid.children[0];
-    expect(firstCol.querySelector('.thruster-power-controls')).not.toBeNull();
+    expect(grid.children.length).toBe(4);
+    const controlsCol = grid.children[1];
+    expect(controlsCol.classList.contains('thruster-power-controls')).toBe(true);
+    expect(grid.children[0].querySelector('.thruster-power-controls')).toBeNull();
   });
 
   test('hides spiral delta v when moon bound', () => {
