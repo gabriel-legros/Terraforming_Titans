@@ -41,7 +41,7 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.distE.textContent).not.toBe('—');
   });
 
-  test('displays exhaust velocity with tooltip', () => {
+  test('displays exhaust velocity and thrust to power ratio with tooltip', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -64,12 +64,15 @@ describe('Planetary Thrusters UI', () => {
 
     const expectedVe = (1e5).toLocaleString() + '\u202Fm/s';
     expect(project.el.veVal.textContent).toBe(expectedVe);
-    const icon = project.el.pwrCard.querySelector('.info-tooltip-icon');
-    expect(icon).not.toBeNull();
-    expect(icon.getAttribute('title')).toMatch(/Specific impulse/);
-    const grid = project.el.pwrCard.querySelector('.stats-grid.two-col');
+    const expectedTP = (2 / 1e5).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 }) + '\u202FN/W';
+    expect(project.el.tpVal.textContent).toBe(expectedTP);
+    const icons = project.el.pwrCard.querySelectorAll('.info-tooltip-icon');
+    expect(icons.length).toBe(2);
+    expect(icons[0].getAttribute('title')).toMatch(/Specific impulse/);
+    expect(icons[1].getAttribute('title')).toMatch(/thrust-to-power ratio/i);
+    const grid = project.el.pwrCard.querySelector('.stats-grid.three-col');
     expect(grid).not.toBeNull();
-    expect(grid.children.length).toBe(2);
+    expect(grid.children.length).toBe(3);
   });
 
   test('hides spiral delta v when moon bound', () => {
