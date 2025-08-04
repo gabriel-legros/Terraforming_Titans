@@ -95,7 +95,7 @@ class PlanetaryThrustersProject extends Project{
         <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
         <div id="parentRow" style="display:none;">
            <span class="stat-label">Around:</span><span id="parentName" class="stat-value">—</span>
-           <span>&nbsp;at</span><span id="parentRad" class="stat-value">—</span>
+           <span>&nbsp;at </span><span id="parentRad" class="stat-value">—</span>
         </div>
         <div><span class="stat-label">Target:</span>
              <input id="distTarget" type="number" min="0.1" step="0.1" value="1"><span>AU</span></div>
