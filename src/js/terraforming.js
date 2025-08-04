@@ -49,6 +49,9 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.calculateActualAlbedoPhysics === 'undefined') {
         globalThis.calculateActualAlbedoPhysics = physics.calculateActualAlbedoPhysics;
     }
+    if (typeof globalThis.calculateAtmosphericPressure === 'undefined') {
+        globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
+    }
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
@@ -235,8 +238,9 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
-    // Current estimated surface radiation in mSv/day
+    // Current estimated surface and orbital radiation in mSv/day
     this.surfaceRadiation = 0;
+    this.orbitalRadiation = 0;
 
 
 
@@ -964,7 +968,7 @@ class Terraforming extends EffectableEntity{
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
     }
 
-    // Estimate and store current surface radiation level in mSv/day
+    // Estimate and store current surface and orbital radiation levels in mSv/day
     updateSurfaceRadiation() {
       const pressurePa = this.calculateTotalPressure() * 1000; // kPa -> Pa
       const g = this.celestialParameters.gravity || 1;
@@ -978,14 +982,27 @@ class Terraforming extends EffectableEntity{
 
       const opts = {};
       if (parent.beltFalloffExp !== undefined) opts.beltFalloffExp = parent.beltFalloffExp;
+
+      const beltDose = parent.parentBeltAtRef_mSvPerDay || 0;
+      const refDistance = parent.refDistance_Rp || 1;
+
       const dose = estimateSurfaceDoseByColumn(
         column_gcm2,
         distance_Rp,
-        parent.parentBeltAtRef_mSvPerDay || 0,
-        parent.refDistance_Rp || 1,
+        beltDose,
+        refDistance,
         opts
       );
       this.surfaceRadiation = dose.total;
+
+      const orbitalDose = estimateSurfaceDoseByColumn(
+        0,
+        distance_Rp,
+        beltDose,
+        refDistance,
+        opts
+      );
+      this.orbitalRadiation = orbitalDose.total;
     }
 
     calculateGroundAlbedo() {
@@ -1108,9 +1125,10 @@ class Terraforming extends EffectableEntity{
     
     // Calculates the current total global atmospheric pressure (in kPa) from global resources
     calculateTotalPressure() {
+        const atmos = (this.resources && this.resources.atmospheric) || (typeof resources !== 'undefined' ? resources.atmospheric : {});
         let totalPressurePa = 0;
-        for (const gas in resources.atmospheric) {
-            const amount = resources.atmospheric[gas].value || 0;
+        for (const gas in atmos) {
+            const amount = atmos[gas].value || 0;
             totalPressurePa += calculateAtmosphericPressure(
                 amount,
                 this.celestialParameters.gravity,

@@ -316,4 +316,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Geothermal generators now require reduced maintenance instead of none.
 - Jumping to a chapter now reconstructs the journal after rewards and objectives are applied.
 - Terraforming Others box now displays surface radiation using new radiation utilities and stores the value for later use.
+- Terraforming Others box now shows orbital radiation assuming no atmospheric shielding.
 - Moon parent bodies now include radius values for accurate distance-based radiation calculations.
