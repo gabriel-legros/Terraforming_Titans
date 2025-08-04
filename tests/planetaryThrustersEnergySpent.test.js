@@ -60,13 +60,14 @@ describe('Planetary Thrusters energy tracking', () => {
 
     let hadEnergy = project.energySpentMotion > 0;
     let i = 0;
-    while(ctx.terraforming.celestialParameters.parentBody && i < 1000){
+    while(!ctx.terraforming.celestialParameters.hasEscapedParent && i < 1000){
       project.update(1_000_000); // sizeable timestep
       if(project.energySpentMotion > 0) hadEnergy = true;
       i++;
     }
     expect(hadEnergy).toBe(true);
-    expect(ctx.terraforming.celestialParameters.parentBody).toBeUndefined();
+    expect(ctx.terraforming.celestialParameters.parentBody).toBeDefined();
+    expect(ctx.terraforming.celestialParameters.hasEscapedParent).toBe(true);
     expect(project.energySpentMotion).toBe(0);
   });
 });

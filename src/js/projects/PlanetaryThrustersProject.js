@@ -234,7 +234,12 @@ class PlanetaryThrustersProject extends Project{
 /* ---------- cost calculations ---------------------------------------- */
   calcSpinCost(){
     const p=terraforming.celestialParameters;if(!p)return;
-    const tgt=parseFloat(this.el.rotTarget.value)||1;
+    let tgt=1;
+    try{
+      const v=this.el.rotTarget&&this.el.rotTarget.value;
+      const n=parseFloat(v);
+      if(!isNaN(n)) tgt=n;
+    }catch(e){ tgt=1; }
     const changed = tgt !== this.tgtDays;
     this.tgtDays=tgt;
     const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
@@ -247,7 +252,12 @@ class PlanetaryThrustersProject extends Project{
     const p=terraforming.celestialParameters;if(!p)return;
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
-      const tgt=parseFloat(this.el.distTarget.value)||1;
+      let tgt=1;
+      try{
+        const v=this.el.distTarget&&this.el.distTarget.value;
+        const n=parseFloat(v);
+        if(!isNaN(n)) tgt=n;
+      }catch(e){ tgt=1; }
       const changed = tgt !== this.tgtAU;
       this.tgtAU=tgt;
       this.el.distTargetRow.style.display="block";
