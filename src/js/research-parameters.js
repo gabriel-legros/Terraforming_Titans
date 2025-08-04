@@ -1255,7 +1255,27 @@ const researchParameters = {
             value: true
           }
         ]
+      },
+      {
+        id: 'tractor_beams',
+        name: 'Tractor Beams',
+        description: 'Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
+        cost: { advancedResearch: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'planetaryThruster',
+            type: 'booleanFlag',
+            flagId: 'tractorBeams',
+            value: true
+          }
+        ]
       }
     ]
   };
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = researchParameters;
+}
   
