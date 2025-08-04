@@ -310,21 +310,18 @@ class ScannerProject extends Project {
 
   renderUI(container) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'power-controls-wrapper';
+    wrapper.className = 'amount-wrapper';
 
     const countContainer = document.createElement('div');
-    countContainer.className = 'invested-container';
+    countContainer.className = 'amount-display';
     const label = document.createElement('span');
-    label.className = 'stat-label';
     label.textContent = 'Amount:';
     const val = document.createElement('span');
     val.id = `${this.name}-count`;
-    val.className = 'stat-value';
     const slash = document.createElement('span');
     slash.textContent = ' / ';
     const max = document.createElement('span');
     max.id = `${this.name}-max`;
-    max.className = 'stat-value';
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
     info.title = 'Colonists let us build scanners in parallel. One satellite can be produced per 10,000 colonists.';
@@ -332,9 +329,9 @@ class ScannerProject extends Project {
     countContainer.append(label, val, slash, max, info);
 
     const controls = document.createElement('div');
-    controls.className = 'thruster-power-controls';
+    controls.className = 'amount-controls';
     const main = document.createElement('div');
-    main.className = 'main-buttons';
+    main.className = 'scanner-main-controls';
     const b0 = document.createElement('button');
     b0.textContent = '0';
     const bMinus = document.createElement('button');
@@ -344,7 +341,7 @@ class ScannerProject extends Project {
     main.append(b0, bMinus, bPlus);
 
     const mult = document.createElement('div');
-    mult.className = 'multiplier-container';
+    mult.className = 'scanner-mult-controls';
     const bDiv = document.createElement('button');
     bDiv.textContent = '/10';
     const bMul = document.createElement('button');
@@ -354,30 +351,31 @@ class ScannerProject extends Project {
     controls.append(main, mult);
     wrapper.append(countContainer, controls);
 
-    container.appendChild(wrapper);
+    const layout = document.createElement('div');
+    layout.className = 'scanner-assignment-container';
+    layout.appendChild(wrapper);
 
     let dVal, dMax;
     if (this.attributes?.scanner?.depositType) {
       const depositContainer = document.createElement('div');
-      depositContainer.className = 'invested-container';
+      depositContainer.className = 'deposits-container';
       const dLabel = document.createElement('span');
-      dLabel.className = 'stat-label';
       dLabel.textContent = 'Deposits:';
       dVal = document.createElement('span');
       dVal.id = `${this.name}-deposit-current`;
-      dVal.className = 'stat-value';
       const dSlash = document.createElement('span');
       dSlash.textContent = ' / ';
       dMax = document.createElement('span');
       dMax.id = `${this.name}-deposit-max`;
-      dMax.className = 'stat-value';
       const dInfo = document.createElement('span');
       dInfo.className = 'info-tooltip-icon';
       dInfo.title = 'Shows discovered and maximum deposits satellites can find on this planet.';
       dInfo.innerHTML = '&#9432;';
       depositContainer.append(dLabel, dVal, dSlash, dMax, dInfo);
-      container.appendChild(depositContainer);
+      layout.appendChild(depositContainer);
     }
+
+    container.appendChild(layout);
 
     this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0 };
     if (dVal && dMax) {
