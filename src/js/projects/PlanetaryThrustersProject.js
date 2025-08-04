@@ -348,7 +348,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.parentRow.style.display = "block";
         this.el.moonWarn.style.display = "block";
         this.el.hillRow.style.display = "block";
-        this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
+        this.el.hillVal.textContent = fmt(r_hill, false, 0) + " km";
         this.el.parentName.textContent = parent.name || "Parent";
         this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
         const dvRem=this.motionInvest?Math.max(0,this.dVreq-this.dVdone):esc;
