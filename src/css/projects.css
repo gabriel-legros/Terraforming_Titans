@@ -629,6 +629,10 @@
     align-items: center;
 }
 
+.power-controls-wrapper .stats-grid {
+    flex-grow: 1;
+}
+
 .thruster-power-controls {
     display: flex;
     flex-direction: column;
