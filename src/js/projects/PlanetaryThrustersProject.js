@@ -284,7 +284,7 @@ class PlanetaryThrustersProject extends Project{
       if(reset) this.energySpentMotion=0;
       if(p.parentBody){
         this.escapePhase=true;
-        const r_hill = hillRadius(p, p.parentBody);
+        const r_hill = hillRadiusMeters(p, p.parentBody);
         this.dVreq = escapeSpiralDeltaV(p.parentBody.orbitRadius, r_hill, p.parentBody.mass);
       }else{
         this.escapePhase=false;
@@ -339,7 +339,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.distTargetRow.style.display="none";
         this.el.distDvRow.style.display="none";
         const parent=p.parentBody;
-        const r_hill = hillRadius(p, parent);
+        const r_hill = hillRadiusMeters(p, parent) / 1e3;
         const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
         this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
         this.el.escRow.style.display = "none";
