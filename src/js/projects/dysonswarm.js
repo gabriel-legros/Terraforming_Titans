@@ -116,10 +116,18 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
   }
 
-  estimateCostAndGain() {
+  estimateCostAndGain(deltaTime = 1000) {
     if (this.isCompleted && this.collectors > 0) {
       const rate = this.collectors * this.energyPerCollector;
       resources.colony.energy.modifyRate(rate, 'Dyson Swarm', 'project');
+    }
+  }
+
+  applyCostAndGain(deltaTime = 1000) {
+    if (this.isCompleted && this.collectors > 0) {
+      const rate = this.collectors * this.energyPerCollector;
+      const energyGain = rate * (deltaTime / 1000);
+      resources.colony.energy.increase(energyGain);
     }
   }
 

@@ -370,7 +370,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if(projectManager){
-    projectManager.estimateProjects();
+    projectManager.estimateProjects(deltaTime);
   }
 
   // Apply accumulated changes to resources

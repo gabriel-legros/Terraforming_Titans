@@ -240,11 +240,11 @@ class PlanetaryThrustersProject extends Project{
     if(parent){
       this.tgtAU=1;
       this.el.distTargetRow.style.display = "none";
-      this.el.distDvRow.style.display = "block"; // Show spiral Δv
+      this.el.distDvRow.style.display = "none"; // Hide spiral Δv
       const r_hill = hillRadiusMeters(p, parent);
       const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
-      this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
-      this.el.escRow.style.display = "none"; // Hide old escape row
+      this.el.escDv.textContent = fmt(esc, false, 3) + " m/s";
+      this.el.escRow.style.display = "block"; // Show escape row
       this.el.parentRow.style.display = "block";
       this.el.moonWarn.style.display = "block";
       this.el.hillRow.style.display = "block";
@@ -335,22 +335,22 @@ class PlanetaryThrustersProject extends Project{
 
     if(this.el.distTarget){
       if(p && p.parentBody){
-        this.tgtAU = 1;
-        this.el.distTargetRow.style.display="none";
-        this.el.distDvRow.style.display="none";
-        const parent=p.parentBody;
-        const r_hill = hillRadiusMeters(p, parent);
-        const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
-        this.el.distDv.textContent = fmt(esc, false, 3) + " m/s";
-        this.el.escRow.style.display = "none";
-        this.el.parentRow.style.display = "block";
-        this.el.moonWarn.style.display = "block";
-        this.el.hillRow.style.display = "block";
-        this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
-        this.el.parentName.textContent = parent.name || "Parent";
-        this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-        const dvRem=esc;
-        this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
+      this.tgtAU = 1;
+      this.el.distTargetRow.style.display="none";
+      this.el.distDvRow.style.display="none";
+      const parent=p.parentBody;
+      const r_hill = hillRadiusMeters(p, parent);
+      const esc = escapeSpiralDeltaV(parent.orbitRadius, r_hill, parent.mass);
+      this.el.escRow.style.display = "block";
+      this.el.escDv.textContent = fmt(esc, false, 3) + " m/s";
+      this.el.parentRow.style.display = "block";
+      this.el.moonWarn.style.display = "block";
+      this.el.hillRow.style.display = "block";
+      this.el.hillVal.textContent = fmt(r_hill / 1e3, false, 0) + " km";
+      this.el.parentName.textContent = parent.name || "Parent";
+      this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+      const dvRem=esc;
+      this.el.distE.textContent=formatEnergy(p.mass*dvRem/this.getThrustPowerRatio());
       }else if(p){
         let tgtAU = 1;
         try{

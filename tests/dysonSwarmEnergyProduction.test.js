@@ -11,7 +11,12 @@ describe('Dyson Swarm energy production', () => {
       EffectableEntity,
       resources: {
         colony: {
-          energy: { value: 0, modifyRate: jest.fn(), updateStorageCap: () => {} },
+          energy: {
+            value: 0,
+            modifyRate: jest.fn(),
+            updateStorageCap: () => {},
+            increase(amount) { this.value += amount; }
+          },
           glass: { value: 2000, decrease: () => {}, updateStorageCap: () => {} },
           electronics: { value: 2000, decrease: () => {}, updateStorageCap: () => {} },
           components: { value: 2000, decrease: () => {}, updateStorageCap: () => {} }
@@ -38,7 +43,9 @@ describe('Dyson Swarm energy production', () => {
     project.energyPerCollector = 50;
 
     project.estimateCostAndGain();
+    project.applyCostAndGain(1000);
 
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(150, 'Dyson Swarm', 'project');
+    expect(ctx.resources.colony.energy.value).toBe(150);
   });
 });
