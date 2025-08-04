@@ -323,3 +323,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Added Tractor Beams advanced research setting planetary thrusters to a thrust-to-power ratio of 1.
 - Thruster power control buttons now appear in the Continuous column.
 - Thruster Power controls now occupy a dedicated second column in a four-column layout.
+- Planetary thruster delta v values update every tick and default to 1 AU/1 day when unset.
