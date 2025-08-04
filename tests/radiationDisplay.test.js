@@ -4,8 +4,8 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-describe('surface radiation display', () => {
-  test('magnetosphere box shows surface radiation value', () => {
+describe('radiation display', () => {
+  test('magnetosphere box shows orbital and surface radiation values', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="summary-terraforming"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     const numbers = require('../src/js/numbers.js');
@@ -31,6 +31,7 @@ describe('surface radiation display', () => {
       life: { name: 'Life', target: 0.5 },
       magnetosphere: { name: 'Mag' },
       surfaceRadiation: 1.2345,
+      orbitalRadiation: 2.3456,
       celestialParameters: { albedo: 0, gravity: 1, radius: 1, surfaceArea: 1 },
       calculateSolarPanelMultiplier: () => 1,
       calculateWindTurbineMultiplier: () => 1,
@@ -52,6 +53,10 @@ describe('surface radiation display', () => {
     vm.runInContext(code, ctx);
 
     ctx.createTerraformingSummaryUI();
+
+    const orbitalEl = dom.window.document.getElementById('orbital-radiation');
+    expect(orbitalEl).not.toBeNull();
+    expect(orbitalEl.textContent).toBe(numbers.formatNumber(2.3456, false, 2));
 
     const radEl = dom.window.document.getElementById('surface-radiation');
     expect(radEl).not.toBeNull();
