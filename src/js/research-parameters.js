@@ -1317,6 +1317,15 @@ const researchParameters = {
             value: true
           }
         ]
+      },
+      {
+        id: 'super_alloys',
+        name: 'Superalloys',
+        description: 'TBA',
+        cost: { advancedResearch: 100000 },
+        prerequisites: [],
+        effects: [
+        ]
       }
     ]
   };
