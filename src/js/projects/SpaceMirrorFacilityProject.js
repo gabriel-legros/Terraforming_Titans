@@ -157,7 +157,7 @@ function updateMirrorOversightUI() {
       focusEnabled = true;
     }
   }
-  if (focusGroup) focusGroup.style.display = focusEnabled ? 'block' : 'none';
+  if (focusGroup) focusGroup.style.display = focusEnabled ? 'flex' : 'none';
 
   ['tropical','temperate','polar','focus','any'].forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
