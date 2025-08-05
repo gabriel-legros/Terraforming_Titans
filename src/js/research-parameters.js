@@ -1287,22 +1287,6 @@ const researchParameters = {
         ]
       },
       {
-        id: 'tractor_beams',
-        name: 'Tractor Beams',
-        description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
-        cost: { advancedResearch: 10000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'project',
-            targetId: 'planetaryThruster',
-            type: 'booleanFlag',
-            flagId: 'tractorBeams',
-            value: true
-          }
-        ]
-      },
-      {
         id: 'space_mirror_focusing',
         name: 'Space Mirror Focusing',
         description: 'Refines the space mirror facility to concentrate sunlight.',
@@ -1326,7 +1310,23 @@ const researchParameters = {
         prerequisites: [],
         effects: [
         ]
-      }
+      },
+      {
+        id: 'tractor_beams',
+        name: 'Tractor Beams',
+        description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
+        cost: { advancedResearch: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'planetaryThruster',
+            type: 'booleanFlag',
+            flagId: 'tractorBeams',
+            value: true
+          }
+        ]
+      },
     ]
   };
 
