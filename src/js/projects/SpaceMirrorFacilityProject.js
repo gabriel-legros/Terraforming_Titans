@@ -62,9 +62,7 @@ function initializeMirrorOversightUI(container) {
         <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">Focusing:
-          <span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion.">&#9432;</span>
-        </label>
+        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion.">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
       </div>

@@ -221,8 +221,11 @@
 .control-group label {
     font-weight: 600;
     color: #495057;
-    flex-basis: 140px;
+    flex: 0 0 140px;
     font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .control-group select,
