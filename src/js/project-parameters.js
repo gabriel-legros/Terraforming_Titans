@@ -361,7 +361,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Install planetary photon thrusters for subtle maneuvering.',
+    description: 'Install planetary fusion thrusters for subtle maneuvering.',
     repeatable: false,
     unlocked: false,
     attributes: { }
