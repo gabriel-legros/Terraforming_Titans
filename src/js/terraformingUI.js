@@ -607,15 +607,17 @@ function updateLifeBox() {
       ? 'The planet is sufficiently protected, providing a 50% boost to life growth'
       : 'No magnetosphere';
 
-    const orbRad = typeof terraforming.orbitalRadiation === 'number' ? terraforming.orbitalRadiation : 0;
-    const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
+      const orbRad = typeof terraforming.orbitalRadiation === 'number' ? terraforming.orbitalRadiation : 0;
+      const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
+      const radPenalty = typeof terraforming.radiationPenalty === 'number' ? terraforming.radiationPenalty : 0;
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
       <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
-      <p>Orbital radiation: <span id="orbital-radiation">${formatNumber(orbRad, false, 2)}</span> mSv/day</p>
-      <p>Surface radiation: <span id="surface-radiation">${formatNumber(rad, false, 2)}</span> mSv/day</p>
-    `;
+        <p>Orbital radiation: <span id="orbital-radiation">${formatNumber(orbRad, false, 2)}</span> mSv/day</p>
+        <p>Surface radiation: <span id="surface-radiation">${formatNumber(rad, false, 2)}</span> mSv/day</p>
+        <p>Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
+      `;
     const magnetosphereHeading = magnetosphereBox.querySelector('h3');
     if (magnetosphereHeading) {
       magnetosphereHeading.appendChild(magInfo);
@@ -627,9 +629,10 @@ function updateLifeBox() {
   // Function to update the magnetosphere box with the latest values
   function updateMagnetosphereBox() {
     const magnetosphereBox = document.getElementById('magnetosphere-box');
-    const magnetosphereStatus = document.getElementById('magnetosphere-status');
-    const surfaceRadiation = document.getElementById('surface-radiation');
-    const orbitalRadiation = document.getElementById('orbital-radiation');
+      const magnetosphereStatus = document.getElementById('magnetosphere-status');
+      const surfaceRadiation = document.getElementById('surface-radiation');
+      const orbitalRadiation = document.getElementById('orbital-radiation');
+      const surfaceRadiationPenalty = document.getElementById('surface-radiation-penalty');
 
     // Update status based on boolean flag
     const magnetosphereStatusText = terraforming.isBooleanFlagSet('magneticShield') 
@@ -638,12 +641,15 @@ function updateLifeBox() {
 
     magnetosphereStatus.textContent = magnetosphereStatusText;
 
-    if (orbitalRadiation) {
-      orbitalRadiation.textContent = formatNumber(terraforming.orbitalRadiation || 0, false, 2);
-    }
-    if (surfaceRadiation) {
-      surfaceRadiation.textContent = formatNumber(terraforming.surfaceRadiation || 0, false, 2);
-    }
+      if (orbitalRadiation) {
+        orbitalRadiation.textContent = formatNumber(terraforming.orbitalRadiation || 0, false, 2);
+      }
+      if (surfaceRadiation) {
+        surfaceRadiation.textContent = formatNumber(terraforming.surfaceRadiation || 0, false, 2);
+      }
+      if (surfaceRadiationPenalty) {
+        surfaceRadiationPenalty.textContent = formatNumber((terraforming.radiationPenalty || 0) * 100, false, 0);
+      }
 
     if(terraforming.getMagnetosphereStatus()){
       magnetosphereBox.style.borderColor = 'green';

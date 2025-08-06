@@ -32,6 +32,7 @@ describe('radiation display', () => {
       magnetosphere: { name: 'Mag' },
       surfaceRadiation: 1.2345,
       orbitalRadiation: 2.3456,
+      radiationPenalty: 0.1234,
       celestialParameters: { albedo: 0, gravity: 1, radius: 1, surfaceArea: 1 },
       calculateSolarPanelMultiplier: () => 1,
       calculateWindTurbineMultiplier: () => 1,
@@ -61,5 +62,9 @@ describe('radiation display', () => {
     const radEl = dom.window.document.getElementById('surface-radiation');
     expect(radEl).not.toBeNull();
     expect(radEl.textContent).toBe(numbers.formatNumber(1.2345, false, 2));
+
+    const penEl = dom.window.document.getElementById('surface-radiation-penalty');
+    expect(penEl).not.toBeNull();
+    expect(penEl.textContent).toBe(numbers.formatNumber(0.1234 * 100, false, 0));
   });
 });
