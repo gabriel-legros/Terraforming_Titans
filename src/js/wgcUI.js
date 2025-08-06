@@ -89,7 +89,7 @@ function generateWGCTeamCards() {
     }).join('');
     const unlocked = (typeof warpGateCommand !== 'undefined' && warpGateCommand.totalOperations >= teamUnlocks[tIdx]);
     const lockMarkup = unlocked ? '' :
-      `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations</div>`;
+      `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations Completed</div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     return `
@@ -525,7 +525,7 @@ function updateWGCUI() {
   }
   const artEl = document.getElementById('wgc-stat-artifact');
   if (artEl) {
-    artEl.textContent = `Artifacts Collected: ${warpGateCommand.totalArtifacts}`;
+    artEl.textContent = `Artifacts Collected: ${formatNumber(warpGateCommand.totalArtifacts, false, 2)}`;
   }
   const diffEl = document.getElementById('wgc-stat-difficulty');
   if (diffEl) {
