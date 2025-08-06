@@ -577,6 +577,25 @@ class ProjectManager extends EffectableEntity {
     return assignments;
   }
 
+  forceUnassignAndroids(count) {
+    let remaining = count;
+    for (const name in this.projects) {
+      if (remaining <= 0) break;
+      const project = this.projects[name];
+      if (project.assignedAndroids > 0) {
+        const toRemove = Math.min(project.assignedAndroids, remaining);
+        project.assignedAndroids -= toRemove;
+        remaining -= toRemove;
+        if (typeof project.adjustActiveDuration === 'function') {
+          project.adjustActiveDuration();
+        }
+        if (typeof updateProjectUI === 'function') {
+          updateProjectUI(project.name);
+        }
+      }
+    }
+  }
+
   applyProjectDurationReduction(effect) {
     this.durationMultiplier = 1 - effect.value;
 
