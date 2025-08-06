@@ -15,7 +15,8 @@ const rdItems = {
   componentsEfficiency: 'Components production efficiency',
   electronicsEfficiency: 'Electronics production efficiency',
   superconductorEfficiency: 'Superconductor production efficiency',
-  androidsEfficiency: 'Androids production efficiency'
+  androidsEfficiency: 'Androids production efficiency',
+  foodProduction: 'Food production efficiency'
 };
 const rdElements = {};
 const facilityItems = {
