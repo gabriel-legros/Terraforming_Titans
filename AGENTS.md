@@ -353,3 +353,4 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC artifact statistics now display totals using formatNumber with two decimal places.
 - Planetary thruster energy tracking now persists by category and resets only when their targets change.
 - Warpgate Teams Equipment purchase now includes a tooltip explaining its artifact chance bonus.
+- Space Disposal project displays a 0K temperature change when no greenhouse gases are jettisoned.

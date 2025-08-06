@@ -19,10 +19,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const elements = projectElements[this.name];
     if (!elements || !elements.temperatureReductionElement) return;
 
-    if (
-      this.assignedSpaceships > 0 &&
-      this.selectedDisposalResource?.resource === 'greenhouseGas'
-    ) {
+    if (this.selectedDisposalResource?.resource === 'greenhouseGas') {
       const reduction = this.calculateTemperatureReduction();
       elements.temperatureReductionElement.textContent =
         `Temperature will reduce by: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${getTemperatureUnit()}`;
@@ -34,6 +31,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   calculateTemperatureReduction() {
     if (
+      this.assignedSpaceships <= 0 ||
       typeof terraforming === 'undefined' ||
       typeof resources === 'undefined' ||
       !resources.atmospheric?.greenhouseGas
