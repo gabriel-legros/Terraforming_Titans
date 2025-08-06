@@ -363,7 +363,13 @@ progressGanymede.chapters.push(
                 contentClass: 'hope-subtab-content',
                 targetId: 'wgc-hope',
                 unhide: true
-            }
+            },
+            {
+              target: 'resource',
+              resourceType: 'special',
+              targetId: 'alienArtifact',
+              type: 'enable'
+            },
         ]
     },
     {
