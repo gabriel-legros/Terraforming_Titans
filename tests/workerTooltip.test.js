@@ -47,6 +47,33 @@ describe('worker resource tooltip', () => {
     expect(html).toContain('5 from androids');
   });
 
+  test('android assignments show worker and project breakdown', () => {
+    const { dom, ctx } = setup();
+    ctx.projectManager = {
+      getAndroidAssignments: () => [['Deeper Mining', 2]],
+    };
+    const workers = {
+      name: 'workers',
+      displayName: 'Workers',
+      category: 'colony',
+      value: 10,
+      cap: 60,
+      hasCap: true,
+      reserved: 0,
+      unlocked: true,
+      productionRate: 0,
+      consumptionRate: 0,
+      productionRateBySource: {},
+      consumptionRateBySource: {},
+      unit: null
+    };
+    ctx.createResourceDisplay({ colony: { workers } });
+    ctx.updateResourceRateDisplay(workers);
+    const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    expect(html).toContain('3 workers');
+    expect(html).toContain('2 Deeper Mining');
+  });
+
   test('breakdown sorted by assigned workers', () => {
     const { dom, ctx } = setup();
     const workers = {

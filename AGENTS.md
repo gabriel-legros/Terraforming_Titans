@@ -342,3 +342,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space mirror facility now computes focused melting and zonal flux internally, keeping terraforming.js leaner.
 - Space Disposal project now displays the expected temperature reduction when jettisoning greenhouse gases.
 - Infrared Vision research now immediately removes the day-night penalty on Ice Harvesters when the cycle is disabled.
+- Android project assignments now keep androids in storage and tooltips show worker and project usage.

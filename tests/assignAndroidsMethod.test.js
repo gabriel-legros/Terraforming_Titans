@@ -8,6 +8,7 @@ describe('AndroidProject.assignAndroids', () => {
     const ctx = { console, EffectableEntity };
     ctx.resources = { colony: { androids: { value: 5 } } };
     ctx.buildings = { oreMine: { count: 1 } };
+    ctx.projectManager = { projects: {}, getAssignedAndroids(exclude){ let t=0; for(const n in this.projects){const p=this.projects[n]; if(p!==exclude) t+=p.assignedAndroids||0;} return t;} };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -16,6 +17,7 @@ describe('AndroidProject.assignAndroids', () => {
 
     global.resources = ctx.resources;
     global.buildings = ctx.buildings;
+    global.projectManager = ctx.projectManager;
 
     const config = {
       name: 'Test',
@@ -29,10 +31,11 @@ describe('AndroidProject.assignAndroids', () => {
       attributes: {}
     };
     const project = new ctx.AndroidProject(config, 'test');
+    ctx.projectManager.projects.test = project;
 
     project.assignAndroids(3);
     expect(project.assignedAndroids).toBe(3);
-    expect(ctx.resources.colony.androids.value).toBe(2);
+    expect(ctx.resources.colony.androids.value).toBe(5);
 
     project.assignAndroids(-10);
     expect(project.assignedAndroids).toBe(0);
@@ -43,6 +46,7 @@ describe('AndroidProject.assignAndroids', () => {
     const ctx = { console, EffectableEntity };
     ctx.resources = { colony: { androids: { value: 1_000_000_000 } } };
     ctx.buildings = { oreMine: { count: 1000 } };
+    ctx.projectManager = { projects: {}, getAssignedAndroids(exclude){ let t=0; for(const n in this.projects){const p=this.projects[n]; if(p!==exclude) t+=p.assignedAndroids||0;} return t;} };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -51,6 +55,7 @@ describe('AndroidProject.assignAndroids', () => {
 
     global.resources = ctx.resources;
     global.buildings = ctx.buildings;
+    global.projectManager = ctx.projectManager;
 
     const config = {
       name: 'Test',
@@ -64,6 +69,7 @@ describe('AndroidProject.assignAndroids', () => {
       attributes: {}
     };
     const project = new ctx.AndroidProject(config, 'test');
+    ctx.projectManager.projects.test = project;
     project.booleanFlags.add('androidAssist');
     project.assignAndroids(1_000_000_000);
     const mult = project.getAndroidSpeedMultiplier();
