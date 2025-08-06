@@ -129,7 +129,9 @@ class PopulationModule extends EffectableEntity {
   updateWorkerCap() {
     // Set the worker cap based on the current population and worker ratio
     const ratio = this.getEffectiveWorkerRatio();
-    const workerCap = Math.floor(ratio * this.populationResource.value) + resources.colony.androids.value;
+    const assignedAndroids = (typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids() : 0;
+    const availableAndroids = Math.max(0, resources.colony.androids.value - assignedAndroids);
+    const workerCap = Math.floor(ratio * this.populationResource.value) + availableAndroids;
     this.workerResource.cap = workerCap;
 
     // Adjust the worker value if it exceeds the cap

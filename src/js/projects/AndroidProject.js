@@ -16,12 +16,17 @@ class AndroidProject extends Project {
   }
 
   assignAndroids(count) {
-    const available = Math.floor(resources.colony.androids.value);
+    const total = Math.floor(resources.colony.androids.value);
+    const assignedOther = (typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0;
+    const maxForThisProject = total - assignedOther;
     this.assignedAndroids = this.assignedAndroids || 0;
+    const available = maxForThisProject - this.assignedAndroids;
     const adjusted = Math.max(-this.assignedAndroids, Math.min(count, available));
     this.assignedAndroids += adjusted;
-    resources.colony.androids.value -= adjusted;
     this.adjustActiveDuration();
+    if (typeof populationModule !== 'undefined' && typeof populationModule.updateWorkerCap === 'function') {
+      populationModule.updateWorkerCap();
+    }
     if (typeof updateProjectUI === 'function') {
       updateProjectUI(this.name);
     }
@@ -100,7 +105,10 @@ class AndroidProject extends Project {
     createButton('0', () => this.assignAndroids(-this.assignedAndroids), mainButtons);
     const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(-this.assignmentMultiplier), mainButtons);
     const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(this.assignmentMultiplier), mainButtons);
-    createButton('Max', () => this.assignAndroids(Math.floor(resources.colony.androids.value)), mainButtons);
+    createButton('Max', () => {
+      const max = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
+      this.assignAndroids(max);
+    }, mainButtons);
 
     const multiplierContainer = document.createElement('div');
     multiplierContainer.classList.add('multiplier-container');
@@ -151,7 +159,8 @@ class AndroidProject extends Project {
       elements.assignedAndroidsDisplay.textContent = formatBigInteger(this.assignedAndroids);
     }
     if (elements.availableAndroidsDisplay) {
-      elements.availableAndroidsDisplay.textContent = formatBigInteger(Math.floor(resources.colony.androids.value));
+      const avail = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
+      elements.availableAndroidsDisplay.textContent = formatBigInteger(avail);
     }
     if (elements.androidSpeedDisplay) {
       const mult = this.getAndroidSpeedMultiplier();
@@ -161,9 +170,9 @@ class AndroidProject extends Project {
 
   autoAssign() {
     if (!this.autoAssignAndroids) return;
-    const available = Math.floor(resources.colony.androids.value);
-    if (available > 0) {
-      this.assignAndroids(available);
+    const max = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
+    if (max > 0) {
+      this.assignAndroids(max);
     }
   }
 

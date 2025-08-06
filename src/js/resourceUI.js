@@ -228,9 +228,22 @@ function updateWorkerAssignments(assignmentsDiv) {
       assignmentsDiv.appendChild(androidDiv);
       assignmentsDiv._androidDiv = androidDiv;
     }
-    const androids = resources.colony?.androids?.value || 0;
-    const androidText = `${formatNumber(androids, true)} from androids`;
-    if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+    const total = resources.colony?.androids?.value || 0;
+    if (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') {
+      const androidAssignments = projectManager.getAndroidAssignments();
+      const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
+      const workers = total - assigned;
+      const parts = [];
+      if (workers > 0) parts.push(`${formatNumber(workers, true)} workers`);
+      androidAssignments.forEach(([name, count]) => {
+        parts.push(`${formatNumber(count, true)} ${name}`);
+      });
+      const androidText = `${formatNumber(total, true)} from androids${parts.length ? ` (${parts.join(', ')})` : ''}`;
+      if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+    } else {
+      const androidText = `${formatNumber(total, true)} from androids`;
+      if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+    }
   }
 
   const assignments = [];
@@ -286,6 +299,24 @@ function updateLandAssignments(assignmentsDiv) {
     assignmentsDiv._tableContainer = tableContainer;
   }
   updateAssignmentTable(tableContainer, assignments);
+}
+
+function updateAndroidAssignments(assignmentsDiv) {
+  if (!assignmentsDiv || typeof resources === 'undefined') return;
+  const total = resources.colony?.androids?.value || 0;
+  const androidAssignments = (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') ? projectManager.getAndroidAssignments() : [];
+  const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
+  const workers = total - assigned;
+  const entries = [];
+  if (workers > 0) entries.push(['Workers', workers]);
+  androidAssignments.forEach(([name, count]) => entries.push([name, count]));
+  let tableContainer = assignmentsDiv._tableContainer;
+  if (!tableContainer) {
+    tableContainer = document.createElement('div');
+    assignmentsDiv.appendChild(tableContainer);
+    assignmentsDiv._tableContainer = tableContainer;
+  }
+  updateAssignmentTable(tableContainer, entries);
 }
 
 function createResourceElement(category, resourceObj, resourceName) {
@@ -575,6 +606,8 @@ function updateResourceRateDisplay(resource){
       updateWorkerAssignments(assignmentsDiv);
     } else if (resource.name === 'land') {
       updateLandAssignments(assignmentsDiv);
+    } else if (resource.name === 'androids') {
+      updateAndroidAssignments(assignmentsDiv);
     } else {
       clearElement(assignmentsDiv);
     }
