@@ -61,3 +61,26 @@ function estimateSurfaceDoseByColumn(column_gcm2,
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { estimateSurfaceDoseByColumn };
 }
+
+/**
+ * radiationPenalty
+ * ----------------
+ * Returns the fractional growth-rate penalty (0 → none, 1 → total arrest)
+ * produced by a given daily radiation dose.
+ *
+ * Calibrated anchor points:
+ *   – D = 0 mSv · day⁻¹   → P = 0.00   (no penalty)
+ *   – D = 0.40 mSv · day⁻¹ → P ≈ 0.25  (Mars-level penalty)
+ *   – D = 65 mSv · day⁻¹  → P ≈ 0.99  (Ganymede-level penalty)
+ *
+ * @param {number} dose_mSvDay  Radiation dose-rate in millisieverts per day
+ * @returns {number}            Penalty fraction 0 ≤ P < 1
+ */
+function radiationPenalty(dose_mSvDay) {
+  // Hill-function parameters
+  const D0 = 1.07;  // “half-inhibition” dose, mSv·day⁻¹
+  const a  = 1.12;  // curvature exponent
+
+  const D = Math.max(dose_mSvDay, 1e-12);        // protect against zero / negatives
+  return 1 / (1 + Math.pow(D0 / D, a));
+}
