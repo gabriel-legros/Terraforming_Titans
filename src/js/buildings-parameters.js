@@ -35,7 +35,7 @@ const buildingsParameters = {
     category: 'resource',
     description: 'Drones that roam the surface looking for ice. Self sufficient, but require heavy maintenance and only work during the day.',
     cost: { colony: { metal: 10, electronics: 1 } },
-    consumption: { surface: { ice: 1 } },
+    consumption: { colony : {energy : 10000}, surface: { ice: 1 } },
     production: { colony: { water: 1 } },
     storage: {},
     dayNightActivity: true,
