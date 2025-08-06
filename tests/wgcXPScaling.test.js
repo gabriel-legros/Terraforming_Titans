@@ -19,7 +19,10 @@ describe('WGC XP scaling', () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     expect(wgc.startOperation(0, 3)).toBe(true);
     wgc.update(600000);
-    wgc.teams[0].forEach(m => expect(m.xp).toBeCloseTo(9 * 1.3));
+    wgc.teams[0].forEach(m => {
+      const total = m.xp + 10 * (m.level - 1) * m.level / 2;
+      expect(total).toBeCloseTo(9 * 1.3);
+    });
     Math.random.mockRestore();
   });
 });
