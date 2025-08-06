@@ -25,7 +25,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     ) {
       const reduction = this.calculateTemperatureReduction();
       elements.temperatureReductionElement.textContent =
-        `Temperature will reduce by: ${formatNumber(toDisplayTemperature(reduction), false, 2)}${getTemperatureUnit()}`;
+        `Temperature will reduce by: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${getTemperatureUnit()}`;
       elements.temperatureReductionElement.style.display = 'block';
     } else {
       elements.temperatureReductionElement.style.display = 'none';
