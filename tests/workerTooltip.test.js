@@ -47,7 +47,7 @@ describe('worker resource tooltip', () => {
     expect(html).toContain('5 from androids');
   });
 
-  test('android assignments show worker and project breakdown', () => {
+  test('android assignments show worker count only', () => {
     const { dom, ctx } = setup();
     ctx.projectManager = {
       getAndroidAssignments: () => [['Deeper Mining', 2]],
@@ -70,11 +70,11 @@ describe('worker resource tooltip', () => {
     ctx.createResourceDisplay({ colony: { workers } });
     ctx.updateResourceRateDisplay(workers);
     const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
-    expect(html).toContain('3 workers');
-    expect(html).toContain('2 Deeper Mining');
+    expect(html).toContain('3 from androids');
+    expect(html).not.toContain('Deeper Mining');
   });
 
-  test('androids over cap show effective counts', () => {
+  test('androids over cap show effective worker counts', () => {
     const { dom, ctx } = setup();
     ctx.projectManager = {
       getAndroidAssignments: () => [['Deeper Mining', 4]],
@@ -98,9 +98,9 @@ describe('worker resource tooltip', () => {
     ctx.createResourceDisplay({ colony: { workers } });
     ctx.updateResourceRateDisplay(workers);
     const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
-    expect(html).toContain('5 from androids');
-    expect(html).toContain('1 workers');
-    expect(html).toContain('4 Deeper Mining');
+    expect(html).toContain('1 from androids');
+    expect(html).not.toContain('5 from androids');
+    expect(html).not.toContain('Deeper Mining');
   });
 
   test('breakdown sorted by assigned workers', () => {
