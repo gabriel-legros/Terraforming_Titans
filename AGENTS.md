@@ -345,4 +345,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Android project assignments now keep androids in storage and tooltips show worker and project usage.
 - Androids above their storage cap no longer contribute workers, and excess project assignments are reduced.
 - Worker and android resource tooltips now reflect effective android counts when storage is over capacity.
+- Operation logs now add a "Recalled" entry when a team is recalled.
 - WGC artifact statistics now display totals using formatNumber with two decimal places.
