@@ -340,3 +340,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space mirror oversight controls include a Focusing slider revealed when the Space Mirror Focusing flag is set.
 - Focused mirror energy melts only surface ice into liquid water, prioritizing the warmest zone with ice and showing rates in resource tooltips.
 - Space mirror facility now computes focused melting and zonal flux internally, keeping terraforming.js leaner.
+- Space Disposal project now displays the expected temperature reduction when jettisoning greenhouse gases.

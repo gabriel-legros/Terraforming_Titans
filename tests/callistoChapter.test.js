@@ -12,6 +12,6 @@ describe('Demo ending after chapter6.3b', () => {
     expect(ch63c).toBeDefined();
     const reward = ch63b.reward.find(r => r.target === 'spaceManager' && r.targetId === 'callisto' && r.type === 'enable');
     expect(reward).toBeUndefined();
-    expect(ch63c.type).toBe('system-pop-up');
+    expect(ch63c.type).toBe('journal');
   });
 });
