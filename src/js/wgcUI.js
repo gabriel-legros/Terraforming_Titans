@@ -18,6 +18,9 @@ const rdItems = {
   androidsEfficiency: 'Androids production efficiency',
   foodProduction: 'Food production efficiency'
 };
+const rdDescriptions = {
+  wgtEquipment: 'Each purchase increases artifact chance by 0.1% up to a +90% bonus (100% total).'
+};
 const rdElements = {};
 const facilityItems = {
   infirmary: 'Infirmary',
@@ -145,7 +148,14 @@ function createRDItem(key, label) {
 
   const nameSpan = document.createElement('span');
   nameSpan.classList.add('wgc-rd-label');
-  nameSpan.textContent = label;
+  nameSpan.textContent = label + ' ';
+  if (rdDescriptions[key]) {
+    const icon = document.createElement('span');
+    icon.classList.add('info-tooltip-icon');
+    icon.innerHTML = '&#9432;';
+    icon.title = rdDescriptions[key];
+    nameSpan.appendChild(icon);
+  }
   div.appendChild(nameSpan);
 
   const multSpan = document.createElement('span');
