@@ -1289,7 +1289,7 @@ const researchParameters = {
       {
         id: 'space_mirror_focusing',
         name: 'Space Mirror Focusing',
-        description: 'Refines the space mirror facility to concentrate sunlight.',
+        description: 'Refines the space mirror facility to concentrate sunlight, allowing production of liquid water from ice.',
         cost: { advancedResearch: 80000 },
         prerequisites: [],
         effects: [

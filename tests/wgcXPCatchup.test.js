@@ -25,6 +25,9 @@ describe('WGC XP catch-up bonus', () => {
 
     wgc.finishOperation(0);
 
-    wgc.teams[0].forEach(m => expect(m.xp).toBe(80));
+    wgc.teams[0].forEach(m => {
+      expect(m.level).toBe(4);
+      expect(m.xp).toBe(20);
+    });
   });
 });

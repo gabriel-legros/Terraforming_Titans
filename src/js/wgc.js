@@ -376,6 +376,14 @@ class WarpGateCommand extends EffectableEntity {
         let gain = xpGain;
         if (m.xp < currentMax) gain *= 1.5;
         m.xp = Math.min(m.xp + gain, newMax);
+        let req = m.getXPForNextLevel();
+        while (m.xp >= req && req > 0) {
+          m.xp -= req;
+          m.level += 1;
+          m.maxHealth = 100 + m.level - 1;
+          m.health = Math.min(m.health, m.maxHealth);
+          req = m.getXPForNextLevel();
+        }
       });
     }
     const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
@@ -424,6 +432,7 @@ class WarpGateCommand extends EffectableEntity {
   recallTeam(teamIndex) {
     const op = this.operations[teamIndex];
     if (op) {
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Recalled`);
       op.active = false;
       op.progress = 0;
       op.timer = 0;

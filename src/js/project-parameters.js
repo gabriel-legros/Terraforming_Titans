@@ -378,7 +378,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct the receiver array to receive energy from the Dyson Swarm and enables its expansion. All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.',
+    description: 'Construct the receiver array to receive energy from the Dyson Swarm and enables its expansion. All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.',
     repeatable: false,
     unlocked: false,
     attributes: { canUseSpaceStorage: true }
@@ -393,7 +393,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct an orbital facility for massive resource storage. Each terraformed planet reduces expansion time.  Resources in space storage may also be used for certain special projects.',
+    description: 'Construct an orbital facility for massive resource storage. Each terraformed planet reduces expansion time.  Resources in space storage may also be used for certain special projects.  Space storage capacity and resources in storage persist between worlds.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,

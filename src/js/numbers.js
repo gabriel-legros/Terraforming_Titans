@@ -50,6 +50,10 @@ function formatBigInteger(number) {
     return useC ? kelvin - 273.15 : kelvin;
   }
 
+  function toDisplayTemperatureDelta(kelvinDelta) {
+    return kelvinDelta;
+  }
+
 function getTemperatureUnit() {
     return (typeof gameSettings !== 'undefined' && gameSettings.useCelsius) ? '°C' : 'K';
   }
@@ -102,6 +106,7 @@ function formatBuildingCount(value) {
       formatBigInteger,
       formatBuildingCount,
       toDisplayTemperature,
+      toDisplayTemperatureDelta,
       getTemperatureUnit,
       formatPlayTime,
       formatDuration,
