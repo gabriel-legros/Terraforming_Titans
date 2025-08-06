@@ -317,6 +317,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Jumping to a chapter now reconstructs the journal after rewards and objectives are applied.
 - Terraforming Others box now displays surface radiation using new radiation utilities and stores the value for later use.
 - Terraforming Others box now shows orbital radiation assuming no atmospheric shielding.
+- Terraforming Others box now displays radiation growth penalty and lifeforms mitigate it with radiation resistance.
 - Moon parent bodies now include radius values for accurate distance-based radiation calculations.
 - Thruster Power subcard now shows exhaust velocity with a tooltip explaining specific impulse and aligns it in a column with the continuous power display.
 - Thruster Power subcard now keeps exhaust velocity beside continuous power and adds a Thrust/Power ratio column.

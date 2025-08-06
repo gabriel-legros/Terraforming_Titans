@@ -195,26 +195,21 @@ class LifeDesign {
       return { pass: pass, reason: pass ? null : "High toxicity" };
   }
 
-  // Checks radiation tolerance against magnetosphere status
-  radiationCheck() {
-      const hasShield = terraforming.getMagnetosphereStatus();
-      const toleranceValue = this.radiationTolerance.value;
-      // Use constant for threshold check
-      const pass = hasShield || toleranceValue >= RADIATION_TOLERANCE_THRESHOLD;
-      let reason = null;
-      let reductionPercent = 0;
+    // Checks radiation tolerance against magnetosphere status
+    radiationCheck() {
+        const hasShield = terraforming.getMagnetosphereStatus();
+        const basePenalty = terraforming.radiationPenalty || 0;
+        let finalPenalty = 0;
+        if (!hasShield) {
+            const mitigation = this.getRadiationMitigationRatio();
+            finalPenalty = basePenalty * (1 - mitigation);
+        }
 
-      if (!pass && !hasShield) { // Only calculate reduction if no shield and check fails
-          reason = "High radiation";
-          // Use the actual mitigation ratio calculation (scale of 20)
-          const mitigationRatio = this.getRadiationMitigationRatio(); // Uses toleranceValue / 20
-          const growthMultiplier = 0.5 + 0.5 * mitigationRatio; // Growth multiplier is 0.5 to 1.0
-          reductionPercent = (1 - growthMultiplier) * 100; // Reduction is 50% down to 0%
-      }
-      
-      // Return reduction percentage along with pass/fail and reason
-      return { pass: pass, reason: reason, reduction: reductionPercent };
-  }
+        const pass = finalPenalty === 0;
+        const reason = pass ? null : "High radiation";
+        const reductionPercent = finalPenalty * 100;
+        return { pass, reason, reduction: reductionPercent };
+    }
 
   // Checks if the lifeform can survive in at least one zone based on temperature
   // TODO: Incorporate global radiation/toxicity checks?
@@ -555,10 +550,10 @@ class LifeManager extends EffectableEntity {
           const canGrowHere = growableZones.includes(zoneName);
 
           let zonalMaxGrowthRate = baseGrowthRate;
-          // Apply radiation penalty if needed (assuming it's a global effect for now)
-          if (!terraforming.getMagnetosphereStatus()) {
-              zonalMaxGrowthRate *= (0.5 + 0.5 * design.getRadiationMitigationRatio());
-          }
+            // Apply radiation penalty if needed (assuming it's a global effect for now)
+            const radMitigation = design.getRadiationMitigationRatio();
+            const radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+            zonalMaxGrowthRate *= (1 - radPenalty);
           // Apply luminosity bonus based on the zone
           zonalMaxGrowthRate *= terraforming.calculateZonalSolarPanelMultiplier(zoneName);
           // Apply global growth multiplier effects

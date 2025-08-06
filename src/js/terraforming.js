@@ -36,8 +36,9 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateMeltingFreezingRates = terraformUtils.calculateMeltingFreezingRates;
     var redistributePrecipitation = require('./phase-change-utils.js').redistributePrecipitation;
 
-    const radiation = require('./radiation-utils.js');
-    var estimateSurfaceDoseByColumn = radiation.estimateSurfaceDoseByColumn;
+      const radiation = require('./radiation-utils.js');
+      var estimateSurfaceDoseByColumn = radiation.estimateSurfaceDoseByColumn;
+      var radiationPenalty = radiation.radiationPenalty;
 
     const physics = require('./physics.js');
     if (typeof globalThis.surfaceAlbedoMix === 'undefined') {
@@ -241,8 +242,9 @@ class Terraforming extends EffectableEntity{
     };
 
     // Current estimated surface and orbital radiation in mSv/day
-    this.surfaceRadiation = 0;
-    this.orbitalRadiation = 0;
+      this.surfaceRadiation = 0;
+      this.orbitalRadiation = 0;
+      this.radiationPenalty = 0;
 
 
 
@@ -1003,14 +1005,15 @@ class Terraforming extends EffectableEntity{
       const beltDose = parent.parentBeltAtRef_mSvPerDay || 0;
       const refDistance = parent.refDistance_Rp || 1;
 
-      const dose = estimateSurfaceDoseByColumn(
-        column_gcm2,
-        distance_Rp,
-        beltDose,
-        refDistance,
-        opts
-      );
-      this.surfaceRadiation = dose.total;
+        const dose = estimateSurfaceDoseByColumn(
+          column_gcm2,
+          distance_Rp,
+          beltDose,
+          refDistance,
+          opts
+        );
+        this.surfaceRadiation = dose.total;
+        this.radiationPenalty = radiationPenalty(this.surfaceRadiation);
 
       const orbitalDose = estimateSurfaceDoseByColumn(
         0,

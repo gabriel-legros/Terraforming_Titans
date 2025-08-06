@@ -59,7 +59,7 @@ function estimateSurfaceDoseByColumn(column_gcm2,
 
 // Support CommonJS environments (tests) while remaining browser friendly
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { estimateSurfaceDoseByColumn };
+  module.exports = { estimateSurfaceDoseByColumn, radiationPenalty };
 }
 
 /**
