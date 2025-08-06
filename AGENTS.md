@@ -344,3 +344,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Infrared Vision research now immediately removes the day-night penalty on Ice Harvesters when the cycle is disabled.
 - Android project assignments now keep androids in storage and tooltips show worker and project usage.
 - Androids above their storage cap no longer contribute workers, and excess project assignments are reduced.
+- Worker and android resource tooltips now reflect effective android counts when storage is over capacity.

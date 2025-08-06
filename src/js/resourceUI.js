@@ -228,20 +228,22 @@ function updateWorkerAssignments(assignmentsDiv) {
       assignmentsDiv.appendChild(androidDiv);
       assignmentsDiv._androidDiv = androidDiv;
     }
-    const total = resources.colony?.androids?.value || 0;
+    const stored = resources.colony?.androids?.value || 0;
+    const cap = resources.colony?.androids?.cap;
+    const effective = cap !== undefined ? Math.min(stored, cap) : stored;
     if (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') {
       const androidAssignments = projectManager.getAndroidAssignments();
       const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
-      const workers = total - assigned;
+      const workers = Math.max(effective - assigned, 0);
       const parts = [];
       if (workers > 0) parts.push(`${formatNumber(workers, true)} workers`);
       androidAssignments.forEach(([name, count]) => {
         parts.push(`${formatNumber(count, true)} ${name}`);
       });
-      const androidText = `${formatNumber(total, true)} from androids${parts.length ? ` (${parts.join(', ')})` : ''}`;
+      const androidText = `${formatNumber(effective, true)} from androids${parts.length ? ` (${parts.join(', ')})` : ''}`;
       if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
     } else {
-      const androidText = `${formatNumber(total, true)} from androids`;
+      const androidText = `${formatNumber(effective, true)} from androids`;
       if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
     }
   }
@@ -303,10 +305,12 @@ function updateLandAssignments(assignmentsDiv) {
 
 function updateAndroidAssignments(assignmentsDiv) {
   if (!assignmentsDiv || typeof resources === 'undefined') return;
-  const total = resources.colony?.androids?.value || 0;
+  const stored = resources.colony?.androids?.value || 0;
+  const cap = resources.colony?.androids?.cap;
+  const effective = cap !== undefined ? Math.min(stored, cap) : stored;
   const androidAssignments = (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') ? projectManager.getAndroidAssignments() : [];
   const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
-  const workers = total - assigned;
+  const workers = Math.max(effective - assigned, 0);
   const entries = [];
   if (workers > 0) entries.push(['Workers', workers]);
   androidAssignments.forEach(([name, count]) => entries.push([name, count]));
