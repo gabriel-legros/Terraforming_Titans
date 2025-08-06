@@ -422,6 +422,7 @@ class WarpGateCommand extends EffectableEntity {
   recallTeam(teamIndex) {
     const op = this.operations[teamIndex];
     if (op) {
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Recalled`);
       op.active = false;
       op.progress = 0;
       op.timer = 0;
