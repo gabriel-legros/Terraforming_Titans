@@ -483,7 +483,7 @@ class PlanetaryThrustersProject extends Project{
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
 
         // Advance to new (circularized) radius from the updated energy
-        const a_new = -mu / (2 * Math.max(E, -mu/(2*r)*0.999999)); // guard against E>=0 numeric edge
+        const a_new = -mu / (2 * E);
         parent.orbitRadius = a_new / 1e3;
         r = a_new; // update local meters value
 
