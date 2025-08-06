@@ -5,6 +5,17 @@ if (typeof globalThis.WGCTeamMember === 'undefined' && isNodeWGC) {
   } catch (e) {}
 }
 
+if (typeof globalThis.formatNumber === 'undefined') {
+  try {
+    if (typeof require !== 'undefined') {
+      globalThis.formatNumber = require('./numbers.js').formatNumber;
+    }
+  } catch (e) {}
+  if (typeof globalThis.formatNumber === 'undefined') {
+    globalThis.formatNumber = v => v;
+  }
+}
+
 const baseOperationEvents = [
   { name: 'Team Power Challenge', type: 'team', skill: 'power', weight: 1 },
   { name: 'Team Athletics Challenge', type: 'team', skill: 'athletics', weight: 1 },
@@ -215,12 +226,13 @@ class WarpGateCommand extends EffectableEntity {
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
     const rollerName = roller ? ` (${roller.firstName})` : '';
     const artText = artifact ? ` +${artifactReward} Artifact${artifactReward === 1 ? '' : 's'}` : '';
-    let skillDetail = skillTotal;
+    let skillDetail = formatNumber(skillTotal, false, 2);
     if (event.type === 'individual' || event.type === 'science') {
-      skillDetail = `${baseSkill}`;
-      if (leaderBonus) skillDetail += ` + leader ${leaderBonus}`;
+      skillDetail = `${formatNumber(baseSkill, false, 2)}`;
+      if (leaderBonus) skillDetail += ` + leader ${formatNumber(leaderBonus, false, 2)}`;
     }
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${rollResult.sum + skillTotal}) vs DC ${dc} => ${outcome}${artText}`;
+    const total = rollResult.sum + skillTotal;
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${dc} => ${outcome}${artText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
