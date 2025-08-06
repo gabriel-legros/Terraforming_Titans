@@ -46,7 +46,7 @@ test('focus slider visibility toggles with flag', () => {
 
   flags.add('spaceMirrorFocusing');
   updateMirrorOversightUI();
-  expect(group.style.display).toBe('block');
+  expect(group.style.display).toBe('flex');
 
   global.document = originalDoc;
   global.projectManager = originalProjectManager;
