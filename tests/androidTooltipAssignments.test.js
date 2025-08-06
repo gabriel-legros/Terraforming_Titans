@@ -12,7 +12,7 @@ describe('android resource tooltip', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.formatDuration = numbers.formatDuration;
     ctx.resources = { colony: { androids: {
-      name: 'androids', displayName: 'Androids', category: 'colony', value: 5, cap: 10, hasCap: true,
+      name: 'androids', displayName: 'Androids', category: 'colony', value: 10, cap: 5, hasCap: true,
       reserved: 0, unlocked: true, productionRate: 0, consumptionRate: 0,
       productionRateBySource: {}, consumptionRateBySource: {}, unit: null
     } } };
@@ -21,8 +21,10 @@ describe('android resource tooltip', () => {
     vm.runInContext(code, ctx);
     ctx.createResourceDisplay(ctx.resources);
     ctx.updateResourceRateDisplay(ctx.resources.colony.androids);
-    const html = dom.window.document.getElementById('androids-tooltip').innerHTML;
-    expect(html).toContain('Workers');
-    expect(html).toContain('Deeper Mining');
+    const text = dom.window.document.getElementById('androids-tooltip-assignments').textContent;
+    expect(text).toContain('Workers');
+    expect(text).toContain('3');
+    expect(text).toContain('Deeper Mining');
+    expect(text).toContain('2');
   });
 });
