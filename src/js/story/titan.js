@@ -323,7 +323,7 @@ progressTitan.chapters.push(
 progressTitan.chapters.push(
   {
     id: "chapter6.3c",
-    type: "system-pop-up",
+    type: "journal",
     chapter: 6,
     narrative : "Complete the terraforming of Titan to continue",
     objectives: [{
