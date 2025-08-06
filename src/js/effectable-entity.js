@@ -467,7 +467,11 @@ class EffectableEntity {
       }
 
       if (flagId === 'dayNightActivity') {
-        // The call to applyDayNightSettingEffects is now handled in game-effects.js
+        if (typeof applyGameEffects === 'function') {
+          applyGameEffects();
+        } else if (typeof applyDayNightSettingEffects === 'function') {
+          applyDayNightSettingEffects();
+        }
       }
 
       console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
