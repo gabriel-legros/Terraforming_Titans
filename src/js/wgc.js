@@ -17,6 +17,8 @@ const baseOperationEvents = [
 
 const operationStartText = 'Setting out through Warp Gate';
 
+const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
+
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
@@ -38,6 +40,7 @@ class WarpGateCommand extends EffectableEntity {
       electronicsEfficiency: { purchases: 0, max: 400 },
       superconductorEfficiency: { purchases: 0, max: 400 },
       androidsEfficiency: { purchases: 0, max: 400 },
+      foodProduction: { purchases: 0, max: 400 },
     };
     this.facilities = {
       infirmary: 0,
@@ -47,6 +50,7 @@ class WarpGateCommand extends EffectableEntity {
       library: 0,
     };
     this.facilityCooldown = 0;
+    this.teamNames = defaultTeamNames.slice();
   }
 
   addLog(teamIndex, text) {
@@ -292,6 +296,7 @@ class WarpGateCommand extends EffectableEntity {
       electronicsEfficiency: 'electronicsFactory',
       superconductorEfficiency: 'superconductorFactory',
       androidsEfficiency: 'androidFactory',
+      foodProduction: 'hydroponicFarm',
     };
     if (mapping[key]) {
       addEffect({
@@ -497,7 +502,8 @@ class WarpGateCommand extends EffectableEntity {
       combatDifficulty: this.combatDifficulty,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
       facilities: { ...this.facilities },
-      facilityCooldown: this.facilityCooldown
+      facilityCooldown: this.facilityCooldown,
+      teamNames: this.teamNames.slice()
     };
   }
 
@@ -537,6 +543,11 @@ class WarpGateCommand extends EffectableEntity {
     if (Array.isArray(data.logs)) {
       this.logs = data.logs.map(l => l.slice(-100));
     }
+    if (Array.isArray(data.teamNames)) {
+      this.teamNames = data.teamNames.map((n, i) => (typeof n === 'string' && n.trim() ? n.trim() : defaultTeamNames[i]));
+    } else {
+      this.teamNames = defaultTeamNames.slice();
+    }
     if (Array.isArray(data.stances)) {
       this.stances = data.stances.map(s => ({
         hazardousBiomass: s.hazardousBiomass || 'Neutral',
@@ -558,6 +569,14 @@ class WarpGateCommand extends EffectableEntity {
     this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;
     this.pendingCombat = data.pendingCombat || false;
     this.combatDifficulty = data.combatDifficulty || 1;
+  }
+
+  renameTeam(index, name) {
+    if (typeof index !== 'number' || typeof name !== 'string') return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (!Array.isArray(this.teamNames)) this.teamNames = defaultTeamNames.slice();
+    this.teamNames[index] = trimmed;
   }
 }
 

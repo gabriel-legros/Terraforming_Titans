@@ -15,7 +15,8 @@ const rdItems = {
   componentsEfficiency: 'Components production efficiency',
   electronicsEfficiency: 'Electronics production efficiency',
   superconductorEfficiency: 'Superconductor production efficiency',
-  androidsEfficiency: 'Androids production efficiency'
+  androidsEfficiency: 'Androids production efficiency',
+  foodProduction: 'Food production efficiency'
 };
 const rdElements = {};
 const facilityItems = {
@@ -33,7 +34,7 @@ const facilityDescriptions = {
   library: 'Boosts Wit for challenges by 1% per level.'
 };
 const facilityElements = {};
-const teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
+var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
 const teamUnlocks = [0, 100, 500, 1000, 5000];
 const classImages = {
   'Team Leader': 'assets/images/team_leader.png',
@@ -69,7 +70,8 @@ function updateWGCVisibility() {
 }
 
 function generateWGCTeamCards() {
-  return teamNames.map((name, tIdx) => {
+  const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
+  return names.map((name, tIdx) => {
     const slots = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teams[tIdx]) ? warpGateCommand.teams[tIdx] : [null, null, null, null];
     const op = (typeof warpGateCommand !== 'undefined' && warpGateCommand.operations[tIdx]) ? warpGateCommand.operations[tIdx] : { active: false, progress: 0, summary: '' };
     const slotMarkup = slots.map((m, sIdx) => {
@@ -94,7 +96,7 @@ function generateWGCTeamCards() {
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
-        <div class="team-header">Team ${name}</div>
+        <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span> <button class="rename-team" data-team="${tIdx}">Rename</button></div>
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-stances">
@@ -479,6 +481,16 @@ function initializeWGCUI() {
           if (log) log.classList.toggle('hidden');
           return;
         }
+        if (e.target.classList.contains('rename-team')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const current = (warpGateCommand.teamNames && warpGateCommand.teamNames[t]) ? warpGateCommand.teamNames[t] : '';
+          const name = typeof prompt === 'function' ? prompt('Enter team name', current) : null;
+          if (name && name.trim()) {
+            warpGateCommand.renameTeam(t, name);
+            redrawWGCTeamCards();
+          }
+          return;
+        }
 
         const slot = e.target.closest('.team-slot');
         if (!slot) return;
@@ -524,6 +536,7 @@ function initializeWGCUI() {
 }
 
 function updateWGCUI() {
+  const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
     opEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
@@ -568,7 +581,7 @@ function updateWGCUI() {
     }
   }
 
-  teamNames.forEach((_, tIdx) => {
+  names.forEach((_, tIdx) => {
     const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
     if (!card) return;
     const startBtn = card.querySelector('.start-button');
@@ -637,7 +650,7 @@ function updateWGCUI() {
     });
   });
 
-  teamNames.forEach((_, tIdx) => {
+  names.forEach((_, tIdx) => {
     const logEl = document.querySelector(`.wgc-team-card[data-team="${tIdx}"] .team-log pre`);
     if (logEl) {
       logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
