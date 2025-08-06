@@ -11,14 +11,14 @@ const thrusterCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'proje
 const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
 
 describe('Planetary Thrusters energy tracking', () => {
-  test('tracks spin energy and resets motion energy after escape', () => {
+  test('separate categories persist and reset only on target change', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 1000, distanceFromSun: 1 } } };
+    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1 } };
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -32,42 +32,41 @@ describe('Planetary Thrusters energy tracking', () => {
     project.renderUI(container);
     project.complete();
 
-    // spin energy persists
+    // accumulate spin energy
     project.power = 1;
     project.spinInvest = true;
-    project.prepareJob(true);
+    project.prepareJob(true, true);
     project.activeMode = 'spin';
     project.update(1000);
-    const spinBeforePause = project.energySpentSpin;
-    project.spinInvest = false;
-    project.spinInvest = true; // resume without resetting
-    project.update(1000);
-    expect(project.energySpentSpin).toBeGreaterThan(spinBeforePause);
+    const spinEnergy = project.energySpentSpin;
 
-    // motion energy persists and resets after escape
+    // switch to motion without resetting spin energy
     project.spinInvest = false;
     project.motionInvest = true;
-    project.prepareJob(true);
+    project.prepareJob(true, false);
     project.activeMode = 'motion';
-    project.power = 1e21; // lower power so escape takes multiple ticks
+    expect(project.energySpentSpin).toBe(spinEnergy);
 
-    project.update(1000); // accumulate some energy
-    const motionBeforePause = project.energySpentMotion;
-    project.motionInvest = false;
-    project.motionInvest = true; // resume
+    // changing spin target resets only spin energy
+    project.el.rotTarget.value = parseFloat(project.el.rotTarget.value) + 1;
+    project.calcSpinCost();
+    expect(project.energySpentSpin).toBe(0);
+
+    // accumulate motion energy
     project.update(1000);
-    expect(project.energySpentMotion).toBeGreaterThan(motionBeforePause);
+    const motionEnergy = project.energySpentMotion;
 
-    let hadEnergy = project.energySpentMotion > 0;
-    let i = 0;
-    while(!ctx.terraforming.celestialParameters.hasEscapedParent && i < 1000){
-      project.update(1_000_000); // sizeable timestep
-      if(project.energySpentMotion > 0) hadEnergy = true;
-      i++;
-    }
-    expect(hadEnergy).toBe(true);
-    expect(ctx.terraforming.celestialParameters.parentBody).toBeDefined();
-    expect(ctx.terraforming.celestialParameters.hasEscapedParent).toBe(true);
+    // switch to spin without resetting motion energy
+    project.motionInvest = false;
+    project.spinInvest = true;
+    project.prepareJob(true, false);
+    project.activeMode = 'spin';
+    expect(project.energySpentMotion).toBe(motionEnergy);
+
+    // changing motion target resets only motion energy
+    project.el.distTarget.value = parseFloat(project.el.distTarget.value) + 1;
+    project.calcMotionCost();
     expect(project.energySpentMotion).toBe(0);
   });
 });
+

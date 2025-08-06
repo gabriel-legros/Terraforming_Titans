@@ -204,7 +204,7 @@ class PlanetaryThrustersProject extends Project{
       this.spinInvest = this.el.rotCb.checked;
       if(this.spinInvest){
         this.motionInvest=false;this.el.distCb.checked=false;
-        if(this.dVreq===0 || this.activeMode!=='spin') this.prepareJob(true);
+        if(this.dVreq===0 || this.activeMode!=='spin') this.prepareJob(true,false);
         this.activeMode='spin';
       }
     };
@@ -212,7 +212,7 @@ class PlanetaryThrustersProject extends Project{
       this.motionInvest = this.el.distCb.checked;
       if(this.motionInvest){
         this.spinInvest=false;this.el.rotCb.checked=false;
-        if(this.dVreq===0 || this.activeMode!=='motion') this.prepareJob(true);
+        if(this.dVreq===0 || this.activeMode!=='motion') this.prepareJob(true,false);
         this.activeMode='motion';
       }
     };
@@ -245,7 +245,11 @@ class PlanetaryThrustersProject extends Project{
     const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
     this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
     this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
-    if(this.spinInvest && (changed || this.dVreq===0)) { this.prepareJob(true); this.activeMode='spin'; }
+    if(changed){
+      this.energySpentSpin=0;
+      this.spinStartDays=null;
+    }
+    if(this.spinInvest && (changed || this.dVreq===0)) { this.prepareJob(true,false); this.activeMode='spin'; }
   }
 
   calcMotionCost(){
@@ -266,7 +270,11 @@ class PlanetaryThrustersProject extends Project{
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
-      if(this.motionInvest && (changed || this.dVreq===0)) { this.prepareJob(true); this.activeMode='motion'; }
+      if(changed){
+        this.energySpentMotion=0;
+        this.startAU=null;
+      }
+      if(this.motionInvest && (changed || this.dVreq===0)) { this.prepareJob(true,false); this.activeMode='motion'; }
       return;
     }
 
@@ -287,16 +295,16 @@ class PlanetaryThrustersProject extends Project{
     this.el.parentName.textContent = parent.name || "Parent";
     this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
     this.el.distE.textContent = formatEnergy(p.mass * escArrival / this.getThrustPowerRatio());
-    if(this.motionInvest && this.dVreq===0) { this.prepareJob(true); this.activeMode='motion'; }
+    if(this.motionInvest && this.dVreq===0) { this.prepareJob(true,false); this.activeMode='motion'; }
   }
 
 /* ---------- job preparation ------------------------------------------ */
-  prepareJob(reset=false){
+  prepareJob(resetDV=false, resetEnergy=false){
     const p=terraforming.celestialParameters;if(!p)return;
-    if(reset) this.dVdone=0;
+    if(resetDV) this.dVdone=0;
 
     if(this.spinInvest){
-      if(reset || this.spinStartDays===null){
+      if(resetEnergy || this.spinStartDays===null){
         this.energySpentSpin=0;
         this.spinStartDays=getRotHours(p)/24;
       }
@@ -305,7 +313,7 @@ class PlanetaryThrustersProject extends Project{
     }
 
     if(this.motionInvest){
-      if(reset) this.energySpentMotion=0;
+      if(resetEnergy) this.energySpentMotion=0;
       if (isBoundToParent(p)) {
         this.escapePhase = true;
         const starM = (p.starMass || SOLAR_MASS);
@@ -315,7 +323,7 @@ class PlanetaryThrustersProject extends Project{
         this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, p.parentBody.orbitRadius*1e3, r_hill_m);
       }else{
         this.escapePhase=false;
-        if(reset || this.startAU===null) this.startAU=p.distanceFromSun;
+        if(resetDV || this.startAU===null) this.startAU=p.distanceFromSun;
         this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
       }
     }
