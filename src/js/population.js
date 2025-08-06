@@ -140,10 +140,6 @@ class PopulationModule extends EffectableEntity {
         projectManager.forceUnassignAndroids(assignedAndroids - effectiveAndroids);
         assignedAndroids = projectManager.getAssignedAndroids();
       }
-      if (effectiveAndroids - assignedAndroids <= 0 && storedAndroids > androidCap && assignedAndroids > 0) {
-        projectManager.forceUnassignAndroids(Math.min(assignedAndroids, storedAndroids - androidCap));
-        assignedAndroids = projectManager.getAssignedAndroids();
-      }
     }
 
     const availableAndroids = Math.max(0, effectiveAndroids - assignedAndroids);
