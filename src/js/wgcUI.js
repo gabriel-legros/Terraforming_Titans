@@ -297,6 +297,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const hp = member ? member.health : 100;
   const hpMax = member ? member.maxHealth : 100;
   const level = document.createElement('div');
+  level.classList.add('wgc-member-level');
   level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${formatNumber(hp)} / ${hpMax}`;
   win.appendChild(level);
 
@@ -409,6 +410,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   overlay.addEventListener('click', e => { if (e.target === overlay) closeRecruitDialog(); });
   document.body.appendChild(overlay);
   activeDialog = overlay;
+  activeDialog._member = member;
+  activeDialog._levelEl = level;
+  activeDialog._alloc = alloc;
+  activeDialog._remainingSpan = remainingSpan;
 }
 
 function generateWGCLayout() {
@@ -638,6 +643,21 @@ function updateWGCUI() {
       logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
     }
   });
+
+  if (activeDialog && activeDialog._member) {
+    const m = activeDialog._member;
+    const lvlEl = activeDialog._levelEl;
+    const remSpan = activeDialog._remainingSpan;
+    const alloc = activeDialog._alloc || { power: 0, athletics: 0, wit: 0 };
+    if (lvlEl) {
+      const xpReq = m.getXPForNextLevel();
+      lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${xpReq} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
+    }
+    if (remSpan) {
+      const pts = m.getPointsToAllocate() - (alloc.power + alloc.athletics + alloc.wit);
+      remSpan.textContent = `Points left: ${pts}`;
+    }
+  }
 }
 
 function redrawWGCTeamCards() {

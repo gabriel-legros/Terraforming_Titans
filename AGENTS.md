@@ -347,3 +347,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Worker and android resource tooltips now reflect effective android counts when storage is over capacity.
 - Operation logs now add a "Recalled" entry when a team is recalled.
 - WGC artifact statistics now display totals using formatNumber with two decimal places.
+- WGC recruit dialog now updates HP and XP in real time when member stats change.
