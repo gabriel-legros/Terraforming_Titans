@@ -96,7 +96,7 @@ function generateWGCTeamCards() {
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
-        <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span> <button class="rename-team" data-team="${tIdx}">Rename</button></div>
+        <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}" title="Rename Team">&#9998;</button></div>
         <div class="wgc-team-body">
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-stances">
@@ -481,14 +481,42 @@ function initializeWGCUI() {
           if (log) log.classList.toggle('hidden');
           return;
         }
-        if (e.target.classList.contains('rename-team')) {
+        if (e.target.classList.contains('rename-team-icon')) {
           const t = parseInt(e.target.dataset.team, 10);
-          const current = (warpGateCommand.teamNames && warpGateCommand.teamNames[t]) ? warpGateCommand.teamNames[t] : '';
-          const name = typeof prompt === 'function' ? prompt('Enter team name', current) : null;
-          if (name && name.trim()) {
-            warpGateCommand.renameTeam(t, name);
-            redrawWGCTeamCards();
+          const header = e.target.closest('.team-header');
+          const nameSpan = header.querySelector('.team-name');
+          const renameButton = header.querySelector('.rename-team-icon');
+
+          const currentName = nameSpan.textContent;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = currentName;
+          input.classList.add('team-name-input');
+          input.dataset.team = t;
+
+          const confirmBtn = document.createElement('button');
+          confirmBtn.textContent = 'OK';
+          confirmBtn.classList.add('confirm-rename-btn');
+          confirmBtn.dataset.team = t;
+
+          header.replaceChild(input, nameSpan);
+          header.replaceChild(confirmBtn, renameButton);
+          input.focus();
+          input.select();
+          return;
+        }
+
+        if (e.target.classList.contains('confirm-rename-btn')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const header = e.target.closest('.team-header');
+          const input = header.querySelector('.team-name-input');
+          const newName = input.value.trim();
+
+          if (newName) {
+            warpGateCommand.renameTeam(t, newName);
           }
+          // Redraw to restore original structure
+          redrawWGCTeamCards();
           return;
         }
 
@@ -646,6 +674,17 @@ function updateWGCUI() {
         } else if (hpPercent < 50) {
           bar.classList.add('low-hp');
         }
+      }
+      const indicator = slot.querySelector('.unspent-points-indicator');
+      if (member.getPointsToAllocate() > 0) {
+        if (!indicator) {
+          const newIndicator = document.createElement('div');
+          newIndicator.className = 'unspent-points-indicator';
+          newIndicator.textContent = '!';
+          slot.appendChild(newIndicator);
+        }
+      } else if (indicator) {
+        indicator.remove();
       }
     });
   });

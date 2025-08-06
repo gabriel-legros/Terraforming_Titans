@@ -70,7 +70,47 @@
   color: var(--wgc-border-color);
   margin-bottom: 10px;
   font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.team-name-input {
+  flex-grow: 1;
+  background-color: var(--wgc-bg-dark);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  font-family: inherit;
+  font-size: inherit;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.wgc-container button.rename-team-icon {
+  background: none;
+  border: none;
+  color: var(--wgc-border-color);
+  cursor: pointer;
+  font-size: 0.8em;
+  padding: 0 5px;
+}
+.wgc-container button.rename-team-icon:hover {
+  color: var(--wgc-text-light);
+}
+
+.confirm-rename-btn {
+  background-color: var(--wgc-green);
+  border: none;
+  color: white;
+  padding: 3px 8px;
+  font-size: 0.8em;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.confirm-rename-btn:hover {
+    background-color: #5cb85c;
+}
+
 
 .wgc-team-body {
   display: flex;
