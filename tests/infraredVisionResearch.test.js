@@ -22,6 +22,7 @@ describe('Infrared Vision advanced research', () => {
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
+const { applyDayNightSettingEffects } = require('../src/js/day-night-setting.js');
 
 function createIceHarvester() {
   return new Building({
@@ -65,4 +66,28 @@ test('boolean flag lets ice harvester produce at night', () => {
   }
   harvester.produce(changes, 1000);
   expect(changes.colony.water).toBeGreaterThan(0);
+});
+
+test('infrared vision removes day-night penalty without loops', () => {
+  global.maintenanceFraction = 0.1;
+  const harvester = createIceHarvester();
+  global.buildings = { iceHarvester: harvester };
+  global.addEffect = effect => harvester.addAndReplace(effect);
+  global.removeEffect = effect => harvester.removeEffect(effect);
+  global.gameSettings = { disableDayNightCycle: true };
+
+  applyDayNightSettingEffects();
+  expect(harvester.activeEffects.some(e => e.effectId === 'disable-day-night-production-iceHarvester')).toBe(true);
+
+  let calls = 0;
+  global.applyGameEffects = () => {
+    calls++;
+    if (calls > 10) throw new Error('loop');
+    applyDayNightSettingEffects();
+  };
+
+  harvester.addEffect({ type: 'booleanFlag', flagId: 'dayNightActivity', value: false });
+
+  expect(calls).toBe(1);
+  expect(harvester.activeEffects.some(e => e.effectId === 'disable-day-night-production-iceHarvester')).toBe(false);
 });

@@ -452,13 +452,15 @@ class EffectableEntity {
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
       const { flagId, value } = effect;
+      const prevValue = this[flagId];
+
       if (value) {
         this.booleanFlags.add(flagId);
       } else {
         this.booleanFlags.delete(flagId);
       }
 
-      if (typeof this[flagId] === 'boolean') {
+      if (typeof prevValue === 'boolean') {
         this[flagId] = value;
       }
 
@@ -466,7 +468,12 @@ class EffectableEntity {
         this.sortAllResearches();
       }
 
-      if (flagId === 'dayNightActivity') {
+      if (flagId === 'dayNightActivity' && prevValue !== value) {
+        if (typeof applyGameEffects === 'function') {
+          applyGameEffects();
+        } else if (typeof applyDayNightSettingEffects === 'function') {
+          applyDayNightSettingEffects();
+        }
       }
 
       console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
