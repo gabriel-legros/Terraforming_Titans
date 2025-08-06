@@ -38,6 +38,7 @@ class WarpGateCommand extends EffectableEntity {
       electronicsEfficiency: { purchases: 0, max: 400 },
       superconductorEfficiency: { purchases: 0, max: 400 },
       androidsEfficiency: { purchases: 0, max: 400 },
+      foodProduction: { purchases: 0, max: 400 },
     };
     this.facilities = {
       infirmary: 0,
@@ -292,6 +293,7 @@ class WarpGateCommand extends EffectableEntity {
       electronicsEfficiency: 'electronicsFactory',
       superconductorEfficiency: 'superconductorFactory',
       androidsEfficiency: 'androidFactory',
+      foodProduction: 'hydroponicFarm',
     };
     if (mapping[key]) {
       addEffect({
