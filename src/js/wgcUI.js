@@ -15,7 +15,8 @@ const rdItems = {
   componentsEfficiency: 'Components production efficiency',
   electronicsEfficiency: 'Electronics production efficiency',
   superconductorEfficiency: 'Superconductor production efficiency',
-  androidsEfficiency: 'Androids production efficiency'
+  androidsEfficiency: 'Androids production efficiency',
+  foodProduction: 'Food production efficiency'
 };
 const rdElements = {};
 const facilityItems = {
@@ -537,7 +538,7 @@ function updateWGCUI() {
   }
   const artEl = document.getElementById('wgc-stat-artifact');
   if (artEl) {
-    artEl.textContent = `Artifacts Collected: ${warpGateCommand.totalArtifacts}`;
+    artEl.textContent = `Artifacts Collected: ${formatNumber(warpGateCommand.totalArtifacts, false, 2)}`;
   }
   const diffEl = document.getElementById('wgc-stat-difficulty');
   if (diffEl) {
