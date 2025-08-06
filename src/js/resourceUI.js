@@ -231,21 +231,14 @@ function updateWorkerAssignments(assignmentsDiv) {
     const stored = resources.colony?.androids?.value || 0;
     const cap = resources.colony?.androids?.cap;
     const effective = cap !== undefined ? Math.min(stored, cap) : stored;
+    let assigned = 0;
     if (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') {
       const androidAssignments = projectManager.getAndroidAssignments();
-      const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
-      const workers = Math.max(effective - assigned, 0);
-      const parts = [];
-      if (workers > 0) parts.push(`${formatNumber(workers, true)} workers`);
-      androidAssignments.forEach(([name, count]) => {
-        parts.push(`${formatNumber(count, true)} ${name}`);
-      });
-      const androidText = `${formatNumber(effective, true)} from androids${parts.length ? ` (${parts.join(', ')})` : ''}`;
-      if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
-    } else {
-      const androidText = `${formatNumber(effective, true)} from androids`;
-      if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+      assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
     }
+    const workers = Math.max(effective - assigned, 0);
+    const androidText = `${formatNumber(workers, true)} from androids`;
+    if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
   }
 
   const assignments = [];

@@ -4,7 +4,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('androids over cap', () => {
-  test('excess androids do not work and are unassigned from projects', () => {
+  test('android assignments limited by storage cap', () => {
     const ctx = { console, EffectableEntity };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -28,7 +28,7 @@ describe('androids over cap', () => {
 
     vm.runInContext(`
       const proj = new AndroidProject(${configStr}, 'test');
-      proj.assignedAndroids = 5;
+      proj.assignedAndroids = 7;
       projectManager.projects.test = proj;
       const pop = new PopulationModule(resources, { workerRatio: 0 });
       pop.updateWorkerCap();
@@ -36,7 +36,7 @@ describe('androids over cap', () => {
       this.assigned = proj.assignedAndroids;
     `, ctx);
 
-    expect(ctx.cap).toBe(5);
-    expect(ctx.assigned).toBe(0);
+    expect(ctx.cap).toBe(0);
+    expect(ctx.assigned).toBe(5);
   });
 });
