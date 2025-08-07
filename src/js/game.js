@@ -115,6 +115,9 @@ function initializeGameState(options = {}) {
   const preserveJournal = options.preserveJournal || false;
   const skipStoryInitialization = options.skipStoryInitialization || false;
   let savedAdvancedResearch = null;
+  if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
+    captureAutoBuildSettings(structures);
+  }
   if (preserveManagers && resources && resources.colony && resources.colony.advancedResearch) {
     savedAdvancedResearch = {
       value: resources.colony.advancedResearch.value,
@@ -156,6 +159,9 @@ function initializeGameState(options = {}) {
   projectManager.initializeProjects(projectParameters);
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
+  if (preserveManagers && typeof restoreAutoBuildSettings === 'function') {
+    restoreAutoBuildSettings(structures);
+  }
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);
   } else {

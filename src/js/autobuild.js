@@ -60,6 +60,28 @@ const autobuildCostTracker = {
     }
 };
 
+const savedAutoBuildSettings = {};
+
+function captureAutoBuildSettings(structures) {
+    for (const name in structures) {
+        const s = structures[name];
+        savedAutoBuildSettings[name] = {
+            percent: s.autoBuildPercent,
+        };
+    }
+}
+
+function restoreAutoBuildSettings(structures) {
+    for (const name in structures) {
+        const s = structures[name];
+        if (savedAutoBuildSettings[name]) {
+            s.autoBuildPercent = savedAutoBuildSettings[name].percent;
+        }
+        s.autoBuildEnabled = false;
+        s.autoBuildPriority = false;
+    }
+}
+
 function autoBuild(buildings, delta = 0) {
     autobuildCostTracker.update(delta);
     const population = resources.colony.colonists.value;
@@ -134,10 +156,12 @@ function autoBuild(buildings, delta = 0) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { autoBuild, autobuildCostTracker };
+    module.exports = { autoBuild, autobuildCostTracker, captureAutoBuildSettings, restoreAutoBuildSettings };
 }
 
 if (typeof window !== 'undefined') {
     window.autoBuild = autoBuild;
     window.autobuildCostTracker = autobuildCostTracker;
+    window.captureAutoBuildSettings = captureAutoBuildSettings;
+    window.restoreAutoBuildSettings = restoreAutoBuildSettings;
 }
