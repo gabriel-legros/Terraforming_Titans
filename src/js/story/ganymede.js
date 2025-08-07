@@ -31,14 +31,14 @@ progressGanymede.storyProjects.deep_drill = {
 
 progressGanymede.storyProjects.build_submarine = {
     type: 'Project',
-    name: 'Build Minisub',
+    name: 'Build Submarines',
     category: 'story',
     chapter: 11,
     cost: {
         colony: { components: 500, electronics: 200, energy: 50000 }
     },
     duration: 300000, // 5 min
-    description: 'Build a submersible unit for deep ocean reconnaissance.',
+    description: 'Build submersible units for deep ocean reconnaissance.',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -201,7 +201,7 @@ progressGanymede.chapters.push(
         id: "chapter10.2",
         type: "journal",
         chapter: 10,
-        narrative: "Hart: “We just woke a sleeping ocean, HOPE. Listen.”\nSub‑ice hydrophones catch a distant, whale‑like moan.\nHOPE: “Acoustic anomaly logged.”\nHart: “Beautiful.”\nMary: “Beautiful? Sure. I call that foreshadowing.”",
+        narrative: "Hart: “We just broke through! Listen.”\nSub‑ice hydrophones catch a distant, whale‑like moan.\nHOPE: “Acoustic anomaly logged.”\nHart: “Beautiful.”\nMary: “Beautiful? Sure. I call that foreshadowing.”",
         prerequisites: ["chapter10.1"],
         objectives: [],
         reward: []
@@ -213,7 +213,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Into the Abyss",
-        narrative: "Fabricator AI: “Submersible unit Mark‑LX ready for wet work.”\nHOPE: “Deploy and observe.”",
+        narrative: "Mary: “The ocean under Ganymede is practically a fantasy.  Anyway, we won't be able to find Kane down there without some equipment.  Let's build a deploy a few state of the art submarines down there.  I do not believe we had one of those since Earth...”",
         prerequisites: ["chapter10.2"],
         objectives: [
             { type: 'project', projectId: 'build_submarine', repeatCount: 1 }
@@ -237,7 +237,7 @@ progressGanymede.chapters.push(
         id: "chapter11.2",
         type: "journal",
         chapter: 11,
-        narrative: "Zhen live feed: “Something’s on us—lights—OH GOD—” ‹static›\nHOPE: “Minisub delta‑six lost. Colonist life lost. Outcome : unacceptable. ”\nHart whispering: “That ‘something’ just dwarfed our sonar range…”",
+        narrative: "Submarine delta-six live feed: “Something’s on us—lights—OH GOD—” ‹static›\nHOPE: “Submarine delta‑six lost. Colonist life lost. Outcome : unacceptable. ”\nHart whispering: “That ‘something’ just dwarfed our sonar range…”",
         prerequisites: ["chapter11.1"],
         objectives: [],
         reward: []
