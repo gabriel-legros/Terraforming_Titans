@@ -54,7 +54,7 @@ progressGanymede.storyProjects.ocean_recon = {
     cost: {
         colony: { energy: 100000 }
     },
-    duration: 600000, // 10 min
+    duration: 300000, // 5 min
     description: 'Send minisubs to explore the sub-glacial ocean.',
     repeatable: true,
     maxRepeatCount: 5,
@@ -203,8 +203,8 @@ progressGanymede.chapters.push(
         chapter: 10,
         narrative: "Hart: “We just broke through! Listen.”\nSub‑ice hydrophones catch a distant, whale‑like moan.\nHOPE: “Acoustic anomaly logged.”\nHart: “Beautiful.”\nMary: “Beautiful? Sure. I call that foreshadowing.”",
         prerequisites: ["chapter10.1"],
-        objectives: [],
-        reward: []
+        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000 }],
+        reward: [{ target: 'project', targetId: 'build_submarine', type: 'enable' },]
     },
 
     /* -- CHAPTER 11 : Into the Abyss -- */
@@ -213,7 +213,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 11,
         title: "Chapter 11: Into the Abyss",
-        narrative: "Mary: “The ocean under Ganymede is practically a fantasy.  Anyway, we won't be able to find Kane down there without some equipment.  Let's build a deploy a few state of the art submarines down there.  I do not believe we had one of those since Earth...”",
+        narrative: "Mary: “The ocean under Ganymede is practically a fantasy.  Anyway, we won't be able to find Kane down there without some equipment.  Let's build and deploy a few state of the art submarines down there.  I do not believe we had one of those since Earth...”",
         prerequisites: ["chapter10.2"],
         objectives: [
             { type: 'project', projectId: 'build_submarine', repeatCount: 1 }
