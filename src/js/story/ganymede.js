@@ -82,7 +82,8 @@ progressGanymede.storyProjects.leviathan_countermeasure = {
     },
     duration: 900000, // 15 min
     description: 'Deploy a 20 hertz sonic wall to scramble the Leviathan\'s vestibular system.',
-    repeatable: false,
+    repeatable: true,
+    repeatCount: 1,
     unlocked: false,
     attributes: {
         planet: 'ganymede'
