@@ -12,7 +12,7 @@ progressGanymede.storyProjects.deep_drill = {
   category: 'story',
   chapter: 10,
   cost: {
-    colony: { components: 10000, electronics: 5000, energy: 500000 }
+    colony: { components: 100, electronics: 50, energy: 500000 }
   },
   duration: 600000, // 10 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
