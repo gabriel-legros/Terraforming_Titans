@@ -39,7 +39,8 @@ progressGanymede.storyProjects.build_submarine = {
     },
     duration: 300000, // 5 min
     description: 'Build submersible units for deep ocean reconnaissance.',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount:1,
     unlocked: false,
     attributes: {
         planet: 'ganymede'
