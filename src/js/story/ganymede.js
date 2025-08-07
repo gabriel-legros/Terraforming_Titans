@@ -194,7 +194,6 @@ progressGanymede.chapters.push(
             { type: 'project', projectId: 'deep_drill', repeatCount: 3 }
         ],
         reward: [
-            { target: 'building', targetId: 'sub_fabricator', type: 'enable' }
         ]
     },
     {
