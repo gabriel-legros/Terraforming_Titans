@@ -77,7 +77,7 @@ progressGanymede.storyProjects.leviathan_countermeasure = {
     category: 'story',
     chapter: 11,
     cost: {
-        colony: { components: 20000, electronics: 10000, research: 1000000, energy: 1000000 }
+        colony: { components: 2000, electronics: 1000, research: 1000000, energy: 1000000 }
     },
     duration: 900000, // 15 min
     description: 'Deploy a 20 hertz sonic wall to scramble the Leviathan\'s vestibular system.',
