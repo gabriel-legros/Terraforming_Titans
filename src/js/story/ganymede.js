@@ -288,7 +288,7 @@ progressGanymede.chapters.push(
         chapter: 11,
         narrative: "HOPE: \"With the biological threat neutralized, a high-resolution scan of the area is complete. A large, artificial structure has been identified at the coordinates of the original sonar spike. This is the likely location of Kane's facility.\"\nMary: \"Going in there now would be walking into whatever trap Kane has set. Let's not play his game. If we can't bring our tools to the facility, let's bring the facility to our tools. Tug it somewhere secure.\"",
         prerequisites: ["chapter11.3b"],
-        objectives: [],
+        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100000 }],
         reward: [
             { target: 'project', targetId: 'facility_tug', type: 'enable' }
         ]
