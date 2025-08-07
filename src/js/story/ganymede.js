@@ -17,6 +17,7 @@ progressGanymede.storyProjects.deep_drill = {
   duration: 600000, // 10 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
   repeatable: false,
+  maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'ganymede',
