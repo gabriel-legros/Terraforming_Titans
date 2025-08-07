@@ -251,14 +251,30 @@ class Colony extends Building {
 
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
+    const amount = Math.min(this.count, 10);
+    const fraction = amount / 10;
+    const remainingFraction = 1 - fraction;
+
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
-        if (category === 'colony' && resource === 'water') continue;
-        const amount = nextCost[category][resource] / 2;
-        if (!cost[category]) cost[category] = {};
-        cost[category][resource] = amount;
+        const baseAmount = nextCost[category][resource];
+        let value = remainingFraction * baseAmount;
+        if (resource === 'metal' || resource === 'glass') {
+          value += 0.5 * fraction * baseAmount;
+        }
+        if (value > 0) {
+          if (!cost[category]) cost[category] = {};
+          cost[category][resource] = value;
+        }
       }
     }
+
+    const landNeeded = next.requiresLand - amount * (this.requiresLand || 0);
+    if (landNeeded > 0) {
+      if (!cost.surface) cost.surface = {};
+      cost.surface.land = landNeeded;
+    }
+
     return cost;
   }
 
@@ -267,7 +283,12 @@ class Colony extends Building {
     if (!cost) return false;
     for (const category in cost) {
       for (const resource in cost[category]) {
-        if (resources[category][resource].value < cost[category][resource]) {
+        if (resource === 'land') {
+          const available = resources[category][resource].value - resources[category][resource].reserved;
+          if (available < cost[category][resource]) {
+            return false;
+          }
+        } else if (resources[category][resource].value < cost[category][resource]) {
           return false;
         }
       }
@@ -280,24 +301,26 @@ class Colony extends Building {
     if (!nextName) return false;
     const next = colonies[nextName];
     if (!next || !next.unlocked) return false;
-    if (this.count < 10) return false;
-    const cost = this.getUpgradeCost();
+    const amount = Math.min(this.count, 10);
+    if (amount <= 0) return false;
     if (!this.canAffordUpgrade()) return false;
+    const cost = this.getUpgradeCost();
 
     // Pay cost
     for (const category in cost) {
       for (const resource in cost[category]) {
+        if (resource === 'land') continue;
         resources[category][resource].decrease(cost[category][resource]);
       }
     }
 
     // Adjust land usage
-    if (this.requiresLand) this.adjustLand(-10);
+    if (this.requiresLand) this.adjustLand(-amount);
     if (next.requiresLand) next.adjustLand(1);
 
     // Remove lower tier buildings
-    this.count -= 10;
-    this.active -= 10;
+    this.count -= amount;
+    this.active -= amount;
     this.updateResourceStorage();
 
     // Add upgraded building

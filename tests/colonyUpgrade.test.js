@@ -124,6 +124,32 @@ describe('colony upgrade', () => {
     expect(ctx.resources.surface.land.reserved).toBe(0);
   });
 
+  test('upgrade scales costs when fewer than ten buildings', () => {
+    const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = t1.active = 1;
+    ctx.resources.colony.metal.value = 237.5;
+    ctx.resources.colony.glass.value = 237.5;
+    ctx.resources.colony.water.value = 450;
+
+    ctx.createColonyButtons(ctx.colonies);
+    ctx.updateStructureDisplay(ctx.colonies);
+
+    const button = dom.window.document.getElementById('t1_colony-upgrade-button');
+    expect(button.disabled).toBe(false);
+    button.click();
+
+    expect(t1.count).toBe(0);
+    expect(t2.count).toBe(1);
+    expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
+    expect(ctx.resources.colony.glass.value).toBeCloseTo(0);
+    expect(ctx.resources.colony.water.value).toBeCloseTo(0);
+    expect(ctx.resources.surface.land.reserved).toBe(9);
+  });
+
   test('upgrade button hidden when next tier locked', () => {
     const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
     const t1 = ctx.colonies.t1_colony;
