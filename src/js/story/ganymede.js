@@ -16,7 +16,7 @@ progressGanymede.storyProjects.deep_drill = {
   },
   duration: 600000, // 10 min
   description: 'Drill through 150km of ice to reach the sub-glacial ocean.',
-  repeatable: false,
+  repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
   attributes: {
@@ -39,7 +39,7 @@ progressGanymede.storyProjects.build_submarine = {
     },
     duration: 300000, // 5 min
     description: 'Build a submersible unit for deep ocean reconnaissance.',
-    repeatable: true,
+    repeatable: false,
     unlocked: false,
     attributes: {
         planet: 'ganymede'
