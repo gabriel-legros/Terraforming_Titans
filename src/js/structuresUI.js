@@ -491,17 +491,9 @@ function updateDecreaseButtonText(button, buildCount) {
     }
     button.textContent = `\u2192 ${parts.join(', ')}`;
 
-    let canAfford = true;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        if (resources[category][resource].value < cost[category][resource]) {
-          canAfford = false;
-        }
-      }
-    }
-
+    const canAfford = colony.canAffordUpgrade();
     button.style.color = canAfford ? 'inherit' : 'red';
-    button.disabled = colony.count < 10 || !canAfford;
+    button.disabled = colony.count <= 0 || !canAfford;
     button.style.display = 'inline-block';
   }
   
