@@ -83,7 +83,7 @@ progressGanymede.storyProjects.leviathan_countermeasure = {
     duration: 900000, // 15 min
     description: 'Deploy a 20 hertz sonic wall to scramble the Leviathan\'s vestibular system.',
     repeatable: true,
-    repeatCount: 1,
+    maxRepeatCount: 1,
     unlocked: false,
     attributes: {
         planet: 'ganymede'
@@ -100,7 +100,8 @@ progressGanymede.storyProjects.facility_tug = {
     },
     duration: 900000, // 15 min
     description: 'Tug the discovered facility 500km to a secure location.',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount: 1,
     unlocked: false,
     attributes: {
         planet: 'ganymede'
@@ -117,7 +118,8 @@ progressGanymede.storyProjects.facility_expedition = {
     },
     duration: 600000, // 30 min
     description: 'Breach, sweep, and power up the mysterious underwater facility.',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount: 3,
     unlocked: false,
     attributes: {
         planet: 'ganymede',
@@ -139,7 +141,8 @@ progressGanymede.storyProjects.draft_wgc_charter = {
     },
     duration: 120000, // 2 min
     description: 'Establish the founding charter for the Warp Gate Command.',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount:4,
     unlocked: false,
     attributes: {
         planet: 'ganymede',
