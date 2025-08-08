@@ -69,9 +69,18 @@ class PopulationModule extends EffectableEntity {
   
     updatePopulation(deltaTime) {
       // Get the current population and population cap
-      const currentPopulation = this.populationResource.value;
+      let currentPopulation = this.populationResource.value;
       const populationCap = this.populationResource.cap;
-  
+
+      // Crop tiny overages to the cap to avoid unnecessary decay
+      if (
+        currentPopulation > populationCap &&
+        currentPopulation - populationCap < 0.01
+      ) {
+        this.populationResource.value = populationCap;
+        currentPopulation = populationCap;
+      }
+
       this.growthRate = this.calculateGrowthRate();
 
       // Calculate logistic growth/decay
