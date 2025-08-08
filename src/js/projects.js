@@ -427,6 +427,12 @@ class Project extends EffectableEntity {
     this.remainingTime = state.remainingTime;
     this.startingDuration = state.startingDuration || this.getEffectiveDuration();
     this.repeatCount = state.repeatCount;
+
+    // If the project is repeatable and has not hit its max repeats, a saved
+    // completed flag may be stale. Clear it so the project can run again.
+    if (this.isCompleted && this.repeatable && this.repeatCount < this.maxRepeatCount) {
+      this.isCompleted = false;
+    }
     this.pendingResourceGains = state.pendingResourceGains;
     if (this.pendingResourceGains) {
       this.oneTimeResourceGainsDisplay = this.pendingResourceGains;
