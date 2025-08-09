@@ -11,6 +11,7 @@ const shopDescriptions = {
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
+  researchUpgrade: 'Auto-complete early infrastructure research'
 };
 
 function showSolisTab() {
@@ -140,6 +141,61 @@ function initializeSolisUI() {
     });
   }
 
+  const donationContainer = document.getElementById('solis-donation-items');
+  if (donationContainer) {
+    const parent = donationContainer.parentElement;
+    parent.classList.add('solis-shop-container', 'hidden');
+    const title = document.createElement('h3');
+    title.textContent = 'Alien Artifact Donation';
+    parent.insertBefore(title, donationContainer);
+
+    const item = document.createElement('div');
+    item.classList.add('solis-shop-item');
+
+    const label = document.createElement('span');
+    label.classList.add('solis-shop-item-label');
+    label.textContent = 'Donate artifacts for 100 Solis points each';
+    item.appendChild(label);
+
+    const actions = document.createElement('div');
+    actions.classList.add('solis-shop-item-actions');
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.id = 'solis-donation-input';
+    input.min = '1';
+    input.value = '1';
+    actions.appendChild(input);
+
+    const button = document.createElement('button');
+    button.id = 'solis-donation-button';
+    button.textContent = 'Donate';
+    button.addEventListener('click', () => {
+      const amount = parseInt(input.value, 10) || 0;
+      solisManager.donateArtifacts(amount);
+      updateSolisUI();
+    });
+    actions.appendChild(button);
+
+    const owned = document.createElement('span');
+    owned.classList.add('solis-shop-item-count');
+    owned.innerHTML = `Owned: <span id="solis-donation-count">0</span>`;
+    actions.appendChild(owned);
+
+    item.appendChild(actions);
+    donationContainer.appendChild(item);
+  }
+
+  const researchShopItems = document.getElementById('solis-research-shop-items');
+  if (researchShopItems) {
+    const parent = researchShopItems.parentElement;
+    parent.classList.add('solis-shop-container', 'hidden');
+    const title = document.createElement('h3');
+    title.textContent = 'Research Upgrades';
+    parent.insertBefore(title, researchShopItems);
+    researchShopItems.appendChild(createShopItem('researchUpgrade'));
+  }
+
   const questText = document.getElementById('solis-quest-text');
   if (questText) {
     questText.textContent = '';
@@ -193,6 +249,15 @@ function updateSolisUI() {
   const cooldownDiv = document.getElementById('solis-cooldown');
   const cooldownText = document.getElementById('solis-cooldown-text');
   const cooldownBar = document.getElementById('solis-cooldown-bar');
+  const donationSection = document.getElementById('solis-donation-section');
+  const donationCount = document.getElementById('solis-donation-count');
+  const donationInput = document.getElementById('solis-donation-input');
+  const donationButton = document.getElementById('solis-donation-button');
+  const researchShop = document.getElementById('solis-research-shop');
+
+  const flag = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisAlienArtifactUpgrade');
+  if (donationSection) donationSection.classList.toggle('hidden', !flag);
+  if (researchShop) researchShop.classList.toggle('hidden', !flag);
 
   if (pointsSpan) {
     pointsSpan.textContent = solisManager.solisPoints;
@@ -248,6 +313,13 @@ function updateSolisUI() {
       cooldownText.textContent = '';
       cooldownBar.style.width = '0%';
     }
+  }
+  if (donationCount && resources.colony && resources.colony.alienArtifact) {
+    donationCount.textContent = resources.colony.alienArtifact.value;
+  }
+  if (donationButton && donationInput && resources.colony && resources.colony.alienArtifact) {
+    const amt = parseInt(donationInput.value, 10) || 0;
+    donationButton.disabled = amt <= 0 || amt > resources.colony.alienArtifact.value;
   }
 
   for (const key in shopElements) {

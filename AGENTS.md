@@ -362,3 +362,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Repeatable projects clear their completed flag on load when more repetitions remain.
 - Deeper mining now proceeds without android assignments, running at normal speed.
 - Colony upgrade cost text now highlights only resources that are unaffordable.
+- Solis tab now features an Alien Artifact section unlocked by a flag, letting players donate artifacts for points and buy Research Upgrades that auto-research early infrastructure, including the Terraforming Bureau.
