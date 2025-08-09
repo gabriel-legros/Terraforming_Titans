@@ -310,18 +310,18 @@ class Terraforming extends EffectableEntity{
   }
 
 
-  calculateInitialValues() {
+  calculateInitialValues(planetParameters = currentPlanetParameters) {
       // Store initial zonal temperatures
       for (const zone of ['tropical', 'temperate', 'polar']) {
           this.temperature.zones[zone].initial = this.temperature.zones[zone].value;
       }
       // This code block belongs inside calculateInitialValues
       const zones = ZONES;
-      // Get initial amounts directly from currentPlanetParameters
-      const initialLiquidWater = currentPlanetParameters.resources.surface.liquidWater?.initialValue || 0;
-      const initialIce = currentPlanetParameters.resources.surface.ice?.initialValue || 0;
-      const initialDryIce = currentPlanetParameters.resources.surface.dryIce?.initialValue || 0;
-      const initialBiomass = currentPlanetParameters.resources.surface.biomass?.initialValue || 0;
+      // Get initial amounts directly from provided planetParameters
+      const initialLiquidWater = planetParameters.resources.surface.liquidWater?.initialValue || 0;
+      const initialIce = planetParameters.resources.surface.ice?.initialValue || 0;
+      const initialDryIce = planetParameters.resources.surface.dryIce?.initialValue || 0;
+      const initialBiomass = planetParameters.resources.surface.biomass?.initialValue || 0;
 
       const iceZoneDistribution = { tropical: 0.01, temperate: 0.09, polar: 0.90 };
       const buriedFractions = { tropical: 1, temperate: 1, polar: 0.3 };
@@ -344,15 +344,15 @@ class Terraforming extends EffectableEntity{
               this.zonalSurface[zone].dryIce = 0;
           }
   
-          const initialLiquidMethane = currentPlanetParameters.resources.surface.liquidMethane?.initialValue || 0;
-          const initialHydrocarbonIce = currentPlanetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
+          const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
+          const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
           this.zonalHydrocarbons[zone].liquid = initialLiquidMethane * zoneRatio;
           this.zonalHydrocarbons[zone].ice = initialHydrocarbonIce * zoneRatio;
       });
 
     // Override defaults if planet parameters specify zonal water amounts
-    if (currentPlanetParameters.zonalWater) {
-        this.zonalWater = structuredClone(currentPlanetParameters.zonalWater);
+    if (planetParameters.zonalWater) {
+        this.zonalWater = structuredClone(planetParameters.zonalWater);
         zones.forEach(z => {
             if (!this.zonalWater[z].hasOwnProperty('buriedIce')) {
                 this.zonalWater[z].buriedIce = 0;
@@ -361,8 +361,8 @@ class Terraforming extends EffectableEntity{
     }
 
     // Override defaults if planet parameters specify zonal hydrocarbon amounts
-    if (currentPlanetParameters.zonalHydrocarbons) {
-        this.zonalHydrocarbons = structuredClone(currentPlanetParameters.zonalHydrocarbons);
+    if (planetParameters.zonalHydrocarbons) {
+        this.zonalHydrocarbons = structuredClone(planetParameters.zonalHydrocarbons);
         zones.forEach(z => {
             if (this.zonalHydrocarbons[z] && !this.zonalHydrocarbons[z].hasOwnProperty('buriedIce')) {
                 this.zonalHydrocarbons[z].buriedIce = 0;
@@ -371,8 +371,8 @@ class Terraforming extends EffectableEntity{
     }
 
     // Override defaults if planet parameters specify zonal surface amounts
-    if (currentPlanetParameters.zonalSurface) {
-        this.zonalSurface = structuredClone(currentPlanetParameters.zonalSurface);
+    if (planetParameters.zonalSurface) {
+        this.zonalSurface = structuredClone(planetParameters.zonalSurface);
         zones.forEach(z => {
             if (!this.zonalSurface[z].hasOwnProperty('biomass')) {
                 this.zonalSurface[z].biomass = 0;
@@ -384,8 +384,8 @@ class Terraforming extends EffectableEntity{
     }
 
     // Initialize global atmospheric resource amounts (no longer storing in this.atmosphere.gases)
-    for (const gas in currentPlanetParameters.resources.atmospheric) {
-        const initialTotalGasAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
+    for (const gas in planetParameters.resources.atmospheric) {
+        const initialTotalGasAmount = planetParameters.resources.atmospheric[gas]?.initialValue || 0;
         if (resources.atmospheric[gas]) {
             resources.atmospheric[gas].value = initialTotalGasAmount; // Set initial value in global resource
         } else {
@@ -395,7 +395,7 @@ class Terraforming extends EffectableEntity{
 
     // Initial global pressures are no longer stored here. They will be calculated
     // on the fly when needed (e.g., for delta or equilibrium calculations)
-    // based on the initial values stored in currentPlanetParameters.resources.atmospheric.
+    // based on the initial values stored in planetParameters.resources.atmospheric.
 
     // Initial synchronization to update global resource amounts and calculate initial pressures
     this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
@@ -1131,7 +1131,7 @@ class Terraforming extends EffectableEntity{
         initializeTerraformingTabs();
         createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){
-          this.calculateInitialValues();
+          this.calculateInitialValues(currentPlanetParameters);
           // Calculate equilibrium constants immediately after initial values are set
           //this.calculateEquilibriumConstants();
         }
@@ -1614,7 +1614,7 @@ synchronizeGlobalResources() {
       // and distribute surface resources zonally.
       if (!this.initialValuesCalculated) {
            console.warn("Initial values not calculated in save. Running calculateInitialValues.");
-           this.calculateInitialValues(); // This now correctly sets global resource values too
+           this.calculateInitialValues(currentPlanetParameters); // This now correctly sets global resource values too
       } else {
           // If initial values *were* calculated, we still need to ensure the global
           // resource amounts match the loaded zonal surface amounts.

@@ -51,7 +51,7 @@ describe('terraforming-utils integration', () => {
     // set some water for coverage
     terra.zonalWater.tropical.liquid = 1e6;
     terra.zonalWater.temperate.liquid = 5e5;
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
     terra._updateZonalCoverageCache();
 
     const expectedStatus = calculateAverageCoverage(terra, 'liquidWater') > terra.waterTarget;
@@ -75,7 +75,7 @@ describe('terraforming-utils integration', () => {
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
 
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     terra.zonalWater.polar.ice = 1000;
     const initialCov = calculateZonalCoverage(terra, 'polar', 'ice');

@@ -174,7 +174,7 @@
         globalThis.calculateZoneSolarFluxWithFacility = undefined;
 
         const terra = new TF(sandboxResources, fullParams.celestialParameters || {});
-        terra.calculateInitialValues();
+        terra.calculateInitialValues(fullParams);
 
         let stepIdx = 0;
         let stableCount = 0;

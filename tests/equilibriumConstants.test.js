@@ -59,7 +59,7 @@ describe('equilibrium constants', () => {
     const res = createResources(params.resources);
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
     debugTools.calculateEquilibriumConstants.call(terra);
 
     terra.updateResources(1000); // one tick

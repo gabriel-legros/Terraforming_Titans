@@ -41,7 +41,7 @@ describe('initial planetary temperatures', () => {
     const res = createResources(params.resources);
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
     terra._updateZonalCoverageCache(); // Manually populate cache for test
     const initial = terra.temperature.value;
     terra.updateSurfaceTemperature();
