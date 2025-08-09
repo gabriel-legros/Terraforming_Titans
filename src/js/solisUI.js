@@ -11,7 +11,7 @@ const shopDescriptions = {
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
-  researchUpgrade: 'Auto-complete one early infrastructure technology per purchase'
+  researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
 };
 
 function showSolisTab() {
