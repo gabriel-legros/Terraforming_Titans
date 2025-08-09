@@ -120,69 +120,72 @@ function drawSingle(seed, options) {
   attachEquilibrateHandler(res, sStr, archetype, box);
 }
 
-    // Attach equilibrate handler if available
-    const eqBtn = document.getElementById('rwg-equilibrate-btn');
-    if (eqBtn && typeof runEquilibration === 'function') {
-      eqBtn.onclick = async () => {
-        const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
-        if (typeof setGameSpeed === 'function') setGameSpeed(0);
-        const cancelToken = { cancelled: false };
-        // Progress window
-        const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.background = 'rgba(0,0,0,0.5)';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
+function attachEquilibrateHandler(res, sStr, archetype, box) {
+  // Attach equilibrate handler if available
+  const eqBtn = document.getElementById('rwg-equilibrate-btn');
+  if (eqBtn && typeof runEquilibration === 'function') {
+    eqBtn.onclick = async () => {
+      const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
+      if (typeof setGameSpeed === 'function') setGameSpeed(0);
+      const cancelToken = { cancelled: false };
+      // Progress window
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.background = 'rgba(0,0,0,0.5)';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
 
-        const win = document.createElement('div');
-        win.style.background = '#222';
-        win.style.padding = '16px';
-        win.style.border = '1px solid #555';
-        win.style.color = '#fff';
-        win.style.width = '260px';
+      const win = document.createElement('div');
+      win.style.background = '#222';
+      win.style.padding = '16px';
+      win.style.border = '1px solid #555';
+      win.style.color = '#fff';
+      win.style.width = '260px';
 
-        const barContainer = document.createElement('div');
-        barContainer.style.width = '100%';
-        barContainer.style.height = '20px';
-        barContainer.style.background = '#444';
-        barContainer.style.marginBottom = '12px';
+      const barContainer = document.createElement('div');
+      barContainer.style.width = '100%';
+      barContainer.style.height = '20px';
+      barContainer.style.background = '#444';
+      barContainer.style.marginBottom = '12px';
 
-        const bar = document.createElement('div');
-        bar.style.height = '100%';
-        bar.style.width = '0%';
-        bar.style.background = '#0f0';
-        barContainer.appendChild(bar);
+      const bar = document.createElement('div');
+      bar.style.height = '100%';
+      bar.style.width = '0%';
+      bar.style.background = '#0f0';
+      barContainer.appendChild(bar);
 
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.onclick = () => { cancelToken.cancelled = true; };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = () => { cancelToken.cancelled = true; };
 
-        win.appendChild(barContainer);
-        win.appendChild(cancelBtn);
-        overlay.appendChild(win);
-        document.body.appendChild(overlay);
+      win.appendChild(barContainer);
+      win.appendChild(cancelBtn);
+      overlay.appendChild(win);
+      document.body.appendChild(overlay);
 
-        eqBtn.disabled = true;
-        try {
-          const result = await runEquilibration(res.override, { yearsMax: 10000, stepDays: 1, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, cancelToken }, (p) => {
-            bar.style.width = `${Math.round(p * 100)}%`;
-          });
-          const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
-          box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
-        } catch (e) {
-          if (e?.message !== 'cancelled') console.error('Equilibration failed:', e);
-        } finally {
-          if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
-          const btn = document.getElementById('rwg-equilibrate-btn');
-          if (btn) btn.disabled = false;
-          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-  };
+      eqBtn.disabled = true;
+      try {
+        const result = await runEquilibration(res.override, { yearsMax: 10000, stepDays: 1, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, cancelToken }, (p) => {
+          bar.style.width = `${Math.round(p * 100)}%`;
+        });
+        const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+        box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
+        attachEquilibrateHandler(newRes, sStr, archetype, box);
+      } catch (e) {
+        if (e?.message !== 'cancelled') console.error('Equilibration failed:', e);
+      } finally {
+        if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
+        const btn = document.getElementById('rwg-equilibrate-btn');
+        if (btn) btn.disabled = false;
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      }
+    };
+  }
 }
 
 function renderPlanetCard(p, index) {
