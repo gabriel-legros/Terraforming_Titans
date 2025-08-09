@@ -385,3 +385,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Introduced `getTerraformedPlanetCountIncludingCurrent` in SpaceManager to avoid double counting the current planet when
   applying terraforming bonuses.
 - Exposed `resources` and `currentPlanetParameters` on `globalThis` so RWG equilibration can safely snapshot and restore live state.
+- RWG equilibration now enforces a 30s timeout and always finalizes to restore state.
+- RWG equilibration waits at least 10s, displays a progress window with a cancel button, and always finalizes on cancel.

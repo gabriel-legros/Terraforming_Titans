@@ -72,6 +72,39 @@ describe('RWG equilibration (isolated Terraforming)', () => {
     const cancelToken = { cancelled: true };
     await expect(runEquilibration(res.override, { cancelToken, sync: true })).rejects.toThrow();
   });
+
+  test('honors minimum runtime', async () => {
+    const seed = 'rwg-eq-test-min-time';
+    const res = generateRandomPlanet(seed, { archetype: 'mars-like' });
+    const start = Date.now();
+    await runEquilibration(res.override, {
+      yearsMax: 1,
+      stepDays: 365,
+      checkEvery: 1,
+      chunkSteps: 365,
+      minRunMs: 50
+    });
+    const elapsed = Date.now() - start;
+    expect(elapsed).toBeGreaterThanOrEqual(50);
+  });
+
+  test('times out and restores globals', async () => {
+    const seed = 'rwg-eq-test-timeout';
+    const res = generateRandomPlanet(seed, { archetype: 'mars-like' });
+    const sentinelCPP = { S: 'CPP' };
+    const sentinelRes = { S: 'RES' };
+    global.currentPlanetParameters = sentinelCPP;
+    global.resources = sentinelRes;
+    await expect(runEquilibration(res.override, {
+      yearsMax: 1e9,
+      stepDays: 365,
+      checkEvery: 1e9,
+      chunkSteps: 1,
+      timeoutMs: 10
+    })).rejects.toThrow('timeout');
+    expect(global.currentPlanetParameters).toBe(sentinelCPP);
+    expect(global.resources).toBe(sentinelRes);
+  });
 });
 
 
