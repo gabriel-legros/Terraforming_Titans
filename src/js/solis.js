@@ -37,6 +37,7 @@ class SolisManager extends EffectableEntity {
     this.postCompletionCooldownUntil = 0;
     this.questInterval = 15 * 60 * 1000; // 15 minutes
     this.refreshCooldown = 5 * 60 * 1000; // 5 minutes
+    this.solisTabAlert = false;
 
     // Purchasable upgrades for the Solis shop
     this.shopUpgrades = {
@@ -122,6 +123,13 @@ class SolisManager extends EffectableEntity {
       }
     } else {
       this.rewardMultiplier = 1;
+    }
+  }
+
+  setSolisTabAlert(value) {
+    this.solisTabAlert = value;
+    if (typeof updateHopeAlert === 'function') {
+      updateHopeAlert();
     }
   }
 
@@ -275,6 +283,7 @@ class SolisManager extends EffectableEntity {
       lastQuestTime: this.lastQuestTime,
       lastRefreshTime: this.lastRefreshTime,
       postCompletionCooldownUntil: this.postCompletionCooldownUntil,
+      solisTabAlert: this.solisTabAlert,
       upgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
         o[k] = this.shopUpgrades[k].purchases;
         return o;
@@ -289,6 +298,7 @@ class SolisManager extends EffectableEntity {
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
     this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
+    this.solisTabAlert = data.solisTabAlert || false;
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.shopUpgrades[k]) {
