@@ -368,6 +368,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Added a Pre-travel save slot that automatically stores the game state before planet travel and remains hidden when empty.
 - WGC class descriptions now appear in the member details window instead of on the team card.
 - Solis artifact donation now uses the correct resource pool, properly displaying owned artifacts and enabling donations.
+- Solis artifact donations now grant 10 points per artifact instead of 100.
 - Solis research upgrade now lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
 - Chapter 13.2 reward now triggers a one-time alert on the Solis tab.
 - Journal objective for Warp Gate Command now displays "Complete an Operation of Difficulty X" for clarity.
