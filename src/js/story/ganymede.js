@@ -332,7 +332,7 @@ progressGanymede.chapters.push(
         narrative: "Callisto Marine CO: “We've breached the inner sanctum! It's... a temple. And there's Kane, wired into some kind of throne. He's not moving, just... smiling.”\nElias Kane (via comms): 'You are too late. The gate is open. The Three Wounds will be made whole.'\nHart: 'What gate? What is he talking about?'\nSuddenly, a massive energy spike. A portal tears open in the center of the chamber.\nFeroza: 'Hostiles incoming! All units, defensive positions!'",
         prerequisites: ["chapter12.0"],
         objectives: [
-            { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000000 }
+            { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }
         ],
         reward: []
     },
