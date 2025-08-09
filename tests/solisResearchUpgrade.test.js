@@ -23,7 +23,7 @@ describe('Solis research upgrade', () => {
         }
       }
     };
-    global.resources = { colony: { alienArtifact: { value: 0, decrease(n) { this.value -= n; } } } };
+    global.resources = { special: { alienArtifact: { value: 0, decrease(n) { this.value -= n; } } } };
     global.globalGameIsLoadingFromSave = false;
   });
 
@@ -45,10 +45,10 @@ describe('Solis research upgrade', () => {
   });
 
   test('donating artifacts grants points', () => {
-    resources.colony.alienArtifact.value = 5;
+    resources.special.alienArtifact.value = 5;
     expect(manager.donateArtifacts(2)).toBe(true);
     expect(manager.solisPoints).toBe(200);
-    expect(resources.colony.alienArtifact.value).toBe(3);
+    expect(resources.special.alienArtifact.value).toBe(3);
     expect(manager.donateArtifacts(10)).toBe(false);
   });
 });

@@ -366,5 +366,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Solis tab now features an Alien Artifact section unlocked by a flag, letting players donate artifacts for points and buy Research Upgrades that auto-research early infrastructure, including the Terraforming Bureau.
 - Added a Pre-travel save slot that automatically stores the game state before planet travel and remains hidden when empty.
 - WGC class descriptions now appear in the member details window instead of on the team card.
+- Solis artifact donation now uses the correct resource pool, properly displaying owned artifacts and enabling donations.
 - Solis research upgrade now lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
-- WGC team cards once again show member class names while keeping descriptions in the details window.
