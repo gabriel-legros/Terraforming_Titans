@@ -116,7 +116,7 @@ progressGanymede.storyProjects.facility_expedition = {
     cost: {
         colony: { components: 10000, electronics: 10000, energy: 1000000 }
     },
-    duration: 600000, // 30 min
+    duration: 300000, // 15 min
     description: 'Breach, sweep, and power up the mysterious underwater facility.',
     repeatable: true,
     maxRepeatCount: 3,
