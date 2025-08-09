@@ -272,7 +272,7 @@ class Terraforming extends EffectableEntity{
 
       for (const gas in terraformingGasTargets) {
           // Calculate pressure on the fly from global resource amount
-          const gasAmount = resources.atmospheric[gas]?.value || 0;
+          const gasAmount = this.resources.atmospheric[gas]?.value || 0;
           const gasPressurePa = calculateAtmosphericPressure(
               gasAmount,
               this.celestialParameters.gravity,
@@ -386,8 +386,8 @@ class Terraforming extends EffectableEntity{
     // Initialize global atmospheric resource amounts (no longer storing in this.atmosphere.gases)
     for (const gas in planetParameters.resources.atmospheric) {
         const initialTotalGasAmount = planetParameters.resources.atmospheric[gas]?.initialValue || 0;
-        if (resources.atmospheric[gas]) {
-            resources.atmospheric[gas].value = initialTotalGasAmount; // Set initial value in global resource
+        if (this.resources.atmospheric[gas]) {
+            this.resources.atmospheric[gas].value = initialTotalGasAmount; // Set initial value in global resource
         } else {
             console.warn(`Atmospheric gas '${gas}' defined in parameters but not in global resources.`);
         }
@@ -430,17 +430,17 @@ class Terraforming extends EffectableEntity{
         let globalWaterPressurePa = 0;
         let globalCo2PressurePa = 0;
         let globalMethanePressurePa = 0;
-        for (const gas in resources.atmospheric) {
-             const amount = resources.atmospheric[gas].value || 0;
+        for (const gas in this.resources.atmospheric) {
+             const amount = this.resources.atmospheric[gas].value || 0;
              const pressure = calculateAtmosphericPressure(amount, gravity, this.celestialParameters.radius);
              globalTotalPressurePa += pressure;
              if (gas === 'atmosphericWater') globalWaterPressurePa = pressure;
              if (gas === 'carbonDioxide') globalCo2PressurePa = pressure;
              if (gas === 'atmosphericMethane') globalMethanePressurePa = pressure;
         }
-        const availableGlobalWaterVapor = resources.atmospheric['atmosphericWater']?.value || 0; // tons
-        const availableGlobalCo2Gas = resources.atmospheric['carbonDioxide']?.value || 0; // tons
-        const availableGlobalMethaneGas = resources.atmospheric['atmosphericMethane']?.value || 0; // tons
+        const availableGlobalWaterVapor = this.resources.atmospheric['atmosphericWater']?.value || 0; // tons
+        const availableGlobalCo2Gas = this.resources.atmospheric['carbonDioxide']?.value || 0; // tons
+        const availableGlobalMethaneGas = this.resources.atmospheric['atmosphericMethane']?.value || 0; // tons
 
         const solarFlux = this.luminosity.modifiedSolarFlux;
         const precipitationMultiplier = this.equilibriumPrecipitationMultiplier;
@@ -675,7 +675,7 @@ class Terraforming extends EffectableEntity{
 
         // Additional melt from focused mirror/lantern power
         const focusMeltAmount = (typeof globalThis.applyFocusedMelt === 'function')
-            ? globalThis.applyFocusedMelt(this, resources, durationSeconds)
+            ? globalThis.applyFocusedMelt(this, this.resources, durationSeconds)
             : 0;
         totalMeltAmount += focusMeltAmount;
         this.focusMeltAmount = focusMeltAmount;
@@ -802,17 +802,17 @@ class Terraforming extends EffectableEntity{
         if(!Number.isFinite(totalAtmosphericMethaneChange)) totalAtmosphericMethaneChange = 0;
 
         // Apply directly to Global Resources (Atmosphere)
-        if (resources.atmospheric['atmosphericWater']) {
-            resources.atmospheric['atmosphericWater'].value += totalAtmosphericWaterChange;
-            resources.atmospheric['atmosphericWater'].value = Math.max(0, resources.atmospheric['atmosphericWater'].value);
+        if (this.resources.atmospheric['atmosphericWater']) {
+            this.resources.atmospheric['atmosphericWater'].value += totalAtmosphericWaterChange;
+            this.resources.atmospheric['atmosphericWater'].value = Math.max(0, this.resources.atmospheric['atmosphericWater'].value);
         }
-        if (resources.atmospheric['carbonDioxide']) {
-            resources.atmospheric['carbonDioxide'].value += totalAtmosphericCO2Change;
-            resources.atmospheric['carbonDioxide'].value = Math.max(0, resources.atmospheric['carbonDioxide'].value);
+        if (this.resources.atmospheric['carbonDioxide']) {
+            this.resources.atmospheric['carbonDioxide'].value += totalAtmosphericCO2Change;
+            this.resources.atmospheric['carbonDioxide'].value = Math.max(0, this.resources.atmospheric['carbonDioxide'].value);
         }
-        if (resources.atmospheric['atmosphericMethane']) {
-            resources.atmospheric['atmosphericMethane'].value += totalAtmosphericMethaneChange;
-            resources.atmospheric['atmosphericMethane'].value = Math.max(0, resources.atmospheric['atmosphericMethane'].value);
+        if (this.resources.atmospheric['atmosphericMethane']) {
+            this.resources.atmospheric['atmosphericMethane'].value += totalAtmosphericMethaneChange;
+            this.resources.atmospheric['atmosphericMethane'].value = Math.max(0, this.resources.atmospheric['atmosphericMethane'].value);
         }
 
         // Apply to Zonal Surface Stores
@@ -879,53 +879,53 @@ class Terraforming extends EffectableEntity{
         const rateType = 'terraforming';
 
         // Update Atmospheric Resource Rates (Individual Processes)
-        if (resources.atmospheric.atmosphericWater) {
-             resources.atmospheric.atmosphericWater.modifyRate(atmosphericWaterProductionRate, 'Evaporation/Sublimation', rateType);
-             resources.atmospheric.atmosphericWater.modifyRate(-atmosphericWaterConsumptionRate, 'Precipitation', rateType); // Consumption is negative
+        if (this.resources.atmospheric.atmosphericWater) {
+             this.resources.atmospheric.atmosphericWater.modifyRate(atmosphericWaterProductionRate, 'Evaporation/Sublimation', rateType);
+             this.resources.atmospheric.atmosphericWater.modifyRate(-atmosphericWaterConsumptionRate, 'Precipitation', rateType); // Consumption is negative
         }
-        if (resources.atmospheric.carbonDioxide) {
-            resources.atmospheric.carbonDioxide.modifyRate(atmosphericCO2ProductionRate, 'CO2 Sublimation', rateType);
-            resources.atmospheric.carbonDioxide.modifyRate(-atmosphericCO2ConsumptionRate, 'CO2 Condensation', rateType); // Consumption is negative
+        if (this.resources.atmospheric.carbonDioxide) {
+            this.resources.atmospheric.carbonDioxide.modifyRate(atmosphericCO2ProductionRate, 'CO2 Sublimation', rateType);
+            this.resources.atmospheric.carbonDioxide.modifyRate(-atmosphericCO2ConsumptionRate, 'CO2 Condensation', rateType); // Consumption is negative
         }
-        if (resources.atmospheric.atmosphericMethane) {
-            resources.atmospheric.atmosphericMethane.modifyRate(atmosphericMethaneProductionRate, 'Evaporation/Sublimation', rateType);
-            resources.atmospheric.atmosphericMethane.modifyRate(-atmosphericMethaneConsumptionRate, 'Precipitation', rateType); // Consumption is negative
+        if (this.resources.atmospheric.atmosphericMethane) {
+            this.resources.atmospheric.atmosphericMethane.modifyRate(atmosphericMethaneProductionRate, 'Evaporation/Sublimation', rateType);
+            this.resources.atmospheric.atmosphericMethane.modifyRate(-atmosphericMethaneConsumptionRate, 'Precipitation', rateType); // Consumption is negative
         }
 
         // Update Surface Resource Rates (Individual Processes for Tooltip)
-        if (resources.surface.liquidWater) {
-            resources.surface.liquidWater.modifyRate(-evaporationRate, 'Evaporation', rateType);
-            resources.surface.liquidWater.modifyRate(rainfallRate, 'Rain', rateType);
-            resources.surface.liquidWater.modifyRate(meltingRate, 'Melt', rateType);
-            resources.surface.liquidWater.modifyRate(-freezingRate, 'Freeze', rateType);
+        if (this.resources.surface.liquidWater) {
+            this.resources.surface.liquidWater.modifyRate(-evaporationRate, 'Evaporation', rateType);
+            this.resources.surface.liquidWater.modifyRate(rainfallRate, 'Rain', rateType);
+            this.resources.surface.liquidWater.modifyRate(meltingRate, 'Melt', rateType);
+            this.resources.surface.liquidWater.modifyRate(-freezingRate, 'Freeze', rateType);
             if (focusedMeltRate > 0) {
-                resources.surface.liquidWater.modifyRate(focusedMeltRate, 'Focused Melt', rateType);
+                this.resources.surface.liquidWater.modifyRate(focusedMeltRate, 'Focused Melt', rateType);
             }
         }
-        if (resources.surface.ice) {
-            resources.surface.ice.modifyRate(-waterSublimationRate, 'Sublimation', rateType);
-            resources.surface.ice.modifyRate(snowfallRate, 'Snow', rateType);
-            resources.surface.ice.modifyRate(-meltingRate, 'Melt', rateType);
-            resources.surface.ice.modifyRate(freezingRate, 'Freeze', rateType);
+        if (this.resources.surface.ice) {
+            this.resources.surface.ice.modifyRate(-waterSublimationRate, 'Sublimation', rateType);
+            this.resources.surface.ice.modifyRate(snowfallRate, 'Snow', rateType);
+            this.resources.surface.ice.modifyRate(-meltingRate, 'Melt', rateType);
+            this.resources.surface.ice.modifyRate(freezingRate, 'Freeze', rateType);
             if (focusedMeltRate > 0) {
-                resources.surface.ice.modifyRate(-focusedMeltRate, 'Focused Melt', rateType);
+                this.resources.surface.ice.modifyRate(-focusedMeltRate, 'Focused Melt', rateType);
             }
         }
-        if (resources.surface.dryIce) {
-            resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
-            resources.surface.dryIce.modifyRate(co2CondensationRate, 'CO2 Condensation', rateType);
+        if (this.resources.surface.dryIce) {
+            this.resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
+            this.resources.surface.dryIce.modifyRate(co2CondensationRate, 'CO2 Condensation', rateType);
         }
-        if (resources.surface.liquidMethane) {
-            resources.surface.liquidMethane.modifyRate(-this.totalMethaneEvaporationRate, 'Methane Evaporation', rateType);
-            resources.surface.liquidMethane.modifyRate(this.totalMethaneCondensationRate, 'Methane Rain', rateType);
-            resources.surface.liquidMethane.modifyRate(this.totalMethaneMeltRate, 'Melt', rateType);
-            resources.surface.liquidMethane.modifyRate(-this.totalMethaneFreezeRate, 'Freeze', rateType);
+        if (this.resources.surface.liquidMethane) {
+            this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneEvaporationRate, 'Methane Evaporation', rateType);
+            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneCondensationRate, 'Methane Rain', rateType);
+            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneMeltRate, 'Melt', rateType);
+            this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneFreezeRate, 'Freeze', rateType);
         }
-        if (resources.surface.hydrocarbonIce) {
-            resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneSublimationRate, 'Methane Sublimation', rateType);
-            resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneIceCondensationRate, 'Methane Snow', rateType);
-            resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneMeltRate, 'Melt', rateType);
-            resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneFreezeRate, 'Freeze', rateType);
+        if (this.resources.surface.hydrocarbonIce) {
+            this.resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneSublimationRate, 'Methane Sublimation', rateType);
+            this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneIceCondensationRate, 'Methane Snow', rateType);
+            this.resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneMeltRate, 'Melt', rateType);
+            this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneFreezeRate, 'Freeze', rateType);
         }
 
         // reset stored melt from flow for next tick
@@ -1030,7 +1030,7 @@ class Terraforming extends EffectableEntity{
         const upgradeAlbedo = 0.05;
         const surfaceArea = this.celestialParameters.surfaceArea;
 
-        const albedoUpgrades = resources.special.albedoUpgrades.value;
+        const albedoUpgrades = this.resources.special.albedoUpgrades.value;
         const upgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1) : 0;
         const untouchedRatio = Math.max(1 - upgradeRatio, 0);
 
@@ -1145,7 +1145,7 @@ class Terraforming extends EffectableEntity{
     
     // Calculates the current total global atmospheric pressure (in kPa) from global resources
     calculateTotalPressure() {
-        const atmos = (this.resources && this.resources.atmospheric) || (typeof resources !== 'undefined' ? resources.atmospheric : {});
+        const atmos = this.resources.atmospheric || {};
         let totalPressurePa = 0;
         for (const gas in atmos) {
             const amount = atmos[gas].value || 0;
@@ -1160,8 +1160,8 @@ class Terraforming extends EffectableEntity{
 
     calculateAtmosphericComposition() {
         let co2Mass = 0, h2oMass = 0, ch4Mass = 0, safeGHGMass = 0, inertMass = 0;
-        for (const gas in resources.atmospheric) {
-            const amountTons = resources.atmospheric[gas].value || 0;
+        for (const gas in this.resources.atmospheric) {
+            const amountTons = this.resources.atmospheric[gas].value || 0;
             const kg = amountTons * 1000;
             if (gas === 'carbonDioxide') co2Mass += kg;
             else if (gas === 'atmosphericWater') h2oMass += kg;
@@ -1270,8 +1270,8 @@ class Terraforming extends EffectableEntity{
         let totalDelta = 0; // Use a local variable, no need to store this.totalDelta
 
         // Calculate current and initial pressures on the fly
-        for (const gas in resources.atmospheric) { // Iterate through defined atmospheric gases
-            const currentAmount = resources.atmospheric[gas].value || 0;
+        for (const gas in this.resources.atmospheric) { // Iterate through defined atmospheric gases
+            const currentAmount = this.resources.atmospheric[gas].value || 0;
             const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
 
             const currentPressure = calculateAtmosphericPressure(currentAmount, this.celestialParameters.gravity, this.celestialParameters.radius);
@@ -1343,7 +1343,7 @@ distributeGlobalChangesToZones(deltaTime) {
 
     for (const category in climateResources) {
         climateResources[category].forEach(resName => {
-            const globalRes = resources[category]?.[resName];
+            const globalRes = this.resources[category]?.[resName];
             if (!globalRes) return; // Skip if resource doesn't exist
 
             // Calculate net rate EXCLUDING 'terraforming' type rates
@@ -1504,12 +1504,12 @@ synchronizeGlobalResources() {
     });
 
     // Update global SURFACE resource values (Amounts)
-    if (resources.surface.liquidWater) resources.surface.liquidWater.value = totalLiquidWater;
-    if (resources.surface.ice) resources.surface.ice.value = totalIce;
-    if (resources.surface.dryIce) resources.surface.dryIce.value = totalDryIce;
-    if (resources.surface.biomass) resources.surface.biomass.value = totalBiomass;
-    if (resources.surface.liquidMethane) resources.surface.liquidMethane.value = totalLiquidMethane;
-    if (resources.surface.hydrocarbonIce) resources.surface.hydrocarbonIce.value = totalHydrocarbonIce;
+    if (this.resources.surface.liquidWater) this.resources.surface.liquidWater.value = totalLiquidWater;
+    if (this.resources.surface.ice) this.resources.surface.ice.value = totalIce;
+    if (this.resources.surface.dryIce) this.resources.surface.dryIce.value = totalDryIce;
+    if (this.resources.surface.biomass) this.resources.surface.biomass.value = totalBiomass;
+    if (this.resources.surface.liquidMethane) this.resources.surface.liquidMethane.value = totalLiquidMethane;
+    if (this.resources.surface.hydrocarbonIce) this.resources.surface.hydrocarbonIce.value = totalHydrocarbonIce;
 
     // Atmospheric resources are no longer synchronized here.
     // Pressures are calculated on the fly when needed.
