@@ -452,7 +452,6 @@ class WarpGateCommand extends EffectableEntity {
       op.progress = 0;
       op.timer = 0;
       op.nextEvent = 60;
-      op.difficulty = 0;
     }
   }
 
