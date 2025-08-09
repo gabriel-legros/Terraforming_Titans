@@ -32,4 +32,17 @@ describe('WGC team members', () => {
     expect(wgc2.teams[0][0].health).toBe(member.health);
     expect(wgc2.teams[0][0].maxHealth).toBe(member.maxHealth);
   });
+
+  test('load recalculates max health from level', () => {
+    // Simulate saved data with an incorrect maxHealth and health above the new max.
+    const data = {
+      enabled: true,
+      teams: [[{ firstName: 'Zoe', classType: 'Soldier', level: 3, health: 999, maxHealth: 1 }]]
+    };
+    const wgc2 = new WarpGateCommand();
+    wgc2.loadState(data);
+    const member = wgc2.teams[0][0];
+    expect(member.maxHealth).toBe(120);
+    expect(member.health).toBe(120);
+  });
 });
