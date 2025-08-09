@@ -394,7 +394,7 @@ progressGanymede.chapters.push(
         chapter: 13,
         narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'H.O.P.E., my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifacts Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee. On an unrelated note, my corporation is now pleased to offer a suite of new, premium research and development services. Let's synergize.'",
         prerequisites: ["chapter13.1"],
-        objectives: [],
+        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }],
         reward: [
             {
             target: 'solisManager',
@@ -415,7 +415,7 @@ progressGanymede.chapters.push(
         chapter: 13,
         narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I can see the calculations running. You're wondering if you can fit through the gate to terraform whatever's on the other side. The answer is no. The gate is just too small for a structure your size.'",
         prerequisites: ["chapter13.2"],
-        objectives: [{type: 'wgcHighestDifficulty', difficulty: 1}],
+        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }],
         reward: []
     },
     {
