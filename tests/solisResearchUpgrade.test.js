@@ -47,7 +47,7 @@ describe('Solis research upgrade', () => {
   test('donating artifacts grants points', () => {
     resources.special.alienArtifact.value = 5;
     expect(manager.donateArtifacts(2)).toBe(true);
-    expect(manager.solisPoints).toBe(200);
+    expect(manager.solisPoints).toBe(20);
     expect(resources.special.alienArtifact.value).toBe(3);
     expect(manager.donateArtifacts(10)).toBe(false);
   });

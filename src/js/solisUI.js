@@ -183,7 +183,7 @@ function initializeSolisUI() {
 
     const label = document.createElement('span');
     label.classList.add('solis-shop-item-label');
-    label.textContent = 'Donate artifacts for 100 Solis points each';
+    label.textContent = 'Donate artifacts for 10 Solis points each';
     item.appendChild(label);
 
     const actions = document.createElement('div');
