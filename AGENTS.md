@@ -381,3 +381,6 @@ second time they speak in a chapter to help clarify who is talking.
 - Skill points are now granted only when traveling from a fully terraformed planet to one not yet terraformed.
 - WGC Facilities section now displays a red exclamation mark when upgrades are ready.
 - WGC highest difficulty objective displays and tracks difficulty starting from 1.
+- Recalling a Warp Gate Command team no longer resets its difficulty.
+- Introduced `getTerraformedPlanetCountIncludingCurrent` in SpaceManager to avoid double counting the current planet when
+  applying terraforming bonuses.

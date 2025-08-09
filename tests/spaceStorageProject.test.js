@@ -31,9 +31,12 @@ describe('Space Storage project', () => {
       colonies: {},
       projectElements: {},
       addEffect: () => {},
-      globalGameIsLoadingFromSave: false,
-      spaceManager: { getTerraformedPlanetCount: () => 2 }
-    };
+        globalGameIsLoadingFromSave: false,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 2,
+          getTerraformedPlanetCountIncludingCurrent: () => 3
+        }
+      };
     vm.createContext(ctx);
     vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -74,9 +77,12 @@ describe('Space Storage project', () => {
       projectElements: {},
       addEffect: () => {},
       globalGameIsLoadingFromSave: false,
-      document: dom.window.document,
-      spaceManager: { getTerraformedPlanetCount: () => 0 },
-      formatNumber: numbers.formatNumber,
+        document: dom.window.document,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        },
+        formatNumber: numbers.formatNumber,
       formatBigInteger: numbers.formatBigInteger,
       formatTotalCostDisplay: () => '',
       formatTotalResourceGainDisplay: () => '',
@@ -134,9 +140,12 @@ describe('Space Storage project', () => {
       projectElements: {},
       addEffect: () => {},
       globalGameIsLoadingFromSave: false,
-      document: dom.window.document,
-      spaceManager: { getTerraformedPlanetCount: () => 0 },
-      formatNumber: numbers.formatNumber,
+        document: dom.window.document,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        },
+        formatNumber: numbers.formatNumber,
       formatBigInteger: numbers.formatBigInteger,
       formatTotalCostDisplay: () => '',
       formatTotalResourceGainDisplay: () => ''
@@ -178,9 +187,12 @@ describe('Space Storage project', () => {
       projectElements: {},
       addEffect: () => {},
       globalGameIsLoadingFromSave: false,
-      document: dom.window.document,
-      spaceManager: { getTerraformedPlanetCount: () => 0 },
-      formatNumber: numbers.formatNumber,
+        document: dom.window.document,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        },
+        formatNumber: numbers.formatNumber,
       formatBigInteger: numbers.formatBigInteger,
       formatTotalCostDisplay: () => '',
       formatTotalResourceGainDisplay: () => ''
@@ -281,10 +293,13 @@ describe('Space Storage project', () => {
       buildings: {},
       colonies: {},
       projectElements: {},
-      addEffect: () => {},
-      globalGameIsLoadingFromSave: false,
-      spaceManager: { getTerraformedPlanetCount: () => 0 }
-    };
+        addEffect: () => {},
+        globalGameIsLoadingFromSave: false,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        }
+      };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -324,10 +339,13 @@ describe('Space Storage project', () => {
       buildings: {},
       colonies: {},
       projectElements: {},
-      addEffect: () => {},
-      globalGameIsLoadingFromSave: false,
-      spaceManager: { getTerraformedPlanetCount: () => 0 }
-    };
+        addEffect: () => {},
+        globalGameIsLoadingFromSave: false,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        }
+      };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -411,10 +429,13 @@ describe('Space Storage project', () => {
       buildings: {},
       colonies: {},
       projectElements: {},
-      addEffect: () => {},
-      globalGameIsLoadingFromSave: false,
-      spaceManager: { getTerraformedPlanetCount: () => 0 }
-    };
+        addEffect: () => {},
+        globalGameIsLoadingFromSave: false,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        }
+      };
     vm.createContext(ctx);
     vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
