@@ -3,6 +3,7 @@ const storageResourceOptions = [
   { label: 'Components', category: 'colony', resource: 'components' },
   { label: 'Electronics', category: 'colony', resource: 'electronics' },
   { label: 'Superconductors', category: 'colony', resource: 'superconductors' },
+  { label: 'Glass', category: 'colony', resource: 'glass' },
   { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
   { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { label: 'Water', category: 'surface', resource: 'liquidWater' },
