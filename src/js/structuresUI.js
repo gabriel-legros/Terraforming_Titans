@@ -483,18 +483,57 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const parts = [];
+    const items = [];
     for (const category in cost) {
       for (const resource in cost[category]) {
-        parts.push(`${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`);
+        let available = resources[category][resource]?.value || 0;
+        if (resource === 'land') {
+          available -= resources[category][resource].reserved;
+        }
+        items.push({
+          key: `${category}.${resource}`,
+          text: `${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`,
+          hasEnough: available >= cost[category][resource]
+        });
       }
     }
-    button.textContent = `\u2192 ${parts.join(', ')}`;
+
+    const keyString = items.map(i => i.key).sort().join(',');
+    let list = button._list;
+    if (button.dataset.keys !== keyString) {
+      button.dataset.keys = keyString;
+      button.textContent = '';
+      button.append('\u2192 ');
+      list = document.createElement('span');
+      button.appendChild(list);
+      button._list = list;
+      button._spans = new Map();
+      items.forEach((item, idx) => {
+        const span = document.createElement('span');
+        list.appendChild(span);
+        button._spans.set(item.key, span);
+        if (idx < items.length - 1) {
+          list.appendChild(document.createTextNode(', '));
+        }
+      });
+    }
+
+    items.forEach(item => {
+      const span = button._spans.get(item.key);
+      if (!span) return;
+      if (span.textContent !== item.text) {
+        span.textContent = item.text;
+      }
+      const color = item.hasEnough ? '' : 'red';
+      if (span.style.color !== color) {
+        span.style.color = color;
+      }
+    });
 
     const canAfford = colony.canAffordUpgrade();
-    button.style.color = canAfford ? 'inherit' : 'red';
     button.disabled = colony.count <= 0 || !canAfford;
     button.style.display = 'inline-block';
+    button.style.color = '';
   }
   
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {

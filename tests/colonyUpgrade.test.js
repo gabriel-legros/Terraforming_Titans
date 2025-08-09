@@ -150,6 +150,28 @@ describe('colony upgrade', () => {
     expect(ctx.resources.surface.land.reserved).toBe(9);
   });
 
+  test('upgrade button colors unaffordable cost parts red', () => {
+    const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = t1.active = 10;
+    ctx.resources.colony.metal.value = 100; // insufficient
+    ctx.resources.colony.glass.value = 125; // enough
+
+    ctx.createColonyButtons(ctx.colonies);
+    ctx.updateStructureDisplay(ctx.colonies);
+
+    const button = dom.window.document.getElementById('t1_colony-upgrade-button');
+    const spans = Array.from(button._spans.values());
+    const metalSpan = spans.find(s => s.textContent.startsWith('Metal'));
+    const glassSpan = spans.find(s => s.textContent.startsWith('Glass'));
+    expect(metalSpan.style.color).toBe('red');
+    expect(glassSpan.style.color).toBe('');
+    expect(button.style.color).toBe('');
+  });
+
   test('upgrade button hidden when next tier locked', () => {
     const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
     const t1 = ctx.colonies.t1_colony;
