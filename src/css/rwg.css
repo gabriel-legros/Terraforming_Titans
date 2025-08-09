@@ -1,0 +1,158 @@
+/* rwg.css */
+
+:root {
+  --rwg-bg: #0f1115;
+  --rwg-card: #151923;
+  --rwg-panel: #191f2b;
+  --rwg-accent: #5db2ff;
+  --rwg-fg: #e6edf3;
+  --rwg-fg-dim: #aeb8c5;
+  --rwg-border: #273043;
+  --rwg-muted: #222a3a;
+}
+
+#space-random {
+  background: var(--rwg-bg);
+  border-radius: 10px;
+  padding: 16px 18px 20px;
+}
+
+.rwg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.rwg-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--rwg-fg);
+}
+
+.rwg-controls {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  background: var(--rwg-card);
+  padding: 12px;
+  border: 1px solid var(--rwg-border);
+  border-radius: 8px;
+}
+
+.rwg-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.rwg-input label {
+  color: var(--rwg-fg-dim);
+  font-size: 13px;
+}
+
+.rwg-input input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--rwg-border);
+  background: var(--rwg-panel);
+  color: var(--rwg-fg);
+}
+
+.rwg-select {
+  display: flex;
+  gap: 10px;
+}
+
+.rwg-select select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rwg-border);
+  background: var(--rwg-panel);
+  color: var(--rwg-fg);
+}
+
+.rwg-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--rwg-accent);
+  background: transparent;
+  color: var(--rwg-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rwg-btn.primary {
+  background: var(--rwg-accent);
+  color: #071521;
+  border-color: var(--rwg-accent);
+}
+
+.rwg-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Result layout */
+.rwg-result {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.rwg-infobar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rwg-chip {
+  background: var(--rwg-card);
+  border: 1px solid var(--rwg-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--rwg-fg);
+}
+
+.rwg-chip .label { color: var(--rwg-fg-dim); font-size: 12px; }
+.rwg-chip .value { font-weight: 700; font-size: 14px; margin-top: 4px; }
+
+.rwg-columns {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+}
+
+.rwg-card {
+  background: var(--rwg-card);
+  border: 1px solid var(--rwg-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.rwg-card h3, .rwg-card h4 { margin: 0 0 10px; color: var(--rwg-fg); }
+
+.rwg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rwg-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 4px 0; }
+.rwg-row span:first-child { color: var(--rwg-fg-dim); }
+.rwg-row span:last-child { color: var(--rwg-fg); font-weight: 600; }
+
+/* Atmosphere table with aligned columns */
+.rwg-atmo-table .rwg-row { grid-template-columns: 1fr 1fr 1fr; }
+.rwg-atmo-table .rwg-row span:nth-child(2),
+.rwg-atmo-table .rwg-row span:nth-child(3) {
+  text-align: right;
+  color: var(--rwg-fg);
+  font-weight: 600;
+}
+
+/* Compact helpers */
+@media (max-width: 900px) {
+  .rwg-infobar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rwg-columns { grid-template-columns: 1fr; }
+}
+

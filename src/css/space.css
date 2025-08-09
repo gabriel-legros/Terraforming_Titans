@@ -72,3 +72,18 @@
     min-height: 30px; /* Ensure it has some height even when empty */
     color: #bbb;
 }
+
+/* Random World Generator UI */
+.rwg-header h2 { margin: 10px 0 4px; }
+.rwg-controls { display: grid; gap: 10px; margin: 10px 0 16px; }
+.rwg-row { display: grid; grid-template-columns: 100px 1fr auto auto; gap: 8px; align-items: center; }
+.rwg-row label { color: #ddd; }
+.rwg-row input[type="text"], .rwg-row input[type="number"] { padding: 6px 8px; background:#1f1f1f; border:1px solid #444; color:#eee; border-radius:4px; }
+.rwg-result { display: grid; gap: 14px; }
+.rwg-star { border:1px solid #555; background:#232323; padding:12px; border-radius:6px; }
+.rwg-grid { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.rwg-grid > div { background:#1c1c1c; border:1px solid #3a3a3a; padding:8px; border-radius:4px; text-align:center; }
+.rwg-planets { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rwg-planet-card { border:1px solid #555; background:#262626; padding:10px; border-radius:6px; }
+.rwg-planet-title { font-weight:600; margin-bottom:8px; text-align:center; }
+.rwg-columns { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
