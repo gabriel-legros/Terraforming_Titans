@@ -315,7 +315,7 @@ class StoryManager {
           }
           case 'wgcHighestDifficulty': {
                if (typeof warpGateCommand !== 'undefined') {
-                    const current = warpGateCommand.highestDifficulty || 0;
+                    const current = warpGateCommand.highestDifficulty;
                     return compareValues(current, objective.difficulty || 0, objective.comparison);
                }
                return false;
@@ -429,8 +429,8 @@ class StoryManager {
           case 'wgcHighestDifficulty': {
                const current = typeof warpGateCommand !== 'undefined'
                     ? warpGateCommand.highestDifficulty : -1;
+               const target = objective.difficulty || 0;
                const dispCurrent = Math.max(0, current);
-               const target = (objective.difficulty || 0);
                return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
          }
           default:
