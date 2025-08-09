@@ -15,9 +15,14 @@ describe('Dyson Swarm collector duration UI', () => {
     ctx.projectElements = {};
     ctx.resources = { colony: { glass: { displayName: 'Glass' }, electronics: { displayName: 'Electronics' }, components: { displayName: 'Components' } } };
     ctx.spaceManager = {
+      currentPlanetKey: 'mars',
       planetStatuses: { mars: { terraformed: false } },
       getTerraformedPlanetCount() {
         return Object.values(this.planetStatuses).filter(p => p.terraformed).length;
+      },
+      getTerraformedPlanetCountIncludingCurrent() {
+        const count = this.getTerraformedPlanetCount();
+        return this.planetStatuses[this.currentPlanetKey].terraformed ? count : count + 1;
       }
     };
 
@@ -30,9 +35,9 @@ describe('Dyson Swarm collector duration UI', () => {
       collectors: 0,
       energyPerCollector: 0,
       get collectorDuration() {
-        const count = ctx.spaceManager.getTerraformedPlanetCount ?
-          ctx.spaceManager.getTerraformedPlanetCount() : 0;
-        return 60000 / (count + 1);
+        const count = ctx.spaceManager.getTerraformedPlanetCountIncludingCurrent ?
+          ctx.spaceManager.getTerraformedPlanetCountIncludingCurrent() : 1;
+        return 60000 / count;
       },
       collectorProgress: 0,
       autoDeployCollectors: false,
