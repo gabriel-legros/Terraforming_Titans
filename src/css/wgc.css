@@ -269,6 +269,7 @@
 .team-controls .difficulty-input {
   width: 60px;
   text-align: center;
+  color-scheme: dark;
 }
 
 /* R&D and Facilities List */
