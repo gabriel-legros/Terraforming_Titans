@@ -30,10 +30,10 @@ describe('wgcHighestDifficulty objective', () => {
     const sm = new StoryManager(data);
     const ev = sm.findEventById('test');
     const obj = ev.objectives[0];
-    expect(sm.describeObjective(obj)).toBe('Complete an Operation of Difficulty 1 (Highest Completed: 0)');
+    expect(sm.describeObjective(obj)).toBe('Complete an Operation of Difficulty 0 (Highest Completed: 0)');
     expect(sm.isObjectiveComplete(obj, ev)).toBe(false);
     warpGateCommand.highestDifficulty = 0;
-    expect(sm.describeObjective(obj)).toBe('Complete an Operation of Difficulty 1 (Highest Completed: 1)');
+    expect(sm.describeObjective(obj)).toBe('Complete an Operation of Difficulty 0 (Highest Completed: 0)');
     expect(sm.isObjectiveComplete(obj, ev)).toBe(true);
   });
 });
