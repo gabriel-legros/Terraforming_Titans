@@ -450,7 +450,7 @@ function generateWGCLayout() {
             <div id="wgc-rd-menu"></div>
           </div>
           <div class="wgc-card" id="wgc-facilities-section">
-            <h3>Facilities</h3>
+            <h3>Facilities<span id="wgc-facility-alert" class="hope-alert">!</span></h3>
             <div id="wgc-facility-cooldown"></div>
             <div id="wgc-facilities-menu"></div>
           </div>
@@ -605,6 +605,8 @@ function updateWGCUI() {
     const sec = Math.ceil(warpGateCommand.facilityCooldown);
     cdEl.textContent = sec > 0 ? `Cooldown: ${formatDuration(sec)}` : 'Ready';
   }
+  const alertEl = document.getElementById('wgc-facility-alert');
+  if (alertEl) alertEl.style.display = warpGateCommand.facilityCooldown <= 0 ? 'inline' : 'none';
   for (const key in facilityElements) {
     const el = facilityElements[key];
     const lvl = warpGateCommand.facilities[key] || 0;
