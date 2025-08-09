@@ -389,3 +389,4 @@ second time they speak in a chapter to help clarify who is talking.
 - RWG equilibration waits at least 10s, displays a progress window with a cancel button, and always finalizes on cancel.
 - Equilibrate button in Random World Generator can now be used repeatedly.
 - Fixed RWG UI crash by restoring the `attachEquilibrateHandler` function.
+- RWG equilibrate progress bar now fills as the simulation advances.
