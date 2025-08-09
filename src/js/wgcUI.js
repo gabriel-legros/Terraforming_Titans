@@ -45,6 +45,12 @@ const classImages = {
   'Natural Scientist': 'assets/images/natural_scientist.png',
   'Social Scientist': 'assets/images/social_scientist.png'
 };
+const classDescriptions = {
+  'Team Leader': 'Balances all skills and lends half their skill to others.',
+  'Soldier': 'Combat expert whose Power counts double in combat challenges.',
+  'Natural Scientist': 'Researcher who excels at natural science challenges and doubles artifact rewards.',
+  'Social Scientist': 'Diplomatic specialist handling social science challenges and reducing conflict.'
+};
 let activeDialog = null;
 
 function showWGCTab() {
@@ -83,9 +89,12 @@ function generateWGCTeamCards() {
         const unspentPoints = m.getPointsToAllocate() > 0 ? '<div class="unspent-points-indicator">!</div>' : '';
         const hpPercent = Math.floor((m.health / m.maxHealth) * 100);
         const hpClass = hpPercent < 25 ? 'critical-hp' : (hpPercent < 50 ? 'low-hp' : '');
+        const desc = classDescriptions[m.classType] || '';
         return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
           <div class="team-hp-bar"><div class="team-hp-bar-fill ${hpClass}" style="height:${hpPercent}%;"></div></div>
           <div class="team-member-name">${m.firstName}</div>
+          <div class="team-member-class">${m.classType}</div>
+          <div class="team-member-description">${desc}</div>
           <img src="${img}" class="team-icon">
           ${unspentPoints}
         </div>`;
