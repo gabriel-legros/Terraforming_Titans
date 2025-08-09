@@ -726,7 +726,7 @@ const researchParameters = {
         id: 'trading',
         name: 'Ship trading',
         description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Also significantly reduces the duration of cargo rockets.',
-        cost: { research: 1000000 },
+        cost: { research: 50000000 },
         prerequisites: [],
         effects: [
             {
@@ -797,7 +797,7 @@ const researchParameters = {
         id: 'space_mirror_oversight',
         name: 'Space Mirror Facility Oversight',
         description: 'Applies automated oversight controls to the space mirror facility.',
-        cost: { research: 2000000 },
+        cost: { research: 1000000 },
         prerequisites: [],
         effects: [
           {

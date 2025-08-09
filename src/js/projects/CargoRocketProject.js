@@ -40,7 +40,7 @@ class CargoRocketProject extends Project {
 
         const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
         const priceDisplay = document.createElement('span');
-        priceDisplay.textContent = `${pricePerUnit}`;
+        priceDisplay.textContent = `${formatNumber(pricePerUnit, true)}`;
         resourceRow.appendChild(priceDisplay);
 
         const buttonsContainer = document.createElement('div');
