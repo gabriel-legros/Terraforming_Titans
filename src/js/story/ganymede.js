@@ -415,7 +415,7 @@ progressGanymede.chapters.push(
         chapter: 13,
         narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I can see the calculations running. You're wondering if you can fit through the gate to terraform whatever's on the other side. The answer is no. The gate is just too small for a structure your size.'",
         prerequisites: ["chapter13.2"],
-        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }],
+        objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
         reward: []
     },
     {
