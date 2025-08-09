@@ -80,7 +80,7 @@ progressGanymede.storyProjects.leviathan_countermeasure = {
     cost: {
         colony: { components: 2000, electronics: 1000, research: 1000000, energy: 1000000 }
     },
-    duration: 900000, // 15 min
+    duration: 600000, // 10 min
     description: 'Deploy a 20 hertz sonic wall to scramble the Leviathan\'s vestibular system.',
     repeatable: true,
     maxRepeatCount: 1,
@@ -98,7 +98,7 @@ progressGanymede.storyProjects.facility_tug = {
     cost: {
         colony: { components: 50000, energy: 2000000 }
     },
-    duration: 900000, // 15 min
+    duration: 600000, // 10 min
     description: 'Tug the discovered facility 500km to a secure location.',
     repeatable: true,
     maxRepeatCount: 1,
