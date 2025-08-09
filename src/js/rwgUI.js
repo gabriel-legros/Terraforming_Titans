@@ -147,6 +147,11 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       win.style.color = '#fff';
       win.style.width = '260px';
 
+      const progressLabel = document.createElement('div');
+      progressLabel.id = 'rwg-progress-label';
+      progressLabel.style.marginBottom = '4px';
+      progressLabel.textContent = 'Minimum fast-forward';
+
       const barContainer = document.createElement('div');
       barContainer.style.width = '100%';
       barContainer.style.height = '20px';
@@ -163,6 +168,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       cancelBtn.textContent = 'Cancel';
       cancelBtn.onclick = () => { cancelToken.cancelled = true; };
 
+      win.appendChild(progressLabel);
       win.appendChild(barContainer);
       win.appendChild(cancelBtn);
       overlay.appendChild(win);
@@ -178,9 +184,11 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           relTol: 1e-6,
           chunkSteps: 20,
           cancelToken
-        }, (p) => {
-          bar.style.width = `${(p * 100).toFixed(2)}%`;
-        });
+        }, (p, info) => {
+           const label = document.getElementById('rwg-progress-label');
+           if (label) label.textContent = info.label;
+           bar.style.width = `${(p * 100).toFixed(2)}%`;
+       });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
         attachEquilibrateHandler(newRes, sStr, archetype, box);

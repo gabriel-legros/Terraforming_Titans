@@ -221,14 +221,25 @@
               stableCount = small ? (stableCount + 1) : 0;
               prevSnap = snap;
               const elapsedNow = Date.now() - startTime;
-              if (onProgress) onProgress(Math.min(1, (stepIdx + 1) / stepsMax), { step: stepIdx + 1, stableCount });
+              if (onProgress) {
+                const inMinRun = elapsedNow < minRunMs;
+                const progress = inMinRun
+                  ? Math.min(1, elapsedNow / minRunMs)
+                  : Math.min(1, (stepIdx + 1) / stepsMax);
+                const label = inMinRun ? 'Minimum fast-forward' : 'Additional fast-forward';
+                onProgress(progress, { step: stepIdx + 1, stableCount, label });
+              }
               if (stableCount >= 5 && elapsedNow >= minRunMs) { finalize(true); return; }
             }
           }
           const elapsed = Date.now() - startTime;
           if (stepIdx >= stepsMax) {
-            if (elapsed >= minRunMs) { finalize(true); return; }
-            if (onProgress) onProgress(1, { step: stepIdx, stableCount });
+            if (elapsed >= minRunMs) {
+              if (onProgress) onProgress(1, { step: stepIdx, stableCount, label: 'Finished' });
+              finalize(true);
+              return;
+            }
+            if (onProgress) onProgress(1, { step: stepIdx, stableCount, label: 'Additional fast-forward' });
           }
           if (options.sync) { loopChunk(); return; }
           setTimeout(loopChunk, 0);
