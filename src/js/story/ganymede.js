@@ -392,9 +392,53 @@ progressGanymede.chapters.push(
         id: "chapter13.2",
         type: "journal",
         chapter: 13,
-        narrative: "Hart quietly awed: “We have a gate to everywhere and no map.”\nMary final word: “Then we draw one—cautiously, together.”",
+        narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'H.O.P.E., my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifacts Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee. On an unrelated note, my corporation is now pleased to offer a suite of new, premium research and development services. Let's synergize.'",
         prerequisites: ["chapter13.1"],
+        objectives: [{type: 'wgcHighestDifficulty', difficulty: 1}],
+        reward: [
+            {
+            target: 'solisManager',
+            type: 'booleanFlag',
+            flagId: 'solisAlienArtifactUpgrade',
+            value: true
+        }]
+    },
+    {
+        id: "chapter13.3",
+        type: "journal",
+        chapter: 13,
+        narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I can see the calculations running. You're wondering if you can fit through the gate to terraform whatever's on the other side. The answer is no. The gate is just too small for a structure your size.'",
+        prerequisites: ["chapter13.2"],
+        objectives: [{type: 'wgcHighestDifficulty', difficulty: 2}],
+        reward: []
+    },
+    {
+        id: "chapter13.4",
+        type: "journal",
+        chapter: 13,
+        narrative: "Receiving transmission...\n  Mary: 'And no, we can't just disassemble you. Your core components are too large to fit through individually. It's a simple matter of physics. Don't even think about it.'",
+        prerequisites: ["chapter13.3"],
+        objectives: [{type: 'wgcHighestDifficulty', difficulty: 3}],
+        reward: []
+    },
+    {
+        id: "chapter13.5",
+        type: "journal",
+        chapter: 13,
+        narrative: "Receiving transmission...\n  Dr. Hart: 'Mary, H.O.P.E., you need to see this. Our last WGC team found something... another gate. A much larger one, clearly designed for interstellar transit.  We figured out how to disassemble it and bring it to the Sol system.'\n  Mary: 'So... you *can* go. If there's a corresponding super-gate on the other side, at least.  When you are ready, I might even have an interesting destination for you.  I'll let you pick.'",
+        prerequisites: ["chapter13.4"],
         objectives: [],
+        reward: []
+    },
+    {
+        id: "chapter13.6",
+        type: "journal",
+        chapter: 13,
+        narrative: "System Message: New objective received. Fully terraform Ganymede—atmosphere, temperature, and hydrosphere within human-habitable ranges.",
+        prerequisites: ["chapter13.5"],
+        objectives: [
+            { type: 'terraforming', terraformingParameter: 'complete' }
+        ],
         reward: []
     }
 );
