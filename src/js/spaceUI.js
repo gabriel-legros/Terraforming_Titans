@@ -215,6 +215,9 @@ function selectPlanet(planetKey){
         console.warn('Target planet already terraformed.');
         return;
     }
+    if (typeof saveGameToSlot === 'function') {
+        saveGameToSlot('pretravel');
+    }
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
     const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
