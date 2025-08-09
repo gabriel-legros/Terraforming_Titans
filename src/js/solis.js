@@ -186,8 +186,8 @@ class SolisManager extends EffectableEntity {
   }
 
   donateArtifacts(count) {
-    if (!resources || !resources.colony || !resources.colony.alienArtifact) return false;
-    const res = resources.colony.alienArtifact;
+    if (!resources || !resources.special || !resources.special.alienArtifact) return false;
+    const res = resources.special.alienArtifact;
     if (res.value < count || count <= 0) return false;
     if (typeof res.decrease === 'function') {
       res.decrease(count);

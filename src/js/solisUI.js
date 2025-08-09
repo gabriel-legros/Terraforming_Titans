@@ -314,12 +314,12 @@ function updateSolisUI() {
       cooldownBar.style.width = '0%';
     }
   }
-  if (donationCount && resources.colony && resources.colony.alienArtifact) {
-    donationCount.textContent = resources.colony.alienArtifact.value;
+  if (donationCount && resources.special && resources.special.alienArtifact) {
+    donationCount.textContent = resources.special.alienArtifact.value;
   }
-  if (donationButton && donationInput && resources.colony && resources.colony.alienArtifact) {
+  if (donationButton && donationInput && resources.special && resources.special.alienArtifact) {
     const amt = parseInt(donationInput.value, 10) || 0;
-    donationButton.disabled = amt <= 0 || amt > resources.colony.alienArtifact.value;
+    donationButton.disabled = amt <= 0 || amt > resources.special.alienArtifact.value;
   }
 
   for (const key in shopElements) {
