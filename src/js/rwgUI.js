@@ -170,8 +170,16 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
 
       eqBtn.disabled = true;
       try {
-        const result = await runEquilibration(res.override, { yearsMax: 10000, stepDays: 1, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, cancelToken }, (p) => {
-          bar.style.width = `${Math.round(p * 100)}%`;
+        const result = await runEquilibration(res.override, {
+          yearsMax: 10000,
+          stepDays: 1,
+          checkEvery: 5,
+          absTol: 1e6,
+          relTol: 1e-6,
+          chunkSteps: 20,
+          cancelToken
+        }, (p) => {
+          bar.style.width = `${(p * 100).toFixed(2)}%`;
         });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
