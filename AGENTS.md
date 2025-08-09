@@ -360,3 +360,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Auto-build percentages for buildings and colonies now persist through planet travel while all auto-build checkboxes reset.
 - Colonists slightly over their cap (by less than 0.01) are now cropped to the cap instead of decaying.
 - Repeatable projects clear their completed flag on load when more repetitions remain.
+- Deeper mining now proceeds without android assignments, running at normal speed.
