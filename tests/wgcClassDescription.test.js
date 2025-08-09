@@ -3,8 +3,8 @@ global.EffectableEntity = EffectableEntity;
 const { WGCTeamMember } = require('../src/js/team-member.js');
 const { generateWGCTeamCards } = require('../src/js/wgcUI.js');
 
-describe('WGC team card class descriptions', () => {
-  test('shows class description below class name', () => {
+describe('WGC class descriptions', () => {
+  test('removed from team card', () => {
     global.warpGateCommand = {
       teamNames: ['Alpha', 'Beta', 'Gamma', 'Delta'],
       teams: [
@@ -19,6 +19,6 @@ describe('WGC team card class descriptions', () => {
     };
     const html = generateWGCTeamCards();
     expect(html).toMatch(/<div class=\"team-member-class\">Soldier<\/div>/);
-    expect(html).toMatch(/Combat expert whose Power counts double in combat challenges./);
+    expect(html).not.toMatch(/Combat expert whose Power counts double in combat challenges./);
   });
 });

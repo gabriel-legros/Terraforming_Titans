@@ -179,11 +179,13 @@
   color: var(--wgc-border-color);
 }
 
-.team-slot .team-member-description {
-  font-size: 0.7em;
+
+.wgc-class-description {
+  font-size: 0.9em;
   text-align: center;
   width: 100%;
   color: var(--wgc-text-medium);
+  margin-bottom: 8px;
 }
 
 .team-slot .team-icon {
