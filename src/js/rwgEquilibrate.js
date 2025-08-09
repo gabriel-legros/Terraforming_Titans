@@ -204,6 +204,7 @@
           for (; stepIdx < end; stepIdx++) {
             // Mirror the essential parts of terraforming.update():
             // 1) update luminosity/flux, 2) update surface temperatures, 3) advance resources
+            terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             if (typeof terra.updateSurfaceTemperature === 'function') terra.updateSurfaceTemperature();
             terra.updateResources(stepMs);
