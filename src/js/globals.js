@@ -2,7 +2,18 @@
 let defaultPlanet = 'mars';
 let tabManager;
 let currentPlanetParameters = planetParameters[defaultPlanet];
+Object.defineProperty(globalThis, 'currentPlanetParameters', {
+  get: () => currentPlanetParameters,
+  set: (v) => { currentPlanetParameters = v; },
+  configurable: true,
+});
+
 let resources = {};
+Object.defineProperty(globalThis, 'resources', {
+  get: () => resources,
+  set: (v) => { resources = v; },
+  configurable: true,
+});
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
 let shipEfficiency = 1;
 let dayNightCycle;
