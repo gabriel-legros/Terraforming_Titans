@@ -233,8 +233,8 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC teams can now start operations when fully staffed. The Start button shows a 10-minute progress bar that loops automatically.
 - Operations now feature random weighted challenges each minute. Results are logged, grant XP and may yield Alien artifacts when successful.
 - WGC tracks total operations completed, displaying the count under the R&D menu.
-  Teams Beta, Gamma, Delta and Epsilon remain locked until 100, 500, 1000 and
-  5000 operations respectively.
+  Teams Beta, Gamma, and Delta remain locked until 100, 500, and
+  1000 operations respectively.
 - Jest setup now suppresses console output for quieter test runs.
 - Operation logs are now kept per team with an expandable section in each card.
 - Operation logs list dice rolls, DC and skill totals.
@@ -353,6 +353,7 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC artifact statistics now display totals using formatNumber with two decimal places.
 - WGC recruit dialog now updates HP and XP in real time when member stats change.
 - WGC artifact statistics now display totals using formatNumber with two decimal places.
+- WGC team slots reduced from five to four.
 - Planetary thruster energy tracking now persists by category and resets only when their targets change.
 - Warpgate Teams Equipment purchase now includes a tooltip explaining its artifact chance bonus.
 - Space Disposal project displays a 0K temperature change when no greenhouse gases are jettisoned.

@@ -13,7 +13,7 @@ describe('Space Mirror Facility Oversight research', () => {
     const colonization = ctx.researchParameters.colonization;
     const research = colonization.find(r => r.id === 'space_mirror_oversight');
     expect(research).toBeDefined();
-    expect(research.cost.research).toBe(2000000);
+    expect(research.cost.research).toBe(1000000);
     const flagEffect = research.effects.find(
       e =>
         e.target === 'project' &&
