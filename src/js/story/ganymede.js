@@ -456,6 +456,8 @@ progressGanymede.chapters.push(
         ],
         reward: [
             { target: 'spaceManager', type: 'enable', targetId: 'space-random' },
+            // Ensure the main Space tab is brought to the front when unlocking Random
+            { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false },
             {
                 target: 'global',
                 type: 'activateSubtab',
