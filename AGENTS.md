@@ -387,3 +387,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Exposed `resources` and `currentPlanetParameters` on `globalThis` so RWG equilibration can safely snapshot and restore live state.
 - RWG equilibration now enforces a 30s timeout and always finalizes to restore state.
 - RWG equilibration waits at least 10s, displays a progress window with a cancel button, and always finalizes on cancel.
+- Equilibrate button in Random World Generator can now be used repeatedly.

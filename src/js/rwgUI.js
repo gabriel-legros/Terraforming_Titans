@@ -117,6 +117,8 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, sStr, archetype);
+  attachEquilibrateHandler(res, sStr, archetype, box);
+}
 
     // Attach equilibrate handler if available
     const eqBtn = document.getElementById('rwg-equilibrate-btn');
@@ -179,9 +181,8 @@ function drawSingle(seed, options) {
           const btn = document.getElementById('rwg-equilibrate-btn');
           if (btn) btn.disabled = false;
           if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-      };
     }
+  };
 }
 
 function renderPlanetCard(p, index) {
@@ -399,6 +400,6 @@ if (typeof showSpaceRandomTab === 'function') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail };
+  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail, attachEquilibrateHandler };
 }
 
