@@ -64,11 +64,23 @@ class SpaceManager extends EffectableEntity {
 
     /**
      * Counts how many planets have been fully terraformed.
+     * The current planet only contributes if it is terraformed.
      * @returns {number}
      */
     getTerraformedPlanetCount() {
         return Object.values(this.planetStatuses)
             .filter(status => status.terraformed).length;
+    }
+
+    /**
+     * Counts terraformed planets and includes the current planet if it isn't
+     * terraformed yet. Used for terraforming-related bonuses that previously
+     * added 1 unconditionally.
+     * @returns {number}
+     */
+    getTerraformedPlanetCountIncludingCurrent() {
+        const count = this.getTerraformedPlanetCount();
+        return this.isPlanetTerraformed(this.currentPlanetKey) ? count : count + 1;
     }
 
     /**

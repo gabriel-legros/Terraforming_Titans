@@ -2,12 +2,12 @@ class TerraformingDurationProject extends Project {
   getDurationWithTerraformBonus(baseDuration) {
     if (
       typeof spaceManager === 'undefined' ||
-      typeof spaceManager.getTerraformedPlanetCount !== 'function'
+      typeof spaceManager.getTerraformedPlanetCountIncludingCurrent !== 'function'
     ) {
       return baseDuration;
     }
-    const count = spaceManager.getTerraformedPlanetCount();
-    return baseDuration / (count + 1);
+    const count = spaceManager.getTerraformedPlanetCountIncludingCurrent();
+    return baseDuration / count;
   }
 }
 
