@@ -370,3 +370,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Solis artifact donation now uses the correct resource pool, properly displaying owned artifacts and enabling donations.
 - Solis research upgrade now lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
 - Chapter 13.2 reward now triggers a one-time alert on the Solis tab.
+- Journal objective for Warp Gate Command now displays "Complete an Operation of Difficulty X" for clarity.
