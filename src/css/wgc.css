@@ -125,7 +125,7 @@
 
 .team-slot {
   width: 80px;
-  height: 140px;
+  height: 110px;
   border: 1px solid var(--wgc-text-dark);
   background-color: var(--wgc-bg-dark);
   display: flex;
@@ -142,7 +142,7 @@
 .team-slot.filled {
   cursor: pointer;
   border-color: var(--wgc-border-color);
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 .team-slot.filled:hover {
@@ -172,13 +172,12 @@
   color: var(--wgc-text-light);
 }
 
-.team-slot .team-member-class {
-  font-size: 0.75em;
-  text-align: center;
-  width: 100%;
-  color: var(--wgc-border-color);
+.team-slot .team-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  filter: brightness(0.9) grayscale(0.2);
 }
-
 
 .wgc-class-description {
   font-size: 0.9em;
@@ -186,13 +185,6 @@
   width: 100%;
   color: var(--wgc-text-medium);
   margin-bottom: 8px;
-}
-
-.team-slot .team-icon {
-  width: 50px;
-  height: 50px;
-  object-fit: contain;
-  filter: brightness(0.9) grayscale(0.2);
 }
 
 .unspent-points-indicator {
@@ -285,7 +277,6 @@
 .team-controls .difficulty-input {
   width: 60px;
   text-align: center;
-  color-scheme: dark;
 }
 
 /* R&D and Facilities List */
