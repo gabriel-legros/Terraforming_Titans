@@ -376,3 +376,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Collector persistence is managed through ProjectManager travel state so only the Dyson Swarm's collector count carries over between planets.
 - Space Storage now allows storing glass.
 - Space Storage now preserves its capacity and stored resources across planet travel using travel state save/load.
+- WGC team members now gain 10 Max Health per level instead of 1.

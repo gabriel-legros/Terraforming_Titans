@@ -16,8 +16,8 @@ describe('WGC team members', () => {
 
   test('max health scales with level', () => {
     const m = new WGCTeamMember({ firstName: 'Eve', classType: 'Soldier', level: 5 });
-    expect(m.maxHealth).toBe(104);
-    expect(m.health).toBe(104);
+    expect(m.maxHealth).toBe(140);
+    expect(m.health).toBe(140);
   });
 
   test('save and load preserves members', () => {

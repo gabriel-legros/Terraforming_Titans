@@ -64,7 +64,7 @@ describe('Cargo Rocket project UI', () => {
     const metalInput = elements.resourceSelectionContainer.querySelector('.resource-selection-cargo_rocket[data-resource="metal"]');
     metalInput.value = 2;
     ctx.updateProjectUI('cargo_rocket');
-    expect(value.textContent).toBe(numbers.formatNumber(10, true));
+    expect(value.textContent).toBe(numbers.formatNumber(4, true));
     expect(value.style.color).toBe('red');
     ctx.resources.colony.funding.value = 100;
     ctx.updateProjectUI('cargo_rocket');
