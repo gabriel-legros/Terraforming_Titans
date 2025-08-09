@@ -138,7 +138,7 @@
 
   /**
    * Run isolated equilibration.
-   * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync }
+   * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync, timeoutMs, minRunMs }
    * onProgress: fn(0..1, info)
    */
   function runEquilibration(override, options = {}, onProgress) {
@@ -150,6 +150,8 @@
     const relTol = options.relTol ?? 1e-6; // relative
     const chunkSteps = options.chunkSteps ?? 20;
     const cancelToken = options.cancelToken;
+    const timeoutMs = options.timeoutMs ?? 30000;
+    const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
 
     return new Promise((resolve, reject) => {
       try {
@@ -179,8 +181,12 @@
         let prevSnap = snapshotMetrics(sandboxResources);
 
         const stepMs = 1000 * stepDays; // 1 day per 1000 ms
+        let timedOut = false;
+        const timeoutHandle = setTimeout(() => { timedOut = true; }, timeoutMs);
+        const startTime = Date.now();
 
         function finalize(ok) {
+          clearTimeout(timeoutHandle);
           // Restore globals without leaking sandbox
           if (cppDesc) {
             Object.defineProperty(globalThis, 'currentPlanetParameters', cppDesc);
@@ -199,6 +205,7 @@
         }
 
         function loopChunk() {
+          if (timedOut) { finalize(false); reject(new Error('timeout')); return; }
           if (cancelToken && cancelToken.cancelled) { finalize(false); reject(new Error('cancelled')); return; }
           const end = Math.min(stepIdx + chunkSteps, stepsMax);
           for (; stepIdx < end; stepIdx++) {
@@ -213,11 +220,16 @@
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
               stableCount = small ? (stableCount + 1) : 0;
               prevSnap = snap;
+              const elapsedNow = Date.now() - startTime;
               if (onProgress) onProgress(Math.min(1, (stepIdx + 1) / stepsMax), { step: stepIdx + 1, stableCount });
-              if (stableCount >= 5) { finalize(true); return; }
+              if (stableCount >= 5 && elapsedNow >= minRunMs) { finalize(true); return; }
             }
           }
-          if (stepIdx >= stepsMax) { finalize(true); return; }
+          const elapsed = Date.now() - startTime;
+          if (stepIdx >= stepsMax) {
+            if (elapsed >= minRunMs) { finalize(true); return; }
+            if (onProgress) onProgress(1, { step: stepIdx, stableCount });
+          }
           if (options.sync) { loopChunk(); return; }
           setTimeout(loopChunk, 0);
         }
