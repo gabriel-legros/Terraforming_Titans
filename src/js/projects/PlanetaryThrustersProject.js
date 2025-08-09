@@ -106,7 +106,7 @@ class PlanetaryThrustersProject extends Project{
 /* -----------------------  U I  --------------------------------------- */
   renderUI(c){
     /* spin */
-    const spinHTML=`<div class="card-header"><span class="card-title">Spin</span></div>
+    const spinHTML=`<div class="card-header"><span class="card-title">Spin <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony Energy per second. Progress is measured in equivalent Δv; when the target is reached, investment stops automatically.">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid five-col">
         <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
@@ -122,7 +122,7 @@ class PlanetaryThrustersProject extends Project{
     spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
-    const motHTML=`<div class="card-header"><span class="card-title">Motion</span></div>
+    const motHTML=`<div class="card-header"><span class="card-title">Motion <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's orbit. If bound to a parent body (moon), investment first drives a slow spiral to the Hill radius (escape). After escape, investment changes heliocentric distance toward the target AU. Investment consumes Energy continuously; only one mode (Spin or Motion) can be active at a time.">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid five-col">
         <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
