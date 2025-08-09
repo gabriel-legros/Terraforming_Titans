@@ -384,3 +384,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Recalling a Warp Gate Command team no longer resets its difficulty.
 - Introduced `getTerraformedPlanetCountIncludingCurrent` in SpaceManager to avoid double counting the current planet when
   applying terraforming bonuses.
+- Exposed `resources` and `currentPlanetParameters` on `globalThis` so RWG equilibration can safely snapshot and restore live state.

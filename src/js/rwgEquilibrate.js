@@ -161,11 +161,9 @@
         const fullParams = deepMerge(baseDefaultParams || (typeof defaultPlanetParameters !== 'undefined' ? defaultPlanetParameters : {}), override);
         const sandboxResources = buildSandboxResourcesFromOverride(fullParams.resources || {});
 
-        // Guarded global swap-in (robust): track existence and previous values
-        const hadCPP = ('currentPlanetParameters' in globalThis);
-        const hadRes = ('resources' in globalThis);
-        const prevCPP = hadCPP ? globalThis.currentPlanetParameters : undefined;
-        const prevRes = hadRes ? globalThis.resources : undefined;
+        // Guarded global swap-in (robust): track previous descriptors
+        const cppDesc = Object.getOwnPropertyDescriptor(globalThis, 'currentPlanetParameters');
+        const resDesc = Object.getOwnPropertyDescriptor(globalThis, 'resources');
         Object.defineProperty(globalThis, 'currentPlanetParameters', { value: fullParams, configurable: true, writable: true });
         Object.defineProperty(globalThis, 'resources', { value: sandboxResources, configurable: true, writable: true });
 
@@ -184,15 +182,15 @@
 
         function finalize(ok) {
           // Restore globals without leaking sandbox
-          if (!hadCPP) {
-            try { delete globalThis.currentPlanetParameters; } catch(_) { globalThis.currentPlanetParameters = prevCPP; }
+          if (cppDesc) {
+            Object.defineProperty(globalThis, 'currentPlanetParameters', cppDesc);
           } else {
-            globalThis.currentPlanetParameters = prevCPP;
+            delete globalThis.currentPlanetParameters;
           }
-          if (!hadRes) {
-            try { delete globalThis.resources; } catch(_) { globalThis.resources = prevRes; }
+          if (resDesc) {
+            Object.defineProperty(globalThis, 'resources', resDesc);
           } else {
-            globalThis.resources = prevRes;
+            delete globalThis.resources;
           }
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
