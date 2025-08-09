@@ -63,6 +63,10 @@ class SolisManager extends EffectableEntity {
     return list;
   }
 
+  getResearchUpgradeOrder() {
+    return RESEARCH_UPGRADE_ORDER.slice();
+  }
+
   generateQuest() {
     const options = this.availableResources();
     if (options.length === 0) {

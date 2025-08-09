@@ -11,7 +11,7 @@ const shopDescriptions = {
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
-  researchUpgrade: 'Auto-complete early infrastructure research'
+  researchUpgrade: 'Auto-complete one early infrastructure technology per purchase'
 };
 
 function showSolisTab() {
@@ -39,6 +39,20 @@ function updateSolisVisibility() {
   } else if (solisTabVisible) {
     hideSolisTab();
   }
+}
+
+function getResearchNameById(id) {
+  if (typeof researchParameters !== 'undefined') {
+    for (const category in researchParameters) {
+      const r = researchParameters[category].find(x => x.id === id);
+      if (r) return r.name;
+    }
+  }
+  if (typeof researchManager !== 'undefined' && typeof researchManager.getResearchById === 'function') {
+    const r = researchManager.getResearchById(id);
+    if (r) return r.name;
+  }
+  return id;
 }
 
 function createShopItem(key) {
@@ -71,8 +85,23 @@ function createShopItem(key) {
 
   const costSpan = label.querySelector(`#solis-shop-${key}-cost`);
   const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
+  const elementRecord = { button, cost: costSpan, count: countSpan };
 
-  shopElements[key] = { button, cost: costSpan, count: countSpan };
+  if (key === 'researchUpgrade') {
+    const list = document.createElement('ul');
+    list.classList.add('solis-research-list');
+    const order = solisManager.getResearchUpgradeOrder ? solisManager.getResearchUpgradeOrder() : [];
+    elementRecord.listItems = [];
+    order.forEach(id => {
+      const li = document.createElement('li');
+      li.textContent = getResearchNameById(id);
+      list.appendChild(li);
+      elementRecord.listItems.push(li);
+    });
+    item.appendChild(list);
+  }
+
+  shopElements[key] = elementRecord;
   return item;
 }
 
@@ -328,6 +357,16 @@ function updateSolisUI() {
     if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
     if (el.count) el.count.textContent = solisManager.shopUpgrades[key].purchases;
     if (el.button) el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
+    if (key === 'researchUpgrade' && el.listItems) {
+      const purchases = solisManager.shopUpgrades.researchUpgrade.purchases;
+      el.listItems.forEach((li, idx) => {
+        if (idx < purchases) {
+          li.classList.add('solis-research-completed');
+        } else {
+          li.classList.remove('solis-research-completed');
+        }
+      });
+    }
   }
 }
 
