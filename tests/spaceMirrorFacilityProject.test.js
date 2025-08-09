@@ -18,7 +18,8 @@ describe('SpaceMirrorFacilityProject', () => {
     ctx.buildings = { spaceMirror: { active: 5 }, hyperionLantern: { active: 2, powerPerBuilding: 100, productivity: 0.5, unlocked: false } };
     ctx.terraforming = {
       calculateMirrorEffect: () => ({ interceptedPower: 10, powerPerUnitArea: 0.5 }),
-      calculateZoneSolarFlux: zone => ({ tropical: 100, temperate: 50, polar: 25 })[zone]
+      calculateZoneSolarFlux: zone => ({ tropical: 100, temperate: 50, polar: 25 })[zone],
+      celestialParameters: { crossSectionArea: 100, surfaceArea: 100 }
     };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
@@ -45,12 +46,19 @@ describe('SpaceMirrorFacilityProject', () => {
     expect(details.totalPower.textContent).toBe('50.00');
 
     const oversight = dom.window.document.getElementById('mirror-oversight-container');
+    const lanternRow = dom.window.document.getElementById('mirror-oversight-lantern-div');
     expect(oversight).not.toBeNull();
     expect(oversight.style.display).toBe('none');
 
     ctx.projectManager = { isBooleanFlagSet: () => true };
     project.updateUI();
     expect(oversight.style.display).toBe('block');
+    expect(lanternRow.style.display).toBe('none');
+
+    ctx.buildings.hyperionLantern.unlocked = true;
+    project.updateUI();
+    expect(lanternRow.style.display).toBe('flex');
+
     const fluxCell = dom.window.document.getElementById('mirror-flux-tropical');
     expect(fluxCell.textContent).toBe('100.00');
   });
