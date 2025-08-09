@@ -210,3 +210,20 @@
     min-width: 100px; /* Ensure alignment */
     text-align: left;
 }
+
+.solis-research-list {
+    list-style: none;
+    padding: 5px 0 0 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.solis-research-list li {
+    white-space: nowrap;
+}
+
+.solis-research-completed {
+    text-decoration: line-through;
+}
