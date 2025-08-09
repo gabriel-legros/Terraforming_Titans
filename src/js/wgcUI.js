@@ -92,7 +92,6 @@ function generateWGCTeamCards() {
         return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
           <div class="team-hp-bar"><div class="team-hp-bar-fill ${hpClass}" style="height:${hpPercent}%;"></div></div>
           <div class="team-member-name">${m.firstName}</div>
-          <div class="team-member-class">${m.classType}</div>
           <img src="${img}" class="team-icon">
           ${unspentPoints}
         </div>`;

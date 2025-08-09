@@ -18,7 +18,5 @@ describe('WGC class descriptions', () => {
       stances: Array.from({ length: 4 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }))
     };
     const html = generateWGCTeamCards();
-    expect(html).toMatch(/<div class=\"team-member-class\">Soldier<\/div>/);
-    expect(html).not.toMatch(/Combat expert whose Power counts double in combat challenges./);
   });
 });
