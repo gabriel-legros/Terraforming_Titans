@@ -140,6 +140,11 @@ class EffectableEntity {
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
+        case 'solisTabAlert':
+          if (typeof this.setSolisTabAlert === 'function') {
+            this.setSolisTabAlert(effect.value);
+          }
+          break;
         case 'oneTimeStart':
           if (typeof CargoRocketProject !== 'undefined' && this instanceof CargoRocketProject) {
             this.applyOneTimeStart(effect);

@@ -401,6 +401,12 @@ progressGanymede.chapters.push(
             type: 'booleanFlag',
             flagId: 'solisAlienArtifactUpgrade',
             value: true
+        },
+        {
+            target: 'solisManager',
+            type: 'solisTabAlert',
+            value: true,
+            oneTimeFlag: true
         }]
     },
     {
