@@ -172,7 +172,7 @@ function updateMirrorOversightUI() {
   if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
   if (lanternDiv) {
     const unlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
-    lanternDiv.style.display = unlocked ? 'block' : 'none';
+    lanternDiv.style.display = unlocked ? 'flex' : 'none';
   }
 
   if (enabled) {
