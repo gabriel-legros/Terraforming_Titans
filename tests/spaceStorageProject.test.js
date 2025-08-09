@@ -100,7 +100,7 @@ describe('Space Storage project', () => {
     project.updateCostAndGains = () => {};
     project.renderUI(container);
     const checkboxes = container.querySelectorAll('#ss-resource-grid input[type="checkbox"]');
-    expect(checkboxes.length).toBe(8);
+    expect(checkboxes.length).toBe(9);
     const items = container.querySelectorAll('#ss-resource-grid .storage-resource-item');
     expect(items[0].children.length).toBe(3);
     checkboxes[0].checked = true;
