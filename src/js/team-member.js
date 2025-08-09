@@ -8,8 +8,11 @@ class WGCTeamMember {
     this.athletics = athletics;
     this.wit = wit;
     this.xp = xp;
-    this.maxHealth = typeof maxHealth === 'number' ? maxHealth : 100 + (this.level - 1) * 10;
-    this.health = typeof health === 'number' ? health : this.maxHealth;
+
+    // Recalculate max health from level on creation, ignoring saved values.
+    this.maxHealth = 100 + (this.level - 1) * 10;
+    // Clamp current health to the recalculated maximum.
+    this.health = typeof health === 'number' ? Math.min(health, this.maxHealth) : this.maxHealth;
   }
 
   static getBaseStats(classType) {
