@@ -29,7 +29,7 @@ class DeeperMiningProject extends AndroidProject {
     if (this.averageDepth >= this.maxDepth) {
       return false;
     }
-    return super.canStart();
+    return Project.prototype.canStart.call(this);
   }
 
   getScaledCost() {
