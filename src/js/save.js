@@ -2,30 +2,30 @@ globalGameIsLoadingFromSave = false;
 
 function getGameState() {
   return {
-    dayNightCycle: dayNightCycle.saveState(),
-    resources: resources,
-    buildings: buildings,
-    colonies: colonies,
-    projects: projectManager.saveState(),
-    research: researchManager.saveState(),
-    oreScanning: oreScanner.saveState(),
-    terraforming: terraforming.saveState(),
-    story: storyManager.saveState(),
-    journalEntrySources: journalEntrySources,
-    journalHistorySources: journalHistorySources,
-    goldenAsteroid: goldenAsteroid.saveState(),
-    solisManager: solisManager.saveState(),
-    warpGateCommand: warpGateCommand.saveState(),
-    lifeDesigner: lifeDesigner.saveState(),
-    milestonesManager: milestonesManager.saveState(),
-    skills: skillManager.saveState(),
-    spaceManager: spaceManager.saveState(),
-    selectedBuildCounts: selectedBuildCounts,
-    settings: gameSettings,
-    colonySliderSettings: colonySliderSettings,
-    ghgFactorySettings: ghgFactorySettings,
-    mirrorOversightSettings: globalThis.mirrorOversightSettings,
-    playTimeSeconds: playTimeSeconds
+    dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
+    resources: typeof resources !== 'undefined' ? resources : undefined,
+    buildings: typeof buildings !== 'undefined' ? buildings : undefined,
+    colonies: typeof colonies !== 'undefined' ? colonies : undefined,
+    projects: (typeof projectManager !== 'undefined' && typeof projectManager.saveState === 'function') ? projectManager.saveState() : undefined,
+    research: (typeof researchManager !== 'undefined' && typeof researchManager.saveState === 'function') ? researchManager.saveState() : undefined,
+    oreScanning: (typeof oreScanner !== 'undefined' && typeof oreScanner.saveState === 'function') ? oreScanner.saveState() : undefined,
+    terraforming: (typeof terraforming !== 'undefined' && typeof terraforming.saveState === 'function') ? terraforming.saveState() : undefined,
+    story: (typeof storyManager !== 'undefined' && typeof storyManager.saveState === 'function') ? storyManager.saveState() : undefined,
+    journalEntrySources: typeof journalEntrySources !== 'undefined' ? journalEntrySources : undefined,
+    journalHistorySources: typeof journalHistorySources !== 'undefined' ? journalHistorySources : undefined,
+    goldenAsteroid: (typeof goldenAsteroid !== 'undefined' && typeof goldenAsteroid.saveState === 'function') ? goldenAsteroid.saveState() : undefined,
+    solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
+    warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
+    lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
+    milestonesManager: (typeof milestonesManager !== 'undefined' && typeof milestonesManager.saveState === 'function') ? milestonesManager.saveState() : undefined,
+    skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
+    spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
+    selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
+    settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
+    colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
+    ghgFactorySettings: typeof ghgFactorySettings !== 'undefined' ? ghgFactorySettings : undefined,
+    mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
+    playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined
   };
 }
 
@@ -324,8 +324,13 @@ function saveGameToSlot(slot) {
   const gameState = getGameState();
 
   // Store game state in localStorage
-  localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
-  console.log(`Game saved successfully to slot ${slot}.`);
+  try {
+    localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
+    console.log(`Game saved successfully to slot ${slot}.`);
+  } catch (e) {
+    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    return;
+  }
 
   // Get the current date and time
   const saveDate = new Date();
@@ -338,6 +343,11 @@ function saveGameToSlot(slot) {
 
   // Save the save slot dates as UNIX timestamps
   saveSaveSlotDates(slot, saveDate);
+
+  if (slot === 'pretravel') {
+    const row = document.getElementById('pretravel-row');
+    if (row) row.classList.remove('hidden');
+  }
 }
 
 function saveGameToFile() {
@@ -370,31 +380,59 @@ function loadGameFromFile(event) {
 
 // Delete save file from a specific slot
 function deleteSaveFileFromSlot(slot) {
-  localStorage.removeItem(`gameState_${slot}`);
-  console.log(`Save file deleted successfully from slot ${slot}.`);
+  try {
+    localStorage.removeItem(`gameState_${slot}`);
+    console.log(`Save file deleted successfully from slot ${slot}.`);
+  } catch (e) {
+    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+  }
 
   // Clear the save date for the slot
   document.getElementById(`${slot}-date`).textContent = 'Empty';
 
   // Delete the save slot date
   deleteSaveSlotDate(slot);
+
+  if (slot === 'pretravel') {
+    const row = document.getElementById('pretravel-row');
+    if (row) row.classList.add('hidden');
+  }
 }
 
 // Save the save slot dates as UNIX timestamps
 function saveSaveSlotDates(slot, date) {
-  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  saveSlotDates[slot] = new Date(date).getTime();
-  localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+  try {
+    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+    saveSlotDates[slot] = new Date(date).getTime();
+    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+  } catch (e) {
+    console.warn('Unable to access localStorage for save slot dates:', e);
+  }
 }
 
 // Load the save slot dates and display them in a user-friendly format
 function loadSaveSlotDates() {
-  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  let saveSlotDates = {};
+  try {
+    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  } catch (e) {
+    console.warn('Unable to access localStorage for save slot dates:', e);
+    saveSlotDates = {};
+  }
   for (const slot in saveSlotDates) {
     const timestamp = saveSlotDates[slot];
     const date = new Date(timestamp);
     const formattedDate = formatDate(date);
-    document.getElementById(`${slot}-date`).textContent = formattedDate;
+    const dateCell = document.getElementById(`${slot}-date`);
+    if (dateCell) dateCell.textContent = formattedDate;
+  }
+  const preRow = document.getElementById('pretravel-row');
+  if (preRow) {
+    if (saveSlotDates.pretravel) {
+      preRow.classList.remove('hidden');
+    } else {
+      preRow.classList.add('hidden');
+    }
   }
 }
 
@@ -414,21 +452,25 @@ function formatDate(date) {
 
 // Delete a save slot date
 function deleteSaveSlotDate(slot) {
-  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  delete saveSlotDates[slot];
-  localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+  try {
+    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+    delete saveSlotDates[slot];
+    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
+  } catch (e) {
+    console.warn('Unable to access localStorage for save slot dates:', e);
+  }
 }
 
 // Add event listeners to save, load, and delete buttons
 function addSaveSlotListeners() {
-  const saveSlots = ['autosave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+  const saveSlots = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
   saveSlots.forEach(slot => {
     const saveButton = document.querySelector(`.save-button[data-slot="${slot}"]`);
     const loadButton = document.querySelector(`.load-button[data-slot="${slot}"]`);
     const deleteButton = document.querySelector(`.delete-button[data-slot="${slot}"]`);
 
-    if (saveButton) {
+    if (saveButton && slot !== 'pretravel') {
       saveButton.addEventListener('click', () => saveGameToSlot(slot));
     }
 
