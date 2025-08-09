@@ -667,5 +667,25 @@ class ProjectManager extends EffectableEntity {
       initializeProjectAlerts();
     }
   }
+
+  saveTravelState() {
+    const travelState = {};
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (typeof project.saveTravelState === 'function') {
+        travelState[name] = project.saveTravelState();
+      }
+    }
+    return travelState;
+  }
+
+  loadTravelState(travelState = {}) {
+    for (const name in travelState) {
+      const project = this.projects[name];
+      if (project && typeof project.loadTravelState === 'function') {
+        project.loadTravelState(travelState[name]);
+      }
+    }
+  }
 }
 

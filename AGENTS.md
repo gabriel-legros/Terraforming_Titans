@@ -37,7 +37,7 @@ Selecting another world via `selectPlanet(key)` soft resets the colony while kee
 * `SolisManager` keeps quests, points and shop upgrades.
 * `SpaceManager` records which planets have been visited or terraformed.
 * `StoryManager` continues tracking active events and re‑applies their rewards.
-* The **Dyson Swarm Receiver** project's collector count persists, maintaining its energy contribution across planets.
+* The **Dyson Swarm Receiver** project's collector count persists across planets, but the receiver must be rebuilt to regain energy production.
 
 When loading a save or switching planets, call each manager's `reapplyEffects` method so stored modifiers affect the newly created game objects.
 
@@ -371,5 +371,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Solis research upgrade now lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
 - Chapter 13.2 reward now triggers a one-time alert on the Solis tab.
 - Journal objective for Warp Gate Command now displays "Complete an Operation of Difficulty X" for clarity.
+- Fixed Dyson Swarm collectors resetting after planet travel; collector counts now persist across worlds while the receiver must be rebuilt on each planet.
+- Collector persistence is managed through ProjectManager travel state so only the Dyson Swarm's collector count carries over between planets.
 - Space Storage now allows storing glass.
 - Space Storage now preserves its capacity and stored resources across planet travel using travel state save/load.

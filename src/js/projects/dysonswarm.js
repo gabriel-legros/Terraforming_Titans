@@ -146,6 +146,14 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.collectorProgress = state.collectorProgress || 0;
     this.autoDeployCollectors = state.autoDeployCollectors || false;
   }
+
+  saveTravelState() {
+    return { collectors: this.collectors };
+  }
+
+  loadTravelState(state = {}) {
+    this.collectors = state.collectors || 0;
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
