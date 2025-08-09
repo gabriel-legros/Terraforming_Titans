@@ -117,6 +117,38 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, sStr, archetype);
+
+    // Attach equilibrate handler if available
+    const eqBtn = document.getElementById('rwg-equilibrate-btn');
+    if (eqBtn && typeof runEquilibration === 'function') {
+      eqBtn.onclick = async () => {
+        const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
+        if (typeof setGameSpeed === 'function') setGameSpeed(0);
+        try {
+          // Simple inline progress UI
+          const progress = document.createElement('div');
+          progress.id = 'rwg-eq-progress';
+          progress.style.marginTop = '10px';
+          progress.textContent = 'Equilibrating... 0%';
+          box.appendChild(progress);
+
+          const cancelToken = { cancelled: false };
+          eqBtn.disabled = true;
+          const result = await runEquilibration(res.override, { yearsMax: 2000, stepDays: 365, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, sync: true }, (p) => {
+            if (progress) progress.textContent = `Equilibrating... ${Math.round(p * 100)}%`;
+          });
+          // Re-render with equilibrated override
+          const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+          box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
+        } catch (e) {
+          console.error('Equilibration failed:', e);
+        } finally {
+          if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
+          const btn = document.getElementById('rwg-equilibrate-btn');
+          if (btn) btn.disabled = false;
+        }
+      };
+    }
 }
 
 function renderPlanetCard(p, index) {
@@ -172,6 +204,9 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
+      <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
+      </div>
       <div class="rwg-infobar">
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedUsed !== undefined ? seedUsed : ''}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>

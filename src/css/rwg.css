@@ -116,6 +116,12 @@
 .rwg-chip .label { color: var(--rwg-fg-dim); font-size: 12px; }
 .rwg-chip .value { font-weight: 700; font-size: 14px; margin-top: 4px; }
 
+/* Inline equilibration progress */
+#rwg-eq-progress {
+  font-size: 0.95em;
+  opacity: 0.9;
+}
+
 .rwg-columns {
   display: grid;
   grid-template-columns: 1.2fr 1fr;

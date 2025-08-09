@@ -1,5 +1,30 @@
 // ===== Random System + World Generator ===================================
 
+// Node compatibility shims: ensure deepMerge and defaultPlanetParameters exist
+if (typeof module !== 'undefined' && module.exports) {
+  try {
+    const pp = require('./planet-parameters.js');
+    if (typeof defaultPlanetParameters === 'undefined') {
+      globalThis.defaultPlanetParameters = pp.defaultPlanetParameters;
+    }
+  } catch (_) {}
+}
+if (typeof deepMerge === 'undefined') {
+  function isObject(item) { return (item && typeof item === 'object' && !Array.isArray(item)); }
+  function deepMerge(target, source) {
+    const output = { ...target };
+    if (isObject(target) && isObject(source)) {
+      Object.keys(source).forEach(key => {
+        const t = target[key];
+        const s = source[key];
+        if (isObject(t) && isObject(s)) output[key] = deepMerge(t, s);
+        else if (s !== undefined) output[key] = s;
+      });
+    }
+    return output;
+  }
+}
+
 // --- Tiny seeded RNG (mulberry32) + string hash
 function hashStringToInt(str) {
     let h = 1779033703 ^ str.length;
