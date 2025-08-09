@@ -180,7 +180,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           yearsMax: 10000,
           stepDays: 1,
           checkEvery: 5,
-          absTol: 1e6,
+          absTol: 1,
           relTol: 1e-6,
           chunkSteps: 20,
           cancelToken

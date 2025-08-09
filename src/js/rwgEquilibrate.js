@@ -143,7 +143,7 @@
    */
   function runEquilibration(override, options = {}, onProgress) {
     const yearsMax = options.yearsMax ?? 2000;
-    const stepDays = options.stepDays ?? 365; // 1 step = 1 year
+    let stepDays = options.stepDays ?? 365; // 1 step = 1 year
     const stepsMax = Math.ceil((yearsMax * 365) / stepDays);
     const checkEvery = options.checkEvery ?? 10;
     const absTol = options.absTol ?? 1e6; // tons
@@ -179,8 +179,9 @@
         let stepIdx = 0;
         let stableCount = 0;
         let prevSnap = snapshotMetrics(sandboxResources);
+        let refinementCount = 0;
 
-        const stepMs = 1000 * stepDays; // 1 day per 1000 ms
+        let stepMs = 1000 * stepDays; // 1 day per 1000 ms
         let timedOut = false;
         const timeoutHandle = setTimeout(() => { timedOut = true; }, timeoutMs);
         const startTime = Date.now();
@@ -201,6 +202,7 @@
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(override, sandboxResources, terra);
+          console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
 
@@ -223,13 +225,30 @@
               const elapsedNow = Date.now() - startTime;
               if (onProgress) {
                 const inMinRun = elapsedNow < minRunMs;
-                const progress = inMinRun
-                  ? Math.min(1, elapsedNow / minRunMs)
-                  : Math.min(1, (stepIdx + 1) / stepsMax);
-                const label = inMinRun ? 'Minimum fast-forward' : 'Additional fast-forward';
+                let progress = 0;
+                let label = '';
+                if (inMinRun) {
+                  progress = Math.min(1, elapsedNow / minRunMs);
+                  label = 'Minimum fast-forward';
+                } else {
+                  const remainingTime = Math.max(0, timeoutMs - minRunMs);
+                  const elapsedInPhase = Math.max(0, elapsedNow - minRunMs);
+                  progress = remainingTime > 0 ? Math.min(1, elapsedInPhase / remainingTime) : 1;
+                  label = 'Additional fast-forward';
+                }
                 onProgress(progress, { step: stepIdx + 1, stableCount, label });
               }
-              if (stableCount >= 5 && elapsedNow >= minRunMs) { finalize(true); return; }
+              if (stableCount >= 5 && elapsedNow >= minRunMs) {
+                if (refinementCount < 10) {
+                  refinementCount++;
+                  stepDays /= 2;
+                  stepMs = 1000 * stepDays;
+                  stableCount = 0; // Reset for next level of stability
+                } else {
+                  finalize(true);
+                  return;
+                }
+              }
             }
           }
           const elapsed = Date.now() - startTime;
