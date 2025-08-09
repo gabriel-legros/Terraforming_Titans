@@ -379,3 +379,5 @@ second time they speak in a chapter to help clarify who is talking.
 - WGC team members now gain 10 Max Health per level instead of 1.
 - Loading saves now recalculates WGC team members' Max Health from their level.
 - Skill points are now granted only when traveling from a fully terraformed planet to one not yet terraformed.
+- WGC Facilities section now displays a red exclamation mark when upgrades are ready.
+- WGC highest difficulty objective displays and tracks difficulty starting from 1.

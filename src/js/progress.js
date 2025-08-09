@@ -429,8 +429,8 @@ class StoryManager {
           case 'wgcHighestDifficulty': {
                const current = typeof warpGateCommand !== 'undefined'
                     ? warpGateCommand.highestDifficulty : -1;
-               const dispCurrent = Math.max(0, current);
-               const target = (objective.difficulty || 0);
+               const dispCurrent = Math.max(0, (current || 0) + 1);
+               const target = (objective.difficulty || 0) + 1;
                return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
          }
           default:
