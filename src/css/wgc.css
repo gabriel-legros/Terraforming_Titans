@@ -125,7 +125,7 @@
 
 .team-slot {
   width: 80px;
-  height: 110px;
+  height: 140px;
   border: 1px solid var(--wgc-text-dark);
   background-color: var(--wgc-bg-dark);
   display: flex;
@@ -142,7 +142,7 @@
 .team-slot.filled {
   cursor: pointer;
   border-color: var(--wgc-border-color);
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .team-slot.filled:hover {
@@ -170,6 +170,20 @@
   text-overflow: ellipsis;
   width: 100%;
   color: var(--wgc-text-light);
+}
+
+.team-slot .team-member-class {
+  font-size: 0.75em;
+  text-align: center;
+  width: 100%;
+  color: var(--wgc-border-color);
+}
+
+.team-slot .team-member-description {
+  font-size: 0.7em;
+  text-align: center;
+  width: 100%;
+  color: var(--wgc-text-medium);
 }
 
 .team-slot .team-icon {
