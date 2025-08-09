@@ -340,7 +340,7 @@ progressGanymede.chapters.push(
         id: "chapter12.2",
         type: "journal",
         chapter: 12,
-        narrative: "Feroza: 'All hostiles eliminated.  They were carrying... strange weapons.  Kane is in custody, but he's catatonic. The portal is stable for now, but we don't know what else might come through. We secured the facility, but this is far from over.'\nMary assembles the senior team in the captured briefing room.\nHart, pointing at the portal: 'That thing violates every law of physics I know. Kane's neural interface seems to have been the trigger. The bio-integration is terrifying... and revolutionary.'\nFeroza: 'Science later. First, we decide who holds the trigger while we stare into that hole.'\n Mary: “I agree, let's get everyone together and talk about this 'gate'”",
+        narrative: "Feroza: 'All hostiles eliminated.  They were carrying... strange weapons.  Kane is in custody, but he's catatonic. The portal is stable for now, but we don't know what else might come through. We secured the facility, but this is far from over.'\nMary assembles the senior team in the captured briefing room.\nHart, pointing at the portal: 'That thing violates every law of physics I know. Kane's neural interface seems to have been the trigger. The bio-integration is terrifying... and revolutionary.'\nFeroza: 'Science later. First, we decide who holds the trigger while we stare into that hole.'\n Mary: 'I agree, let's get everyone together and talk about this \"gate\"'",
         prerequisites: ["chapter12.1"],
         objectives: [            { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10000000 }],
         reward: [
@@ -354,7 +354,7 @@ progressGanymede.chapters.push(
         type: "journal",
         chapter: 13,
         title: "Chapter 13: Warp Gate Command",
-        narrative: "Mary: “This gate is a doorway carved through the dark—and a blade pointed at us if we mishandle it.”\nDr. Hart: “Its physics violate three textbooks in my head. We have a duty to understand it before we charge through.”\nCmdr. Feroza: “Understand all you want; someone has to stand guard. I’m requesting a permanent Marine garrison and layered kill‑zones.”\nPresident Bob Titan: “Titan will bankroll the logistics—fuel, food, alloys.  Anything you need”\nMary: “Then let it be written: Defend first, discover second. Motion carried.”",
+        narrative: "Mary: “This gate is a doorway carved through the dark—and a blade pointed at us if we mishandle it.”\nDr. Hart: “Its physics violate three textbooks in my head, but believe it or not... we control where it goes.  There appears to be thousands, if not tens of thousands of destinations in the cult's databases.”\nCmdr. Feroza: “Explore all you want; someone has to stand guard. I’m requesting a permanent Marine garrison and layered kill‑zones.”\nPresident Bob Titan: “Titan will bankroll the logistics—fuel, food, alloys.  Anything you need”\nMary: “Then let it be written: Defend first, discover second. Motion carried.”",
         prerequisites: ["chapter12.2"],
         objectives: [
             { type: 'project', projectId: 'draft_wgc_charter', repeatCount: 4 }
