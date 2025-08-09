@@ -178,7 +178,6 @@ function processNextJournalEntry() {
         journalContainer.scrollTop = journalContainer.scrollHeight;
       }
 
-      console.log("Journal typing complete, dispatching storyJournalFinishedTyping event.");
       const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
       document.dispatchEvent(storyEvent);
 
