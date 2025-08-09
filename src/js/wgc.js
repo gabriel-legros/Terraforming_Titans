@@ -395,7 +395,7 @@ class WarpGateCommand extends EffectableEntity {
         while (m.xp >= req && req > 0) {
           m.xp -= req;
           m.level += 1;
-          m.maxHealth = 100 + m.level - 1;
+          m.maxHealth = 100 + (m.level - 1) * 10;
           m.health = Math.min(m.health, m.maxHealth);
           req = m.getXPForNextLevel();
         }

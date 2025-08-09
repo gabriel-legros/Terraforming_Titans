@@ -8,7 +8,7 @@ class WGCTeamMember {
     this.athletics = athletics;
     this.wit = wit;
     this.xp = xp;
-    this.maxHealth = typeof maxHealth === 'number' ? maxHealth : 100 + this.level - 1;
+    this.maxHealth = typeof maxHealth === 'number' ? maxHealth : 100 + (this.level - 1) * 10;
     this.health = typeof health === 'number' ? health : this.maxHealth;
   }
 
