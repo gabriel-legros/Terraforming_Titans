@@ -226,7 +226,9 @@ function selectPlanet(planetKey){
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
     const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
-    if(firstVisit && typeof skillManager !== 'undefined' && skillManager){
+    const departingTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
+    const destinationTerraformed = _spaceManagerInstance.isPlanetTerraformed(planetKey);
+    if(firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager){
         skillManager.skillPoints += 1;
     }
 

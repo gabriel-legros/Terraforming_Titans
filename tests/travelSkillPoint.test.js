@@ -82,12 +82,16 @@ describe('skill point gained on first planet visit', () => {
     `;
     vm.runInContext(overrides, ctx);
     vm.runInContext('initializeGameState();', ctx);
-    vm.runInContext('spaceManager.updateCurrentPlanetTerraformedStatus(true);', ctx);
 
     const initialPoints = vm.runInContext('skillManager.skillPoints', ctx);
     vm.runInContext("selectPlanet('titan');", ctx);
+    const afterFailedTravel = vm.runInContext('skillManager.skillPoints', ctx);
+    expect(afterFailedTravel).toBe(initialPoints);
+
+    vm.runInContext('spaceManager.updateCurrentPlanetTerraformedStatus(true);', ctx);
+    vm.runInContext("selectPlanet('titan');", ctx);
     const afterFirstTravel = vm.runInContext('skillManager.skillPoints', ctx);
-    expect(afterFirstTravel).toBe(initialPoints + 1);
+    expect(afterFirstTravel).toBe(afterFailedTravel + 1);
 
     vm.runInContext('spaceManager.updateCurrentPlanetTerraformedStatus(true);', ctx);
     vm.runInContext("selectPlanet('mars');", ctx);
