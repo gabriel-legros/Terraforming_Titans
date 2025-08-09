@@ -134,7 +134,7 @@ function drawSingle(seed, options) {
 
           const cancelToken = { cancelled: false };
           eqBtn.disabled = true;
-          const result = await runEquilibration(res.override, { yearsMax: 100000, stepDays: 365, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, sync: true }, (p) => {
+          const result = await runEquilibration(res.override, { yearsMax: 10000, stepDays: 1, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, sync: true }, (p) => {
             if (progress) progress.textContent = `Equilibrating... ${Math.round(p * 100)}%`;
           });
           // Re-render with equilibrated override
