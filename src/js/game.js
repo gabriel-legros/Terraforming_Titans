@@ -115,6 +115,10 @@ function initializeGameState(options = {}) {
   const preserveJournal = options.preserveJournal || false;
   const skipStoryInitialization = options.skipStoryInitialization || false;
   let savedAdvancedResearch = null;
+  let savedProjectTravelState = null;
+  if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
+    savedProjectTravelState = projectManager.saveTravelState();
+  }
   if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
     captureAutoBuildSettings(structures);
   }
@@ -157,6 +161,9 @@ function initializeGameState(options = {}) {
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
+  if (savedProjectTravelState && typeof projectManager.loadTravelState === 'function') {
+    projectManager.loadTravelState(savedProjectTravelState);
+  }
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
   if (preserveManagers && typeof restoreAutoBuildSettings === 'function') {
