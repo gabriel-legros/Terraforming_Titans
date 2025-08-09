@@ -89,12 +89,10 @@ function generateWGCTeamCards() {
         const unspentPoints = m.getPointsToAllocate() > 0 ? '<div class="unspent-points-indicator">!</div>' : '';
         const hpPercent = Math.floor((m.health / m.maxHealth) * 100);
         const hpClass = hpPercent < 25 ? 'critical-hp' : (hpPercent < 50 ? 'low-hp' : '');
-        const desc = classDescriptions[m.classType] || '';
         return `<div class="team-slot filled" data-team="${tIdx}" data-slot="${sIdx}">
           <div class="team-hp-bar"><div class="team-hp-bar-fill ${hpClass}" style="height:${hpPercent}%;"></div></div>
           <div class="team-member-name">${m.firstName}</div>
           <div class="team-member-class">${m.classType}</div>
-          <div class="team-member-description">${desc}</div>
           <img src="${img}" class="team-icon">
           ${unspentPoints}
         </div>`;
@@ -312,6 +310,11 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   }
   win.appendChild(classSelect);
 
+  const classDescDiv = document.createElement('div');
+  classDescDiv.classList.add('wgc-class-description');
+  classDescDiv.textContent = classDescriptions[classSelect.value] || '';
+  win.appendChild(classDescDiv);
+
   const lvl = member ? member.level : 1;
   const xp = member ? Math.floor(member.xp || 0) : 0;
   const xpReq = member ? member.getXPForNextLevel() : 10;
@@ -374,6 +377,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       const statName = ['power', 'athletics', 'wit'][index];
       container.querySelector('span:nth-child(2)').textContent = statValues[statName];
     });
+    classDescDiv.textContent = classDescriptions[classSelect.value] || '';
   });
   win.appendChild(statsDiv);
   win.appendChild(remainingSpan);

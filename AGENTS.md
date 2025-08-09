@@ -365,3 +365,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Colony upgrade cost text now highlights only resources that are unaffordable.
 - Solis tab now features an Alien Artifact section unlocked by a flag, letting players donate artifacts for points and buy Research Upgrades that auto-research early infrastructure, including the Terraforming Bureau.
 - Added a Pre-travel save slot that automatically stores the game state before planet travel and remains hidden when empty.
+- WGC class descriptions now appear in the member details window instead of on the team card.
