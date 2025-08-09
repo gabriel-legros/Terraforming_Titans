@@ -372,3 +372,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Chapter 13.2 reward now triggers a one-time alert on the Solis tab.
 - Journal objective for Warp Gate Command now displays "Complete an Operation of Difficulty X" for clarity.
 - Space Storage now allows storing glass.
+- Space Storage now preserves its capacity and stored resources across planet travel using travel state save/load.

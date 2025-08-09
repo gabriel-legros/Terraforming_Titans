@@ -402,4 +402,41 @@ describe('Space Storage project', () => {
     const btn = ctx.projectElements[project.name].progressButton;
     expect(btn.textContent).toBe('Start storage expansion (Duration: 1.00 seconds)');
   });
+
+  test('saveTravelState and loadTravelState preserve storage data', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {},
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: { getTerraformedPlanetCount: () => 0 }
+    };
+    vm.createContext(ctx);
+    vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const attrs = { costPerShip: {}, transportPerShip: 0 };
+    const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.repeatCount = 4;
+    project.usedStorage = 500;
+    project.resourceUsage = { metal: 300 };
+
+    const saved = project.saveTravelState();
+    const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    loaded.loadTravelState(saved);
+
+    expect(loaded.repeatCount).toBe(4);
+    expect(loaded.usedStorage).toBe(500);
+    expect(loaded.resourceUsage.metal).toBe(300);
+  });
 });

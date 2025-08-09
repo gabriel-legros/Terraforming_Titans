@@ -292,6 +292,20 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationAutoStart = ship.autoStart || false;
     this.shipWithdrawMode = ship.mode === 'withdraw';
   }
+
+  saveTravelState() {
+    return {
+      repeatCount: this.repeatCount,
+      usedStorage: this.usedStorage,
+      resourceUsage: this.resourceUsage,
+    };
+  }
+
+  loadTravelState(state = {}) {
+    this.repeatCount = state.repeatCount || 0;
+    this.usedStorage = state.usedStorage || 0;
+    this.resourceUsage = state.resourceUsage || {};
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
