@@ -528,13 +528,19 @@ class WarpGateCommand extends EffectableEntity {
         }
       }
     }
-    if (Array.isArray(data.teams)) {
-      this.teams = data.teams.map(team =>
-        Array.isArray(team) ? team.map(m => (m ? new WGCTeamMember(m) : null)) : [null, null, null, null]
-      );
-    }
-    if (Array.isArray(data.operations)) {
-      this.operations = data.operations.map(op => ({
+    const MAX_TEAMS = 4;
+    const teamData = Array.isArray(data.teams) ? data.teams.slice(0, MAX_TEAMS) : [];
+    this.teams = Array.from({ length: MAX_TEAMS }, (_, i) => {
+      const team = Array.isArray(teamData[i]) ? teamData[i].slice(0, 4) : [];
+      const members = team.map(m => (m ? new WGCTeamMember(m) : null));
+      while (members.length < 4) members.push(null);
+      return members;
+    });
+
+    const opData = Array.isArray(data.operations) ? data.operations.slice(0, MAX_TEAMS) : [];
+    this.operations = Array.from({ length: MAX_TEAMS }, (_, i) => {
+      const op = opData[i] || {};
+      return {
         active: !!op.active,
         progress: op.progress || 0,
         timer: op.timer || 0,
@@ -543,29 +549,39 @@ class WarpGateCommand extends EffectableEntity {
         successes: op.successes || 0,
         summary: op.summary || '',
         number: op.number || 1,
-        nextEvent: op.nextEvent || 60
-      }));
-    }
-    if (Array.isArray(data.teamOperationCounts)) {
-      this.teamOperationCounts = data.teamOperationCounts.slice();
-    }
-    if (Array.isArray(data.teamNextOperationNumber)) {
-      this.teamNextOperationNumber = data.teamNextOperationNumber.slice();
-    }
-    if (Array.isArray(data.logs)) {
-      this.logs = data.logs.map(l => l.slice(-100));
-    }
+        nextEvent: op.nextEvent || 60,
+      };
+    });
+
+    const countData = Array.isArray(data.teamOperationCounts) ? data.teamOperationCounts.slice(0, MAX_TEAMS) : [];
+    this.teamOperationCounts = Array.from({ length: MAX_TEAMS }, (_, i) => countData[i] || 0);
+
+    const nextOpData = Array.isArray(data.teamNextOperationNumber) ? data.teamNextOperationNumber.slice(0, MAX_TEAMS) : [];
+    this.teamNextOperationNumber = Array.from({ length: MAX_TEAMS }, (_, i) => nextOpData[i] || 1);
+
+    const logData = Array.isArray(data.logs) ? data.logs.slice(0, MAX_TEAMS) : [];
+    this.logs = Array.from({ length: MAX_TEAMS }, (_, i) =>
+      Array.isArray(logData[i]) ? logData[i].slice(-100) : []
+    );
+
     if (Array.isArray(data.teamNames)) {
-      this.teamNames = data.teamNames.map((n, i) => (typeof n === 'string' && n.trim() ? n.trim() : defaultTeamNames[i]));
+      const names = data.teamNames.slice(0, MAX_TEAMS);
+      this.teamNames = Array.from({ length: MAX_TEAMS }, (_, i) => {
+        const n = names[i];
+        return typeof n === 'string' && n.trim() ? n.trim() : defaultTeamNames[i];
+      });
     } else {
       this.teamNames = defaultTeamNames.slice();
     }
-    if (Array.isArray(data.stances)) {
-      this.stances = data.stances.map(s => ({
+
+    const stanceData = Array.isArray(data.stances) ? data.stances.slice(0, MAX_TEAMS) : [];
+    this.stances = Array.from({ length: MAX_TEAMS }, (_, i) => {
+      const s = stanceData[i] || {};
+      return {
         hazardousBiomass: s.hazardousBiomass || 'Neutral',
-        artifact: s.artifact || 'Neutral'
-      }));
-    }
+        artifact: s.artifact || 'Neutral',
+      };
+    });
     if (data.facilities) {
       for (const k in this.facilities) {
         if (typeof data.facilities[k] === 'number') {
