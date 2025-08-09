@@ -454,7 +454,17 @@ progressGanymede.chapters.push(
         objectives: [
             { type: 'terraforming', terraformingParameter: 'complete' }
         ],
-        reward: []
+        reward: [
+            { target: 'spaceManager', type: 'enable', targetId: 'space-random' },
+            {
+                target: 'global',
+                type: 'activateSubtab',
+                subtabClass: 'space-subtab',
+                contentClass: 'space-subtab-content',
+                targetId: 'space-random',
+                unhide: true
+            }
+        ]
     }
 );
 

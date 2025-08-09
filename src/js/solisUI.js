@@ -344,7 +344,7 @@ function updateSolisUI() {
     }
   }
   if (donationCount && resources.special && resources.special.alienArtifact) {
-    donationCount.textContent = resources.special.alienArtifact.value;
+    donationCount.textContent = formatNumber(resources.special.alienArtifact.value, false, 2);
   }
   if (donationButton && donationInput && resources.special && resources.special.alienArtifact) {
     const amt = parseInt(donationInput.value, 10) || 0;

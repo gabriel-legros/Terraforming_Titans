@@ -24,13 +24,14 @@ describe('Solis artifact donation UI', () => {
     };
     ctx.resources = { special: { alienArtifact: { value: 4 } } };
 
+    const numbersCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'numbers.js'), 'utf8');
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'solisUI.js'), 'utf8');
-    vm.runInContext(uiCode, ctx);
+    vm.runInContext(numbersCode + '\n' + uiCode, ctx);
 
     ctx.initializeSolisUI();
     ctx.updateSolisUI();
 
     const count = dom.window.document.getElementById('solis-donation-count').textContent;
-    expect(count).toBe('4');
+    expect(count).toBe('4.00');
   });
 });
