@@ -8,6 +8,15 @@ const RESOURCE_UPGRADE_AMOUNTS = {
   androids: 100,
 };
 
+const RESEARCH_UPGRADE_ORDER = [
+  'launch_pads',
+  'colony_sliders',
+  'construction_office',
+  'space_mirror_oversight',
+  'terraforming_bureau',
+  'atmospheric_monitoring'
+];
+
 class SolisManager extends EffectableEntity {
   constructor(resourceValues = {}) {
     super({ description: 'Solis Manager' });
@@ -39,7 +48,8 @@ class SolisManager extends EffectableEntity {
       glass: { baseCost: 1, purchases: 0 },
       water: { baseCost: 1, purchases: 0 },
       androids: { baseCost: 10, purchases: 0 },
-      colonistRocket: { baseCost: 1, purchases: 0 }
+      colonistRocket: { baseCost: 1, purchases: 0 },
+      researchUpgrade: { baseCost: 100, purchases: 0 }
     };
   }
 
@@ -119,6 +129,9 @@ class SolisManager extends EffectableEntity {
   purchaseUpgrade(key) {
     const up = this.shopUpgrades[key];
     if (!up) return false;
+    if (key === 'researchUpgrade' && up.purchases >= RESEARCH_UPGRADE_ORDER.length) {
+      return false;
+    }
     const cost = this.getUpgradeCost(key);
     if (this.solisPoints < cost) return false;
     this.solisPoints -= cost;
@@ -142,6 +155,8 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisColonistRocket',
         sourceId: 'solisShop'
       });
+    } else if (key === 'researchUpgrade') {
+      this.applyResearchUpgrade();
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
@@ -158,6 +173,28 @@ class SolisManager extends EffectableEntity {
         });
       }
     }
+    return true;
+  }
+
+  applyResearchUpgrade() {
+    const upgrade = this.shopUpgrades.researchUpgrade;
+    if (!upgrade || upgrade.purchases <= 0) return;
+    if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') return;
+    for (let i = 0; i < upgrade.purchases && i < RESEARCH_UPGRADE_ORDER.length; i++) {
+      researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i]);
+    }
+  }
+
+  donateArtifacts(count) {
+    if (!resources || !resources.colony || !resources.colony.alienArtifact) return false;
+    const res = resources.colony.alienArtifact;
+    if (res.value < count || count <= 0) return false;
+    if (typeof res.decrease === 'function') {
+      res.decrease(count);
+    } else {
+      res.value -= count;
+    }
+    this.solisPoints += count * 100;
     return true;
   }
 
@@ -186,6 +223,8 @@ class SolisManager extends EffectableEntity {
         sourceId: 'solisShop'
       });
     }
+
+    this.applyResearchUpgrade();
 
     for (const key in RESOURCE_UPGRADE_AMOUNTS) {
       const upgrade = this.shopUpgrades[key];
@@ -250,6 +289,8 @@ class SolisManager extends EffectableEntity {
       for (const k in data.upgrades) {
         if (this.shopUpgrades[k]) {
           this.shopUpgrades[k].purchases = data.upgrades[k];
+        } else if (k === 'alienArtifactResearch' && this.shopUpgrades.researchUpgrade) {
+          this.shopUpgrades.researchUpgrade.purchases = data.upgrades[k];
         }
       }
     }
