@@ -385,3 +385,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Introduced `getTerraformedPlanetCountIncludingCurrent` in SpaceManager to avoid double counting the current planet when
   applying terraforming bonuses.
 - Exposed `resources` and `currentPlanetParameters` on `globalThis` so RWG equilibration can safely snapshot and restore live state.
+- Equilibrate button in Random World Generator can now be used repeatedly.
