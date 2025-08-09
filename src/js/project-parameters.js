@@ -13,7 +13,7 @@ const projectParameters = {
     attributes: {
       resourceChoiceGainCost: {
         colony: {
-          metal : 5,
+          metal : 2,
           glass: 5,
           water : 1,
           food : 1,
