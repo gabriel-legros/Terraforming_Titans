@@ -10,6 +10,9 @@
     "jsdom": "^22.1.0"
   },
   "jest": {
-    "setupFiles": ["<rootDir>/tests/jestSetup.js"]
+    "setupFiles": ["<rootDir>/tests/jestSetup.js"],
+    "moduleNameMapper": {
+      ".*lib[\\\\/]+node_modules[\\\\/]+jsdom$": "jsdom"
+    }
   }
 }

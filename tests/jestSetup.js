@@ -17,6 +17,13 @@ if (typeof global.window !== 'undefined') {
   }
 }
 
+// Provide a structuredClone polyfill for Node environments that lack it
+if (typeof global.structuredClone === 'undefined') {
+  global.structuredClone = (value) => {
+    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  };
+}
+
 // Silence noisy console output during tests
 ['log', 'info', 'warn', 'error'].forEach(method => {
   jest.spyOn(console, method).mockImplementation(() => {});
@@ -28,4 +35,32 @@ if (typeof global.resources === 'undefined') {
 }
 if (typeof global.calculateAtmosphericPressure === 'undefined') {
   global.calculateAtmosphericPressure = () => 0;
+}
+
+// Map dynamic jsdom path requires to the installed jsdom package
+try {
+  const Module = require('module');
+  const path = require('path');
+
+  // Add global npm node_modules to resolution paths on Windows user installs
+  if (process.platform === 'win32' && process.env.APPDATA) {
+    const globalNpmPath = path.join(process.env.APPDATA, 'npm', 'node_modules');
+    if (!Module.globalPaths.includes(globalNpmPath)) {
+      Module.globalPaths.unshift(globalNpmPath);
+    }
+  }
+
+  const originalResolveFilename = Module._resolveFilename;
+  Module._resolveFilename = function(request, parent, isMain, options) {
+    try {
+      if (typeof request === 'string' && /[\\\/]lib[\\\/]node_modules[\\\/]jsdom$/.test(request)) {
+        return require.resolve('jsdom');
+      }
+    } catch (e) {
+      // fall through to default resolver
+    }
+    return originalResolveFilename.call(this, request, parent, isMain, options);
+  };
+} catch (e) {
+  // If Module monkey-patching fails, tests that use dynamic jsdom paths may still fail
 }
