@@ -280,7 +280,7 @@ const callistoOverrides = {
       land: { initialValue: 7300000000 },
 
       /* ~4 × 10¹⁶ t of easily‑accessible water‑ice (≪ 4 × 10¹⁹ t true inventory) */
-      ice: { initialValue: 159999999942703360000, unlocked: true },
+      ice: { initialValue: 159_999_999_942_703_360, unlocked: true },
 
       liquidWater:   { initialValue: 0 },
       dryIce:        { initialValue: 0 },
@@ -316,17 +316,17 @@ const callistoOverrides = {
     "tropical": {
       "liquid": 0,
       "ice": 227987.50423423847,
-      "buriedIce": 4e+21
+      "buriedIce": 4e+18
     },
     "temperate": {
       "liquid": 0,
       "ice": 1899338.2410272758,
-      "buriedIce": 5e+21
+      "buriedIce": 5e+18
     },
     "polar": {
       "liquid": 0,
       "ice": 39999644653114.9,
-      "buriedIce": 1e+21
+      "buriedIce": 1e+18
     }
   },
   "zonalSurface": {
@@ -389,7 +389,7 @@ const ganymedeOverrides = {
       land: { initialValue: 8720000000 },
 
       /* accessible surface water-ice (upper regolith only) */
-      ice: { initialValue: 199999999928379200000, unlocked: true },
+      ice: { initialValue: 199999999928379200, unlocked: true },
 
       liquidWater:   { initialValue: 0 },
       dryIce:        { initialValue: 0 },
@@ -425,17 +425,17 @@ const ganymedeOverrides = {
     "tropical": {
       "liquid": 0,
       "ice": 94676233227887.31,
-      "buriedIce": 5e+21
+      "buriedIce": 5e+18
     },
     "temperate": {
       "liquid": 0,
       "ice": 151906523027232.84,
-      "buriedIce": 7e+21
+      "buriedIce": 7e+18
     },
     "polar": {
       "liquid": 0,
       "ice": 51417217563592.55,
-      "buriedIce": 2e+21
+      "buriedIce": 2e+18
     }
   },
 
