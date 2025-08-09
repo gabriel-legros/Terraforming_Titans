@@ -218,6 +218,11 @@ function selectPlanet(planetKey){
     if (typeof saveGameToSlot === 'function') {
         saveGameToSlot('pretravel');
     }
+
+    const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
+        ? projectManager.projects.spaceStorage.saveTravelState()
+        : null;
+
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
     const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
@@ -231,5 +236,13 @@ function selectPlanet(planetKey){
     }
 
     initializeGameState({preserveManagers: true, preserveJournal: true});
+
+    if (storageState && projectManager?.projects?.spaceStorage?.loadTravelState) {
+        projectManager.projects.spaceStorage.loadTravelState(storageState);
+        if (typeof updateProjectUI === 'function') {
+            updateProjectUI('spaceStorage');
+        }
+    }
+
     updateSpaceUI();
 }
