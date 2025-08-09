@@ -37,8 +37,8 @@ const facilityDescriptions = {
   library: 'Boosts Wit for challenges by 1% per level.'
 };
 const facilityElements = {};
-var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
-const teamUnlocks = [0, 100, 500, 1000, 5000];
+var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const teamUnlocks = [0, 100, 500, 1000];
 const classImages = {
   'Team Leader': 'assets/images/team_leader.png',
   'Soldier': 'assets/images/soldier.png',

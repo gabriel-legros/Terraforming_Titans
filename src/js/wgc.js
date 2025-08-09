@@ -28,18 +28,18 @@ const baseOperationEvents = [
 
 const operationStartText = 'Setting out through Warp Gate';
 
-const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'];
+const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
-    this.teams = Array.from({ length: 5 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 5 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1, nextEvent: 60 }));
-    this.teamOperationCounts = Array(5).fill(0);
-    this.teamNextOperationNumber = Array(5).fill(1);
-    this.logs = Array.from({ length: 5 }, () => []);
-    this.stances = Array.from({ length: 5 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
+    this.teams = Array.from({ length: 4 }, () => Array(4).fill(null));
+    this.operations = Array.from({ length: 4 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1, nextEvent: 60 }));
+    this.teamOperationCounts = Array(4).fill(0);
+    this.teamNextOperationNumber = Array(4).fill(1);
+    this.logs = Array.from({ length: 4 }, () => []);
+    this.stances = Array.from({ length: 4 }, () => ({ hazardousBiomass: 'Neutral', artifact: 'Neutral' }));
     this.totalOperations = 0;
     this.totalArtifacts = 0;
     this.highestDifficulty = -1;
