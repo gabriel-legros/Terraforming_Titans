@@ -431,8 +431,8 @@ class StoryManager {
                     ? warpGateCommand.highestDifficulty : -1;
                const dispCurrent = Math.max(0, current + 1);
                const target = (objective.difficulty || 0) + 1;
-               return `Highest Operation Difficulty: ${format(dispCurrent, true)}/${format(target, true)}`;
-          }
+               return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
+         }
           default:
                return '';
        }
