@@ -54,7 +54,7 @@ describe('flow melt tracking', () => {
     const res = createResources();
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     // remove initial water to avoid other melt
     for (const z of ['tropical','temperate','polar']) {

@@ -61,7 +61,7 @@ describe('methane atmospheric rate tracking', () => {
     const res = createResources();
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     // ensure some methane in atmosphere so condensation path runs
     res.atmospheric.atmosphericMethane.value = 50;

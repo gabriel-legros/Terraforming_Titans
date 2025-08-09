@@ -61,7 +61,7 @@ describe('focused mirror melt', () => {
     const res = createResources();
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     // simplify environment: no water except polar ice and set cold zone temps
     for (const z of ['tropical','temperate','polar']) {
@@ -109,7 +109,7 @@ describe('focused mirror melt', () => {
     const res = createResources();
     global.resources = res;
     const terra = new Terraforming(res, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     for (const z of ['tropical','temperate','polar']) {
       terra.zonalWater[z].liquid = 0;

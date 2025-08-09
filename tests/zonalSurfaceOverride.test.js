@@ -34,7 +34,7 @@ describe('zonal surface overrides', () => {
     global.resources = resources;
 
     const terra = new Terraforming(resources, params.celestialParameters);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     expect(terra.zonalSurface.tropical.dryIce).toBeCloseTo(params.zonalSurface.tropical.dryIce);
     expect(terra.zonalSurface.temperate.dryIce).toBeCloseTo(params.zonalSurface.temperate.dryIce);

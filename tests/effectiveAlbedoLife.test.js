@@ -32,7 +32,7 @@ describe('effective albedo with biomass', () => {
     global.currentPlanetParameters = params;
     const celestial = { radius: 1, gravity: 1, albedo: 0.5, surfaceArea: 1, distanceFromSun: 1 };
     const terra = new Terraforming(global.resources, celestial);
-    terra.calculateInitialValues();
+    terra.calculateInitialValues(params);
 
     const baseAlbedo = terra.calculateEffectiveAlbedo();
 
