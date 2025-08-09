@@ -108,7 +108,7 @@ const buildingsParameters = {
   hydroponicFarm: {
     name: 'Hydroponic Farm',
     category: 'production',
-    description: 'Botanists work hard to grow potatoes using martian soil.  Water is provided by colonies, and recovered when the food is consumed.',
+    description: 'Botanists work hard to grow potatoes using local soil.  Water is provided by colonies, and recovered when the food is consumed.',
     cost: { colony: { glass: 50} },
     consumption: { colony: { energy: 500000} },
     production: { colony: { food: 5 } },
