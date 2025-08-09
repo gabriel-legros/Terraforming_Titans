@@ -117,38 +117,38 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, sStr, archetype);
+  attachEquilibrateHandler(res, sStr, archetype, box);
+}
 
-    // Attach equilibrate handler if available
-    const eqBtn = document.getElementById('rwg-equilibrate-btn');
-    if (eqBtn && typeof runEquilibration === 'function') {
-      eqBtn.onclick = async () => {
-        const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
-        if (typeof setGameSpeed === 'function') setGameSpeed(0);
-        try {
-          // Simple inline progress UI
-          const progress = document.createElement('div');
-          progress.id = 'rwg-eq-progress';
-          progress.style.marginTop = '10px';
-          progress.textContent = 'Equilibrating... 0%';
-          box.appendChild(progress);
+function attachEquilibrateHandler(res, sStr, archetype, box) {
+  const eqBtn = document.getElementById('rwg-equilibrate-btn');
+  if (!eqBtn || typeof runEquilibration !== 'function') return;
+  eqBtn.onclick = async () => {
+    const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
+    if (typeof setGameSpeed === 'function') setGameSpeed(0);
+    try {
+      const progress = document.createElement('div');
+      progress.id = 'rwg-eq-progress';
+      progress.style.marginTop = '10px';
+      progress.textContent = 'Equilibrating... 0%';
+      box.appendChild(progress);
 
-          const cancelToken = { cancelled: false };
-          eqBtn.disabled = true;
-          const result = await runEquilibration(res.override, { yearsMax: 100000, stepDays: 365, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, sync: true }, (p) => {
-            if (progress) progress.textContent = `Equilibrating... ${Math.round(p * 100)}%`;
-          });
-          // Re-render with equilibrated override
-          const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
-          box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
-        } catch (e) {
-          console.error('Equilibration failed:', e);
-        } finally {
-          if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
-          const btn = document.getElementById('rwg-equilibrate-btn');
-          if (btn) btn.disabled = false;
-        }
-      };
+      const cancelToken = { cancelled: false };
+      eqBtn.disabled = true;
+      const result = await runEquilibration(res.override, { yearsMax: 100000, stepDays: 365, checkEvery: 5, absTol: 1e6, relTol: 1e-6, chunkSteps: 20, sync: true }, (p) => {
+        if (progress) progress.textContent = `Equilibrating... ${Math.round(p * 100)}%`;
+      });
+      const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+      box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
+      attachEquilibrateHandler(newRes, sStr, archetype, box);
+    } catch (e) {
+      console.error('Equilibration failed:', e);
+    } finally {
+      if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
+      const btn = document.getElementById('rwg-equilibrate-btn');
+      if (btn) btn.disabled = false;
     }
+  };
 }
 
 function renderPlanetCard(p, index) {
@@ -366,6 +366,6 @@ if (typeof showSpaceRandomTab === 'function') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail };
+  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail, attachEquilibrateHandler };
 }
 
