@@ -1,4 +1,9 @@
 class CargoRocketProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.spaceshipPriceIncrease = 0;
+  }
+
   createCargoSelectionUI(container) {
     const sectionContainer = document.createElement('div');
     sectionContainer.classList.add('project-section-container');
@@ -25,8 +30,12 @@ class CargoRocketProject extends Project {
         resourceRow.style.display = resource.unlocked ? '' : 'none';
 
         const label = document.createElement('span');
-        label.textContent = `${resource.displayName}`;
         label.classList.add('cargo-resource-label');
+        if (resourceId === 'spaceships') {
+          label.innerHTML = `${resource.displayName} <span class="info-tooltip-icon" title="Each ship purchase raises prices based on terraformed planets and the increase decays by 1% per second.">&#9432;</span>`;
+        } else {
+          label.textContent = `${resource.displayName}`;
+        }
         resourceRow.appendChild(label);
 
         const quantityInput = document.createElement('input');
@@ -40,6 +49,8 @@ class CargoRocketProject extends Project {
 
         const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
         const priceDisplay = document.createElement('span');
+        priceDisplay.classList.add('resource-price-display');
+        priceDisplay.dataset.resource = resourceId;
         priceDisplay.textContent = `${formatNumber(pricePerUnit, true)}`;
         resourceRow.appendChild(priceDisplay);
 
@@ -102,6 +113,14 @@ class CargoRocketProject extends Project {
           const row = document.getElementById(`${this.name}-${category}-${resourceId}-row`);
           if (row) {
             row.style.display = resource.unlocked ? 'grid' : 'none';
+            const priceElement = row.querySelector('.resource-price-display');
+            if (priceElement) {
+              let price = this.attributes.resourceChoiceGainCost[category][resourceId];
+              if (resourceId === 'spaceships') {
+                price *= this.getSpaceshipPriceMultiplier();
+              }
+              priceElement.textContent = `${formatNumber(price, true)}`;
+            }
           }
         }
       }
@@ -129,6 +148,44 @@ class CargoRocketProject extends Project {
     }
   }
 
+  getSpaceshipPriceMultiplier() {
+    return 1 + this.spaceshipPriceIncrease;
+  }
+
+  applySpaceshipPurchase(count) {
+    const planetCount = Math.max(
+      1,
+      typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
+        ? spaceManager.getTerraformedPlanetCount()
+        : 0
+    );
+    this.spaceshipPriceIncrease += count / planetCount;
+  }
+
+  getSpaceshipTotalCost(quantity, basePrice) {
+    const planetCount = Math.max(
+      1,
+      typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
+        ? spaceManager.getTerraformedPlanetCount()
+        : 0
+    );
+    const delta = 1 / planetCount;
+    const current = this.spaceshipPriceIncrease;
+    const totalMultiplier = quantity * (1 + current) + delta * quantity * (quantity - 1) / 2;
+    return basePrice * totalMultiplier;
+  }
+
+  update(delta) {
+    if (this.spaceshipPriceIncrease > 0) {
+      const decay = Math.pow(0.99, delta / 1000);
+      this.spaceshipPriceIncrease *= decay;
+      if (this.spaceshipPriceIncrease < 1e-6) {
+        this.spaceshipPriceIncrease = 0;
+      }
+    }
+    super.update(delta);
+  }
+
   applyOneTimeStart(effect) {
     console.log('Getting one time cargo rocket');
     this.pendingResourceGains = effect.pendingResourceGains;
@@ -153,8 +210,12 @@ class CargoRocketProject extends Project {
     if (this.selectedResources && this.selectedResources.length > 0) {
       let totalFundingCost = 0;
       this.selectedResources.forEach(({ category, resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
-        totalFundingCost += pricePerUnit * quantity;
+        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+        if (resource === 'spaceships') {
+          totalFundingCost += this.getSpaceshipTotalCost(quantity, basePrice);
+        } else {
+          totalFundingCost += basePrice * quantity;
+        }
       });
 
       if (resources.colony.funding.value < totalFundingCost) {
@@ -167,7 +228,15 @@ class CargoRocketProject extends Project {
 
   deductResources(resources) {
     super.deductResources(resources);
-    resources.colony.funding.decrease(this.getResourceChoiceGainCost());
+    const cost = this.getResourceChoiceGainCost();
+    resources.colony.funding.decrease(cost);
+    if (this.selectedResources) {
+      this.selectedResources.forEach(({ category, resource, quantity }) => {
+        if (category === 'special' && resource === 'spaceships') {
+          this.applySpaceshipPurchase(quantity);
+        }
+      });
+    }
   }
 
   getResourceChoiceGainCost() {
@@ -176,8 +245,11 @@ class CargoRocketProject extends Project {
       let totalFundingCost = 0;
       this.pendingResourceGains = []; // Track resources that will be gained later
       this.selectedResources.forEach(({ category, resource, quantity }) => {
-        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resource];
-        totalFundingCost += pricePerUnit * quantity;
+        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+        const cost = resource === 'spaceships'
+          ? this.getSpaceshipTotalCost(quantity, basePrice)
+          : basePrice * quantity;
+        totalFundingCost += cost;
         this.pendingResourceGains.push({ category, resource, quantity });
       });
       return totalFundingCost;
