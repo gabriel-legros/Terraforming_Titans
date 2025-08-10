@@ -36,11 +36,13 @@ describe('RWG target auto mode', () => {
     function findSeed(desired){
       for(let i=0;i<5000;i++){
         const s = String(i);
-        const h = ctx.hashStringToInt(s);
-        const rng = ctx.mulberry32(h);
-        const aAU = ctx.sampleOrbitAU(rng, 0);
-        const isMoon = (aAU > 3 && rng() < 0.35);
-        if(isMoon === desired) return s;
+        dom.window.document.getElementById('rwg-seed').value = s;
+        dom.window.document.getElementById('rwg-target').value = 'auto';
+        dom.window.document.getElementById('rwg-orbit').value = 'auto';
+        dom.window.document.getElementById('rwg-type').value = 'auto';
+        ctx.callArgs = [];
+        dom.window.document.getElementById('rwg-generate-planet').click();
+        if(ctx.callArgs.pop()?.isMoon === desired) return s;
       }
       throw new Error('seed not found');
     }
@@ -48,13 +50,18 @@ describe('RWG target auto mode', () => {
     const moonSeed = findSeed(true);
     dom.window.document.getElementById('rwg-seed').value = moonSeed;
     dom.window.document.getElementById('rwg-target').value = 'auto';
+    dom.window.document.getElementById('rwg-orbit').value = 'auto';
+    dom.window.document.getElementById('rwg-type').value = 'auto';
+    ctx.callArgs = [];
     dom.window.document.getElementById('rwg-generate-planet').click();
     expect(ctx.callArgs.pop().isMoon).toBe(true);
 
-    ctx.callArgs = [];
     const planetSeed = findSeed(false);
     dom.window.document.getElementById('rwg-seed').value = planetSeed;
     dom.window.document.getElementById('rwg-target').value = 'auto';
+    dom.window.document.getElementById('rwg-orbit').value = 'auto';
+    dom.window.document.getElementById('rwg-type').value = 'auto';
+    ctx.callArgs = [];
     dom.window.document.getElementById('rwg-generate-planet').click();
     expect(ctx.callArgs.pop().isMoon).toBe(false);
   });

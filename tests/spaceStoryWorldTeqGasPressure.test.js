@@ -31,6 +31,6 @@ describe('story world detail', () => {
     const co2Row = Array.from(dom.window.document.querySelectorAll('.rwg-atmo-table .rwg-row'))
       .find(row => row.children[0]?.textContent === 'CO₂');
     expect(co2Row).toBeTruthy();
-    expect(co2Row.children[2].textContent).toMatch(/kPa/);
+    expect(co2Row.children[2].textContent).toMatch(/Pa/);
   });
 });
