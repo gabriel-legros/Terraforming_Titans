@@ -119,11 +119,11 @@ function initializeSpaceUI(spaceManager) {
         const statsDiv = document.createElement('div');
         statsDiv.classList.add('planet-stats');
         statsDiv.innerHTML = `
-            <p><strong>Distance:</strong> ${celestial.distanceFromSun} AU</p>
-            <p><strong>Gravity:</strong> ${celestial.gravity} m/s²</p>
-            <p><strong>Radius:</strong> ${format(celestial.radius)} km</p>
-            <p><strong>Albedo:</strong> ${celestial.albedo}</p>
-            <p><strong>Status:</strong> <span class="planet-status"></span></p>
+            <p><strong>Distance:</strong><span>${celestial.distanceFromSun} AU</span></p>
+            <p><strong>Gravity:</strong><span>${celestial.gravity} m/s²</span></p>
+            <p><strong>Radius:</strong><span>${format(celestial.radius)} km</span></p>
+            <p><strong>Albedo:</strong><span>${celestial.albedo}</span></p>
+            <p><strong>Status:</strong><span class="planet-status"></span></p>
         `;
         planetDiv.appendChild(statsDiv);
 
@@ -143,6 +143,20 @@ function initializeSpaceUI(spaceManager) {
     });
 
     updateSpaceUI(); // Perform the initial draw using the stored instance
+
+    const detailsContainer = document.getElementById('current-world-details-container');
+    if (detailsContainer) {
+        const header = detailsContainer.querySelector('.summary-header');
+        const content = detailsContainer.querySelector('.details-content');
+        const arrow = detailsContainer.querySelector('.summary-arrow');
+
+        if (header && content && arrow) {
+            header.addEventListener('click', () => {
+                content.classList.toggle('hidden');
+                arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+            });
+        }
+    }
 }
 
 /**
@@ -288,7 +302,9 @@ function updateCurrentWorldUI() {
             wrapper.querySelector('#rwg-equilibrate-btn')?.remove();
             wrapper.querySelector('#rwg-travel-btn')?.remove();
             wrapper.querySelector('#rwg-travel-warning')?.remove();
-            wrapper.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            wrapper.querySelectorAll('[id]').forEach(el => {
+                if(el.id !== 'current-world-details') el.removeAttribute('id')
+            });
             if (seedArg === undefined) {
                 wrapper.querySelectorAll('.rwg-chip').forEach(chip => {
                     const label = chip.querySelector('.label')?.textContent;
@@ -297,9 +313,11 @@ function updateCurrentWorldUI() {
                     }
                 });
             }
-            detailsBox.replaceChildren(wrapper);
+            const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
+            detailsContent.replaceChildren(wrapper);
         } else {
-            detailsBox.textContent = '';
+            const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
+            detailsContent.textContent = '';
         }
     }
 }

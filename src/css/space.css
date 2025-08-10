@@ -6,9 +6,9 @@
 }
 
 #planet-selection-options {
-    display: flex; /* Arrange planets side-by-side */
-    flex-wrap: wrap; /* Allow wrapping to the next line */
-    gap: 20px; /* Space between planet boxes */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 15px;
     margin-top: 15px;
 }
 
@@ -16,28 +16,52 @@
     border: 1px solid #555;
     background-color: #2a2a2a;
     padding: 15px;
-    border-radius: 5px;
-    width: 250px; /* Adjust width as needed */
+    border-radius: 8px;
     display: flex;
-    flex-direction: column; /* Stack elements vertically */
-    justify-content: space-between; /* Push button to the bottom */
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.planet-option:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .planet-option h3 {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: #eee;
     text-align: center;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+body:not(.dark-mode) .planet-option h3 {
+    color: #111;
 }
 
 .planet-stats {
     margin-bottom: 15px;
     font-size: 0.9em;
     color: #ccc;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
 }
 
 .planet-stats p {
-    margin: 5px 0;
+    margin: 0;
+    display: contents; /* Makes p tags behave like their contents for grid layout */
+}
+
+.planet-stats p > strong {
+    color: #aaa;
+    font-weight: 500;
+}
+
+body:not(.dark-mode) .planet-stats p > strong {
+    color: #555;
 }
 
 .select-planet-button {
@@ -87,3 +111,68 @@
 .rwg-planet-card { border:1px solid #555; background:#262626; padding:10px; border-radius:6px; }
 .rwg-planet-title { font-weight:600; margin-bottom:8px; text-align:center; }
 .rwg-columns { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+
+#current-world-section {
+    margin-bottom: 20px;
+    background: #232323;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+body:not(.dark-mode) #current-world-section {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+}
+
+#current-world-header {
+    font-size: 1.1em;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+body:not(.dark-mode) #current-world-header {
+    color: #111;
+}
+
+.details-container .summary-header {
+    cursor: pointer;
+    color: #aaddff;
+}
+
+body:not(.dark-mode) .details-container .summary-header {
+    color: #005a9e;
+}
+
+.details-container .summary-header:hover {
+    text-decoration: underline;
+}
+
+.summary-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.details-content {
+    padding-left: 20px;
+    margin-top: 10px;
+    border-left: 1px solid #444;
+}
+
+body:not(.dark-mode) .details-content {
+    border-left: 1px solid #ccc;
+}
+
+.section-title {
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    color: #eee;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+body:not(.dark-mode) .section-title {
+    color: #111;
+    border-bottom: 1px solid #ccc;
+}
