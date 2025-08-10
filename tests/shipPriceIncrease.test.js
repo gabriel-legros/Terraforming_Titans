@@ -29,22 +29,23 @@ describe('Spaceship price increase and decay', () => {
     ctx.spaceManager.planetStatuses.titan.terraformed = true;
 
     const project = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    const basePrice = project.attributes.resourceChoiceGainCost.special.spaceships;
     project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 3 }];
 
     const initialCost = project.getResourceChoiceGainCost();
-    expect(initialCost).toBeCloseTo(450_000);
+    expect(initialCost).toBeCloseTo(basePrice * 3 + 3);
 
     project.deductResources(ctx.resources);
-    expect(ctx.resources.colony.funding.value).toBeCloseTo(550_000);
-    expect(project.spaceshipPriceIncrease).toBeCloseTo(1.5);
+    expect(ctx.resources.colony.funding.value).toBeCloseTo(1_000_000 - initialCost);
+    expect(project.spaceshipPriceIncrease).toBeCloseTo(3);
 
     project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 1 }];
     const costAfter = project.getResourceChoiceGainCost();
-    expect(costAfter).toBeCloseTo(250_000);
+    expect(costAfter).toBeCloseTo(basePrice + 3);
 
     project.update(1000);
     const decayedCost = project.getResourceChoiceGainCost();
-    expect(decayedCost).toBeCloseTo(248_500);
+    expect(decayedCost).toBeCloseTo(basePrice + 3 * 0.99);
   });
 });
 
