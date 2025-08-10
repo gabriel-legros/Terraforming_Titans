@@ -80,15 +80,9 @@ function attachTravelHandler(res, sStr) {
   if (!travelBtn) return;
   travelBtn.onclick = () => {
     if (!equilibratedWorlds.has(sStr)) return;
-    if (typeof saveGameToSlot === 'function') {
-      try { saveGameToSlot('pretravel'); } catch (_) {}
-    }
-    if (projectManager?.projects?.spaceStorage?.saveTravelState) {
-      try { projectManager.projects.spaceStorage.saveTravelState(); } catch (_) {}
-    }
-    globalThis.currentPlanetParameters = res.merged;
-    if (typeof initializeGameState === 'function') {
-      initializeGameState({ preserveManagers: true, preserveJournal: true });
+    if (spaceManager?.isSeedTerraformed && spaceManager.isSeedTerraformed(sStr)) return;
+    if (spaceManager?.travelToRandomWorld) {
+      spaceManager.travelToRandomWorld(res, sStr);
     }
   };
 }
@@ -277,14 +271,21 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     </div>` : '';
 
   const eqDone = seedUsed && equilibratedWorlds.has(seedUsed);
+  const alreadyTerraformed = seedUsed && typeof globalThis.spaceManager?.isSeedTerraformed === 'function'
+    ? globalThis.spaceManager.isSeedTerraformed(seedUsed)
+    : false;
+  const travelDisabled = !eqDone || alreadyTerraformed;
+  const warningMsg = !eqDone
+    ? 'Press Equilibrate at least once before traveling.'
+    : (alreadyTerraformed ? 'This world has already been terraformed.' : '');
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
       <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
-        <button id="rwg-travel-btn" class="rwg-btn" ${eqDone ? '' : 'disabled'}>Travel</button>
+        <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
       </div>
-      ${eqDone ? '' : '<div id="rwg-travel-warning" class="warning-message">Press Equilibrate at least once before traveling.</div>'}
+      ${warningMsg ? `<div id="rwg-travel-warning" class="warning-message">${warningMsg}</div>` : ''}
       <div class="rwg-infobar">
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedUsed !== undefined ? seedUsed : ''}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>

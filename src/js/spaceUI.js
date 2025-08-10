@@ -132,6 +132,7 @@ function initializeSpaceUI(spaceManager) {
     });
 
     updateSpaceUI(); // Perform the initial draw using the stored instance
+    updateCurrentWorldUI();
 }
 
 /**
@@ -142,6 +143,7 @@ function initializeSpaceUI(spaceManager) {
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
     updateSpaceRandomVisibility();
+    updateCurrentWorldUI();
 
     const statusContainer = document.getElementById('travel-status');
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
@@ -247,4 +249,30 @@ function selectPlanet(planetKey){
     }
 
     updateSpaceUI();
+}
+
+function updateCurrentWorldUI() {
+    if (!_spaceManagerInstance) return;
+    const nameSpan = document.getElementById('current-world-name');
+    const detailsBox = document.getElementById('current-world-details');
+    if (nameSpan) {
+        nameSpan.textContent = _spaceManagerInstance.getCurrentWorldName();
+    }
+    if (detailsBox) {
+        const data = _spaceManagerInstance.getCurrentWorldOriginal();
+        const seed = _spaceManagerInstance.getCurrentRandomSeed();
+        if (data && typeof renderWorldDetail === 'function') {
+            let html = renderWorldDetail(data, seed);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html;
+            wrapper.querySelector('#rwg-equilibrate-btn')?.remove();
+            wrapper.querySelector('#rwg-travel-btn')?.remove();
+            wrapper.querySelector('#rwg-travel-warning')?.remove();
+            wrapper.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            detailsBox.innerHTML = '';
+            detailsBox.appendChild(wrapper);
+        } else {
+            detailsBox.innerHTML = '';
+        }
+    }
 }

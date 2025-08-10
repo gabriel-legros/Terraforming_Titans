@@ -391,3 +391,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Fixed RWG UI crash by restoring the `attachEquilibrateHandler` function.
 - RWG equilibrate progress bar now fills as the simulation advances.
 - Random World Generator now includes a Travel button that remains disabled until the world is equilibrated at least once and shows a warning until then.
+- Space Manager tracks random world seeds and colonist populations, blocks travel to terraformed seeds, and displays current world details.
