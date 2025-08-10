@@ -390,8 +390,12 @@ function updateTotalCostDisplay(project) {
     const category = input.dataset.category;
     const resource = input.dataset.resource;
     const quantity = parseInt(input.value, 10);
-    const pricePerUnit = project.attributes.resourceChoiceGainCost[category][resource];
-    totalCost += quantity * pricePerUnit;
+    const basePrice = project.attributes.resourceChoiceGainCost[category][resource];
+    if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
+      totalCost += project.getSpaceshipTotalCost(quantity, basePrice);
+    } else {
+      totalCost += quantity * basePrice;
+    }
   });
 
   // Update the total cost display element
