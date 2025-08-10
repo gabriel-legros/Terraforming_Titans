@@ -22,7 +22,7 @@ const projectParameters = {
           androids: 1000,
         },
         special: {
-          spaceships:100000
+          spaceships:25000
         }
       }
     }
