@@ -59,4 +59,39 @@ describe('SpaceExportProject', () => {
     project.assignSpaceships(100);
     expect(project.assignedSpaceships).toBe(Math.min(100, maxShips));
   });
+
+  test('getExportCap excludes current terraformed world', () => {
+    const ctx = { console, EffectableEntity, shipEfficiency: 1 };
+    ctx.resources = { special: { spaceships: { value: 100 } }, colony: { metal: {} } };
+    ctx.spaceManager = {
+      getTerraformedPlanetCount: () => 2,
+      getCurrentPlanetKey: () => 'mars',
+      isPlanetTerraformed: (key) => key === 'mars'
+    };
+    vm.createContext(ctx);
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const exportBase = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceExportBaseProject.js'), 'utf8');
+    vm.runInContext(exportBase + '; this.SpaceExportBaseProject = SpaceExportBaseProject;', ctx);
+    const exportSubclass = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceExportProject.js'), 'utf8');
+    vm.runInContext(exportSubclass + '; this.SpaceExportProject = SpaceExportProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    global.resources = ctx.resources;
+    global.spaceManager = ctx.spaceManager;
+
+    const config = ctx.projectParameters.exportResources;
+    const project = new ctx.SpaceExportProject(config, 'exportResources');
+
+    // current world is terraformed -> one less world counts
+    expect(project.getExportCap()).toBe(1000000000);
+
+    // now mark current world as unterraformed -> all worlds count
+    ctx.spaceManager.isPlanetTerraformed = () => false;
+    expect(project.getExportCap()).toBe(2000000000);
+  });
 });
