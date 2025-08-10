@@ -38,6 +38,13 @@ function createTooltipElement(resourceName) {
   timeDiv.id = `${resourceName}-tooltip-time`;
   tooltip.appendChild(timeDiv);
 
+  if (resourceName === 'land') {
+    const noteDiv = document.createElement('div');
+    noteDiv.id = `${resourceName}-tooltip-note`;
+    noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
+    tooltip.appendChild(noteDiv);
+  }
+
   const assignmentsDiv = document.createElement('div');
   assignmentsDiv.id = `${resourceName}-tooltip-assignments`;
   tooltip.appendChild(assignmentsDiv);
