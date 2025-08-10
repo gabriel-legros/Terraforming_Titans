@@ -270,6 +270,14 @@ function updateCurrentWorldUI() {
             wrapper.querySelector('#rwg-travel-btn')?.remove();
             wrapper.querySelector('#rwg-travel-warning')?.remove();
             wrapper.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            if (seedArg === undefined) {
+                wrapper.querySelectorAll('.rwg-chip').forEach(chip => {
+                    const label = chip.querySelector('.label')?.textContent;
+                    if (label === 'Seed' || label === 'Type') {
+                        chip.remove();
+                    }
+                });
+            }
             detailsBox.innerHTML = '';
             detailsBox.appendChild(wrapper);
         } else {
