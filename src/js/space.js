@@ -313,15 +313,15 @@ class SpaceManager extends EffectableEntity {
         }
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         this.recordCurrentWorldPopulation(pop);
+        if (typeof saveGameToSlot === 'function') {
+            try { saveGameToSlot('pretravel'); } catch (_) {}
+        }
         this.currentRandomSeed = s;
         this.currentRandomName = res?.merged?.name || `Seed ${s}`;
         if (!this.randomWorldStatuses[s]) {
             this.randomWorldStatuses[s] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: res };
         } else {
             this.randomWorldStatuses[s].original = this.randomWorldStatuses[s].original || res;
-        }
-        if (typeof saveGameToSlot === 'function') {
-            try { saveGameToSlot('pretravel'); } catch (_) {}
         }
         const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
             ? projectManager.projects.spaceStorage.saveTravelState() : null;
