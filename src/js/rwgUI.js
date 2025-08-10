@@ -4,6 +4,18 @@
 let rwgUIInitialized = false;
 const equilibratedWorlds = new Set();
 
+function encodeSeedOptions(seed, opts = {}) {
+  const t = opts.target ?? 'auto';
+  const ty = opts.type ?? 'auto';
+  const o = opts.orbitPreset ?? 'auto';
+  return `${seed}|${t}|${ty}|${o}`;
+}
+
+function decodeSeedOptions(str) {
+  const [seed, t = 'auto', ty = 'auto', o = 'auto'] = String(str).split('|');
+  return { seed, options: { target: t, type: ty, orbitPreset: o } };
+}
+
 function initializeRandomWorldUI() {
   const container = document.getElementById('space-random');
   if (!container) return;
@@ -62,11 +74,22 @@ function initializeRandomWorldUI() {
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
   btnPlanet.addEventListener('click', () => {
-    const seed = document.getElementById('rwg-seed').value;
-    const target = /** @type {HTMLSelectElement} */(document.getElementById('rwg-target')).value;
-    const orbit = /** @type {HTMLSelectElement} */(document.getElementById('rwg-orbit')).value;
-    const type = /** @type {HTMLSelectElement} */(document.getElementById('rwg-type')).value;
-    drawSingle(seed, { target, orbitPreset: orbit, type });
+    const seedInput = document.getElementById('rwg-seed').value.trim();
+    const targetSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-target'));
+    const orbitSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-orbit'));
+    const typeSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-type'));
+    if (seedInput) {
+      const { seed, options } = decodeSeedOptions(seedInput);
+      if (targetSel) targetSel.value = options.target;
+      if (orbitSel) orbitSel.value = options.orbitPreset;
+      if (typeSel) typeSel.value = options.type;
+      drawSingle(seed, options);
+    } else {
+      const target = targetSel.value;
+      const orbit = orbitSel.value;
+      const type = typeSel.value;
+      drawSingle(undefined, { target, orbitPreset: orbit, type });
+    }
   });
 }
 
@@ -91,6 +114,7 @@ function attachTravelHandler(res, sStr) {
 function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
+  const seedKey = encodeSeedOptions(sStr, options);
   const star = generateStar(hashStringToInt(sStr) ^ 0x1234);
   const seedInt = hashStringToInt(sStr);
   const rng = mulberry32(seedInt);
@@ -156,9 +180,9 @@ function drawSingle(seed, options) {
   } catch (e) {}
   const box = document.getElementById('rwg-result');
   if (!box) return;
-  box.innerHTML = renderWorldDetail(res, sStr, archetype);
-  attachEquilibrateHandler(res, sStr, archetype, box);
-  attachTravelHandler(res, sStr);
+  box.innerHTML = renderWorldDetail(res, seedKey, archetype);
+  attachEquilibrateHandler(res, seedKey, archetype, box);
+  attachTravelHandler(res, seedKey);
 }
 
 function attachEquilibrateHandler(res, sStr, archetype, box) {
