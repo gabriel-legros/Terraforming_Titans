@@ -207,6 +207,8 @@
         }
 
         function loopChunk() {
+          let elapsed = Date.now() - startTime;
+          if (cancelToken && cancelToken.endEarly && elapsed >= minRunMs) { finalize(true); return; }
           if (timedOut) { finalize(false); reject(new Error('timeout')); return; }
           if (cancelToken && cancelToken.cancelled) { finalize(false); reject(new Error('cancelled')); return; }
           const end = Math.min(stepIdx + chunkSteps, stepsMax);
@@ -251,7 +253,7 @@
               }
             }
           }
-          const elapsed = Date.now() - startTime;
+          elapsed = Date.now() - startTime;
           if (stepIdx >= stepsMax) {
             if (elapsed >= minRunMs) {
               if (onProgress) onProgress(1, { step: stepIdx, stableCount, label: 'Finished' });
