@@ -178,12 +178,19 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       bar.style.background = '#0f0';
       barContainer.appendChild(bar);
 
+      const endBtn = document.createElement('button');
+      endBtn.id = 'rwg-end-early-btn';
+      endBtn.textContent = 'End Early';
+      endBtn.style.display = 'none';
+      endBtn.onclick = () => { cancelToken.endEarly = true; };
+
       const cancelBtn = document.createElement('button');
       cancelBtn.textContent = 'Cancel';
       cancelBtn.onclick = () => { cancelToken.cancelled = true; };
 
       win.appendChild(progressLabel);
       win.appendChild(barContainer);
+      win.appendChild(endBtn);
       win.appendChild(cancelBtn);
       overlay.appendChild(win);
       document.body.appendChild(overlay);
@@ -199,10 +206,11 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           chunkSteps: 20,
           cancelToken
         }, (p, info) => {
-           const label = document.getElementById('rwg-progress-label');
-           if (label && info?.label) label.textContent = info.label;
-           bar.style.width = `${(p * 100).toFixed(2)}%`;
-       });
+          const label = document.getElementById('rwg-progress-label');
+          if (label && info?.label) label.textContent = info.label;
+          bar.style.width = `${(p * 100).toFixed(2)}%`;
+          if (info?.label === 'Additional fast-forward') endBtn.style.display = '';
+        });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);

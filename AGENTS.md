@@ -401,3 +401,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Cargo rocket ship purchases now raise future ship prices based on terraformed planets and decay by 1% per second.
 - Metal export cap now counts previously terraformed worlds excluding the current planet.
 - Life design biodome points now scale with active Biodomes instead of total built.
+- Random World Generator equilibration window now offers an End Early button after the minimum fast-forward, enabling travel with current planet parameters.
