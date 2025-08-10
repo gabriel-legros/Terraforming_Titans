@@ -32,9 +32,14 @@ class CargoRocketProject extends Project {
         const label = document.createElement('span');
         label.classList.add('cargo-resource-label');
         if (resourceId === 'spaceships') {
-          label.innerHTML = `${resource.displayName} <span class="info-tooltip-icon" title="Each ship purchase raises prices based on terraformed planets and the increase decays by 1% per second.">&#9432;</span>`;
+          label.textContent = resource.displayName;
+          const tooltip = document.createElement('span');
+          tooltip.className = 'info-tooltip-icon';
+          tooltip.title = 'Each ship purchase raises prices based on terraformed planets and the increase decays by 1% per second.';
+          tooltip.innerHTML = '&#9432;';
+          label.appendChild(tooltip);
         } else {
-          label.textContent = `${resource.displayName}`;
+          label.textContent = resource.displayName;
         }
         resourceRow.appendChild(label);
 
