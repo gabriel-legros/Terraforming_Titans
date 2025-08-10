@@ -412,3 +412,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space UI caches the last world key and seed to skip redundant detail rendering.
 - Auto mode in Random World Generator no longer generates locked planet types.
 - Random World Generator now offers an Auto target option that randomly selects planets or moons.
+- Fixed Gas Giant parent bodies showing a NaN radius in the Random World Generator.
