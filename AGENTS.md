@@ -391,4 +391,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Fixed RWG UI crash by restoring the `attachEquilibrateHandler` function.
 - RWG equilibrate progress bar now fills as the simulation advances.
 - Random World Generator now includes a Travel button that remains disabled until the world is equilibrated at least once and shows a warning until then.
+- Autosave slot can now be manually overwritten through the Save button.
 - Land resource tooltip now notes that land can be recovered by turning off the corresponding building.
