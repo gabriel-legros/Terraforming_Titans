@@ -505,7 +505,7 @@ function renderAtmoTable(res) {
     const amt = res.merged?.resources?.atmospheric?.[r.key]?.initialValue;
     const amtText = (amt === undefined || amt === null) ? '—' : fmt(amt);
     const kPa = estimateGasPressure(res, r.key);
-    const pText = (typeof kPa === 'number' && isFinite(kPa)) ? `${kPa.toFixed(1)} kPa` : '—';
+    const pText = (typeof kPa === 'number' && isFinite(kPa)) ? `${formatNumber(kPa*1000)}Pa` : '—';
     return `<div class="rwg-row"><span>${r.label}</span><span>${amtText}</span><span>${pText}</span></div>`;
   }).join('');
   // Header row
