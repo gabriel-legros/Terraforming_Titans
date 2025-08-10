@@ -415,3 +415,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator seeds now encode dropdown selections and override menu choices when used.
 - Fixed Gas Giant parent bodies showing a NaN radius in the Random World Generator.
 - Habitable zone orbit presets in the Random World Generator now vary distance to provide differing solar flux.
+- Hot and cold orbit presets in the Random World Generator now ensure solar flux above 1.5 kW/m² and below 500 W/m² respectively with randomized variability.
