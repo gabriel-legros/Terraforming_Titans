@@ -205,7 +205,13 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
-                this.randomWorldStatuses[seed] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: this.getCurrentWorldOriginal() };
+                this.randomWorldStatuses[seed] = {
+                    name: this.currentRandomName,
+                    terraformed: false,
+                    colonists: 0,
+                    original: this.getCurrentWorldOriginal(),
+                    visited: true
+                };
             }
             if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
                 this.randomWorldStatuses[seed].terraformed = isComplete;
@@ -297,7 +303,15 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
-                this.randomWorldStatuses[seed] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: this.getCurrentWorldOriginal() };
+                this.randomWorldStatuses[seed] = {
+                    name: this.currentRandomName,
+                    terraformed: false,
+                    colonists: 0,
+                    original: this.getCurrentWorldOriginal(),
+                    visited: true
+                };
+            } else {
+                this.randomWorldStatuses[seed].visited = true;
             }
             this.randomWorldStatuses[seed].colonists = pop;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
@@ -311,17 +325,38 @@ class SpaceManager extends EffectableEntity {
             console.warn(`SpaceManager: Seed ${s} already terraformed.`);
             return false;
         }
+
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         this.recordCurrentWorldPopulation(pop);
         if (typeof saveGameToSlot === 'function') {
             try { saveGameToSlot('pretravel'); } catch (_) {}
         }
+
+        const departingTerraformed = this.currentRandomSeed !== null
+            ? this.isSeedTerraformed(String(this.currentRandomSeed))
+            : this.isPlanetTerraformed(this.currentPlanetKey);
+
+        const existing = this.randomWorldStatuses[s];
+        const firstVisit = !existing?.visited;
+        const destinationTerraformed = existing?.terraformed || false;
+
         this.currentRandomSeed = s;
         this.currentRandomName = res?.merged?.name || `Seed ${s}`;
-        if (!this.randomWorldStatuses[s]) {
-            this.randomWorldStatuses[s] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: res };
+        if (!existing) {
+            this.randomWorldStatuses[s] = {
+                name: this.currentRandomName,
+                terraformed: false,
+                colonists: 0,
+                original: res,
+                visited: true
+            };
         } else {
-            this.randomWorldStatuses[s].original = this.randomWorldStatuses[s].original || res;
+            existing.original = existing.original || res;
+            existing.visited = true;
+        }
+
+        if (firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager) {
+            skillManager.skillPoints += 1;
         }
         const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
             ? projectManager.projects.spaceStorage.saveTravelState() : null;

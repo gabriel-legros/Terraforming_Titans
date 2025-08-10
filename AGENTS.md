@@ -404,3 +404,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Life design biodome points now scale with active Biodomes instead of total built.
 - Pre-travel saves no longer update SpaceManager's current world before travel.
 - Random World Generator equilibration window now offers an End Early button after the minimum fast-forward, enabling travel with current planet parameters.
+- Traveling from a fully terraformed world to a random world now awards a skill point on the first visit.
