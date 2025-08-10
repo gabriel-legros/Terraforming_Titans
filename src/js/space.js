@@ -1,5 +1,15 @@
 // space.js
 
+// Simple representation of the Sun used for original planet summaries
+const SOL_STAR = {
+    name: 'Sol',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    temperatureK: 5778,
+    habitableZone: { inner: 0.95, outer: 1.37 }
+};
+
 class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
         super({ description: 'Manages planetary travel' });
@@ -99,7 +109,9 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             return this.randomWorldStatuses[this.currentRandomSeed]?.original || null;
         }
-        return null;
+        const base = this.allPlanetsData[this.currentPlanetKey];
+        if (!base) return null;
+        return { merged: base, star: SOL_STAR };
     }
 
     getCurrentRandomSeed() {

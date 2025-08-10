@@ -261,8 +261,9 @@ function updateCurrentWorldUI() {
     if (detailsBox) {
         const data = _spaceManagerInstance.getCurrentWorldOriginal();
         const seed = _spaceManagerInstance.getCurrentRandomSeed();
+        const seedArg = seed === null ? undefined : seed;
         if (data && typeof renderWorldDetail === 'function') {
-            let html = renderWorldDetail(data, seed);
+            let html = renderWorldDetail(data, seedArg);
             const wrapper = document.createElement('div');
             wrapper.innerHTML = html;
             wrapper.querySelector('#rwg-equilibrate-btn')?.remove();
