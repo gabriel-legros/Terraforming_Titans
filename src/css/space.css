@@ -163,15 +163,6 @@ body:not(.dark-mode) .details-content {
     border-left: 1px solid #ccc;
 }
 
-.section-title {
-    margin-top: 25px;
-    margin-bottom: 15px;
-    font-size: 1.5em;
-    color: #eee;
-    border-bottom: 1px solid #444;
-    padding-bottom: 5px;
-}
-
 body:not(.dark-mode) .section-title {
     color: #111;
     border-bottom: 1px solid #ccc;
