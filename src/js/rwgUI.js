@@ -327,6 +327,8 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const surf = r.surface || {};
   const temps = estimateWorldTemperatures(res);
   const fluxWm2 = estimateFlux(res);
+  const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
+  const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
   const star = res.star;
   const starPanel = `
@@ -376,7 +378,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Rotation</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
         <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
         <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? forcedType : (cls?.archetype || '—')}</div></div>
-        <div class="rwg-chip"><div class="label">Teq</div><div class="value">${cls?.TeqK ? fmt(cls.TeqK) + ' K' : '—'}</div></div>
+        <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(teqDisplay) + ' K' : '—'}</div></div>
         ${temps ? `<div class="rwg-chip"><div class="label">Mean T</div><div class="value">${fmt(temps.mean.toFixed ? temps.mean.toFixed(0) : temps.mean)} K</div></div>` : ''}
         ${temps ? `<div class="rwg-chip"><div class="label">Day T</div><div class="value">${fmt(temps.day.toFixed ? temps.day.toFixed(0) : temps.day)} K</div></div>` : ''}
         ${temps ? `<div class="rwg-chip"><div class="label">Night T</div><div class="value">${fmt(temps.night.toFixed ? temps.night.toFixed(0) : temps.night)} K</div></div>` : ''}
@@ -461,17 +463,22 @@ function estimateFlux(res) {
   }
 }
 
+function estimateEquilibriumTemp(res, fluxWm2) {
+  try {
+    const c = res.merged?.celestialParameters || {};
+    const albedo = c.albedo ?? 0.3;
+    const sigma = 5.670374419e-8;
+    if (!fluxWm2) return null;
+    return Math.pow((fluxWm2 * (1 - albedo)) / (4 * sigma), 0.25);
+  } catch {
+    return null;
+  }
+}
+
 function renderResourceRow(label, value) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const v = (value === undefined || value === null) ? '—' : fmt(value);
   return `<div class="rwg-row"><span>${label}</span><span>${v}</span></div>`;
-}
-
-function renderAtmoRow(label, amountTons, kPa) {
-  const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const amt = (amountTons === undefined || amountTons === null) ? '—' : fmt(amountTons);
-  const p = (typeof kPa === 'number' && isFinite(kPa)) ? `${(kPa).toFixed(1)} kPa` : '—';
-  return `<div class="rwg-row"><span>${label}</span><span>${amt} (${p})</span></div>`;
 }
 
 function estimateGasPressure(res, gasKey) {
