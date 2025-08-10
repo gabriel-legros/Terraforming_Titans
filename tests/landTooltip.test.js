@@ -42,7 +42,9 @@ describe('land resource tooltip', () => {
     };
     ctx.createResourceDisplay({ surface: { land } });
     ctx.updateResourceRateDisplay(land);
-    const html = dom.window.document.getElementById('land-tooltip').innerHTML;
+    const tooltip = dom.window.document.getElementById('land-tooltip');
+    const html = tooltip.innerHTML;
+    expect(tooltip.textContent).toContain('Land can be recovered by turning off the corresponding building');
     expect(html).toContain('Outpost');
     expect(html).toContain('Factory');
     expect(html).toContain('Greenhouse');
