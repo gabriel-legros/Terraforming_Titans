@@ -398,3 +398,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator travel warning now displays inline with triangle icons next to the Travel button.
 - Random World Generator equilibration timeout now counts as having used the button for enabling travel.
 - Metal export cap now counts previously terraformed worlds excluding the current planet.
+- Life design biodome points now scale with active Biodomes instead of total built.

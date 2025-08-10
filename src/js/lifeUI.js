@@ -82,7 +82,7 @@ function initializeLifeTerraformingDesignerUI() {
                  <p>Points from biodomes :
                    <span id="life-biodome-points">0</span>
                    <span id="life-biodome-rate">+0/hour</span>
-                  <span class="info-tooltip-icon" id="life-biodome-tooltip" title="Each Biodome generates life design points at log10(10 × Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.">&#9432;</span>
+                  <span class="info-tooltip-icon" id="life-biodome-tooltip" title="Each active Biodome generates life design points at log10(10 × Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.">&#9432;</span>
                 </p>
               </div>
                <hr style="margin: 15px 0;">
