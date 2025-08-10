@@ -11,6 +11,10 @@ class SpaceManager extends EffectableEntity {
         // Store status per planet including whether it's been visited
         this.planetStatuses = {};
         this.randomTabEnabled = false;
+        // Tracking for procedurally generated worlds
+        this.currentRandomSeed = null;
+        this.currentRandomName = '';
+        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original }
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -28,7 +32,8 @@ class SpaceManager extends EffectableEntity {
                 terraformed: false,
                 visited: false,
                 enabled: false, // visible/selectable in UI
-                // Add other statuses later if needed (e.g., colonized: false)
+                colonists: 0,
+                // Add other statuses later if needed
             };
         });
 
@@ -83,6 +88,28 @@ class SpaceManager extends EffectableEntity {
         return this.isPlanetTerraformed(this.currentPlanetKey) ? count : count + 1;
     }
 
+    getCurrentWorldName() {
+        if (this.currentRandomSeed !== null) {
+            return this.currentRandomName || `Seed ${this.currentRandomSeed}`;
+        }
+        return this.allPlanetsData[this.currentPlanetKey]?.name || '';
+    }
+
+    getCurrentWorldOriginal() {
+        if (this.currentRandomSeed !== null) {
+            return this.randomWorldStatuses[this.currentRandomSeed]?.original || null;
+        }
+        return null;
+    }
+
+    getCurrentRandomSeed() {
+        return this.currentRandomSeed;
+    }
+
+    isSeedTerraformed(seed) {
+        return !!this.randomWorldStatuses[String(seed)]?.terraformed;
+    }
+
     /**
      * Enable a planet so it appears in the UI.
      * @param {string} planetKey
@@ -129,6 +156,17 @@ class SpaceManager extends EffectableEntity {
      * @param {boolean} isComplete - The terraforming completion status.
      */
     updateCurrentPlanetTerraformedStatus(isComplete) {
+        if (this.currentRandomSeed !== null) {
+            const seed = String(this.currentRandomSeed);
+            if (!this.randomWorldStatuses[seed]) {
+                this.randomWorldStatuses[seed] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: this.getCurrentWorldOriginal() };
+            }
+            if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
+                this.randomWorldStatuses[seed].terraformed = isComplete;
+                console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
+            }
+            return;
+        }
         if (this.planetStatuses[this.currentPlanetKey]) {
             if (this.planetStatuses[this.currentPlanetKey].terraformed !== isComplete) {
                  this.planetStatuses[this.currentPlanetKey].terraformed = isComplete;
@@ -150,11 +188,13 @@ class SpaceManager extends EffectableEntity {
         if (this.allPlanetsData[key]) {
             if (this.currentPlanetKey !== key) {
                 this.currentPlanetKey = key;
+                this.currentRandomSeed = null;
+                this.currentRandomName = '';
                 console.log(`SpaceManager: Current planet set to: ${this.currentPlanetKey}`);
             }
              // Ensure status object exists for the new current planet
              if (!this.planetStatuses[key]) {
-                  this.planetStatuses[key] = { terraformed: false, visited: false, enabled: false };
+                  this.planetStatuses[key] = { terraformed: false, visited: false, enabled: false, colonists: 0 };
                   console.warn(`SpaceManager: Initialized missing status for planet ${key}.`);
              }
            return true;
@@ -178,6 +218,8 @@ class SpaceManager extends EffectableEntity {
             console.warn(`SpaceManager: Planet ${key} already terraformed.`);
             return false;
         }
+        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
+        this.recordCurrentWorldPopulation(pop);
         return this._setCurrentPlanetKey(key);
     }
 
@@ -205,18 +247,71 @@ class SpaceManager extends EffectableEntity {
         return !!this.planetStatuses[key]?.visited;
     }
 
+    recordCurrentWorldPopulation(pop) {
+        if (this.currentRandomSeed !== null) {
+            const seed = String(this.currentRandomSeed);
+            if (!this.randomWorldStatuses[seed]) {
+                this.randomWorldStatuses[seed] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: this.getCurrentWorldOriginal() };
+            }
+            this.randomWorldStatuses[seed].colonists = pop;
+        } else if (this.planetStatuses[this.currentPlanetKey]) {
+            this.planetStatuses[this.currentPlanetKey].colonists = pop;
+        }
+    }
+
+    travelToRandomWorld(res, seed) {
+        const s = String(seed);
+        if (this.isSeedTerraformed(s)) {
+            console.warn(`SpaceManager: Seed ${s} already terraformed.`);
+            return false;
+        }
+        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
+        this.recordCurrentWorldPopulation(pop);
+        this.currentRandomSeed = s;
+        this.currentRandomName = res?.merged?.name || `Seed ${s}`;
+        if (!this.randomWorldStatuses[s]) {
+            this.randomWorldStatuses[s] = { name: this.currentRandomName, terraformed: false, colonists: 0, original: res };
+        } else {
+            this.randomWorldStatuses[s].original = this.randomWorldStatuses[s].original || res;
+        }
+        if (typeof saveGameToSlot === 'function') {
+            try { saveGameToSlot('pretravel'); } catch (_) {}
+        }
+        const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
+            ? projectManager.projects.spaceStorage.saveTravelState() : null;
+        globalThis.currentPlanetParameters = res?.merged;
+        if (typeof initializeGameState === 'function') {
+            initializeGameState({ preserveManagers: true, preserveJournal: true });
+        }
+        if (storageState && projectManager?.projects?.spaceStorage?.loadTravelState) {
+            projectManager.projects.spaceStorage.loadTravelState(storageState);
+            if (typeof updateProjectUI === 'function') {
+                updateProjectUI('spaceStorage');
+            }
+        }
+        if (typeof updateSpaceUI === 'function') {
+            updateSpaceUI();
+        }
+        return true;
+    }
+
     // --- Save/Load ---
     saveState() {
         return {
             currentPlanetKey: this.currentPlanetKey,
-            // <<< SAVE planetStatuses >>>
-            planetStatuses: this.planetStatuses
+            planetStatuses: this.planetStatuses,
+            currentRandomSeed: this.currentRandomSeed,
+            currentRandomName: this.currentRandomName,
+            randomWorldStatuses: this.randomWorldStatuses
         };
     }
 
     loadState(savedData) {
         // Reset to default before loading
         this.currentPlanetKey = 'mars';
+        this.currentRandomSeed = null;
+        this.currentRandomName = '';
+        this.randomWorldStatuses = {};
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
@@ -236,22 +331,33 @@ class SpaceManager extends EffectableEntity {
         // Load planet statuses, merging with default structure
         if (savedData.planetStatuses) {
             Object.keys(this.planetStatuses).forEach(planetKey => {
-                if (savedData.planetStatuses[planetKey]) {
-                    // Only update known properties (like 'terraformed' and 'visited')
-                    if (typeof savedData.planetStatuses[planetKey].terraformed === 'boolean') {
-                        this.planetStatuses[planetKey].terraformed = savedData.planetStatuses[planetKey].terraformed;
+                const saved = savedData.planetStatuses[planetKey];
+                if (saved) {
+                    if (typeof saved.terraformed === 'boolean') {
+                        this.planetStatuses[planetKey].terraformed = saved.terraformed;
                     }
-                    if (typeof savedData.planetStatuses[planetKey].visited === 'boolean') {
-                        this.planetStatuses[planetKey].visited = savedData.planetStatuses[planetKey].visited;
+                    if (typeof saved.visited === 'boolean') {
+                        this.planetStatuses[planetKey].visited = saved.visited;
                     }
-                    if (typeof savedData.planetStatuses[planetKey].enabled === 'boolean') {
-                        this.planetStatuses[planetKey].enabled = savedData.planetStatuses[planetKey].enabled;
+                    if (typeof saved.enabled === 'boolean') {
+                        this.planetStatuses[planetKey].enabled = saved.enabled;
+                    }
+                    if (typeof saved.colonists === 'number') {
+                        this.planetStatuses[planetKey].colonists = saved.colonists;
                     }
                 }
             });
             console.log("SpaceManager: Loaded planet statuses from save data.");
         } else {
             console.log("SpaceManager: No planet statuses found in save data, keeping defaults.");
+        }
+
+        if (savedData.currentRandomSeed !== undefined) {
+            this.currentRandomSeed = savedData.currentRandomSeed;
+            this.currentRandomName = savedData.currentRandomName || '';
+        }
+        if (savedData.randomWorldStatuses) {
+            this.randomWorldStatuses = savedData.randomWorldStatuses;
         }
 
         // Ensure the loaded current planet is marked visited
