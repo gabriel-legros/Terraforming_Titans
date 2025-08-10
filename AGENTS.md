@@ -394,3 +394,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Space Manager tracks random world seeds and colonist populations, blocks travel to terraformed seeds, and displays current world details.
 - Autosave slot can now be manually overwritten through the Save button.
 - Land resource tooltip now notes that land can be recovered by turning off the corresponding building.
+- Random World Generator travel warning now displays inline with triangle icons next to the Travel button.
