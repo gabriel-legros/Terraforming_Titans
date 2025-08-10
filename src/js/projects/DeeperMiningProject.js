@@ -22,6 +22,12 @@ class DeeperMiningProject extends AndroidProject {
       if (this.attributes?.completionEffect) {
         this.applyCompletionEffect();
       }
+      if (this.averageDepth < this.maxDepth) {
+        this.isCompleted = false;
+        if (typeof updateProjectUI === 'function') {
+          updateProjectUI(this.name);
+        }
+      }
     }
   }
 
