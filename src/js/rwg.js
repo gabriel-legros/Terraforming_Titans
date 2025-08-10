@@ -489,6 +489,7 @@ function hashStringToInt(str) {
       parentBody = {
         name: 'Gas Giant',
         mass: gg.mass,
+        radius: gg.radius_km,
         orbitRadius: gg.orbitRadius_km
       };
     }

@@ -413,3 +413,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Auto mode in Random World Generator no longer generates locked planet types.
 - Random World Generator now offers an Auto target option that randomly selects planets or moons.
 - Random World Generator seeds now encode dropdown selections and override menu choices when used.
+- Fixed Gas Giant parent bodies showing a NaN radius in the Random World Generator.
