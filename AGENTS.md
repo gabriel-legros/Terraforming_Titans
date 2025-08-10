@@ -405,3 +405,5 @@ second time they speak in a chapter to help clarify who is talking.
 - Cargo rocket spaceship tooltip now appears immediately to the right of the Spaceships label.
 - Pre-travel saves no longer update SpaceManager's current world before travel.
 - Random World Generator equilibration window now offers an End Early button after the minimum fast-forward, enabling travel with current planet parameters.
+- Traveling from a fully terraformed world to a random world now awards a skill point on the first visit.
+- Random World Generator equilibration window now offers an End Early button after the minimum fast-forward, enabling travel with current planet parameters.
