@@ -130,11 +130,20 @@ function drawSingle(seed, options) {
     } else if (options.orbitPreset === 'hz-outer') {
       aAU = hz.outer - rng() * range / 3;
     } else {
+      const SOLAR_FLUX_1AU = 1361;
+      const lum = star.luminositySolar || 1;
       const mapping = {
-        'hot': Math.max(0.2, hz.inner * 0.5),
-        'cold': Math.min(30, hz.outer * 2)
+        'hot': () => {
+          const flux = 1500 + rng() * 1000; // 1500–2500 W/m²
+          return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+        },
+        'cold': () => {
+          const flux = 100 + rng() * 400; // 100–500 W/m²
+          return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+        }
       };
-      aAU = mapping[options.orbitPreset] ?? undefined;
+      const fn = mapping[options.orbitPreset];
+      aAU = typeof fn === 'function' ? fn() : undefined;
     }
   } else if (options?.target === 'auto') {
     aAU = sampleOrbitAU(rng, 0);
