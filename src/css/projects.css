@@ -353,6 +353,9 @@
 .cargo-resource-label {
     font-weight: 600;
     color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .cargo-buttons-container {
