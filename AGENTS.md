@@ -409,3 +409,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Traveling from a fully terraformed world to a random world now awards a skill point on the first visit.
 - Random World Generator equilibration window now offers an End Early button after the minimum fast-forward, enabling travel with current planet parameters.
 - Auto mode in Random World Generator no longer generates locked planet types.
+- Random World Generator now offers an Auto target option that randomly selects planets or moons.
