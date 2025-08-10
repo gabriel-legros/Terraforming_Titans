@@ -73,6 +73,14 @@ describe('RWG equilibration (isolated Terraforming)', () => {
     await expect(runEquilibration(res.override, { cancelToken, sync: true })).rejects.toThrow();
   });
 
+  test('endEarly resolves run', async () => {
+    const seed = 'rwg-eq-test-end-early';
+    const res = generateRandomPlanet(seed, { archetype: 'mars-like' });
+    const cancelToken = { endEarly: true };
+    const { steps } = await runEquilibration(res.override, { cancelToken, sync: true, minRunMs: 0 });
+    expect(steps).toBeGreaterThanOrEqual(0);
+  });
+
   test('honors minimum runtime', async () => {
     const seed = 'rwg-eq-test-min-time';
     const res = generateRandomPlanet(seed, { archetype: 'mars-like' });

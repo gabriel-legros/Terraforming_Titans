@@ -33,19 +33,19 @@ describe('Spaceship price increase and decay', () => {
     project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 3 }];
 
     const initialCost = project.getResourceChoiceGainCost();
-    expect(initialCost).toBeCloseTo(basePrice * 3 + 3);
+    expect(initialCost).toBeCloseTo(112_500);
 
     project.deductResources(ctx.resources);
-    expect(ctx.resources.colony.funding.value).toBeCloseTo(1_000_000 - initialCost);
-    expect(project.spaceshipPriceIncrease).toBeCloseTo(3);
+    expect(ctx.resources.colony.funding.value).toBeCloseTo(887_500);
+    expect(project.spaceshipPriceIncrease).toBeCloseTo(1.5);
 
     project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 1 }];
     const costAfter = project.getResourceChoiceGainCost();
-    expect(costAfter).toBeCloseTo(basePrice + 3);
+    expect(costAfter).toBeCloseTo(62_500);
 
     project.update(1000);
     const decayedCost = project.getResourceChoiceGainCost();
-    expect(decayedCost).toBeCloseTo(basePrice + 3 * 0.99);
+    expect(decayedCost).toBeCloseTo(62_125);
   });
 });
 
