@@ -209,7 +209,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
-        if (e?.message !== 'cancelled') console.error('Equilibration failed:', e);
+        if (e?.message === 'timeout') {
+          equilibratedWorlds.add(sStr);
+          box.innerHTML = renderWorldDetail(res, sStr, archetype);
+          attachEquilibrateHandler(res, sStr, archetype, box);
+          attachTravelHandler(res, sStr);
+        } else if (e?.message !== 'cancelled') {
+          console.error('Equilibration failed:', e);
+        }
       } finally {
         if (typeof setGameSpeed === 'function') setGameSpeed(prevSpeed);
         const btn = document.getElementById('rwg-equilibrate-btn');
