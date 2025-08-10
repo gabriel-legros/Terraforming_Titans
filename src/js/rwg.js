@@ -153,7 +153,6 @@ function hashStringToInt(str) {
     // Radius ranges (Earth radii) by archetype
     const radiusRanges = {
       "venus-like":       [0.85, 1.05],
-      "temperate-terran": [0.90, 1.20],
       "mars-like":        [0.30, 0.60],
       "hot-rocky":        [0.50, 1.40],
       "icy-moon":         [0.25, 0.70],
@@ -164,7 +163,6 @@ function hashStringToInt(str) {
     // Density ranges relative to Earth (rocky ~0.8–1.1, icy ~0.3–0.6)
     const densityRanges = {
       "venus-like":       [0.95, 1.10],
-      "temperate-terran": [0.90, 1.05],
       "mars-like":        [0.70, 0.95],
       "hot-rocky":        [0.85, 1.05],
       "icy-moon":         [0.30, 0.55],
@@ -196,7 +194,6 @@ function hashStringToInt(str) {
     }
     if (Teq > 330) return { type: "venus-like", Teq, albedo: 0.75 };
     if (Teq > 290) return { type: "rocky", Teq, albedo: 0.35 };
-    if (Teq >= 255 && Teq <= 290 && rng() < 0.2) return { type: "temperate-terran", Teq, albedo: 0.3 }; // rare
     if (Teq >= 200 && Teq < 255) return { type: "mars-like", Teq, albedo: 0.25 };
     if (Teq < 200) return { type: "cold-desert", Teq, albedo: 0.5 };
     return { type: "mars-like", Teq, albedo: 0.25 };
@@ -205,7 +202,6 @@ function hashStringToInt(str) {
   // --- Atmosphere templates (target surface pressure + gas fractions)
   const atmoTemplates = {
     "venus-like":       { pressureBar: 90,  mix: { carbonDioxide: 0.965, inertGas: 0.03, oxygen: 0.0003, atmosphericWater: 0.0047 } },
-    "temperate-terran": { pressureBar: 1.0, mix: { carbonDioxide: 0.0006, inertGas: 0.78, oxygen: 0.209, atmosphericWater: 0.0104 } },
     "mars-like":        { pressureBar: 0.006, mix: { carbonDioxide: 0.95, inertGas: 0.03, oxygen: 0.0016, atmosphericWater: 0.0004 } },
     "rocky":            { pressureBar: 0.6,  mix: { carbonDioxide: 0.9, inertGas: 0.09, oxygen: 0.005, atmosphericWater: 0.005 } },
     "cold-desert":      { pressureBar: 0.02, mix: { carbonDioxide: 0.85, inertGas: 0.14, oxygen: 0.0005, atmosphericWater: 0.0095 } },
@@ -222,8 +218,7 @@ function hashStringToInt(str) {
       'mars-like': [0.3, 3.0],
       'cold-desert': [0.2, 2.0],
       'icy-moon': [0.1, 10.0],
-      'titan-like': [0.7, 1.3],
-      'temperate-terran': [0.8, 1.2]
+      'titan-like': [0.7, 1.3]
     };
     const band = bands[archetype] || [0.5, 1.5];
     const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
@@ -289,7 +284,6 @@ function hashStringToInt(str) {
     // Baselines (order of magnitude)
     const H2O_total = {
       "venus-like":       1e12,
-      "temperate-terran": 3e16,
       "mars-like":        8e15,
       "rocky":            5e14,
       "cold-desert":      2e16,
@@ -303,16 +297,11 @@ function hashStringToInt(str) {
       "cold-desert":      1e9,
       "mars-like":        0,
       "venus-like":       0,
-      "rocky":            0,
-      "temperate-terran": 0
+      "rocky":            0
     }[archetype] * landScale;
   
     // Partition water by temperature
-    if (archetype === "temperate-terran") {
-      const fracLiquid = clamp((Teq - 255) / 80, 0.3, 0.9);
-      surface.liquidWater.initialValue = H2O_total * fracLiquid;
-      surface.ice.initialValue = H2O_total * (1 - fracLiquid);
-    } else if (Teq < 273) {
+    if (Teq < 273) {
       // cold worlds: mostly ice, some dry ice if CO2 freezes (Teq < ~195 K)
       surface.ice.initialValue = H2O_total * 0.999;
       if (Teq < 195) surface.dryIce.initialValue = 1e10 * landScale;
@@ -398,7 +387,6 @@ function hashStringToInt(str) {
     else if (type === 'titan-like') buriedFactor = 3.0;
     else if (type === 'cold-desert') buriedFactor = 2.0;
     else if (type === 'mars-like') buriedFactor = 1.5;
-    else if (type === 'temperate-terran') buriedFactor = 0.2;
     else if (type === 'venus-like' || type === 'rocky') buriedFactor = 0.1;
     const buriedTotal = (surface.ice?.initialValue || 0) * buriedFactor;
     // Favor lower latitudes for buried ice but still allow polar storage
@@ -444,7 +432,6 @@ function hashStringToInt(str) {
     if (forcedType) {
       const typeAlb = {
         'venus-like': 0.75,
-        'temperate-terran': 0.30,
         'mars-like': 0.25,
         'rocky': 0.35,
         'cold-desert': 0.50,
@@ -476,7 +463,7 @@ function hashStringToInt(str) {
     const underground = {
       ore: { name: 'Ore deposits', initialValue: Math.max(2, Math.floor(maxDeposits * 0.0002)), maxDeposits, hasCap: true, areaTotal, unlocked: false },
       geothermal: { name: 'Geo. vent', initialValue:
-        (type === 'temperate-terran' || type === 'rocky') ? 5 :
+        (type === 'rocky') ? 5 :
         (type === 'mars-like') ? 3 :
         (type === 'titan-like' || type === 'icy-moon' || type === 'cold-desert') ? 1 : 2,
         maxDeposits: Math.max(3, Math.floor(areaTotal * 0.002)), hasCap: true, areaTotal, unlocked: false }
