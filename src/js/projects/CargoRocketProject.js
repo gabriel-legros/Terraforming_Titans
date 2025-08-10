@@ -117,7 +117,7 @@ class CargoRocketProject extends Project {
             if (priceElement) {
               let price = this.attributes.resourceChoiceGainCost[category][resourceId];
               if (resourceId === 'spaceships') {
-                price *= this.getSpaceshipPriceMultiplier();
+                price += this.getSpaceshipPriceIncrease();
               }
               priceElement.textContent = `${formatNumber(price, true)}`;
             }
@@ -148,31 +148,32 @@ class CargoRocketProject extends Project {
     }
   }
 
-  getSpaceshipPriceMultiplier() {
-    return 1 + this.spaceshipPriceIncrease;
+  getSpaceshipPriceIncrease() {
+    return this.spaceshipPriceIncrease;
   }
 
   applySpaceshipPurchase(count) {
-    const planetCount = Math.max(
-      1,
-      typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-        ? spaceManager.getTerraformedPlanetCount()
-        : 0
-    );
-    this.spaceshipPriceIncrease += count / planetCount;
+    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
+      ? spaceManager.getTerraformedPlanetCount()
+      : 0;
+    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
+      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
+      : false;
+    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    this.spaceshipPriceIncrease += count / divisor;
   }
 
   getSpaceshipTotalCost(quantity, basePrice) {
-    const planetCount = Math.max(
-      1,
-      typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-        ? spaceManager.getTerraformedPlanetCount()
-        : 0
-    );
-    const delta = 1 / planetCount;
+    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
+      ? spaceManager.getTerraformedPlanetCount()
+      : 0;
+    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
+      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
+      : false;
+    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    const delta = 1 / divisor;
     const current = this.spaceshipPriceIncrease;
-    const totalMultiplier = quantity * (1 + current) + delta * quantity * (quantity - 1) / 2;
-    return basePrice * totalMultiplier;
+    return basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2;
   }
 
   update(delta) {

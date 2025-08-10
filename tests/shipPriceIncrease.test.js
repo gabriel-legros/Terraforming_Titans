@@ -29,6 +29,7 @@ describe('Spaceship price increase and decay', () => {
     ctx.spaceManager.planetStatuses.titan.terraformed = true;
 
     const project = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    const basePrice = project.attributes.resourceChoiceGainCost.special.spaceships;
     project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 3 }];
 
     const initialCost = project.getResourceChoiceGainCost();
