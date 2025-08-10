@@ -395,6 +395,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Autosave slot can now be manually overwritten through the Save button.
 - Land resource tooltip now notes that land can be recovered by turning off the corresponding building.
 - Space UI now shows original planetary properties for story worlds.
+- Story world details no longer display seed or type in the Space UI.
 - Random World Generator travel warning now displays inline with triangle icons next to the Travel button.
 - Random World Generator equilibration timeout now counts as having used the button for enabling travel.
 - Cargo rocket ship purchases now add a flat +1 funding cost per ship divided by previously terraformed worlds (excluding the current planet) and decay by 1% per second.
