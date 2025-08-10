@@ -284,8 +284,8 @@ function renderWorldDetail(res, seedUsed, forcedType) {
       <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
+        ${warningMsg ? `<span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span>` : ''}
       </div>
-      ${warningMsg ? `<div id="rwg-travel-warning" class="warning-message">${warningMsg}</div>` : ''}
       <div class="rwg-infobar">
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedUsed !== undefined ? seedUsed : ''}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
