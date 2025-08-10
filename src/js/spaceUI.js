@@ -8,6 +8,9 @@ const planetUIElements = {};
 let spaceUIInitialized = false;
 // Track visibility of the Random subtab
 let spaceRandomTabVisible = false;
+// Cache the last rendered world so we can skip redundant updates
+let lastWorldKey = null;
+let lastWorldSeed = null;
 
 function showSpaceRandomTab() {
     spaceRandomTabVisible = true;
@@ -54,6 +57,12 @@ function activateSpaceSubtab(subtabId) {
     }
 }
 
+// Reset the cached world key and seed so the next update rebuilds the details box
+function resetCurrentWorldCache() {
+    lastWorldKey = null;
+    lastWorldSeed = null;
+}
+
 /**
  * Initializes the Space Tab UI elements and stores the SpaceManager instance.
  * @param {SpaceManager} spaceManager - The instance of the SpaceManager.
@@ -64,6 +73,8 @@ function initializeSpaceUI(spaceManager) {
         return;
     }
     _spaceManagerInstance = spaceManager; // Store the instance for later use
+    // Reset cached world details whenever we get a new manager
+    resetCurrentWorldCache();
     console.log("Initializing Space UI with SpaceManager reference.");
     initializeSpaceTabs();
     hideSpaceRandomTab();
@@ -132,7 +143,6 @@ function initializeSpaceUI(spaceManager) {
     });
 
     updateSpaceUI(); // Perform the initial draw using the stored instance
-    updateCurrentWorldUI();
 }
 
 /**
@@ -227,6 +237,9 @@ function selectPlanet(planetKey){
 
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
+    // World has changed, invalidate cached details before rebuilding UI
+    resetCurrentWorldCache();
+
     const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
     const departingTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
     const destinationTerraformed = _spaceManagerInstance.isPlanetTerraformed(planetKey);
@@ -253,6 +266,14 @@ function selectPlanet(planetKey){
 
 function updateCurrentWorldUI() {
     if (!_spaceManagerInstance) return;
+    const key = _spaceManagerInstance.getCurrentPlanetKey();
+    const seed = _spaceManagerInstance.getCurrentRandomSeed();
+    if (key === lastWorldKey && seed === lastWorldSeed) {
+        return;
+    }
+    lastWorldKey = key;
+    lastWorldSeed = seed;
+
     const nameSpan = document.getElementById('current-world-name');
     const detailsBox = document.getElementById('current-world-details');
     if (nameSpan) {
@@ -260,12 +281,10 @@ function updateCurrentWorldUI() {
     }
     if (detailsBox) {
         const data = _spaceManagerInstance.getCurrentWorldOriginal();
-        const seed = _spaceManagerInstance.getCurrentRandomSeed();
         const seedArg = seed === null ? undefined : seed;
         if (data && typeof renderWorldDetail === 'function') {
-            let html = renderWorldDetail(data, seedArg);
             const wrapper = document.createElement('div');
-            wrapper.innerHTML = html;
+            wrapper.innerHTML = renderWorldDetail(data, seedArg);
             wrapper.querySelector('#rwg-equilibrate-btn')?.remove();
             wrapper.querySelector('#rwg-travel-btn')?.remove();
             wrapper.querySelector('#rwg-travel-warning')?.remove();
@@ -278,10 +297,9 @@ function updateCurrentWorldUI() {
                     }
                 });
             }
-            detailsBox.innerHTML = '';
-            detailsBox.appendChild(wrapper);
+            detailsBox.replaceChildren(wrapper);
         } else {
-            detailsBox.innerHTML = '';
+            detailsBox.textContent = '';
         }
     }
 }
