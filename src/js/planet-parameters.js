@@ -481,6 +481,8 @@ const planetSpecificOverrides = {
   ganymede: ganymedeOverrides
   // Add future planets here by defining their override objects
 };
+// Expose overrides for modules needing raw planet data
+const planetOverrides = planetSpecificOverrides;
 
 /**
  * Gets the fully merged parameters for a specific planet by combining
@@ -517,5 +519,5 @@ const planetParameters = {
 // If the codebase evolves to use the getPlanetParameters function directly,
 // the export could be changed to: export { getPlanetParameters, defaultPlanetParameters };
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters };
+  module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }

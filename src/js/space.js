@@ -111,7 +111,41 @@ class SpaceManager extends EffectableEntity {
         }
         const base = this.allPlanetsData[this.currentPlanetKey];
         if (!base) return null;
-        return { merged: base, star: SOL_STAR };
+        const override = typeof planetOverrides !== 'undefined' ? planetOverrides[this.currentPlanetKey] : null;
+        const merged = JSON.parse(JSON.stringify(base));
+        const zones = ['tropical', 'temperate', 'polar'];
+        let totalLiquidWater = 0, totalIce = 0, totalDryIce = 0,
+            totalBiomass = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0;
+
+        zones.forEach(z => {
+            const zw = merged.zonalWater?.[z] || {};
+            totalLiquidWater += zw.liquid || 0;
+            totalIce += (zw.ice || 0) + (zw.buriedIce || 0);
+            const zs = merged.zonalSurface?.[z] || {};
+            totalDryIce += zs.dryIce || 0;
+            totalBiomass += zs.biomass || 0;
+            const zh = merged.zonalHydrocarbons?.[z] || {};
+            totalLiquidMethane += zh.liquid || 0;
+            totalHydrocarbonIce += (zh.ice || 0) + (zh.buriedIce || 0);
+        });
+
+        if (!merged.resources) merged.resources = {};
+        if (!merged.resources.surface) merged.resources.surface = {};
+        merged.resources.surface.liquidWater = merged.resources.surface.liquidWater || {};
+        merged.resources.surface.ice = merged.resources.surface.ice || {};
+        merged.resources.surface.dryIce = merged.resources.surface.dryIce || {};
+        merged.resources.surface.biomass = merged.resources.surface.biomass || {};
+        merged.resources.surface.liquidMethane = merged.resources.surface.liquidMethane || {};
+        merged.resources.surface.hydrocarbonIce = merged.resources.surface.hydrocarbonIce || {};
+
+        merged.resources.surface.liquidWater.initialValue = totalLiquidWater;
+        merged.resources.surface.ice.initialValue = totalIce;
+        merged.resources.surface.dryIce.initialValue = totalDryIce;
+        merged.resources.surface.biomass.initialValue = totalBiomass;
+        merged.resources.surface.liquidMethane.initialValue = totalLiquidMethane;
+        merged.resources.surface.hydrocarbonIce.initialValue = totalHydrocarbonIce;
+
+        return { merged, override, star: SOL_STAR };
     }
 
     getCurrentRandomSeed() {
