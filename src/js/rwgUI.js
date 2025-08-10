@@ -109,9 +109,17 @@ function drawSingle(seed, options) {
     // Even weights among sensible candidates, seeded for determinism
     try {
       const rng = mulberry32(hashStringToInt(sStr) ^ 0xC0FFEE);
-      const candidates = options?.isMoon
+      const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
+      let candidates = options?.isMoon
         ? ['icy-moon', 'titan-like']
         : ['temperate-terran', 'mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
+      if (typeSelect) {
+        const disabled = Array.from(typeSelect.options)
+          .filter(opt => opt.disabled)
+          .map(opt => opt.value === 'rocky' ? 'hot-rocky' : opt.value);
+        candidates = candidates.filter(c => !disabled.includes(c));
+      }
+      if (candidates.length === 0) candidates = options?.isMoon ? ['icy-moon'] : ['mars-like'];
       archetype = candidates[Math.floor(rng() * candidates.length)];
     } catch (e) {
       // Fallback
@@ -122,7 +130,9 @@ function drawSingle(seed, options) {
   // Enforce high flux rule: if flux >= 2000 W/m², force Venus-like
   try {
     const fluxNow = estimateFlux(res);
-    if (fluxNow >= 2000 && res.override?.classification?.archetype !== 'venus-like') {
+    const venusLocked = document.getElementById('rwg-type')
+      ?.querySelector('option[value="venus-like"]')?.disabled;
+    if (fluxNow >= 2000 && res.override?.classification?.archetype !== 'venus-like' && !venusLocked) {
       const fixedAU = res.orbitAU ?? aAU;
       res = generateRandomPlanet(sStr, { star, aAU: fixedAU, isMoon: options?.isMoon, archetype: 'venus-like' });
     }
