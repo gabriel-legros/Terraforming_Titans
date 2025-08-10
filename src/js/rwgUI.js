@@ -26,8 +26,9 @@ function initializeRandomWorldUI() {
     </div>
     <div class="rwg-select">
       <select id="rwg-target">
-        <option value="planet" selected>Planet</option>
-        <option value="moon">Moon</option>
+        <option value="auto" selected>Target: Auto</option>
+        <option value="planet">Target: Planet</option>
+        <option value="moon">Target: Moon</option>
       </select>
       <select id="rwg-type">
         <option value="auto" selected>Type: Auto</option>
@@ -65,7 +66,7 @@ function initializeRandomWorldUI() {
     const target = /** @type {HTMLSelectElement} */(document.getElementById('rwg-target')).value;
     const orbit = /** @type {HTMLSelectElement} */(document.getElementById('rwg-orbit')).value;
     const type = /** @type {HTMLSelectElement} */(document.getElementById('rwg-type')).value;
-    drawSingle(seed, { isMoon: target === 'moon', orbitPreset: orbit, type });
+    drawSingle(seed, { target, orbitPreset: orbit, type });
   });
 }
 
@@ -91,6 +92,8 @@ function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
   const star = generateStar(hashStringToInt(sStr) ^ 0x1234);
+  const seedInt = hashStringToInt(sStr);
+  const rng = mulberry32(seedInt);
   // Orbit presets
   let aAU;
   if (options?.orbitPreset && options.orbitPreset !== 'auto') {
@@ -103,14 +106,27 @@ function drawSingle(seed, options) {
       'cold': Math.min(30, hz.outer * 2)
     };
     aAU = mapping[options.orbitPreset] ?? undefined;
+  } else if (options?.target === 'auto') {
+    aAU = sampleOrbitAU(rng, 0);
   }
+
+  let isMoon;
+  if (options?.target === 'moon') isMoon = true;
+  else if (options?.target === 'planet') isMoon = false;
+  else if (options?.target === 'auto') {
+    if (aAU === undefined) aAU = sampleOrbitAU(rng, 0);
+    isMoon = (aAU > 3 && rng() < 0.35);
+  } else {
+    isMoon = options?.isMoon;
+  }
+
   let archetype = (options?.type && options.type !== 'auto') ? options.type : undefined;
   if (!archetype) {
     // Even weights among sensible candidates, seeded for determinism
     try {
-      const rng = mulberry32(hashStringToInt(sStr) ^ 0xC0FFEE);
+      const rngType = mulberry32(seedInt ^ 0xC0FFEE);
       const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
-      let candidates = options?.isMoon
+      let candidates = isMoon
         ? ['icy-moon', 'titan-like']
         : ['temperate-terran', 'mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
       if (typeSelect) {
@@ -119,14 +135,15 @@ function drawSingle(seed, options) {
           .map(opt => opt.value === 'rocky' ? 'hot-rocky' : opt.value);
         candidates = candidates.filter(c => !disabled.includes(c));
       }
-      if (candidates.length === 0) candidates = options?.isMoon ? ['icy-moon'] : ['mars-like'];
-      archetype = candidates[Math.floor(rng() * candidates.length)];
+      if (candidates.length === 0) candidates = isMoon ? ['icy-moon'] : ['mars-like'];
+      archetype = candidates[Math.floor(rngType() * candidates.length)];
     } catch (e) {
       // Fallback
-      archetype = options?.isMoon ? 'icy-moon' : 'mars-like';
+      archetype = isMoon ? 'icy-moon' : 'mars-like';
     }
   }
-  let res = generateRandomPlanet(sStr, { star, aAU, isMoon: options?.isMoon, archetype });
+
+  let res = generateRandomPlanet(sStr, { star, aAU, isMoon, archetype });
   // Enforce high flux rule: if flux >= 2000 W/m², force Venus-like
   try {
     const fluxNow = estimateFlux(res);
@@ -134,7 +151,7 @@ function drawSingle(seed, options) {
       ?.querySelector('option[value="venus-like"]')?.disabled;
     if (fluxNow >= 2000 && res.override?.classification?.archetype !== 'venus-like' && !venusLocked) {
       const fixedAU = res.orbitAU ?? aAU;
-      res = generateRandomPlanet(sStr, { star, aAU: fixedAU, isMoon: options?.isMoon, archetype: 'venus-like' });
+      res = generateRandomPlanet(sStr, { star, aAU: fixedAU, isMoon, archetype: 'venus-like' });
     }
   } catch (e) {}
   const box = document.getElementById('rwg-result');
