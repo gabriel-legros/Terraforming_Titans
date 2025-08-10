@@ -2,6 +2,7 @@
 
 // Guard flags
 let rwgUIInitialized = false;
+const equilibratedWorlds = new Set();
 
 function initializeRandomWorldUI() {
   const container = document.getElementById('space-random');
@@ -74,6 +75,24 @@ function ensureRandomWorldUI() {
   }
 }
 
+function attachTravelHandler(res, sStr) {
+  const travelBtn = document.getElementById('rwg-travel-btn');
+  if (!travelBtn) return;
+  travelBtn.onclick = () => {
+    if (!equilibratedWorlds.has(sStr)) return;
+    if (typeof saveGameToSlot === 'function') {
+      try { saveGameToSlot('pretravel'); } catch (_) {}
+    }
+    if (projectManager?.projects?.spaceStorage?.saveTravelState) {
+      try { projectManager.projects.spaceStorage.saveTravelState(); } catch (_) {}
+    }
+    globalThis.currentPlanetParameters = res.merged;
+    if (typeof initializeGameState === 'function') {
+      initializeGameState({ preserveManagers: true, preserveJournal: true });
+    }
+  };
+}
+
 function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
@@ -118,6 +137,7 @@ function drawSingle(seed, options) {
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, sStr, archetype);
   attachEquilibrateHandler(res, sStr, archetype, box);
+  attachTravelHandler(res, sStr);
 }
 
 function attachEquilibrateHandler(res, sStr, archetype, box) {
@@ -186,12 +206,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           cancelToken
         }, (p, info) => {
            const label = document.getElementById('rwg-progress-label');
-           if (label) label.textContent = info.label;
+           if (label && info?.label) label.textContent = info.label;
            bar.style.width = `${(p * 100).toFixed(2)}%`;
        });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+        equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
         attachEquilibrateHandler(newRes, sStr, archetype, box);
+        attachTravelHandler(newRes, sStr);
       } catch (e) {
         if (e?.message !== 'cancelled') console.error('Equilibration failed:', e);
       } finally {
@@ -254,12 +276,15 @@ function renderWorldDetail(res, seedUsed, forcedType) {
       </div>
     </div>` : '';
 
+  const eqDone = seedUsed && equilibratedWorlds.has(seedUsed);
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
-      <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
+        <button id="rwg-travel-btn" class="rwg-btn" ${eqDone ? '' : 'disabled'}>Travel</button>
       </div>
+      ${eqDone ? '' : '<div id="rwg-travel-warning" class="warning-message">Press Equilibrate at least once before traveling.</div>'}
       <div class="rwg-infobar">
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedUsed !== undefined ? seedUsed : ''}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
@@ -419,6 +444,6 @@ if (typeof showSpaceRandomTab === 'function') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail, attachEquilibrateHandler };
+  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail, attachEquilibrateHandler, attachTravelHandler };
 }
 
