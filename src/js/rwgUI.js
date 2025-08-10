@@ -128,7 +128,7 @@ function drawSingle(seed, options) {
       const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
       let candidates = isMoon
         ? ['icy-moon', 'titan-like']
-        : ['temperate-terran', 'mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
+        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
       if (typeSelect) {
         const disabled = Array.from(typeSelect.options)
           .filter(opt => opt.disabled)

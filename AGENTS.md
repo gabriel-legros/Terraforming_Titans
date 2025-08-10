@@ -103,6 +103,7 @@ second time they speak in a chapter to help clarify who is talking.
 - Story events with chapter `-1` display in the current chapter without changing it.
 
 # Changelogs
+- Removed temperate-terran worlds from the random world generator.
 - The collector progress bar continues updating after the receiver is finished and
   controls stay disabled until the receiver completes.
 - The solar collector UI remains hidden until the receiver is built.
