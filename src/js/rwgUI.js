@@ -56,7 +56,7 @@ function initializeRandomWorldUI() {
         <option value="hz-inner">Orbit: HZ Inner</option>
         <option value="hz-mid">Orbit: HZ Mid</option>
         <option value="hz-outer">Orbit: HZ Outer</option>
-        <option value="hot">Orbit: Hot</option>
+        <option value="hot" disabled>Orbit: Hot (Locked)</option>
         <option value="cold">Orbit: Cold</option>
       </select>
     </div>
@@ -118,6 +118,24 @@ function drawSingle(seed, options) {
   const star = generateStar(hashStringToInt(sStr) ^ 0x1234);
   const seedInt = hashStringToInt(sStr);
   const rng = mulberry32(seedInt);
+  if (options?.orbitPreset === 'auto') {
+    try {
+      const rngOrbit = mulberry32(seedInt ^ 0xF00D);
+      const orbitSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
+      let candidates = ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
+      if (orbitSelect) {
+        const disabled = Array.from(orbitSelect.options)
+          .filter(opt => opt.disabled || opt.value === 'auto')
+          .map(opt => opt.value);
+        candidates = candidates.filter(c => !disabled.includes(c));
+      }
+      if (candidates.length > 0) {
+        const choice = candidates[Math.floor(rngOrbit() * candidates.length)];
+        options.orbitPreset = choice;
+        if (orbitSelect) orbitSelect.value = choice;
+      }
+    } catch (e) {}
+  }
   // Orbit presets
   let aAU;
   if (options?.orbitPreset && options.orbitPreset !== 'auto') {
