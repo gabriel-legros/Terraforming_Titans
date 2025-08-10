@@ -414,3 +414,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator now offers an Auto target option that randomly selects planets or moons.
 - Random World Generator seeds now encode dropdown selections and override menu choices when used.
 - Fixed Gas Giant parent bodies showing a NaN radius in the Random World Generator.
+- Habitable zone orbit presets in the Random World Generator now vary distance to provide differing solar flux.

@@ -122,14 +122,20 @@ function drawSingle(seed, options) {
   let aAU;
   if (options?.orbitPreset && options.orbitPreset !== 'auto') {
     const hz = star.habitableZone;
-    const mapping = {
-      'hz-inner': hz.inner,
-      'hz-mid': (hz.inner + hz.outer) / 2,
-      'hz-outer': hz.outer,
-      'hot': Math.max(0.2, hz.inner * 0.5),
-      'cold': Math.min(30, hz.outer * 2)
-    };
-    aAU = mapping[options.orbitPreset] ?? undefined;
+    const range = hz.outer - hz.inner;
+    if (options.orbitPreset === 'hz-inner') {
+      aAU = hz.inner + rng() * range / 3;
+    } else if (options.orbitPreset === 'hz-mid') {
+      aAU = hz.inner + range / 3 + rng() * range / 3;
+    } else if (options.orbitPreset === 'hz-outer') {
+      aAU = hz.outer - rng() * range / 3;
+    } else {
+      const mapping = {
+        'hot': Math.max(0.2, hz.inner * 0.5),
+        'cold': Math.min(30, hz.outer * 2)
+      };
+      aAU = mapping[options.orbitPreset] ?? undefined;
+    }
   } else if (options?.target === 'auto') {
     aAU = sampleOrbitAU(rng, 0);
   }
