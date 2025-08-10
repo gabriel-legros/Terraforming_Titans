@@ -35,7 +35,7 @@ class CargoRocketProject extends Project {
           label.textContent = resource.displayName;
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = 'Each ship purchase raises by 1 and the increase decays by 1% per second.  This increase can be reduced by progressing further in the game.';
+          tooltip.title = 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.';
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         } else {
