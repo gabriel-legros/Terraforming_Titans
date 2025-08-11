@@ -108,11 +108,13 @@ function updateRandomWorldUI() {
     Array.from(orbitSel.options).forEach(opt => {
       if (opt.value === 'auto') return;
       const locked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
+      if (opt.disabled === locked) return; // No change needed
+
       const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '');
       opt.dataset.baseText = base;
       const newText = locked ? base + ' (Locked)' : base;
-      if (opt.disabled !== locked) opt.disabled = locked;
-      if (opt.textContent !== newText) opt.textContent = newText;
+      opt.disabled = locked;
+      opt.textContent = newText;
     });
   }
 
@@ -122,11 +124,13 @@ function updateRandomWorldUI() {
       if (opt.value === 'auto') return;
       const key = opt.value === 'rocky' ? 'hot-rocky' : opt.value;
       const locked = typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(key) : false;
+      if (opt.disabled === locked) return; // No change needed
+
       const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '');
       opt.dataset.baseText = base;
       const newText = locked ? base + ' (Locked)' : base;
-      if (opt.disabled !== locked) opt.disabled = locked;
-      if (opt.textContent !== newText) opt.textContent = newText;
+      opt.disabled = locked;
+      opt.textContent = newText;
     });
   }
 }
