@@ -236,6 +236,18 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       bar.style.background = '#0f0';
       barContainer.appendChild(bar);
 
+      const statsDiv = document.createElement('div');
+      statsDiv.style.marginBottom = '12px';
+      const stableRefText = document.createElement('div');
+      stableRefText.textContent = 'Number of refinements from stability: 0';
+      const unstableRefText = document.createElement('div');
+      unstableRefText.textContent = 'Number of refinements from instability: 0';
+      const timeSimText = document.createElement('div');
+      timeSimText.textContent = 'Time simulated: 0s';
+      statsDiv.appendChild(stableRefText);
+      statsDiv.appendChild(unstableRefText);
+      statsDiv.appendChild(timeSimText);
+
       const endBtn = document.createElement('button');
       endBtn.id = 'rwg-end-early-btn';
       endBtn.textContent = 'End Early';
@@ -254,6 +266,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
 
       win.appendChild(progressLabel);
       win.appendChild(barContainer);
+      win.appendChild(statsDiv);
       win.appendChild(endBtn);
       win.appendChild(addTimeBtn);
       win.appendChild(cancelBtn);
@@ -269,6 +282,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           const label = document.getElementById('rwg-progress-label');
           if (label && info?.label) label.textContent = info.label;
           bar.style.width = `${(p * 100).toFixed(2)}%`;
+          if (info) {
+            stableRefText.textContent = `Number of refinements from stability: ${info.refinementsFromStability || 0}`;
+            unstableRefText.textContent = `Number of refinements from instability: ${info.refinementsFromInstability || 0}`;
+            if (typeof formatDuration === 'function') {
+              const seconds = (info.simulatedMs || 0) / 1000 * 86400;
+              timeSimText.textContent = `Time simulated: ${formatDuration(seconds)}`;
+            }
+          }
           if (info?.label === 'Additional fast-forward') endBtn.style.display = '';
         });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };

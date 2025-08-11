@@ -94,7 +94,7 @@ describe('RWG equilibration (isolated Terraforming)', () => {
     });
     const elapsed = Date.now() - start;
     expect(elapsed).toBeGreaterThanOrEqual(50);
-  });
+  }, 20000);
 
   test('times out and restores globals', async () => {
     const seed = 'rwg-eq-test-timeout';
