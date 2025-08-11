@@ -426,29 +426,6 @@ class Terraforming extends EffectableEntity{
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         if (durationSeconds <= 0) return;
 
-        const logState = (label) => {
-            console.log(`--- TERRAFORMING LOG: ${label} (dt=${durationSeconds.toFixed(3)}s) ---`);
-            const state = {
-                time: deltaTime,
-                zonalWater: this.zonalWater,
-                zonalSurface: this.zonalSurface,
-                zonalHydrocarbons: this.zonalHydrocarbons,
-                atmospheric: {
-                    water: this.resources.atmospheric.atmosphericWater.value,
-                    co2: this.resources.atmospheric.carbonDioxide.value,
-                    methane: this.resources.atmospheric.atmosphericMethane.value,
-                },
-                temperatures: {
-                    tropical: this.temperature.zones.tropical.value,
-                    temperate: this.temperature.zones.temperate.value,
-                    polar: this.temperature.zones.polar.value,
-                }
-            };
-            console.log(`RWG_LOG ${label} | ${JSON.stringify(state)}`);
-        };
-
-        logState('Start of updateResources');
-
         const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
         // Get current global atmospheric state directly from resources or calculate pressures
@@ -694,8 +671,6 @@ class Terraforming extends EffectableEntity{
             zonalChanges[zone].potentialAtmosphericMethaneChange += rapidMethaneAmount;
             totalMethaneSublimationAmount += rapidMethaneAmount;
         }
-
-        console.log(`RWG_LOG Mid-point | ${JSON.stringify(zonalChanges)}`);
 
         // Include melt from zonal water flow
         totalMeltAmount += this.flowMeltAmount || 0;
@@ -959,8 +934,6 @@ class Terraforming extends EffectableEntity{
         // reset stored melt from flow for next tick
         this.flowMeltAmount = 0;
         this.flowMethaneMeltAmount = 0;
-
-        logState('End of updateResources');
     }
 
     // Function to update luminosity properties
