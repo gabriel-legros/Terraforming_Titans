@@ -422,3 +422,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator is now handled by a manager extending EffectableEntity and tracks locked options internally.
 - Solar flux now accounts for the generating star's luminosity when visiting random worlds.
 - Random World Generator UI now reflects manager-locked orbit and type options during regular UI updates.
+- Random World Generator dropdowns now only change when their lock state changes, preventing flicker.
