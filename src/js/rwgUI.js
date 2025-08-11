@@ -242,6 +242,12 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       endBtn.style.display = 'none';
       endBtn.onclick = () => { cancelToken.endEarly = true; };
 
+      const addTimeBtn = document.createElement('button');
+      addTimeBtn.textContent = 'Add 10s';
+      addTimeBtn.onclick = () => {
+        cancelToken.addTime = (cancelToken.addTime || 0) + 10000;
+      };
+
       const cancelBtn = document.createElement('button');
       cancelBtn.textContent = 'Cancel';
       cancelBtn.onclick = () => { cancelToken.cancelled = true; };
@@ -249,19 +255,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       win.appendChild(progressLabel);
       win.appendChild(barContainer);
       win.appendChild(endBtn);
+      win.appendChild(addTimeBtn);
       win.appendChild(cancelBtn);
       overlay.appendChild(win);
       document.body.appendChild(overlay);
 
       eqBtn.disabled = true;
       try {
-        const result = await runEquilibration(res.override, {
-          yearsMax: 10000,
-          stepDays: 1,
-          checkEvery: 5,
-          absTol: 1,
-          relTol: 1e-6,
-          chunkSteps: 1000,
+        const result = await runEquilibration(res.merged, {
           cancelToken,
           star: res.star
         }, (p, info) => {

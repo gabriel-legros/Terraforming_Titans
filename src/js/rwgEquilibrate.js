@@ -52,6 +52,12 @@
         if (typeof globalThis.calculateEvaporationSublimationRates === 'undefined') globalThis.calculateEvaporationSublimationRates = water.calculateEvaporationSublimationRates || globalThis.calculateEvaporationSublimationRates;
         if (typeof globalThis.calculatePrecipitationRateFactor === 'undefined') globalThis.calculatePrecipitationRateFactor = water.calculatePrecipitationRateFactor || globalThis.calculatePrecipitationRateFactor;
       } catch (_) {}
+      // Hydrology functions for surface flow
+      try {
+        const hydrology = require('./hydrology.js');
+        if (typeof globalThis.simulateSurfaceWaterFlow === 'undefined') globalThis.simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
+        if (typeof globalThis.simulateSurfaceHydrocarbonFlow === 'undefined') globalThis.simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
+      } catch (_) {}
       // Require Terraforming after priming globals
       const TF = require('./terraforming.js');
       TerraformingCtor = TF && TF.default ? TF.default : TF;
@@ -114,12 +120,8 @@
       out.zonalHydrocarbons = JSON.parse(JSON.stringify(terra.zonalHydrocarbons || {}));
       out.zonalSurface = JSON.parse(JSON.stringify(terra.zonalSurface || {}));
 
-      const alb = terra.luminosity && typeof terra.luminosity.surfaceAlbedo === 'number'
-        ? terra.luminosity.surfaceAlbedo
-        : undefined;
-      if (alb !== undefined) {
-        out.celestialParameters = out.celestialParameters || {};
-        out.celestialParameters.albedo = alb;
+      if (terra.celestialParameters) {
+        out.celestialParameters = JSON.parse(JSON.stringify(terra.celestialParameters));
       }
 
       const eqT = terra.temperature && typeof terra.temperature.effectiveTempNoAtmosphere === 'number'
@@ -145,14 +147,24 @@
     return out;
   }
 
-  function snapshotMetrics(sandboxResources) {
-    const atmo = sandboxResources.atmospheric || {};
-    const surf = sandboxResources.surface || {};
+  function snapshotMetrics(terra) {
+    const atmo = terra.resources.atmospheric || {};
+    const surf = terra.resources.surface || {};
     function g(obj, k) { return obj[k] ? (obj[k].value || 0) : 0; }
-    return [
+    const metrics = [
       g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'atmosphericMethane'),
       g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce')
     ];
+    const zones = ['tropical', 'temperate', 'polar'];
+    for (const zone of zones) {
+       const zw = terra.zonalWater[zone] || {};
+       const zs = terra.zonalSurface[zone] || {};
+       const zh = terra.zonalHydrocarbons[zone] || {};
+       metrics.push(zw.liquid || 0, zw.ice || 0, zw.buriedIce || 0);
+       metrics.push(zs.dryIce || 0, zs.biomass || 0);
+       metrics.push(zh.liquid || 0, zh.ice || 0, zh.buriedIce || 0);
+    }
+    return metrics;
   }
   function deltaSmall(prev, curr, absTol, relTol) {
     for (let i = 0; i < prev.length; i++) {
@@ -169,17 +181,16 @@
    * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync, timeoutMs, minRunMs }
    * onProgress: fn(0..1, info)
    */
-  function runEquilibration(override, options = {}, onProgress) {
-    const yearsMax = options.yearsMax ?? 2000;
-    let stepDays = options.stepDays ?? 365; // 1 step = 1 year
-    const stepsMax = Math.ceil((yearsMax * 365) / stepDays);
-    const checkEvery = options.checkEvery ?? 10;
-    const absTol = options.absTol ?? 1e6; // tons
-    const relTol = options.relTol ?? 1e-6; // relative
+  function runEquilibration(fullParams, options = {}, onProgress) {
+    let stepDays = options.stepDays ?? 10;
+    const checkEvery = options.checkEvery ?? 5;
+    let absTol = options.absTol ?? 1; // tons
+    let relTol = options.relTol ?? 1e-6; // relative
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
-    const timeoutMs = options.timeoutMs ?? 30000;
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
+    let additionalRunMs = options.additionalRunMs ?? 50000;
+    let timeoutMs = options.timeoutMs ?? (minRunMs + additionalRunMs);
 
     return new Promise((resolve, reject) => {
       const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
@@ -192,7 +203,6 @@
           reject(new Error('Terraforming module unavailable'));
           return;
         }
-        const fullParams = deepMerge(baseDefaultParams || (typeof defaultPlanetParameters !== 'undefined' ? defaultPlanetParameters : {}), override);
         const sandboxResources = buildSandboxResourcesFromOverride(fullParams.resources || {});
 
         // Guarded global swap-in (robust): track previous descriptors
@@ -206,11 +216,13 @@
         globalThis.calculateZoneSolarFluxWithFacility = undefined;
 
         const terra = new TF(sandboxResources, fullParams.celestialParameters || {});
-        terra.calculateInitialValues(fullParams);
+        if (typeof terra.calculateInitialValues === 'function') {
+          terra.calculateInitialValues(fullParams);
+        }
 
         let stepIdx = 0;
         let stableCount = 0;
-        let prevSnap = snapshotMetrics(sandboxResources);
+        let prevSnap = snapshotMetrics(terra);
         let refinementCount = 0;
 
         let stepMs = 1000 * stepDays; // 1 day per 1000 ms
@@ -236,7 +248,10 @@
           }
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
-          const outOverride = copyBackToOverrideFromSandbox(override, sandboxResources, terra);
+          if (typeof terra.synchronizeGlobalResources === 'function') {
+            terra.synchronizeGlobalResources();
+          }
+          const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
@@ -244,18 +259,41 @@
         function loopChunk() {
           let elapsed = Date.now() - startTime;
           if (cancelToken && cancelToken.endEarly && elapsed >= minRunMs) { finalize(true); return; }
-          if (timedOut) { finalize(false); reject(new Error('timeout')); return; }
+          if (timedOut) { finalize(true); return; }
           if (cancelToken && cancelToken.cancelled) { finalize(false); reject(new Error('cancelled')); return; }
-          const end = Math.min(stepIdx + chunkSteps, stepsMax);
+          if (cancelToken && cancelToken.addTime) {
+            const extra = cancelToken.addTime;
+            additionalRunMs += extra;
+            timeoutMs += extra;
+            cancelToken.addTime = 0; // Consume it
+          }
+          if (cancelToken && cancelToken.addTime) {
+            const extra = cancelToken.addTime;
+            additionalRunMs += extra;
+            timeoutMs += extra;
+            cancelToken.addTime = 0; // Consume it
+          }
+          const end = stepIdx + chunkSteps;
           for (; stepIdx < end; stepIdx++) {
             // Mirror the essential parts of terraforming.update():
             // 1) update luminosity/flux, 2) update surface temperatures, 3) advance resources
             terra._updateZonalCoverageCache();
+            terra.synchronizeGlobalResources();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             if (typeof terra.updateSurfaceTemperature === 'function') terra.updateSurfaceTemperature();
+            if (typeof terra.flowMeltAmount === 'number' && typeof globalThis.simulateSurfaceWaterFlow === 'function') {
+               const tempMap = {};
+               for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
+               terra.flowMeltAmount = globalThis.simulateSurfaceWaterFlow(terra, stepMs, tempMap);
+            }
+            if (typeof terra.flowMethaneMeltAmount === 'number' && typeof globalThis.simulateSurfaceHydrocarbonFlow === 'function') {
+               const tempMap = {};
+               for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
+               terra.flowMethaneMeltAmount = globalThis.simulateSurfaceHydrocarbonFlow(terra, stepMs, tempMap);
+            }
             terra.updateResources(stepMs);
             if ((stepIdx + 1) % checkEvery === 0) {
-              const snap = snapshotMetrics(sandboxResources);
+              const snap = snapshotMetrics(terra);
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
               stableCount = small ? (stableCount + 1) : 0;
               prevSnap = snap;
@@ -268,7 +306,7 @@
                   progress = Math.min(1, elapsedNow / minRunMs);
                   label = 'Minimum fast-forward';
                 } else {
-                  const remainingTime = Math.max(0, timeoutMs - minRunMs);
+                  const remainingTime = Math.max(0, additionalRunMs);
                   const elapsedInPhase = Math.max(0, elapsedNow - minRunMs);
                   progress = remainingTime > 0 ? Math.min(1, elapsedInPhase / remainingTime) : 1;
                   label = 'Additional fast-forward';
@@ -278,7 +316,9 @@
               if (stableCount >= 5 && elapsedNow >= minRunMs) {
                 if (refinementCount < 10) {
                   refinementCount++;
-                  stepDays /= 2;
+                  stepDays /= 10;
+                  absTol /= 100;
+                  relTol /= 100;
                   stepMs = 1000 * stepDays;
                   stableCount = 0; // Reset for next level of stability
                 } else {
@@ -289,14 +329,6 @@
             }
           }
           elapsed = Date.now() - startTime;
-          if (stepIdx >= stepsMax) {
-            if (elapsed >= minRunMs) {
-              if (onProgress) onProgress(1, { step: stepIdx, stableCount, label: 'Finished' });
-              finalize(true);
-              return;
-            }
-            if (onProgress) onProgress(1, { step: stepIdx, stableCount, label: 'Additional fast-forward' });
-          }
           if (options.sync) { loopChunk(); return; }
           setTimeout(loopChunk, 0);
         }
