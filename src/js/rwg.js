@@ -552,13 +552,83 @@ function hashStringToInt(str) {
     const rng = mulberry32(s);
     const star = opts.star ?? generateStar(s ^ 0x1234);
     const index = opts.index ?? 0;
-    const aAU = opts.aAU ?? sampleOrbitAU(rng, index);
-    const isMoon = opts.isMoon ?? (aAU > 3 && rng() < 0.35);
-    const forcedType = opts.archetype || opts.type;
+
+    // --- Resolve orbit preset and semimajor axis ---
+    let aAU = opts.aAU;
+    let usedPreset = opts.orbitPreset;
+    if (aAU === undefined) {
+      if (!usedPreset || usedPreset === 'auto') {
+        const rngOrbit = mulberry32(s ^ 0xF00D);
+        let candidates = Array.isArray(opts.availableOrbits)
+          ? opts.availableOrbits.slice()
+          : ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
+        if (Array.isArray(opts.lockedOrbits)) {
+          candidates = candidates.filter(o => !opts.lockedOrbits.includes(o));
+        }
+        candidates = candidates.filter(Boolean);
+        if (candidates.length > 0) {
+          usedPreset = candidates[Math.floor(rngOrbit() * candidates.length)];
+        }
+      }
+      if (usedPreset && usedPreset !== 'auto') {
+        const hz = star.habitableZone;
+        const range = hz.outer - hz.inner;
+        if (usedPreset === 'hz-inner') {
+          aAU = hz.inner + rng() * range / 3;
+        } else if (usedPreset === 'hz-mid') {
+          aAU = hz.inner + range / 3 + rng() * range / 3;
+        } else if (usedPreset === 'hz-outer') {
+          aAU = hz.outer - rng() * range / 3;
+        } else {
+          const SOLAR_FLUX_1AU = 1361;
+          const lum = star.luminositySolar || 1;
+          const mapping = {
+            hot: () => {
+              const flux = 1500 + rng() * 1000;
+              return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+            },
+            cold: () => {
+              const flux = 100 + rng() * 400;
+              return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+            }
+          };
+          const fn = mapping[usedPreset];
+          if (typeof fn === 'function') aAU = fn();
+        }
+      }
+    }
+    if (aAU === undefined) aAU = sampleOrbitAU(rng, index);
+
+    // --- Resolve target (moon vs planet) ---
+    let isMoon = opts.isMoon;
+    const tgt = opts.target;
+    if (typeof isMoon !== 'boolean') {
+      if (tgt === 'moon') isMoon = true;
+      else if (tgt === 'planet') isMoon = false;
+      else isMoon = (aAU > 3 && rng() < 0.35);
+    }
+
+    // --- Resolve type/archetype ---
+    let forcedType = opts.archetype || opts.type;
+    if (!forcedType || forcedType === 'auto') {
+      const rngType = mulberry32(s ^ 0xC0FFEE);
+      let candidates = isMoon
+        ? ['icy-moon', 'titan-like']
+        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
+      if (Array.isArray(opts.availableTypes)) {
+        candidates = candidates.filter(c => opts.availableTypes.includes(c));
+      }
+      if (candidates.length === 0) candidates = isMoon ? ['icy-moon'] : ['mars-like'];
+      forcedType = candidates[Math.floor(rngType() * candidates.length)];
+    }
+
     const override = buildPlanetOverride({ seed: s ^ 0xBEEF, star, aAU, isMoon, forcedType });
     return {
       star,
       orbitAU: aAU,
+      orbitPreset: usedPreset,
+      isMoon,
+      archetype: forcedType,
       override,
       merged: deepMerge(defaultPlanetParameters, override) // ready to play
     };

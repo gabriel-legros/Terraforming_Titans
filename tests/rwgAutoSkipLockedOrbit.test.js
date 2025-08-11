@@ -18,23 +18,17 @@ describe('RWG Auto mode skips locked hot orbit', () => {
       function formatNumber(n){ return n; }
       function estimateFlux(){ return 1000; }
       function estimateGasPressure(){ return undefined; }
-      function generateRandomPlanet(seed, opts){
-        return {
-          star: opts.star,
-          orbitAU: opts.aAU,
-          override: { classification: { archetype: 'test' } },
-          merged: { name: 'Test', celestialParameters: { radius: 1, gravity: 1, albedo: 0.3, rotationPeriod: 24 }, resources: { atmospheric: {}, surface: {}, underground: {}, colony: {}, special: {} } }
-        };
-      }
       ${rwgCode}
+      const realGen = generateRandomPlanet;
+      generateRandomPlanet = function(seed, opts){ const r = realGen(seed, opts); globalThis.lastResult = r; return r; };
       ${rwgUICode}
       initializeRandomWorldUI();
     `, ctx);
     dom.window.document.getElementById('rwg-seed').value = '123';
     dom.window.document.getElementById('rwg-generate-planet').click();
-    const orbit = dom.window.document.getElementById('rwg-orbit').value;
-    expect(orbit).not.toBe('auto');
-    expect(orbit).not.toBe('hot');
-    expect(['hz-inner','hz-mid','hz-outer','cold']).toContain(orbit);
+    const orbitSel = dom.window.document.getElementById('rwg-orbit').value;
+    expect(orbitSel).toBe('auto');
+    expect(ctx.lastResult.orbitPreset).not.toBe('hot');
+    expect(['hz-inner','hz-mid','hz-outer','cold']).toContain(ctx.lastResult.orbitPreset);
   });
 });
