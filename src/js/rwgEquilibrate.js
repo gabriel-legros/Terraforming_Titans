@@ -176,7 +176,7 @@
     const checkEvery = options.checkEvery ?? 10;
     const absTol = options.absTol ?? 1e6; // tons
     const relTol = options.relTol ?? 1e-6; // relative
-    const chunkSteps = options.chunkSteps ?? 20;
+    const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
     const timeoutMs = options.timeoutMs ?? 30000;
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
