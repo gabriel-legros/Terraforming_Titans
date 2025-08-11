@@ -418,3 +418,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Habitable zone orbit presets in the Random World Generator now vary distance to provide differing solar flux.
 - Hot and cold orbit presets in the Random World Generator now ensure solar flux above 1.5 kW/m² and below 500 W/m² respectively with randomized variability.
 - Hot orbit option in the Random World Generator is now locked, and Auto selects a random unlocked orbit preset.
+- Random World Generator UI now respects the global Celsius setting for temperature displays.

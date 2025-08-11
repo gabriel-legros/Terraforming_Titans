@@ -287,6 +287,8 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
   const star = res.star;
+  const toDisplayTemp = typeof toDisplayTemperature === 'function' ? toDisplayTemperature : (v => v);
+  const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
     <div class="rwg-card">
       <h3>Star: ${star.name}</h3>
@@ -294,7 +296,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Spectral</div><div class="value">${star.spectralType}</div></div>
         <div class="rwg-chip"><div class="label">Luminosity</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
         <div class="rwg-chip"><div class="label">Mass</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
-        <div class="rwg-chip"><div class="label">Temp</div><div class="value">${fmt(star.temperatureK)} K</div></div>
+        <div class="rwg-chip"><div class="label">Temp</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
         <div class="rwg-chip"><div class="label">Habitable Zone</div><div class="value">${star.habitableZone.inner.toFixed(2)}–${star.habitableZone.outer.toFixed(2)} AU</div></div>
       </div>
     </div>`;
@@ -334,10 +336,10 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Rotation</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
         <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
         <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? forcedType : (cls?.archetype || '—')}</div></div>
-        <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(teqDisplay) + ' K' : '—'}</div></div>
-        ${temps ? `<div class="rwg-chip"><div class="label">Mean T</div><div class="value">${fmt(temps.mean.toFixed ? temps.mean.toFixed(0) : temps.mean)} K</div></div>` : ''}
-        ${temps ? `<div class="rwg-chip"><div class="label">Day T</div><div class="value">${fmt(temps.day.toFixed ? temps.day.toFixed(0) : temps.day)} K</div></div>` : ''}
-        ${temps ? `<div class="rwg-chip"><div class="label">Night T</div><div class="value">${fmt(temps.night.toFixed ? temps.night.toFixed(0) : temps.night)} K</div></div>` : ''}
+        <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(toDisplayTemp(teqDisplay)) + ' ' + tempUnit : '—'}</div></div>
+        ${temps ? `<div class="rwg-chip"><div class="label">Mean T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}</div></div>` : ''}
+        ${temps ? `<div class="rwg-chip"><div class="label">Day T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.day)))} ${tempUnit}</div></div>` : ''}
+        ${temps ? `<div class="rwg-chip"><div class="label">Night T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}</div></div>` : ''}
       </div>
       <div class="rwg-columns" style="margin-top:10px;">
         <div>
