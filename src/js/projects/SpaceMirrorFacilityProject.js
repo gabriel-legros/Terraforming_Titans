@@ -196,6 +196,11 @@ function updateZonalFluxTable() {
 
 function applyFocusedMelt(terraforming, resources, durationSeconds) {
   let focusMeltAmount = 0;
+  const zonesList = ['tropical', 'temperate', 'polar'];
+  terraforming.focusedWaterProtection = terraforming.focusedWaterProtection || {};
+  zonesList.forEach(z => {
+    terraforming.focusedWaterProtection[z] = { full: 0, partial: 0 };
+  });
   if (typeof projectManager !== 'undefined' &&
       ((projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
        (projectManager.projects &&
@@ -228,6 +233,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         if (totalSurfaceIce > 0) {
           const desiredMelt = Math.min(meltTons, totalSurfaceIce);
           let remaining = desiredMelt;
+          const meltByZone = {};
           zonesData.sort((a, b) => b.temp - a.temp);
           for (const z of zonesData) {
             if (remaining <= 0) break;
@@ -236,6 +242,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
               terraforming.zonalWater[z.zone].ice -= meltHere;
               terraforming.zonalWater[z.zone].liquid += meltHere;
               remaining -= meltHere;
+              meltByZone[z.zone] = (meltByZone[z.zone] || 0) + meltHere;
             }
           }
           const actualMelt = desiredMelt - remaining;
@@ -243,6 +250,11 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
             focusMeltAmount = actualMelt;
             if (resources.surface?.ice) resources.surface.ice.value -= actualMelt;
             if (resources.surface?.liquidWater) resources.surface.liquidWater.value += actualMelt;
+            for (const zone of Object.keys(meltByZone)) {
+              const rate = meltByZone[zone] / durationSeconds;
+              const protect = 50 * rate;
+              terraforming.focusedWaterProtection[zone] = { full: protect, partial: protect };
+            }
           }
         }
       }
