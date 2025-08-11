@@ -427,3 +427,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator UI now reads day/night/mean temperatures directly from the physics model instead of estimating them separately.
 - Solar luminosity for Random World Generator worlds now persists through saves and reloads.
 - Random World Generator equilibration window now displays refinement counts and simulated time.
+- Innovation Initiative now boosts android research output.
