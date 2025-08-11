@@ -419,3 +419,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Hot and cold orbit presets in the Random World Generator now ensure solar flux above 1.5 kW/m² and below 500 W/m² respectively with randomized variability.
 - Hot orbit option in the Random World Generator is now locked, and Auto selects a random unlocked orbit preset.
 - Random World Generator UI now respects the global Celsius setting for temperature displays.
+- Random World Generator is now handled by a manager extending EffectableEntity and tracks locked options internally.
