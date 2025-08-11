@@ -430,3 +430,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Innovation Initiative now boosts android research output.
 - Alien artifact resource values now persist across planet travel, mirroring advanced research.
 - Resource tooltip time line now reserves space with a blank line when no time to full or empty is shown, preventing flicker.
+- Radiation penalty values below 0.01% are hidden from the UI.
