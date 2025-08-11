@@ -420,3 +420,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Hot orbit option in the Random World Generator is now locked, and Auto selects a random unlocked orbit preset.
 - Random World Generator UI now respects the global Celsius setting for temperature displays.
 - Random World Generator is now handled by a manager extending EffectableEntity and tracks locked options internally.
+- Solar flux now accounts for the generating star's luminosity when visiting random worlds.

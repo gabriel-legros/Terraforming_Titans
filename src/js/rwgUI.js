@@ -226,7 +226,8 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           absTol: 1,
           relTol: 1e-6,
           chunkSteps: 20,
-          cancelToken
+          cancelToken,
+          star: res.star
         }, (p, info) => {
           const label = document.getElementById('rwg-progress-label');
           if (label && info?.label) label.textContent = info.label;

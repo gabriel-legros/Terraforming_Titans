@@ -1,4 +1,11 @@
-let solarLuminosity = 3.828e26; // Solar luminosity (W)
+const SOLAR_LUMINOSITY_W = 3.828e26; // Base solar luminosity (W)
+let starLuminosityMultiplier = 1; // Multiplier relative to Sol
+function setStarLuminosity(multiplier) {
+  starLuminosityMultiplier = multiplier || 1;
+}
+function getStarLuminosity() {
+  return starLuminosityMultiplier;
+}
 const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
@@ -1203,8 +1210,9 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateSolarFlux(distanceFromSun){
-      return solarLuminosity / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
-    }    
+      const lum = SOLAR_LUMINOSITY_W * starLuminosityMultiplier;
+      return lum / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
+    }
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){
       const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
@@ -1643,5 +1651,10 @@ synchronizeGlobalResources() {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = Terraforming;
+  module.exports.setStarLuminosity = setStarLuminosity;
+  module.exports.getStarLuminosity = getStarLuminosity;
+} else {
+  globalThis.setStarLuminosity = setStarLuminosity;
+  globalThis.getStarLuminosity = getStarLuminosity;
 }
 
