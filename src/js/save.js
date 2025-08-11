@@ -54,10 +54,21 @@ function loadGame(slotOrCustomString) {
       const savedSpace = gameState.spaceManager || gameState.spaceState;
       if (savedSpace) {
         spaceManager.loadState(savedSpace);
-        const key = spaceManager.getCurrentPlanetKey();
-        if (planetParameters[key]) {
-          defaultPlanet = key; // keep global consistent
-          currentPlanetParameters = planetParameters[key];
+        const worldOriginal = typeof spaceManager.getCurrentWorldOriginal === 'function'
+          ? spaceManager.getCurrentWorldOriginal() : null;
+        if (spaceManager.getCurrentRandomSeed && spaceManager.getCurrentRandomSeed() !== null) {
+          if (worldOriginal) {
+            currentPlanetParameters = worldOriginal.merged;
+          }
+        } else {
+          const key = spaceManager.getCurrentPlanetKey();
+          if (planetParameters[key]) {
+            defaultPlanet = key; // keep global consistent
+            currentPlanetParameters = planetParameters[key];
+          }
+        }
+        if (typeof setStarLuminosity === 'function') {
+          setStarLuminosity(worldOriginal?.star?.luminositySolar || 1);
         }
 
         // Clear previously applied story effects so they don't carry over
