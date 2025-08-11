@@ -616,8 +616,12 @@ function updateLifeBox() {
       <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
         <p>Orbital radiation: <span id="orbital-radiation">${formatNumber(orbRad, false, 2)}</span> mSv/day</p>
         <p>Surface radiation: <span id="surface-radiation">${formatNumber(rad, false, 2)}</span> mSv/day</p>
-        <p>Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
+        <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
       `;
+    if ((radPenalty || 0) < 0.0001) {
+      const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
+      if (penaltyRow) penaltyRow.style.display = 'none';
+    }
     const magnetosphereHeading = magnetosphereBox.querySelector('h3');
     if (magnetosphereHeading) {
       magnetosphereHeading.appendChild(magInfo);
@@ -648,7 +652,14 @@ function updateLifeBox() {
         surfaceRadiation.textContent = formatNumber(terraforming.surfaceRadiation || 0, false, 2);
       }
       if (surfaceRadiationPenalty) {
-        surfaceRadiationPenalty.textContent = formatNumber((terraforming.radiationPenalty || 0) * 100, false, 0);
+        const penaltyRow = surfaceRadiationPenalty.parentElement;
+        const penaltyValue = terraforming.radiationPenalty || 0;
+        if (penaltyValue < 0.0001) {
+          penaltyRow.style.display = 'none';
+        } else {
+          penaltyRow.style.display = '';
+          surfaceRadiationPenalty.textContent = formatNumber(penaltyValue * 100, false, 0);
+        }
       }
 
     if(terraforming.getMagnetosphereStatus()){

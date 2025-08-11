@@ -204,6 +204,9 @@ class LifeDesign {
             const mitigation = this.getRadiationMitigationRatio();
             finalPenalty = basePenalty * (1 - mitigation);
         }
+        if (finalPenalty < 0.0001) {
+            finalPenalty = 0;
+        }
 
         const pass = finalPenalty === 0;
         const reason = pass ? null : "High radiation";
