@@ -316,9 +316,8 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const c = res.merged?.celestialParameters || {};
   const r = res.merged?.resources || {};
   const cls = res.override?.classification || res.merged?.classification;
-  const atmo = r.atmospheric || {};
   const surf = r.surface || {};
-  const temps = estimateWorldTemperatures(res);
+  const temps = res.merged?.celestialParameters?.temperature || null;
   const fluxWm2 = estimateFlux(res);
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
@@ -396,52 +395,6 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     </div>`;
 
   return `${starPanel}${parent}${worldPanel}`;
-}
-
-function estimateWorldTemperatures(res) {
-  try {
-    if (typeof dayNightTemperaturesModel !== 'function' || typeof calculateAtmosphericPressure !== 'function') {
-      return null;
-    }
-    const c = res.merged?.celestialParameters || {};
-    const atmo = res.merged?.resources?.atmospheric || {};
-    const star = res.star;
-    const Lsun = 3.828e26; // W
-    const AU = 149597870700; // m
-    const distanceAU = res.orbitAU ?? c.distanceFromSun;
-    if (!star || !distanceAU || !c.radius || !c.gravity) return null;
-    const flux = (Lsun * (star.luminositySolar || 1)) / (4 * Math.PI * Math.pow(distanceAU * AU, 2));
-
-    const mCO2 = (atmo.carbonDioxide?.initialValue || 0) * 1000; // kg
-    const mH2O = (atmo.atmosphericWater?.initialValue || 0) * 1000; // kg
-    const mCH4 = (atmo.atmosphericMethane?.initialValue || 0) * 1000; // kg
-    const mGHG = (atmo.greenhouseGas?.initialValue || 0) * 1000; // kg
-    const totalKg = mCO2 + mH2O + mCH4 + mGHG + ((atmo.inertGas?.initialValue || 0) * 1000);
-    const totalTonsForPressure = totalKg / 1000; // physics expects tons
-    const pPa = calculateAtmosphericPressure(totalTonsForPressure, c.gravity, c.radius);
-    const pBar = pPa / 1e5;
-    const mixDen = (mCO2 + mH2O + mCH4 + mGHG) || 1;
-    const composition = {
-      co2: mCO2 / mixDen,
-      h2o: mH2O / mixDen,
-      ch4: mCH4 / mixDen,
-      greenhouseGas: mGHG / mixDen
-    };
-    const rotationH = c.rotationPeriod || 24;
-    const albedo = c.albedo ?? 0.25;
-    const temps = dayNightTemperaturesModel({
-      groundAlbedo: albedo,
-      flux,
-      rotationPeriodH: rotationH,
-      surfacePressureBar: pBar,
-      composition,
-      gSurface: c.gravity
-    });
-    return temps;
-  } catch (e) {
-    console.warn('RWG temperature estimate failed', e);
-    return null;
-  }
 }
 
 function estimateFlux(res) {
