@@ -439,7 +439,6 @@ class SpaceshipProject extends Project {
     this.pendingResourceGains.forEach(({ category, resource, quantity }) => {
       if (resources[category] && resources[category][resource]) {
         resources[category][resource].increase(quantity);
-        console.log(`Gained ${quantity} ${resource} in category ${category} from spaceship assignments.`);
       }
     });
     this.pendingResourceGains = [];

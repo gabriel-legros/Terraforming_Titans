@@ -118,7 +118,7 @@ class Terraforming extends EffectableEntity{
 
     this.initialValuesCalculated = false;
     this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
-    this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
+    this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER || EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
     this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default, will be calculated
 
       this.completed = false;
@@ -345,11 +345,7 @@ class Terraforming extends EffectableEntity{
           this.zonalWater[zone].buriedIce = zoneIce * buriedFraction;
 
           // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
-          if (zone === 'polar') {
-              this.zonalSurface[zone].dryIce = initialDryIce;
-          } else {
-              this.zonalSurface[zone].dryIce = 0;
-          }
+          this.zonalSurface[zone].dryIce = (zone === 'polar') ? initialDryIce : 0;
   
           const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
           const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
@@ -429,6 +425,29 @@ class Terraforming extends EffectableEntity{
     updateResources(deltaTime) {
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         if (durationSeconds <= 0) return;
+
+        const logState = (label) => {
+            console.log(`--- TERRAFORMING LOG: ${label} (dt=${durationSeconds.toFixed(3)}s) ---`);
+            const state = {
+                time: deltaTime,
+                zonalWater: this.zonalWater,
+                zonalSurface: this.zonalSurface,
+                zonalHydrocarbons: this.zonalHydrocarbons,
+                atmospheric: {
+                    water: this.resources.atmospheric.atmosphericWater.value,
+                    co2: this.resources.atmospheric.carbonDioxide.value,
+                    methane: this.resources.atmospheric.atmosphericMethane.value,
+                },
+                temperatures: {
+                    tropical: this.temperature.zones.tropical.value,
+                    temperate: this.temperature.zones.temperate.value,
+                    polar: this.temperature.zones.polar.value,
+                }
+            };
+            console.log(`RWG_LOG ${label} | ${JSON.stringify(state)}`);
+        };
+
+        logState('Start of updateResources');
 
         const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
@@ -676,6 +695,8 @@ class Terraforming extends EffectableEntity{
             totalMethaneSublimationAmount += rapidMethaneAmount;
         }
 
+        console.log(`RWG_LOG Mid-point | ${JSON.stringify(zonalChanges)}`);
+
         // Include melt from zonal water flow
         totalMeltAmount += this.flowMeltAmount || 0;
         totalMethaneMeltAmount += this.flowMethaneMeltAmount || 0;
@@ -753,12 +774,12 @@ class Terraforming extends EffectableEntity{
                 // Calculate actual surface gain
                 const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation * co2LossScale;
                 zonalChanges[zone].dryIce += actualCO2Condensation; // Add actual dry ice gain
-                // Accumulate actual total for UI
+                totalCo2CondensationAmount += actualCO2Condensation;
             } else {
                  // If it was a net gain zone, add potential condensation anyway
                  const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation; // Not scaled
                  zonalChanges[zone].dryIce += actualCO2Condensation;
-                 // Accumulate actual total for UI
+                 totalCo2CondensationAmount += actualCO2Condensation;
             }
 
             // Adjust Methane Loss/Gain
@@ -938,6 +959,8 @@ class Terraforming extends EffectableEntity{
         // reset stored melt from flow for next tick
         this.flowMeltAmount = 0;
         this.flowMethaneMeltAmount = 0;
+
+        logState('End of updateResources');
     }
 
     // Function to update luminosity properties

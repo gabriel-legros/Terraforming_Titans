@@ -185,7 +185,7 @@
     let stepDays = options.stepDays ?? 10;
     const checkEvery = options.checkEvery ?? 5;
     let absTol = options.absTol ?? 0.01; // tons
-    let relTol = options.relTol ?? 1e-6; // relative
+    let relTol = options.relTol ?? 1e-5; // relative
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
@@ -224,13 +224,18 @@
         let stableCount = 0;
         let prevSnap = snapshotMetrics(terra);
         let refinementCount = 0;
+        let lastUnstableCheckTime = 0;
 
         let stepMs = 1000 * stepDays; // 1 day per 1000 ms
         let timedOut = false;
-        const timeoutHandle = setTimeout(() => { timedOut = true; }, timeoutMs);
+        let timeoutHandle = setTimeout(() => { timedOut = true; }, timeoutMs);
         const startTime = Date.now();
 
         function finalize(ok) {
+          terra._updateZonalCoverageCache();
+          terra.updateLuminosity();
+          terra.updateSurfaceTemperature();
+          terra.synchronizeGlobalResources();
           clearTimeout(timeoutHandle);
           if (typeof setStarLuminosity === 'function') {
             setStarLuminosity(prevLum);
@@ -248,9 +253,6 @@
           }
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
-          if (typeof terra.synchronizeGlobalResources === 'function') {
-            terra.synchronizeGlobalResources();
-          }
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
@@ -266,12 +268,11 @@
             additionalRunMs += extra;
             timeoutMs += extra;
             cancelToken.addTime = 0; // Consume it
-          }
-          if (cancelToken && cancelToken.addTime) {
-            const extra = cancelToken.addTime;
-            additionalRunMs += extra;
-            timeoutMs += extra;
-            cancelToken.addTime = 0; // Consume it
+            clearTimeout(timeoutHandle); // Clear the old timeout
+            const remainingTime = timeoutMs - (Date.now() - startTime);
+            if (remainingTime > 0) {
+              timeoutHandle = setTimeout(() => { timedOut = true; }, remainingTime); // Set a new one
+            }
           }
           const end = stepIdx + chunkSteps;
           for (; stepIdx < end; stepIdx++) {
@@ -296,9 +297,10 @@
             if ((stepIdx + 1) % checkEvery === 0) {
               const snap = snapshotMetrics(terra);
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
-              stableCount = small ? (stableCount + 1) : 0;
-              prevSnap = snap;
               const elapsedNow = Date.now() - startTime;
+              stableCount = small ? (stableCount + 1) : 0;
+              if (small) lastUnstableCheckTime = elapsedNow;
+              prevSnap = snap;
               if (onProgress) {
                 const inMinRun = elapsedNow < minRunMs;
                 let progress = 0;
@@ -325,6 +327,13 @@
                   finalize(true);
                   return;
                 }
+              } else if (elapsedNow - lastUnstableCheckTime > 10000 && stableCount < 5 && elapsedNow > minRunMs) {
+                // Alternative refinement: If it's been 10s since the last unstable check
+                // and we're still not stable, reduce the time step.
+                stepDays /= 2;
+                stepMs = 1000 * stepDays;
+                lastUnstableCheckTime = elapsedNow; // Reset the timer
+                console.log(`RWG_LOG: Unstable for 10s. Reducing stepDays to ${stepDays}`);
               }
             }
           }

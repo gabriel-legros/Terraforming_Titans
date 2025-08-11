@@ -111,7 +111,6 @@ class ScannerProject extends Project {
   startScan(depositType) {
     const scanData = this.scanData[depositType];
     if (!scanData) {
-      console.log(`Invalid deposit type: ${depositType}`);
       return;
     }
 
@@ -122,10 +121,6 @@ class ScannerProject extends Project {
       );
       scanData.currentScanProgress = 0;
     }
-
-    console.log(
-      `Scan started for ${depositType} with strength ${scanData.currentScanningStrength}, expected time: ${scanData.remainingTime}`
-    );
   }
 
   updateScan(deltaTime) {
@@ -135,7 +130,6 @@ class ScannerProject extends Project {
         scanData.D_current = resources.underground[depositType].value;
       }
       if (!scanData) {
-        console.log(`Invalid deposit type: ${depositType}`);
         continue;
       }
       if (scanData.D_current >= scanData.D_max) {
@@ -152,16 +146,10 @@ class ScannerProject extends Project {
         scanData.D_current++;
         resources.underground[depositType].addDeposit();
 
-        console.log(
-          `Deposit found! Total ${depositType} deposits found: ${scanData.D_current}/${scanData.D_max}`
-        );
 
         if (scanData.D_current < scanData.D_max) {
           this.startScan(depositType);
         } else {
-          console.log(
-            `All ${depositType} deposits have been found. No further scans will be started.`
-          );
           scanData.remainingTime = 0;
         }
       }
@@ -209,16 +197,12 @@ class ScannerProject extends Project {
   adjustScanningStrength(depositType, newScanningStrength) {
     const scanData = this.scanData[depositType];
     if (!scanData) {
-      console.log(`Invalid deposit type: ${depositType}`);
       return;
     }
 
     scanData.currentScanningStrength = newScanningStrength;
 
     if (scanData.remainingTime <= 0) {
-      console.log(
-        `No active scan for ${depositType} to adjust. Scanning strength set to ${scanData.currentScanningStrength}.`
-      );
       return;
     }
 
@@ -228,9 +212,6 @@ class ScannerProject extends Project {
     );
 
     scanData.remainingTime = newExpectedTime;
-    console.log(
-      `Scanning strength for ${depositType} adjusted to ${newScanningStrength}. New remaining time: ${scanData.remainingTime}`
-    );
   }
 
   getCurrentDepositCount(depositType) {

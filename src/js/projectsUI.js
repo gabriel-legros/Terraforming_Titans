@@ -643,12 +643,10 @@ function updateProjectUI(projectName) {
 function startProjectWithSelectedResources(project) {
   if (project.isPaused) {
     if (!project.resume()) {
-      console.log(`Failed to resume project: ${project.name}`);
     }
   } else if (project.canStart()) {
     projectManager.startProject(project.name);
   } else {
-    console.log(`Failed to start project: ${project.name}`);
   }
 }
 

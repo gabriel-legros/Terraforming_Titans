@@ -227,10 +227,8 @@ class Project extends EffectableEntity {
       this.isPaused = false;
   
   
-      console.log(`Project ${this.name} started.`);
       return true;
     } else {
-      console.log(`Not enough resources to start ${this.name}.`);
       return false;
     }
   }
@@ -239,7 +237,6 @@ class Project extends EffectableEntity {
     if (this.isPaused && !this.isCompleted && this.hasSustainResources()) {
       this.isActive = true;
       this.isPaused = false;
-      console.log(`Project ${this.name} resumed.`);
       return true;
     }
     return false;
@@ -266,12 +263,10 @@ class Project extends EffectableEntity {
   complete() {
     this.isCompleted = true;
     this.isActive = false;
-    console.log(`Project ${this.name} completed! Production effect initiated.`);
 
     if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
       this.repeatCount++;
       this.resetProject();
-      console.log(`Project ${this.name} is repeatable and will restart. Repeat count: ${this.repeatCount}`);
     }
 
     if (this.attributes && this.attributes.resourceGain) {
@@ -303,7 +298,6 @@ class Project extends EffectableEntity {
       for (const resource in effectiveResourceGain[resourceCategory]) {
         const amount = effectiveResourceGain[resourceCategory][resource];
         resources[resourceCategory][resource].increase(amount);
-        console.log(`Increased ${resource} by ${amount} in category ${resourceCategory}`);
       }
     }
   }
@@ -465,7 +459,6 @@ class ProjectManager extends EffectableEntity {
   // New method to activate automation
   activateSpecialProjectsAutomation() {
     this.automateSpecialProjects = true;
-    console.log("Special projects automation activated.");
   }
 
   initializeProjects(projectParameters) {
@@ -502,10 +495,8 @@ class ProjectManager extends EffectableEntity {
   startProject(projectName) {
     const project = this.projects[projectName];
     if (project && project.start(resources)) {
-      console.log(`Started project: ${projectName}`);
       updateProjectUI(projectName);
     } else {
-      console.log(`Failed to start project: ${projectName}`);
     }
   }
 
