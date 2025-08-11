@@ -23,6 +23,8 @@ describe('rwgUI temperature display', () => {
 
     const sm = new SpaceManager(planetParameters);
     const res = sm.getCurrentWorldOriginal();
+    res.override = res.override || {};
+    res.override.finalTemps = global.dayNightTemperaturesModel({});
     const html = renderWorldDetail(res);
     const dom = new JSDOM(html);
     const chips = Array.from(dom.window.document.querySelectorAll('.rwg-chip'));

@@ -56,7 +56,10 @@ describe('Random World Generator equilibrate updates temperatures', () => {
         },
         classification: { archetype: 'mars-like', TeqK: 100 }
       },
-      override: { resources: { atmospheric: {} } }
+      override: {
+        resources: { atmospheric: {} },
+        finalTemps: { mean: 250, day: 260, night: 240 }
+      }
     };
     const box = document.getElementById('rwg-result');
     box.innerHTML = renderWorldDetail(res, 'seed', 'mars-like');

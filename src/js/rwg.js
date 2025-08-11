@@ -658,6 +658,7 @@ function hashStringToInt(str) {
       // Initial zonal guesses to seed terraforming models
       ...zonal,
       zonalCoverageCache,
+      finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
       fundingRate: Math.round(randRange(rng, 5, 15)), // tweak to taste
       buildingParameters: { maintenanceFraction: 0.001 },
       populationParameters: { workerRatio: 0.5 },
