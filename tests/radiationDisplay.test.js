@@ -57,11 +57,11 @@ describe('radiation display', () => {
 
     const orbitalEl = dom.window.document.getElementById('orbital-radiation');
     expect(orbitalEl).not.toBeNull();
-    expect(orbitalEl.textContent).toBe(numbers.formatNumber(2.3456, false, 2));
+    expect(orbitalEl.textContent).toBe('2.35');
 
     const radEl = dom.window.document.getElementById('surface-radiation');
     expect(radEl).not.toBeNull();
-    expect(radEl.textContent).toBe(numbers.formatNumber(1.2345, false, 2));
+    expect(radEl.textContent).toBe('1.23');
 
     const penEl = dom.window.document.getElementById('surface-radiation-penalty');
     expect(penEl).not.toBeNull();
@@ -93,8 +93,8 @@ describe('radiation display', () => {
       luminosity: { name: 'Lum', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0 },
       life: { name: 'Life', target: 0.5 },
       magnetosphere: { name: 'Mag' },
-      surfaceRadiation: 0.1,
-      orbitalRadiation: 0.2,
+      surfaceRadiation: 0.005,
+      orbitalRadiation: 0.009,
       radiationPenalty: 0.00005,
       celestialParameters: { albedo: 0, gravity: 1, radius: 1, surfaceArea: 1 },
       calculateSolarPanelMultiplier: () => 1,
@@ -121,5 +121,10 @@ describe('radiation display', () => {
     const penEl = dom.window.document.getElementById('surface-radiation-penalty');
     expect(penEl).not.toBeNull();
     expect(penEl.parentElement.style.display).toBe('none');
+
+    const orbEl = dom.window.document.getElementById('orbital-radiation');
+    const radEl = dom.window.document.getElementById('surface-radiation');
+    expect(orbEl.textContent).toBe('0');
+    expect(radEl.textContent).toBe('0');
   });
 });

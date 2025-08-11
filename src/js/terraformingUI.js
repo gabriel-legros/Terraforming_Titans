@@ -100,11 +100,11 @@ function updateTerraformingUI() {
     updateCompleteTerraformingButton();
   }
 
-function updatePlayTimeDisplay() {
+  function updatePlayTimeDisplay() {
     const el = document.getElementById('play-time-display');
     if (!el) return;
     el.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
-}
+  }
 
 // Functions to create and update each terraforming aspect box
 
@@ -592,7 +592,11 @@ function updateLifeBox() {
     const photoPolar = document.getElementById('life-photo-polar');
     if (photoPolar) photoPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
   }
-  
+
+  function formatRadiation(value){
+    return value < 0.01 ? '0' : value.toFixed(2);
+  }
+
   // Function to create the magnetosphere box, with conditional text based on boolean flag
   function createMagnetosphereBox(row) {
     const magnetosphereBox = document.createElement('div');
@@ -614,8 +618,8 @@ function updateLifeBox() {
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
       <p>Magnetosphere: <span id="magnetosphere-status">${magnetosphereStatusText}</span></p>
-        <p>Orbital radiation: <span id="orbital-radiation">${formatNumber(orbRad, false, 2)}</span> mSv/day</p>
-        <p>Surface radiation: <span id="surface-radiation">${formatNumber(rad, false, 2)}</span> mSv/day</p>
+        <p>Orbital radiation: <span id="orbital-radiation">${formatRadiation(orbRad)}</span> mSv/day</p>
+        <p>Surface radiation: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
         <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
       `;
     if ((radPenalty || 0) < 0.0001) {
@@ -646,10 +650,10 @@ function updateLifeBox() {
     magnetosphereStatus.textContent = magnetosphereStatusText;
 
       if (orbitalRadiation) {
-        orbitalRadiation.textContent = formatNumber(terraforming.orbitalRadiation || 0, false, 2);
+        orbitalRadiation.textContent = formatRadiation(terraforming.orbitalRadiation || 0);
       }
       if (surfaceRadiation) {
-        surfaceRadiation.textContent = formatNumber(terraforming.surfaceRadiation || 0, false, 2);
+        surfaceRadiation.textContent = formatRadiation(terraforming.surfaceRadiation || 0);
       }
       if (surfaceRadiationPenalty) {
         const penaltyRow = surfaceRadiationPenalty.parentElement;
