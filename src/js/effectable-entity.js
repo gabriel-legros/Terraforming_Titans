@@ -351,6 +351,15 @@ class EffectableEntity {
           });
         }
       }
+      if (globalThis.androidResearch && typeof globalThis.androidResearch.addAndReplace === 'function') {
+        const effectId = `${effect.effectId}-androidResearch`;
+        globalThis.androidResearch.addAndReplace({
+          type: 'productionMultiplier',
+          value: multiplier,
+          effectId,
+          sourceId: effect.sourceId
+        });
+      }
     }
 
     applyGlobalMaintenanceReduction(effect) {

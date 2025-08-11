@@ -243,9 +243,6 @@ class SolisManager extends EffectableEntity {
       const res = resources && resources.colony && resources.colony[key];
       if (upgrade && upgrade.purchases > 0 && res && typeof res.increase === 'function') {
         const amount = RESOURCE_UPGRADE_AMOUNTS[key] * upgrade.purchases;
-        if (!globalGameIsLoadingFromSave) {
-          res.increase(amount);
-        }
         if (typeof addEffect === 'function' && res.hasCap) {
           addEffect({
             target: 'resource',
@@ -256,6 +253,9 @@ class SolisManager extends EffectableEntity {
             effectId: `solisStorage-${key}`,
             sourceId: 'solisShop'
           });
+        }
+        if (!globalGameIsLoadingFromSave) {
+          res.increase(amount);
         }
       }
     }

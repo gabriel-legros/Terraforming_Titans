@@ -28,7 +28,9 @@ describe('Solis resource upgrades', () => {
         .reduce((s, e) => s + e.value, 0);
       this.cap = this.baseCap + bonus;
     }
-    increase(v) { this.value += v; }
+    increase(v) {
+      this.value = Math.min(this.value + v, this.cap);
+    }
   }
 
   function makeResource() {
@@ -67,13 +69,16 @@ describe('Solis resource upgrades', () => {
     global.globalGameIsLoadingFromSave = false;
     const manager = new SolisManager();
     for (const k of Object.keys(amounts)) {
-      manager.shopUpgrades[k].purchases = k === 'metal' ? 2 : 1;
+      manager.shopUpgrades[k].purchases =
+        k === 'metal' ? 2 : k === 'water' ? 5 : 1;
     }
     manager.reapplyEffects();
     expect(cols.metal.value).toBe(2 * amounts.metal);
     expect(cols.metal.cap).toBe(2 * amounts.metal);
+    expect(cols.water.value).toBe(5 * amounts.water);
+    expect(cols.water.cap).toBe(5 * amounts.water);
     for (const k of Object.keys(amounts)) {
-      if (k !== 'metal') {
+      if (k !== 'metal' && k !== 'water') {
         expect(cols[k].value).toBe(amounts[k]);
         expect(cols[k].cap).toBe(amounts[k]);
       }
