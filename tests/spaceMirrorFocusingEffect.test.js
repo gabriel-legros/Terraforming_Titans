@@ -6,7 +6,7 @@ const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
 global.Project = class {};
 global.projectElements = {};
-const { mirrorOversightSettings } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const { mirrorOversightSettings, applyFocusedMelt } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 mirrorOversightSettings.distribution.focus = 1;
 mirrorOversightSettings.applyToLantern = false;
 
@@ -137,5 +137,55 @@ describe('focused mirror melt', () => {
 
     expect(res.surface.liquidWater.value).toBeCloseTo(0, 5);
     expect(res.surface.ice.value).toBeCloseTo(0, 5);
+  });
+
+  test('focused melt grants freeze immunity', () => {
+    const params = getPlanetParameters('mars');
+    global.currentPlanetParameters = params;
+    const res = createResources();
+    global.resources = res;
+    const terra = new Terraforming(res, params.celestialParameters);
+    terra.calculateInitialValues(params);
+
+    for (const z of ['tropical','temperate','polar']) {
+      terra.zonalWater[z].liquid = 0;
+      terra.zonalWater[z].ice = 0;
+      terra.zonalWater[z].buriedIce = 0;
+      terra.zonalSurface[z] = { dryIce: 0 };
+      terra.temperature.zones[z].value = 250;
+      terra.temperature.zones[z].day = 250;
+      terra.temperature.zones[z].night = 250;
+    }
+    terra.zonalWater.polar.ice = 10;
+    terra.zonalWater.polar.liquid = 20;
+    res.surface.liquidWater.value = 20;
+    res.surface.ice.value = 10;
+
+    terra.temperature.value = 263;
+
+    const deltaT = 273.15 - terra.temperature.value;
+    const energyPerKg = 2100 * deltaT + 334000;
+    const meltRateKgPerSec = 100; // 0.1 tons/sec
+    terra.calculateMirrorEffect = () => ({ interceptedPower: meltRateKgPerSec * energyPerKg, powerPerUnitArea: 0 });
+    terra.calculateLanternFlux = () => 0;
+
+    applyFocusedMelt(terra, res, 1);
+
+    expect(terra.focusedWaterProtection.polar.full).toBeCloseTo(5, 5);
+    expect(terra.focusedWaterProtection.polar.partial).toBeCloseTo(5, 5);
+
+    const freezeAttempt = 100;
+    const totalLiquid = res.surface.liquidWater.value;
+    const protection = terra.focusedWaterProtection.polar;
+    const unprotected = Math.max(0, totalLiquid - protection.full - protection.partial);
+    let freezeFromUnprotected = Math.min(freezeAttempt, unprotected);
+    let remainingFreeze = freezeAttempt - freezeFromUnprotected;
+    const partialFraction = 1 - Math.exp(-freezeAttempt);
+    const partialFreezable = Math.max(0, Math.min(protection.partial, totalLiquid - protection.full));
+    let freezeFromPartial = Math.min(remainingFreeze, partialFraction * partialFreezable);
+    const freezeAmount = freezeFromUnprotected + freezeFromPartial;
+    res.surface.liquidWater.value -= freezeAmount;
+
+    expect(res.surface.liquidWater.value).toBeCloseTo(5.0, 1);
   });
 });
