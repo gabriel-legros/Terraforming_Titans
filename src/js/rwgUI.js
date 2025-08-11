@@ -261,7 +261,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           checkEvery: 5,
           absTol: 1,
           relTol: 1e-6,
-          chunkSteps: 20,
+          chunkSteps: 1000,
           cancelToken,
           star: res.star
         }, (p, info) => {
