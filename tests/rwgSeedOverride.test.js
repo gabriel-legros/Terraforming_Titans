@@ -19,16 +19,9 @@ describe('RWG seed encodes selections and overrides menus', () => {
       function estimateFlux(){ return 1000; }
       function estimateGasPressure(){ return undefined; }
       globalThis.callArgs = [];
-      generateRandomPlanet = function(seed, opts){
-        callArgs.push(opts);
-        return {
-          star: opts.star,
-          orbitAU: opts.aAU,
-          override:{ classification:{ archetype: opts.archetype } },
-          merged:{ name:'Test', celestialParameters:{ radius:1, gravity:1, albedo:0.3, rotationPeriod:24 }, resources:{ atmospheric:{}, surface:{}, underground:{}, colony:{}, special:{} } }
-        };
-      };
       ${rwgCode}
+      const realGen = generateRandomPlanet;
+      generateRandomPlanet = function(seed, opts){ const r = realGen(seed, opts); callArgs.push(r); return r; };
       ${rwgUICode}
       initializeRandomWorldUI();
     `, ctx);
@@ -55,7 +48,7 @@ describe('RWG seed encodes selections and overrides menus', () => {
     const second = ctx.callArgs[1];
     expect(second.isMoon).toBe(first.isMoon);
     expect(second.archetype).toBe(first.archetype);
-    expect(second.aAU).toBeCloseTo(first.aAU, 10);
+    expect(second.orbitAU).toBeCloseTo(first.orbitAU, 10);
     expect(doc.getElementById('rwg-target').value).toBe('moon');
     expect(doc.getElementById('rwg-type').value).toBe('icy-moon');
     expect(doc.getElementById('rwg-orbit').value).toBe('hz-inner');

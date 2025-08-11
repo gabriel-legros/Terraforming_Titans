@@ -18,23 +18,16 @@ describe('RWG Auto mode skips locked types', () => {
       function formatNumber(n){ return n; }
       function estimateFlux(){ return 1000; }
       function estimateGasPressure(){ return undefined; }
-      function generateRandomPlanet(seed, opts){
-        globalThis.lastArchetype = opts.archetype;
-        return {
-          star: opts.star,
-          orbitAU: opts.aAU,
-          override: { classification: { archetype: opts.archetype } },
-          merged: { name: 'Test', celestialParameters: { radius: 1, gravity: 1, albedo: 0.3, rotationPeriod: 24 }, resources: { atmospheric: {}, surface: {}, underground: {}, colony: {}, special: {} } }
-        };
-      }
       ${rwgCode}
+      const realGen = generateRandomPlanet;
+      generateRandomPlanet = function(seed, opts){ const r = realGen(seed, opts); globalThis.lastResult = r; return r; };
       ${rwgUICode}
       initializeRandomWorldUI();
     `, ctx);
     dom.window.document.getElementById('rwg-seed').value = '42';
     dom.window.document.getElementById('rwg-generate-planet').click();
-    expect(ctx.lastArchetype).not.toBe('hot-rocky');
-    expect(ctx.lastArchetype).not.toBe('venus-like');
+    expect(ctx.lastResult.archetype).not.toBe('hot-rocky');
+    expect(ctx.lastResult.archetype).not.toBe('venus-like');
   });
 
   test('High flux does not force locked venus-like', () => {
@@ -50,23 +43,14 @@ describe('RWG Auto mode skips locked types', () => {
       function formatNumber(n){ return n; }
       function estimateFlux(){ return 3000; }
       function estimateGasPressure(){ return undefined; }
-      globalThis.callCount = 0;
-      function generateRandomPlanet(seed, opts){
-        globalThis.callCount++;
-        globalThis.lastArchetype = opts.archetype;
-        return {
-          star: opts.star,
-          orbitAU: opts.aAU,
-          override: { classification: { archetype: opts.archetype } },
-          merged: { name: 'Test', celestialParameters: { radius: 1, gravity: 1, albedo: 0.3, rotationPeriod: 24 }, resources: { atmospheric: {}, surface: {}, underground: {}, colony: {}, special: {} } }
-        };
-      }
       ${rwgCode}
+      const realGen = generateRandomPlanet;
+      generateRandomPlanet = function(seed, opts){ const r = realGen(seed, opts); globalThis.lastResult = r; return r; };
       ${rwgUICode}
       initializeRandomWorldUI();
     `, ctx);
     dom.window.document.getElementById('rwg-seed').value = '99';
     dom.window.document.getElementById('rwg-generate-planet').click();
-    expect(ctx.lastArchetype).not.toBe('venus-like');
+    expect(ctx.lastResult.archetype).not.toBe('venus-like');
   });
 });

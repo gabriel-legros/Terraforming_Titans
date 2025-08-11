@@ -20,15 +20,8 @@ describe('RWG target auto mode', () => {
       function estimateGasPressure(){ return undefined; }
       ${rwgCode}
       globalThis.callArgs = [];
-      generateRandomPlanet = function(seed, opts){
-        globalThis.callArgs.push(opts);
-        return {
-          star: opts.star,
-          orbitAU: opts.aAU,
-          override: { classification: { archetype: opts.archetype } },
-          merged: { name: 'Test', celestialParameters: { radius: 1, gravity: 1, albedo: 0.3, rotationPeriod: 24 }, resources: { atmospheric: {}, surface: {}, underground: {}, colony: {}, special: {} } }
-        };
-      };
+      const realGen = generateRandomPlanet;
+      generateRandomPlanet = function(seed, opts){ const r = realGen(seed, opts); globalThis.callArgs.push(r); return r; };
       ${rwgUICode}
       initializeRandomWorldUI();
     `, ctx);

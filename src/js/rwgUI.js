@@ -115,100 +115,38 @@ function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
   const seedKey = encodeSeedOptions(sStr, options);
-  const star = generateStar(hashStringToInt(sStr) ^ 0x1234);
-  const seedInt = hashStringToInt(sStr);
-  const rng = mulberry32(seedInt);
-  if (options?.orbitPreset === 'auto') {
-    try {
-      const rngOrbit = mulberry32(seedInt ^ 0xF00D);
-      const orbitSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
-      let candidates = ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
-      if (orbitSelect) {
-        const disabled = Array.from(orbitSelect.options)
-          .filter(opt => opt.disabled || opt.value === 'auto')
-          .map(opt => opt.value);
-        candidates = candidates.filter(c => !disabled.includes(c));
-      }
-      if (candidates.length > 0) {
-        const choice = candidates[Math.floor(rngOrbit() * candidates.length)];
-        options.orbitPreset = choice;
-        if (orbitSelect) orbitSelect.value = choice;
-      }
-    } catch (e) {}
-  }
-  // Orbit presets
-  let aAU;
-  if (options?.orbitPreset && options.orbitPreset !== 'auto') {
-    const hz = star.habitableZone;
-    const range = hz.outer - hz.inner;
-    if (options.orbitPreset === 'hz-inner') {
-      aAU = hz.inner + rng() * range / 3;
-    } else if (options.orbitPreset === 'hz-mid') {
-      aAU = hz.inner + range / 3 + rng() * range / 3;
-    } else if (options.orbitPreset === 'hz-outer') {
-      aAU = hz.outer - rng() * range / 3;
-    } else {
-      const SOLAR_FLUX_1AU = 1361;
-      const lum = star.luminositySolar || 1;
-      const mapping = {
-        'hot': () => {
-          const flux = 1500 + rng() * 1000; // 1500–2500 W/m²
-          return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-        },
-        'cold': () => {
-          const flux = 100 + rng() * 400; // 100–500 W/m²
-          return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-        }
-      };
-      const fn = mapping[options.orbitPreset];
-      aAU = typeof fn === 'function' ? fn() : undefined;
-    }
-  } else if (options?.target === 'auto') {
-    aAU = sampleOrbitAU(rng, 0);
-  }
 
-  let isMoon;
-  if (options?.target === 'moon') isMoon = true;
-  else if (options?.target === 'planet') isMoon = false;
-  else if (options?.target === 'auto') {
-    if (aAU === undefined) aAU = sampleOrbitAU(rng, 0);
-    isMoon = (aAU > 3 && rng() < 0.35);
-  } else {
-    isMoon = options?.isMoon;
-  }
+  const orbitSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
+  const orbitOptions = orbitSelect
+    ? Array.from(orbitSelect.options)
+        .filter(opt => !opt.disabled && opt.value !== 'auto')
+        .map(opt => opt.value)
+    : undefined;
 
-  let archetype = (options?.type && options.type !== 'auto') ? options.type : undefined;
-  if (!archetype) {
-    // Even weights among sensible candidates, seeded for determinism
-    try {
-      const rngType = mulberry32(seedInt ^ 0xC0FFEE);
-      const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
-      let candidates = isMoon
-        ? ['icy-moon', 'titan-like']
-        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
-      if (typeSelect) {
-        const disabled = Array.from(typeSelect.options)
-          .filter(opt => opt.disabled)
-          .map(opt => opt.value === 'rocky' ? 'hot-rocky' : opt.value);
-        candidates = candidates.filter(c => !disabled.includes(c));
-      }
-      if (candidates.length === 0) candidates = isMoon ? ['icy-moon'] : ['mars-like'];
-      archetype = candidates[Math.floor(rngType() * candidates.length)];
-    } catch (e) {
-      // Fallback
-      archetype = isMoon ? 'icy-moon' : 'mars-like';
-    }
-  }
+  const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
+  const typeOptions = typeSelect
+    ? Array.from(typeSelect.options)
+        .filter(opt => !opt.disabled && opt.value !== 'auto')
+        .map(opt => opt.value === 'rocky' ? 'hot-rocky' : opt.value)
+    : undefined;
 
-  let res = generateRandomPlanet(sStr, { star, aAU, isMoon, archetype });
+  let res = generateRandomPlanet(sStr, {
+    target: options?.target,
+    orbitPreset: options?.orbitPreset,
+    availableOrbits: orbitOptions,
+    type: options?.type,
+    availableTypes: typeOptions
+  });
+  let archetype = res.archetype;
   // Enforce high flux rule: if flux >= 2000 W/m², force Venus-like
   try {
     const fluxNow = estimateFlux(res);
     const venusLocked = document.getElementById('rwg-type')
       ?.querySelector('option[value="venus-like"]')?.disabled;
-    if (fluxNow >= 2000 && res.override?.classification?.archetype !== 'venus-like' && !venusLocked) {
-      const fixedAU = res.orbitAU ?? aAU;
-      res = generateRandomPlanet(sStr, { star, aAU: fixedAU, isMoon, archetype: 'venus-like' });
+    if (fluxNow >= 2000 && res.archetype !== 'venus-like' && !venusLocked) {
+      const fixedAU = res.orbitAU;
+      res = generateRandomPlanet(sStr, { star: res.star, aAU: fixedAU, isMoon: res.isMoon, archetype: 'venus-like' });
+      archetype = res.archetype;
     }
   } catch (e) {}
   const box = document.getElementById('rwg-result');
