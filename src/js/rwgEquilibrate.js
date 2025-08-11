@@ -319,8 +319,8 @@
               if (stableCount >= 5 && elapsedNow >= minRunMs) {
                 if (refinementCount < 20) {
                   refinementCount++;
-                  stepDays /= 10;
-                  relTol /= 100;
+                  stepDays /= 2;
+                  relTol /= 4;
                   stepMs = 1000 * stepDays;
                   stableCount = 0; // Reset for next level of stability
                 } else {

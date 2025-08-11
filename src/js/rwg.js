@@ -310,15 +310,15 @@ function hashStringToInt(str) {
       "venus-like":       1e12,
       "mars-like":        8e15,
       "rocky":            5e14,
-      "cold-desert":      2e16,
+      "cold-desert":      2e14,
       "icy-moon":         4e19,
       "titan-like":       1e16
     }[archetype] * landScale;
   
     const CH4_total = {
       "titan-like":       3e14,
-      "icy-moon":         2e10,
-      "cold-desert":      1e9,
+      "icy-moon":         0,
+      "cold-desert":      0,
       "mars-like":        0,
       "venus-like":       0,
       "rocky":            0
