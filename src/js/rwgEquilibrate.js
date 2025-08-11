@@ -224,7 +224,9 @@
         let stableCount = 0;
         let prevSnap = snapshotMetrics(terra);
         let refinementCount = 0;
+        let refinementsFromInstability = 0;
         let lastUnstableCheckTime = 0;
+        let totalSimulatedMs = 0;
 
         let stepMs = 1000 * stepDays; // 1 day per 1000 ms
         let timedOut = false;
@@ -294,6 +296,7 @@
                terra.flowMethaneMeltAmount = globalThis.simulateSurfaceHydrocarbonFlow(terra, noisyStepMs, tempMap);
             }
             terra.updateResources(noisyStepMs);
+            totalSimulatedMs += noisyStepMs;
             if ((stepIdx + 1) % checkEvery === 0) {
               const snap = snapshotMetrics(terra);
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
@@ -301,21 +304,6 @@
               stableCount = small ? (stableCount + 1) : 0;
               if (small) lastUnstableCheckTime = elapsedNow;
               prevSnap = snap;
-              if (onProgress) {
-                const inMinRun = elapsedNow < minRunMs;
-                let progress = 0;
-                let label = '';
-                if (inMinRun) {
-                  progress = Math.min(1, elapsedNow / minRunMs);
-                  label = 'Minimum fast-forward';
-                } else {
-                  const remainingTime = Math.max(0, additionalRunMs);
-                  const elapsedInPhase = Math.max(0, elapsedNow - minRunMs);
-                  progress = remainingTime > 0 ? Math.min(1, elapsedInPhase / remainingTime) : 1;
-                  label = 'Additional fast-forward';
-                }
-                onProgress(progress, { step: stepIdx + 1, stableCount, label });
-              }
               if (stableCount >= 100) {
                 if (refinementCount < 20) {
                   refinementCount++;
@@ -334,7 +322,30 @@
                 stepDays /= 2;
                 stepMs = 1000 * stepDays;
                 lastUnstableCheckTime = elapsedNow; // Reset the timer
+                refinementsFromInstability++;
                 console.log(`RWG_LOG: Unstable for 10s. Reducing stepDays to ${stepDays}`);
+              }
+              if (onProgress) {
+                const inMinRun = elapsedNow < minRunMs;
+                let progress = 0;
+                let label = '';
+                if (inMinRun) {
+                  progress = Math.min(1, elapsedNow / minRunMs);
+                  label = 'Minimum fast-forward';
+                } else {
+                  const remainingTime = Math.max(0, additionalRunMs);
+                  const elapsedInPhase = Math.max(0, elapsedNow - minRunMs);
+                  progress = remainingTime > 0 ? Math.min(1, elapsedInPhase / remainingTime) : 1;
+                  label = 'Additional fast-forward';
+                }
+                onProgress(progress, {
+                  step: stepIdx + 1,
+                  stableCount,
+                  label,
+                  refinementsFromStability: refinementCount,
+                  refinementsFromInstability,
+                  simulatedMs: totalSimulatedMs
+                });
               }
             }
           }
