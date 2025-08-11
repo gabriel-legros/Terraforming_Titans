@@ -20,4 +20,8 @@ test('random world generator uses physics model and precomputes zonal coverage',
   terraObj.zonalCoverageCache = override.zonalCoverageCache;
   expect(cp.temperature.mean).toBeGreaterThan(0);
   expect(typeof cp.actualAlbedo).toBe('number');
+  expect(override.finalTemps).toBeDefined();
+  expect(override.finalTemps.mean).toBeCloseTo(cp.temperature.mean);
+  expect(override.finalTemps.day).toBeCloseTo(cp.temperature.day);
+  expect(override.finalTemps.night).toBeCloseTo(cp.temperature.night);
 });
