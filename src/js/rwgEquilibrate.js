@@ -184,7 +184,7 @@
   function runEquilibration(fullParams, options = {}, onProgress) {
     let stepDays = options.stepDays ?? 10;
     const checkEvery = options.checkEvery ?? 5;
-    let absTol = options.absTol ?? 1; // tons
+    let absTol = options.absTol ?? 0.01; // tons
     let relTol = options.relTol ?? 1e-6; // relative
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
@@ -277,21 +277,22 @@
           for (; stepIdx < end; stepIdx++) {
             // Mirror the essential parts of terraforming.update():
             // 1) update luminosity/flux, 2) update surface temperatures, 3) advance resources
-            terra._updateZonalCoverageCache();
             terra.synchronizeGlobalResources();
+            terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             if (typeof terra.updateSurfaceTemperature === 'function') terra.updateSurfaceTemperature();
+            const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
             if (typeof terra.flowMeltAmount === 'number' && typeof globalThis.simulateSurfaceWaterFlow === 'function') {
                const tempMap = {};
                for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
-               terra.flowMeltAmount = globalThis.simulateSurfaceWaterFlow(terra, stepMs, tempMap);
+               terra.flowMeltAmount = globalThis.simulateSurfaceWaterFlow(terra, noisyStepMs, tempMap);
             }
             if (typeof terra.flowMethaneMeltAmount === 'number' && typeof globalThis.simulateSurfaceHydrocarbonFlow === 'function') {
                const tempMap = {};
                for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
-               terra.flowMethaneMeltAmount = globalThis.simulateSurfaceHydrocarbonFlow(terra, stepMs, tempMap);
+               terra.flowMethaneMeltAmount = globalThis.simulateSurfaceHydrocarbonFlow(terra, noisyStepMs, tempMap);
             }
-            terra.updateResources(stepMs);
+            terra.updateResources(noisyStepMs);
             if ((stepIdx + 1) % checkEvery === 0) {
               const snap = snapshotMetrics(terra);
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
@@ -314,10 +315,9 @@
                 onProgress(progress, { step: stepIdx + 1, stableCount, label });
               }
               if (stableCount >= 5 && elapsedNow >= minRunMs) {
-                if (refinementCount < 10) {
+                if (refinementCount < 20) {
                   refinementCount++;
                   stepDays /= 10;
-                  absTol /= 100;
                   relTol /= 100;
                   stepMs = 1000 * stepDays;
                   stableCount = 0; // Reset for next level of stability
