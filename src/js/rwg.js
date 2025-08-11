@@ -25,6 +25,20 @@ if (typeof deepMerge === 'undefined') {
   }
 }
 
+// Ensure EffectableEntity exists in all environments
+const _global = (typeof globalThis !== 'undefined') ? globalThis
+  : (typeof global !== 'undefined') ? global
+  : (typeof window !== 'undefined') ? window
+  : {};
+
+if (typeof _global.EffectableEntity === 'undefined') {
+  try {
+    _global.EffectableEntity = require('./effectable-entity.js');
+  } catch (_) {
+    _global.EffectableEntity = class {};
+  }
+}
+
 // --- Tiny seeded RNG (mulberry32) + string hash
 function hashStringToInt(str) {
     let h = 1779033703 ^ str.length;
@@ -546,116 +560,164 @@ function hashStringToInt(str) {
     return core.charAt(0).toUpperCase() + core.slice(1);
   }
   
-  // --- Public API -----------------------------------------------------------
-  function generateRandomPlanet(seed, opts={}) {
-    const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
-    const rng = mulberry32(s);
-    const star = opts.star ?? generateStar(s ^ 0x1234);
-    const index = opts.index ?? 0;
-
-    // --- Resolve orbit preset and semimajor axis ---
-    let aAU = opts.aAU;
-    let usedPreset = opts.orbitPreset;
-    if (aAU === undefined) {
-      if (!usedPreset || usedPreset === 'auto') {
-        const rngOrbit = mulberry32(s ^ 0xF00D);
-        let candidates = Array.isArray(opts.availableOrbits)
-          ? opts.availableOrbits.slice()
-          : ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
-        if (Array.isArray(opts.lockedOrbits)) {
-          candidates = candidates.filter(o => !opts.lockedOrbits.includes(o));
-        }
-        candidates = candidates.filter(Boolean);
-        if (candidates.length > 0) {
-          usedPreset = candidates[Math.floor(rngOrbit() * candidates.length)];
-        }
-      }
-      if (usedPreset && usedPreset !== 'auto') {
-        const hz = star.habitableZone;
-        const range = hz.outer - hz.inner;
-        if (usedPreset === 'hz-inner') {
-          aAU = hz.inner + rng() * range / 3;
-        } else if (usedPreset === 'hz-mid') {
-          aAU = hz.inner + range / 3 + rng() * range / 3;
-        } else if (usedPreset === 'hz-outer') {
-          aAU = hz.outer - rng() * range / 3;
-        } else {
-          const SOLAR_FLUX_1AU = 1361;
-          const lum = star.luminositySolar || 1;
-          const mapping = {
-            hot: () => {
-              const flux = 1500 + rng() * 1000;
-              return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-            },
-            cold: () => {
-              const flux = 100 + rng() * 400;
-              return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-            }
-          };
-          const fn = mapping[usedPreset];
-          if (typeof fn === 'function') aAU = fn();
-        }
-      }
-    }
-    if (aAU === undefined) aAU = sampleOrbitAU(rng, index);
-
-    // --- Resolve target (moon vs planet) ---
-    let isMoon = opts.isMoon;
-    const tgt = opts.target;
-    if (typeof isMoon !== 'boolean') {
-      if (tgt === 'moon') isMoon = true;
-      else if (tgt === 'planet') isMoon = false;
-      else isMoon = (aAU > 3 && rng() < 0.35);
+  class RwgManager extends EffectableEntity {
+    constructor() {
+      super({ description: 'Random World Generator Manager' });
+      this.lockedOrbits = new Set(['hot']);
+      this.lockedTypes = new Set(['hot-rocky', 'venus-like']);
     }
 
-    // --- Resolve type/archetype ---
-    let forcedType = opts.archetype || opts.type;
-    if (!forcedType || forcedType === 'auto') {
-      const rngType = mulberry32(s ^ 0xC0FFEE);
-      let candidates = isMoon
+    // Locking helpers
+    isOrbitLocked(o) { return this.lockedOrbits.has(o); }
+    lockOrbit(o) { this.lockedOrbits.add(o); }
+    unlockOrbit(o) { this.lockedOrbits.delete(o); }
+    isTypeLocked(t) { return this.lockedTypes.has(t); }
+    lockType(t) { this.lockedTypes.add(t); }
+    unlockType(t) { this.lockedTypes.delete(t); }
+
+    getAvailableOrbits() {
+      const base = ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
+      return base.filter(o => !this.lockedOrbits.has(o));
+    }
+
+    getAvailableTypes(isMoon) {
+      const base = isMoon
         ? ['icy-moon', 'titan-like']
-        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like'];
-      if (Array.isArray(opts.availableTypes)) {
-        candidates = candidates.filter(c => opts.availableTypes.includes(c));
-      }
-      if (candidates.length === 0) candidates = isMoon ? ['icy-moon'] : ['mars-like'];
-      forcedType = candidates[Math.floor(rngType() * candidates.length)];
+        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like', 'venus-like'];
+      return base.filter(t => !this.lockedTypes.has(t));
     }
 
-    const override = buildPlanetOverride({ seed: s ^ 0xBEEF, star, aAU, isMoon, forcedType });
-    return {
-      star,
-      orbitAU: aAU,
-      orbitPreset: usedPreset,
-      isMoon,
-      archetype: forcedType,
-      override,
-      merged: deepMerge(defaultPlanetParameters, override) // ready to play
-    };
-  }
-  
-  function generateSystem(seed, planetCount) {
-    const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
-    const rng = mulberry32(s);
-    const star = generateStar(s);
-    const n = planetCount ?? Math.floor(randRange(rng, 3, 9)); // 3..8
-    const planets = [];
-    for (let i = 0; i < n; i++) {
-      const aAU = sampleOrbitAU(rng, i);
-      const isMoon = (aAU > 3 && rng() < 0.35);
-      const ov = buildPlanetOverride({ seed: (s ^ (i+1)*0x9E37), star, aAU, isMoon });
-      planets.push({
-        name: ov.name,
-        classification: ov.classification,
+    // --- Public API -------------------------------------------------------
+    generateRandomPlanet(seed, opts = {}) {
+      const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
+      const rng = mulberry32(s);
+      const star = opts.star ?? generateStar(s ^ 0x1234);
+      const index = opts.index ?? 0;
+
+      // --- Resolve orbit preset and semimajor axis ---
+      let aAU = opts.aAU;
+      let usedPreset = opts.orbitPreset;
+      if (aAU === undefined) {
+        if (!usedPreset || usedPreset === 'auto') {
+          const rngOrbit = mulberry32(s ^ 0xF00D);
+          let candidates = Array.isArray(opts.availableOrbits)
+            ? opts.availableOrbits.slice()
+            : this.getAvailableOrbits();
+          if (Array.isArray(opts.lockedOrbits)) {
+            candidates = candidates.filter(o => !opts.lockedOrbits.includes(o));
+          }
+          candidates = candidates.filter(Boolean);
+          if (candidates.length > 0) {
+            usedPreset = candidates[Math.floor(rngOrbit() * candidates.length)];
+          }
+        }
+        if (usedPreset && usedPreset !== 'auto') {
+          const hz = star.habitableZone;
+          const range = hz.outer - hz.inner;
+          if (usedPreset === 'hz-inner') {
+            aAU = hz.inner + rng() * range / 3;
+          } else if (usedPreset === 'hz-mid') {
+            aAU = hz.inner + range / 3 + rng() * range / 3;
+          } else if (usedPreset === 'hz-outer') {
+            aAU = hz.outer - rng() * range / 3;
+          } else {
+            const SOLAR_FLUX_1AU = 1361;
+            const lum = star.luminositySolar || 1;
+            const mapping = {
+              hot: () => {
+                const flux = 1500 + rng() * 1000;
+                return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+              },
+              cold: () => {
+                const flux = 100 + rng() * 400;
+                return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
+              }
+            };
+            const fn = mapping[usedPreset];
+            if (typeof fn === 'function') aAU = fn();
+          }
+        }
+      }
+      if (aAU === undefined) aAU = sampleOrbitAU(rng, index);
+
+      // --- Resolve target (moon vs planet) ---
+      let isMoon = opts.isMoon;
+      const tgt = opts.target;
+      if (typeof isMoon !== 'boolean') {
+        if (tgt === 'moon') isMoon = true;
+        else if (tgt === 'planet') isMoon = false;
+        else isMoon = (aAU > 3 && rng() < 0.35);
+      }
+
+      // --- Resolve type/archetype ---
+      let forcedType = opts.archetype || opts.type;
+      if (!forcedType || forcedType === 'auto') {
+        const rngType = mulberry32(s ^ 0xC0FFEE);
+        let candidates = Array.isArray(opts.availableTypes)
+          ? opts.availableTypes.slice()
+          : this.getAvailableTypes(isMoon);
+        if (Array.isArray(opts.lockedTypes)) {
+          candidates = candidates.filter(c => !opts.lockedTypes.includes(c));
+        }
+        if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
+        forcedType = candidates[Math.floor(rngType() * candidates.length)];
+      }
+
+      const override = buildPlanetOverride({ seed: s ^ 0xBEEF, star, aAU, isMoon, forcedType });
+      return {
+        star,
         orbitAU: aAU,
-        merged: deepMerge(defaultPlanetParameters, ov)
-      });
+        orbitPreset: usedPreset,
+        isMoon,
+        archetype: forcedType,
+        override,
+        merged: deepMerge(defaultPlanetParameters, override) // ready to play
+      };
     }
-    return { star, planets };
+
+    generateSystem(seed, planetCount) {
+      const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
+      const rng = mulberry32(s);
+      const star = generateStar(s);
+      const n = planetCount ?? Math.floor(randRange(rng, 3, 9));
+      const planets = [];
+      for (let i = 0; i < n; i++) {
+        const aAU = sampleOrbitAU(rng, i);
+        const isMoon = (aAU > 3 && rng() < 0.35);
+        const ov = buildPlanetOverride({ seed: (s ^ (i + 1) * 0x9E37), star, aAU, isMoon });
+        planets.push({
+          name: ov.name,
+          classification: ov.classification,
+          orbitAU: aAU,
+          merged: deepMerge(defaultPlanetParameters, ov)
+        });
+      }
+      return { star, planets };
+    }
   }
-  
+
+  const rwgManager = new RwgManager();
+
+  // Backwards-compatible wrapper functions
+  function generateRandomPlanet(seed, opts) {
+    return rwgManager.generateRandomPlanet(seed, opts);
+  }
+
+  function generateSystem(seed, planetCount) {
+    return rwgManager.generateSystem(seed, planetCount);
+  }
+
+  // Expose globally for browser
+  if (typeof globalThis !== 'undefined') {
+    globalThis.rwgManager = rwgManager;
+    globalThis.generateRandomPlanet = generateRandomPlanet;
+    globalThis.generateSystem = generateSystem;
+  }
+
   // Optional export(s)
-  if (typeof module !== "undefined" && module.exports) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports.RwgManager = RwgManager;
+    module.exports.rwgManager = rwgManager;
     module.exports.generateRandomPlanet = generateRandomPlanet;
     module.exports.generateSystem = generateSystem;
   }
