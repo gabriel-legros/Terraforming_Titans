@@ -224,7 +224,7 @@ class ScannerProject extends Project {
     if (this.maxRepeatCount === Infinity) {
       return colonistCap;
     }
-    return Math.max(Math.min(colonistCap, this.maxRepeatCount),1);
+    return Math.min(colonistCap, this.maxRepeatCount);
   }
 
   getEffectiveBuildCount(count = this.buildCount) {
