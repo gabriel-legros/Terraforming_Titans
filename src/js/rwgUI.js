@@ -317,7 +317,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const r = res.merged?.resources || {};
   const cls = res.override?.classification || res.merged?.classification;
   const surf = r.surface || {};
-  const temps = res.merged?.celestialParameters?.temperature || null;
+  const temps = res.override?.finalTemps || null;
   const fluxWm2 = estimateFlux(res);
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
