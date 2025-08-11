@@ -302,7 +302,6 @@
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
               const elapsedNow = Date.now() - startTime;
               stableCount = small ? (stableCount + 1) : 0;
-              if (small) lastUnstableCheckTime = elapsedNow;
               prevSnap = snap;
               if (stableCount >= 100) {
                 if (refinementCount < 20) {
@@ -310,13 +309,14 @@
                   stepDays /= 2;
                   relTol /= 4;
                   stepMs = 1000 * stepDays;
+                  lastUnstableCheckTime = elapsedNow;
                   stableCount = 0; // Reset for next level of stability
                   console.log(`RWG_LOG: Stable for 100 steps. Reducing stepDays to ${stepDays}`);
                 } else {
                   finalize(true);
                   return;
                 }
-              } else if (elapsedNow - lastUnstableCheckTime > 10000 && stableCount < 100) {
+              } else if (elapsedNow - lastUnstableCheckTime > 5000 && stableCount < 100) {
                 // Alternative refinement: If it's been 10s since the last unstable check
                 // and we're still not stable, reduce the time step.
                 stepDays /= 2;

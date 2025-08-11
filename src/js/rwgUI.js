@@ -283,7 +283,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           if (label && info?.label) label.textContent = info.label;
           bar.style.width = `${(p * 100).toFixed(2)}%`;
           if (info) {
-            stableRefText.textContent = `Number of refinements from stability: ${info.refinementsFromStability || 0}`;
+            stableRefText.textContent = `Number of refinements from stability: ${info.refinementsFromStability || 0}/20`;
             unstableRefText.textContent = `Number of refinements from instability: ${info.refinementsFromInstability || 0}`;
             if (typeof formatDuration === 'function') {
               const seconds = (info.simulatedMs || 0) / 1000 * 86400;
