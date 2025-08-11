@@ -185,11 +185,11 @@
     let stepDays = options.stepDays ?? 10;
     const checkEvery = options.checkEvery ?? 5;
     let absTol = options.absTol ?? 0.01; // tons
-    let relTol = options.relTol ?? 1e-5; // relative
+    let relTol = options.relTol ?? 1e-4; // relative
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
-    const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
-    let additionalRunMs = options.additionalRunMs ?? 50000;
+    const minRunMs = options.minRunMs ?? (options.sync ? 0 : 30000);
+    let additionalRunMs = options.additionalRunMs ?? 60000;
     let timeoutMs = options.timeoutMs ?? (minRunMs + additionalRunMs);
 
     return new Promise((resolve, reject) => {
@@ -316,18 +316,19 @@
                 }
                 onProgress(progress, { step: stepIdx + 1, stableCount, label });
               }
-              if (stableCount >= 5 && elapsedNow >= minRunMs) {
+              if (stableCount >= 100) {
                 if (refinementCount < 20) {
                   refinementCount++;
                   stepDays /= 2;
                   relTol /= 4;
                   stepMs = 1000 * stepDays;
                   stableCount = 0; // Reset for next level of stability
+                  console.log(`RWG_LOG: Stable for 100 steps. Reducing stepDays to ${stepDays}`);
                 } else {
                   finalize(true);
                   return;
                 }
-              } else if (elapsedNow - lastUnstableCheckTime > 10000 && stableCount < 5 && elapsedNow > minRunMs) {
+              } else if (elapsedNow - lastUnstableCheckTime > 10000 && stableCount < 100) {
                 // Alternative refinement: If it's been 10s since the last unstable check
                 // and we're still not stable, reduce the time step.
                 stepDays /= 2;
