@@ -251,9 +251,9 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
             if (resources.surface?.ice) resources.surface.ice.value -= actualMelt;
             if (resources.surface?.liquidWater) resources.surface.liquidWater.value += actualMelt;
             for (const zone of Object.keys(meltByZone)) {
-              const rate = meltByZone[zone] / durationSeconds;
-              const protect = 50 * rate;
-              terraforming.focusedWaterProtection[zone] = { full: protect, partial: protect };
+              const rate = meltByZone[zone] / durationSeconds * 86400;
+              const protect = 10 * rate;
+              terraforming.focusedWaterProtection[zone] = { full: protect };
             }
           }
         }
