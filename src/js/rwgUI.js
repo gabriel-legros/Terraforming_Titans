@@ -382,6 +382,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
       <h3>${res.merged?.name || 'Generated World'}</h3>
       <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
+        <span class="info-tooltip-icon" title="Placeholder text for equilibration tooltip">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
         ${warningMsg ? `<span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span>` : ''}
       </div>
