@@ -99,6 +99,34 @@ function ensureRandomWorldUI() {
   }
 }
 
+function updateRandomWorldUI() {
+  const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
+  if (!mgr) return;
+
+  const orbitSel = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
+  if (orbitSel) {
+    Array.from(orbitSel.options).forEach(opt => {
+      if (opt.value === 'auto') return;
+      const locked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
+      const base = opt.textContent.replace(' (Locked)', '');
+      opt.disabled = locked;
+      opt.textContent = locked ? base + ' (Locked)' : base;
+    });
+  }
+
+  const typeSel = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
+  if (typeSel) {
+    Array.from(typeSel.options).forEach(opt => {
+      if (opt.value === 'auto') return;
+      const key = opt.value === 'rocky' ? 'hot-rocky' : opt.value;
+      const locked = typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(key) : false;
+      const base = opt.textContent.replace(' (Locked)', '');
+      opt.disabled = locked;
+      opt.textContent = locked ? base + ' (Locked)' : base;
+    });
+  }
+}
+
 function attachTravelHandler(res, sStr) {
   const travelBtn = document.getElementById('rwg-travel-btn');
   if (!travelBtn) return;
@@ -490,7 +518,15 @@ if (typeof showSpaceRandomTab === 'function') {
   };
 }
 
+if (typeof updateSpaceUI === 'function') {
+  const originalUpdateSpaceUI = updateSpaceUI;
+  updateSpaceUI = function(...args) {
+    originalUpdateSpaceUI.apply(this, args);
+    updateRandomWorldUI();
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, renderWorldDetail, attachEquilibrateHandler, attachTravelHandler };
+  module.exports = { initializeRandomWorldUI, ensureRandomWorldUI, updateRandomWorldUI, renderWorldDetail, attachEquilibrateHandler, attachTravelHandler };
 }
 
