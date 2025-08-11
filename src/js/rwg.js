@@ -39,6 +39,16 @@ if (typeof _global.EffectableEntity === 'undefined') {
   }
 }
 
+let dayNightTemperaturesModelFn = _global.dayNightTemperaturesModel;
+let calcAtmPressure = _global.calculateAtmosphericPressure;
+if (typeof module !== 'undefined' && module.exports) {
+  try {
+    const physics = require('./physics.js');
+    dayNightTemperaturesModelFn = dayNightTemperaturesModelFn || physics.dayNightTemperaturesModel;
+    calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
+  } catch (_) {}
+}
+
 // --- Tiny seeded RNG (mulberry32) + string hash
 function hashStringToInt(str) {
     let h = 1779033703 ^ str.length;
@@ -354,6 +364,66 @@ function hashStringToInt(str) {
     return { tropical: 0.4, temperate: 0.4, polar: 0.2 };
   }
 
+  function estimateCoverage(amount, zoneArea, scale = 0.0001) {
+    const resourceRatio = (scale * amount) / zoneArea;
+    const R0 = 0.002926577381;
+    const LINEAR_SLOPE = 50;
+    const LOG_A = LINEAR_SLOPE * R0;
+    const LOG_B = 1;
+    if (resourceRatio <= 0) return 0;
+    if (resourceRatio <= R0) return LINEAR_SLOPE * resourceRatio;
+    if (resourceRatio < 1) return LOG_A * Math.log(resourceRatio) + LOG_B;
+    return 1;
+  }
+
+  function calculateZonalCoverageLocal(tf, zone, resourceType) {
+    const frac = getZoneFractionsSafe()[zone] || 0;
+    const zoneArea = tf.celestialParameters.surfaceArea * frac;
+    if (zoneArea <= 0) return 0;
+    const zw = tf.zonalWater?.[zone] || {};
+    const zh = tf.zonalHydrocarbons?.[zone] || {};
+    const zs = tf.zonalSurface?.[zone] || {};
+    let amount = 0;
+    switch (resourceType) {
+      case 'liquidWater': amount = zw.liquid || 0; break;
+      case 'ice': amount = zw.ice || 0; break;
+      case 'buriedIce': amount = zw.buriedIce || 0; break;
+      case 'biomass': amount = zs.biomass || 0; break;
+      case 'dryIce': amount = zs.dryIce || 0; break;
+      case 'liquidMethane': amount = zh.liquid || 0; break;
+      case 'hydrocarbonIce': amount = zh.ice || 0; break;
+    }
+    let scale = 0.0001;
+    if (['dryIce','ice','hydrocarbonIce'].includes(resourceType)) scale *= 100;
+    else if (resourceType === 'biomass') scale *= 100000;
+    return estimateCoverage(amount, zoneArea, scale);
+  }
+
+  function calculateAverageCoverageLocal(cache, resourceType) {
+    const frac = getZoneFractionsSafe();
+    const zones = ['tropical','temperate','polar'];
+    let total = 0;
+    for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0);
+    return Math.max(0, Math.min(total, 1));
+  }
+
+  function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0) {
+    const bio = Math.min(biomass, 1);
+    const remaining = 1 - bio;
+    const surfaces = {
+      ocean: Math.max(0, water),
+      ice: Math.max(0, ice),
+      hydrocarbon: Math.max(0, hydro),
+      hydrocarbonIce: Math.max(0, hydroIce),
+      co2_ice: Math.max(0, dryIce)
+    };
+    const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
+    let scale = 1;
+    if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther;
+    for (const k in surfaces) surfaces[k] *= scale;
+    return { ...surfaces, biomass: bio };
+  }
+
   function distribute(amount, weights, rng) {
     const keys = Object.keys(weights);
     // jitter weights ±10% to create variability
@@ -469,10 +539,68 @@ function hashStringToInt(str) {
       type = (classification.Teq > 290 && classification.Teq <= 330) ? 'rocky' : 'mars-like';
     }
     const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng);
-  
+
     // volatiles (surface water, ice, methane…)
     const surface = buildVolatiles(type, classification.Teq, landHa, rng);
-  
+
+    // celestial basics
+    const rotation = (type === 'titan-like' || type === 'icy-moon') ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
+    const distanceFromSun = aAU;
+    const albedo = classification.albedo;
+
+    // zonal distributions and coverage
+    const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng);
+    const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
+    const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
+    const zonesList = ['tropical', 'temperate', 'polar'];
+    const zonalCoverageCache = {};
+    for (const z of zonesList) {
+      zonalCoverageCache[z] = {
+        liquidWater: calculateZonalCoverageLocal(tmpTerraforming, z, 'liquidWater'),
+        ice: calculateZonalCoverageLocal(tmpTerraforming, z, 'ice'),
+        buriedIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'buriedIce'),
+        biomass: calculateZonalCoverageLocal(tmpTerraforming, z, 'biomass'),
+        dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'dryIce'),
+        liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, 'liquidMethane'),
+        hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'hydrocarbonIce')
+      };
+    }
+    const avgWater = calculateAverageCoverageLocal(zonalCoverageCache, 'liquidWater');
+    const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, 'ice');
+    const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, 'biomass');
+    const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, 'liquidMethane');
+    const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, 'hydrocarbonIce');
+    const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, 'dryIce');
+    const surfaceFractions = calculateSurfaceFractionsLocal(avgWater, avgIce, avgBio, avgHydro, avgHydroIce, avgDryIce);
+
+    // atmosphere composition & pressure for physics model
+    let totalAtmoMass = 0;
+    const compMass = {};
+    for (const g in atmo) {
+      const m = atmo[g]?.initialValue || 0;
+      compMass[g] = m;
+      totalAtmoMass += m;
+    }
+    const composition = {};
+    if (totalAtmoMass > 0) {
+      if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass;
+      if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass;
+      if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass;
+    }
+    const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
+    const SOLAR_FLUX_1AU = 1361;
+    const flux = SOLAR_FLUX_1AU * (star.luminositySolar || 1) / (distanceFromSun * distanceFromSun);
+    const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({
+      groundAlbedo: classification.albedo,
+      flux,
+      rotationPeriodH: rotation,
+      surfacePressureBar,
+      composition,
+      surfaceFractions,
+      gSurface: bulk.gravity
+    }) : { day: 0, night: 0, mean: 0, albedo };
+    classification.Teq = temps.mean;
+
     // underground
     const underground = {
       ore: { name: 'Ore deposits', initialValue: Math.max(2, Math.floor(maxDeposits * 0.0002)), maxDeposits, hasCap: true, areaTotal, unlocked: false },
@@ -490,12 +618,7 @@ function hashStringToInt(str) {
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
       seed: { name: 'Generator Seed', hasCap: false, initialValue: seed, unlocked: false }
     };
-  
-    // celestial
-    const rotation = (type === 'titan-like' || type === 'icy-moon') ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
-    const distanceFromSun = aAU;
-    const albedo = classification.albedo;
-  
+
     // optional parent body for moons
     let parentBody = undefined;
     if (isMoon) {
@@ -533,7 +656,8 @@ function hashStringToInt(str) {
         special
       },
       // Initial zonal guesses to seed terraforming models
-      ...buildZonalDistributions(type, classification.Teq, surface, landHa, rng),
+      ...zonal,
+      zonalCoverageCache,
       fundingRate: Math.round(randRange(rng, 5, 15)), // tweak to taste
       buildingParameters: { maintenanceFraction: 0.001 },
       populationParameters: { workerRatio: 0.5 },
@@ -544,7 +668,12 @@ function hashStringToInt(str) {
         mass: bulk.mass,
         albedo,
         rotationPeriod: rotation,
-        parentBody
+        parentBody,
+        surfaceArea,
+        temperature: { day: temps.day, night: temps.night, mean: temps.mean },
+        actualAlbedo: temps.albedo,
+        cloudFraction: temps.cfCloud,
+        hazeFraction: temps.cfHaze
       },
       // lightweight tag to your requested classification
       classification: { archetype: type, TeqK: Math.round(classification.Teq) }
