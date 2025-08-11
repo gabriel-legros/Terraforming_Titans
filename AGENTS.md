@@ -425,3 +425,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Random World Generator dropdowns now only change when their lock state changes, preventing flicker.
 - Random World Generator now precomputes zonal coverages and derives temperatures using physics.js.
 - Random World Generator UI now reads day/night/mean temperatures directly from the physics model instead of estimating them separately.
+- Solar luminosity for Random World Generator worlds now persists through saves and reloads.
