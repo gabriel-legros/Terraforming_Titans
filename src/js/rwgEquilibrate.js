@@ -154,6 +154,10 @@
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 10000);
 
     return new Promise((resolve, reject) => {
+      const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
+      if (typeof setStarLuminosity === 'function') {
+        setStarLuminosity(options.star?.luminositySolar || 1);
+      }
       try {
         const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
         if (typeof TF !== 'function') {
@@ -188,6 +192,9 @@
 
         function finalize(ok) {
           clearTimeout(timeoutHandle);
+          if (typeof setStarLuminosity === 'function') {
+            setStarLuminosity(prevLum);
+          }
           // Restore globals without leaking sandbox
           if (cppDesc) {
             Object.defineProperty(globalThis, 'currentPlanetParameters', cppDesc);
@@ -268,6 +275,9 @@
 
         if (options.sync) loopChunk(); else setTimeout(loopChunk, 0);
       } catch (e) {
+        if (typeof setStarLuminosity === 'function') {
+          setStarLuminosity(prevLum);
+        }
         reject(e);
       }
     });
