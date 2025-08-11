@@ -318,7 +318,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const cls = res.override?.classification || res.merged?.classification;
   const atmo = r.atmospheric || {};
   const surf = r.surface || {};
-  const temps = estimateWorldTemperatures(res);
+  const temps = res.override?.finalTemps || estimateWorldTemperatures(res);
   const fluxWm2 = estimateFlux(res);
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);

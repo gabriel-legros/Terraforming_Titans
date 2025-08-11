@@ -113,6 +113,34 @@
       out.zonalWater = JSON.parse(JSON.stringify(terra.zonalWater || {}));
       out.zonalHydrocarbons = JSON.parse(JSON.stringify(terra.zonalHydrocarbons || {}));
       out.zonalSurface = JSON.parse(JSON.stringify(terra.zonalSurface || {}));
+
+      const alb = terra.luminosity && typeof terra.luminosity.surfaceAlbedo === 'number'
+        ? terra.luminosity.surfaceAlbedo
+        : undefined;
+      if (alb !== undefined) {
+        out.celestialParameters = out.celestialParameters || {};
+        out.celestialParameters.albedo = alb;
+      }
+
+      const eqT = terra.temperature && typeof terra.temperature.effectiveTempNoAtmosphere === 'number'
+        ? terra.temperature.effectiveTempNoAtmosphere
+        : undefined;
+      if (eqT !== undefined) {
+        out.classification = out.classification || {};
+        out.classification.TeqK = Math.round(eqT);
+      }
+
+      if (terra.temperature && terra.temperature.zones && typeof getZoneRatio === 'function') {
+        const z = terra.temperature.zones;
+        const ratios = {
+          tropical: getZoneRatio('tropical'),
+          temperate: getZoneRatio('temperate'),
+          polar: getZoneRatio('polar')
+        };
+        const day = z.tropical.day * ratios.tropical + z.temperate.day * ratios.temperate + z.polar.day * ratios.polar;
+        const night = z.tropical.night * ratios.tropical + z.temperate.night * ratios.temperate + z.polar.night * ratios.polar;
+        out.finalTemps = { mean: terra.temperature.value, day, night };
+      }
     }
     return out;
   }
