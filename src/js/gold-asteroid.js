@@ -206,9 +206,23 @@ class GoldenAsteroid {
     loadState(data) {
       this.despawn();
       this.removeEffects();
-      if (this.countdownElement) {
-        this.countdownElement.remove();
-        this.countdownElement = null;
+
+      // Remove any leftover DOM elements from previous instances
+      const container = document.getElementById('gold-asteroid-container');
+      if (container) {
+        const staleCountdown = container.querySelector('.gold-asteroid-countdown');
+        if (staleCountdown) {
+          staleCountdown.remove();
+        }
+      }
+      this.countdownElement = null;
+
+      const gameContainer = document.getElementById('game-container');
+      if (gameContainer) {
+        const staleAsteroid = gameContainer.querySelector('.golden-asteroid');
+        if (staleAsteroid) {
+          staleAsteroid.remove();
+        }
       }
 
       this.active = data.active;
@@ -219,9 +233,9 @@ class GoldenAsteroid {
       this.lastSpawnTime = 0;
       this.generateNextSpawnTime();
 
-          if (this.countdownActive) {
-              this.addEffects();
-              this.startCountdown(this.countdownRemainingTime);
-          }
+      if (this.countdownActive) {
+        this.addEffects();
+        this.startCountdown(this.countdownRemainingTime);
+      }
     }
   }
