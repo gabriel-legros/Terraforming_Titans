@@ -110,4 +110,18 @@ describe('resource tooltip time remaining', () => {
     expect(html).toContain('Time to empty');
     expect(html).toContain('2 years');
   });
+
+  test('shows blank line when rate is zero', () => {
+    const { dom, ctx } = setup();
+    const resource = {
+      name: 'silicon', displayName: 'Silicon', category: 'colony',
+      value: 50, cap: 100, hasCap: true, reserved: 0, unlocked: true,
+      productionRate: 2, consumptionRate: 2,
+      productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
+    };
+    ctx.createResourceDisplay({ colony: { silicon: resource } });
+    ctx.updateResourceRateDisplay(resource);
+    const timeDiv = dom.window.document.getElementById('silicon-tooltip-time');
+    expect(timeDiv.innerHTML).toBe('&nbsp;');
+  });
 });
