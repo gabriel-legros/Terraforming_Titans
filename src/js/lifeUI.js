@@ -637,7 +637,10 @@ function updateLifeStatusTable() {
                 : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
             const tempMult = growthTempResults[zone]?.multiplier || 0;
               const radMitigation = designToCheck.getRadiationMitigationRatio();
-              const radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+              let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+              if (radPenalty < 0.0001) {
+                  radPenalty = 0;
+              }
               const radMult = 1 - radPenalty;
             const waterMult = (terraforming.zonalWater[zone]?.liquid || 0) > 1e-9 ? 1 : 0;
             const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
