@@ -598,10 +598,10 @@ function updateResourceRateDisplay(resource){
         const time = resource.value / Math.abs(netRate);
         timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
       } else {
-        timeDiv.textContent = '';
+        timeDiv.innerHTML = '&nbsp;';
       }
     } else {
-      timeDiv.textContent = '';
+      timeDiv.innerHTML = '&nbsp;';
     }
   }
 
