@@ -428,3 +428,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Solar luminosity for Random World Generator worlds now persists through saves and reloads.
 - Random World Generator equilibration window now displays refinement counts and simulated time.
 - Innovation Initiative now boosts android research output.
+- Alien artifact resource values now persist across planet travel, mirroring advanced research.

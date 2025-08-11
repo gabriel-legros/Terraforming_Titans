@@ -115,6 +115,7 @@ function initializeGameState(options = {}) {
   const preserveJournal = options.preserveJournal || false;
   const skipStoryInitialization = options.skipStoryInitialization || false;
   let savedAdvancedResearch = null;
+  let savedAlienArtifact = null;
   let savedProjectTravelState = null;
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
@@ -126,6 +127,12 @@ function initializeGameState(options = {}) {
     savedAdvancedResearch = {
       value: resources.colony.advancedResearch.value,
       unlocked: resources.colony.advancedResearch.unlocked,
+    };
+  }
+  if (preserveManagers && resources && resources.special && resources.special.alienArtifact) {
+    savedAlienArtifact = {
+      value: resources.special.alienArtifact.value,
+      unlocked: resources.special.alienArtifact.unlocked,
     };
   }
   tabManager = new TabManager({
@@ -157,6 +164,10 @@ function initializeGameState(options = {}) {
   if (savedAdvancedResearch) {
     resources.colony.advancedResearch.value = savedAdvancedResearch.value;
     resources.colony.advancedResearch.unlocked = savedAdvancedResearch.unlocked;
+  }
+  if (savedAlienArtifact) {
+    resources.special.alienArtifact.value = savedAlienArtifact.value;
+    resources.special.alienArtifact.unlocked = savedAlienArtifact.unlocked;
   }
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
