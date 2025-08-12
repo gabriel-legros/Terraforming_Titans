@@ -245,18 +245,24 @@ class CargoRocketProject extends Project {
     }
   }
 
-  getResourceChoiceGainCost() {
-    // Deduct funding for selected resources if applicable
-    if (this.selectedResources && this.selectedResources.length > 0) {
+  getResourceChoiceGainCost(useSelected = true) {
+    // Calculate funding cost for selected resources. When useSelected is true,
+    // this also updates pendingResourceGains which are applied on completion.
+    const source = useSelected ? this.selectedResources : this.pendingResourceGains;
+    if (source && source.length > 0) {
       let totalFundingCost = 0;
-      this.pendingResourceGains = []; // Track resources that will be gained later
-      this.selectedResources.forEach(({ category, resource, quantity }) => {
+      if (useSelected) {
+        this.pendingResourceGains = [];
+      }
+      source.forEach(({ category, resource, quantity }) => {
         const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
         const cost = resource === 'spaceships'
           ? this.getSpaceshipTotalCost(quantity, basePrice)
           : basePrice * quantity;
         totalFundingCost += cost;
-        this.pendingResourceGains.push({ category, resource, quantity });
+        if (useSelected) {
+          this.pendingResourceGains.push({ category, resource, quantity });
+        }
       });
       return totalFundingCost;
     }
@@ -292,7 +298,7 @@ class CargoRocketProject extends Project {
         });
       }
 
-      const fundingCost = 1000 * this.getResourceChoiceGainCost() / this.getEffectiveDuration();
+      const fundingCost = 1000 * this.getResourceChoiceGainCost(false) / this.getEffectiveDuration();
       resources.colony.funding.modifyRate(
         -fundingCost,
         'Cargo Rockets',
