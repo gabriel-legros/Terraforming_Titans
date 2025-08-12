@@ -1106,7 +1106,6 @@ class Terraforming extends EffectableEntity{
 
     update(deltaTime) {
       // Distribute global changes (from buildings) into zones first
-      this.distributeGlobalChangesToZones(deltaTime);
 
       this._updateZonalCoverageCache(); // New call at the start of the update tick
 

@@ -348,6 +348,7 @@ function produceResources(deltaTime, buildings) {
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
     terraforming.updateResources(deltaTime);
+    terraforming.distributeGlobalChangesToZones(deltaTime);
   }
 
   // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
