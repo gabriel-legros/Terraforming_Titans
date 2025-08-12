@@ -22,22 +22,28 @@ describe('overflow rate appears in tooltip', () => {
     const colonyWater = {
       name: 'water', displayName: 'Water', category: 'colony',
       value: 100, cap: 100, hasCap: true, reserved: 0, unlocked: true,
-      productionRate: 0, consumptionRate: 0, productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton',
-      overflowRate: 5
+      productionRate: 0, consumptionRate: 5,
+      productionRateBySource: {},
+      consumptionRateBySource: { Overflow: 5 },
+      unit: 'ton'
     };
     const liquid = {
       name: 'liquidWater', displayName: 'Water', category: 'surface',
       value: 0, cap: 0, hasCap: false, reserved: 0, unlocked: true,
-      productionRate: 0, consumptionRate: 0, productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton',
-      overflowRate: 5
+      productionRate: 5, consumptionRate: 0,
+      productionRateBySource: { Overflow: 5 },
+      consumptionRateBySource: {},
+      unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: colonyWater }, surface: { liquidWater: liquid } });
     ctx.updateResourceRateDisplay(colonyWater);
     ctx.updateResourceRateDisplay(liquid);
     const cw = dom.window.document.getElementById('water-tooltip').innerHTML;
     const lw = dom.window.document.getElementById('liquidWater-tooltip').innerHTML;
+    expect(cw).toContain('Consumption and Maintenance');
     expect(cw).toContain('Overflow');
     expect(cw).toContain(numbers.formatNumber(5, false, 2));
+    expect(lw).toContain('Production');
     expect(lw).toContain('Overflow');
     expect(lw).toContain(numbers.formatNumber(5, false, 2));
   });
@@ -47,22 +53,28 @@ describe('overflow rate appears in tooltip', () => {
     const colonyWater = {
       name: 'water', displayName: 'Water', category: 'colony',
       value: 100, cap: 100, hasCap: true, reserved: 0, unlocked: true,
-      productionRate: 0, consumptionRate: 0, productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton',
-      overflowRate: 2
+      productionRate: 0, consumptionRate: 2,
+      productionRateBySource: {},
+      consumptionRateBySource: { Overflow: 2 },
+      unit: 'ton'
     };
     const ice = {
       name: 'ice', displayName: 'Ice', category: 'surface',
       value: 0, cap: 0, hasCap: false, reserved: 0, unlocked: true,
-      productionRate: 0, consumptionRate: 0, productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton',
-      overflowRate: 2
+      productionRate: 2, consumptionRate: 0,
+      productionRateBySource: { Overflow: 2 },
+      consumptionRateBySource: {},
+      unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: colonyWater }, surface: { ice: ice } });
     ctx.updateResourceRateDisplay(colonyWater);
     ctx.updateResourceRateDisplay(ice);
     const cw = dom.window.document.getElementById('water-tooltip').innerHTML;
     const iw = dom.window.document.getElementById('ice-tooltip').innerHTML;
+    expect(cw).toContain('Consumption and Maintenance');
     expect(cw).toContain('Overflow');
     expect(cw).toContain(numbers.formatNumber(2, false, 2));
+    expect(iw).toContain('Production');
     expect(iw).toContain('Overflow');
     expect(iw).toContain(numbers.formatNumber(2, false, 2));
   });

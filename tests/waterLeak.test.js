@@ -31,6 +31,7 @@ describe('water leaks when colony storage full', () => {
     ctx.dayNightCycle = { isDay: () => true };
     ctx.buildings = {};
     ctx.terraforming = setupTerraforming(tempAbove);
+    ctx.terraforming.distributeGlobalChangesToZones = () => {};
     ctx.fundingModule = null;
     ctx.lifeManager = null;
     ctx.researchManager = null;
@@ -40,11 +41,28 @@ describe('water leaks when colony storage full', () => {
         value,
         cap,
         hasCap: cap !== Infinity,
-        overflowRate: 0,
+        productionRate: 0,
+        consumptionRate: 0,
+        productionRateBySource: {},
+        consumptionRateBySource: {},
         updateStorageCap: () => {},
-        resetRates: function () { this.overflowRate = 0; },
+        resetRates: function () {
+          this.productionRate = 0;
+          this.consumptionRate = 0;
+          this.productionRateBySource = {};
+          this.consumptionRateBySource = {};
+        },
         recalculateTotalRates: () => {},
-        modifyRate: () => {}
+        modifyRate: function (val, source) {
+          if (val > 0) {
+            this.productionRate += val;
+            this.productionRateBySource[source] = (this.productionRateBySource[source] || 0) + val;
+          } else if (val < 0) {
+            const amt = -val;
+            this.consumptionRate += amt;
+            this.consumptionRateBySource[source] = (this.consumptionRateBySource[source] || 0) + amt;
+          }
+        }
       };
     }
     ctx.resources = {
@@ -94,9 +112,9 @@ describe('water leaks when colony storage full', () => {
     expect(ctx.terraforming.zonalWater.polar.liquid).toBe(0);
     expect(ctx.terraforming.zonalWater.polar.ice).toBe(0);
     expect(ctx.resources.colony.water.value).toBe(100);
-    expect(ctx.resources.colony.water.overflowRate).toBeCloseTo(10);
-    expect(ctx.resources.surface.liquidWater.overflowRate).toBeCloseTo(10);
-    expect(ctx.resources.surface.ice.overflowRate).toBe(0);
+    expect(ctx.resources.colony.water.consumptionRateBySource.Overflow).toBeCloseTo(10);
+    expect(ctx.resources.surface.liquidWater.productionRateBySource.Overflow).toBeCloseTo(10);
+    expect(ctx.resources.surface.ice.productionRateBySource.Overflow || 0).toBe(0);
   });
 
   test('distributes across multiple warm zones by area', () => {
@@ -113,8 +131,8 @@ describe('water leaks when colony storage full', () => {
     expect(ctx.terraforming.zonalWater.tropical.liquid).toBeCloseTo(tropExp);
     expect(ctx.terraforming.zonalWater.polar.liquid).toBeCloseTo(polarExp);
     expect(ctx.terraforming.zonalWater.temperate.liquid).toBe(0);
-    expect(ctx.resources.surface.liquidWater.overflowRate).toBeCloseTo(10);
-    expect(ctx.resources.surface.ice.overflowRate).toBe(0);
+    expect(ctx.resources.surface.liquidWater.productionRateBySource.Overflow).toBeCloseTo(10);
+    expect(ctx.resources.surface.ice.productionRateBySource.Overflow || 0).toBe(0);
   });
 
   test('leaks as ice when all zones below 0C', () => {
@@ -129,7 +147,7 @@ describe('water leaks when colony storage full', () => {
     expect(ctx.terraforming.zonalWater.temperate.ice).toBeCloseTo(tempExp);
     expect(ctx.terraforming.zonalWater.polar.ice).toBeCloseTo(polarExp);
     expect(ctx.resources.colony.water.value).toBe(100);
-    expect(ctx.resources.colony.water.overflowRate).toBeCloseTo(10);
-    expect(ctx.resources.surface.ice.overflowRate).toBeCloseTo(10);
+    expect(ctx.resources.colony.water.consumptionRateBySource.Overflow).toBeCloseTo(10);
+    expect(ctx.resources.surface.ice.productionRateBySource.Overflow).toBeCloseTo(10);
   });
 });

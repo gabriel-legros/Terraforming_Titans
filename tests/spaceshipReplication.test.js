@@ -12,7 +12,7 @@ describe('spaceship self replication', () => {
     ctx.structures = {};
     ctx.buildings = {};
     ctx.colonies = {};
-    ctx.terraforming = { updateResources: () => {} };
+    ctx.terraforming = { updateResources: () => {}, distributeGlobalChangesToZones: () => {} };
     ctx.fundingModule = null;
     ctx.lifeManager = null;
     ctx.researchManager = null;

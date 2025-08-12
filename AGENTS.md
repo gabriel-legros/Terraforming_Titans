@@ -433,3 +433,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Focused mirror melting now grants liquid water freeze immunity, fully protecting 50× the melted amount and partially shielding another 50× based on freezing intensity.
 - Radiation penalty values below 0.01% are hidden from the UI.
 - Radiation display in the terraforming UI now shows mSv/day without formatNumber and values below 0.01 mSv/day appear as 0.
+- Water overflow now counts as production and is included in resource totals instead of showing a separate overflow line.
