@@ -196,11 +196,6 @@ function updateZonalFluxTable() {
 
 function applyFocusedMelt(terraforming, resources, durationSeconds) {
   let focusMeltAmount = 0;
-  const zonesList = ['tropical', 'temperate', 'polar'];
-  terraforming.focusedWaterProtection = terraforming.focusedWaterProtection || {};
-  zonesList.forEach(z => {
-    terraforming.focusedWaterProtection[z] = { full: 0, partial: 0 };
-  });
   if (typeof projectManager !== 'undefined' &&
       ((projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
        (projectManager.projects &&
@@ -233,36 +228,21 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         if (totalSurfaceIce > 0) {
           const desiredMelt = Math.min(meltTons, totalSurfaceIce);
           let remaining = desiredMelt;
-          const meltByZone = {};
           zonesData.sort((a, b) => b.temp - a.temp);
           for (const z of zonesData) {
             if (remaining <= 0) break;
             const meltHere = Math.min(z.ice, remaining);
-             if (meltHere > 0) {
-               const meltRate = meltHere / durationSeconds * 86400;
-               const existingLiquid = terraforming.zonalWater[z.zone].liquid;
-               let dampenedMelt = meltHere;
-               if (existingLiquid > 10 * meltRate) {
-                 const ratio = existingLiquid / (10 * meltRate);
-                 const dampeningFactor = 1 / Math.pow(ratio, 0.01);
-                 dampenedMelt *= dampeningFactor;
-               }
-               terraforming.zonalWater[z.zone].ice -= dampenedMelt;
-               terraforming.zonalWater[z.zone].liquid += dampenedMelt;
-               remaining -= dampenedMelt;
-               meltByZone[z.zone] = (meltByZone[z.zone] || 0) + dampenedMelt;
-             }
+            if (meltHere > 0) {
+              terraforming.zonalWater[z.zone].ice -= meltHere;
+              terraforming.zonalWater[z.zone].liquid += meltHere;
+              remaining -= meltHere;
+            }
           }
           const actualMelt = desiredMelt - remaining;
           if (actualMelt > 0) {
             focusMeltAmount = actualMelt;
             if (resources.surface?.ice) resources.surface.ice.value -= actualMelt;
             if (resources.surface?.liquidWater) resources.surface.liquidWater.value += actualMelt;
-            for (const zone of Object.keys(meltByZone)) {
-              const rate = meltByZone[zone] / durationSeconds * 86400;
-              const protect = 10 * rate;
-              terraforming.focusedWaterProtection[zone] = { full: protect };
-            }
           }
         }
       }

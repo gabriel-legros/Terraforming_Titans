@@ -555,17 +555,7 @@ class Terraforming extends EffectableEntity{
             // Calculate melt/freeze based on amounts *after* sublimation/evaporation but *before* potential precipitation
             const availableForMelt = availableIce + availableBuriedIce + zonalChanges[zone].ice + zonalChanges[zone].buriedIce;
             const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt); // Limit by ice available after sublimation
-            const freezeAttempt = meltFreezeRates.freezingRate * durationSeconds;
-            const totalLiquidAfterEvap = availableLiquid + zonalChanges[zone].liquidWater;
-            const protection = this.focusedWaterProtection?.[zone] || { full: 0};
-            const unprotectedLiquid = Math.max(0, totalLiquidAfterEvap - protection.full - protection.full);
-            let freezeFromUnprotected = Math.min(freezeAttempt, unprotectedLiquid);
-            let remainingFreeze = freezeAttempt - freezeFromUnprotected;
-            const precariousLiquid = Math.max(0, totalLiquidAfterEvap - protection.full);
-            const partialFraction = protection.full ? precariousLiquid / protection.full : 1;
-            let freezeFromPartial = Math.min(remainingFreeze, partialFraction * freezeAttempt);
-            let freezeAmount = freezeFromUnprotected + freezeFromPartial;
-            freezeAmount = Math.min(freezeAmount, totalLiquidAfterEvap);
+            const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].liquidWater); // Limit by liquid available after evap
 
             // Apply melt/freeze changes to surface stores (adjusting the net change)
             zonalChanges[zone].liquidWater += meltAmount - freezeAmount;
