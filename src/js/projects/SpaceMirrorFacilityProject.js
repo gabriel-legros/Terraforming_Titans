@@ -238,12 +238,20 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
           for (const z of zonesData) {
             if (remaining <= 0) break;
             const meltHere = Math.min(z.ice, remaining);
-            if (meltHere > 0) {
-              terraforming.zonalWater[z.zone].ice -= meltHere;
-              terraforming.zonalWater[z.zone].liquid += meltHere;
-              remaining -= meltHere;
-              meltByZone[z.zone] = (meltByZone[z.zone] || 0) + meltHere;
-            }
+             if (meltHere > 0) {
+               const meltRate = meltHere / durationSeconds * 86400;
+               const existingLiquid = terraforming.zonalWater[z.zone].liquid;
+               let dampenedMelt = meltHere;
+               if (existingLiquid > 10 * meltRate) {
+                 const ratio = existingLiquid / (10 * meltRate);
+                 const dampeningFactor = 1 / Math.pow(ratio, 0.01);
+                 dampenedMelt *= dampeningFactor;
+               }
+               terraforming.zonalWater[z.zone].ice -= dampenedMelt;
+               terraforming.zonalWater[z.zone].liquid += dampenedMelt;
+               remaining -= dampenedMelt;
+               meltByZone[z.zone] = (meltByZone[z.zone] || 0) + dampenedMelt;
+             }
           }
           const actualMelt = desiredMelt - remaining;
           if (actualMelt > 0) {
