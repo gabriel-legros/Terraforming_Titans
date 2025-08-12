@@ -24,6 +24,12 @@ class Resource extends EffectableEntity {
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
+
+    Object.defineProperty(this, 'valueHistory', {
+      value: [],
+      writable: true,
+      enumerable: false,
+    });
   }
 
   // Method to initialize configurable properties
@@ -186,6 +192,23 @@ class Resource extends EffectableEntity {
       this.productionRateBySource = {}; // Also reset the aggregated source map
       this.consumptionRateBySource = {}; // Also reset the aggregated source map
       this.overflowRate = 0;
+  }
+
+  recordValue(time) {
+    const history = this.valueHistory;
+    history.push({ time, value: this.value });
+    while (history.length > 0 && time - history[0].time > 1) {
+      history.shift();
+    }
+  }
+
+  getRecentRate(currentTime) {
+    const history = this.valueHistory;
+    if (history.length === 0) return 0;
+    const oldest = history[0];
+    const span = currentTime - oldest.time;
+    if (span <= 0) return 0;
+    return (this.value - oldest.value) / span;
   }
 
   enable() {
@@ -426,6 +449,15 @@ function produceResources(deltaTime, buildings) {
         if (iceRate > 0 && resources.surface?.ice) {
           resources.surface.ice.overflowRate = (resources.surface.ice.overflowRate || 0) + iceRate;
         }
+      }
+    }
+  }
+
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      if (typeof resource.recordValue === 'function') {
+        resource.recordValue(playTimeSeconds);
       }
     }
   }

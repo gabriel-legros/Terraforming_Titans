@@ -563,6 +563,9 @@
             <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
           </label>
           <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="avg-resource-change-toggle" checked> Average resource changes <span class="info-tooltip-icon" title="Show surface and atmospheric resource rates averaged over the last second.">&#9432;</span>
+          </label>
+          <label style="display:block;margin-bottom:8px;">
             <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
           </label>
       </div>
@@ -693,6 +696,15 @@
             if (typeof updateBuildingDisplay === 'function') {
                 updateBuildingDisplay(buildings);
             }
+        });
+    }
+
+    const avgResourceChangeToggle = document.getElementById('avg-resource-change-toggle');
+    if (avgResourceChangeToggle) {
+        avgResourceChangeToggle.checked = gameSettings.averageResourceChanges;
+        avgResourceChangeToggle.addEventListener('change', () => {
+            gameSettings.averageResourceChanges = avgResourceChangeToggle.checked;
+            updateResourceDisplay(resources);
         });
     }
 

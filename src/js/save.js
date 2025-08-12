@@ -277,6 +277,10 @@ function loadGame(slotOrCustomString) {
       if(dayNightToggle){
         dayNightToggle.checked = gameSettings.disableDayNightCycle;
       }
+      const avgResourceChangeToggle = document.getElementById('avg-resource-change-toggle');
+      if(avgResourceChangeToggle){
+        avgResourceChangeToggle.checked = gameSettings.averageResourceChanges;
+      }
       const darkModeToggle = document.getElementById('dark-mode-toggle');
       if(darkModeToggle){
         darkModeToggle.checked = gameSettings.darkMode;

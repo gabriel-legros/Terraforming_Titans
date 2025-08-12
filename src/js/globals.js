@@ -39,6 +39,7 @@ let gameSettings = {
   silenceMilestoneAlert: false,
   silenceUnlockAlert: false,
   disableDayNightCycle: false,
+  averageResourceChanges: true,
 };
 
 let colonySliderSettings = {

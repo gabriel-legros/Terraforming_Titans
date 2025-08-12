@@ -236,6 +236,10 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
               terraforming.zonalWater[z.zone].ice -= meltHere;
               terraforming.zonalWater[z.zone].liquid += meltHere;
               remaining -= meltHere;
+              terraforming.focusedWaterProtection = terraforming.focusedWaterProtection || {};
+              const zoneProt = terraforming.focusedWaterProtection[z.zone] || {};
+              zoneProt.full = (zoneProt.full || 0) + meltHere * 864000;
+              terraforming.focusedWaterProtection[z.zone] = zoneProt;
             }
           }
           const actualMelt = desiredMelt - remaining;

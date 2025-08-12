@@ -535,9 +535,18 @@ function updateResourceDisplay(resources) {
 }
 
 function updateResourceRateDisplay(resource){
+  let netRate = resource.productionRate - resource.consumptionRate;
+  if (
+    typeof gameSettings !== 'undefined' &&
+    gameSettings.averageResourceChanges &&
+    (resource.category === 'surface' || resource.category === 'atmosphere') &&
+    typeof resource.getRecentRate === 'function'
+  ) {
+    netRate = resource.getRecentRate(playTimeSeconds);
+  }
+
   const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
   if (ppsElement) {
-    const netRate = resource.productionRate - resource.consumptionRate;
     if (Math.abs(netRate) < 1e-3) {
       ppsElement.textContent = `0/s`;
     } else {
@@ -563,8 +572,6 @@ function updateResourceRateDisplay(resource){
   const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
   const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
   const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
-
-  const netRate = resource.productionRate - resource.consumptionRate;
 
   if (valueDiv) {
     if (resource.name === 'land') {
