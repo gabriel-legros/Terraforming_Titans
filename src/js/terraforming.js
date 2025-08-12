@@ -136,6 +136,7 @@ class Terraforming extends EffectableEntity{
     this.totalMeltRate = 0;
     this.totalFreezeRate = 0;
     this.flowMeltAmount = 0;
+    this.flowMeltRate = 0;
     this.focusMeltRate = 0;
     this.focusMeltAmount = 0;
     this.totalMethaneEvaporationRate = 0;
@@ -143,6 +144,7 @@ class Terraforming extends EffectableEntity{
     this.totalMethaneMeltRate = 0;
     this.totalMethaneFreezeRate = 0;
     this.flowMethaneMeltAmount = 0;
+    this.flowMethaneMeltRate = 0;
 
     // Zonal Water Data - Replaces global this.water
     this.zonalWater = {};
@@ -426,6 +428,16 @@ class Terraforming extends EffectableEntity{
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         if (durationSeconds <= 0) return;
 
+        // Simulate atmospheric and water flow between zones
+        const tempMap = {};
+        for (const z of ZONES) {
+          tempMap[z] = this.temperature.zones[z].value;
+        }
+        this.flowMeltAmount = simulateSurfaceWaterFlow(this, deltaTime, tempMap);
+        this.flowMethaneMeltAmount = simulateSurfaceHydrocarbonFlow(this, deltaTime, tempMap);
+        this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
+        this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
+
         const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
         // Get current global atmospheric state directly from resources or calculate pressures
@@ -445,7 +457,6 @@ class Terraforming extends EffectableEntity{
         const availableGlobalCo2Gas = this.resources.atmospheric['carbonDioxide']?.value || 0; // tons
         const availableGlobalMethaneGas = this.resources.atmospheric['atmosphericMethane']?.value || 0; // tons
 
-        const solarFlux = this.luminosity.modifiedSolarFlux;
         const precipitationMultiplier = this.equilibriumPrecipitationMultiplier;
         const condensationParameter = this.equilibriumCondensationParameter;
         const methaneCondensationParameter = this.equilibriumMethaneCondensationParameter;
@@ -867,7 +878,8 @@ class Terraforming extends EffectableEntity{
         const rainfallRate = this.totalRainfallRate;
         const snowfallRate = this.totalSnowfallRate;
         const focusedMeltRate = this.focusMeltRate;
-        const meltingRate = this.totalMeltRate - focusedMeltRate;
+        const flowMeltRate = this.flowMeltRate;
+        const meltingRate = this.totalMeltRate - focusedMeltRate - flowMeltRate;
         const freezingRate = this.totalFreezeRate;
         const co2CondensationRate = this.totalCo2CondensationRate;
 
@@ -904,6 +916,9 @@ class Terraforming extends EffectableEntity{
             if (focusedMeltRate > 0) {
                 this.resources.surface.liquidWater.modifyRate(focusedMeltRate, 'Focused Melt', rateType);
             }
+            if (flowMeltRate > 0) {
+                this.resources.surface.liquidWater.modifyRate(flowMeltRate, 'Flow Melt', rateType);
+            }
         }
         if (this.resources.surface.ice) {
             this.resources.surface.ice.modifyRate(-waterSublimationRate, 'Sublimation', rateType);
@@ -913,6 +928,9 @@ class Terraforming extends EffectableEntity{
             if (focusedMeltRate > 0) {
                 this.resources.surface.ice.modifyRate(-focusedMeltRate, 'Focused Melt', rateType);
             }
+            if (flowMeltRate > 0) {
+                this.resources.surface.ice.modifyRate(-flowMeltRate, 'Flow Melt', rateType);
+            }
         }
         if (this.resources.surface.dryIce) {
             this.resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
@@ -921,19 +939,27 @@ class Terraforming extends EffectableEntity{
         if (this.resources.surface.liquidMethane) {
             this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneEvaporationRate, 'Methane Evaporation', rateType);
             this.resources.surface.liquidMethane.modifyRate(this.totalMethaneCondensationRate, 'Methane Rain', rateType);
-            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneMeltRate, 'Melt', rateType);
+            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneMeltRate - this.flowMethaneMeltRate, 'Melt', rateType);
             this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneFreezeRate, 'Freeze', rateType);
+            if (this.flowMethaneMeltRate > 0) {
+                this.resources.surface.liquidMethane.modifyRate(this.flowMethaneMeltRate, 'Flow Melt', rateType);
+            }
         }
         if (this.resources.surface.hydrocarbonIce) {
             this.resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneSublimationRate, 'Methane Sublimation', rateType);
             this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneIceCondensationRate, 'Methane Snow', rateType);
-            this.resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneMeltRate, 'Melt', rateType);
+            this.resources.surface.hydrocarbonIce.modifyRate(-(this.totalMethaneMeltRate - this.flowMethaneMeltRate), 'Melt', rateType);
             this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneFreezeRate, 'Freeze', rateType);
+            if (this.flowMethaneMeltRate > 0) {
+                this.resources.surface.hydrocarbonIce.modifyRate(-this.flowMethaneMeltRate, 'Flow Melt', rateType);
+            }
         }
 
         // reset stored melt from flow for next tick
         this.flowMeltAmount = 0;
         this.flowMethaneMeltAmount = 0;
+
+      this.synchronizeGlobalResources();
     }
 
     // Function to update luminosity properties
@@ -1100,14 +1126,6 @@ class Terraforming extends EffectableEntity{
       // Coverage is now calculated on-demand using calculateAverageCoverage from
       // terraforming-utils.js. Removed redundant calls to the old
       // calculateCoverage function.
-
-      // Simulate atmospheric and water flow between zones
-      const tempMap = {};
-      for (const z of ZONES) {
-        tempMap[z] = this.temperature.zones[z].value;
-      }
-      this.flowMeltAmount = simulateSurfaceWaterFlow(this, deltaTime, tempMap); // Call for Step 4
-      this.flowMethaneMeltAmount = simulateSurfaceHydrocarbonFlow(this, deltaTime, tempMap);
 
       this.applyTerraformingEffects();
 
