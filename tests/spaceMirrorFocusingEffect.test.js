@@ -170,22 +170,21 @@ describe('focused mirror melt', () => {
     terra.calculateLanternFlux = () => 0;
 
     applyFocusedMelt(terra, res, 1);
-
-    expect(terra.focusedWaterProtection.polar.full).toBeCloseTo(5, 5);
-    expect(terra.focusedWaterProtection.polar.partial).toBeCloseTo(5, 5);
+    expect(terra.focusedWaterProtection.polar.full).toBeCloseTo(86400, 5);
+    expect(terra.focusedWaterProtection.polar.partial).toBeUndefined();
 
     const freezeAttempt = 100;
     const totalLiquid = res.surface.liquidWater.value;
     const protection = terra.focusedWaterProtection.polar;
-    const unprotected = Math.max(0, totalLiquid - protection.full - protection.partial);
+    const unprotected = Math.max(0, totalLiquid - protection.full - protection.full);
     let freezeFromUnprotected = Math.min(freezeAttempt, unprotected);
     let remainingFreeze = freezeAttempt - freezeFromUnprotected;
-    const partialFraction = 1 - Math.exp(-freezeAttempt);
-    const partialFreezable = Math.max(0, Math.min(protection.partial, totalLiquid - protection.full));
-    let freezeFromPartial = Math.min(remainingFreeze, partialFraction * partialFreezable);
+    const precariousLiquid = Math.max(0, totalLiquid - protection.full);
+    const partialFraction = protection.full ? precariousLiquid / protection.full : 1;
+    let freezeFromPartial = Math.min(remainingFreeze, partialFraction * freezeAttempt);
     const freezeAmount = freezeFromUnprotected + freezeFromPartial;
     res.surface.liquidWater.value -= freezeAmount;
 
-    expect(res.surface.liquidWater.value).toBeCloseTo(5.0, 1);
+    expect(res.surface.liquidWater.value).toBeCloseTo(20.1, 5);
   });
 });
