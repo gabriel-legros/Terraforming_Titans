@@ -418,14 +418,16 @@ function produceResources(deltaTime, buildings) {
           }
         });
 
-        // Record overflow rate for tooltips
+        // Record overflow as production/consumption so it counts toward totals
         const rate = overflow / (deltaTime / 1000);
-        resource.overflowRate = rate;
+        if (typeof resource.modifyRate === 'function') {
+          resource.modifyRate(-rate, 'Overflow', 'overflow');
+        }
         if (liquidRate > 0 && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.overflowRate = (resources.surface.liquidWater.overflowRate || 0) + liquidRate;
+          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow', 'overflow');
         }
         if (iceRate > 0 && resources.surface?.ice) {
-          resources.surface.ice.overflowRate = (resources.surface.ice.overflowRate || 0) + iceRate;
+          resources.surface.ice.modifyRate(iceRate, 'Overflow', 'overflow');
         }
       }
     }

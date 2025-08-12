@@ -94,18 +94,6 @@ function createTooltipElement(resourceName) {
   consumptionDiv._info = { table: consTable, rows: new Map() };
   tooltip.appendChild(consumptionDiv);
 
-  const overflowDiv = document.createElement('div');
-  overflowDiv.id = `${resourceName}-tooltip-overflow`;
-  overflowDiv.style.display = 'none';
-  const overflowHeader = document.createElement('strong');
-  overflowHeader.textContent = 'Overflow:';
-  overflowDiv.appendChild(overflowHeader);
-  overflowDiv.appendChild(document.createTextNode(' '));
-  const overflowValue = document.createElement('span');
-  overflowDiv.appendChild(overflowValue);
-  overflowDiv._value = overflowValue;
-  tooltip.appendChild(overflowDiv);
-
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
   autobuildDiv.style.display = 'none';
@@ -561,7 +549,6 @@ function updateResourceRateDisplay(resource){
   const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
   const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
   const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
-  const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
   const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
 
   const netRate = resource.productionRate - resource.consumptionRate;
@@ -691,15 +678,6 @@ function updateResourceRateDisplay(resource){
     const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
     updateRateTable(consumptionDiv, consumptionEntries, r => `${formatNumber(r, false, 2)}/s`);
     consumptionDiv.style.display = consumptionEntries.length > 0 ? 'block' : 'none';
-  }
-
-  if (overflowDiv) {
-    if (resource.overflowRate && Math.abs(resource.overflowRate) > 0) {
-      overflowDiv.style.display = 'block';
-      overflowDiv._value.textContent = `${resource.overflowRate >= 0 ? '+' : ''}${formatNumber(resource.overflowRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    } else {
-      overflowDiv.style.display = 'none';
-    }
   }
 
   if (autobuildDiv) {
