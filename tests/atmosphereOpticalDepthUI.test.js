@@ -53,8 +53,7 @@ describe('atmosphere UI optical depth', () => {
     expect(pEls[1].querySelector('#optical-depth')).not.toBeNull();
     const info = pEls[1].querySelector('#optical-depth-info');
     expect(info).not.toBeNull();
-    expect(info.title).toContain('CO2: 0.30');
-    expect(info.title).toContain('H2O: 0.20');
+    expect(info.getAttribute('title')).toBeNull();
     const tooltip = pEls[1].querySelector('#optical-depth-tooltip');
     expect(tooltip).not.toBeNull();
     expect(tooltip.textContent).toContain('CO2: 0.30');
