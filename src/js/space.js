@@ -243,9 +243,6 @@ class SpaceManager extends EffectableEntity {
                 this.currentRandomSeed = null;
                 this.currentRandomName = '';
                 console.log(`SpaceManager: Current planet set to: ${this.currentPlanetKey}`);
-                if (typeof setStarLuminosity === 'function') {
-                    setStarLuminosity(SOL_STAR.luminositySolar);
-                }
             }
              // Ensure status object exists for the new current planet
              if (!this.planetStatuses[key]) {
@@ -363,9 +360,6 @@ class SpaceManager extends EffectableEntity {
         }
         const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
             ? projectManager.projects.spaceStorage.saveTravelState() : null;
-        if (typeof setStarLuminosity === 'function') {
-            setStarLuminosity(res?.star?.luminositySolar || 1);
-        }
         globalThis.currentPlanetParameters = res?.merged;
         if (typeof initializeGameState === 'function') {
             initializeGameState({ preserveManagers: true, preserveJournal: true });
