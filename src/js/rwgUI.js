@@ -222,7 +222,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       const progressLabel = document.createElement('div');
       progressLabel.id = 'rwg-progress-label';
       progressLabel.style.marginBottom = '4px';
-      progressLabel.textContent = 'Minimum fast-forward';
+      progressLabel.textContent = 'Minimum fast-forward (Game is paused)';
 
       const barContainer = document.createElement('div');
       barContainer.style.width = '100%';
@@ -289,7 +289,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
               timeSimText.textContent = `Time simulated: ${formatDuration(seconds)}`;
             }
           }
-          if (info?.label === 'Additional fast-forward') endBtn.style.display = '';
+          if (info?.label === 'Additional fast-forward (Game is paused)') endBtn.style.display = '';
         });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
         equilibratedWorlds.add(sStr);
