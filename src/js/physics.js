@@ -21,10 +21,14 @@ const R_AIR = 287;
     return pressure;
 }
 
-// Calculate atmospheric emissivity directly from optical depth
+// Calculate atmospheric emissivity directly from saturated optical depth
 function calculateEmissivity(composition, surfacePressureBar, gSurface){
-  const tau = opticalDepth(composition, surfacePressureBar, gSurface);
-  return 1 - Math.exp(-tau);
+  const { total: tau, contributions } = opticalDepthSat(composition, surfacePressureBar, gSurface);
+  return {
+    emissivity: 1 - Math.exp(-tau),
+    tau,
+    contributions
+  };
 }
 // Function to calculate air density (rho_a)
 function airDensity(atmPressure, T) {
@@ -154,26 +158,31 @@ function effectiveTemp(albedo, flux) {
 function opticalDepth(comp, pBar, gSurface) {
   const pPa   = pBar * 1e5;
   const mcolT = pPa / gSurface;  // total column mass (kg/m²)
-  let tau = 0;
+  let total = 0;
+  const contributions = {};
 
   for (const key in comp) {
     const x = comp[key] ?? comp[key.toLowerCase()] ?? 0; // tolerate key case
     if (x <= 0) continue;
 
-    const G = GAMMA[key.toLowerCase()] ?? 0;
+    const k = key.toLowerCase();
+    const G = GAMMA[k] ?? 0;
     if (!G) continue;
 
     const mu_i = x * mcolT;                      // column mass of gas i
     const R    = mu_i / COLUMN_MASS_REF;         // dimensionless
-    tau += G * Math.pow(R, BETA);
+    const tau_i = G * Math.pow(R, BETA);
+    total += tau_i;
+    contributions[k] = tau_i;
   }
-  return tau;
+  return { total, contributions };
 }
 
 function opticalDepthSat(comp, pBar, gSurface) {
   const pPa   = pBar * 1e5;
   const mcolT = pPa / gSurface;
-  let tau = 0;
+  let total = 0;
+  const contributions = {};
 
   for (const key in comp) {
     const x = comp[key] ?? comp[key.toLowerCase()] ?? 0;
@@ -191,9 +200,10 @@ function opticalDepthSat(comp, pBar, gSurface) {
       const n = SAT_EXP[k] ?? 1.0;
       tau_i /= (1 + Math.pow(mu_i / MU_SAT[k], n)); // saturation only for CH4/H2SO4
     }
-    tau += tau_i;
+    total += tau_i;
+    contributions[k] = tau_i;
   }
-  return tau;
+  return { total, contributions };
 }
 
 function cloudFraction(pBar) {
@@ -203,7 +213,7 @@ function cloudFraction(pBar) {
 
 // Calculate actual (Bond) albedo and cloud/haze fractions
 function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface) {
-  const tau = opticalDepth(composition, pressureBar, gSurface);
+  const { total: tau } = opticalDepth(composition, pressureBar, gSurface);
   const { cfCloud, aCloud, cfHaze, aHaze } =
         cloudAndHazeProps(pressureBar, tau, composition);
   const A_noCloud = (1 - cfHaze) * surfaceAlbedo + cfHaze * aHaze;
@@ -253,8 +263,8 @@ function dayNightTemperaturesModel({
   const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
 
   // greenhouse optical depth
-  const tau = opticalDepth(composition, surfacePressureBar, gSurface);
-  const tauSat = opticalDepthSat(composition, surfacePressureBar, gSurface);
+  const { total: tau } = opticalDepth(composition, surfacePressureBar, gSurface);
+  const { total: tauSat } = opticalDepthSat(composition, surfacePressureBar, gSurface);
 
   // NEW: smoothly blended clouds + haze
   const { cfCloud, aCloud, cfHaze, aHaze } =
@@ -289,6 +299,7 @@ if (typeof module !== 'undefined' && module.exports) {
     autoSlabHeatCapacity,
     effectiveTemp,
     opticalDepth,
+    opticalDepthSat,
     cloudFraction,
     surfaceAlbedoMix,
     diurnalAmplitude,

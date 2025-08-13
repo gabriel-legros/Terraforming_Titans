@@ -285,7 +285,7 @@ function createTemperatureBox(row) {
     innerHTML += `
         </tbody>
       </table>
-      <p class="no-margin">Optical depth: <span id="optical-depth"></span></p>
+      <p class="no-margin">Optical depth: <span id="optical-depth"></span> <span id="optical-depth-info" class="info-tooltip-icon" title="">&#9432;</span></p>
       <p class="no-margin">Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
     `;
   
@@ -313,6 +313,13 @@ function createTemperatureBox(row) {
     const opticalDepth = document.getElementById('optical-depth');
     if (opticalDepth) {
       opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(2);
+    }
+    const opticalDepthInfo = document.getElementById('optical-depth-info');
+    if (opticalDepthInfo) {
+      const contributions = terraforming.temperature.opticalDepthContributions || {};
+      const lines = Object.entries(contributions)
+        .map(([gas, val]) => `${gas.toUpperCase()}: ${val.toFixed(2)}`);
+      opticalDepthInfo.title = lines.join('\n');
     }
 
 
