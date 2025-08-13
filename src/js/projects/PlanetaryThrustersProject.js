@@ -9,6 +9,16 @@ const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
 
+// rotationPeriodToDuration is defined globally in the browser but must be
+// required explicitly when running under Node.js for tests
+let rotationPeriodToDurationFunc = (typeof globalThis !== 'undefined' &&
+  globalThis.rotationPeriodToDuration) ? globalThis.rotationPeriodToDuration : null;
+try {
+  if (typeof require === 'function') {
+    ({ rotationPeriodToDuration: rotationPeriodToDurationFunc } = require('../day-night-cycle.js'));
+  }
+} catch (e) {}
+
 /* ---------- helpers ---------------------------------------------------- */
 const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
   n.toLocaleString(undefined,int?{maximumFractionDigits:0}:
@@ -461,12 +471,15 @@ class PlanetaryThrustersProject extends Project{
     /* ------ spin -------- */
     if(this.spinInvest){
       const sign=this.tgtDays<this.spinStartDays?1:-1;
-      const dΩ=sign*dvTick/(p.radius*1e3);
-      const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
-      p.rotationPeriod=2*Math.PI/ω/3600;
-      if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;}
-      this.updateUI(); return;
-    }
+        const dΩ=sign*dvTick/(p.radius*1e3);
+        const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
+        p.rotationPeriod=2*Math.PI/ω/3600;
+        if(typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc){
+          dayNightCycle.dayDuration = rotationPeriodToDurationFunc(p.rotationPeriod);
+        }
+        if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;}
+        this.updateUI(); return;
+      }
 
     /* ------ motion ------- */
     if(this.motionInvest){

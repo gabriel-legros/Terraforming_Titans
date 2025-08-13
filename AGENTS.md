@@ -178,3 +178,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - `getTerraformedPlanetCount` now counts terraformed procedural worlds via `getAllPlanetStatuses`.
 - Space Storage withdraw mode shows an icon when colony storage is full.
 - Advanced research production scales with the number of terraformed worlds.
+- Planetary thrusters adjust day-night cycle duration when spin changes.
