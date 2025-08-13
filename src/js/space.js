@@ -56,7 +56,9 @@ class SpaceManager extends EffectableEntity {
     }
 
     // --- Getters (Keep existing getters) ---
-    getCurrentPlanetKey() { return this.currentPlanetKey; }
+    getCurrentPlanetKey() {
+        return this.currentPlanetKey;
+    }
     getCurrentPlanetData() { /* ... same as before ... */ }
 
     /**
@@ -95,6 +97,9 @@ class SpaceManager extends EffectableEntity {
      */
     getTerraformedPlanetCountIncludingCurrent() {
         const count = this.getTerraformedPlanetCount();
+        if (this.currentRandomSeed !== null) {
+            return this.isSeedTerraformed(String(this.currentRandomSeed)) ? count : count + 1;
+        }
         return this.isPlanetTerraformed(this.currentPlanetKey) ? count : count + 1;
     }
 
@@ -341,6 +346,7 @@ class SpaceManager extends EffectableEntity {
         const destinationTerraformed = existing?.terraformed || false;
 
         this.currentRandomSeed = s;
+        this.currentPlanetKey = s;
         this.currentRandomName = res?.merged?.name || `Seed ${s}`;
         if (!existing) {
             this.randomWorldStatuses[s] = {
@@ -400,14 +406,20 @@ class SpaceManager extends EffectableEntity {
              return; // Keep defaults initialized above
         }
 
-        // Load current planet key
-        let keyToLoad = 'mars';
-        if (savedData.currentPlanetKey && this.allPlanetsData[savedData.currentPlanetKey]) {
-            keyToLoad = savedData.currentPlanetKey;
-        } else if (savedData.currentPlanetKey) {
-            console.warn(`SpaceManager: Saved planet key "${savedData.currentPlanetKey}" is invalid. Defaulting to 'mars'.`);
+        // Load current location
+        if (savedData.currentRandomSeed !== undefined && savedData.currentRandomSeed !== null) {
+            this.currentRandomSeed = savedData.currentRandomSeed;
+            this.currentRandomName = savedData.currentRandomName || '';
+            this.currentPlanetKey = String(savedData.currentRandomSeed);
+        } else {
+            let keyToLoad = 'mars';
+            if (savedData.currentPlanetKey && this.allPlanetsData[savedData.currentPlanetKey]) {
+                keyToLoad = savedData.currentPlanetKey;
+            } else if (savedData.currentPlanetKey) {
+                console.warn(`SpaceManager: Saved planet key "${savedData.currentPlanetKey}" is invalid. Defaulting to 'mars'.`);
+            }
+            this._setCurrentPlanetKey(keyToLoad); // Use internal setter
         }
-        this._setCurrentPlanetKey(keyToLoad); // Use internal setter
 
         // Load planet statuses, merging with default structure
         if (savedData.planetStatuses) {
@@ -433,16 +445,17 @@ class SpaceManager extends EffectableEntity {
             console.log("SpaceManager: No planet statuses found in save data, keeping defaults.");
         }
 
-        if (savedData.currentRandomSeed !== undefined) {
-            this.currentRandomSeed = savedData.currentRandomSeed;
-            this.currentRandomName = savedData.currentRandomName || '';
-        }
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
         }
 
-        // Ensure the loaded current planet is marked visited
-        if (this.planetStatuses[this.currentPlanetKey]) {
+        // Ensure the loaded current world is marked visited
+        if (this.currentRandomSeed !== null) {
+            const seed = String(this.currentRandomSeed);
+            if (this.randomWorldStatuses[seed]) {
+                this.randomWorldStatuses[seed].visited = true;
+            }
+        } else if (this.planetStatuses[this.currentPlanetKey]) {
             this.planetStatuses[this.currentPlanetKey].visited = true;
         }
 

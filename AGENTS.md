@@ -171,3 +171,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Radiation penalty values below 0.01% are hidden from the UI, and radiation display in the terraforming UI shows mSv/day without `formatNumber`, with values below 0.01 mSv/day appearing as 0.
 - Water overflow counts as production and is included in resource totals instead of showing a separate overflow line.
 - Star luminosity is a celestial parameter set during Terraforming construction, ensuring new games have correct solar flux.
+- SpaceManager stores the random world seed as `currentPlanetKey` when visiting procedural planets, unifying key handling for story and procedural worlds.
