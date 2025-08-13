@@ -23,6 +23,20 @@ describe('SpaceManager terraformed planet counting', () => {
     sm.planetStatuses.titan.terraformed = false;
     expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
   });
+
+  test('counts terraformed random worlds', () => {
+    const sm = new SpaceManager({ mars: {}, titan: {} });
+    sm.randomWorldStatuses['123'] = { terraformed: true, visited: true, colonists: 0, name: 'Seed 123' };
+
+    expect(sm.getTerraformedPlanetCount()).toBe(1);
+    expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(2);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(1);
+
+    sm.currentRandomSeed = '123';
+    sm.currentPlanetKey = '123';
+    expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(1);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
+  });
 });
 
 delete global.EffectableEntity;
