@@ -285,16 +285,6 @@
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             if (typeof terra.updateSurfaceTemperature === 'function') terra.updateSurfaceTemperature();
             const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
-            if (typeof terra.flowMeltAmount === 'number' && typeof globalThis.simulateSurfaceWaterFlow === 'function') {
-               const tempMap = {};
-               for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
-               terra.flowMeltAmount = globalThis.simulateSurfaceWaterFlow(terra, noisyStepMs, tempMap);
-            }
-            if (typeof terra.flowMethaneMeltAmount === 'number' && typeof globalThis.simulateSurfaceHydrocarbonFlow === 'function') {
-               const tempMap = {};
-               for (const z of ['tropical', 'temperate', 'polar']) { tempMap[z] = terra.temperature.zones[z].value; }
-               terra.flowMethaneMeltAmount = globalThis.simulateSurfaceHydrocarbonFlow(terra, noisyStepMs, tempMap);
-            }
             terra.updateResources(noisyStepMs);
             totalSimulatedMs += noisyStepMs;
             if ((stepIdx + 1) % checkEvery === 0) {

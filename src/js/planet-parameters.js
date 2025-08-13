@@ -101,13 +101,13 @@ const marsOverrides = {
 "resources": {
     "surface": {
       "ice": {
-        "initialValue": 8200007980898620
+        "initialValue": 8200007985298688
       },
       "liquidWater": {
         "initialValue": 0
       },
       "dryIce": {
-        "initialValue": 20000036381099.133
+        "initialValue": 1476511541532.2644
       },
       "liquidMethane": {
         "initialValue": 0
@@ -118,10 +118,10 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 23998810562847.49
+        "initialValue": 22522299021317.324
       },
       "atmosphericWater": {
-        "initialValue": 19100402.12301435
+        "initialValue": 14700077.113325292
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -131,17 +131,17 @@ const marsOverrides = {
   "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 37778199.556139365,
+      "ice": 29437122.81635771,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 56730796.17582948,
+      "ice": 44611661.56616815,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007886389624.5,
+      "ice": 4500007911249903,
       "buriedIce": 700000000000000
     }
   },
@@ -153,7 +153,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 0
+      "dryIce": 1476511541532.2644
     }
   },
   "zonalHydrocarbons": {
@@ -193,13 +193,13 @@ const titanOverrides = {
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       "carbonDioxide": {
-        "initialValue": 95729.50158850153
+        "initialValue": 99330.23938609319
       },
       "atmosphericWater": {
-        "initialValue": 9.597449302588715e-14
+        "initialValue": 2.3873381347100907e-14
       },
       "atmosphericMethane": {
-        "initialValue": 260430020861844.1,
+        "initialValue": 129156962655200.3,
         "unlocked": true
       }
     },
@@ -207,7 +207,7 @@ const titanOverrides = {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
     }
   },
- "zonalWater": {
+  "zonalWater": {
     "tropical": {
       "liquid": 0,
       "ice": 3791.2409230205194,
@@ -226,27 +226,27 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 0
+      "dryIce": 262.97338814047794
     },
     "temperate": {
-      "dryIce": 0
+      "dryIce": 346.8498221071425
     },
     "polar": {
-      "dryIce": 0
+      "dryIce": 59.937403981005644
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 1720311771320.0037,
+      "liquid": 763077755993.29,
       "ice": 0
     },
     "temperate": {
-      "liquid": 2236159434617.72,
+      "liquid": 991899866089.7545,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 6113206932240.577
+      "ice": 3588059723150.7617
     }
   },
 
@@ -280,8 +280,7 @@ const callistoOverrides = {
       land: { initialValue: 7300000000 },
 
       /* ~4 × 10¹⁶ t of easily‑accessible water‑ice (≪ 4 × 10¹⁹ t true inventory) */
-      ice: { initialValue: 159_999_999_942_703_360, unlocked: true },
-
+      ice: { initialValue: 0, unlocked: true },
       liquidWater:   { initialValue: 0 },
       dryIce:        { initialValue: 0 },
       liquidMethane: { initialValue: 0 },
@@ -297,10 +296,10 @@ const callistoOverrides = {
 
     /* ---------- ATMOSPHERE (ultra‑thin CO₂/O₂ exosphere) ---------- */
     atmospheric: {
-      carbonDioxide:    { initialValue: 2414.6137246225217 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
+      carbonDioxide:    { initialValue: 18197.670355272443 },   // CO₂ exosphere detected by Galileo :contentReference[oaicite:1]{index=1}
       inertGas:         { initialValue: 1e5 },   // mostly Ar; trace amounts
       oxygen:           { initialValue: 5e3 },   // sputtered O₂  :contentReference[oaicite:2]{index=2}
-      atmosphericWater: { initialValue: 22934.27284032676 },
+      atmosphericWater: { initialValue: 139.11057047257964 },
       atmosphericMethane:{ initialValue: 0 }
     },
 
@@ -315,29 +314,29 @@ const callistoOverrides = {
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 227987.50423423847,
-      "buriedIce": 4e+18
+      "ice": 156341.6517211872,
+      "buriedIce": 4000000000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 1899338.2410272758,
-      "buriedIce": 5e+18
+      "ice": 1719858.449614392,
+      "buriedIce": 5000000000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 39999644653114.9,
-      "buriedIce": 1e+18
+      "ice": 39999644927037.81,
+      "buriedIce": 1000000000000000000
     }
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 13595.230503597835
+      "dryIce": 9081.029927055873
     },
     "temperate": {
-      "dryIce": 23737.390468573874
+      "dryIce": 15854.44191563618
     },
     "polar": {
-      "dryIce": 10252.765303402204
+      "dryIce": 6866.857802233041
     }
   },
   "zonalHydrocarbons": {

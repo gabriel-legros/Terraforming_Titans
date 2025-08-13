@@ -68,7 +68,7 @@ const KPA_PER_ATM = 101.325;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.000047944585831950544;
-const EQUILIBRIUM_CO2_PARAMETER = 3.695049443068239e-8;
+const EQUILIBRIUM_CO2_PARAMETER = 5.5e-9;
 
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
@@ -186,6 +186,7 @@ class Terraforming extends EffectableEntity{
       targetMin: 278.15, // 15°C in Kelvin,
       targetMax: 298.15,
       effectiveTempNoAtmosphere: 0,
+      equilibriumTemperature: 0,
       emissivity: 0,
       opticalDepth: 0,
       unlocked: false,
@@ -194,19 +195,22 @@ class Terraforming extends EffectableEntity{
           initial: 0,
           value: 0,
           day: 0,
-          night: 0
+          night: 0,
+          equilibriumTemperature: 0
         },
         temperate: {
           initial: 0,
           value: 0,
           day: 0,
-          night: 0
+          night: 0,
+          equilibriumTemperature: 0
         },
         polar: {
           initial: 0,
           value: 0,
           day: 0,
-          night: 0
+          night: 0,
+          equilibriumTemperature: 0
         }
       }
     };
@@ -425,18 +429,11 @@ class Terraforming extends EffectableEntity{
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
     updateResources(deltaTime) {
+        this.update();
+
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         if (durationSeconds <= 0) return;
 
-        // Simulate atmospheric and water flow between zones
-        const tempMap = {};
-        for (const z of ZONES) {
-          tempMap[z] = this.temperature.zones[z].value;
-        }
-        this.flowMeltAmount = simulateSurfaceWaterFlow(this, deltaTime, tempMap);
-        this.flowMethaneMeltAmount = simulateSurfaceHydrocarbonFlow(this, deltaTime, tempMap);
-        this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
-        this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
 
         const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
@@ -485,6 +482,31 @@ class Terraforming extends EffectableEntity{
                 actualMethaneIceCondensation: 0
             };
         });
+
+        // Simulate atmospheric and water flow between zones
+        const tempMap = {};
+        for (const z of zones) {
+          tempMap[z] = this.temperature.zones[z].value;
+        }
+        const waterFlowResult = simulateSurfaceWaterFlow(this, deltaTime, tempMap);
+        this.flowMeltAmount = waterFlowResult.totalMelt;
+        this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
+
+        const hydrocarbonFlowResult = simulateSurfaceHydrocarbonFlow(this, deltaTime, tempMap);
+        this.flowMethaneMeltAmount = hydrocarbonFlowResult.totalMelt;
+        this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
+
+        for (const zone of zones) {
+            if (waterFlowResult.changes[zone]) {
+                zonalChanges[zone].liquidWater += waterFlowResult.changes[zone].liquid || 0;
+                zonalChanges[zone].ice += waterFlowResult.changes[zone].ice || 0;
+                zonalChanges[zone].buriedIce += waterFlowResult.changes[zone].buriedIce || 0;
+            }
+            if (hydrocarbonFlowResult.changes[zone]) {
+                zonalChanges[zone].liquidMethane += hydrocarbonFlowResult.changes[zone].liquid || 0;
+                zonalChanges[zone].hydrocarbonIce += hydrocarbonFlowResult.changes[zone].ice || 0;
+            }
+        }
 
         // Store total atmospheric changes calculated across all zones
         let totalAtmosphericWaterChange = 0;
@@ -982,7 +1004,7 @@ class Terraforming extends EffectableEntity{
       const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
       const surfacePressureBar = surfacePressurePa / 100000;
 
-      const emissivity = calculateEmissivity(composition, surfacePressureBar);
+      const emissivity = calculateEmissivity(composition, surfacePressureBar, gSurface);
       this.temperature.emissivity = emissivity;
       const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
       this.temperature.opticalDepth = tau;
@@ -999,6 +1021,7 @@ class Terraforming extends EffectableEntity{
       this.luminosity.zonalFluxes = {};
       let weightedTemp = 0;
       let weightedFlux = 0;
+      let weightedEqTemp = 0;
       for (const zone in this.temperature.zones) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -1007,11 +1030,14 @@ class Terraforming extends EffectableEntity{
         this.temperature.zones[zone].value = zoneTemps.mean;
         this.temperature.zones[zone].day = zoneTemps.day;
         this.temperature.zones[zone].night = zoneTemps.night;
+        this.temperature.zones[zone].equilibriumTemperature = zoneTemps.equilibriumTemperature;
         const zonePct = getZonePercentage(zone);
         weightedTemp += zoneTemps.mean * zonePct;
         weightedFlux += zoneFlux * zonePct;
+        weightedEqTemp += zoneTemps.equilibriumTemperature * zonePct;
       }
       this.temperature.value = weightedTemp;
+      this.temperature.equilibriumTemperature = weightedEqTemp;
       this.luminosity.modifiedSolarFlux = weightedFlux;
       this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
     }
@@ -1089,8 +1115,9 @@ class Terraforming extends EffectableEntity{
     calculateActualAlbedo() {
         const surf = this.calculateSurfaceAlbedo();
         const pressureBar = this.calculateTotalPressure() / 100;
+        const gSurface = this.celestialParameters.gravity;
         const { composition } = this.calculateAtmosphericComposition();
-        return calculateActualAlbedoPhysics(surf, pressureBar, composition).albedo;
+        return calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface).albedo;
     }
 
     _updateZonalCoverageCache() {
@@ -1104,7 +1131,7 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    update(deltaTime) {
+    update() {
       // Distribute global changes (from buildings) into zones first
 
       this._updateZonalCoverageCache(); // New call at the start of the update tick

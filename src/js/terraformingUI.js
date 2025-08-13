@@ -118,22 +118,24 @@ function createTemperatureBox(row) {
     tempInfo.innerHTML = '&#9432;';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p>Current average: <span id="temperature-current"></span><span class="temp-unit"></span></p>
-      <p>Effective Temp (No Atm): <span id="effective-temp-no-atm"></span> <span class="temp-unit"></span></p>
+      <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
+      <p>Equilibrium Temp: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
       <table>
         <thead>
           <tr>
             <th>Zone</th>
             <th>T (<span class="temp-unit"></span>)</th>
-            <th>Delta (<span class="temp-unit"></span>)</th>
-            <th>Day (<span class="temp-unit"></span>)</th>
-            <th>Night (<span class="temp-unit"></span>)</th>
+            <th>T_eq</th>
+            <th>Delta</th>
+            <th>Day</th>
+            <th>Night</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Tropical</td>
             <td><span id="tropical-temp">${terraforming.temperature.zones.tropical.value.toFixed(2)}</span></td>
+            <td><span id="tropical-eq-temp"></span></td>
             <td><span id="tropical-delta"></span></td>
             <td><span id="tropical-day">${terraforming.temperature.zones.tropical.day.toFixed(2)}</span></td>
             <td><span id="tropical-night">${terraforming.temperature.zones.tropical.night.toFixed(2)}</span></td>
@@ -141,6 +143,7 @@ function createTemperatureBox(row) {
           <tr>
             <td>Temperate</td>
             <td><span id="temperate-temp">${terraforming.temperature.zones.temperate.value.toFixed(2)}</span></td>
+            <td><span id="temperate-eq-temp"></span></td>
             <td><span id="temperate-delta"></span></td>
             <td><span id="temperate-day">${terraforming.temperature.zones.temperate.day.toFixed(2)}</span></td>
             <td><span id="temperate-night">${terraforming.temperature.zones.temperate.night.toFixed(2)}</span></td>
@@ -148,6 +151,7 @@ function createTemperatureBox(row) {
           <tr>
             <td>Polar</td>
             <td><span id="polar-temp">${terraforming.temperature.zones.polar.value.toFixed(2)}</span></td>
+            <td><span id="polar-eq-temp"></span></td>
             <td><span id="polar-delta"></span></td>
             <td><span id="polar-day">${terraforming.temperature.zones.polar.day.toFixed(2)}</span></td>
             <td><span id="polar-night">${terraforming.temperature.zones.polar.night.toFixed(2)}</span></td>
@@ -182,17 +186,19 @@ function createTemperatureBox(row) {
     temperatureBox.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
     const targetSpan = document.getElementById('temperature-target');
     if(targetSpan){
-      targetSpan.textContent = `Target : Average between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
+      targetSpan.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
     }
 
     const temperatureCurrent = document.getElementById('temperature-current');
     temperatureCurrent.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
   
-    const effectiveTempNoAtm = document.getElementById('effective-temp-no-atm');
-    effectiveTempNoAtm.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.effectiveTempNoAtmosphere), false, 2);
-  
+    const equilibriumTemp = document.getElementById('equilibrium-temp');
+    equilibriumTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
+
     const tropicalTemp = document.getElementById('tropical-temp');
     tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
+    const tropicalEqTemp = document.getElementById('tropical-eq-temp');
+    tropicalEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.equilibriumTemperature), false, 2);
     const tropicalDelta = document.getElementById('tropical-delta');
     const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
     tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
@@ -203,6 +209,8 @@ function createTemperatureBox(row) {
   
     const temperateTemp = document.getElementById('temperate-temp');
     temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
+    const temperateEqTemp = document.getElementById('temperate-eq-temp');
+    temperateEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.equilibriumTemperature), false, 2);
     const temperateDelta = document.getElementById('temperate-delta');
     const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
     temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
@@ -213,6 +221,8 @@ function createTemperatureBox(row) {
   
     const polarTemp = document.getElementById('polar-temp');
     polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
+    const polarEqTemp = document.getElementById('polar-eq-temp');
+    polarEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.equilibriumTemperature), false, 2);
     const polarDelta = document.getElementById('polar-delta');
     const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
     polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
