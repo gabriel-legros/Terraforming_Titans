@@ -38,10 +38,10 @@ function updateDysonSwarmUI(project) {
   if (els.swarmCard) {
     els.swarmCard.style.display = project.isCompleted ? 'block' : 'none';
   }
-  els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 0);
-  els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 0);
+  els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 2);
+  els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
   const total = project.energyPerCollector * project.collectors;
-  els.totalPowerDisplay.textContent = formatNumber(total, false, 0);
+  els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
   if (els.costDisplay) {
     const parts = [];
     for (const category in project.collectorCost) {
