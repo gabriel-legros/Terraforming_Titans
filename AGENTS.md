@@ -80,7 +80,7 @@ Failing to use these helpers may leave the DOM bound to outdated objects.
 To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.  This flag should not be saved/loaded.  Instead, story unlocks, researches and other things will re enable it as needed.
 
 # Testing
-- `jest` and `jsdom` are available globally.
+- Run `npm ci` to install dependencies before running tests.
 - Write tests for any new feature.
 - Run tests with `npm test` and report how many passed or failed.
 - Avoid asserting on exact story text; check IDs or prerequisites instead.
@@ -179,3 +179,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space Storage withdraw mode shows an icon when colony storage is full.
 - Advanced research production scales with the number of terraformed worlds.
 - Planetary thrusters adjust day-night cycle duration when spin changes.
+- Surface flow rates scale with planet radius, so larger planets experience faster hydrological movement.

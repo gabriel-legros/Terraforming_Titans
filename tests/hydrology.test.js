@@ -17,6 +17,21 @@ function makeTerraforming(zonalWater) {
   return { zonalWater, zonalCoverageCache: cache, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
 }
 
+function makeTerraformingWithRadius(zonalWater, radius) {
+  const cache = {};
+  for (const zone in zonalWater) {
+    cache[zone] = {
+      ice: (zonalWater[zone].ice || 0) > 0 ? 0.1 : 0
+    };
+  }
+  return {
+    zonalWater,
+    zonalCoverageCache: cache,
+    zonalSurface: {},
+    celestialParameters: { surfaceArea: 1, radius }
+  };
+}
+
 describe('hydrology melting with buried ice', () => {
   test('calculateMeltingFreezingRates respects area cap', () => {
     const T = 280; // above freezing
@@ -110,5 +125,30 @@ describe('hydrology melting with buried ice', () => {
     const temps = { polar: 260, temperate: 260, tropical: 260 };
     simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
     expect(zonalWater.tropical.liquid).toBeCloseTo(0, 5);
+  });
+
+  test('surface flow scales with planet radius', () => {
+    const marsRadius = 3389.5;
+    const zonalWater = {
+      polar: { liquid: 0, ice: 100, buriedIce: 0 },
+      temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+      tropical: { liquid: 0, ice: 0, buriedIce: 0 }
+    };
+    const temps = { polar: 250, temperate: 274, tropical: 260 };
+    const meltMars = simulateSurfaceWaterFlow(
+      makeTerraformingWithRadius(JSON.parse(JSON.stringify(zonalWater)), marsRadius),
+      1000,
+      temps,
+      zoneElevations
+    ).totalMelt;
+
+    const meltBig = simulateSurfaceWaterFlow(
+      makeTerraformingWithRadius(JSON.parse(JSON.stringify(zonalWater)), marsRadius * 2),
+      1000,
+      temps,
+      zoneElevations
+    ).totalMelt;
+
+    expect(meltBig).toBeCloseTo(meltMars * 2);
   });
 });

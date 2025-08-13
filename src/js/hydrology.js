@@ -15,16 +15,23 @@ meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezin
 
 function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElevationsInput, config) {
     const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity } = config;
+    const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
+    const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
+
+    const marsRadiusKm = 3389.5;
+    const planetRadius = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
+        ? terraforming.celestialParameters.radius
+        : marsRadiusKm;
+    const radiusScale = planetRadius / marsRadiusKm;
+
     const baseFlowRate = 0.001;
-    const flowRateCoefficient = baseFlowRate / (viscosity || 1.0);
+    const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
     const secondsMultiplier = deltaTime / 1000;
     let totalMelt = 0;
 
     const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
     const defaultElevations = { tropical: 0, temperate: 0, polar: 0 };
     const zoneElevations = zoneElevationsInput || (typeof ZONE_ELEVATIONS !== 'undefined' ? ZONE_ELEVATIONS : defaultElevations);
-    const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
-    const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
     const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);
 
     const changes = {};
