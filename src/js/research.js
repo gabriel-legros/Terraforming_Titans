@@ -47,13 +47,13 @@ class Research {
       if (!resources || !resources.colony || !resources.colony.advancedResearch) return;
       if (!resources.colony.advancedResearch.unlocked) return;
       if (typeof spaceManager === 'undefined') return;
+      if (typeof spaceManager.getTerraformedPlanetCount !== 'function') return;
 
-      const statuses = spaceManager.planetStatuses || {};
-      const count = Object.values(statuses).filter(s => s.terraformed).length;
+      const count = spaceManager.getTerraformedPlanetCount();
       if (count <= 0) return;
 
       const rate = count; // 1 per second per terraformed planet
-      resources.colony.advancedResearch.increase(rate * deltaTime / 1000);
+      resources.colony.advancedResearch.increase((rate * deltaTime) / 1000);
       resources.colony.advancedResearch.modifyRate(rate, 'Research Manager', 'research');
     }
 
