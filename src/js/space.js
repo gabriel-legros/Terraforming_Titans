@@ -103,6 +103,19 @@ class SpaceManager extends EffectableEntity {
         return this.isPlanetTerraformed(this.currentPlanetKey) ? count : count + 1;
     }
 
+    /**
+     * Counts how many planets have been terraformed prior to the current world.
+     * The current planet is excluded even if it has already been terraformed.
+     * @returns {number}
+     */
+    getTerraformedPlanetCountExcludingCurrent() {
+        const count = this.getTerraformedPlanetCount();
+        if (this.currentRandomSeed !== null) {
+            return this.isSeedTerraformed(String(this.currentRandomSeed)) ? Math.max(count - 1, 0) : count;
+        }
+        return this.isPlanetTerraformed(this.currentPlanetKey) ? Math.max(count - 1, 0) : count;
+    }
+
     getCurrentWorldName() {
         if (this.currentRandomSeed !== null) {
             return this.currentRandomName || `Seed ${this.currentRandomSeed}`;
