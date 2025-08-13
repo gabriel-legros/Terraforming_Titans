@@ -113,6 +113,11 @@ class Terraforming extends EffectableEntity{
         this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
     }
 
+    const starLuminosity = this.celestialParameters.starLuminosity || 1;
+    this.celestialParameters.starLuminosity = starLuminosity;
+    this.initialCelestialParameters.starLuminosity = starLuminosity;
+    setStarLuminosity(starLuminosity);
+
     this.lifeParameters = lifeParameters; // Load external life parameters
     this.zonalCoverageCache = {};
 

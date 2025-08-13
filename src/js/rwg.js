@@ -669,6 +669,7 @@ function hashStringToInt(str) {
         mass: bulk.mass,
         albedo,
         rotationPeriod: rotation,
+        starLuminosity: star.luminositySolar,
         parentBody,
         surfaceArea,
         temperature: { day: temps.day, night: temps.night, mean: temps.mean },

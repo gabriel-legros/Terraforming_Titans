@@ -276,8 +276,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       eqBtn.disabled = true;
       try {
         const result = await runEquilibration(res.merged, {
-          cancelToken,
-          star: res.star
+          cancelToken
         }, (p, info) => {
           const label = document.getElementById('rwg-progress-label');
           if (label && info?.label) label.textContent = info.label;

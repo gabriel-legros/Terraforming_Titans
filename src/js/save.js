@@ -67,10 +67,6 @@ function loadGame(slotOrCustomString) {
             currentPlanetParameters = planetParameters[key];
           }
         }
-        if (typeof setStarLuminosity === 'function') {
-          setStarLuminosity(worldOriginal?.star?.luminositySolar || 1);
-        }
-
         // Clear previously applied story effects so they don't carry over
         if (storyManager) {
           storyManager.appliedEffects = [];

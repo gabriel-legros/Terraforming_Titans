@@ -24,7 +24,9 @@ describe('RWG solar luminosity persistence', () => {
     sandbox.resources = { colony: { colonists: { value: 0 } } };
     sandbox.saveGameToSlot = () => {};
     sandbox.projectManager = { projects: { spaceStorage: { saveTravelState: () => null, loadTravelState: () => {} } } };
-    sandbox.initializeGameState = () => {};
+    sandbox.initializeGameState = () => {
+      sandbox.setStarLuminosity(sandbox.currentPlanetParameters?.celestialParameters?.starLuminosity || 1);
+    };
     sandbox.updateProjectUI = () => {};
     sandbox.updateSpaceUI = () => {};
     sandbox.skillManager = null;
@@ -57,7 +59,7 @@ describe('RWG solar luminosity persistence', () => {
 
     const sm = new sandbox.SpaceManager({ mars: { name: 'Mars' } });
     sandbox.spaceManager = sm;
-    sm.travelToRandomWorld({ merged: { name: 'Alpha' }, star: { luminositySolar: 2 } }, '42');
+    sm.travelToRandomWorld({ merged: { name: 'Alpha', celestialParameters: { starLuminosity: 2 } }, star: { luminositySolar: 2 } }, '42');
     expect(sandbox.getStarLuminosity()).toBe(2);
 
     const saved = JSON.stringify({ spaceManager: sm.saveState() });

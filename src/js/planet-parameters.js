@@ -90,6 +90,7 @@ const defaultPlanetParameters = {
     mass: 6.417e23, // kg
     albedo: 0.25, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
+    starLuminosity: 1, // Multiplier relative to Sol
   }
 };
 
@@ -258,6 +259,7 @@ const titanOverrides = {
     mass: 1.345e23, // kg
     albedo: 0.15,
     rotationPeriod: 382.7,
+    starLuminosity: 1,
     parentBody: {
       name: 'Saturn',
       radius: 60268,        // km
@@ -362,6 +364,7 @@ const callistoOverrides = {
     mass: 1.076e23,            // kg
     albedo: 0.17,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
     rotationPeriod: 400.8,     // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
+    starLuminosity: 1,
     parentBody: {
       name: 'Jupiter',
       radius: 71492,       // km
@@ -458,6 +461,7 @@ const ganymedeOverrides = {
     mass: 1.482e23,            // kg
     albedo: 0.21,              // Bond albedo estimate
     rotationPeriod: 171.7,     // hours (7.155 days, tidally locked)
+    starLuminosity: 1,
     parentBody: {
       name: 'Jupiter',
       radius: 71492,      // km

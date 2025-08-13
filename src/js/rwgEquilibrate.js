@@ -194,9 +194,6 @@
 
     return new Promise((resolve, reject) => {
       const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
-      if (typeof setStarLuminosity === 'function') {
-        setStarLuminosity(options.star?.luminositySolar || 1);
-      }
       try {
         const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
         if (typeof TF !== 'function') {

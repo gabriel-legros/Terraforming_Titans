@@ -20,8 +20,7 @@ describe('star luminosity affects solar flux', () => {
   });
 
   test('flux scales with star luminosity multiplier', () => {
-    Terraforming.setStarLuminosity(2);
-    const terra = new Terraforming({}, { radius: 1, distanceFromSun: 1, albedo: 0, gravity: 1 });
+    const terra = new Terraforming({}, { radius: 1, distanceFromSun: 1, albedo: 0, gravity: 1, starLuminosity: 2 });
     const flux = terra.calculateSolarFlux(149597870700);
     expect(flux).toBeCloseTo(2722, 0);
   });
