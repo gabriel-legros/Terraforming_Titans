@@ -172,3 +172,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Water overflow counts as production and is included in resource totals instead of showing a separate overflow line.
 - Star luminosity is a celestial parameter set during Terraforming construction, ensuring new games have correct solar flux.
 - SpaceManager stores the random world seed as `currentPlanetKey` when visiting procedural planets, unifying key handling for story and procedural worlds.
+- Optical depth tooltip lists contributions from each gas.
