@@ -81,6 +81,7 @@ To ensure this works properly, every feature in the game that has an UI should h
 
 # Testing
 - Run `npm ci` to install dependencies before running tests.
+- Save tests output to a file so you don't have to rerun it just to read the results.
 - Write tests for any new feature.
 - Run tests with `npm test` and report how many passed or failed.
 - Avoid asserting on exact story text; check IDs or prerequisites instead.
