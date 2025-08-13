@@ -67,7 +67,7 @@ class SpaceManager extends EffectableEntity {
      * @returns {boolean} - True if terraformed, false otherwise. Returns false if planet not found.
      */
     isPlanetTerraformed(planetKey) {
-        return this.planetStatuses[planetKey]?.terraformed || false;
+        return this.getPlanetStatus(planetKey)?.terraformed || false;
     }
 
     /**
@@ -80,12 +80,20 @@ class SpaceManager extends EffectableEntity {
     }
 
     /**
+     * Returns a combined object of story planet statuses and random world statuses.
+     * @returns {Object}
+     */
+    getAllPlanetStatuses() {
+        return { ...this.planetStatuses, ...this.randomWorldStatuses };
+    }
+
+    /**
      * Counts how many planets have been fully terraformed.
      * The current planet only contributes if it is terraformed.
      * @returns {number}
      */
     getTerraformedPlanetCount() {
-        return Object.values(this.planetStatuses)
+        return Object.values(this.getAllPlanetStatuses())
             .filter(status => status.terraformed).length;
     }
 
@@ -209,7 +217,7 @@ class SpaceManager extends EffectableEntity {
      * @returns {object | null} - The status object or null if planet not found.
      */
     getPlanetStatus(planetKey) {
-        return this.planetStatuses[planetKey] || null;
+        return this.planetStatuses[planetKey] || this.randomWorldStatuses[planetKey] || null;
     }
 
     // --- Setters / Updates ---
