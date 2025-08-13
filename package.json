@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Terraforming Titans game",
   "scripts": {
+    "pretest": "test -d node_modules || npm ci --no-audit --no-fund",
     "test": "jest"
   },
   "devDependencies": {
