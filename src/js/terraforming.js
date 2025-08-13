@@ -194,6 +194,7 @@ class Terraforming extends EffectableEntity{
       equilibriumTemperature: 0,
       emissivity: 0,
       opticalDepth: 0,
+      opticalDepthContributions: {},
       unlocked: false,
       zones: {
         tropical: {
@@ -1009,10 +1010,10 @@ class Terraforming extends EffectableEntity{
       const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
       const surfacePressureBar = surfacePressurePa / 100000;
 
-      const emissivity = calculateEmissivity(composition, surfacePressureBar, gSurface);
+      const { emissivity, tau, contributions } = calculateEmissivity(composition, surfacePressureBar, gSurface);
       this.temperature.emissivity = emissivity;
-      const tau = emissivity < 1 ? -Math.log(1 - emissivity) : Infinity;
       this.temperature.opticalDepth = tau;
+      this.temperature.opticalDepthContributions = contributions;
 
       const baseParams = {
         groundAlbedo: groundAlbedo,
@@ -1633,6 +1634,7 @@ synchronizeGlobalResources() {
           this.temperature.emissivity = terraformingState.temperature.emissivity || 0;
           this.temperature.effectiveTempNoAtmosphere = terraformingState.temperature.effectiveTempNoAtmosphere || 0;
           this.temperature.opticalDepth = terraformingState.temperature.opticalDepth || 0;
+          this.temperature.opticalDepthContributions = terraformingState.temperature.opticalDepthContributions || {};
           this.temperature.unlocked = terraformingState.temperature.unlocked || false;
           if (terraformingState.temperature.zones) {
               for (const zone of ['tropical', 'temperate', 'polar']) {

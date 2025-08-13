@@ -13,7 +13,9 @@ describe('atmosphere UI optical depth', () => {
     ctx.toDisplayTemperature = numbers.toDisplayTemperature;
     ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
-    ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
+    const physics = require('../src/js/physics.js');
+    ctx.DEFAULT_SURFACE_ALBEDO = physics.DEFAULT_SURFACE_ALBEDO;
+    ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 
     ctx.resources = { atmospheric: { o2: { displayName: 'O2' } } };
     ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };
@@ -21,7 +23,7 @@ describe('atmosphere UI optical depth', () => {
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
     ctx.terraforming = {
-      temperature: { name: 'Temp', value: 0, emissivity: 1, opticalDepth: 0.5, effectiveTempNoAtmosphere: 0,
+      temperature: { name: 'Temp', value: 0, emissivity: 1, opticalDepth: 0.5, opticalDepthContributions: { co2: 0.3, h2o: 0.2 }, effectiveTempNoAtmosphere: 0,
         zones: { tropical: { value: 0, day: 0, night: 0 }, temperate: { value: 0, day: 0, night: 0 }, polar: { value: 0, day: 0, night: 0 } } },
       atmosphere: { name: 'Atm' },
       water: {}, luminosity: { name: 'Lum', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0, calculateSolarPanelMultiplier: () => 1 },
@@ -29,6 +31,7 @@ describe('atmosphere UI optical depth', () => {
       celestialParameters: { albedo: 0, gravity: 1, radius: 1 },
       calculateSolarPanelMultiplier: () => 1,
       calculateWindTurbineMultiplier: () => 1,
+      calculateTotalPressure: () => 1,
       getAtmosphereStatus: () => true,
       getLuminosityStatus: () => true,
       getMagnetosphereStatus: () => true,
@@ -41,12 +44,17 @@ describe('atmosphere UI optical depth', () => {
     vm.runInContext(code, ctx);
 
     ctx.createTerraformingSummaryUI();
+    ctx.updateAtmosphereBox();
 
     const box = dom.window.document.getElementById('atmosphere-box');
     const pEls = box.querySelectorAll('p');
     expect(pEls.length).toBe(3);
     expect(pEls[0].querySelector('#atmosphere-current')).not.toBeNull();
     expect(pEls[1].querySelector('#optical-depth')).not.toBeNull();
+    const info = pEls[1].querySelector('#optical-depth-info');
+    expect(info).not.toBeNull();
+    expect(info.title).toContain('CO2: 0.30');
+    expect(info.title).toContain('H2O: 0.20');
     expect(box.querySelector('#emissivity')).toBeNull();
     expect(pEls[2].querySelector('#wind-turbine-multiplier')).not.toBeNull();
     expect(pEls[1].classList.contains('no-margin')).toBe(true);
