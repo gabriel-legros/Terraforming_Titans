@@ -28,13 +28,13 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 Two reset layers control long term progression:
 
 ### New game
-Calling `startNewGame()` fully recreates the game state and returns the player to Mars. Nothing carries over between playthroughs.
+Calling `startNewGame()` fully recreates the game state and returns the player to Mars. Nothing carries over between playthroughs.  Care must be taken to ensure that if any value is set later in the game, it must be reset or set again properly when starting a new game.
 
 ### Planet travel
 Selecting another world via `selectPlanet(key)` soft resets the colony while keeping meta systems. It awards one skill point on the first visit and calls `initializeGameState({ preserveManagers: true, preserveJournal: true })` so that:
 * `ResearchManager` survives but `resetRegularResearch()` clears normal tech while advanced research and its resource are preserved.
-* `SkillManager` retains unlocked skills and re‑applies their effects.
-* `SolisManager` keeps quests, points and shop upgrades.
+* `SkillManager` retains unlocked skills and re‑applies their effects.  Gained when travelling.
+* `SolisManager` keeps quests, points and shop upgrades.  Can also buy artifact and provides an upgrade for permanent researches.
 * `SpaceManager` records which planets have been visited or terraformed.
 * `StoryManager` continues tracking active events and re‑applies their rewards.
 * The **Dyson Swarm Receiver** project's collector count persists across planets, but the receiver must be rebuilt to regain energy production.
@@ -77,7 +77,7 @@ resources immediately.
 - **Moving to another planet** – `selectPlanet(key)` switches the planet and
   calls `initializeGameState({ preserveManagers: true })` followed by `updateSpaceUI()`.
 Failing to use these helpers may leave the DOM bound to outdated objects.
-To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.  This flag should not saved/loaded.  Instead, story unlocks, researches and other things will re enable it as needed.
+To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.  This flag should not be saved/loaded.  Instead, story unlocks, researches and other things will re enable it as needed.
 
 # Testing
 - `jest` and `jsdom` are available globally.
@@ -106,7 +106,7 @@ second time they speak in a chapter to help clarify who is talking.
 Warp Gate Command provides a dedicated subtab for managing teams that embark on timed operations through the warp gate. Players recruit custom-named members with classes and skills, track their health, and choose operation difficulty. Operations grant experience and Alien artifacts, while R&D and Facilities menus offer equipment and training upgrades. Statistics and logs persist across planets so progress carries over between worlds.
 
 ## Space Mirror Facility
-Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally. Focused melting grants liquid water freeze immunity, fully protecting 50× the melted amount and partially shielding another 50× depending on freezing intensity.
+Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally.
 
 ## Random World Generator
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
