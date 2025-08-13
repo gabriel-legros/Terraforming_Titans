@@ -68,9 +68,9 @@ describe('resource tooltip zonal values', () => {
     const tropBuried = numbers.formatNumber(15, false, 3);
     const tempBuried = numbers.formatNumber(25, false, 3);
     const polBuried = numbers.formatNumber(35, false, 3);
-    expect(html).toContain(`Tropical: ${tropTotal} / ${tropBuried} (buried)`);
-    expect(html).toContain(`Temperate: ${tempTotal} / ${tempBuried} (buried)`);
-    expect(html).toContain(`Polar: ${polTotal} / ${polBuried} (buried)`);
+    expect(html).toContain(`Tropical: ${tropTotal} / ${tropBuried} (surface/buried)`);
+    expect(html).toContain(`Temperate: ${tempTotal} / ${tempBuried} (surface/buried)`);
+    expect(html).toContain(`Polar: ${polTotal} / ${polBuried} (surface/buried)`);
   });
 
   test('dry ice tooltip shows zonal amounts', () => {
@@ -106,8 +106,8 @@ describe('resource tooltip zonal values', () => {
     const tBuried = numbers.formatNumber(4, false, 3);
     const mBuried = numbers.formatNumber(6, false, 3);
     const pBuried = numbers.formatNumber(8, false, 3);
-    expect(html).toContain(`Tropical: ${tTotal} / ${tBuried} (buried)`);
-    expect(html).toContain(`Temperate: ${mTotal} / ${mBuried} (buried)`);
-    expect(html).toContain(`Polar: ${pTotal} / ${pBuried} (buried)`);
+    expect(html).toContain(`Tropical: ${tTotal} / ${tBuried} (surface/buried)`);
+    expect(html).toContain(`Temperate: ${mTotal} / ${mBuried} (surface/buried)`);
+    expect(html).toContain(`Polar: ${pTotal} / ${pBuried} (surface/buried)`);
   });
 });

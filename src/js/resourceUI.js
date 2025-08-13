@@ -655,7 +655,7 @@ function updateResourceRateDisplay(resource){
           let text = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
           if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
             const buried = zoneBuried[zone] || 0;
-            text += ` / ${formatNumber(buried, false, 3)} (buried)`;
+            text += ` / ${formatNumber(buried, false, 3)} (surface/buried)`;
           }
           line.style.display = 'block';
           if (line.textContent !== text) line.textContent = text;
