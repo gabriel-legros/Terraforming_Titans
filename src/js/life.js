@@ -71,7 +71,7 @@ class LifeDesign {
     geologicalBurial, // Added Geological Burial
     growthTemperatureTolerance = 0
   ) {
-    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 50);
+    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 60);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
     this.optimalGrowthTemperature = new LifeAttribute(
       'optimalGrowthTemperature',
