@@ -435,3 +435,4 @@ second time they speak in a chapter to help clarify who is talking.
 - Radiation display in the terraforming UI now shows mSv/day without formatNumber and values below 0.01 mSv/day appear as 0.
 - Water overflow now counts as production and is included in resource totals instead of showing a separate overflow line.
 - Star luminosity is now a celestial parameter set during Terraforming construction, ensuring new games have correct solar flux.
+- Planetary thrusters now use the host star's mass for orbital calculations on random worlds.

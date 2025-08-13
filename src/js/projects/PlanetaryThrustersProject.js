@@ -267,7 +267,8 @@ class PlanetaryThrustersProject extends Project{
       this.el.distTargetRow.style.display="block";
       this.el.distDvRow.style.display="block";
       this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display=this.el.hillRow.style.display="none";
-      const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU);
+      const starM = (p.starMass || SOLAR_MASS);
+      const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU, G*starM);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
       this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
       if(changed){
@@ -324,7 +325,8 @@ class PlanetaryThrustersProject extends Project{
       }else{
         this.escapePhase=false;
         if(resetDV || this.startAU===null) this.startAU=p.distanceFromSun;
-        this.dVreq=spiralDeltaV(this.startAU,this.tgtAU);
+        const starM = (p.starMass || SOLAR_MASS);
+        this.dVreq=spiralDeltaV(this.startAU,this.tgtAU, G*starM);
       }
     }
   }
@@ -410,7 +412,8 @@ class PlanetaryThrustersProject extends Project{
         this.el.distDvRow.style.display="block";
         this.el.escRow.style.display=this.el.parentRow.style.display=this.el.moonWarn.style.display=this.el.hillRow.style.display="none";
         const curAU=p.distanceFromSun||tgtAU;
-        const dvPreview=spiralDeltaV(curAU,tgtAU);
+        const starM = (p.starMass || SOLAR_MASS);
+        const dvPreview=spiralDeltaV(curAU,tgtAU, G*starM);
         this.el.distDv.textContent=fmt(dvPreview,false,3)+" m/s";
         // For heliocentric moves, show remaining dv based on job when active
         const usingJob  = this.motionInvest && this.dVreq > 0;
@@ -495,13 +498,14 @@ class PlanetaryThrustersProject extends Project{
           this.startAU = p.distanceFromSun; // stays on the planet per your model
           this.dVdone = 0;
           this.energySpentMotion = 0;    // optional reset for clarity
-          this.dVreq = spiralDeltaV(this.startAU, this.tgtAU);
+          const starM = (p.starMass || SOLAR_MASS);
+          this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM);
           this.calcMotionCost();
           this.updateUI();
           return;
         }
       } else {
-        const mu=G*SOLAR_MASS;
+        const mu=G*(p.starMass || SOLAR_MASS);
         let a_sma=p.distanceFromSun*AU_IN_METERS;
         const v=Math.sqrt(mu/a_sma);
         let E=-mu/(2*a_sma)+v*a*dt*(this.tgtAU>this.startAU?+1:-1);
