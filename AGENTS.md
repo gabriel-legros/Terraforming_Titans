@@ -161,6 +161,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Story world original properties list partial atmospheric pressures for key gases instead of a single total.
 - Cargo rocket ship purchases raise future ship prices based on terraformed planets and decay by 1% per second.
 - Metal export cap counts previously terraformed worlds excluding the current planet.
+- SpaceManager exposes `getTerraformedPlanetCountExcludingCurrent` for modules needing previously terraformed world counts.
 - Life design biodome points scale with active Biodomes instead of total built.
 - Cargo rocket spaceship tooltip appears immediately to the right of the Spaceships label.
 - Pre-travel saves no longer update SpaceManager's current world before travel.

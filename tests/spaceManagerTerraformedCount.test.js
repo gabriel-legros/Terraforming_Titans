@@ -9,10 +9,19 @@ describe('SpaceManager terraformed planet counting', () => {
 
     expect(sm.getTerraformedPlanetCount()).toBe(1);
     expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(2);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(1);
 
     sm.planetStatuses.mars.terraformed = true;
     expect(sm.getTerraformedPlanetCount()).toBe(2);
     expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(2);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(1);
+
+    sm.currentPlanetKey = 'titan';
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(1);
+
+    sm.currentPlanetKey = 'mars';
+    sm.planetStatuses.titan.terraformed = false;
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
   });
 });
 

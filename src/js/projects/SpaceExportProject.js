@@ -2,18 +2,9 @@ class SpaceExportProject extends SpaceExportBaseProject {
   getExportCap() {
     if (
       typeof spaceManager !== 'undefined' &&
-      typeof spaceManager.getTerraformedPlanetCount === 'function'
+      typeof spaceManager.getTerraformedPlanetCountExcludingCurrent === 'function'
     ) {
-      let count = spaceManager.getTerraformedPlanetCount();
-      if (
-        typeof spaceManager.getCurrentPlanetKey === 'function' &&
-        typeof spaceManager.isPlanetTerraformed === 'function'
-      ) {
-        const currentKey = spaceManager.getCurrentPlanetKey();
-        if (spaceManager.isPlanetTerraformed(currentKey)) {
-          count -= 1;
-        }
-      }
+      const count = spaceManager.getTerraformedPlanetCountExcludingCurrent();
       return Math.max(count, 1) * 1000000000;
     }
     return 1000000000;

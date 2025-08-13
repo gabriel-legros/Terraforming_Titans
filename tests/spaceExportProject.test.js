@@ -35,7 +35,7 @@ describe('SpaceExportProject', () => {
   test('assignSpaceships respects export cap', () => {
     const ctx = { console, EffectableEntity, shipEfficiency: 1 };
     ctx.resources = { special: { spaceships: { value: 100 } }, colony: { metal: {} } };
-    ctx.spaceManager = { getTerraformedPlanetCount: () => 2 };
+    ctx.spaceManager = { getTerraformedPlanetCountExcludingCurrent: () => 2 };
     vm.createContext(ctx);
 
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -64,9 +64,7 @@ describe('SpaceExportProject', () => {
     const ctx = { console, EffectableEntity, shipEfficiency: 1 };
     ctx.resources = { special: { spaceships: { value: 100 } }, colony: { metal: {} } };
     ctx.spaceManager = {
-      getTerraformedPlanetCount: () => 2,
-      getCurrentPlanetKey: () => 'mars',
-      isPlanetTerraformed: (key) => key === 'mars'
+      getTerraformedPlanetCountExcludingCurrent: () => 1
     };
     vm.createContext(ctx);
 
@@ -87,11 +85,11 @@ describe('SpaceExportProject', () => {
     const config = ctx.projectParameters.exportResources;
     const project = new ctx.SpaceExportProject(config, 'exportResources');
 
-    // current world is terraformed -> one less world counts
+    // export cap uses the provided terraformed count
     expect(project.getExportCap()).toBe(1000000000);
 
-    // now mark current world as unterraformed -> all worlds count
-    ctx.spaceManager.isPlanetTerraformed = () => false;
+    // change the count returned by space manager
+    ctx.spaceManager.getTerraformedPlanetCountExcludingCurrent = () => 2;
     expect(project.getExportCap()).toBe(2000000000);
   });
 });
