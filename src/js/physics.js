@@ -61,7 +61,7 @@ const GAMMA = {
   co2           : 10.0,
   ch4           : 150.0,
   h2so4         : 50.0,
-  greenhousegas : 10000.0
+  greenhousegas : 2500.0
 };
 
 // Saturation only for CH4 (and H2SO4 if you like)
