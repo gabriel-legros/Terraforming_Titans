@@ -132,17 +132,16 @@ function renderSpaceStorageUI(project, container) {
     label.textContent = opt.label;
 
     const fullIcon = document.createElement('span');
-    fullIcon.classList.add('storage-full-icon');
-    fullIcon.innerHTML = ' &#9888;&#xFE0E;';
+    fullIcon.classList.add('info-tooltip-icon');
+    fullIcon.innerHTML = '&#9432;';
     fullIcon.title = 'Colony storage full';
     fullIcon.style.display = 'none';
-    label.appendChild(fullIcon);
 
     const usage = document.createElement('span');
     usage.id = `${project.name}-usage-${opt.resource}`;
     usage.textContent = '0';
 
-    resourceItem.append(checkbox, label, usage);
+    resourceItem.append(checkbox, label, fullIcon, usage);
     resourceGrid.appendChild(resourceItem);
 
     projectElements[project.name] = {

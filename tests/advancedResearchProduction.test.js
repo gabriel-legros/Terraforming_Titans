@@ -20,11 +20,7 @@ describe('advanced research production', () => {
         }
       },
       spaceManager: {
-        planetStatuses: {
-          mars: { terraformed: true },
-          venus: { terraformed: true },
-          titan: { terraformed: false }
-        }
+        getTerraformedPlanetCount: jest.fn().mockReturnValue(2)
       },
       buildings: {},
       colonies: {},
@@ -40,6 +36,7 @@ describe('advanced research production', () => {
 
     manager.update(1000);
 
+    expect(ctx.spaceManager.getTerraformedPlanetCount).toHaveBeenCalled();
     expect(ctx.resources.colony.advancedResearch.value).toBe(2);
     expect(ctx.resources.colony.advancedResearch.modifyRate).toHaveBeenCalledWith(2, 'Research Manager', 'research');
   });
