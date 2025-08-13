@@ -5,7 +5,7 @@ const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
 const hydrology = require('../src/js/hydrology.js');
-hydrology.simulateSurfaceWaterFlow = () => 0;
+hydrology.simulateSurfaceWaterFlow = () => ({ totalMelt: 0, changes: {} });
 hydrology.calculateMeltingFreezingRates = () => ({
   meltRates: { tropical: 0, temperate: 0, polar: 0 },
   freezeRates: { tropical: 0, temperate: 0, polar: 0 }
