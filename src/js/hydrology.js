@@ -15,7 +15,7 @@ meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezin
 
 function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElevationsInput, config) {
     const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity } = config;
-    const baseFlowRate = 0.01;
+    const baseFlowRate = 0.001;
     const flowRateCoefficient = baseFlowRate / (viscosity || 1.0);
     const secondsMultiplier = deltaTime / 1000;
     let totalMelt = 0;
@@ -75,7 +75,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
                 let slopeFactor = 1 + ((zoneElevations[source] || 0) - (zoneElevations[target] || 0));
                 if (slopeFactor < 0.1) slopeFactor = 0.1;
                 const meltCoefficient = flowRateCoefficient * Math.min(Math.sqrt(diff), 1);
-                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
+                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier * 0.1;
                 melts[source][target] = potentialMelt;
                 meltOut[source] += potentialMelt;
             }
