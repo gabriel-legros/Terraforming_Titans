@@ -16,14 +16,15 @@ class SpaceMiningProject extends SpaceshipProject {
     return category === 'colony' && resource === 'metal' && this.shouldPenalizeMetalProduction();
   }
 
-  applyMetalCostPenalty(gain) {
+  applyMetalCostPenalty(gain, metalCostOverride) {
     if (!this.shouldPenalizeMetalProduction()) return;
-    const cost = this.calculateSpaceshipCost();
-    const metalCost = cost.colony?.metal || 0;
-    const scaling = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
-    const totalCost = metalCost * scaling;
+    let deduction = metalCostOverride;
+    if (deduction === undefined) {
+      const cost = this.calculateSpaceshipCost();
+      deduction = cost.colony?.metal || 0;
+    }
     if (gain.colony && typeof gain.colony.metal === 'number') {
-      gain.colony.metal = Math.max(0, gain.colony.metal - totalCost);
+      gain.colony.metal = Math.max(0, gain.colony.metal - deduction);
     }
   }
 
@@ -157,23 +158,23 @@ class SpaceMiningProject extends SpaceshipProject {
 
   calculateSpaceshipTotalResourceGain() {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
-      const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
-      const gainPerShip = this.calculateSpaceshipGainPerShip();
-      const resource = Object.keys(gainPerShip.surface)[0];
-      const amount = gainPerShip.surface[resource] * scalingFactor;
+    const gainPerShip = this.calculateSpaceshipGainPerShip();
+    const resource = Object.keys(gainPerShip.surface)[0];
+    const amount = gainPerShip.surface[resource];
       return { surface: { [resource]: amount } };
     }
     return super.calculateSpaceshipTotalResourceGain();
   }
 
-  applySpaceshipResourceGain() {
-    if (this.attributes.dynamicWaterImport && this.pendingResourceGains?.length) {
-      const entry = this.pendingResourceGains[0];
-      const amount = entry.quantity;
+  applySpaceshipResourceGain(gain, fraction) {
+    if (this.attributes.dynamicWaterImport && gain.surface) {
+      const entry = gain.surface;
+      const resource = Object.keys(entry)[0];
+      const amount = entry[resource] * fraction;
       const zones = ['tropical', 'temperate', 'polar'];
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
-      if (allBelow) {
+      if (allBelow || resource === 'ice') {
         zones.forEach(zone => {
           const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
           terraforming.zonalWater[zone].ice += amount * pct;
@@ -189,10 +190,9 @@ class SpaceMiningProject extends SpaceshipProject {
       if (typeof terraforming.synchronizeGlobalResources === 'function') {
         terraforming.synchronizeGlobalResources();
       }
-      this.pendingResourceGains = [];
       return;
     }
-    super.applySpaceshipResourceGain();
+    super.applySpaceshipResourceGain(gain, fraction);
   }
 }
 

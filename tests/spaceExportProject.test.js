@@ -28,8 +28,8 @@ describe('SpaceExportProject', () => {
     project.assignedSpaceships = 200;
     const totalCost = project.calculateSpaceshipTotalCost();
 
-    expect(totalCost.colony.metal).toBeCloseTo(2 * config.attributes.costPerShip.colony.metal);
-    expect(totalCost.colony.energy).toBeCloseTo(2 * config.attributes.costPerShip.colony.energy);
+    expect(totalCost.colony.metal).toBeCloseTo(config.attributes.costPerShip.colony.metal);
+    expect(totalCost.colony.energy).toBeCloseTo(config.attributes.costPerShip.colony.energy);
   });
 
   test('assignSpaceships respects export cap', () => {

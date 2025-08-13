@@ -51,7 +51,7 @@ describe('Space Storage project', () => {
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
     expect(project.getBaseDuration()).toBeCloseTo(100000);
     project.assignedSpaceships = 150;
-    expect(project.getBaseDuration()).toBeCloseTo(1000);
+    expect(project.getBaseDuration()).toBeCloseTo(100000);
     expect(project.calculateTransferAmount()).toBe(1_500_000_000);
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(2000000000000);
