@@ -65,3 +65,15 @@
   .status-cross {
     color: red;
   }
+
+  #optical-depth-info {
+    position: relative;
+  }
+
+  #optical-depth-info .resource-tooltip {
+    text-align: left;
+  }
+
+  #optical-depth-info:hover .resource-tooltip {
+    display: block;
+  }
