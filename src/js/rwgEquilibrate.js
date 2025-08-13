@@ -318,12 +318,12 @@
                 let label = '';
                 if (inMinRun) {
                   progress = Math.min(1, elapsedNow / minRunMs);
-                  label = 'Minimum fast-forward';
+                  label = 'Minimum fast-forward (Game is paused)';
                 } else {
                   const remainingTime = Math.max(0, additionalRunMs);
                   const elapsedInPhase = Math.max(0, elapsedNow - minRunMs);
                   progress = remainingTime > 0 ? Math.min(1, elapsedInPhase / remainingTime) : 1;
-                  label = 'Additional fast-forward';
+                  label = 'Additional fast-forward (Game is paused)';
                 }
                 onProgress(progress, {
                   step: stepIdx + 1,
