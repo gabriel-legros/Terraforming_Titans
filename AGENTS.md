@@ -176,3 +176,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Optical depth tooltip lists contributions from each gas.
 - Optical depth tooltip refreshes its gas contributions in real time while hovered.
 - `getTerraformedPlanetCount` now counts terraformed procedural worlds via `getAllPlanetStatuses`.
+- Space Storage withdraw mode shows an icon when colony storage is full.

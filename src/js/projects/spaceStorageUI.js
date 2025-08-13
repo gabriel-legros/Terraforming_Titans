@@ -131,11 +131,17 @@ function renderSpaceStorageUI(project, container) {
     label.htmlFor = checkbox.id;
     label.textContent = opt.label;
 
+    const fullIcon = document.createElement('span');
+    fullIcon.classList.add('info-tooltip-icon');
+    fullIcon.innerHTML = '&#9432;';
+    fullIcon.title = 'Colony storage full';
+    fullIcon.style.display = 'none';
+
     const usage = document.createElement('span');
     usage.id = `${project.name}-usage-${opt.resource}`;
     usage.textContent = '0';
 
-    resourceItem.append(checkbox, label, usage);
+    resourceItem.append(checkbox, label, fullIcon, usage);
     resourceGrid.appendChild(resourceItem);
 
     projectElements[project.name] = {
@@ -147,6 +153,10 @@ function renderSpaceStorageUI(project, container) {
       usageCells: {
         ...(projectElements[project.name]?.usageCells || {}),
         [opt.resource]: usage
+      },
+      fullIcons: {
+        ...(projectElements[project.name]?.fullIcons || {}),
+        [opt.resource]: fullIcon
       }
     };
   });
@@ -268,6 +278,19 @@ function updateSpaceStorageUI(project) {
           r => r.category === opt.category && r.resource === opt.resource
         );
         cb.checked = checked;
+      }
+    });
+  }
+  if (els.fullIcons) {
+    storageResourceOptions.forEach(opt => {
+      const icon = els.fullIcons[opt.resource];
+      const res = resources[opt.category]?.[opt.resource];
+      if (icon) {
+        if (project.shipWithdrawMode && res && res.hasCap && res.value >= res.cap) {
+          icon.style.display = 'inline';
+        } else {
+          icon.style.display = 'none';
+        }
       }
     });
   }
