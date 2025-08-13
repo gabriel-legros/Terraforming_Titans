@@ -5,7 +5,7 @@ const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
 const hydrology = require('../src/js/hydrology.js');
-hydrology.simulateSurfaceWaterFlow = () => 10;
+hydrology.simulateSurfaceWaterFlow = () => ({ totalMelt: 10, changes: {} });
 
 // set up required globals for terraforming.js
 global.getZoneRatio = getZoneRatio;
@@ -66,7 +66,6 @@ describe('flow melt tracking', () => {
       terra.zonalSurface[z] = { dryIce: 0 };
     }
 
-    terra.flowMeltAmount = 10;
     terra.updateResources(1000);
 
     expect(res.surface.liquidWater.modifyRate).toHaveBeenCalledWith(10, 'Flow Melt', 'terraforming');

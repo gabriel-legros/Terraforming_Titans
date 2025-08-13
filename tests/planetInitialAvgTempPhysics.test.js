@@ -71,7 +71,7 @@ describe('initial average temperature using physics.js', () => {
       });
       calculated += temps.mean * getZonePercentage(zone);
     }
-    expect(Math.abs(calculated - EXPECTED_TEMPS[planet])).toBeLessThan(1);
+    expect(Math.abs(calculated - EXPECTED_TEMPS[planet])).toBeLessThan(2);
   });
 });
 

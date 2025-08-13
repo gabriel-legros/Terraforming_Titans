@@ -37,6 +37,11 @@ if (typeof global.calculateAtmosphericPressure === 'undefined') {
   global.calculateAtmosphericPressure = () => 0;
 }
 
+// Provide a no-op addEffect so modules can call it without crashing
+if (typeof global.addEffect === 'undefined') {
+  global.addEffect = () => {};
+}
+
 // Map dynamic jsdom path requires to the installed jsdom package
 try {
   const Module = require('module');
