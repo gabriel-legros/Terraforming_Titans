@@ -697,3 +697,8 @@
     cursor: help;
     margin-left: 4px;
 }
+.storage-full-icon {
+    color: #ffc107;
+    cursor: help;
+    margin-left: 4px;
+}
