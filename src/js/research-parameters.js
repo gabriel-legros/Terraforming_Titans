@@ -1291,6 +1291,15 @@ const researchParameters = {
         ]
       },
       {
+        id: 'underground_habitats',
+        name: 'Underground habitats',
+        description: 'TBA',
+        cost: { advancedResearch: 50000 },
+        prerequisites: [],
+        effects: [
+        ]
+      },
+      {
         id: 'hive_mind_androids',
         name: 'Hive Mind Androids',
         description: 'Links androids into a cooperative network producing research.',
