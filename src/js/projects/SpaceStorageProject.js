@@ -74,10 +74,10 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
-  calculateTransferPlan(simulate = false) {
+  calculateTransferPlan(simulate = false, capacityOverride = null) {
     const transfers = [];
     let total = 0;
-    const capacity = this.calculateTransferAmount();
+    const capacity = capacityOverride != null ? capacityOverride : this.calculateTransferAmount();
     if (capacity <= 0) return { transfers, total };
 
     if (this.shipWithdrawMode) {
@@ -221,6 +221,59 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  applyContinuousShipOperation(deltaTime) {
+    const fraction = deltaTime / this.getEffectiveDuration();
+    const capacity = this.calculateTransferAmount() * fraction;
+    if (capacity <= 0) {
+      this.shipOperationIsActive = false;
+      return;
+    }
+
+    const totalCost = this.calculateSpaceshipTotalCost();
+    for (const category in totalCost) {
+      for (const resource in totalCost[category]) {
+        const amount = totalCost[category][resource] * this.assignedSpaceships * fraction;
+        if (resources[category][resource].value < amount) {
+          this.shipOperationIsActive = false;
+          return;
+        }
+      }
+    }
+
+    const plan = this.calculateTransferPlan(true, capacity);
+    if (plan.total <= 0) {
+      this.shipOperationIsActive = false;
+      return;
+    }
+
+    for (const category in totalCost) {
+      for (const resource in totalCost[category]) {
+        const amount = totalCost[category][resource] * this.assignedSpaceships * fraction;
+        resources[category][resource].decrease(amount);
+      }
+    }
+
+    plan.transfers.forEach(t => {
+      if (t.mode === 'withdraw') {
+        const stored = this.resourceUsage[t.storageKey] || 0;
+        const remaining = stored - t.amount;
+        if (remaining > 0) {
+          this.resourceUsage[t.storageKey] = remaining;
+        } else {
+          delete this.resourceUsage[t.storageKey];
+        }
+        this.usedStorage = Math.max(0, this.usedStorage - t.amount);
+        resources[t.category][t.resource].increase(t.amount);
+      } else if (t.mode === 'store') {
+        resources[t.category][t.resource].decrease(t.amount);
+        this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
+        this.usedStorage += t.amount;
+      }
+    });
+
+    this.shipOperationIsActive = true;
+  }
+
   completeShipOperation() {
     this.shipOperationIsActive = false;
     this.pendingTransfers.forEach(t => {
@@ -286,7 +339,13 @@ class SpaceStorageProject extends SpaceshipProject {
 
   update(deltaTime) {
     super.update(deltaTime);
-    if (this.shipOperationIsActive) {
+    if (this.isShipOperationContinuous()) {
+      if (this.shipOperationAutoStart) {
+        this.applyContinuousShipOperation(deltaTime);
+      } else {
+        this.shipOperationIsActive = false;
+      }
+    } else if (this.shipOperationIsActive) {
       this.updateShipOperation(deltaTime);
     } else if (this.shipOperationAutoStart && this.canStartShipOperation()) {
       this.startShipOperation();
