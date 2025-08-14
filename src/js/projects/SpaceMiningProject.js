@@ -3,6 +3,11 @@ class SpaceMiningProject extends SpaceshipProject {
     super(config, name);
     this.disableAbovePressure = false;
     this.disablePressureThreshold = 0;
+    const maxPressure = config.attributes?.maxPressure;
+    if (typeof maxPressure === 'number') {
+      this.disableAbovePressure = true;
+      this.disablePressureThreshold = maxPressure;
+    }
   }
 
   shouldPenalizeMetalProduction() {
