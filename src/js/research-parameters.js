@@ -1291,21 +1291,6 @@ const researchParameters = {
         ]
       },
       {
-        id: 'self_replicating_ships_concept',
-        name: 'Self Replicating Ships',
-        description: 'Opens research into autonomous self-building spacecraft.',
-        cost: { advancedResearch: 50000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'selfReplicatingShipsUnlocked',
-            value: true
-          }
-        ]
-      },
-      {
         id: 'hive_mind_androids',
         name: 'Hive Mind Androids',
         description: 'Links androids into a cooperative network producing research.',
@@ -1377,6 +1362,21 @@ const researchParameters = {
             target: 'researchManager',
             type: 'booleanFlag',
             flagId: 'orbitalRingsResearchUnlocked',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'self_replicating_ships_concept',
+        name: 'Self Replicating Ships',
+        description: 'Opens research into autonomous self-building spacecraft.',
+        cost: { advancedResearch: 175000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'selfReplicatingShipsUnlocked',
             value: true
           }
         ]
