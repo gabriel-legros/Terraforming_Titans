@@ -414,7 +414,10 @@ class SpaceshipProject extends Project {
     const started = super.start(resources);
     if (!started) return false;
 
-    if (!this.isContinuous() && this.attributes.spaceMining) {
+    if (this.isContinuous()) {
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    } else if (this.attributes.spaceMining) {
       let gain = this.calculateSpaceshipTotalResourceGain();
       if (this.applyMetalCostPenalty) {
         this.applyMetalCostPenalty(gain);

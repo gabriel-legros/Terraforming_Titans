@@ -182,3 +182,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Advanced research production scales with the number of terraformed worlds.
 - Planetary thrusters adjust day-night cycle duration when spin changes.
 - Surface flow rates scale with planet radius, so larger planets experience faster hydrological movement.
+- Spaceship projects in continuous mode display "Continuous" or "Stopped" instead of a progress bar.
