@@ -197,3 +197,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Project auto-start now runs within ProjectManager and requires the `automateSpecialProjects` flag.
 - Carbon and nitrogen importation projects now start with configurable default pressure limits.
 - Cargo Rocket project cannot start without selecting any resources.
+- Space Storage continuous mode transfers resources each tick and is toggled by the Auto Start Ships checkbox.

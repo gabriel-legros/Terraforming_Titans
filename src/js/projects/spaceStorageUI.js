@@ -171,6 +171,7 @@ function renderSpaceStorageUI(project, container) {
   shipProgressButton.classList.add('progress-button');
   shipProgressButton.style.width = '100%';
   shipProgressButton.addEventListener('click', () => {
+    if (project.isShipOperationContinuous()) return;
     if (project.shipOperationIsPaused) {
       project.resumeShipOperation();
     } else if (!project.shipOperationIsActive) {
@@ -306,7 +307,7 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipProgressButton) {
     if (project.isShipOperationContinuous()) {
-      if (project.shipOperationIsActive && !project.shipOperationIsPaused) {
+      if (project.shipOperationAutoStart) {
         els.shipProgressButton.textContent = 'Continuous';
         els.shipProgressButton.style.background = '#4caf50';
       } else {

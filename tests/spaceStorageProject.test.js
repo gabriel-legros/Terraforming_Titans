@@ -465,6 +465,57 @@ describe('Space Storage project', () => {
     expect(loaded.resourceUsage.metal).toBe(300);
   });
 
+  test('transfers resources continuously based on mode', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        special: { spaceships: { value: 200 } },
+        colony: {
+          metal: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } },
+          energy: { value: 10000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+        },
+        surface: {},
+        atmospheric: {}
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: { getTerraformedPlanetCount: () => 0, getTerraformedPlanetCountIncludingCurrent: () => 1 }
+    };
+    vm.createContext(ctx);
+    vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const attrs = { costPerShip: { colony: { energy: 10 } }, transportPerShip: 100 };
+    const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.repeatCount = 1;
+    project.selectedResources = [{ category: 'colony', resource: 'metal' }];
+    project.assignSpaceships(200);
+    project.shipOperationAutoStart = true;
+
+    project.update(1000);
+    expect(project.resourceUsage.metal).toBeCloseTo(200);
+    expect(project.usedStorage).toBeCloseTo(200);
+    expect(ctx.resources.colony.metal.value).toBeCloseTo(800);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(8000);
+
+    project.shipWithdrawMode = true;
+    project.update(1000);
+    expect(project.resourceUsage.metal).toBeUndefined();
+    expect(project.usedStorage).toBeCloseTo(0);
+    expect(ctx.resources.colony.metal.value).toBeCloseTo(1000);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(6000);
+  });
+
   test('only ship progress shows continuous status with >100 ships', () => {
     const dom = new JSDOM('<!DOCTYPE html><div class="projects-subtab-content-wrapper"></div>');
     const ctx = {
@@ -529,7 +580,7 @@ describe('Space Storage project', () => {
     expect(mainBtn.textContent).toBe('Start storage expansion (Duration: 1.00 seconds)');
     expect(shipBtn.textContent).toBe('Stopped');
 
-    project.shipOperationIsActive = true;
+    project.shipOperationAutoStart = true;
     ctx.updateSpaceStorageUI(project);
     expect(shipBtn.textContent).toBe('Continuous');
   });
