@@ -153,6 +153,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Solis research upgrade lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
 - Chapter 13.2 reward triggers a one-time alert on the Solis tab.
 - Solis point rewards now scale with the square root of terraformed worlds and display two decimal places.
+- Solis point display now shows two decimal places, and alien artifact trade points scale with the Solis point multiplier.
+- Alien artifact donation UI displays Solis points per artifact based on the current terraformed world bonus.
 - Fixed Dyson Swarm collectors resetting after planet travel; collector counts persist across worlds while the receiver must be rebuilt on each planet.
 - Collector persistence is managed through ProjectManager travel state so only the Dyson Swarm's collector count carries over between planets.
 - Space Storage allows storing glass and preserves its capacity and stored resources across planet travel using travel state save/load.
