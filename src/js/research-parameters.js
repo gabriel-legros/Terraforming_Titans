@@ -1352,6 +1352,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'orbital_rings',
+        name: 'Orbital Rings',
+        description: 'Placeholder for orbital ring megastructure research.',
+        cost: { advancedResearch: 150000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'orbitalRingsResearchUnlocked',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
