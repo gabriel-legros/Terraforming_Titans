@@ -354,27 +354,58 @@ class SpaceshipProject extends Project {
 
     const cost = this.getScaledCost();
     const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
-    for (const category in totalSpaceshipCost) {
-      for (const resource in totalSpaceshipCost[category]) {
-        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
-          continue;
+
+    if (this.isContinuous()) {
+      const duration = this.getEffectiveDuration();
+      const factor = 1000 / duration;
+      for (const category in totalSpaceshipCost) {
+        for (const resource in totalSpaceshipCost[category]) {
+          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+            continue;
+          }
+          const required = totalSpaceshipCost[category][resource] * this.assignedSpaceships * factor;
+          if (resources[category][resource].value < required) {
+            return false;
+          }
         }
-        if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
+      }
+
+      if (this.attributes.spaceExport && this.selectedDisposalResource) {
+        const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+        const disposalPerTick = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * factor;
+        const { category, resource } = this.selectedDisposalResource;
+        let required = disposalPerTick;
+        if (this.waitForCapacity) {
+          required += (totalSpaceshipCost[category]?.[resource] || 0) * this.assignedSpaceships * factor +
+            (cost[category]?.[resource] || 0);
+        }
+        if (resources[category][resource].value < required) {
           return false;
         }
       }
-    }
-
-    if (this.attributes.spaceExport && this.waitForCapacity && this.selectedDisposalResource) {
-      const totalDisposal = this.calculateSpaceshipTotalDisposal();
-      for (const category in totalDisposal) {
-        for (const resource in totalDisposal[category]) {
-          const required =
-            totalDisposal[category][resource] +
-            (totalSpaceshipCost[category]?.[resource] || 0) +
-            (cost[category]?.[resource] || 0);
-          if (resources[category][resource].value < required) {
+    } else {
+      for (const category in totalSpaceshipCost) {
+        for (const resource in totalSpaceshipCost[category]) {
+          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+            continue;
+          }
+          if (resources[category][resource].value < totalSpaceshipCost[category][resource]) {
             return false;
+          }
+        }
+      }
+
+      if (this.attributes.spaceExport && this.waitForCapacity && this.selectedDisposalResource) {
+        const totalDisposal = this.calculateSpaceshipTotalDisposal();
+        for (const category in totalDisposal) {
+          for (const resource in totalDisposal[category]) {
+            const required =
+              totalDisposal[category][resource] +
+              (totalSpaceshipCost[category]?.[resource] || 0) +
+              (cost[category]?.[resource] || 0);
+            if (resources[category][resource].value < required) {
+              return false;
+            }
           }
         }
       }
@@ -566,6 +597,11 @@ class SpaceshipProject extends Project {
     if (!this.isContinuous()) return;
     const activeTime = this.lastActiveTime || 0;
     if (activeTime <= 0) return;
+    if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
+      this.isActive = false;
+      this.lastActiveTime = 0;
+      return;
+    }
     const duration = this.getEffectiveDuration();
     const fraction = activeTime / duration;
 
@@ -577,8 +613,10 @@ class SpaceshipProject extends Project {
         }
         const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
         const res = resources[category]?.[resource];
-        if (res && typeof res.decrease === 'function') {
-          res.decrease(amount);
+        if (!res || res.value < amount) {
+          this.isActive = false;
+          this.lastActiveTime = 0;
+          return;
         }
       }
     }
@@ -588,12 +626,33 @@ class SpaceshipProject extends Project {
       const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
       const { category, resource } = this.selectedDisposalResource;
       const res = resources[category]?.[resource];
-      if (res && typeof res.decrease === 'function') {
-        const actual = Math.min(disposalAmount, res.value);
-        res.decrease(actual);
-        if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-          resources.colony.funding.increase(actual * this.attributes.fundingGainAmount);
+      if (!res || res.value < disposalAmount) {
+        this.isActive = false;
+        this.lastActiveTime = 0;
+        return;
+      }
+    }
+
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
         }
+        const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
+        const res = resources[category][resource];
+        res.decrease(amount);
+      }
+    }
+
+    if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+      const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
+      const { category, resource } = this.selectedDisposalResource;
+      const res = resources[category][resource];
+      const actual = Math.min(disposalAmount, res.value);
+      res.decrease(actual);
+      if (this.attributes.fundingGainAmount && resources.colony?.funding) {
+        resources.colony.funding.increase(actual * this.attributes.fundingGainAmount);
       }
     }
 

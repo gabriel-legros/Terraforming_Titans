@@ -237,6 +237,18 @@ class SpaceExportBaseProject extends SpaceshipProject {
     };
   }
 
+  shouldAutomationDisable() {
+    if (this.disableBelowTemperature) {
+      if (typeof terraforming !== 'undefined' && terraforming.temperature) {
+        const temp = terraforming.temperature.value || 0;
+        if (temp <= this.disableTemperatureThreshold) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   canStart() {
     if (!super.canStart()) return false;
 
