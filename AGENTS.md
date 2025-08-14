@@ -191,3 +191,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Dynamic water-import space mining projects scale per-second gains with the assigned ship count.
 - Space Storage project only marks ship transfers as continuous, leaving expansion progress discrete.
 - Added a setting to preserve project auto-start selections between worlds.
+- Project auto-start now runs within ProjectManager and requires the `automateSpecialProjects` flag.

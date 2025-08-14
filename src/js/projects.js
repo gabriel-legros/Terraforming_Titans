@@ -514,6 +514,22 @@ class ProjectManager extends EffectableEntity {
       if (typeof project.applyCostAndGain === 'function') {
         project.applyCostAndGain(deltaTime);
       }
+
+      if (
+        this.isBooleanFlagSet('automateSpecialProjects') &&
+        project.autoStart &&
+        !project.isActive &&
+        !project.isCompleted &&
+        project.canStart()
+      ) {
+        if (project.isPaused) {
+          if (project.resume() && typeof updateProjectUI === 'function') {
+            updateProjectUI(project.name);
+          }
+        } else {
+          this.startProject(project.name);
+        }
+      }
     }
   }
 
