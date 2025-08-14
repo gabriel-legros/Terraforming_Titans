@@ -21,6 +21,7 @@ class Resource extends EffectableEntity {
     this.reserved = resourceData.reserved || 0;
     this.unlocked = resourceData.unlocked;
     this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
+    this.maintenanceMultiplier = resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1; // Multiplier for maintenance costs
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
@@ -48,6 +49,9 @@ class Resource extends EffectableEntity {
     }
     if (config.maintenanceConversion !== undefined) {
       this.maintenanceConversion = config.maintenanceConversion || {};
+    }
+    if (config.maintenanceMultiplier !== undefined) {
+      this.maintenanceMultiplier = config.maintenanceMultiplier;
     }
     if (config.conversionValue !== undefined) {
       this.conversionValue = config.conversionValue || 1;
