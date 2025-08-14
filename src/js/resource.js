@@ -425,13 +425,13 @@ function produceResources(deltaTime, buildings) {
         // Record overflow separately for tooltip display without affecting totals
         const rate = overflow / (deltaTime / 1000);
         if (typeof resource.modifyRate === 'function') {
-          resource.modifyRate(-rate, 'Overflow', 'overflow');
+          resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
         }
         if (liquidRate > 0 && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow', 'overflow');
+          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow (not summed)', 'overflow');
         }
         if (iceRate > 0 && resources.surface?.ice) {
-          resources.surface.ice.modifyRate(iceRate, 'Overflow', 'overflow');
+          resources.surface.ice.modifyRate(iceRate, 'Overflow (not summed)', 'overflow');
         }
       }
     }
