@@ -51,7 +51,7 @@ class WarpGateCommand extends EffectableEntity {
       electronicsEfficiency: { purchases: 0, max: 400 },
       superconductorEfficiency: { purchases: 0, max: 400 },
       androidsEfficiency: { purchases: 0, max: 400 },
-      superalloyEfficiency: { purchases: 0, max: 900, enabled: false },
+      superalloyEfficiency: { purchases: 0, max: 999, enabled: false },
       foodProduction: { purchases: 0, max: 400 },
     };
     this.facilities = {
