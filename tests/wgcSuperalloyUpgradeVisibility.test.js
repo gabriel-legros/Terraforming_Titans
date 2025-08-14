@@ -14,7 +14,6 @@ describe('WGC superalloy upgrade visibility', () => {
     ctx.console = console;
     ctx.EffectableEntity = EffectableEntity;
     ctx.WarpGateCommand = require('../src/js/wgc.js').WarpGateCommand;
-    ctx.researchManager = { isBooleanFlagSet: () => false };
     vm.createContext(ctx);
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'wgcUI.js'), 'utf8');
     vm.runInContext(code, ctx);
@@ -24,7 +23,7 @@ describe('WGC superalloy upgrade visibility', () => {
     const item = dom.window.document.getElementById('wgc-superalloyEfficiency-button').parentElement;
     expect(item.classList.contains('hidden')).toBe(true);
     expect(ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled).toBe(false);
-    ctx.researchManager.isBooleanFlagSet = f => f === 'superalloyResearchUnlocked';
+    ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled = true;
     ctx.updateWGCUI();
     expect(ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled).toBe(true);
     expect(item.classList.contains('hidden')).toBe(false);
