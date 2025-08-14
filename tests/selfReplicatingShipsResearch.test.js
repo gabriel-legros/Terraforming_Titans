@@ -13,7 +13,7 @@ describe('Self Replicating Ships research', () => {
     const adv = ctx.researchParameters.advanced;
     const research = adv.find(r => r.id === 'self_replicating_ships_concept');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(50000);
+    expect(research.cost.advancedResearch).toBe(175000);
     const flag = research.effects.find(e => e.type === 'booleanFlag' && e.flagId === 'selfReplicatingShipsUnlocked' && e.value === true);
     expect(flag).toBeDefined();
   });
