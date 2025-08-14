@@ -202,3 +202,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added Superalloys advanced research unlocking Superalloy Foundry, Superalloy Fusion Reactor, and Ecumenopolis District.
 - Space Storage ship transfers scale with assigned ships, matching rates across the 100-ship transition.
 - Space Storage transfers appear in resource tooltips as production or consumption.
+- WGC shop offers a Superalloy production multiplier upgrade unlocked by Superalloys research, capped at 900 purchases, and increasing production by 100% per purchase.

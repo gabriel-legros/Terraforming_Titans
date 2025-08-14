@@ -16,6 +16,7 @@ const rdItems = {
   electronicsEfficiency: 'Electronics production efficiency',
   superconductorEfficiency: 'Superconductor production efficiency',
   androidsEfficiency: 'Androids production efficiency',
+  superalloyEfficiency: 'Superalloy production efficiency',
   foodProduction: 'Food production efficiency'
 };
 const rdDescriptions = {
@@ -178,7 +179,7 @@ function createRDItem(key, label) {
   });
   div.appendChild(button);
 
-  rdElements[key] = { button, mult: multSpan };
+  rdElements[key] = { button, mult: multSpan, container: div };
   return div;
 }
 
@@ -616,6 +617,13 @@ function updateWGCUI() {
   for (const key in rdElements) {
     const el = rdElements[key];
     if (!el) continue;
+    if (key === 'superalloyEfficiency') {
+      const hasResearch = typeof researchManager !== 'undefined' && typeof researchManager.isBooleanFlagSet === 'function' && researchManager.isBooleanFlagSet('superalloyResearchUnlocked');
+      warpGateCommand.rdUpgrades.superalloyEfficiency.enabled = hasResearch;
+      const enabled = warpGateCommand.rdUpgrades.superalloyEfficiency.enabled;
+      if (el.container) el.container.classList.toggle('hidden', !enabled);
+      if (!enabled) continue;
+    }
     const cost = warpGateCommand.getUpgradeCost(key);
     if (el.button) {
       el.button.textContent = `Buy (${cost})`;
