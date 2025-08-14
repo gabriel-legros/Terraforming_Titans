@@ -618,9 +618,11 @@ function updateWGCUI() {
     const el = rdElements[key];
     if (!el) continue;
     if (key === 'superalloyEfficiency' && warpGateCommand.rdUpgrades && warpGateCommand.rdUpgrades.superalloyEfficiency) {
-      const isEnabled = researchManager.isBooleanFlagSet('superalloyResearchUnlocked');
+      const hasResearch = typeof researchManager === 'undefined'
+        || (typeof researchManager.isBooleanFlagSet === 'function'
+          && researchManager.isBooleanFlagSet('superalloyResearchUnlocked'));
       if (el.container) {
-        el.container.style.display = isEnabled ? '' : 'none';
+        el.container.style.display = hasResearch ? '' : 'none';
       }
       if (!isEnabled) {
         continue;
