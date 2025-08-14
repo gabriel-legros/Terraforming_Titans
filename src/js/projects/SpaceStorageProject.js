@@ -31,15 +31,25 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.repeatCount * this.capacityPerCompletion;
   }
 
+  isContinuous() {
+    return false;
+  }
+
+  isShipOperationContinuous() {
+    return this.assignedSpaceships > 100;
+  }
+
   calculateTransferAmount() {
     const base = this.attributes.transportPerShip || 0;
-    const scalingFactor = this.assignedSpaceships >= 100 ? this.assignedSpaceships / 100 : 1;
+    const scalingFactor = this.isShipOperationContinuous()
+      ? this.assignedSpaceships / 100
+      : 1;
     return base * scalingFactor;
   }
 
   calculateSpaceshipAdjustedDuration() {
     const maxShipsForDurationReduction = 100;
-    if (this.assignedSpaceships >= 100) {
+    if (this.isShipOperationContinuous()) {
       return this.baseDuration;
     }
     const ships = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction);
