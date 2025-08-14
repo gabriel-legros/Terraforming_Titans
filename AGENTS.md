@@ -196,3 +196,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Water overflow no longer contributes to resource totals but remains displayed in tooltips.
 - Project auto-start now runs within ProjectManager and requires the `automateSpecialProjects` flag.
 - Carbon and nitrogen importation projects now start with configurable default pressure limits.
+- Cargo Rocket project cannot start without selecting any resources.
