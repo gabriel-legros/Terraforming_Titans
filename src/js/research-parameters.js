@@ -1352,6 +1352,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanotechnology_stage_1',
+        name: 'Nanotechnology Stage I',
+        description: 'Placeholder for future nanotechnology research.',
+        cost: { advancedResearch: 125000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'nanotechnologyStage1',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
