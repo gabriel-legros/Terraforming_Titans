@@ -624,7 +624,7 @@ function updateWGCUI() {
       if (el.container) {
         el.container.style.display = hasResearch ? '' : 'none';
       }
-      if (!isEnabled) {
+      if (!hasResearch) {
         continue;
       }
     }
