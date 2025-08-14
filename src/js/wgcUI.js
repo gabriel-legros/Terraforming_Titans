@@ -617,10 +617,14 @@ function updateWGCUI() {
   for (const key in rdElements) {
     const el = rdElements[key];
     if (!el) continue;
-    if (key === 'superalloyEfficiency') {
-      const enabled = warpGateCommand.rdUpgrades.superalloyEfficiency.enabled;
-      if (el.container) el.container.classList.toggle('hidden', !enabled);
-      if (!enabled) continue;
+    if (key === 'superalloyEfficiency' && warpGateCommand.rdUpgrades && warpGateCommand.rdUpgrades.superalloyEfficiency) {
+      const isEnabled = researchManager.isBooleanFlagSet('superalloyResearchUnlocked');
+      if (el.container) {
+        el.container.style.display = isEnabled ? '' : 'none';
+      }
+      if (!isEnabled) {
+        continue;
+      }
     }
     const cost = warpGateCommand.getUpgradeCost(key);
     if (el.button) {
