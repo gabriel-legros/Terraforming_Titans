@@ -64,10 +64,11 @@ describe('Space Storage UI', () => {
     const items = els.resourceGrid.querySelectorAll('.storage-resource-item');
     expect(items.length).toBe(9);
     const firstItem = items[0];
-    const fullIcon = firstItem.children[2];
-    expect(fullIcon.classList.contains('info-tooltip-icon')).toBe(true);
+    const label = firstItem.children[1];
+    const fullIcon = label.querySelector('.storage-full-icon');
+    expect(fullIcon).toBeDefined();
     expect(fullIcon.style.display).toBe('none');
-    expect(firstItem.children[3].textContent).toBe(String(numbers.formatNumber(0, false, 0)));
+    expect(firstItem.children[2].textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
     expect(els.storeButton).toBeDefined();
@@ -83,7 +84,7 @@ describe('Space Storage UI', () => {
     const updatedItems = els.resourceGrid.querySelectorAll('.storage-resource-item');
     expect(updatedItems.length).toBe(9);
     const metalItem = updatedItems[0];
-    expect(metalItem.children[3].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
 
     const topSection = container.querySelector('.project-top-section');
     const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
@@ -124,7 +125,7 @@ describe('Space Storage UI', () => {
     ctx.updateSpaceStorageUI(project);
 
     const els = ctx.projectElements[project.name];
-    const icon = els.resourceGrid.querySelector('.storage-resource-item .info-tooltip-icon');
+    const icon = els.resourceGrid.querySelector('.storage-resource-item .storage-full-icon');
     expect(icon.style.display).toBe('none');
 
     project.shipWithdrawMode = true;

@@ -109,8 +109,10 @@ describe('Space Storage project', () => {
     const checkboxes = container.querySelectorAll('#ss-resource-grid input[type="checkbox"]');
     expect(checkboxes.length).toBe(9);
     const items = container.querySelectorAll('#ss-resource-grid .storage-resource-item');
-    expect(items[0].children.length).toBe(4);
-    expect(items[0].children[2].classList.contains('info-tooltip-icon')).toBe(true);
+    expect(items[0].children.length).toBe(3);
+    const label = items[0].children[1];
+    const fullIcon = label.querySelector('.storage-full-icon');
+    expect(fullIcon).toBeDefined();
     checkboxes[0].checked = true;
     checkboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
