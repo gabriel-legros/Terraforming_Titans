@@ -252,7 +252,9 @@ class Building extends EffectableEntity {
     for (const resource in effectiveCost.colony) {
       const resourceCost = effectiveCost.colony[resource];
       const multiplier = this.getEffectiveMaintenanceCostMultiplier('colony', resource);
-      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier;
+      const resourceData = resources?.colony?.[resource];
+      const resourceMultiplier = resourceData && resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1;
+      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier * resourceMultiplier;
     }
     return maintenanceCost;
   }
