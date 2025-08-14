@@ -196,7 +196,8 @@ const projectParameters = {
     attributes: {
       spaceMining : true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
-      resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}}
+      resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}},
+      maxPressure: 10
     }
   },
   waterSpaceMining: {
@@ -229,7 +230,8 @@ const projectParameters = {
     attributes: {
       spaceMining : true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
-      resourceGainPerShip : {atmospheric: {inertGas : 1000000}}
+      resourceGainPerShip : {atmospheric: {inertGas : 1000000}},
+      maxPressure: 100
     }
   },
   spaceElevator: {
