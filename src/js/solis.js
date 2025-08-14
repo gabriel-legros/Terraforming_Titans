@@ -54,6 +54,22 @@ class SolisManager extends EffectableEntity {
     };
   }
 
+  getTerraformedWorldBonus() {
+    if (
+      typeof spaceManager !== 'undefined' &&
+      spaceManager &&
+      typeof spaceManager.getTerraformedPlanetCount === 'function'
+    ) {
+      const count = spaceManager.getTerraformedPlanetCount();
+      return Math.sqrt(count);
+    }
+    return 1;
+  }
+
+  getCurrentReward() {
+    return this.rewardMultiplier * this.getTerraformedWorldBonus();
+  }
+
   availableResources() {
     const list = [];
     for (const name in this.resourceValues) {
@@ -100,7 +116,7 @@ class SolisManager extends EffectableEntity {
     const res = resources.colony[this.currentQuest.resource];
     if (!res || res.value < this.currentQuest.quantity) return false;
     res.decrease(this.currentQuest.quantity);
-    this.solisPoints += this.rewardMultiplier;
+    this.solisPoints += this.getCurrentReward();
     this.currentQuest = null;
     this.lastQuestTime = Date.now();
     this.postCompletionCooldownUntil = this.lastQuestTime + this.questInterval;
@@ -206,7 +222,7 @@ class SolisManager extends EffectableEntity {
     } else {
       res.value -= count;
     }
-    this.solisPoints += count * 10;
+    this.solisPoints += count * 10 * this.getTerraformedWorldBonus();
     return true;
   }
 
