@@ -170,7 +170,7 @@ const buildingsParameters = {
     category: 'production',
     description: 'Uses extreme energy and metal to forge advanced superalloys.',
     cost: { colony: { metal: 10000, glass: 10000, components: 10000, electronics: 5000, superconductors: 1000 } },
-    consumption: { colony: { energy: 1_000_000_000, metal: 1 } },
+    consumption: { colony: { energy: 100_000_000_000, metal: 1 } },
     production: { colony: { superalloys: 0.001 } },
     storage: {},
     dayNightActivity: false,
