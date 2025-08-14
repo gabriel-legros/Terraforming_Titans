@@ -591,10 +591,6 @@ function updateProjectUI(projectName) {
 
 
 
-  // Check if the auto-start checkbox is checked and attempt to start the project automatically
-  if (elements.autoStartCheckbox?.checked && !project.isActive && !project.isCompleted && project.canStart()) {
-    checkAndStartProjectAutomatically(project);
-  }
   // Final visibility check for the footer and its contents
   const footer = elements.cardFooter;
   if (footer) {
@@ -654,16 +650,6 @@ function startProjectWithSelectedResources(project) {
   } else if (project.canStart()) {
     projectManager.startProject(project.name);
   } else {
-  }
-}
-
-function checkAndStartProjectAutomatically(project) {
-  if (project.isPaused) {
-    if (project.canStart()) {
-      startProjectWithSelectedResources(project);
-    }
-  } else if (project.canStart()) {
-    startProjectWithSelectedResources(project);
   }
 }
 
