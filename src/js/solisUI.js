@@ -292,7 +292,10 @@ function updateSolisUI() {
     pointsSpan.textContent = solisManager.solisPoints;
   }
   if (rewardSpan) {
-    rewardSpan.textContent = solisManager.rewardMultiplier;
+    const format = typeof formatNumber === 'function'
+      ? formatNumber
+      : (n, _s, p = 2) => Number(n).toFixed(p);
+    rewardSpan.textContent = format(solisManager.getCurrentReward(), false, 2);
   }
   const quest = solisManager.currentQuest;
   if (questMessage && questDetail && questQuantitySpan && questResourceSpan) {
