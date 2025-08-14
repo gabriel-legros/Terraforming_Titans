@@ -53,7 +53,7 @@ describe('Space Storage project', () => {
     expect(project.getBaseDuration()).toBeCloseTo(100000);
     project.assignedSpaceships = 150;
     expect(project.getBaseDuration()).toBeCloseTo(100000);
-    expect(project.calculateTransferAmount()).toBe(1_500_000_000);
+    expect(project.calculateTransferAmount()).toBe(150_000_000_000);
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(2000000000000);
     project.usedStorage = 1234;
@@ -290,8 +290,8 @@ describe('Space Storage project', () => {
       EffectableEntity: require('../src/js/effectable-entity.js'),
       resources: {
         colony: {
-          metal: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } },
-          water: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; } }
+          metal: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; }, modifyRate: () => {} },
+          water: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; }, modifyRate: () => {} }
         }
       },
       buildings: {},
@@ -334,10 +334,10 @@ describe('Space Storage project', () => {
       EffectableEntity: require('../src/js/effectable-entity.js'),
       resources: {
         colony: {
-          metal: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+          metal: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; }, modifyRate: () => {} }
         },
         surface: {
-          liquidWater: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+          liquidWater: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; }, modifyRate: () => {} }
         }
       },
       buildings: {},
@@ -472,8 +472,24 @@ describe('Space Storage project', () => {
       resources: {
         special: { spaceships: { value: 200 } },
         colony: {
-          metal: { value: 1000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } },
-          energy: { value: 10000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; } }
+          metal: {
+            value: 1000,
+            cap: Infinity,
+            decrease(v){ this.value -= v; },
+            increase(v){ this.value += v; },
+            modifyRate(value, source, type){
+              this.consumptionRateByType = this.consumptionRateByType || {};
+              this.productionRateByType = this.productionRateByType || {};
+              if (value < 0) {
+                this.consumptionRateByType[type] = this.consumptionRateByType[type] || {};
+                this.consumptionRateByType[type][source] = (this.consumptionRateByType[type][source] || 0) - value;
+              } else if (value > 0) {
+                this.productionRateByType[type] = this.productionRateByType[type] || {};
+                this.productionRateByType[type][source] = (this.productionRateByType[type][source] || 0) + value;
+              }
+            }
+          },
+          energy: { value: 10000, cap: Infinity, decrease(v){ this.value -= v; }, increase(v){ this.value += v; }, modifyRate(){ } }
         },
         surface: {},
         atmospheric: {}
@@ -503,10 +519,12 @@ describe('Space Storage project', () => {
     project.shipOperationAutoStart = true;
 
     project.update(1000);
-    expect(project.resourceUsage.metal).toBeCloseTo(200);
-    expect(project.usedStorage).toBeCloseTo(200);
-    expect(ctx.resources.colony.metal.value).toBeCloseTo(800);
+    expect(project.resourceUsage.metal).toBeCloseTo(1000);
+    expect(project.usedStorage).toBeCloseTo(1000);
+    expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(8000);
+    expect(ctx.resources.colony.metal.consumptionRateByType.project['Space Storage'])
+      .toBeCloseTo(1000);
 
     project.shipWithdrawMode = true;
     project.update(1000);
@@ -514,6 +532,39 @@ describe('Space Storage project', () => {
     expect(project.usedStorage).toBeCloseTo(0);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1000);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(6000);
+    expect(ctx.resources.colony.metal.productionRateByType.project['Space Storage'])
+      .toBeCloseTo(1000);
+  });
+
+  test('transfer rate matches at 100-ship transition', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {},
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: { getTerraformedPlanetCount: () => 0, getTerraformedPlanetCountIncludingCurrent: () => 1 }
+    };
+    vm.createContext(ctx);
+    vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const attrs = { costPerShip: {}, transportPerShip: 1000 };
+    const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.assignedSpaceships = 100;
+    const discreteRate = project.calculateTransferAmount() / (project.getBaseDuration() / 1000);
+    project.assignedSpaceships = 101;
+    const continuousRate = project.calculateTransferAmount() / (project.getBaseDuration() / 1000);
+    expect(continuousRate / discreteRate).toBeCloseTo(101 / 100);
   });
 
   test('only ship progress shows continuous status with >100 ships', () => {

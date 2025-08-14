@@ -199,3 +199,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cargo Rocket project cannot start without selecting any resources.
 - Space Storage continuous mode transfers resources each tick and is toggled by the Auto Start Ships checkbox.
 - Space Storage displays transfer rate under Cost & Gain.
+- Space Storage ship transfers scale with assigned ships, matching rates across the 100-ship transition.
+- Space Storage transfers appear in resource tooltips as production or consumption.
