@@ -212,21 +212,22 @@ class CargoRocketProject extends Project {
 
   canStart() {
     if (!super.canStart()) return false;
+    if (!this.selectedResources || this.selectedResources.length === 0) {
+      return false;
+    }
 
-    if (this.selectedResources && this.selectedResources.length > 0) {
-      let totalFundingCost = 0;
-      this.selectedResources.forEach(({ category, resource, quantity }) => {
-        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-        if (resource === 'spaceships') {
-          totalFundingCost += this.getSpaceshipTotalCost(quantity, basePrice);
-        } else {
-          totalFundingCost += basePrice * quantity;
-        }
-      });
-
-      if (resources.colony.funding.value < totalFundingCost) {
-        return false;
+    let totalFundingCost = 0;
+    this.selectedResources.forEach(({ category, resource, quantity }) => {
+      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+      if (resource === 'spaceships') {
+        totalFundingCost += this.getSpaceshipTotalCost(quantity, basePrice);
+      } else {
+        totalFundingCost += basePrice * quantity;
       }
+    });
+
+    if (resources.colony.funding.value < totalFundingCost) {
+      return false;
     }
 
     return true;
