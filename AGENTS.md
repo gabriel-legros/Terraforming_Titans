@@ -199,3 +199,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cargo Rocket project cannot start without selecting any resources.
 - Space Storage continuous mode transfers resources each tick and is toggled by the Auto Start Ships checkbox.
 - Space Storage displays transfer rate under Cost & Gain.
+- Added Superalloys advanced research unlocking Superalloy Foundry, Superalloy Fusion Reactor, and Ecumenopolis District.

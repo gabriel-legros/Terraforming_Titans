@@ -165,6 +165,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  superalloyFoundry: {
+    name: 'Superalloy Foundry',
+    category: 'production',
+    description: 'Uses extreme energy and metal to forge advanced superalloys.',
+    cost: { colony: { metal: 10000, glass: 10000, components: 10000, electronics: 5000, superconductors: 1000 } },
+    consumption: { colony: { energy: 1_000_000_000, metal: 1 } },
+    production: { colony: { superalloys: 0.001 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 100,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   androidFactory: {
     name: 'Androids Factory',
     category: 'production',
@@ -304,6 +319,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  superalloyFusionReactor: {
+    name: 'Superalloy Fusion Reactor',
+    category: 'energy',
+    description: 'Enormous fusion plant using superalloys for containment.',
+    cost: { colony: { metal: 500000, components: 10000, electronics: 10000, superconductors: 5000, superalloys: 5000 } },
+    consumption: { colony: { water: 1 } },
+    production: { colony: { energy: 500_000_000_000 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   battery: {
     name: 'Battery',
     category: 'storage',
@@ -336,7 +366,8 @@ const buildingsParameters = {
         food: 5000,
         components: 500,
         electronics: 200,
-        superconductors: 200
+        superconductors: 200,
+        superalloys: 200
       }
     },
     dayNightActivity: false,
