@@ -18,14 +18,16 @@ describe('WGC superalloy upgrade visibility', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'wgcUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     ctx.warpGateCommand = new ctx.WarpGateCommand();
+    ctx.researchManager = { isBooleanFlagSet: () => false };
     ctx.initializeWGCUI();
     ctx.updateWGCUI();
     const item = dom.window.document.getElementById('wgc-superalloyEfficiency-button').parentElement;
     expect(item.classList.contains('hidden')).toBe(true);
-    expect(ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled).toBe(false);
     ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled = true;
     ctx.updateWGCUI();
-    expect(ctx.warpGateCommand.rdUpgrades.superalloyEfficiency.enabled).toBe(true);
+    expect(item.classList.contains('hidden')).toBe(true);
+    ctx.researchManager.isBooleanFlagSet = f => f === 'superalloyResearchUnlocked';
+    ctx.updateWGCUI();
     expect(item.classList.contains('hidden')).toBe(false);
   });
 });

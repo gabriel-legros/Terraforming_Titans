@@ -618,7 +618,10 @@ function updateWGCUI() {
     const el = rdElements[key];
     if (!el) continue;
     if (key === 'superalloyEfficiency') {
-      const enabled = warpGateCommand.rdUpgrades.superalloyEfficiency.enabled;
+      const hasResearch = typeof researchManager !== 'undefined' &&
+        typeof researchManager.isBooleanFlagSet === 'function' &&
+        researchManager.isBooleanFlagSet('superalloyResearchUnlocked');
+      const enabled = warpGateCommand.rdUpgrades.superalloyEfficiency.enabled && hasResearch;
       if (el.container) el.container.classList.toggle('hidden', !enabled);
       if (!enabled) continue;
     }
