@@ -133,6 +133,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Moon-based planetary thrusters show an Escape Δv row and hide spiral Δv when bound to a parent body.
 - Escaped bodies keep their parent reference but set `hasEscapedParent` to track the event.
 - ProjectManager applies project gains each tick via `applyCostAndGain`, keeping `estimateCostAndGain` as a pure rate estimate.
+- Spaceship projects now switch to proportional, per-ship continuous resource flow when more than 100 spaceships are assigned; smaller fleets resolve costs on start and gains on completion, and rates match at the 100-ship transition.
+- Automation checkboxes pause continuous spaceship projects when resources or environmental thresholds fail and resume them once conditions recover.
 - Ore and geothermal satellite UI split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
 - Space Disposal project displays the expected temperature reduction when jettisoning greenhouse gases.
 - Infrared Vision research immediately removes the day-night penalty on Ice Harvesters when the cycle is disabled.
@@ -181,3 +183,9 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Advanced research production scales with the number of terraformed worlds.
 - Planetary thrusters adjust day-night cycle duration when spin changes.
 - Surface flow rates scale with planet radius, so larger planets experience faster hydrological movement.
+- Spaceship projects in continuous mode display "Continuous" or "Stopped" instead of a progress bar.
+- Continuous spaceship projects revert to discrete timing when assignments fall to 100 ships or fewer.
+- Continuous spaceship projects display total gains as per-second rates.
+- Gas-importing space mining caps per-tick transfers at the configured pressure limit.
+- Dynamic water-import space mining projects scale per-second gains with the assigned ship count.
+- Space Storage project only marks ship transfers as continuous, leaving expansion progress discrete.

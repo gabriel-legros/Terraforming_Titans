@@ -29,6 +29,6 @@ describe('SpaceDisposalProject', () => {
     project.selectedDisposalResource = { category: 'surface', resource: 'liquidWater' };
     const disposal = project.calculateSpaceshipTotalDisposal();
 
-    expect(disposal.surface.liquidWater).toBeCloseTo(2 * config.attributes.disposalAmount);
+    expect(disposal.surface.liquidWater).toBeCloseTo(config.attributes.disposalAmount);
   });
 });

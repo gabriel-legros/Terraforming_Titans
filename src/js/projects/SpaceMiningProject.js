@@ -16,14 +16,15 @@ class SpaceMiningProject extends SpaceshipProject {
     return category === 'colony' && resource === 'metal' && this.shouldPenalizeMetalProduction();
   }
 
-  applyMetalCostPenalty(gain) {
+  applyMetalCostPenalty(gain, metalCostOverride) {
     if (!this.shouldPenalizeMetalProduction()) return;
-    const cost = this.calculateSpaceshipCost();
-    const metalCost = cost.colony?.metal || 0;
-    const scaling = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
-    const totalCost = metalCost * scaling;
+    let deduction = metalCostOverride;
+    if (deduction === undefined) {
+      const cost = this.calculateSpaceshipCost();
+      deduction = cost.colony?.metal || 0;
+    }
     if (gain.colony && typeof gain.colony.metal === 'number') {
-      gain.colony.metal = Math.max(0, gain.colony.metal - totalCost);
+      gain.colony.metal = Math.max(0, gain.colony.metal - deduction);
     }
   }
 
@@ -108,6 +109,25 @@ class SpaceMiningProject extends SpaceshipProject {
     return null;
   }
 
+  shouldAutomationDisable() {
+    if (this.disableAbovePressure) {
+      const gas = this.getTargetAtmosphericResource();
+      if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
+        const amount = resources.atmospheric[gas].value || 0;
+        const pressurePa = calculateAtmosphericPressure(
+          amount,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
+        );
+        const pressureKPa = pressurePa / 1000;
+        if (pressureKPa >= this.disablePressureThreshold) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   canStart() {
     if (!super.canStart()) return false;
 
@@ -155,25 +175,27 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipGainPerShip();
   }
 
-  calculateSpaceshipTotalResourceGain() {
+  calculateSpaceshipTotalResourceGain(perSecond = false) {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
-      const scalingFactor = this.assignedSpaceships > 100 ? this.assignedSpaceships / 100 : 1;
       const gainPerShip = this.calculateSpaceshipGainPerShip();
       const resource = Object.keys(gainPerShip.surface)[0];
-      const amount = gainPerShip.surface[resource] * scalingFactor;
-      return { surface: { [resource]: amount } };
+      const multiplier = perSecond
+        ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+        : this.assignedSpaceships;
+      return { surface: { [resource]: gainPerShip.surface[resource] * multiplier } };
     }
-    return super.calculateSpaceshipTotalResourceGain();
+    return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
-  applySpaceshipResourceGain() {
-    if (this.attributes.dynamicWaterImport && this.pendingResourceGains?.length) {
-      const entry = this.pendingResourceGains[0];
-      const amount = entry.quantity;
+  applySpaceshipResourceGain(gain, fraction) {
+    if (this.attributes.dynamicWaterImport && gain.surface) {
+      const entry = gain.surface;
+      const resource = Object.keys(entry)[0];
+      const amount = entry[resource] * fraction;
       const zones = ['tropical', 'temperate', 'polar'];
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
-      if (allBelow) {
+      if (allBelow || resource === 'ice') {
         zones.forEach(zone => {
           const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
           terraforming.zonalWater[zone].ice += amount * pct;
@@ -189,10 +211,38 @@ class SpaceMiningProject extends SpaceshipProject {
       if (typeof terraforming.synchronizeGlobalResources === 'function') {
         terraforming.synchronizeGlobalResources();
       }
-      this.pendingResourceGains = [];
       return;
     }
-    super.applySpaceshipResourceGain();
+    if (this.disableAbovePressure && gain.atmospheric) {
+      const gas = this.getTargetAtmosphericResource();
+      const entry = gain.atmospheric;
+      if (
+        gas &&
+        typeof entry[gas] === 'number' &&
+        typeof terraforming !== 'undefined' &&
+        resources.atmospheric &&
+        resources.atmospheric[gas]
+      ) {
+        const currentAmount = resources.atmospheric[gas].value || 0;
+        const gSurface = terraforming.celestialParameters.gravity;
+        const radius = terraforming.celestialParameters.radius;
+        const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
+        const limitPa = this.disablePressureThreshold * 1000;
+        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
+        const remaining = Math.max(0, maxMass - currentAmount);
+        const desired = entry[gas] * fraction;
+        const applied = Math.min(desired, remaining);
+        if (applied <= 0) {
+          delete entry[gas];
+          if (Object.keys(entry).length === 0) {
+            delete gain.atmospheric;
+          }
+        } else {
+          entry[gas] = applied / fraction;
+        }
+      }
+    }
+    super.applySpaceshipResourceGain(gain, fraction);
   }
 }
 

@@ -304,21 +304,31 @@ function updateSpaceStorageUI(project) {
     els.updateModeButtons();
   }
   if (els.shipProgressButton) {
-    const duration = project.getEffectiveDuration();
-    const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
-    if (project.shipOperationIsActive) {
-      const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
-      els.shipProgressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
-      els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
-    } else if (project.shipOperationIsPaused) {
-      els.shipProgressButton.textContent = `Resume ship transfers (${timeRemaining}s left)`;
-      els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
-    } else if (project.canStartShipOperation && project.canStartShipOperation()) {
-      els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
-      els.shipProgressButton.style.background = '#4caf50';
+    if (project.isShipOperationContinuous()) {
+      if (project.shipOperationIsActive && !project.shipOperationIsPaused) {
+        els.shipProgressButton.textContent = 'Continuous';
+        els.shipProgressButton.style.background = '#4caf50';
+      } else {
+        els.shipProgressButton.textContent = 'Stopped';
+        els.shipProgressButton.style.background = '#f44336';
+      }
     } else {
-      els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
-      els.shipProgressButton.style.background = '#f44336';
+      const duration = project.getEffectiveDuration();
+      const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
+      if (project.shipOperationIsActive) {
+        const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
+        els.shipProgressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
+        els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+      } else if (project.shipOperationIsPaused) {
+        els.shipProgressButton.textContent = `Resume ship transfers (${timeRemaining}s left)`;
+        els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
+      } else if (project.canStartShipOperation && project.canStartShipOperation()) {
+        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.style.background = '#4caf50';
+      } else {
+        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.style.background = '#f44336';
+      }
     }
   }
 }

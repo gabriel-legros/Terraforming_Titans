@@ -61,9 +61,9 @@ describe('metal production penalty without space elevator', () => {
     project.assignedSpaceships = 1;
     expect(project.canStart()).toBe(true);
     project.start(context.resources);
-    expect(project.pendingResourceGains).toEqual([
-      { category: 'colony', resource: 'metal', quantity: 90 }
-    ]);
+    const duration = project.getEffectiveDuration();
+    project.update(duration);
+    expect(context.resources.colony.metal.increase).toHaveBeenCalledWith(90);
     expect(context.resources.colony.metal.decrease).not.toHaveBeenCalled();
   });
 
@@ -93,8 +93,8 @@ describe('metal production penalty without space elevator', () => {
     });
     expect(project.canStart()).toBe(true);
     project.start(context.resources);
-    expect(project.pendingResourceGains).toEqual([
-      { category: 'colony', resource: 'metal', quantity: 100 }
-    ]);
+    const duration = project.getEffectiveDuration();
+    project.update(duration);
+    expect(context.resources.colony.metal.increase).toHaveBeenCalledWith(100);
   });
 });

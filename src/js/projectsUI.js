@@ -518,7 +518,15 @@ function updateProjectUI(projectName) {
 
       // Update the duration in the progress bar display
       if (elements.progressButton) {
-        if (project.isActive) {
+        if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject && project.isContinuous()) {
+          if (project.isActive && !project.isPaused) {
+            elements.progressButton.textContent = 'Continuous';
+            elements.progressButton.style.background = '#4caf50';
+          } else {
+            elements.progressButton.textContent = 'Stopped';
+            elements.progressButton.style.background = '#f44336';
+          }
+        } else if (project.isActive) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
           if (project.startingDuration < 1000) {
@@ -549,11 +557,12 @@ function updateProjectUI(projectName) {
             elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
           }
 
-        // Set background color based on whether the project can start
-        if (project.canStart()) {
-          elements.progressButton.style.background = '#4caf50'; // Green if it can be started
-        } else {
-          elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+          // Set background color based on whether the project can start
+          if (project.canStart()) {
+            elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+          } else {
+            elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+          }
         }
       }
     }
@@ -567,8 +576,6 @@ function updateProjectUI(projectName) {
       // Wait capacity visibility handled by project subclass
     }
   }
-}
-
   if (typeof project.updateUI === 'function') {
     project.updateUI();
   }
@@ -686,13 +693,14 @@ function formatTotalCostDisplay(totalCost, project) {
 
 
 
-function formatTotalResourceGainDisplay(totalResourceGain) {
+function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
   const gainArray = [];
+  const suffix = perSecond ? '/s' : '';
   for (const category in totalResourceGain) {
     for (const resource in totalResourceGain[category]) {
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
-      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}`);
+      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}${suffix}`);
     }
   }
   return `Total Gain: ${gainArray.join(', ')}`;

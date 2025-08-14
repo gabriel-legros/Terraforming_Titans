@@ -30,6 +30,7 @@ describe('Space Storage UI', () => {
       shipOperationStartingDuration: 0,
       shipOperationIsActive: false,
       shipWithdrawMode: false,
+      isShipOperationContinuous: () => false,
       getEffectiveDuration: () => 1000,
       createSpaceshipAssignmentUI(container) {
         const doc = container.ownerDocument;
@@ -113,6 +114,7 @@ describe('Space Storage UI', () => {
       shipOperationStartingDuration: 0,
       shipOperationIsActive: false,
       shipWithdrawMode: false,
+      isShipOperationContinuous: () => false,
       getEffectiveDuration: () => 1000,
       createSpaceshipAssignmentUI() {},
       createProjectDetailsGridUI() {},

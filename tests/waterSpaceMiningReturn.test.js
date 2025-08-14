@@ -65,7 +65,8 @@ describe('waterSpaceMining dynamic returns', () => {
     const project = createProject(ctx);
     expect(project.canStart()).toBe(true);
     project.start(ctx.resources);
-    project.complete();
+    const duration = project.getEffectiveDuration();
+    project.update(duration);
     const tropExp = 100 * getZonePercentage('tropical');
     const tempExp = 100 * getZonePercentage('temperate');
     const polarExp = 100 * getZonePercentage('polar');
@@ -79,7 +80,8 @@ describe('waterSpaceMining dynamic returns', () => {
     const project = createProject(ctx);
     expect(project.canStart()).toBe(true);
     project.start(ctx.resources);
-    project.complete();
+    const duration = project.getEffectiveDuration();
+    project.update(duration);
     expect(ctx.terraforming.zonalWater.tropical.liquid).toBeCloseTo(100);
     expect(ctx.terraforming.zonalWater.temperate.liquid).toBe(0);
     expect(ctx.terraforming.zonalWater.polar.liquid).toBe(0);
