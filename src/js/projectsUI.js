@@ -693,13 +693,14 @@ function formatTotalCostDisplay(totalCost, project) {
 
 
 
-function formatTotalResourceGainDisplay(totalResourceGain) {
+function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
   const gainArray = [];
+  const suffix = perSecond ? '/s' : '';
   for (const category in totalResourceGain) {
     for (const resource in totalResourceGain[category]) {
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
-      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}`);
+      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}${suffix}`);
     }
   }
   return `Total Gain: ${gainArray.join(', ')}`;

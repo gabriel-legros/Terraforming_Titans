@@ -113,9 +113,10 @@ class SpaceshipProject extends Project {
     }
 
     if (elements.totalGainElement && this.assignedSpaceships != null) {
-      const totalGain = this.calculateSpaceshipTotalResourceGain();
+      const perSecond = this.isContinuous();
+      const totalGain = this.calculateSpaceshipTotalResourceGain(perSecond);
       if (Object.keys(totalGain).length > 0) {
-        elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain);
+        elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain, perSecond);
         elements.totalGainElement.style.display = 'block';
       } else {
         elements.totalGainElement.style.display = 'none';
@@ -328,14 +329,16 @@ class SpaceshipProject extends Project {
     return totalCost;
   }
 
-  calculateSpaceshipTotalResourceGain() {
+  calculateSpaceshipTotalResourceGain(perSecond = false) {
     const totalResourceGain = {};
-    const resourceGainPerShip = this.attributes.resourceGainPerShip || {};
-    const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-    for (const category in resourceGainPerShip) {
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const multiplier = perSecond
+      ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+      : 1;
+    for (const category in gainPerShip) {
       totalResourceGain[category] = {};
-      for (const resource in resourceGainPerShip[category]) {
-        totalResourceGain[category][resource] = resourceGainPerShip[category][resource] * efficiency;
+      for (const resource in gainPerShip[category]) {
+        totalResourceGain[category][resource] = gainPerShip[category][resource] * multiplier;
       }
     }
     return totalResourceGain;
