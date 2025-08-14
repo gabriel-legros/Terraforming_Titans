@@ -198,3 +198,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Carbon and nitrogen importation projects now start with configurable default pressure limits.
 - Cargo Rocket project cannot start without selecting any resources.
 - Space Storage continuous mode transfers resources each tick and is toggled by the Auto Start Ships checkbox.
+- Space Storage displays transfer rate under Cost & Gain.

@@ -287,6 +287,28 @@ class SpaceStorageProject extends SpaceshipProject {
     this.pendingTransfers = [];
   }
 
+  createProjectDetailsGridUI(container) {
+    super.createProjectDetailsGridUI(container);
+    const els = projectElements[this.name];
+    const grid = els.totalGainElement ? els.totalGainElement.parentElement : null;
+    if (grid) {
+      const transferRate = document.createElement('div');
+      transferRate.id = `${this.name}-transfer-rate`;
+      projectElements[this.name].transferRateElement = transferRate;
+      grid.appendChild(transferRate);
+    }
+  }
+
+  updateCostAndGains(elements) {
+    super.updateCostAndGains(elements);
+    if (elements.transferRateElement) {
+      const amount = this.calculateTransferAmount();
+      const seconds = this.getEffectiveDuration() / 1000;
+      const rate = seconds > 0 ? amount / seconds : 0;
+      elements.transferRateElement.textContent = `Transfer Rate: ${formatNumber(rate, true)}/s`;
+    }
+  }
+
   renderUI(container) {
     projectElements[this.name] = projectElements[this.name] || {};
 
