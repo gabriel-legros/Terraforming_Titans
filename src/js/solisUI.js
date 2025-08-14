@@ -183,6 +183,7 @@ function initializeSolisUI() {
 
     const label = document.createElement('span');
     label.classList.add('solis-shop-item-label');
+    label.id = 'solis-donation-label';
     label.textContent = 'Donate artifacts for 10 Solis points each';
     item.appendChild(label);
 
@@ -282,6 +283,7 @@ function updateSolisUI() {
   const donationCount = document.getElementById('solis-donation-count');
   const donationInput = document.getElementById('solis-donation-input');
   const donationButton = document.getElementById('solis-donation-button');
+  const donationLabel = document.getElementById('solis-donation-label');
   const researchShop = document.getElementById('solis-research-shop');
 
   const flag = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisAlienArtifactUpgrade');
@@ -289,7 +291,10 @@ function updateSolisUI() {
   if (researchShop) researchShop.classList.toggle('hidden', !flag);
 
   if (pointsSpan) {
-    pointsSpan.textContent = solisManager.solisPoints;
+    const format = typeof formatNumber === 'function'
+      ? formatNumber
+      : (n, _s, p = 2) => Number(n).toFixed(p);
+    pointsSpan.textContent = format(solisManager.solisPoints, false, 2);
   }
   if (rewardSpan) {
     const format = typeof formatNumber === 'function'
@@ -352,6 +357,13 @@ function updateSolisUI() {
   if (donationButton && donationInput && resources.special && resources.special.alienArtifact) {
     const amt = parseInt(donationInput.value, 10) || 0;
     donationButton.disabled = amt <= 0 || amt > resources.special.alienArtifact.value;
+  }
+  if (donationLabel) {
+    const format = typeof formatNumber === 'function'
+      ? formatNumber
+      : (n, _s, p = 2) => Number(n).toFixed(p);
+    const per = 10 * (solisManager.getTerraformedWorldBonus ? solisManager.getTerraformedWorldBonus() : 1);
+    donationLabel.textContent = `Donate artifacts for ${format(per, false, 2)} Solis points each`;
   }
 
   for (const key in shopElements) {
