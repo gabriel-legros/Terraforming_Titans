@@ -161,9 +161,7 @@ class Resource extends EffectableEntity {
     for (const type in this.productionRateByType) {
         for (const source in this.productionRateByType[type]) {
             const rate = this.productionRateByType[type][source];
-            if (type !== 'overflow') {
                 this.productionRate += rate; // Exclude overflow from total production
-            }
             if (!this.productionRateBySource[source]) this.productionRateBySource[source] = 0;
             this.productionRateBySource[source] += rate;
         }
@@ -428,10 +426,10 @@ function produceResources(deltaTime, buildings) {
           resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
         }
         if (liquidRate > 0 && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow (not summed)', 'overflow');
+          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow', 'overflow');
         }
         if (iceRate > 0 && resources.surface?.ice) {
-          resources.surface.ice.modifyRate(iceRate, 'Overflow (not summed)', 'overflow');
+          resources.surface.ice.modifyRate(iceRate, 'Overflow', 'overflow');
         }
       }
     }
