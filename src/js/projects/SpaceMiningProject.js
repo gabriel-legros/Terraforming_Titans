@@ -175,14 +175,16 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipGainPerShip();
   }
 
-  calculateSpaceshipTotalResourceGain() {
+  calculateSpaceshipTotalResourceGain(perSecond = false) {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
-    const gainPerShip = this.calculateSpaceshipGainPerShip();
-    const resource = Object.keys(gainPerShip.surface)[0];
-    const amount = gainPerShip.surface[resource];
-      return { surface: { [resource]: amount } };
+      const gainPerShip = this.calculateSpaceshipGainPerShip();
+      const resource = Object.keys(gainPerShip.surface)[0];
+      const multiplier = perSecond
+        ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+        : this.assignedSpaceships;
+      return { surface: { [resource]: gainPerShip.surface[resource] * multiplier } };
     }
-    return super.calculateSpaceshipTotalResourceGain();
+    return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
   applySpaceshipResourceGain(gain, fraction) {
