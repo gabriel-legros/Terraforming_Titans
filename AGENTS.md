@@ -202,3 +202,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added Superalloys advanced research unlocking Superalloy Foundry, Superalloy Fusion Reactor, and Ecumenopolis District.
 - Space Storage ship transfers scale with assigned ships, matching rates across the 100-ship transition.
 - Space Storage transfers appear in resource tooltips as production or consumption.
+- Added a maintenanceMultiplier attribute for resources; superalloys use a multiplier of 0 and maintenance costs scale with each resource's multiplier.
