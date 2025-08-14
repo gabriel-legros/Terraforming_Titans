@@ -161,7 +161,9 @@ class Resource extends EffectableEntity {
     for (const type in this.productionRateByType) {
         for (const source in this.productionRateByType[type]) {
             const rate = this.productionRateByType[type][source];
-            this.productionRate += rate;
+            if (type !== 'overflow') {
+                this.productionRate += rate; // Exclude overflow from total production
+            }
             if (!this.productionRateBySource[source]) this.productionRateBySource[source] = 0;
             this.productionRateBySource[source] += rate;
         }
@@ -170,7 +172,9 @@ class Resource extends EffectableEntity {
     for (const type in this.consumptionRateByType) {
         for (const source in this.consumptionRateByType[type]) {
             const rate = this.consumptionRateByType[type][source];
-            this.consumptionRate += rate;
+            if (type !== 'overflow') {
+                this.consumptionRate += rate; // Exclude overflow from total consumption
+            }
             if (!this.consumptionRateBySource[source]) this.consumptionRateBySource[source] = 0;
             this.consumptionRateBySource[source] += rate;
         }
@@ -418,7 +422,7 @@ function produceResources(deltaTime, buildings) {
           }
         });
 
-        // Record overflow as production/consumption so it counts toward totals
+        // Record overflow separately for tooltip display without affecting totals
         const rate = overflow / (deltaTime / 1000);
         if (typeof resource.modifyRate === 'function') {
           resource.modifyRate(-rate, 'Overflow', 'overflow');
