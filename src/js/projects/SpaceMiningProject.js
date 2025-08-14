@@ -211,6 +211,35 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       return;
     }
+    if (this.disableAbovePressure && gain.atmospheric) {
+      const gas = this.getTargetAtmosphericResource();
+      const entry = gain.atmospheric;
+      if (
+        gas &&
+        typeof entry[gas] === 'number' &&
+        typeof terraforming !== 'undefined' &&
+        resources.atmospheric &&
+        resources.atmospheric[gas]
+      ) {
+        const currentAmount = resources.atmospheric[gas].value || 0;
+        const gSurface = terraforming.celestialParameters.gravity;
+        const radius = terraforming.celestialParameters.radius;
+        const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
+        const limitPa = this.disablePressureThreshold * 1000;
+        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
+        const remaining = Math.max(0, maxMass - currentAmount);
+        const desired = entry[gas] * fraction;
+        const applied = Math.min(desired, remaining);
+        if (applied <= 0) {
+          delete entry[gas];
+          if (Object.keys(entry).length === 0) {
+            delete gain.atmospheric;
+          }
+        } else {
+          entry[gas] = applied / fraction;
+        }
+      }
+    }
     super.applySpaceshipResourceGain(gain, fraction);
   }
 }

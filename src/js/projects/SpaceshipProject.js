@@ -16,11 +16,29 @@ class SpaceshipProject extends Project {
   }
 
  assignSpaceships(count) {
+    const wasContinuous = this.isContinuous();
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
     this.assignedSpaceships = this.assignedSpaceships || 0;
     const adjustedCount = Math.max(-this.assignedSpaceships, Math.min(count, availableSpaceships));
     this.assignedSpaceships += adjustedCount;
     resources.special.spaceships.value -= adjustedCount;
+    const nowContinuous = this.isContinuous();
+    if (this.isActive && wasContinuous !== nowContinuous) {
+      if (nowContinuous) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+        this.pendingGain = null;
+      } else {
+        this.isActive = false;
+        this.isCompleted = false;
+        this.isPaused = false;
+        const duration = this.getEffectiveDuration();
+        this.startingDuration = duration;
+        this.remainingTime = duration;
+        this.pendingGain = null;
+        this.start(resources);
+      }
+    }
   }
 
   calculateSpaceshipCost() {

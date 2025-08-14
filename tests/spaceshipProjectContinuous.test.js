@@ -135,5 +135,47 @@ describe('SpaceshipProject continuous cost and gain', () => {
     const continuousRate = perShipGain * 100 * 1000 / project.duration;
     expect(discreteRate).toBeCloseTo(continuousRate);
   });
+
+  test('reverts to discrete mode when ship count drops to 100 or less', () => {
+    const ctx = { console, EffectableEntity, shipEfficiency: 1 };
+    ctx.resources = {
+      colony: { energy: stubResource(1000), metal: stubResource(0) },
+      special: { spaceships: { value: 150 } }
+    };
+    vm.createContext(ctx);
+    const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectCode + '; this.Project = Project;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+
+    global.resources = ctx.resources;
+
+    const config = {
+      name: 'Test',
+      category: 'resources',
+      cost: {},
+      duration: 100000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 20 } }
+      }
+    };
+    const project = new ctx.SpaceshipProject(config, 'test');
+    project.assignSpaceships(150);
+    project.start(ctx.resources);
+    expect(project.isContinuous()).toBe(true);
+    expect(project.remainingTime).toBe(Infinity);
+    project.assignSpaceships(-50);
+    expect(project.isContinuous()).toBe(false);
+    const duration = project.getEffectiveDuration();
+    expect(project.remainingTime).toBeCloseTo(duration);
+    project.update(duration / 2);
+    expect(project.remainingTime).toBeCloseTo(duration / 2);
+  });
 });
 

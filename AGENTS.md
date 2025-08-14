@@ -184,3 +184,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Planetary thrusters adjust day-night cycle duration when spin changes.
 - Surface flow rates scale with planet radius, so larger planets experience faster hydrological movement.
 - Spaceship projects in continuous mode display "Continuous" or "Stopped" instead of a progress bar.
+- Continuous spaceship projects revert to discrete timing when assignments fall to 100 ships or fewer.
+- Gas-importing space mining caps per-tick transfers at the configured pressure limit.
