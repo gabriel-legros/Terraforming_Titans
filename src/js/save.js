@@ -278,6 +278,10 @@ function loadGame(slotOrCustomString) {
         darkModeToggle.checked = gameSettings.darkMode;
         document.body.classList.toggle('dark-mode', gameSettings.darkMode);
       }
+      const preserveAutoStartToggle = document.getElementById('preserve-project-auto-start-toggle');
+      if(preserveAutoStartToggle){
+        preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {

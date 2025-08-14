@@ -661,20 +661,35 @@ class ProjectManager extends EffectableEntity {
 
   saveTravelState() {
     const travelState = {};
+    const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
     for (const name in this.projects) {
       const project = this.projects[name];
+      const state = {};
+      if (preserveAuto) {
+        state.autoStart = project.autoStart;
+      }
       if (typeof project.saveTravelState === 'function') {
-        travelState[name] = project.saveTravelState();
+        Object.assign(state, project.saveTravelState());
+      }
+      if (Object.keys(state).length > 0) {
+        travelState[name] = state;
       }
     }
     return travelState;
   }
 
   loadTravelState(travelState = {}) {
+    const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
     for (const name in travelState) {
       const project = this.projects[name];
-      if (project && typeof project.loadTravelState === 'function') {
-        project.loadTravelState(travelState[name]);
+      if (!project) continue;
+      const state = travelState[name] || {};
+      if (preserveAuto && typeof state.autoStart !== 'undefined') {
+        project.autoStart = state.autoStart;
+      }
+      if (typeof project.loadTravelState === 'function') {
+        const { autoStart, ...projectState } = state;
+        project.loadTravelState(projectState);
       }
     }
   }
