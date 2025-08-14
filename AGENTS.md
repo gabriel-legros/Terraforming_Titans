@@ -192,3 +192,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space Storage project only marks ship transfers as continuous, leaving expansion progress discrete.
 - Added a setting to preserve project auto-start selections between worlds.
 - Water overflow no longer contributes to resource totals but remains displayed in tooltips.
+- Project auto-start now runs within ProjectManager and requires the `automateSpecialProjects` flag.
