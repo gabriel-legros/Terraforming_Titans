@@ -208,6 +208,17 @@ const researchParameters = {
           { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' }
         ]
       },
+      {
+        id: 'superalloy_fusion_reactor',
+        name: 'Superalloy Fusion Reactor',
+        description: 'Unlocks a massive fusion reactor that requires superalloys.',
+        cost: { research: 500000000000 },
+        prerequisites: [],
+        requiredFlags: ['superalloyResearchUnlocked'],
+        effects: [
+          { target: 'building', targetId: 'superalloyFusionReactor', type: 'enable' }
+        ]
+      },
     ],
     industry: [
       {
@@ -567,7 +578,19 @@ const researchParameters = {
               value: 0.75
             }
         ],
-      },  
+      },
+      {
+        id: 'superalloy_foundry',
+        name: 'Superalloy Foundry',
+        description: 'Enables production of superalloys at great energy cost.',
+        cost: { research: 500000000000 },
+        prerequisites: [],
+        requiredFlags: ['superalloyResearchUnlocked'],
+        effects: [
+          { target: 'building', targetId: 'superalloyFoundry', type: 'enable' },
+          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
+        ]
+      },
     ],
     colonization: [
       {
@@ -775,6 +798,17 @@ const researchParameters = {
             targetId: 't6_colony',
             type: 'enable',
           },
+        ],
+      },
+      {
+        id: 't7_colony',
+        name: 'Ecumenopolis District',
+        description: 'Creates a planet-wide city district with unmatched comfort.',
+        cost: { research: 500000000000 },
+        prerequisites: [],
+        requiredFlags: ['superalloyResearchUnlocked'],
+        effects: [
+          { target: 'colony', targetId: 't7_colony', type: 'enable' }
         ],
       },
       {
@@ -1305,10 +1339,16 @@ const researchParameters = {
       {
         id: 'super_alloys',
         name: 'Superalloys',
-        description: 'TBA',
+        description: 'Opens research into advanced superalloy materials.',
         cost: { advancedResearch: 100000 },
         prerequisites: [],
         effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'superalloyResearchUnlocked',
+            value: true
+          }
         ]
       },
       {

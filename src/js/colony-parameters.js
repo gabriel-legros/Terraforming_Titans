@@ -96,5 +96,21 @@ const colonyParameters = {
       maintenanceFactor: 1, // Default maintenance factor
       unlocked: false,
       requiresLand : 100000
+    },
+    t7_colony: {
+      name: 'Ecumenopolis District',
+      category: 'Colony',
+      description: 'A planet-spanning city offering unparalleled comfort and capacity.',
+      cost: { colony: { metal: 50000000, water: 50000000, glass: 50000000, superalloys: 10000 } },
+      consumption: { colony: { energy: 25000000000, food: 1000000, electronics: 10000, androids: 100 } },
+      production: { colony: { research: 1000000 } },
+      storage: { colony: { colonists: 10000000 } },
+      baseComfort: 1,
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: true,
+      maintenanceFactor: 1,
+      unlocked: false,
+      requiresLand: 100000
     }
 }
