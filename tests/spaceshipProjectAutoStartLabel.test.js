@@ -5,8 +5,8 @@ const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
-describe('SpaceshipProject continuous progress UI', () => {
-  test('displays Continuous or Stopped without progress bar', () => {
+describe('SpaceshipProject auto-start label', () => {
+  test('renames to Run in continuous mode and reverts otherwise', () => {
     const dom = new JSDOM(`<!DOCTYPE html>
       <div class="projects-subtab-content-wrapper">
         <div id="resources-projects-list" class="projects-list"></div>
@@ -29,7 +29,11 @@ describe('SpaceshipProject continuous progress UI', () => {
     vm.runInContext(uiCode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.initializeProjectsUI = initializeProjectsUI; this.projectElements = projectElements;', ctx);
 
     class DummySpaceshipProject extends ctx.Project {
-      isContinuous() { return true; }
+      constructor(config, name) {
+        super(config, name);
+        this.continuous = false;
+      }
+      isContinuous() { return this.continuous; }
     }
     ctx.SpaceshipProject = DummySpaceshipProject;
 
@@ -48,26 +52,22 @@ describe('SpaceshipProject continuous progress UI', () => {
 
     ctx.projectManager = {
       projects: { test: project },
-      isBooleanFlagSet: () => false,
-      getProjectStatuses: () => Object.values({ test: project })
+      isBooleanFlagSet: () => true,
+      getProjectStatuses: () => [project]
     };
 
     ctx.initializeProjectsUI();
     ctx.createProjectItem(project);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
-    project.autoStart = true;
-    project.isActive = true;
+    project.continuous = true;
     ctx.updateProjectUI('test');
-    let btn = ctx.projectElements.test.progressButton;
-    expect(btn.textContent).toBe('Continuous');
-    expect(btn.style.background).toBe('rgb(76, 175, 80)');
+    let label = ctx.projectElements.test.autoStartCheckboxContainer.querySelector('label');
+    expect(label.textContent).toBe('Run');
 
-    project.autoStart = false;
-    project.isActive = true;
+    project.continuous = false;
     ctx.updateProjectUI('test');
-    btn = ctx.projectElements.test.progressButton;
-    expect(btn.textContent).toBe('Stopped');
-    expect(btn.style.background).toBe('rgb(244, 67, 54)');
+    label = ctx.projectElements.test.autoStartCheckboxContainer.querySelector('label');
+    expect(label.textContent).toBe('Auto start');
   });
 });

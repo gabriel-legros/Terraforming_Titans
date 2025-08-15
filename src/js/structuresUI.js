@@ -488,7 +488,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const upgradeCount = Math.max(1, selectedBuildCounts[colony.name] || 1);
-    const amount = upgradeCount * 10;
+    const amount = Math.min(upgradeCount * 10, colony.count);
     const cost = colony.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';
