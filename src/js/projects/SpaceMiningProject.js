@@ -192,7 +192,7 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
-  applySpaceshipResourceGain(gain, fraction) {
+  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = {}) {
     if (this.attributes.dynamicWaterImport && gain.surface) {
       const entry = gain.surface;
       const resource = Object.keys(entry)[0];
@@ -247,7 +247,7 @@ class SpaceMiningProject extends SpaceshipProject {
         }
       }
     }
-    super.applySpaceshipResourceGain(gain, fraction);
+    super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
   }
 }
 

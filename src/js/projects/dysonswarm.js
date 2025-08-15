@@ -117,19 +117,22 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   }
 
   estimateCostAndGain(deltaTime = 1000) {
+    const totals = { cost: {}, gain: {} };
     if (this.isCompleted && this.collectors > 0) {
       const rate = this.collectors * this.energyPerCollector;
       resources.colony.energy.modifyRate(rate, 'Dyson Swarm', 'project');
+      totals.gain.colony = { energy: rate * (deltaTime / 1000) };
     }
+    return totals;
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = {}) {
     if (this.isCompleted && this.collectors > 0) {
       const rate = this.collectors * this.energyPerCollector;
-      const energyGain = rate * (deltaTime / 1000);
+      const energyGain = rate * (deltaTime / 1000) * (productivity.colony?.energy ?? 1);
       if (accumulatedChanges) {
         accumulatedChanges.colony.energy += energyGain;
-      } else {
+      } else if (resources.colony?.energy) {
         resources.colony.energy.increase(energyGain);
       }
     }
