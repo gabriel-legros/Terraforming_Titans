@@ -93,8 +93,9 @@ class SpaceshipProject extends Project {
     }
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
-      const totalCost = this.calculateSpaceshipTotalCost();
-      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this);
+      const perSecond = this.isContinuous();
+      const totalCost = this.calculateSpaceshipTotalCost(perSecond);
+      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, perSecond);
     }
 
     if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
@@ -320,11 +321,17 @@ class SpaceshipProject extends Project {
     }
   }
 
-  calculateSpaceshipTotalCost() {
+  calculateSpaceshipTotalCost(perSecond = false) {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
+    const multiplier = perSecond
+      ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+      : 1;
     for (const category in costPerShip) {
-      totalCost[category] = { ...costPerShip[category] };
+      totalCost[category] = {};
+      for (const resource in costPerShip[category]) {
+        totalCost[category][resource] = costPerShip[category][resource] * multiplier;
+      }
     }
     return totalCost;
   }
