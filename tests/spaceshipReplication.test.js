@@ -4,7 +4,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('spaceship self replication', () => {
-  function createContext(flag) {
+  function createContext(flag, assigned = 0) {
     const ctx = { console };
     vm.createContext(ctx);
     ctx.EffectableEntity = EffectableEntity;
@@ -16,7 +16,10 @@ describe('spaceship self replication', () => {
     ctx.fundingModule = null;
     ctx.lifeManager = null;
     ctx.researchManager = null;
-    ctx.projectManager = null;
+    ctx.projectManager = {
+      getAssignedSpaceships: () => assigned,
+      estimateProjects: () => {}
+    };
     ctx.globalEffects = new EffectableEntity({ description: 'global' });
     if (flag) {
       ctx.globalEffects.addAndReplace({ type: 'booleanFlag', flagId: 'selfReplicatingShips', value: true, sourceId: 'test' });
@@ -52,6 +55,13 @@ describe('spaceship self replication', () => {
     ctx.resources.special.spaceships.value = 1e12 - 1;
     vm.runInContext('produceResources(1000, {})', ctx);
     expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e12);
+  });
+
+  test('counts assigned ships toward cap', () => {
+    const ctx = createContext(true, 50);
+    ctx.resources.special.spaceships.value = 1e12 - 60;
+    vm.runInContext('produceResources(1000, {})', ctx);
+    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e12 - 50);
   });
 
   test('no replication when disabled', () => {
