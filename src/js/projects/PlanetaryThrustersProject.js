@@ -535,13 +535,15 @@ class PlanetaryThrustersProject extends Project{
     }
   }
 
-  estimateCostAndGain(){
-    if(!this.isCompleted) return;
-    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return;
-    if(resources && resources.colony && resources.colony.energy &&
-       typeof resources.colony.energy.modifyRate === 'function'){
-      resources.colony.energy.modifyRate(-this.power, 'Planetary Thrusters', 'project');
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
+    const totals = { cost: {}, gain: {} };
+    if(!this.isCompleted) return totals;
+    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return totals;
+    if (applyRates && resources?.colony?.energy && typeof resources.colony.energy.modifyRate === 'function') {
+      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
+    totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
+    return totals;
   }
 
   saveState(){
