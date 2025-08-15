@@ -211,3 +211,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Ecumenopolis District now provides 100M android storage.
 - Colonies can upgrade to the Ecumenopolis District via the upgrade button and require full superalloy cost.
 - Self-replicating ship cap counts ships assigned to projects.
+- Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
