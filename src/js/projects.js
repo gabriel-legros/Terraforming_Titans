@@ -363,38 +363,54 @@ class Project extends EffectableEntity {
 
 
 
-  estimateProjectCostAndGain(deltaTime = 1000) {
-    if (this.isActive && this.autoStart) {
-      const rate = 1000 / this.getEffectiveDuration();
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const totals = { cost: {}, gain: {} };
+    if (this.isActive) {
+      const duration = this.getEffectiveDuration();
+      const rate = 1000 / duration; // per-second rate for display
+      const timeFraction = deltaTime / duration; // fraction of project processed this tick
 
       const cost = this.getScaledCost();
       for (const category in cost) {
+        if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
-          resources[category][resource].modifyRate(
-            -cost[category][resource] * rate,
-            this.displayName,
-            'project'
-          );
+          const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+          if (applyRates && resources[category] && resources[category][resource]) {
+            resources[category][resource].modifyRate(
+              -rateValue,
+              this.displayName,
+              'project'
+            );
+          }
+          totals.cost[category][resource] =
+            (totals.cost[category][resource] || 0) + cost[category][resource] * timeFraction;
         }
       }
 
       if (this.attributes && this.attributes.resourceGain) {
         const gain = this.getEffectiveResourceGain();
         for (const category in gain) {
+          if (!totals.gain[category]) totals.gain[category] = {};
           for (const resource in gain[category]) {
-            resources[category][resource].modifyRate(
-              gain[category][resource] * rate,
-              this.displayName,
-              'project'
-            );
+            const rateValue = gain[category][resource] * rate * (applyRates ? productivity : 1);
+            if (applyRates && resources[category] && resources[category][resource]) {
+              resources[category][resource].modifyRate(
+                rateValue,
+                this.displayName,
+                'project'
+              );
+            }
+            totals.gain[category][resource] =
+              (totals.gain[category][resource] || 0) + gain[category][resource] * timeFraction;
           }
         }
       }
     }
+    return totals;
   }
 
-  estimateCostAndGain(deltaTime = 1000) {
-    this.estimateProjectCostAndGain(deltaTime);
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
   }
 
   applyCostAndGain(deltaTime = 1000) {}
@@ -511,10 +527,6 @@ class ProjectManager extends EffectableEntity {
       // Always update so subclasses can run logic after completion
       project.update(deltaTime);
 
-      if (typeof project.applyCostAndGain === 'function') {
-        project.applyCostAndGain(deltaTime);
-      }
-
       if (
         this.isBooleanFlagSet('automateSpecialProjects') &&
         project.autoStart &&
@@ -529,6 +541,15 @@ class ProjectManager extends EffectableEntity {
         } else {
           this.startProject(project.name);
         }
+      }
+    }
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    for (const projectName in this.projects) {
+      const project = this.projects[projectName];
+      if (typeof project.applyCostAndGain === 'function') {
+        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
       }
     }
   }
@@ -559,12 +580,28 @@ class ProjectManager extends EffectableEntity {
   }
 
   estimateProjects(deltaTime = 1000) {
-    for (const projectName in this.projects){
+    const totals = { cost: {}, gain: {} };
+    for (const projectName in this.projects) {
       const project = this.projects[projectName];
       if (typeof project.estimateCostAndGain === 'function') {
-        project.estimateCostAndGain(deltaTime);
+        const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime) || {};
+        for (const category in cost) {
+          if (!totals.cost[category]) totals.cost[category] = {};
+          for (const resource in cost[category]) {
+            totals.cost[category][resource] =
+              (totals.cost[category][resource] || 0) + cost[category][resource];
+          }
+        }
+        for (const category in gain) {
+          if (!totals.gain[category]) totals.gain[category] = {};
+          for (const resource in gain[category]) {
+            totals.gain[category][resource] =
+              (totals.gain[category][resource] || 0) + gain[category][resource];
+          }
+        }
       }
     }
+    return totals;
   }
 
   getAssignedSpaceships(exclude) {

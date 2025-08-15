@@ -13,6 +13,27 @@ function stubResource(value) {
   };
 }
 
+function createChanges(resources) {
+  const changes = {};
+  for (const category in resources) {
+    changes[category] = {};
+    for (const resource in resources[category]) {
+      changes[category][resource] = 0;
+    }
+  }
+  return changes;
+}
+
+function applyChanges(resources, changes) {
+  for (const category in changes) {
+    for (const resource in changes[category]) {
+      if (resources[category]?.[resource]) {
+        resources[category][resource].value += changes[category][resource];
+      }
+    }
+  }
+}
+
 describe('continuous spaceship project automation', () => {
   let ctx;
   beforeEach(() => {
@@ -77,11 +98,15 @@ describe('continuous spaceship project automation', () => {
     expect(project.canStart()).toBe(true);
     project.start(ctx.resources);
     project.update(1000);
-    project.applyCostAndGain(1000);
+    let changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.metal.value).toBeGreaterThan(0);
     ctx.resources.atmospheric.carbonDioxide.value = 7; // exceed threshold
     project.update(1000);
-    project.applyCostAndGain(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(project.isActive).toBe(false);
     const metalAfterStop = ctx.resources.colony.metal.value;
     ctx.resources.atmospheric.carbonDioxide.value = 5; // below threshold
@@ -89,7 +114,9 @@ describe('continuous spaceship project automation', () => {
       project.start(ctx.resources);
     }
     project.update(1000);
-    project.applyCostAndGain(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.metal.value).toBeGreaterThan(metalAfterStop);
   });
 
@@ -120,11 +147,15 @@ describe('continuous spaceship project automation', () => {
     expect(project.canStart()).toBe(true);
     project.start(ctx.resources);
     project.update(1000);
-    project.applyCostAndGain(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.atmospheric.greenhouseGas.value).toBeLessThan(10000);
     ctx.terraforming.temperature.value = 300; // below threshold
     project.update(1000);
-    project.applyCostAndGain(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(project.isActive).toBe(false);
     const ghgAfterStop = ctx.resources.atmospheric.greenhouseGas.value;
     ctx.terraforming.temperature.value = 400; // above threshold
@@ -132,7 +163,9 @@ describe('continuous spaceship project automation', () => {
       project.start(ctx.resources);
     }
     project.update(1000);
-    project.applyCostAndGain(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.atmospheric.greenhouseGas.value).toBeLessThan(ghgAfterStop);
   });
 });
