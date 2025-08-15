@@ -34,6 +34,7 @@ describe('life coverage table', () => {
       celestialParameters: { surfaceArea: 1 },
       calculateZonalSolarPanelMultiplier: () => 1
     };
+    ctx.getEffectiveLifeFraction = () => 0.5;
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');

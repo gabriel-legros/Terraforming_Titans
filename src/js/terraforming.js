@@ -62,6 +62,18 @@ if (typeof module !== 'undefined' && module.exports) {
     }
 }
 
+var getEcumenopolisLandFraction;
+if (typeof module !== 'undefined' && module.exports) {
+    ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+} else {
+    getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction;
+}
+
+function getEffectiveLifeFraction(terraforming) {
+    const fraction = getEcumenopolisLandFraction(terraforming);
+    return Math.max(0, (terraforming.life?.target || 0) - fraction);
+}
+
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const BASE_COMFORTABLE_TEMPERATURE = 295.15;
 const KPA_PER_ATM = 101.325;
@@ -92,6 +104,7 @@ class Terraforming extends EffectableEntity{
     super({ description: 'This module manages all terraforming compononents' });
 
     this.resources = resources;
+    this.initialLand = resources.surface?.land?.value || 0;
 
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
@@ -321,7 +334,7 @@ class Terraforming extends EffectableEntity{
 
   getLifeStatus() {
      // Compare average biomass coverage to the global target
-    return (calculateAverageCoverage(this, 'biomass') > this.life.target);
+    return (calculateAverageCoverage(this, 'biomass') > getEffectiveLifeFraction(this));
   }
 
   getTerraformingStatus() {
@@ -1700,6 +1713,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = Terraforming;
   module.exports.setStarLuminosity = setStarLuminosity;
   module.exports.getStarLuminosity = getStarLuminosity;
+  module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;
   globalThis.getStarLuminosity = getStarLuminosity;

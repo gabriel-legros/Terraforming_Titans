@@ -16,6 +16,10 @@ const BASE_MAX_BIOMASS_DENSITY = 0.1; // Base max biomass in tons per m^2
 const RADIATION_TOLERANCE_THRESHOLD = 25; // Points needed for full mitigation
 const MINIMUM_BIOMASS_DECAY_RATE = 1; // Minimum decay in tons per second when conditions are lethal
 
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+}
+
 class LifeAttribute {
   constructor(name, value, displayName, description, maxUpgrades) {
     this.name = name;
@@ -571,7 +575,8 @@ class LifeManager extends EffectableEntity {
           if (canGrowHere) {
               // --- Growth Calculation ---
               // Calculate land area and biomass capacity first
-              const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName);
+              const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
+              const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
               const liquidWaterCoverage = terraforming.zonalCoverageCache[zoneName]?.liquidWater ?? 0;
               const iceCoverage = terraforming.zonalCoverageCache[zoneName]?.ice ?? 0;
               // const availableLandArea = Math.max(0, zoneArea * (1 - liquidWaterCoverage - iceCoverage)); // Land area calculation no longer used for biomass limit
