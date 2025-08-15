@@ -225,3 +225,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
 - Added a `treatAsBuilding` flag for certain projects like the Dyson Swarm Receiver so they contribute to building productivity and resource production loops.
 - Population growth skill multiplier displays as 'Awakening' in the growth rate tooltip.
+- Autobuild cost tracker preserves overflow milliseconds for accurate 10-second spending averages.
