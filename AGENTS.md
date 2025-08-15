@@ -136,7 +136,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Spaceship projects now switch to proportional, per-ship continuous resource flow when more than 100 spaceships are assigned; smaller fleets resolve costs on start and gains on completion, and rates match at the 100-ship transition.
 - Automation checkboxes pause continuous spaceship projects when resources or environmental thresholds fail and resume them once conditions recover.
 - Ore and geothermal satellite UI split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
-- Space Disposal project displays the expected temperature reduction when jettisoning greenhouse gases.
+- Space Disposal project displays the expected temperature reduction when jettisoning greenhouse gases and shows per-second rates in continuous mode.
 - Infrared Vision research immediately removes the day-night penalty on Ice Harvesters when the cycle is disabled.
 - Android project assignments keep androids in storage and tooltips show worker and project usage.
 - Androids above their storage cap no longer contribute workers, and excess project assignments are reduced.
