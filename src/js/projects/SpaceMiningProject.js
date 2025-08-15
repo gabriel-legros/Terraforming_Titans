@@ -196,7 +196,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.attributes.dynamicWaterImport && gain.surface) {
       const entry = gain.surface;
       const resource = Object.keys(entry)[0];
-      const amount = entry[resource] * fraction;
+      const amount = entry[resource] * fraction * productivity;
       const zones = ['tropical', 'temperate', 'polar'];
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
@@ -235,7 +235,7 @@ class SpaceMiningProject extends SpaceshipProject {
         const limitPa = this.disablePressureThreshold * 1000;
         const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
         const remaining = Math.max(0, maxMass - currentAmount);
-        const desired = entry[gas] * fraction;
+        const desired = entry[gas] * fraction * productivity;
         const applied = Math.min(desired, remaining);
         if (applied <= 0) {
           delete entry[gas];
