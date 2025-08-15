@@ -519,7 +519,7 @@ function updateProjectUI(projectName) {
       // Update the duration in the progress bar display
       if (elements.progressButton) {
         if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject && project.isContinuous()) {
-          if (project.isActive && !project.isPaused) {
+          if (project.autoStart && project.isActive && !project.isPaused) {
             elements.progressButton.textContent = 'Continuous';
             elements.progressButton.style.background = '#4caf50';
           } else {
