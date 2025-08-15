@@ -504,13 +504,21 @@ class SpaceshipProject extends Project {
     }
   }
 
-  applySpaceshipResourceGain(gain, fraction) {
+  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null) {
     for (const category in gain) {
       for (const resource in gain[category]) {
         const amount = gain[category][resource] * fraction;
-        const res = resources[category]?.[resource];
-        if (res && typeof res.increase === 'function') {
-          res.increase(amount);
+        if (accumulatedChanges) {
+          if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+          if (accumulatedChanges[category][resource] === undefined) {
+            accumulatedChanges[category][resource] = 0;
+          }
+          accumulatedChanges[category][resource] += amount;
+        } else {
+          const res = resources[category]?.[resource];
+          if (res && typeof res.increase === 'function') {
+            res.increase(amount);
+          }
         }
       }
     }
@@ -622,7 +630,7 @@ class SpaceshipProject extends Project {
     this.estimateProjectCostAndGain();
   }
 
-  applyCostAndGain(deltaTime = 1000) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges) {
     if (!this.isContinuous()) return;
     const activeTime = this.lastActiveTime || 0;
     if (activeTime <= 0) return;
@@ -642,7 +650,9 @@ class SpaceshipProject extends Project {
         }
         const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
         const res = resources[category]?.[resource];
-        if (!res || res.value < amount) {
+        const current = res ? res.value : 0;
+        const pending = accumulatedChanges?.[category]?.[resource] || 0;
+        if (current + pending < amount) {
           this.isActive = false;
           this.lastActiveTime = 0;
           return;
@@ -655,7 +665,9 @@ class SpaceshipProject extends Project {
       const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
       const { category, resource } = this.selectedDisposalResource;
       const res = resources[category]?.[resource];
-      if (!res || res.value < disposalAmount) {
+      const current = res ? res.value : 0;
+      const pending = accumulatedChanges?.[category]?.[resource] || 0;
+      if (current + pending < disposalAmount) {
         this.isActive = false;
         this.lastActiveTime = 0;
         return;
@@ -668,8 +680,12 @@ class SpaceshipProject extends Project {
           continue;
         }
         const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
-        const res = resources[category][resource];
-        res.decrease(amount);
+        if (accumulatedChanges) {
+          accumulatedChanges[category][resource] -= amount;
+        } else {
+          const res = resources[category][resource];
+          res.decrease(amount);
+        }
       }
     }
 
@@ -677,11 +693,18 @@ class SpaceshipProject extends Project {
       const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
       const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
       const { category, resource } = this.selectedDisposalResource;
-      const res = resources[category][resource];
-      const actual = Math.min(disposalAmount, res.value);
-      res.decrease(actual);
-      if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-        resources.colony.funding.increase(actual * this.attributes.fundingGainAmount);
+      if (accumulatedChanges) {
+        accumulatedChanges[category][resource] -= disposalAmount;
+        if (this.attributes.fundingGainAmount && accumulatedChanges.colony && accumulatedChanges.colony.funding !== undefined) {
+          accumulatedChanges.colony.funding += disposalAmount * this.attributes.fundingGainAmount;
+        }
+      } else {
+        const res = resources[category][resource];
+        const actual = Math.min(disposalAmount, res.value);
+        res.decrease(actual);
+        if (this.attributes.fundingGainAmount && resources.colony?.funding) {
+          resources.colony.funding.increase(actual * this.attributes.fundingGainAmount);
+        }
       }
     }
 
@@ -699,7 +722,7 @@ class SpaceshipProject extends Project {
       const penalty = metalCost * this.assignedSpaceships * fraction;
       this.applyMetalCostPenalty(gain, penalty);
     }
-    this.applySpaceshipResourceGain(gain, 1);
+    this.applySpaceshipResourceGain(gain, 1, accumulatedChanges);
   }
 
   saveState() {

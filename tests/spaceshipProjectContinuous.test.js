@@ -13,6 +13,27 @@ function stubResource(value) {
   };
 }
 
+function createChanges(resources) {
+  const changes = {};
+  for (const category in resources) {
+    changes[category] = {};
+    for (const resource in resources[category]) {
+      changes[category][resource] = 0;
+    }
+  }
+  return changes;
+}
+
+function applyChanges(resources, changes) {
+  for (const category in changes) {
+    for (const resource in changes[category]) {
+      if (resources[category]?.[resource]) {
+        resources[category][resource].value += changes[category][resource];
+      }
+    }
+  }
+}
+
 describe('SpaceshipProject continuous cost and gain', () => {
   test('applies proportional cost and gain over time when more than 100 ships', () => {
     const ctx = { console, EffectableEntity, shipEfficiency: 1 };
@@ -52,7 +73,9 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.start(ctx.resources);
     const duration = project.getEffectiveDuration();
     project.update(duration / 2);
-    project.applyCostAndGain(duration / 2);
+    const changes = createChanges(ctx.resources);
+    project.applyCostAndGain(duration / 2, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(495);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1010);
   });
@@ -96,10 +119,15 @@ describe('SpaceshipProject continuous cost and gain', () => {
     const duration = project.getEffectiveDuration();
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
     project.update(duration / 2);
-    project.applyCostAndGain(duration / 2);
+    let changes = createChanges(ctx.resources);
+    project.applyCostAndGain(duration / 2, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
     project.update(duration / 2);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(duration / 2, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(20);
   });
 

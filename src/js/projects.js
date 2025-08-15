@@ -511,10 +511,6 @@ class ProjectManager extends EffectableEntity {
       // Always update so subclasses can run logic after completion
       project.update(deltaTime);
 
-      if (typeof project.applyCostAndGain === 'function') {
-        project.applyCostAndGain(deltaTime);
-      }
-
       if (
         this.isBooleanFlagSet('automateSpecialProjects') &&
         project.autoStart &&
@@ -529,6 +525,15 @@ class ProjectManager extends EffectableEntity {
         } else {
           this.startProject(project.name);
         }
+      }
+    }
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges) {
+    for (const projectName in this.projects) {
+      const project = this.projects[projectName];
+      if (typeof project.applyCostAndGain === 'function') {
+        project.applyCostAndGain(deltaTime, accumulatedChanges);
       }
     }
   }
