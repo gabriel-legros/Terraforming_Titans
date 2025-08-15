@@ -210,5 +210,6 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Ecumenopolis District coverage now reduces land available for life, lowers life terraforming requirements, and updates the life UI accordingly.
 - Ecumenopolis District now provides 100M android storage.
 - Colonies can upgrade to the Ecumenopolis District via the upgrade button and require full superalloy cost.
+- The "Wait for full capacity" option only requires resources to fill a single ship.
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.

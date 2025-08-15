@@ -400,11 +400,12 @@ class SpaceshipProject extends Project {
 
       if (this.attributes.spaceExport && this.selectedDisposalResource) {
         const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-        const disposalPerTick = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * factor;
+        const shipCount = this.waitForCapacity ? 1 : this.assignedSpaceships;
+        const disposalPerTick = (this.attributes.disposalAmount || 0) * shipCount * efficiency * factor;
         const { category, resource } = this.selectedDisposalResource;
         let required = disposalPerTick;
         if (this.waitForCapacity) {
-          required += (totalSpaceshipCost[category]?.[resource] || 0) * this.assignedSpaceships * factor +
+          required += (totalSpaceshipCost[category]?.[resource] || 0) * factor +
             (cost[category]?.[resource] || 0);
         }
         if (resources[category][resource].value < required) {
