@@ -124,7 +124,7 @@ describe('colony upgrade', () => {
     expect(ctx.resources.surface.land.reserved).toBe(0);
   });
 
-  test('upgrade scales costs when fewer than ten buildings', () => {
+  test('upgrade requires at least ten buildings', () => {
     const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
     const t1 = ctx.colonies.t1_colony;
     const t2 = ctx.colonies.t2_colony;
@@ -139,15 +139,15 @@ describe('colony upgrade', () => {
     ctx.updateStructureDisplay(ctx.colonies);
 
     const button = dom.window.document.getElementById('t1_colony-upgrade-button');
-    expect(button.disabled).toBe(false);
+    expect(button.disabled).toBe(true);
     button.click();
 
-    expect(t1.count).toBe(0);
-    expect(t2.count).toBe(1);
-    expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
-    expect(ctx.resources.colony.glass.value).toBeCloseTo(0);
-    expect(ctx.resources.colony.water.value).toBeCloseTo(0);
-    expect(ctx.resources.surface.land.reserved).toBe(9);
+    expect(t1.count).toBe(1);
+    expect(t2.count).toBe(0);
+    expect(ctx.resources.colony.metal.value).toBe(237.5);
+    expect(ctx.resources.colony.glass.value).toBe(237.5);
+    expect(ctx.resources.colony.water.value).toBe(450);
+    expect(ctx.resources.surface.land.reserved).toBe(0);
   });
 
   test('upgrade button colors unaffordable cost parts red', () => {
