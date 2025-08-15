@@ -134,6 +134,57 @@ describe('SpaceshipProject continuous cost and gain', () => {
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1010);
   });
 
+  test('records resource rates before applying changes for continuous projects', () => {
+    const ctx = { console, EffectableEntity, shipEfficiency: 1 };
+    ctx.resources = {
+      colony: {
+        energy: stubResource(1000),
+        metal: stubResource(0)
+      },
+      special: { spaceships: { value: 101 } }
+    };
+    vm.createContext(ctx);
+    const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectCode + '; this.Project = Project;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+
+    global.resources = ctx.resources;
+
+    const config = {
+      name: 'Test',
+      category: 'resources',
+      cost: {},
+      duration: 100000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      autoStart: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 20 } }
+      }
+    };
+    const project = new ctx.SpaceshipProject(config, 'test');
+    project.assignedSpaceships = 101;
+    project.start(ctx.resources);
+    const duration = project.getEffectiveDuration();
+    project.update(duration / 2);
+    const changes = createChanges(ctx.resources);
+    const totals = project.estimateCostAndGain(duration / 2, false);
+    const prod = calculateProjectProductivities(ctx.resources, changes, { p: totals }).p;
+    ctx.resources.colony.energy.modifyRate.mockClear();
+    ctx.resources.colony.metal.modifyRate.mockClear();
+    project.estimateCostAndGain(duration / 2, true, prod);
+    project.applyCostAndGain(duration / 2, changes, prod);
+    const energyRate = ctx.resources.colony.energy.modifyRate.mock.calls[0][0];
+    const metalRate = ctx.resources.colony.metal.modifyRate.mock.calls[0][0];
+    expect(energyRate).toBeCloseTo(-10.1);
+    expect(metalRate).toBeCloseTo(20.2);
+  });
+
   test('uses discrete mode at or below 100 ships', () => {
     const ctx = { console, EffectableEntity, shipEfficiency: 1 };
     ctx.resources = {

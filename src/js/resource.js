@@ -394,8 +394,8 @@ function produceResources(deltaTime, buildings) {
       if (!data) continue;
       const { project } = data;
       const productivity = productivityMap[name] ?? 1;
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
       project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
   }
 
