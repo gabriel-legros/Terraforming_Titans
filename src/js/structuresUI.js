@@ -98,6 +98,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     buildCallback(structure.name, selectedBuildCounts[structure.name]);
     updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
     updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    if (isColony && upgradeButton) {
+      updateUpgradeButton(upgradeButton, structure);
+    }
   });
 
   leftContainer.appendChild(button);
@@ -127,6 +130,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
     }
+    if (isColony && upgradeButton) {
+      updateUpgradeButton(upgradeButton, structure);
+    }
   });
   buildCountButtons.appendChild(multiplyButton);
 
@@ -141,6 +147,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
     }
+    if (isColony && upgradeButton) {
+      updateUpgradeButton(upgradeButton, structure);
+    }
   });
   buildCountButtons.appendChild(divideButton);
 
@@ -152,7 +161,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
     upgradeButton.addEventListener('click', function () {
-      if (structure.upgrade && structure.upgrade()) {
+      const upgrades = Math.max(1, selectedBuildCounts[structure.name] || 1);
+      if (structure.upgrade && structure.upgrade(upgrades)) {
         updateStructureDisplay(colonies);
       }
     });
@@ -477,7 +487,9 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const cost = colony.getUpgradeCost();
+    const upgradeCount = Math.max(1, selectedBuildCounts[colony.name] || 1);
+    const amount = upgradeCount * 10;
+    const cost = colony.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';
       return;
@@ -500,10 +512,12 @@ function updateDecreaseButtonText(button, buildCount) {
 
     const keyString = items.map(i => i.key).sort().join(',');
     let list = button._list;
-    if (button.dataset.keys !== keyString) {
+    const amountString = `${amount}`;
+    if (button.dataset.keys !== keyString || button.dataset.amount !== amountString) {
       button.dataset.keys = keyString;
+      button.dataset.amount = amountString;
       button.textContent = '';
-      button.append('\u2192 ');
+      button.append(`${formatNumber(amount, true)} \u2192 ${formatNumber(upgradeCount, true)} `);
       list = document.createElement('span');
       button.appendChild(list);
       button._list = list;
@@ -530,8 +544,8 @@ function updateDecreaseButtonText(button, buildCount) {
       }
     });
 
-    const canAfford = colony.canAffordUpgrade();
-    button.disabled = colony.count <= 0 || !canAfford;
+    const canAfford = colony.canAffordUpgrade(upgradeCount);
+    button.disabled = !canAfford;
     button.style.display = 'inline-block';
     button.style.color = '';
   }
