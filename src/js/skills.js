@@ -55,7 +55,7 @@ class SkillManager {
   applySkillEffect(skill) {
     if (!skill.effect) return;
     const effect = Object.assign({}, skill.effect, {
-      sourceId: "awakening",
+      sourceId: skill.id,
       effectId: skill.id,
     });
     if (skill.effect.perRank) {
