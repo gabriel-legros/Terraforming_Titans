@@ -58,7 +58,22 @@ function loadGame(slotOrCustomString) {
           ? spaceManager.getCurrentWorldOriginal() : null;
         if (spaceManager.getCurrentRandomSeed && spaceManager.getCurrentRandomSeed() !== null) {
           if (worldOriginal) {
+            const existingResources = currentPlanetParameters.resources;
             currentPlanetParameters = worldOriginal.merged;
+            const newResources = currentPlanetParameters.resources;
+            if (existingResources) {
+              for (const category in existingResources) {
+                if (!newResources[category]) {
+                  newResources[category] = {};
+                }
+                for (const resourceName in existingResources[category]) {
+                  const savedResource = existingResources[category][resourceName];
+                  if (!newResources[category][resourceName]) {
+                    newResources[category][resourceName] = savedResource;
+                  }
+                }
+              }
+            }
           }
         } else {
           const key = spaceManager.getCurrentPlanetKey();
