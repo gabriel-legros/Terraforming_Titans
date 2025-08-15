@@ -376,8 +376,19 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
-  if(projectManager){
-    projectManager.estimateProjects(deltaTime);
+  if (projectManager) {
+    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    for (const name of names) {
+      const project = projectManager.projects?.[name];
+      if (!project) continue;
+      if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
+        continue;
+      }
+      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
+      const productivity = calculateProjectProductivity(resources, accumulatedChanges, cost, gain);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      project.estimateCostAndGain(deltaTime, true, productivity);
+    }
   }
 
   // Apply accumulated changes to resources
@@ -442,6 +453,25 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
+function calculateProjectProductivity(resources, accumulatedChanges, cost = {}, gain = {}) {
+  let productivity = 1;
+  for (const category in cost) {
+    for (const resource in cost[category]) {
+      const required = cost[category][resource] || 0;
+      const produced = gain[category]?.[resource] || 0;
+      const net = Math.max(required - produced, 0);
+      if (net > 0) {
+        const available =
+          (resources[category]?.[resource]?.value || 0) +
+          (accumulatedChanges[category]?.[resource] || 0);
+        const ratio = available / net;
+        productivity = Math.min(productivity, ratio);
+      }
+    }
+  }
+  return Math.max(0, Math.min(1, productivity));
+}
+
 function recalculateTotalRates(){
   // After all changes are applied, recalculate total rates for UI display
   for (const category in resources) {
@@ -449,4 +479,15 @@ function recalculateTotalRates(){
       resources[category][resourceName].recalculateTotalRates();
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    Resource,
+    checkResourceAvailability,
+    createResources,
+    produceResources,
+    calculateProjectProductivity,
+    recalculateTotalRates,
+  };
 }

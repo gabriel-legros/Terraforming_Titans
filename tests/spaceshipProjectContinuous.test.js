@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
+const { calculateProjectProductivity } = require('../src/js/resource.js');
 
 function stubResource(value) {
   return {
@@ -13,7 +15,76 @@ function stubResource(value) {
   };
 }
 
+function createChanges(resources) {
+  const changes = {};
+  for (const category in resources) {
+    changes[category] = {};
+    for (const resource in resources[category]) {
+      changes[category][resource] = 0;
+    }
+  }
+  return changes;
+}
+
+function applyChanges(resources, changes) {
+  for (const category in changes) {
+    for (const resource in changes[category]) {
+      if (resources[category]?.[resource]) {
+        resources[category][resource].value += changes[category][resource];
+      }
+    }
+  }
+}
+
 describe('SpaceshipProject continuous cost and gain', () => {
+  test('starts without stored energy and consumes available energy from accumulated changes', () => {
+    const ctx = { console, EffectableEntity, shipEfficiency: 1 };
+    ctx.resources = {
+      colony: {
+        energy: stubResource(0),
+        metal: stubResource(0)
+      },
+      special: { spaceships: { value: 101 } }
+    };
+    vm.createContext(ctx);
+    const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectCode + '; this.Project = Project;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+
+    global.resources = ctx.resources;
+
+    const config = {
+      name: 'Test',
+      category: 'resources',
+      cost: {},
+      duration: 100000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      autoStart: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 20 } }
+      }
+    };
+    const project = new ctx.SpaceshipProject(config, 'test');
+    project.assignedSpaceships = 101;
+    expect(project.canStart()).toBe(true);
+    project.start(ctx.resources);
+    const duration = project.getEffectiveDuration();
+    project.update(duration / 2);
+    const changes = createChanges(ctx.resources);
+    changes.colony.energy = 200;
+    const totals = project.estimateCostAndGain(duration / 2);
+    const prod = calculateProjectProductivity(ctx.resources, changes, totals.cost, totals.gain);
+    project.applyCostAndGain(duration / 2, changes, prod);
+    expect(changes.colony.energy).toBeCloseTo(0);
+    expect(changes.colony.metal).toBeCloseTo(400);
+  });
+
   test('applies proportional cost and gain over time when more than 100 ships', () => {
     const ctx = { console, EffectableEntity, shipEfficiency: 1 };
     ctx.resources = {
@@ -40,6 +111,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
       repeatable: true,
       maxRepeatCount: Infinity,
       unlocked: true,
+      autoStart: true,
       attributes: {
         spaceMining: true,
         costPerShip: { colony: { energy: 10 } },
@@ -52,7 +124,11 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.start(ctx.resources);
     const duration = project.getEffectiveDuration();
     project.update(duration / 2);
-    project.applyCostAndGain(duration / 2);
+    let changes = createChanges(ctx.resources);
+    let totals = project.estimateCostAndGain(duration / 2);
+    let prod = calculateProjectProductivity(ctx.resources, changes, totals.cost, totals.gain);
+    project.applyCostAndGain(duration / 2, changes, prod);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(495);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1010);
   });
@@ -83,6 +159,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
       repeatable: true,
       maxRepeatCount: Infinity,
       unlocked: true,
+      autoStart: true,
       attributes: {
         spaceMining: true,
         costPerShip: { colony: { energy: 10 } },
@@ -96,10 +173,19 @@ describe('SpaceshipProject continuous cost and gain', () => {
     const duration = project.getEffectiveDuration();
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
     project.update(duration / 2);
-    project.applyCostAndGain(duration / 2);
+    let changes = createChanges(ctx.resources);
+    let totals = project.estimateCostAndGain(duration / 2);
+    let prod = calculateProjectProductivity(ctx.resources, changes, totals.cost, totals.gain);
+    project.applyCostAndGain(duration / 2, changes, prod);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
     project.update(duration / 2);
+    changes = createChanges(ctx.resources);
+    totals = project.estimateCostAndGain(duration / 2);
+    prod = calculateProjectProductivity(ctx.resources, changes, totals.cost, totals.gain);
+    project.applyCostAndGain(duration / 2, changes, prod);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(20);
   });
 
@@ -120,6 +206,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
       repeatable: true,
       maxRepeatCount: Infinity,
       unlocked: true,
+      autoStart: true,
       attributes: {
         spaceMining: true,
         costPerShip: { colony: { energy: 10 } },

@@ -308,8 +308,8 @@ class CargoRocketProject extends Project {
     }
   }
 
-  estimateCostAndGain() {
-    this.estimateProjectCostAndGain();
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
   }
 }
 

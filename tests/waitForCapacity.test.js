@@ -123,11 +123,11 @@ describe('waitForCapacity flag', () => {
   test('continuous mode only needs one ship filled', () => {
     const project = createContinuousExportProject();
     project.waitForCapacity = true;
-    global.resources.colony.metal.value = 1000; // one ship disposal (100) * factor (10)
-    global.resources.colony.energy.value = 10100; // baseline cost for assigned ships
+    global.resources.colony.metal.value = 100; // one ship disposal
+    global.resources.colony.energy.value = 0;
     global.resources.special.spaceships.value = 101;
     expect(project.canStart()).toBe(true);
-    global.resources.colony.metal.value = 999; // just below requirement
+    global.resources.colony.metal.value = 99; // just below requirement
     expect(project.canStart()).toBe(false);
   });
 });
