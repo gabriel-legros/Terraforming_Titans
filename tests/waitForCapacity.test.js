@@ -78,6 +78,30 @@ describe('waitForCapacity flag', () => {
     return project;
   }
 
+  function createContinuousExportProject() {
+    const config = {
+      name: 'Export',
+      category: 'resources',
+      cost: {},
+      duration: 100,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceExport: true,
+        costPerShip: { colony: { energy: 10 } },
+        disposable: { colony: ['metal'] },
+        disposalAmount: 100,
+        fundingGainAmount: 1
+      }
+    };
+    const project = new SpaceshipProject(config, 'export');
+    project.assignedSpaceships = 101;
+    project.selectedDisposalResource = { category: 'colony', resource: 'metal' };
+    return project;
+  }
+
   test('requires full disposal amount when enabled', () => {
     const project = createExportProject();
     project.waitForCapacity = true;
@@ -94,5 +118,16 @@ describe('waitForCapacity flag', () => {
     global.resources.colony.metal.value = 10; // only cost
     global.resources.special.spaceships.value = 1;
     expect(project.canStart()).toBe(true);
+  });
+
+  test('continuous mode only needs one ship filled', () => {
+    const project = createContinuousExportProject();
+    project.waitForCapacity = true;
+    global.resources.colony.metal.value = 1000; // one ship disposal (100) * factor (10)
+    global.resources.colony.energy.value = 10100; // baseline cost for assigned ships
+    global.resources.special.spaceships.value = 101;
+    expect(project.canStart()).toBe(true);
+    global.resources.colony.metal.value = 999; // just below requirement
+    expect(project.canStart()).toBe(false);
   });
 });
