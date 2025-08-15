@@ -219,7 +219,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
   }
 
-  calculateSpaceshipTotalResourceGain() {
+  calculateSpaceshipTotalResourceGain(perSecond = false) {
     if (!this.attributes.fundingGainAmount) {
       return {};
     }
@@ -230,9 +230,13 @@ class SpaceExportBaseProject extends SpaceshipProject {
         totalDisposalAmount += totalDisposal[category][resource];
       }
     }
+    let multiplier = 1;
+    if (perSecond) {
+      multiplier = this.assignedSpaceships * (1000 / this.getEffectiveDuration());
+    }
     return {
       colony: {
-        funding: totalDisposalAmount * this.attributes.fundingGainAmount,
+        funding: totalDisposalAmount * this.attributes.fundingGainAmount * multiplier,
       },
     };
   }
