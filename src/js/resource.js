@@ -378,6 +378,7 @@ function produceResources(deltaTime, buildings) {
 
   if (projectManager) {
     const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    const projectData = {};
     for (const name of names) {
       const project = projectManager.projects?.[name];
       if (!project) continue;
@@ -385,9 +386,16 @@ function produceResources(deltaTime, buildings) {
         continue;
       }
       const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
-      const productivity = calculateProjectProductivity(resources, accumulatedChanges, cost, gain);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      projectData[name] = { project, cost, gain };
+    }
+    const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
+    for (const name of names) {
+      const data = projectData[name];
+      if (!data) continue;
+      const { project } = data;
+      const productivity = productivityMap[name] ?? 1;
       project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
   }
 
@@ -453,23 +461,55 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
-function calculateProjectProductivity(resources, accumulatedChanges, cost = {}, gain = {}) {
-  let productivity = 1;
-  for (const category in cost) {
-    for (const resource in cost[category]) {
-      const required = cost[category][resource] || 0;
-      const produced = gain[category]?.[resource] || 0;
-      const net = Math.max(required - produced, 0);
-      if (net > 0) {
-        const available =
-          (resources[category]?.[resource]?.value || 0) +
-          (accumulatedChanges[category]?.[resource] || 0);
-        const ratio = available / net;
-        productivity = Math.min(productivity, ratio);
+function calculateProjectProductivities(resources, accumulatedChanges, projectData = {}) {
+  const totalNet = {};
+  for (const name in projectData) {
+    const { cost = {}, gain = {} } = projectData[name];
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const required = cost[category][resource] || 0;
+        const produced = gain[category]?.[resource] || 0;
+        const net = Math.max(required - produced, 0);
+        if (net > 0) {
+          if (!totalNet[category]) totalNet[category] = {};
+          totalNet[category][resource] = (totalNet[category][resource] || 0) + net;
+        }
       }
     }
   }
-  return Math.max(0, Math.min(1, productivity));
+
+  const ratios = {};
+  for (const category in totalNet) {
+    for (const resource in totalNet[category]) {
+      const available =
+        (resources[category]?.[resource]?.value || 0) +
+        (accumulatedChanges[category]?.[resource] || 0);
+      const net = totalNet[category][resource];
+      const ratio = net > 0 ? Math.min(available / net, 1) : 1;
+      if (!ratios[category]) ratios[category] = {};
+      ratios[category][resource] = Math.max(0, ratio);
+    }
+  }
+
+  const productivityMap = {};
+  for (const name in projectData) {
+    const { cost = {}, gain = {} } = projectData[name];
+    let productivity = 1;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const required = cost[category][resource] || 0;
+        const produced = gain[category]?.[resource] || 0;
+        const net = Math.max(required - produced, 0);
+        if (net > 0) {
+          const ratio = ratios[category]?.[resource] ?? 1;
+          productivity = Math.min(productivity, ratio);
+        }
+      }
+    }
+    productivityMap[name] = Math.max(0, Math.min(1, productivity));
+  }
+
+  return productivityMap;
 }
 
 function recalculateTotalRates(){
@@ -487,7 +527,7 @@ if (typeof module !== 'undefined' && module.exports) {
     checkResourceAvailability,
     createResources,
     produceResources,
-    calculateProjectProductivity,
+    calculateProjectProductivities,
     recalculateTotalRates,
   };
 }
