@@ -213,4 +213,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - The "Wait for full capacity" option only requires resources to fill a single ship.
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
+- Auto start checkbox shows 'Run' when spaceship projects enter continuous mode and reverts when they return to discrete operation.
 - Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
