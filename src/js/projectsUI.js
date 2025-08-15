@@ -251,6 +251,7 @@ function createProjectItem(project) {
     progressButton: progressButton,
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
+    autoStartLabel: autoStartLabel,
     automationSettingsContainer: automationSettingsContainer,
     cardFooter: cardFooter,
     upButton: upButton,
@@ -455,6 +456,15 @@ function updateProjectUI(projectName) {
   // Set the auto-start checkbox state based on the project data
   if (elements.autoStartCheckbox) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
+  }
+  if (
+    elements.autoStartLabel &&
+    typeof SpaceshipProject !== 'undefined' &&
+    project instanceof SpaceshipProject
+  ) {
+    elements.autoStartLabel.textContent = project.isContinuous()
+      ? 'Run'
+      : 'Auto start';
   }
 
 
