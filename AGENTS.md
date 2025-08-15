@@ -208,3 +208,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added a maintenanceMultiplier attribute for resources; superalloys use a multiplier of 0 and maintenance costs scale with each resource's multiplier.
 - Added placeholder Nanotechnology Stage I advanced research costing 125k.
 - Ecumenopolis District now provides 100M android storage.
+- Colonies can upgrade to the Ecumenopolis District via the upgrade button and require full superalloy cost.
