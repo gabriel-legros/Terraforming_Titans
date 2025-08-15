@@ -32,8 +32,9 @@ class Project extends EffectableEntity {
     this.maxRepeatCount = config.maxRepeatCount || Infinity; // Maximum times the project can be repeated
     this.unlocked = config.unlocked;
     this.category = config.category;
+    this.treatAsBuilding = config.treatAsBuilding || false;
 
-  
+
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
