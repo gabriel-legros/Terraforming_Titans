@@ -567,6 +567,18 @@ class ProjectManager extends EffectableEntity {
     }
   }
 
+  getAssignedSpaceships(exclude) {
+    let total = 0;
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (project === exclude) continue;
+      if (typeof project.assignedSpaceships === 'number') {
+        total += project.assignedSpaceships;
+      }
+    }
+    return total;
+  }
+
   getAssignedAndroids(exclude) {
     let total = 0;
     for (const name in this.projects) {
