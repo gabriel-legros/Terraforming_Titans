@@ -109,6 +109,7 @@ describe('colony upgrade', () => {
     t1.count = t1.active = 10;
     ctx.resources.colony.metal.value = 125;
     ctx.resources.colony.glass.value = 125;
+    ctx.resources.colony.water.value = 0;
 
     ctx.createColonyButtons(ctx.colonies);
     ctx.updateStructureDisplay(ctx.colonies);
@@ -121,18 +122,20 @@ describe('colony upgrade', () => {
     expect(t2.count).toBe(1);
     expect(ctx.resources.colony.metal.value).toBe(0);
     expect(ctx.resources.colony.glass.value).toBe(0);
+    expect(ctx.resources.colony.water.value).toBe(0);
     expect(ctx.resources.surface.land.reserved).toBe(0);
   });
 
-  test('upgrade works with fewer than ten buildings at full cost', () => {
+  test('upgrade scales cost when fewer than ten buildings', () => {
     const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
     const t1 = ctx.colonies.t1_colony;
     const t2 = ctx.colonies.t2_colony;
     t1.unlocked = true;
     t2.unlocked = true;
     t1.count = t1.active = 8;
-    ctx.resources.colony.metal.value = 125;
-    ctx.resources.colony.glass.value = 125;
+    ctx.resources.colony.metal.value = 150;
+    ctx.resources.colony.glass.value = 150;
+    ctx.resources.colony.water.value = 100;
 
     ctx.createColonyButtons(ctx.colonies);
     ctx.updateStructureDisplay(ctx.colonies);
@@ -145,7 +148,30 @@ describe('colony upgrade', () => {
     expect(t2.count).toBe(1);
     expect(ctx.resources.colony.metal.value).toBe(0);
     expect(ctx.resources.colony.glass.value).toBe(0);
+    expect(ctx.resources.colony.water.value).toBe(0);
     expect(ctx.resources.surface.land.reserved).toBe(2);
+  });
+
+  test('upgrade cost scales with available lower tier buildings', () => {
+    const { ctx } = setupContext();
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+
+    t1.count = t1.active = 5;
+    let cost = t1.getUpgradeCost(1);
+    expect(cost.colony.metal).toBeCloseTo(187.5);
+    expect(cost.colony.glass).toBeCloseTo(187.5);
+    expect(cost.colony.water).toBeCloseTo(250);
+    expect(cost.surface.land).toBeCloseTo(5);
+
+    t1.count = t1.active = 1;
+    cost = t1.getUpgradeCost(1);
+    expect(cost.colony.metal).toBeCloseTo(237.5);
+    expect(cost.colony.glass).toBeCloseTo(237.5);
+    expect(cost.colony.water).toBeCloseTo(450);
+    expect(cost.surface.land).toBeCloseTo(9);
   });
 
   test('upgrade button colors unaffordable cost parts red', () => {

@@ -253,15 +253,18 @@ class Colony extends Building {
     const cost = {};
     const amount = upgradeCount * 10;
     const removeCount = Math.min(amount, this.count);
+    const missingRatio = (amount - removeCount) / amount;
 
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
-        const baseAmount = nextCost[category][resource];
+        const baseAmount = nextCost[category][resource] * upgradeCount;
         let value = 0;
         if (nextName === 't7_colony' && resource === 'superalloys') {
-          value = baseAmount * upgradeCount;
+          value = baseAmount;
         } else if (resource === 'metal' || resource === 'glass') {
-          value = 0.5 * baseAmount * upgradeCount;
+          value = baseAmount * (0.5 + 0.5 * missingRatio);
+        } else if (resource === 'water') {
+          value = baseAmount * missingRatio;
         }
         if (value > 0) {
           if (!cost[category]) cost[category] = {};

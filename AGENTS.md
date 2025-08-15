@@ -214,3 +214,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
 - Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
+- Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
