@@ -653,8 +653,9 @@ function startProjectWithSelectedResources(project) {
   }
 }
 
-function formatTotalCostDisplay(totalCost, project) {
+function formatTotalCostDisplay(totalCost, project, perSecond = false) {
   const costArray = [];
+  const suffix = perSecond ? '/s' : '';
   for (const category in totalCost) {
     for (const resource in totalCost[category]) {
       const requiredAmount = totalCost[category][resource];
@@ -664,7 +665,7 @@ function formatTotalCostDisplay(totalCost, project) {
         resource.charAt(0).toUpperCase() + resource.slice(1);
 
       // Check if the player has enough of this resource
-      const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+      const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`;
       const highlight = availableAmount < requiredAmount &&
         !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
       const formattedResourceText = highlight
