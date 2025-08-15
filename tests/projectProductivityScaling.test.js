@@ -1,6 +1,6 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
-const { calculateProjectProductivity } = require('../src/js/resource.js');
+const { calculateProjectProductivities } = require('../src/js/resource.js');
 
 describe('project productivity', () => {
   test('uses worst ratio and leaves cost-free projects unaffected', () => {
@@ -12,18 +12,18 @@ describe('project productivity', () => {
     };
     const changes = { colony: { energy: 10, metal: 0 } };
 
-    const costA = { colony: { energy: 200, metal: 30 } };
-    const gainA = { colony: { metal: 10 } };
-    const prodA = calculateProjectProductivity(resources, changes, costA, gainA);
-    expect(prodA).toBeCloseTo(110 / 200);
-    changes.colony.energy -= costA.colony.energy * prodA;
-    changes.colony.metal -= costA.colony.metal * prodA;
-    changes.colony.metal += gainA.colony.metal * prodA;
+    const projectData = {
+      A: { cost: { colony: { energy: 200, metal: 30 } }, gain: { colony: { metal: 10 } } },
+      B: { cost: {}, gain: { colony: { energy: 10 } } },
+    };
+    const productivities = calculateProjectProductivities(resources, changes, projectData);
+    expect(productivities.A).toBeCloseTo(110 / 200);
+    expect(productivities.B).toBe(1);
+    changes.colony.energy -= projectData.A.cost.colony.energy * productivities.A;
+    changes.colony.metal -= projectData.A.cost.colony.metal * productivities.A;
+    changes.colony.metal += projectData.A.gain.colony.metal * productivities.A;
 
-    const gainB = { colony: { energy: 10 } };
-    const prodB = calculateProjectProductivity(resources, changes, {}, gainB);
-    expect(prodB).toBe(1);
-    changes.colony.energy += gainB.colony.energy * prodB;
+    changes.colony.energy += projectData.B.gain.colony.energy * productivities.B;
 
     const finalEnergy = resources.colony.energy.value + changes.colony.energy;
     const finalMetal = resources.colony.metal.value + changes.colony.metal;
