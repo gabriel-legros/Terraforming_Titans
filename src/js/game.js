@@ -159,8 +159,22 @@ function initializeGameState(options = {}) {
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDuration = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDuration);
-  resources = {};
+  const existingResources = resources;
   resources = createResources(currentPlanetParameters.resources);
+  if (existingResources) {
+    for (const category in existingResources) {
+      if (!resources[category]) {
+        resources[category] = {};
+      }
+      for (const resourceName in existingResources[category]) {
+        const savedResource = existingResources[category][resourceName];
+        if (!resources[category][resourceName]) {
+          // If the resource doesn't exist in the new defaults, add it directly from the save.
+          resources[category][resourceName] = savedResource;
+          }
+        }
+      }
+  }
   if (savedAdvancedResearch) {
     resources.colony.advancedResearch.value = savedAdvancedResearch.value;
     resources.colony.advancedResearch.unlocked = savedAdvancedResearch.unlocked;
