@@ -65,7 +65,7 @@ describe('SkillManager save/load', () => {
     global.addEffect.mockClear();
     manager.reapplyEffects();
     expect(global.addEffect).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 2, sourceId: 'test' })
+      expect.objectContaining({ value: 2, effectId: 'test' })
     );
   });
 
@@ -75,19 +75,19 @@ describe('SkillManager save/load', () => {
     const manager = new SkillManager(data);
     manager.unlockSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 1.4, sourceId: 'android_efficiency' })
+      expect.objectContaining({ value: 1.4, effectId: 'android_efficiency' })
     );
 
     global.addEffect.mockClear();
     manager.upgradeSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 1.8, sourceId: 'android_efficiency' })
+      expect.objectContaining({ value: 1.8, effectId: 'android_efficiency' })
     );
 
     global.addEffect.mockClear();
     manager.upgradeSkill('android_efficiency');
     expect(global.addEffect).toHaveBeenLastCalledWith(
-      expect.objectContaining({ value: 2.2, sourceId: 'android_efficiency' })
+      expect.objectContaining({ value: 2.2, effectId: 'android_efficiency' })
     );
   });
 

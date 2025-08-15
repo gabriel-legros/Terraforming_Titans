@@ -21,8 +21,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     if (this.selectedDisposalResource?.resource === 'greenhouseGas') {
       const reduction = this.calculateTemperatureReduction();
+      const suffix = this.isContinuous() ? `${getTemperatureUnit()}/s` : getTemperatureUnit();
       elements.temperatureReductionElement.textContent =
-        `Temperature will reduce by: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${getTemperatureUnit()}`;
+        `Temperature will reduce by: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}`;
       elements.temperatureReductionElement.style.display = 'block';
     } else {
       elements.temperatureReductionElement.style.display = 'none';
@@ -39,8 +40,19 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return 0;
     }
 
-    const totalDisposal = this.calculateSpaceshipTotalDisposal();
-    const removed = totalDisposal.atmospheric?.greenhouseGas || 0;
+    let removed = 0;
+    if (this.isContinuous()) {
+      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
+      removed =
+        (this.attributes.disposalAmount || 0) *
+        this.assignedSpaceships *
+        efficiency *
+        (1000 / this.getEffectiveDuration());
+    } else {
+      const totalDisposal = this.calculateSpaceshipTotalDisposal();
+      removed = totalDisposal.atmospheric?.greenhouseGas || 0;
+    }
+
     if (removed <= 0) return 0;
 
     const ghg = resources.atmospheric.greenhouseGas;
