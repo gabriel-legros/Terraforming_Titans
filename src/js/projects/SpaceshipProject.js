@@ -380,39 +380,23 @@ class SpaceshipProject extends Project {
       return false;
     }
 
-    const cost = this.getScaledCost();
-    const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
-
     if (this.isContinuous()) {
-      const duration = this.getEffectiveDuration();
-      const factor = 1000 / duration;
-      for (const category in totalSpaceshipCost) {
-        for (const resource in totalSpaceshipCost[category]) {
-          if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
-            continue;
-          }
-          const required = totalSpaceshipCost[category][resource] * this.assignedSpaceships * factor;
-          if (resources[category][resource].value < required) {
-            return false;
-          }
-        }
-      }
-
-      if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      if (this.attributes.spaceExport && this.waitForCapacity && this.selectedDisposalResource) {
         const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-        const shipCount = this.waitForCapacity ? 1 : this.assignedSpaceships;
-        const disposalPerTick = (this.attributes.disposalAmount || 0) * shipCount * efficiency * factor;
         const { category, resource } = this.selectedDisposalResource;
-        let required = disposalPerTick;
-        if (this.waitForCapacity) {
-          required += (totalSpaceshipCost[category]?.[resource] || 0) * factor +
-            (cost[category]?.[resource] || 0);
-        }
+        const perShipCost = this.calculateSpaceshipCost();
+        const projectCost = this.getScaledCost();
+        const required =
+          (this.attributes.disposalAmount || 0) * efficiency +
+          (perShipCost[category]?.[resource] || 0) +
+          (projectCost[category]?.[resource] || 0);
         if (resources[category][resource].value < required) {
           return false;
         }
       }
     } else {
+      const cost = this.getScaledCost();
+      const totalSpaceshipCost = this.calculateSpaceshipTotalCost();
       for (const category in totalSpaceshipCost) {
         for (const resource in totalSpaceshipCost[category]) {
           if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
@@ -640,7 +624,8 @@ class SpaceshipProject extends Project {
       return;
     }
     const duration = this.getEffectiveDuration();
-    const fraction = activeTime / duration;
+    const baseFraction = activeTime / duration;
+    let fraction = baseFraction;
 
     const costPerShip = this.calculateSpaceshipCost();
     for (const category in costPerShip) {
@@ -648,30 +633,33 @@ class SpaceshipProject extends Project {
         if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
           continue;
         }
-        const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
+        const amount = costPerShip[category][resource] * this.assignedSpaceships * baseFraction;
         const res = resources[category]?.[resource];
         const current = res ? res.value : 0;
         const pending = accumulatedChanges?.[category]?.[resource] || 0;
-        if (current + pending < amount) {
-          this.isActive = false;
-          this.lastActiveTime = 0;
-          return;
+        const available = current + pending;
+        if (amount > 0) {
+          fraction = Math.min(fraction, baseFraction * Math.min(1, available / amount));
         }
       }
     }
 
     if (this.attributes.spaceExport && this.selectedDisposalResource) {
       const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-      const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
+      const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * baseFraction;
       const { category, resource } = this.selectedDisposalResource;
       const res = resources[category]?.[resource];
       const current = res ? res.value : 0;
       const pending = accumulatedChanges?.[category]?.[resource] || 0;
-      if (current + pending < disposalAmount) {
-        this.isActive = false;
-        this.lastActiveTime = 0;
-        return;
+      const available = current + pending;
+      if (disposalAmount > 0) {
+        fraction = Math.min(fraction, baseFraction * Math.min(1, available / disposalAmount));
       }
+    }
+
+    if (fraction <= 0) {
+      this.lastActiveTime = 0;
+      return;
     }
 
     for (const category in costPerShip) {

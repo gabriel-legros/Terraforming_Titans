@@ -214,3 +214,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
 - Continuous spaceship and Dyson Swarm projects apply resource changes through resource.js accumulatedChanges.
+- Continuous spaceship projects start without stored energy and scale resource flow to available amounts.
