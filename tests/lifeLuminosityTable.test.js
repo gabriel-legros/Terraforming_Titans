@@ -33,6 +33,7 @@ describe('life luminosity table', () => {
       }
     };
     ctx.projectManager = { isBooleanFlagSet: () => false };
+    ctx.getEffectiveLifeFraction = () => 0.5;
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
