@@ -221,3 +221,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Auto start checkbox shows 'Run' when spaceship projects enter continuous mode and reverts when they return to discrete operation.
 - Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
 - Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
+- Added a `treatAsBuilding` flag for certain projects like the Dyson Swarm Receiver so they contribute to building productivity and resource production loops.

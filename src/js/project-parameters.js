@@ -383,6 +383,7 @@ const projectParameters = {
     description: 'Construct the receiver array to receive energy from the Dyson Swarm and enables its expansion. All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.',
     repeatable: false,
     unlocked: false,
+    treatAsBuilding: true,
     attributes: { canUseSpaceStorage: true }
   },
   spaceStorage : {

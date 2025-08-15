@@ -14,5 +14,6 @@ describe('Dyson Swarm Receiver project', () => {
     expect(project.category).toBe('mega');
     expect(project.cost.colony.metal).toBe(10000000);
     expect(project.duration).toBe(300000);
+    expect(project.treatAsBuilding).toBe(true);
   });
 });

@@ -265,6 +265,15 @@ function calculateProductionRates(deltaTime, buildings) {
     }
   }
 
+  if (projectManager) {
+    for (const name in projectManager.projects) {
+      const project = projectManager.projects[name];
+      if (project && project.treatAsBuilding && typeof project.estimateCostAndGain === 'function') {
+        project.estimateCostAndGain(deltaTime, true);
+      }
+    }
+  }
+
   // Add funding rate to the production of funding resource
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
@@ -339,6 +348,18 @@ function produceResources(deltaTime, buildings) {
     building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
   }
 
+  if (projectManager) {
+    for (const name in projectManager.projects) {
+      const project = projectManager.projects[name];
+      if (project && project.treatAsBuilding && typeof project.applyCostAndGain === 'function') {
+        if (typeof project.estimateCostAndGain === 'function') {
+          project.estimateCostAndGain(deltaTime, true, 1);
+        }
+        project.applyCostAndGain(deltaTime, accumulatedChanges, 1);
+      }
+    }
+  }
+
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
@@ -381,7 +402,7 @@ function produceResources(deltaTime, buildings) {
     const projectData = {};
     for (const name of names) {
       const project = projectManager.projects?.[name];
-      if (!project) continue;
+      if (!project || project.treatAsBuilding) continue;
       if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
         continue;
       }
@@ -391,7 +412,7 @@ function produceResources(deltaTime, buildings) {
     const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
     for (const name of names) {
       const data = projectData[name];
-      if (!data) continue;
+      if (!data || data.project.treatAsBuilding) continue;
       const { project } = data;
       const productivity = productivityMap[name] ?? 1;
       project.estimateCostAndGain(deltaTime, true, productivity);
