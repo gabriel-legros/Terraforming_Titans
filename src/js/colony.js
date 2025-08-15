@@ -238,7 +238,7 @@ class Colony extends Building {
   }
 
   getNextTierName() {
-    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     const index = tiers.indexOf(this.name);
     return index >= 0 && index < tiers.length - 1 ? tiers[index + 1] : null;
   }
@@ -258,9 +258,14 @@ class Colony extends Building {
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
         const baseAmount = nextCost[category][resource];
-        let value = remainingFraction * baseAmount;
-        if (resource === 'metal' || resource === 'glass') {
-          value += 0.5 * fraction * baseAmount;
+        let value;
+        if (nextName === 't7_colony' && resource === 'superalloys') {
+          value = baseAmount;
+        } else {
+          value = remainingFraction * baseAmount;
+          if (resource === 'metal' || resource === 'glass') {
+            value += 0.5 * fraction * baseAmount;
+          }
         }
         if (value > 0) {
           if (!cost[category]) cost[category] = {};
@@ -332,7 +337,7 @@ class Colony extends Building {
   }
 
   enable(tierName){
-    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
+    const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
     // Unlock the new tier
     colonies[tierName].unlocked = true;
