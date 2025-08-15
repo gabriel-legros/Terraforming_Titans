@@ -852,9 +852,15 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
-      const maintenanceKeys = Object.keys(structure.maintenanceCost).map(r => `colony.${r}`);
+      const filteredMaintenance = Object.entries(structure.maintenanceCost)
+        .filter(([_, cost]) => cost > 0)
+        .reduce((acc, [res, cost]) => {
+          acc[res] = cost;
+          return acc;
+        }, {});
+      const maintenanceKeys = Object.keys(filteredMaintenance).map(r => `colony.${r}`);
       if (maintenanceKeys.length > 0) {
-        sections.push({ key: 'maintenance', label: 'Maintenance', data: structure.maintenanceCost, keys: maintenanceKeys });
+        sections.push({ key: 'maintenance', label: 'Maintenance', data: filteredMaintenance, keys: maintenanceKeys });
       }
     }
 
@@ -1029,3 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { getProdConsSections, formatMaintenanceDetails };
+}
