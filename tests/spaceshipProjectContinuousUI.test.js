@@ -56,13 +56,15 @@ describe('SpaceshipProject continuous progress UI', () => {
     ctx.createProjectItem(project);
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
+    project.autoStart = true;
     project.isActive = true;
     ctx.updateProjectUI('test');
     let btn = ctx.projectElements.test.progressButton;
     expect(btn.textContent).toBe('Continuous');
     expect(btn.style.background).toBe('rgb(76, 175, 80)');
 
-    project.isActive = false;
+    project.autoStart = false;
+    project.isActive = true;
     ctx.updateProjectUI('test');
     btn = ctx.projectElements.test.progressButton;
     expect(btn.textContent).toBe('Stopped');
