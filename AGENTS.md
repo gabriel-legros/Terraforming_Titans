@@ -158,6 +158,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Fixed Dyson Swarm collectors resetting after planet travel; collector counts persist across worlds while the receiver must be rebuilt on each planet.
 - Collector persistence is managed through ProjectManager travel state so only the Dyson Swarm's collector count carries over between planets.
 - Space Storage allows storing glass and preserves its capacity and stored resources across planet travel using travel state save/load.
+- Space Storage allows storing superalloys when the Superalloys research is completed.
 - Skill points are granted only when traveling from a fully terraformed planet to one not yet terraformed.
 - `getTerraformedPlanetCountIncludingCurrent` in SpaceManager avoids double counting the current planet when applying terraforming bonuses.
 - Autosave slot can be manually overwritten through the Save button.

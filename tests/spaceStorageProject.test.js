@@ -104,17 +104,22 @@ describe('Space Storage project', () => {
     const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 300000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
     const container = dom.window.document.getElementById('root');
+    ctx.researchManager = { isBooleanFlagSet: () => false };
     project.updateCostAndGains = () => {};
     project.renderUI(container);
     const checkboxes = container.querySelectorAll('#ss-resource-grid input[type="checkbox"]');
-    expect(checkboxes.length).toBe(9);
+    expect(checkboxes.length).toBe(10);
+    const superCheckbox = container.querySelector('#spaceStorage-res-superalloys');
+    expect(superCheckbox.parentElement.style.display).toBe('none');
+    const visibleCheckboxes = Array.from(checkboxes).filter(cb => cb.parentElement.style.display !== 'none');
+    expect(visibleCheckboxes.length).toBe(9);
     const items = container.querySelectorAll('#ss-resource-grid .storage-resource-item');
     expect(items[0].children.length).toBe(3);
     const label = items[0].children[1];
     const fullIcon = label.querySelector('.storage-full-icon');
     expect(fullIcon).toBeDefined();
-    checkboxes[0].checked = true;
-    checkboxes[0].dispatchEvent(new dom.window.Event('change'));
+    visibleCheckboxes[0].checked = true;
+    visibleCheckboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
   });
 

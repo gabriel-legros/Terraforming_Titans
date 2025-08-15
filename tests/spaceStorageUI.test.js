@@ -12,6 +12,7 @@ describe('Space Storage UI', () => {
     ctx.projectElements = {};
     ctx.formatNumber = numbers.formatNumber;
     ctx.resources = { colony: { metal: { displayName: 'Metal' } } };
+    ctx.researchManager = { isBooleanFlagSet: () => false };
 
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
@@ -52,6 +53,7 @@ describe('Space Storage UI', () => {
         section.appendChild(title);
         container.appendChild(section);
       },
+      toggleResourceSelection() {},
     };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);
@@ -61,9 +63,13 @@ describe('Space Storage UI', () => {
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
     expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
     expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
-    const items = els.resourceGrid.querySelectorAll('.storage-resource-item');
-    expect(items.length).toBe(9);
-    const firstItem = items[0];
+    const items = Array.from(els.resourceGrid.querySelectorAll('.storage-resource-item'));
+    expect(items.length).toBe(10);
+    const superItem = dom.window.document.getElementById('spaceStorage-res-superalloys').parentElement;
+    expect(superItem.style.display).toBe('none');
+    const visibleItems = items.filter(i => i.style.display !== 'none');
+    expect(visibleItems.length).toBe(9);
+    const firstItem = visibleItems[0];
     const label = firstItem.children[1];
     const fullIcon = label.querySelector('.storage-full-icon');
     expect(fullIcon).toBeDefined();
@@ -81,9 +87,10 @@ describe('Space Storage UI', () => {
     project.resourceUsage = { metal: 500 };
     project.usedStorage = 500;
     ctx.updateSpaceStorageUI(project);
-    const updatedItems = els.resourceGrid.querySelectorAll('.storage-resource-item');
-    expect(updatedItems.length).toBe(9);
-    const metalItem = updatedItems[0];
+    const updatedItems = Array.from(els.resourceGrid.querySelectorAll('.storage-resource-item'));
+    const updatedVisible = updatedItems.filter(i => i.style.display !== 'none');
+    expect(updatedVisible.length).toBe(9);
+    const metalItem = updatedVisible[0];
     expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
 
     const topSection = container.querySelector('.project-top-section');
@@ -98,6 +105,7 @@ describe('Space Storage UI', () => {
     ctx.projectElements = {};
     ctx.formatNumber = numbers.formatNumber;
     ctx.resources = { colony: { metal: { displayName: 'Metal', hasCap: true, value: 10, cap: 10 } } };
+    ctx.researchManager = { isBooleanFlagSet: () => false };
 
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
     vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
@@ -119,6 +127,7 @@ describe('Space Storage UI', () => {
       getEffectiveDuration: () => 1000,
       createSpaceshipAssignmentUI() {},
       createProjectDetailsGridUI() {},
+      toggleResourceSelection() {},
     };
     const container = dom.window.document.getElementById('container');
     ctx.renderSpaceStorageUI(project, container);

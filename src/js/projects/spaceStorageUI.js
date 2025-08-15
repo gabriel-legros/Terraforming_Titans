@@ -4,6 +4,7 @@ const storageResourceOptions = [
   { label: 'Components', category: 'colony', resource: 'components' },
   { label: 'Electronics', category: 'colony', resource: 'electronics' },
   { label: 'Superconductors', category: 'colony', resource: 'superconductors' },
+  { label: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
   { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
   { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { label: 'Water', category: 'surface', resource: 'liquidWater' },
@@ -145,6 +146,13 @@ function renderSpaceStorageUI(project, container) {
     resourceItem.append(checkbox, label, usage);
     resourceGrid.appendChild(resourceItem);
 
+    if (opt.requiresFlag) {
+      const hasFlag = typeof researchManager === 'undefined'
+        || (typeof researchManager.isBooleanFlagSet === 'function'
+          && researchManager.isBooleanFlagSet(opt.requiresFlag));
+      resourceItem.style.display = hasFlag ? '' : 'none';
+    }
+
     projectElements[project.name] = {
       ...projectElements[project.name],
       resourceCheckboxes: {
@@ -158,6 +166,10 @@ function renderSpaceStorageUI(project, container) {
       fullIcons: {
         ...(projectElements[project.name]?.fullIcons || {}),
         [opt.resource]: fullIcon
+      },
+      resourceItems: {
+        ...(projectElements[project.name]?.resourceItems || {}),
+        [opt.resource]: resourceItem
       }
     };
   });
@@ -280,6 +292,20 @@ function updateSpaceStorageUI(project) {
           r => r.category === opt.category && r.resource === opt.resource
         );
         cb.checked = checked;
+      }
+    });
+  }
+  if (els.resourceItems) {
+    storageResourceOptions.forEach(opt => {
+      const item = els.resourceItems[opt.resource];
+      if (item && opt.requiresFlag) {
+        const hasFlag = typeof researchManager === 'undefined'
+          || (typeof researchManager.isBooleanFlagSet === 'function'
+            && researchManager.isBooleanFlagSet(opt.requiresFlag));
+        item.style.display = hasFlag ? '' : 'none';
+        if (!hasFlag) {
+          project.toggleResourceSelection(opt.category, opt.resource, false);
+        }
       }
     });
   }
