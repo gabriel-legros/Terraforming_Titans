@@ -14,6 +14,7 @@ describe('geological burial slows when CO2 depleted', () => {
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     ctx.getZonePercentage = () => 1;
     ctx.calculateZonalCoverage = () => 0;
+    ctx.getEcumenopolisLandFraction = () => 0;
     ctx.terraforming = {
       zonalCoverageCache: {
         tropical: { liquidWater: 0.1, ice: 0 },
@@ -37,7 +38,9 @@ describe('geological burial slows when CO2 depleted', () => {
       },
       getMagnetosphereStatus: () => true,
       celestialParameters: { surfaceArea: 1, gravity: 1, radius: 1 },
-      calculateZonalSolarPanelMultiplier: () => 1
+      calculateZonalSolarPanelMultiplier: () => 1,
+      getEcumenopolisLandFraction: () => 0,
+      getEffectiveLifeFraction: () => 0.5
     };
     ctx.resources = {
       surface: { biomass: { value: 0, modifyRate: jest.fn() } },

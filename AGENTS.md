@@ -207,3 +207,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - WGC shop offers a Superalloy production multiplier upgrade unlocked by Superalloys research, capped at 900 purchases, and increasing production by 100% per purchase.
 - Added a maintenanceMultiplier attribute for resources; superalloys use a multiplier of 0 and maintenance costs scale with each resource's multiplier.
 - Added placeholder Nanotechnology Stage I advanced research costing 125k.
+- Ecumenopolis District coverage now reduces land available for life, lowers life terraforming requirements, and updates the life UI accordingly.

@@ -581,14 +581,15 @@ function updateLifeBox() {
     // Calculate average biomass coverage percentage using the centralized helper function
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
-    // Update border based on average biomass coverage vs target
-    // TODO: The getLifeStatus function itself needs updating in terraforming.js
-    //       to use the new avgBiomassCoverage calculation. For now, we replicate the check.
-    if (avgBiomassCoverage > terraforming.life.target) {
+    const effectiveTarget = getEffectiveLifeFraction(terraforming);
+    if (avgBiomassCoverage > effectiveTarget) {
         lifeBox.style.borderColor = 'green';
     } else {
         lifeBox.style.borderColor = 'red';
     }
+
+    const targetSpan = lifeBox.querySelector('.terraforming-target');
+    if (targetSpan) targetSpan.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
 
     // Calculate zonal coverage percentages
     const polarCov = terraforming.zonalCoverageCache['polar']?.biomass ?? 0;
