@@ -43,7 +43,9 @@ describe('Dyson Swarm energy production', () => {
     project.energyPerCollector = 50;
 
     project.estimateCostAndGain();
-    project.applyCostAndGain(1000);
+    const changes = { colony: { energy: 0 } };
+    project.applyCostAndGain(1000, changes);
+    ctx.resources.colony.energy.value += changes.colony.energy;
 
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(150, 'Dyson Swarm', 'project');
     expect(ctx.resources.colony.energy.value).toBe(150);

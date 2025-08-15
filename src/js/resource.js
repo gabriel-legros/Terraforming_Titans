@@ -378,6 +378,9 @@ function produceResources(deltaTime, buildings) {
 
   if(projectManager){
     projectManager.estimateProjects(deltaTime);
+    if (typeof projectManager.applyCostAndGain === 'function') {
+      projectManager.applyCostAndGain(deltaTime, accumulatedChanges);
+    }
   }
 
   // Apply accumulated changes to resources

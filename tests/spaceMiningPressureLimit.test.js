@@ -14,6 +14,27 @@ function stubResource(value) {
   };
 }
 
+function createChanges(resources) {
+  const changes = {};
+  for (const category in resources) {
+    changes[category] = {};
+    for (const resource in resources[category]) {
+      changes[category][resource] = 0;
+    }
+  }
+  return changes;
+}
+
+function applyChanges(resources, changes) {
+  for (const category in changes) {
+    for (const resource in changes[category]) {
+      if (resources[category]?.[resource]) {
+        resources[category][resource].value += changes[category][resource];
+      }
+    }
+  }
+}
+
 describe('SpaceMiningProject pressure limit capping', () => {
   let ctx;
   beforeEach(() => {
@@ -79,7 +100,9 @@ describe('SpaceMiningProject pressure limit capping', () => {
     project.start(ctx.resources);
     const duration = project.getEffectiveDuration();
     project.update(duration);
-    project.applyCostAndGain(duration);
+    const changes = createChanges(ctx.resources);
+    project.applyCostAndGain(duration, changes);
+    applyChanges(ctx.resources, changes);
     expect(ctx.resources.atmospheric.inertGas.value).toBeCloseTo(massLimit);
   });
 });
