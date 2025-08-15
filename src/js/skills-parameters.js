@@ -22,6 +22,7 @@ const skillParameters = {
     effect: {
       target: 'population',
       type: 'globalPopulationGrowth',
+      name: 'Awakening',
       baseValue: 0.2,
       perRank: true
     },

@@ -304,16 +304,17 @@ class EffectableEntity {
       }
     }
 
-    applyGlobalPopulationGrowth(effect) {
-      const multiplier = 1 + effect.value;
-      this.addAndReplace({
-        type: 'growthMultiplier',
-        value: multiplier,
-        effectId: `${effect.effectId}-growthMultiplier`,
-        sourceId: effect.sourceId,
-        onLoad: effect.onLoad
-      });
-    }
+  applyGlobalPopulationGrowth(effect) {
+    const multiplier = 1 + effect.value;
+    this.addAndReplace({
+      type: 'growthMultiplier',
+      value: multiplier,
+      effectId: `${effect.effectId}-growthMultiplier`,
+      sourceId: effect.sourceId,
+      onLoad: effect.onLoad,
+      name: effect.name
+    });
+  }
 
     applyGlobalWorkerReduction(effect) {
       const multiplier = 1 - effect.value;

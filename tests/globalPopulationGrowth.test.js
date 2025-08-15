@@ -35,4 +35,17 @@ describe('globalPopulationGrowth effect', () => {
     const count = pop.activeEffects.filter(e => e.type === 'growthMultiplier').length;
     expect(count).toBe(1);
   });
+
+  test('uses provided name for multiplier effect', () => {
+    const pop = new TestPopulation();
+    pop.addAndReplace({
+      type: 'globalPopulationGrowth',
+      value: 0.1,
+      effectId: 'skill',
+      sourceId: 'skill',
+      name: 'Awakening'
+    });
+    const gm = pop.activeEffects.find(e => e.type === 'growthMultiplier');
+    expect(gm.name).toBe('Awakening');
+  });
 });
