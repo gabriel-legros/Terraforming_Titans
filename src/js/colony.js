@@ -243,7 +243,7 @@ class Colony extends Building {
     return index >= 0 && index < tiers.length - 1 ? tiers[index + 1] : null;
   }
 
-  getUpgradeCost() {
+  getUpgradeCost(upgradeCount = 1) {
     const nextName = this.getNextTierName();
     if (!nextName) return null;
     const next = colonies[nextName];
@@ -251,21 +251,16 @@ class Colony extends Building {
 
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
-    const amount = Math.min(this.count, 10);
-    const fraction = amount / 10;
-    const remainingFraction = 1 - fraction;
+    const amount = upgradeCount * 10;
 
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
         const baseAmount = nextCost[category][resource];
-        let value;
+        let value = 0;
         if (nextName === 't7_colony' && resource === 'superalloys') {
-          value = baseAmount;
-        } else {
-          value = remainingFraction * baseAmount;
-          if (resource === 'metal' || resource === 'glass') {
-            value += 0.5 * fraction * baseAmount;
-          }
+          value = baseAmount * upgradeCount;
+        } else if (resource === 'metal' || resource === 'glass') {
+          value = 0.5 * baseAmount * upgradeCount;
         }
         if (value > 0) {
           if (!cost[category]) cost[category] = {};
@@ -274,7 +269,7 @@ class Colony extends Building {
       }
     }
 
-    const landNeeded = next.requiresLand - amount * (this.requiresLand || 0);
+    const landNeeded = upgradeCount * next.requiresLand - amount * (this.requiresLand || 0);
     if (landNeeded > 0) {
       if (!cost.surface) cost.surface = {};
       cost.surface.land = landNeeded;
@@ -283,8 +278,10 @@ class Colony extends Building {
     return cost;
   }
 
-  canAffordUpgrade() {
-    const cost = this.getUpgradeCost();
+  canAffordUpgrade(upgradeCount = 1) {
+    const amount = upgradeCount * 10;
+    if (this.count < amount) return false;
+    const cost = this.getUpgradeCost(upgradeCount);
     if (!cost) return false;
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -301,15 +298,14 @@ class Colony extends Building {
     return true;
   }
 
-  upgrade() {
+  upgrade(upgradeCount = 1) {
     const nextName = this.getNextTierName();
     if (!nextName) return false;
     const next = colonies[nextName];
     if (!next || !next.unlocked) return false;
-    const amount = Math.min(this.count, 10);
-    if (amount <= 0) return false;
-    if (!this.canAffordUpgrade()) return false;
-    const cost = this.getUpgradeCost();
+    if (!this.canAffordUpgrade(upgradeCount)) return false;
+    const cost = this.getUpgradeCost(upgradeCount);
+    const amount = upgradeCount * 10;
 
     // Pay cost
     for (const category in cost) {
@@ -321,7 +317,7 @@ class Colony extends Building {
 
     // Adjust land usage
     if (this.requiresLand) this.adjustLand(-amount);
-    if (next.requiresLand) next.adjustLand(1);
+    if (next.requiresLand) next.adjustLand(upgradeCount);
 
     // Remove lower tier buildings
     this.count -= amount;
@@ -329,8 +325,8 @@ class Colony extends Building {
     this.updateResourceStorage();
 
     // Add upgraded building
-    next.count += 1;
-    next.active += 1;
+    next.count += upgradeCount;
+    next.active += upgradeCount;
     next.updateResourceStorage();
 
     return true;

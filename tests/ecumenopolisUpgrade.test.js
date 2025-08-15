@@ -129,5 +129,36 @@ describe('Ecumenopolis upgrade', () => {
     expect(t7.count).toBe(1);
     expect(ctx.resources.colony.superalloys.value).toBe(0);
   });
+
+  test('Metropolis upgrades multiple districts based on build count', () => {
+    const { dom, ctx } = setupContext();
+    const t6 = ctx.colonies.t6_colony;
+    const t7 = ctx.colonies.t7_colony;
+    t6.unlocked = true;
+    t7.unlocked = true;
+    t6.count = t6.active = 20;
+
+    ctx.resources.colony.metal.value = 50000000;
+    ctx.resources.colony.glass.value = 50000000;
+    ctx.resources.colony.superalloys.value = 2000000;
+
+    ctx.createColonyButtons(ctx.colonies);
+    vm.runInContext("selectedBuildCounts['t6_colony'] = 2;", ctx);
+    ctx.updateStructureDisplay(ctx.colonies);
+
+    const button = dom.window.document.getElementById('t6_colony-upgrade-button');
+    expect(button.disabled).toBe(false);
+
+    const cost = t6.getUpgradeCost(2);
+    expect(cost.colony.superalloys).toBe(2000000);
+
+    button.click();
+
+    expect(t6.count).toBe(0);
+    expect(t7.count).toBe(2);
+    expect(ctx.resources.colony.superalloys.value).toBe(0);
+    expect(ctx.resources.colony.metal.value).toBe(0);
+    expect(ctx.resources.colony.glass.value).toBe(0);
+  });
 });
 
