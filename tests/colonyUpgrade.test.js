@@ -124,30 +124,28 @@ describe('colony upgrade', () => {
     expect(ctx.resources.surface.land.reserved).toBe(0);
   });
 
-  test('upgrade requires at least ten buildings', () => {
+  test('upgrade works with fewer than ten buildings at full cost', () => {
     const { dom, ctx } = setupContext('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
     const t1 = ctx.colonies.t1_colony;
     const t2 = ctx.colonies.t2_colony;
     t1.unlocked = true;
     t2.unlocked = true;
-    t1.count = t1.active = 1;
-    ctx.resources.colony.metal.value = 237.5;
-    ctx.resources.colony.glass.value = 237.5;
-    ctx.resources.colony.water.value = 450;
+    t1.count = t1.active = 8;
+    ctx.resources.colony.metal.value = 125;
+    ctx.resources.colony.glass.value = 125;
 
     ctx.createColonyButtons(ctx.colonies);
     ctx.updateStructureDisplay(ctx.colonies);
 
     const button = dom.window.document.getElementById('t1_colony-upgrade-button');
-    expect(button.disabled).toBe(true);
+    expect(button.disabled).toBe(false);
     button.click();
 
-    expect(t1.count).toBe(1);
-    expect(t2.count).toBe(0);
-    expect(ctx.resources.colony.metal.value).toBe(237.5);
-    expect(ctx.resources.colony.glass.value).toBe(237.5);
-    expect(ctx.resources.colony.water.value).toBe(450);
-    expect(ctx.resources.surface.land.reserved).toBe(0);
+    expect(t1.count).toBe(0);
+    expect(t2.count).toBe(1);
+    expect(ctx.resources.colony.metal.value).toBe(0);
+    expect(ctx.resources.colony.glass.value).toBe(0);
+    expect(ctx.resources.surface.land.reserved).toBe(2);
   });
 
   test('upgrade button colors unaffordable cost parts red', () => {
