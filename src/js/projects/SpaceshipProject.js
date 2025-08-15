@@ -488,11 +488,10 @@ class SpaceshipProject extends Project {
     }
   }
 
-  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = {}) {
+  applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
     for (const category in gain) {
       for (const resource in gain[category]) {
-        const scale = productivity[category]?.[resource] ?? 1;
-        const amount = gain[category][resource] * fraction * scale;
+        const amount = gain[category][resource] * fraction * productivity;
         if (accumulatedChanges) {
           if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
           if (accumulatedChanges[category][resource] === undefined) {
@@ -643,7 +642,7 @@ class SpaceshipProject extends Project {
     return this.estimateProjectCostAndGain(deltaTime);
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = {}) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous()) return;
     const activeTime = this.lastActiveTime || 0;
     if (activeTime <= 0) return;
@@ -659,22 +658,19 @@ class SpaceshipProject extends Project {
       return;
     }
 
-    let projectProd = 1;
     const costPerShip = this.calculateSpaceshipCost();
     for (const category in costPerShip) {
       for (const resource in costPerShip[category]) {
         if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
           continue;
         }
-        const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction;
-        const scale = productivity[category]?.[resource] ?? 1;
-        projectProd = Math.min(projectProd, scale);
+        const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction * productivity;
         if (accumulatedChanges) {
-          accumulatedChanges[category][resource] -= amount * scale;
+          accumulatedChanges[category][resource] -= amount;
         } else {
           const res = resources[category]?.[resource];
           if (res && typeof res.decrease === 'function') {
-            res.decrease(amount * scale);
+            res.decrease(amount);
           }
         }
       }
@@ -682,22 +678,20 @@ class SpaceshipProject extends Project {
 
     if (this.attributes.spaceExport && this.selectedDisposalResource) {
       const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-      const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction;
+      const disposalAmount = (this.attributes.disposalAmount || 0) * this.assignedSpaceships * efficiency * fraction * productivity;
       const { category, resource } = this.selectedDisposalResource;
-      const scale = productivity[category]?.[resource] ?? 1;
-      projectProd = Math.min(projectProd, scale);
       if (accumulatedChanges) {
-        accumulatedChanges[category][resource] -= disposalAmount * scale;
+        accumulatedChanges[category][resource] -= disposalAmount;
         if (this.attributes.fundingGainAmount && accumulatedChanges.colony && accumulatedChanges.colony.funding !== undefined) {
-          accumulatedChanges.colony.funding += disposalAmount * scale * this.attributes.fundingGainAmount;
+          accumulatedChanges.colony.funding += disposalAmount * this.attributes.fundingGainAmount;
         }
       } else {
         const res = resources[category]?.[resource];
         if (res && typeof res.decrease === 'function') {
-          res.decrease(disposalAmount * scale);
+          res.decrease(disposalAmount);
         }
         if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-          resources.colony.funding.increase(disposalAmount * scale * this.attributes.fundingGainAmount);
+          resources.colony.funding.increase(disposalAmount * this.attributes.fundingGainAmount);
         }
       }
     }
@@ -713,17 +707,10 @@ class SpaceshipProject extends Project {
     if (this.applyMetalCostPenalty) {
       const cost = this.calculateSpaceshipCost();
       const metalCost = cost.colony?.metal || 0;
-      const penalty = metalCost * this.assignedSpaceships * fraction;
+      const penalty = metalCost * this.assignedSpaceships * fraction * productivity;
       this.applyMetalCostPenalty(gain, penalty);
     }
-    const gainProd = {};
-    for (const category in gain) {
-      gainProd[category] = {};
-      for (const resource in gain[category]) {
-        gainProd[category][resource] = projectProd;
-      }
-    }
-    this.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, gainProd);
+    this.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
 
     this.lastActiveTime = 0;
   }

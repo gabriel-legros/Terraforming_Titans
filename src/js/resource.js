@@ -376,17 +376,17 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
-  let projectTotals = null;
   if (projectManager) {
-    projectTotals = projectManager.estimateProjects(deltaTime);
-    const productivity = calculateProjectProductivity(
-      resources,
-      accumulatedChanges,
-      projectTotals?.cost,
-      projectTotals?.gain
-    );
-    if (typeof projectManager.applyCostAndGain === 'function') {
-      projectManager.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    for (const name of names) {
+      const project = projectManager.projects?.[name];
+      if (!project) continue;
+      if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
+        continue;
+      }
+      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime) || {};
+      const productivity = calculateProjectProductivity(resources, accumulatedChanges, cost, gain);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
   }
 
@@ -452,24 +452,23 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
-function calculateProjectProductivity(resources, accumulatedChanges, totalCost = {}, totalGain = {}) {
-  const productivity = {};
-  for (const category in totalCost) {
-    for (const resource in totalCost[category]) {
-      const cost = totalCost[category][resource] || 0;
-      const gain = totalGain[category]?.[resource] || 0;
-      const net = Math.max(cost - gain, 0);
+function calculateProjectProductivity(resources, accumulatedChanges, cost = {}, gain = {}) {
+  let productivity = 1;
+  for (const category in cost) {
+    for (const resource in cost[category]) {
+      const required = cost[category][resource] || 0;
+      const produced = gain[category]?.[resource] || 0;
+      const net = Math.max(required - produced, 0);
       if (net > 0) {
         const available =
           (resources[category]?.[resource]?.value || 0) +
           (accumulatedChanges[category]?.[resource] || 0);
-        const factor = Math.min(1, available / net);
-        if (!productivity[category]) productivity[category] = {};
-        productivity[category][resource] = factor;
+        const ratio = available / net;
+        productivity = Math.min(productivity, ratio);
       }
     }
   }
-  return productivity;
+  return Math.max(0, Math.min(1, productivity));
 }
 
 function recalculateTotalRates(){

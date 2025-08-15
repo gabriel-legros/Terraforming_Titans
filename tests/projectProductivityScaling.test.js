@@ -2,29 +2,32 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { calculateProjectProductivity } = require('../src/js/resource.js');
 
-describe('global project productivity', () => {
-  test('scales multiple project costs to available resources', () => {
+describe('project productivity', () => {
+  test('uses worst ratio and leaves cost-free projects unaffected', () => {
     const resources = {
       colony: {
-        energy: { value: 100 }
+        energy: { value: 100 },
+        metal: { value: 50 }
       }
     };
-    const accumulatedChanges = { colony: { energy: 10 } };
-    const totalCost = { colony: { energy: 200 } };
-    const totalGain = {};
-    const prod = calculateProjectProductivity(resources, accumulatedChanges, totalCost, totalGain);
-    expect(prod.colony.energy).toBeCloseTo(110 / 200);
-    const changes = { colony: { energy: 10 } };
-    const projectA = (change, productivity) => {
-      change.colony.energy -= 120 * productivity.colony.energy;
-    };
-    const projectB = (change, productivity) => {
-      change.colony.energy -= 80 * productivity.colony.energy;
-    };
-    projectA(changes, prod);
-    projectB(changes, prod);
-    expect(changes.colony.energy).toBeCloseTo(10 - 200 * (110 / 200));
-    resources.colony.energy.value += changes.colony.energy;
-    expect(resources.colony.energy.value).toBeCloseTo(0);
+    const changes = { colony: { energy: 10, metal: 0 } };
+
+    const costA = { colony: { energy: 200, metal: 30 } };
+    const gainA = { colony: { metal: 10 } };
+    const prodA = calculateProjectProductivity(resources, changes, costA, gainA);
+    expect(prodA).toBeCloseTo(110 / 200);
+    changes.colony.energy -= costA.colony.energy * prodA;
+    changes.colony.metal -= costA.colony.metal * prodA;
+    changes.colony.metal += gainA.colony.metal * prodA;
+
+    const gainB = { colony: { energy: 10 } };
+    const prodB = calculateProjectProductivity(resources, changes, {}, gainB);
+    expect(prodB).toBe(1);
+    changes.colony.energy += gainB.colony.energy * prodB;
+
+    const finalEnergy = resources.colony.energy.value + changes.colony.energy;
+    const finalMetal = resources.colony.metal.value + changes.colony.metal;
+    expect(finalEnergy).toBeCloseTo(10);
+    expect(finalMetal).toBeCloseTo(39);
   });
 });

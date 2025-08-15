@@ -541,7 +541,7 @@ class ProjectManager extends EffectableEntity {
     }
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = {}) {
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
       if (typeof project.applyCostAndGain === 'function') {
