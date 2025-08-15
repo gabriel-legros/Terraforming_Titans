@@ -376,8 +376,27 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
-  if(projectManager){
-    projectManager.estimateProjects(deltaTime);
+  if (projectManager) {
+    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    const projectData = {};
+    for (const name of names) {
+      const project = projectManager.projects?.[name];
+      if (!project) continue;
+      if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
+        continue;
+      }
+      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
+      projectData[name] = { project, cost, gain };
+    }
+    const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
+    for (const name of names) {
+      const data = projectData[name];
+      if (!data) continue;
+      const { project } = data;
+      const productivity = productivityMap[name] ?? 1;
+      project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+    }
   }
 
   // Apply accumulated changes to resources
@@ -442,6 +461,57 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
+function calculateProjectProductivities(resources, accumulatedChanges, projectData = {}) {
+  const totalNet = {};
+  for (const name in projectData) {
+    const { cost = {}, gain = {} } = projectData[name];
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const required = cost[category][resource] || 0;
+        const produced = gain[category]?.[resource] || 0;
+        const net = Math.max(required - produced, 0);
+        if (net > 0) {
+          if (!totalNet[category]) totalNet[category] = {};
+          totalNet[category][resource] = (totalNet[category][resource] || 0) + net;
+        }
+      }
+    }
+  }
+
+  const ratios = {};
+  for (const category in totalNet) {
+    for (const resource in totalNet[category]) {
+      const available =
+        (resources[category]?.[resource]?.value || 0) +
+        (accumulatedChanges[category]?.[resource] || 0);
+      const net = totalNet[category][resource];
+      const ratio = net > 0 ? Math.min(available / net, 1) : 1;
+      if (!ratios[category]) ratios[category] = {};
+      ratios[category][resource] = Math.max(0, ratio);
+    }
+  }
+
+  const productivityMap = {};
+  for (const name in projectData) {
+    const { cost = {}, gain = {} } = projectData[name];
+    let productivity = 1;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const required = cost[category][resource] || 0;
+        const produced = gain[category]?.[resource] || 0;
+        const net = Math.max(required - produced, 0);
+        if (net > 0) {
+          const ratio = ratios[category]?.[resource] ?? 1;
+          productivity = Math.min(productivity, ratio);
+        }
+      }
+    }
+    productivityMap[name] = Math.max(0, Math.min(1, productivity));
+  }
+
+  return productivityMap;
+}
+
 function recalculateTotalRates(){
   // After all changes are applied, recalculate total rates for UI display
   for (const category in resources) {
@@ -449,4 +519,15 @@ function recalculateTotalRates(){
       resources[category][resourceName].recalculateTotalRates();
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    Resource,
+    checkResourceAvailability,
+    createResources,
+    produceResources,
+    calculateProjectProductivities,
+    recalculateTotalRates,
+  };
 }

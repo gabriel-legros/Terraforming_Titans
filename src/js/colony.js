@@ -252,15 +252,19 @@ class Colony extends Building {
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
     const amount = upgradeCount * 10;
+    const removeCount = Math.min(amount, this.count);
+    const missingRatio = (amount - removeCount) / amount;
 
     for (const category in nextCost) {
       for (const resource in nextCost[category]) {
-        const baseAmount = nextCost[category][resource];
+        const baseAmount = nextCost[category][resource] * upgradeCount;
         let value = 0;
         if (nextName === 't7_colony' && resource === 'superalloys') {
-          value = baseAmount * upgradeCount;
+          value = baseAmount;
         } else if (resource === 'metal' || resource === 'glass') {
-          value = 0.5 * baseAmount * upgradeCount;
+          value = baseAmount * (0.5 + 0.5 * missingRatio);
+        } else if (resource === 'water') {
+          value = baseAmount * missingRatio;
         }
         if (value > 0) {
           if (!cost[category]) cost[category] = {};
@@ -269,7 +273,7 @@ class Colony extends Building {
       }
     }
 
-    const landNeeded = upgradeCount * next.requiresLand - amount * (this.requiresLand || 0);
+    const landNeeded = upgradeCount * next.requiresLand - removeCount * (this.requiresLand || 0);
     if (landNeeded > 0) {
       if (!cost.surface) cost.surface = {};
       cost.surface.land = landNeeded;
@@ -279,8 +283,8 @@ class Colony extends Building {
   }
 
   canAffordUpgrade(upgradeCount = 1) {
-    const amount = upgradeCount * 10;
-    if (this.count < amount) return false;
+    const maxUpgrades = Math.ceil(this.count / 10);
+    if (maxUpgrades === 0 || upgradeCount > maxUpgrades) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     if (!cost) return false;
     for (const category in cost) {
@@ -306,6 +310,7 @@ class Colony extends Building {
     if (!this.canAffordUpgrade(upgradeCount)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     const amount = upgradeCount * 10;
+    const removeCount = Math.min(amount, this.count);
 
     // Pay cost
     for (const category in cost) {
@@ -316,12 +321,12 @@ class Colony extends Building {
     }
 
     // Adjust land usage
-    if (this.requiresLand) this.adjustLand(-amount);
+    if (this.requiresLand) this.adjustLand(-removeCount);
     if (next.requiresLand) next.adjustLand(upgradeCount);
 
     // Remove lower tier buildings
-    this.count -= amount;
-    this.active -= amount;
+    this.count -= removeCount;
+    this.active -= removeCount;
     this.updateResourceStorage();
 
     // Add upgraded building

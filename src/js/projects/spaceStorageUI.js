@@ -257,6 +257,14 @@ function updateSpaceStorageUI(project) {
     els.shipAutoStartContainer.style.display = display;
     els.prioritizeMegaContainer.style.display = display;
   }
+  if (els.shipAutoStartContainer) {
+    const label = els.shipAutoStartContainer.querySelector('label');
+    if (label) {
+      label.textContent = project.isShipOperationContinuous()
+        ? 'Run'
+        : 'Auto Start Ships';
+    }
+  }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 0);
   }

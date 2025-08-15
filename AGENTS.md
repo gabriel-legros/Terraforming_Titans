@@ -214,3 +214,12 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
 - Growth rate tooltip lists individual multipliers and hides neutral (+0/x1) entries.
+=======
+- Continuous spaceship and Dyson Swarm projects apply resource changes through resource.js accumulatedChanges.
+- Continuous spaceship projects start without stored energy and scale resource flow to available amounts.
+- Project productivity now sums costs and gains across all active projects and scales each by the worst resource ratio, so projects without costs (like the Dyson Swarm) still run at full output and ordering no longer matters.
+- Project resource rates in tooltips display productivity-adjusted values.
+- Continuous projects display "Stopped" when their auto-start checkbox is disabled.
+- Auto start checkbox shows 'Run' when spaceship projects enter continuous mode and reverts when they return to discrete operation.
+- Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
+- Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
