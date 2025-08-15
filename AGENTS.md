@@ -213,6 +213,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - The "Wait for full capacity" option only requires resources to fill a single ship.
 - Self-replicating ship cap counts ships assigned to projects.
 - Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
+- Growth rate tooltip lists individual multipliers and hides neutral (+0/x1) entries.
+=======
 - Continuous spaceship and Dyson Swarm projects apply resource changes through resource.js accumulatedChanges.
 - Continuous spaceship projects start without stored energy and scale resource flow to available amounts.
 - Project productivity now sums costs and gains across all active projects and scales each by the worst resource ratio, so projects without costs (like the Dyson Swarm) still run at full output and ordering no longer matters.

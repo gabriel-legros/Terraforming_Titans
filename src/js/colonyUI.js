@@ -74,6 +74,26 @@ function createGrowthRateDisplay(){
   }
 }
 
+function getGrowthMultiplierBreakdown(){
+  const effects = (typeof populationModule !== 'undefined' && Array.isArray(populationModule.activeEffects)) ? populationModule.activeEffects : [];
+  const lines = [];
+  effects.forEach(effect => {
+    if(effect.type === 'growthMultiplier'){
+      const mult = effect.value;
+      if(mult === 1) return;
+      let name = effect.name || effect.sourceId || effect.effectId || 'Unknown';
+      name = name.toString()
+                 .replace(/([A-Z])/g, ' $1')
+                 .replace(/_/g, ' ')
+                 .replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+      const pct = (mult - 1) * 100;
+      const formatted = `${pct >= 0 ? '+' : ''}${formatNumber(pct, false, 1)}%`;
+      lines.push(`${name}: ${formatted}`);
+    }
+  });
+  return lines;
+}
+
 function updateGrowthRateDisplay(){
   if(typeof populationModule === 'undefined') return;
   const growthEl = document.getElementById('growth-rate-value');
@@ -90,6 +110,16 @@ function updateGrowthRateDisplay(){
 
   const otherMult = populationModule.getEffectiveGrowthMultiplier() * 100;
   otherEl.textContent = `${formatNumber(otherMult, false, 1)}%`;
+
+  const otherInfo = otherEl.parentElement.querySelector('.info-tooltip-icon');
+  if(otherInfo){
+    const breakdown = getGrowthMultiplierBreakdown();
+    let title = 'Multipliers from colony sliders, and other effects.';
+    if(breakdown.length > 0){
+      title += '\n' + breakdown.join('\n');
+    }
+    otherInfo.title = title;
+  }
 
   const pop = populationModule.populationResource.value;
   const cap = populationModule.populationResource.cap;

@@ -46,4 +46,37 @@ describe('colony growth rate display', () => {
     const icons = dom.window.document.querySelectorAll('#growth-rate-container .info-tooltip-icon');
     expect(icons.length).toBe(4);
   });
+
+  test('tooltip lists non-neutral growth multipliers', () => {
+    const html = `<!DOCTYPE html>
+      <div id="colony-controls-container"></div>`;
+    const dom = new JSDOM(html, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.populationModule = {
+      getCurrentGrowthPercent: () => 0.05,
+      growthRate: 0.001,
+      populationResource: { value: 100, cap: 200 },
+      getEffectiveGrowthMultiplier: () => 3.6,
+      activeEffects: [
+        { type: 'growthMultiplier', value: 1.2, sourceId: 'foodGrowth' },
+        { type: 'growthMultiplier', value: 1, sourceId: 'neutral' },
+        { type: 'growthMultiplier', value: 3, sourceId: 'festival' }
+      ]
+    };
+    ctx.colonies = {};
+
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonyUI.js'), 'utf8');
+    vm.runInContext(code, ctx);
+
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    ctx.updateGrowthRateDisplay();
+
+    const icon = dom.window.document.querySelector('#growth-other-value').parentElement.querySelector('.info-tooltip-icon');
+    const title = icon.title;
+    expect(title).toContain('Food Growth: +20.0%');
+    expect(title).toContain('Festival: +200.0%');
+    expect(title).not.toContain('Neutral');
+  });
 });
