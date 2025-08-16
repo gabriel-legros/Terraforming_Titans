@@ -182,6 +182,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - SpaceManager stores the random world seed as `currentPlanetKey` when visiting procedural planets, unifying key handling for story and procedural worlds.
 - Optical depth tooltip lists contributions from each gas.
 - Optical depth tooltip refreshes its gas contributions in real time while hovered.
+- Optical depth tooltip uses resource display names.
 - `getTerraformedPlanetCount` now counts terraformed procedural worlds via `getAllPlanetStatuses`.
 - Space Storage withdraw mode shows an icon when colony storage is full.
 - Advanced research production scales with the number of terraformed worlds.

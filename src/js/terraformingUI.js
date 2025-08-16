@@ -318,7 +318,19 @@ function createTemperatureBox(row) {
     if (opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
       const lines = Object.entries(contributions)
-        .map(([gas, val]) => `${gas.toUpperCase()}: ${val.toFixed(2)}`);
+        .map(([gas, val]) => {
+          const mapping = {
+            co2: 'carbonDioxide',
+            h2o: 'atmosphericWater',
+            ch4: 'atmosphericMethane',
+            greenhousegas: 'greenhouseGas'
+          };
+          const resourceKey = mapping[gas.toLowerCase()];
+          const displayName = resourceKey && resources.atmospheric[resourceKey]
+            ? resources.atmospheric[resourceKey].displayName
+            : gas.toUpperCase();
+          return `${displayName}: ${val.toFixed(2)}`;
+        });
       const tooltip = document.getElementById('optical-depth-tooltip');
       if (tooltip) {
         tooltip.innerHTML = lines.join('<br>');
