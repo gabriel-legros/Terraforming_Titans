@@ -20,14 +20,14 @@ const autobuildCostTracker = {
     },
     update(delta) {
         this.elapsed += delta;
-        if (this.elapsed >= 1000) {
+        while (this.elapsed >= 1000) {
             this.costQueue.push(this.currentCosts);
             this.buildingCostQueue.push(this.currentBuildingCosts);
             if (this.costQueue.length > 10) this.costQueue.shift();
             if (this.buildingCostQueue.length > 10) this.buildingCostQueue.shift();
             this.currentCosts = {};
             this.currentBuildingCosts = {};
-            this.elapsed = 0;
+            this.elapsed -= 1000;
         }
     },
     getAverageCost(category, resource) {
