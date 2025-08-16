@@ -126,4 +126,27 @@ describe('resource tooltip hides non-auto-start project rates', () => {
     expect(energy.consumptionRate).toBeCloseTo(100);
     expect(energy.consumptionRateBySource.Dummy).toBeCloseTo(100);
   });
+
+  test('auto-start disabled projects skip rate estimation', () => {
+    const energy = new Resource({ name: 'energy', category: 'colony', initialValue: 200 });
+    setupGlobals(energy);
+    const estimateCostAndGain = jest.fn(() => ({ cost: { colony: { energy: 100 } }, gain: {} }));
+    const project = {
+      displayName: 'Dummy',
+      isActive: true,
+      isCompleted: false,
+      autoStart: false,
+      estimateCostAndGain,
+      applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+        accumulatedChanges.colony.energy -= 100 * productivity;
+      }
+    };
+    global.projectManager = { projectOrder: ['dummy'], projects: { dummy: project } };
+
+    produceResources(1000, {});
+
+    expect(estimateCostAndGain).toHaveBeenCalledTimes(1);
+    expect(estimateCostAndGain.mock.calls[0][1]).toBe(false);
+    expect(energy.value).toBeCloseTo(100);
+  });
 });
