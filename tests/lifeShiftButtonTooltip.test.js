@@ -47,10 +47,12 @@ describe('life designer shift tooltip', () => {
     ctx.initializeLifeTerraformingDesignerUI();
 
     const minusBtn = dom.window.document.querySelector('.life-tentative-btn.life-tentative-minus[data-attribute="minTemperatureTolerance"][data-change="-1"]');
-    const modifyCell = minusBtn.closest('.modify-buttons-cell');
-    const icons = modifyCell.querySelectorAll('.info-tooltip-icon');
-    expect(icons.length).toBe(2);
-    expect(icons[0].title).toBe('Hold Shift to recover all points.');
-    expect(icons[1].title).toBe('Hold Shift to spend all points.');
+    const minusTenBtn = dom.window.document.querySelector('.life-tentative-btn.life-tentative-minus[data-attribute="minTemperatureTolerance"][data-change="-10"]');
+    const plusBtn = dom.window.document.querySelector('.life-tentative-btn.life-tentative-plus[data-attribute="minTemperatureTolerance"][data-change="1"]');
+    const plusTenBtn = dom.window.document.querySelector('.life-tentative-btn.life-tentative-plus[data-attribute="minTemperatureTolerance"][data-change="10"]');
+    expect(minusBtn.title).toBe('Hold Shift to recover all points.');
+    expect(minusTenBtn.title).toBe('Hold Shift to recover all points.');
+    expect(plusBtn.title).toBe('Hold Shift to spend all points.');
+    expect(plusTenBtn.title).toBe('Hold Shift to spend all points.');
   });
 });
