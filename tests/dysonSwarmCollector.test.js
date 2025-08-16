@@ -10,10 +10,10 @@ describe('Dyson Swarm collector behaviour', () => {
       EffectableEntity,
       resources: {
         colony: {
-          metal: { value: 1000000, decrease: () => {}, updateStorageCap: () => {} },
-          glass: { value: 500000, decrease: () => {}, updateStorageCap: () => {} },
-          electronics: { value: 500000, decrease: () => {}, updateStorageCap: () => {} },
-          components: { value: 100000, decrease: () => {}, updateStorageCap: () => {} },
+          metal: { value: 5000000, decrease: () => {}, updateStorageCap: () => {} },
+          glass: { value: 80000, decrease: () => {}, updateStorageCap: () => {} },
+          electronics: { value: 2500000, decrease: () => {}, updateStorageCap: () => {} },
+          components: { value: 400000, decrease: () => {}, updateStorageCap: () => {} },
           energy: { value: 0, modifyRate: () => {}, updateStorageCap: () => {} }
         }
       },
@@ -37,7 +37,8 @@ describe('Dyson Swarm collector behaviour', () => {
     project.isCompleted = true;
     ctx.projectManager.projects.dyson = project;
 
-    project.startCollector();
+    const started = project.startCollector();
+    expect(started).toBe(true);
     expect(project.collectorProgress).toBe(project.collectorDuration);
     ctx.projectManager.updateProjects(1000);
     expect(project.collectorProgress).toBe(project.collectorDuration - 1000);
