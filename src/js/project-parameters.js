@@ -438,7 +438,8 @@ const projectParameters = {
     attributes: {
       spaceStorage: true,
       costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
-      transportPerShip: 1_000_000
+      transportPerShip: 1_000_000,
+      canUseSpaceStorage: true 
     }
   },
   disposeResources : {
