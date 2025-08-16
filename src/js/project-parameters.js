@@ -403,6 +403,24 @@ const projectParameters = {
     treatAsBuilding: true,
     attributes: { canUseSpaceStorage: true }
   },
+  orbitalRing: {
+    type: 'OrbitalRingProject',
+    name: 'Orbital Ring',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 1000000000,
+        components: 10000000,
+        superalloys: 100000
+      }
+    },
+    duration: 1800000,
+    description: 'Construct a planetary ring that counts as a terraformed world.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: { canUseSpaceStorage: true }
+  },
   spaceStorage : {
     type: 'SpaceStorageProject',
     name : 'Space Storage',

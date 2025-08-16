@@ -237,3 +237,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Underground Land Expansion project now operates even without androids, shows land expansion progress, and adds 0.1% of the planet's starting land per completion.
 - Underground Land Expansion android speed scales with initial land and features a distinct tooltip from Deeper mining.
 - Random World Generator temperature fields (Mean/Day/Night T) display '-' until the world is equilibrated.
+- Added Orbital Rings advanced research unlocking a repeatable orbital ring megastructure that counts as additional terraformed worlds and can draw from space storage resources.

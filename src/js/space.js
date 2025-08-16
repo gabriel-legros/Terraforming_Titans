@@ -24,7 +24,7 @@ class SpaceManager extends EffectableEntity {
         // Tracking for procedurally generated worlds
         this.currentRandomSeed = null;
         this.currentRandomName = '';
-        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original }
+        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -43,6 +43,7 @@ class SpaceManager extends EffectableEntity {
                 visited: false,
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
+                orbitalRing: false,
                 // Add other statuses later if needed
             };
         });
@@ -87,14 +88,42 @@ class SpaceManager extends EffectableEntity {
         return { ...this.planetStatuses, ...this.randomWorldStatuses };
     }
 
+    currentWorldHasOrbitalRing() {
+        if (this.currentRandomSeed !== null) {
+            return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
+        }
+        return !!this.planetStatuses[this.currentPlanetKey]?.orbitalRing;
+    }
+
+    setCurrentWorldHasOrbitalRing(value) {
+        if (this.currentRandomSeed !== null) {
+            const seed = String(this.currentRandomSeed);
+            if (!this.randomWorldStatuses[seed]) return;
+            this.randomWorldStatuses[seed].orbitalRing = value;
+        } else if (this.planetStatuses[this.currentPlanetKey]) {
+            this.planetStatuses[this.currentPlanetKey].orbitalRing = value;
+        }
+    }
+
     /**
-     * Counts how many planets have been fully terraformed.
-     * The current planet only contributes if it is terraformed.
+     * Returns the count of fully terraformed worlds without orbital ring bonuses.
+     * @returns {number}
+     */
+    getUnmodifiedTerraformedWorldCount() {
+        return Object.values(this.getAllPlanetStatuses())
+            .filter(status => status.terraformed).length;
+    }
+
+    /**
+     * Counts how many planets have been fully terraformed and adds orbital rings.
      * @returns {number}
      */
     getTerraformedPlanetCount() {
-        return Object.values(this.getAllPlanetStatuses())
-            .filter(status => status.terraformed).length;
+        const base = this.getUnmodifiedTerraformedWorldCount();
+        const rings = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.orbitalRing)
+            ? projectManager.projects.orbitalRing.ringCount
+            : 0;
+        return base + rings;
     }
 
     /**
@@ -105,10 +134,11 @@ class SpaceManager extends EffectableEntity {
      */
     getTerraformedPlanetCountIncludingCurrent() {
         const count = this.getTerraformedPlanetCount();
+        const hasRing = this.currentWorldHasOrbitalRing();
         if (this.currentRandomSeed !== null) {
-            return this.isSeedTerraformed(String(this.currentRandomSeed)) ? count : count + 1;
+            return (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? count : count + 1;
         }
-        return this.isPlanetTerraformed(this.currentPlanetKey) ? count : count + 1;
+        return (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? count : count + 1;
     }
 
     /**
@@ -118,10 +148,11 @@ class SpaceManager extends EffectableEntity {
      */
     getTerraformedPlanetCountExcludingCurrent() {
         const count = this.getTerraformedPlanetCount();
+        const hasRing = this.currentWorldHasOrbitalRing();
         if (this.currentRandomSeed !== null) {
-            return this.isSeedTerraformed(String(this.currentRandomSeed)) ? Math.max(count - 1, 0) : count;
+            return (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? Math.max(count - 1, 0) : count;
         }
-        return this.isPlanetTerraformed(this.currentPlanetKey) ? Math.max(count - 1, 0) : count;
+        return (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? Math.max(count - 1, 0) : count;
     }
 
     getCurrentWorldName() {
@@ -236,7 +267,8 @@ class SpaceManager extends EffectableEntity {
                     terraformed: false,
                     colonists: 0,
                     original: this.getCurrentWorldOriginal(),
-                    visited: true
+                    visited: true,
+                    orbitalRing: false
                 };
             }
             if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
@@ -334,7 +366,8 @@ class SpaceManager extends EffectableEntity {
                     terraformed: false,
                     colonists: 0,
                     original: this.getCurrentWorldOriginal(),
-                    visited: true
+                    visited: true,
+                    orbitalRing: false
                 };
             } else {
                 this.randomWorldStatuses[seed].visited = true;
@@ -375,7 +408,8 @@ class SpaceManager extends EffectableEntity {
                 terraformed: false,
                 colonists: 0,
                 original: res,
-                visited: true
+                visited: true,
+                orbitalRing: false
             };
         } else {
             existing.original = existing.original || res;
@@ -395,6 +429,13 @@ class SpaceManager extends EffectableEntity {
             projectManager.projects.spaceStorage.loadTravelState(storageState);
             if (typeof updateProjectUI === 'function') {
                 updateProjectUI('spaceStorage');
+            }
+        }
+        const ringProj = projectManager?.projects?.orbitalRing;
+        if (ringProj) {
+            ringProj.currentWorldHasRing = this.currentWorldHasOrbitalRing();
+            if (typeof updateProjectUI === 'function') {
+                updateProjectUI('orbitalRing');
             }
         }
         if (typeof updateSpaceUI === 'function') {
@@ -458,6 +499,9 @@ class SpaceManager extends EffectableEntity {
                     }
                     if (typeof saved.colonists === 'number') {
                         this.planetStatuses[planetKey].colonists = saved.colonists;
+                    }
+                    if (typeof saved.orbitalRing === 'boolean') {
+                        this.planetStatuses[planetKey].orbitalRing = saved.orbitalRing;
                     }
                 }
             });

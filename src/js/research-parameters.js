@@ -1413,6 +1413,11 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'orbitalRingsResearchUnlocked',
             value: true
+          },
+          {
+            target: 'project',
+            targetId: 'orbitalRing',
+            type: 'enable'
           }
         ]
       },
