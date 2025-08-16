@@ -173,7 +173,7 @@ const projectParameters = {
     category: "infrastructure",
     cost: {
       colony: {
-        metal: 0.01,
+        metal: 1,
         components: 0.01
       }
     },
