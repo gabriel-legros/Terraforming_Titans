@@ -1404,16 +1404,10 @@ const researchParameters = {
       {
         id: 'orbital_rings',
         name: 'Orbital Rings',
-        description: 'Placeholder for orbital ring megastructure research.',
+        description: 'Unlocks a new megastructure project for constructing orbital rings.',
         cost: { advancedResearch: 150000 },
         prerequisites: [],
         effects: [
-          {
-            target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'orbitalRingsResearchUnlocked',
-            value: true
-          },
           {
             target: 'project',
             targetId: 'orbitalRing',
