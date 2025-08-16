@@ -167,6 +167,22 @@ const projectParameters = {
       ]
     }
   },
+  undergroundExpansion: {
+    type: 'UndergroundExpansionProject',
+    name: "Underground Land Expansion",
+    category: "infrastructure",
+    cost: {
+      colony: {
+        metal: 10,
+        components: 10
+      }
+    },
+    duration: 120000,
+    description: "Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.",
+    repeatable: true,
+    unlocked: false,
+    attributes: {}
+  },
   oreSpaceMining: {
     type: 'SpaceMiningProject',
     name: "Metal Asteroid Mining",
