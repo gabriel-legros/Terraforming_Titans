@@ -14,7 +14,7 @@ describe('Space Storage project', () => {
     expect(project).toBeDefined();
     expect(project.type).toBe('SpaceStorageProject');
     expect(project.category).toBe('mega');
-    expect(project.cost.colony.metal).toBe(1_000_000_000_000);
+    expect(project.cost.colony.metal).toBe(100_000_000_000);
     expect(project.duration).toBe(300000);
     expect(project.repeatable).toBe(true);
     expect(project.maxRepeatCount).toBe(Infinity);
@@ -55,7 +55,7 @@ describe('Space Storage project', () => {
     expect(project.getBaseDuration()).toBeCloseTo(100000);
     expect(project.calculateTransferAmount()).toBe(150_000_000_000);
     project.repeatCount = 2;
-    expect(project.maxStorage).toBe(2000000000000);
+    expect(project.maxStorage).toBe(200_000_000_000);
     project.usedStorage = 1234;
     project.resourceUsage = { metal: 100 };
     project.shipWithdrawMode = true;

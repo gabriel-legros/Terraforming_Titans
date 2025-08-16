@@ -229,3 +229,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Autobuild cost tracker preserves overflow milliseconds for accurate 10-second spending averages.
 - Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
 - Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
+- Life designer ±1/±10 buttons include tooltips noting Shift spends or recovers all points.

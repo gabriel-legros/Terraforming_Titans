@@ -223,10 +223,10 @@ function initializeLifeTerraformingDesignerUI() {
               </div>
             </td>
             <td class="modify-buttons-cell" style="display: none;">
-                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
-                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
-                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
-                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10" title="Hold Shift to recover all points.">-10</button>
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1" title="Hold Shift to recover all points.">-1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1" title="Hold Shift to spend all points.">+1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10" title="Hold Shift to spend all points.">+10</button>
             </td>
           </tr>
         `;
