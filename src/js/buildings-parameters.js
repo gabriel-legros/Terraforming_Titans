@@ -367,7 +367,7 @@ const buildingsParameters = {
         components: 500,
         electronics: 200,
         superconductors: 200,
-        superalloys: 200
+        superalloys: 50
       }
     },
     dayNightActivity: false,
