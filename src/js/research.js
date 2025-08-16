@@ -119,6 +119,9 @@ class Research {
     }
 
     isResearchDisplayable(research) {
+      if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
+        return false;
+      }
       if (research.requiresMethane && !this.planetHasMethane()) {
         return false;
       }
