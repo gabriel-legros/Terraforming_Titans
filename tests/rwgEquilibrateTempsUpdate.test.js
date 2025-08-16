@@ -66,9 +66,9 @@ describe('Random World Generator equilibrate updates temperatures', () => {
     attachEquilibrateHandler(res, 'seed', 'mars-like', box);
 
     expect(findChipValue('Teq')).toBe('100 K');
-    expect(findChipValue('Mean T')).toBe('250 K');
-    expect(findChipValue('Day T')).toBe('260 K');
-    expect(findChipValue('Night T')).toBe('240 K');
+    expect(findChipValue('Mean T')).toBe('—');
+    expect(findChipValue('Day T')).toBe('—');
+    expect(findChipValue('Night T')).toBe('—');
 
     document.getElementById('rwg-equilibrate-btn').click();
     await new Promise(setImmediate);

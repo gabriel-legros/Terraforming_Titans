@@ -378,6 +378,16 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     ? globalThis.spaceManager.isSeedTerraformed(seedUsed)
     : false;
   const travelDisabled = !eqDone || alreadyTerraformed;
+  const showTemps = !seedUsed || eqDone;
+  const meanTVal = (showTemps && temps)
+    ? `${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}`
+    : '—';
+  const dayTVal = (showTemps && temps)
+    ? `${fmt(Math.round(toDisplayTemp(temps.day)))} ${tempUnit}`
+    : '—';
+  const nightTVal = (showTemps && temps)
+    ? `${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}`
+    : '—';
   const warningMsg = !eqDone
     ? 'Press Equilibrate at least once before traveling.'
     : (alreadyTerraformed ? 'This world has already been terraformed.' : '');
@@ -404,9 +414,9 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Magnetosphere</div><div class="value">${c.hasNaturalMagnetosphere ? 'Yes' : 'No'}</div></div>
         <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? forcedType : (cls?.archetype || '—')}</div></div>
         <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(toDisplayTemp(teqDisplay)) + ' ' + tempUnit : '—'}</div></div>
-        ${temps ? `<div class="rwg-chip"><div class="label">Mean T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}</div></div>` : ''}
-        ${temps ? `<div class="rwg-chip"><div class="label">Day T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.day)))} ${tempUnit}</div></div>` : ''}
-        ${temps ? `<div class="rwg-chip"><div class="label">Night T</div><div class="value">${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}</div></div>` : ''}
+        <div class="rwg-chip"><div class="label">Mean T</div><div class="value">${meanTVal}</div></div>
+        <div class="rwg-chip"><div class="label">Day T</div><div class="value">${dayTVal}</div></div>
+        <div class="rwg-chip"><div class="label">Night T</div><div class="value">${nightTVal}</div></div>
       </div>
       <div class="rwg-columns" style="margin-top:10px;">
         <div>
