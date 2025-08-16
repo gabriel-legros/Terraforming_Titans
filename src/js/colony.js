@@ -187,12 +187,16 @@ class Colony extends Building {
     totalLuxuryHappiness = Math.min(foodNeed, energyNeed) * totalLuxuryHappiness;
 
     const milestoneHappiness = milestonesManager.getHappinessBonus();
-  
-    // Calculate the target happiness
-    const targetHappiness = nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness;
-  
-    // Adjust the happiness towards the target value
-    this.happiness = this.adjustToTarget(this.happiness, targetHappiness / 100, deltaTime);
+
+    // Apply gravity penalty: every m/s² above 10 reduces happiness by 10%, capped at 100%
+    const gravity = globalThis.terraforming?.celestialParameters?.gravity || 0;
+    const gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.1, 1) : 0;
+
+    // Calculate the target happiness after gravity penalty
+    const targetHappiness = (nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty);
+
+    // Adjust the happiness towards the target value and ensure it doesn't drop below 0
+    this.happiness = this.adjustToTarget(this.happiness, Math.max(0, targetHappiness) / 100, deltaTime);
   }
 
   // Override calculateBaseMinRatio to exclude luxury resources from productivity calculation

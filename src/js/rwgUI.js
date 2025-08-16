@@ -321,13 +321,16 @@ function renderPlanetCard(p, index) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = p.merged?.celestialParameters || {};
   const cls = p.classification || p.merged?.classification;
+  const gWarn = c.gravity > 10
+    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 10%, for a maximum of a 100% reduction">⚠</span>'
+    : '';
   return `
     <div class="rwg-planet-card">
       <div class="rwg-planet-title">${p.name || p.merged?.name || 'Planet ' + (index + 1)}</div>
       <div class="rwg-grid">
         <div><strong>Orbit</strong><div>${(p.orbitAU ?? c.distanceFromSun)?.toFixed ? (p.orbitAU ?? c.distanceFromSun).toFixed(2) : (p.orbitAU ?? c.distanceFromSun)} AU</div></div>
         <div><strong>Radius</strong><div>${fmt((c.radius ?? 0).toFixed ? c.radius.toFixed(0) : c.radius)} km</div></div>
-        <div><strong>Gravity</strong><div>${fmt((c.gravity ?? 0).toFixed ? c.gravity.toFixed(2) : c.gravity)} m/s²</div></div>
+        <div><strong>Gravity</strong><div>${fmt((c.gravity ?? 0).toFixed ? c.gravity.toFixed(2) : c.gravity)} m/s²${gWarn}</div></div>
         <div><strong>Albedo</strong><div>${(c.albedo ?? 0)}</div></div>
         <div><strong>Type</strong><div>${cls?.archetype || '—'}</div></div>
       </div>
@@ -378,6 +381,9 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const warningMsg = !eqDone
     ? 'Press Equilibrate at least once before traveling.'
     : (alreadyTerraformed ? 'This world has already been terraformed.' : '');
+  const gWarn = c.gravity > 10
+    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 10%, for a maximum of a 100% reduction">⚠</span>'
+    : '';
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
@@ -391,7 +397,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedString}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
         <div class="rwg-chip"><div class="label">Radius</div><div class="value">${fmt(c.radius)} km</div></div>
-        <div class="rwg-chip"><div class="label">Gravity</div><div class="value">${fmt(c.gravity)} m/s²</div></div>
+        <div class="rwg-chip"><div class="label">Gravity</div><div class="value">${fmt(c.gravity)} m/s²${gWarn}</div></div>
         <div class="rwg-chip"><div class="label">Albedo</div><div class="value">${c.albedo}</div></div>
         <div class="rwg-chip"><div class="label">Rotation</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
         <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>

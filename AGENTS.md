@@ -230,3 +230,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
 - Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
 - Life designer ±1/±10 buttons include tooltips noting Shift spends or recovers all points.
+- High-gravity worlds (>10 m/s²) show a warning in the random world generator and reduce colony happiness by 10% per m/s² above 10, capped at 100%.
