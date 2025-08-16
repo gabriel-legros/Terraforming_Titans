@@ -273,6 +273,13 @@ class Terraforming extends EffectableEntity{
       unlocked: false
     };
 
+    // If the planet has a natural magnetosphere, treat it as if the
+    // magnetic shield project has already been completed.
+    if (this.celestialParameters.hasNaturalMagnetosphere) {
+      this.magnetosphere.value = 100;
+      this.booleanFlags.add('magneticShield');
+    }
+
     // Current estimated surface and orbital radiation in mSv/day
       this.surfaceRadiation = 0;
       this.orbitalRadiation = 0;

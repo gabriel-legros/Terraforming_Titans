@@ -640,9 +640,12 @@ function updateLifeBox() {
     magInfo.title = 'The magnetosphere is a planet\'s magnetic shield against harmful solar wind and cosmic radiation.\n\n Radiation calculation:\n- Galactic cosmic rays: deep-space particles (~1.3 mSv/day on an airless world).\n- Parent belts: trapped radiation from the host planet, falling off with distance.\n- Solar energetic particles: averaged daily storm dose (usually 0).\n\nEach component is exponentially reduced by atmospheric column mass (D = D0 * e^(-column/L)). Orbital radiation uses no atmosphere, while surface radiation uses the current column mass.\n\nProtection: A strong magnetosphere prevents the solar wind from stripping away the planet\'s atmosphere over time and shields surface life from damaging radiation, making it a key terraforming objective.';
     magInfo.innerHTML = '&#9432;';
 
-    const magnetosphereStatusText = projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
-      ? 'The planet is sufficiently protected, providing a 50% boost to life growth'
-      : 'No magnetosphere';
+    const protectedText = 'The planet is sufficiently protected, providing a 50% boost to life growth';
+    const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
+      ? `Natural magnetosphere: ${protectedText}`
+      : projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
+        ? `Artificial magnetosphere: ${protectedText}`
+        : 'No magnetosphere';
 
       const orbRad = typeof terraforming.orbitalRadiation === 'number' ? terraforming.orbitalRadiation : 0;
       const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
@@ -675,10 +678,12 @@ function updateLifeBox() {
       const orbitalRadiation = document.getElementById('orbital-radiation');
       const surfaceRadiationPenalty = document.getElementById('surface-radiation-penalty');
 
-    // Update status based on boolean flag
-    const magnetosphereStatusText = terraforming.isBooleanFlagSet('magneticShield') 
-      ? 'The planet is sufficiently protected' 
-      : 'No magnetosphere';
+    // Update status based on natural or artificial magnetosphere
+    const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
+      ? 'Natural magnetosphere'
+      : terraforming.isBooleanFlagSet('magneticShield')
+        ? 'Artificial magnetosphere'
+        : 'No magnetosphere';
 
     magnetosphereStatus.textContent = magnetosphereStatusText;
 
