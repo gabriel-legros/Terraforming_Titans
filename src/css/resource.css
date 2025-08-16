@@ -1,4 +1,9 @@
-  
+
+  .collapse-arrow {
+    margin-right: 6px;
+    cursor: pointer;
+  }
+
   .resource-row {
     display: grid;
     grid-template-columns: 32% 21% 3% 21% 23%; /* Default layout with cap */
