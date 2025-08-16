@@ -188,9 +188,9 @@ class Colony extends Building {
 
     const milestoneHappiness = milestonesManager.getHappinessBonus();
 
-    // Apply gravity penalty: every m/s² above 10 reduces happiness by 10%, capped at 100%
+    // Apply gravity penalty: every m/s² above 10 reduces happiness by 5%, capped at 100%
     const gravity = globalThis.terraforming?.celestialParameters?.gravity || 0;
-    const gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.1, 1) : 0;
+    const gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.05, 1) : 0;
 
     // Calculate the target happiness after gravity penalty
     const targetHappiness = (nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty);
