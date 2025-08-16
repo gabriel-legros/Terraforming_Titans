@@ -6,9 +6,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.collectorProgress = 0;
     this.autoDeployCollectors = false;
     this.collectorCost = {
-      colony: { metal: 2500000, electronics: 1250000, components: 200000, glass: 40000,  }
+      colony: { metal: 250000, electronics: 125000, components: 20000, glass: 4000,  }
     };
-    this.energyPerCollector = 10000000000000;
+    this.energyPerCollector = 1000000000000;
   }
 
   get collectorDuration() {
