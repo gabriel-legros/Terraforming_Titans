@@ -24,14 +24,14 @@ class UndergroundExpansionProject extends AndroidProject {
 
   getAndroidSpeedMultiplier() {
     const initialLand = Math.max((typeof terraforming !== 'undefined' ? terraforming.initialLand : 0), 1);
-    return 1 + Math.sqrt((this.assignedAndroids || 0) / initialLand);
+    return 1 + Math.sqrt((10000*this.assignedAndroids || 0) / initialLand);
   }
 
   renderUI(container) {
     super.renderUI(container);
     const elements = projectElements[this.name];
     if (elements?.androidSpeedDisplay) {
-      elements.androidSpeedDisplay.title = '1 + sqrt(androids assigned / initial land)';
+      elements.androidSpeedDisplay.title = '1 + sqrt(10000*androids assigned / initial land)';
     }
   }
 
@@ -40,7 +40,7 @@ class UndergroundExpansionProject extends AndroidProject {
     const elements = projectElements[this.name];
     if (elements?.repeatCountElement && typeof terraforming !== 'undefined') {
       const maxLand = terraforming.initialLand || 0;
-      const perCompletion = maxLand / 100000;
+      const perCompletion = maxLand / 10000;
       const expanded = Math.min(this.repeatCount * perCompletion, maxLand);
       elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true)} / ${formatNumber(maxLand, true)}`;
     }
@@ -49,7 +49,7 @@ class UndergroundExpansionProject extends AndroidProject {
   complete() {
     super.complete();
     if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
-      const increase = (terraforming.initialLand || 0) / 100000
+      const increase = (terraforming.initialLand || 0) / 10000
       resources.surface.land.value += increase;
     }
   }
