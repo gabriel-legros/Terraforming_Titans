@@ -22,6 +22,19 @@ class UndergroundExpansionProject extends AndroidProject {
     return Project.prototype.canStart.call(this);
   }
 
+  getAndroidSpeedMultiplier() {
+    const initialLand = Math.max((typeof terraforming !== 'undefined' ? terraforming.initialLand : 0), 1);
+    return 1 + Math.sqrt((this.assignedAndroids || 0) / initialLand);
+  }
+
+  renderUI(container) {
+    super.renderUI(container);
+    const elements = projectElements[this.name];
+    if (elements?.androidSpeedDisplay) {
+      elements.androidSpeedDisplay.title = '1 + sqrt(androids assigned / initial land)';
+    }
+  }
+
   updateUI() {
     super.updateUI();
     const elements = projectElements[this.name];
