@@ -227,3 +227,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Population growth skill multiplier displays as 'Awakening' in the growth rate tooltip.
 - Autobuild cost tracker preserves overflow milliseconds for accurate 10-second spending averages.
 - Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
+- Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
