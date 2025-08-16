@@ -82,7 +82,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
                 let slopeFactor = 1 + ((zoneElevations[source] || 0) - (zoneElevations[target] || 0));
                 if (slopeFactor < 0.1) slopeFactor = 0.1;
                 const meltCoefficient = flowRateCoefficient * Math.min(Math.sqrt(diff), 1);
-                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier * 0.1;
+                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
                 melts[source][target] = potentialMelt;
                 meltOut[source] += potentialMelt;
             }
@@ -179,7 +179,7 @@ function simulateSurfaceWaterFlow(zonalWaterInput, deltaTime, zonalTemperatures 
         buriedIceProp: 'buriedIce',
         meltingPoint: 273.15,
         zonalDataKey: 'zonalWater',
-        viscosity: 1.0 // Baseline viscosity for water
+        viscosity: 0.89 // Baseline viscosity for water
     });
 }
 
@@ -190,7 +190,7 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalT
         buriedIceProp: null,
         meltingPoint: 90.7,
         zonalDataKey: 'zonalHydrocarbons',
-        viscosity: 0.2 // Methane is less viscous than water
+        viscosity: 0.12 // Methane is less viscous than water
     });
 }
 

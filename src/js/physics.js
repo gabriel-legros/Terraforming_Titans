@@ -65,7 +65,7 @@ const GAMMA = {
 };
 
 // Saturation only for CH4 (and H2SO4 if you like)
-const MU_SAT = { ch4: 50.0, h2so4: 2000.0 }; // kg/m²
+const MU_SAT = { ch4: 110.0, h2so4: 2000.0 }; // kg/m²
 const SAT_EXP = { ch4: 1.0, h2so4: 1.0 };    // exponent n_i
 
 /*  Each entry describes how *that* condensate behaves.
