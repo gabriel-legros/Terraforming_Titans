@@ -322,7 +322,7 @@ function renderPlanetCard(p, index) {
   const c = p.merged?.celestialParameters || {};
   const cls = p.classification || p.merged?.classification;
   const gWarn = c.gravity > 10
-    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 10%, for a maximum of a 100% reduction">⚠</span>'
+    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 5%, for a maximum of a 100% reduction">⚠</span>'
     : '';
   return `
     <div class="rwg-planet-card">
@@ -382,7 +382,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     ? 'Press Equilibrate at least once before traveling.'
     : (alreadyTerraformed ? 'This world has already been terraformed.' : '');
   const gWarn = c.gravity > 10
-    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 10% of its value, for a maximum of a 100% reduction">⚠</span>'
+    ? '<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 5% of its value, for a maximum of a 100% reduction">⚠</span>'
     : '';
   const worldPanel = `
     <div class="rwg-card">

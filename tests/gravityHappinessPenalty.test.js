@@ -46,11 +46,11 @@ describe('gravity happiness penalty', () => {
   test('reduces happiness above 10 m/s²', () => {
     const colony = setup(12);
     colony.updateHappiness(1);
-    expect(colony.happiness).toBeCloseTo(0.4);
+    expect(colony.happiness).toBeCloseTo(0.45);
   });
 
   test('caps happiness at zero when penalty reaches 100%', () => {
-    const colony = setup(25);
+    const colony = setup(35);
     colony.updateHappiness(1);
     expect(colony.happiness).toBe(0);
   });
