@@ -180,7 +180,7 @@ const projectParameters = {
     attributes: {
       spaceMining : true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
-      resourceGainPerShip : {colony: {metal : 1000000}}
+      resourceGainPerShip : {colony: {metal : 500000}}
     }
   },
   carbonSpaceMining: {

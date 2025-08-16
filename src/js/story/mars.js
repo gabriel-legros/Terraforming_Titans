@@ -559,7 +559,7 @@ var progressMars = {
         id: "chapter2.2",
         type: "journal",
         chapter: 2,
-        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone is insufficient to achieve target temperatures for full terraforming without inducing a runaway greenhouse effect. Supplemental heating methods will be required.",
+        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. Supplemental heating methods are required.",
         prerequisites: ["chapter2.1"],
         objectives: [{
           type: 'collection',
@@ -578,7 +578,7 @@ var progressMars = {
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
-          value: 243
+          value: 241
       }],
         reward: []
       },
@@ -586,7 +586,7 @@ var progressMars = {
         id: "chapter2.4",
         type: "journal",
         chapter: 2,
-        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 243K.",
+        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 241K.",
         prerequisites: ["chapter2.3"],
         objectives: [],
         reward: []
@@ -610,7 +610,7 @@ var progressMars = {
             type: 'collection',
             resourceType: 'surface',
             resource: 'biomass',
-            quantity: 1000
+            quantity: 100000
         }],
         reward: []
       },
