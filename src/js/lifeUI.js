@@ -225,8 +225,10 @@ function initializeLifeTerraformingDesignerUI() {
             <td class="modify-buttons-cell" style="display: none;">
                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
+                 <span class="info-tooltip-icon" title="Hold Shift to recover all points.">&#9432;</span>
                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
+                 <span class="info-tooltip-icon" title="Hold Shift to spend all points.">&#9432;</span>
             </td>
           </tr>
         `;
