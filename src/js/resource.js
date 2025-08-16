@@ -162,10 +162,23 @@ class Resource extends EffectableEntity {
     this.productionRateBySource = {}; // Keep this for potential UI use, sum across types
     this.consumptionRateBySource = {}; // Keep this for potential UI use, sum across types
 
+    const hiddenProjects = new Set();
+    if (typeof projectManager !== 'undefined' && projectManager.projects) {
+        for (const key in projectManager.projects) {
+            const p = projectManager.projects[key];
+            if (p && p.displayName && p.autoStart === false && !p.treatAsBuilding) {
+                hiddenProjects.add(p.displayName);
+            }
+        }
+    }
+
     for (const type in this.productionRateByType) {
         for (const source in this.productionRateByType[type]) {
             const rate = this.productionRateByType[type][source];
-                this.productionRate += rate; // Exclude overflow from total production
+            if (type === 'project' && hiddenProjects.has(source)) {
+                continue;
+            }
+            this.productionRate += rate; // Exclude overflow from total production
             if (!this.productionRateBySource[source]) this.productionRateBySource[source] = 0;
             this.productionRateBySource[source] += rate;
         }
@@ -174,11 +187,14 @@ class Resource extends EffectableEntity {
     for (const type in this.consumptionRateByType) {
         for (const source in this.consumptionRateByType[type]) {
             const rate = this.consumptionRateByType[type][source];
-            if (type !== 'overflow') {
+            const hidden = type === 'project' && hiddenProjects.has(source);
+            if (type !== 'overflow' && !hidden) {
                 this.consumptionRate += rate; // Exclude overflow from total consumption
             }
-            if (!this.consumptionRateBySource[source]) this.consumptionRateBySource[source] = 0;
-            this.consumptionRateBySource[source] += rate;
+            if (!hidden) {
+                if (!this.consumptionRateBySource[source]) this.consumptionRateBySource[source] = 0;
+                this.consumptionRateBySource[source] += rate;
+            }
         }
     }
   }
