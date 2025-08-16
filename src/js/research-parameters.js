@@ -962,6 +962,12 @@ const researchParameters = {
             resourceType: 'atmospheric',
             targetId : 'atmosphericWater',
             type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'atmosphericMethane',
+            type: 'enable'
           }
         ],
       },
