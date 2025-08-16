@@ -40,7 +40,7 @@ class UndergroundExpansionProject extends AndroidProject {
     const elements = projectElements[this.name];
     if (elements?.repeatCountElement && typeof terraforming !== 'undefined') {
       const maxLand = terraforming.initialLand || 0;
-      const perCompletion = maxLand / 1000;
+      const perCompletion = maxLand / 100000;
       const expanded = Math.min(this.repeatCount * perCompletion, maxLand);
       elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true)} / ${formatNumber(maxLand, true)}`;
     }
@@ -49,7 +49,7 @@ class UndergroundExpansionProject extends AndroidProject {
   complete() {
     super.complete();
     if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
-      const increase = (terraforming.initialLand || 0) / 1000;
+      const increase = (terraforming.initialLand || 0) / 100000
       resources.surface.land.value += increase;
     }
   }
