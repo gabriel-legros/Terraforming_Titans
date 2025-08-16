@@ -7,9 +7,10 @@
 
 #planet-selection-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, 260px);
     gap: 15px;
     margin-top: 15px;
+    justify-content: center;
 }
 
 .planet-option {
@@ -35,10 +36,6 @@
     text-align: center;
     font-size: 1.3em;
     font-weight: 600;
-}
-
-body:not(.dark-mode) .planet-option h3 {
-    color: #111;
 }
 
 .planet-stats {
