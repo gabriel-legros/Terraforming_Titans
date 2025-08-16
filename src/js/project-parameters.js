@@ -415,7 +415,7 @@ const projectParameters = {
       }
     },
     duration: 1800000,
-    description: 'Orbital rings count as additional terraformed worlds.  You can build a ring on previously terraformed worlds.  Building a ring on the current world also increases its land by its initial land value.',
+    description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,

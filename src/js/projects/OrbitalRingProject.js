@@ -31,7 +31,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
   complete() {
     super.complete();
     this.ringCount += 1;
-    if (!this.currentWorldHasRing) {
+    if (!this.currentWorldHasRing && spaceManager?.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())) {
       this.currentWorldHasRing = true;
       if (typeof spaceManager !== 'undefined' && typeof spaceManager.setCurrentWorldHasOrbitalRing === 'function') {
         spaceManager.setCurrentWorldHasOrbitalRing(true);

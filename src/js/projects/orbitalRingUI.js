@@ -6,7 +6,7 @@ function renderOrbitalRingUI(project, container) {
       <span class="card-title">Orbital Ring</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid">
+      <div class="stats-grid three-col">
         <div class="stat-item"><span class="stat-label">Rings Built:</span><span id="or-rings-built"></span></div>
         <div class="stat-item"><span class="stat-label">Max Rings:</span><span id="or-max-rings"></span></div>
         <div class="stat-item"><span class="stat-label">Current World Ring:</span><span id="or-current-world"></span></div>

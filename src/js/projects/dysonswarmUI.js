@@ -6,7 +6,7 @@ function renderDysonSwarmUI(project, container) {
       <span class="card-title">Dyson Swarm</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid">
+      <div class="stats-grid three-col">
         <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors"></span></div>
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
