@@ -49,12 +49,12 @@ describe('Underground Land Expansion project', () => {
     expect(project.getAndroidSpeedMultiplier()).toBe(1);
   });
 
-  test('completion increases land by 1/1000 of initial land', () => {
+  test('completion increases land by 1/10000 of initial land', () => {
     const ctx = createContext();
     const config = { name: 'undergroundExpansion', category: 'infrastructure', cost: {}, duration: 1, description: '', repeatable: true, maxRepeatCount: 1000, unlocked: true, attributes: {} };
     const project = new ctx.UndergroundExpansionProject(config, 'undergroundExpansion');
     project.complete();
-    expect(ctx.resources.surface.land.value).toBeCloseTo(1001, 5);
+    expect(ctx.resources.surface.land.value).toBeCloseTo(1000.1, 5);
     expect(project.repeatCount).toBe(1);
   });
 
@@ -71,7 +71,7 @@ describe('Underground Land Expansion project', () => {
     const config = { name: 'undergroundExpansion', category: 'infrastructure', cost: {}, duration: 1, description: '', repeatable: true, maxRepeatCount: 1000, unlocked: true, attributes: {} };
     const project = new ctx.UndergroundExpansionProject(config, 'undergroundExpansion');
     project.assignedAndroids = 100;
-    const expected = 1 + Math.sqrt(100 / ctx.terraforming.initialLand);
+    const expected = 1 + Math.sqrt(10000 * 100 / ctx.terraforming.initialLand);
     expect(project.getAndroidSpeedMultiplier()).toBeCloseTo(expected, 5);
   });
 
@@ -81,7 +81,7 @@ describe('Underground Land Expansion project', () => {
     const project = new ctx.UndergroundExpansionProject(config, 'undergroundExpansion');
     project.renderUI(container);
     const title = ctx.projectElements.undergroundExpansion.androidSpeedDisplay.title;
-    expect(title).toBe('1 + sqrt(androids assigned / initial land)');
+    expect(title).toBe('1 + sqrt(10000*androids assigned / initial land)');
     expect(title).not.toBe('1 + sqrt(androids assigned / ore mines built)');
   });
 });

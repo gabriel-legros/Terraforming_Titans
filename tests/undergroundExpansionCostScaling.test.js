@@ -7,6 +7,7 @@ describe('Underground Land Expansion cost scaling', () => {
   test('cost scales with land', () => {
     const ctx = { console, EffectableEntity };
     ctx.resources = { surface: { land: { value: 5 } } };
+    ctx.terraforming = { initialLand: 5 };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
