@@ -50,7 +50,7 @@ const defaultPlanetParameters = {
       advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false },
     },
     surface: {
-      land: {name : 'Land', initialValue : 14400000000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
+      land: {name : 'Land', initialValue : 14_400_000_000, hasCap: true, unlocked: false, land:true}, // Default (Mars)
       ice: { name: 'Ice', initialValue: 8200007980898617, unlocked:false , unit: 'ton' }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
       dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)

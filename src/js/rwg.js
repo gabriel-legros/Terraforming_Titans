@@ -1,20 +1,46 @@
-// ===== Random System + World Generator ===================================
 
-// Node compatibility shims: ensure deepMerge and defaultPlanetParameters exist
-if (typeof module !== 'undefined' && module.exports) {
-  try {
-    const pp = require('./planet-parameters.js');
-    if (typeof defaultPlanetParameters === 'undefined') {
-      globalThis.defaultPlanetParameters = pp.defaultPlanetParameters;
-    }
-  } catch (_) {}
+"use strict";
+
+/**
+ * Random World Generator — Fully Parameterized Module
+ * - Central DEFAULT_PARAMS controls all knobs
+ * - Canonical seeding:
+ *    seed S := hash(input) if input is string, else numeric input >>> 0
+ *    Use derived RNG streams to pick: target(planet|moon), orbit preset & aAU, and type.
+ *    Generate everything else with mulberry32(S).
+ *    Return canonical seed string:  S|<planet|moon>|<type>|<orbitPreset>
+ * - Param API: rwgManager.setParams({...}), .getParams(), .withParams({...})
+ */
+
+// ===================== Utilities & Shims =====================
+function hashStringToInt(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return h >>> 0;
 }
-if (typeof deepMerge === 'undefined') {
-  function isObject(item) { return (item && typeof item === 'object' && !Array.isArray(item)); }
-  function deepMerge(target, source) {
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t += 0x6d2b79f5;
+    let x = Math.imul(t ^ (t >>> 15), 1 | t);
+    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const randRange = (rng, a, b) => a + (b - a) * rng();
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const toTons = (kg) => kg / 1000;
+function isObject(item) { return item && typeof item === "object" && !Array.isArray(item); }
+
+// Deep merge shim
+if (typeof globalThis.deepMerge === "undefined") {
+  globalThis.deepMerge = function deepMerge(target, source) {
     const output = { ...target };
     if (isObject(target) && isObject(source)) {
-      Object.keys(source).forEach(key => {
+      Object.keys(source).forEach((key) => {
         const t = target[key];
         const s = source[key];
         if (isObject(t) && isObject(s)) output[key] = deepMerge(t, s);
@@ -22,834 +48,539 @@ if (typeof deepMerge === 'undefined') {
       });
     }
     return output;
-  }
-}
-
-// Ensure EffectableEntity exists in all environments
-const _global = (typeof globalThis !== 'undefined') ? globalThis
-  : (typeof global !== 'undefined') ? global
-  : (typeof window !== 'undefined') ? window
-  : {};
-
-if (typeof _global.EffectableEntity === 'undefined') {
-  try {
-    _global.EffectableEntity = require('./effectable-entity.js');
-  } catch (_) {
-    _global.EffectableEntity = class {};
-  }
-}
-
-let dayNightTemperaturesModelFn = _global.dayNightTemperaturesModel;
-let calcAtmPressure = _global.calculateAtmosphericPressure;
-if (typeof module !== 'undefined' && module.exports) {
-  try {
-    const physics = require('./physics.js');
-    dayNightTemperaturesModelFn = dayNightTemperaturesModelFn || physics.dayNightTemperaturesModel;
-    calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
-  } catch (_) {}
-}
-
-// --- Tiny seeded RNG (mulberry32) + string hash
-function hashStringToInt(str) {
-    let h = 1779033703 ^ str.length;
-    for (let i = 0; i < str.length; i++) {
-      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-      h = (h << 13) | (h >>> 19);
-    }
-    return (h >>> 0);
-  }
-  function mulberry32(seed) {
-    let t = seed >>> 0;
-    return function() {
-      t += 0x6D2B79F5;
-      let x = Math.imul(t ^ (t >>> 15), 1 | t);
-      x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  const randRange = (rng, a, b) => a + (b - a) * rng();
-  const pickWeighted = (rng, items) => {
-    const sum = items.reduce((s, it) => s + it.w, 0);
-    let r = rng() * sum;
-    for (const it of items) { r -= it.w; if (r <= 0) return it.v; }
-    return items[items.length - 1].v;
   };
-  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-  const toTons = kg => kg / 1000;
-  
-  // --- Physics-ish helpers (rough but consistent)
-  function habitableZoneAU(luminositySolar) {
-    // Kasting-ish constants, simplified
-    const root = Math.sqrt(luminositySolar);
-    return { inner: 0.95 * root, outer: 1.37 * root };
-  }
-  function luminosityFromMassSolar(m) {
-    // Main-sequence: L ~ M^3.5 (cap extremes a bit)
-    return Math.max(0.0005, Math.min(100000, Math.pow(m, 3.5)));
-  }
-  function radiusFromMassSolar(m) {
-    // Rough: R ~ M^0.8 for MS stars
-    return Math.pow(m, 0.8);
-  }
-  function eqTempK(luminositySolar, distanceAU, albedo=0.3) {
-    // Normalize to Earth ≈ 278 K at L=1, d=1, A=0.3
-    const base = 278 * Math.pow(luminositySolar, 0.25) / Math.sqrt(distanceAU);
-    // Albedo correction (~fourth-root scaling)
-    return base * Math.pow((1 - albedo) / (1 - 0.3), 0.25);
-  }
-  function gravityFromMassRadius(M_kg, R_km) {
-    const G = 6.67430e-11;
-    const R_m = R_km * 1000;
-    return (G * M_kg) / (R_m * R_m); // m/s^2
-  }
-  function surfaceAreaHa(radius_km) {
-    const area_km2 = 4 * Math.PI * radius_km * radius_km;
-    return Math.round(area_km2 * 100); // 1 km² = 100 ha
-  }
-  function totalAtmosphereMassTons(pressureBar, radius_km, gravity_ms2) {
-    // M_atm ≈ 4πR² * P / g ; P in Pa, R in m; returns tons
-    const P = pressureBar * 1e5; // bar -> Pa
-    const R_m = radius_km * 1000;
-    const M_kg = 4 * Math.PI * R_m * R_m * P / gravity_ms2;
-    return toTons(M_kg);
-  }
-  
-  // --- Star generator
-  function generateStar(seed) {
-    const rng = mulberry32(seed);
-    // Spectral distribution (very skewed toward K/M)
-    const spectral = pickWeighted(rng, [
-      { v: 'M', w: 76 }, { v: 'K', w: 12 }, { v: 'G', w: 7.6 },
-      { v: 'F', w: 3.0 }, { v: 'A', w: 1.2 }, { v: 'B', w: 0.2 }, { v: 'O', w: 0.02 }
-    ]);
-    const massRanges = {
-      O: [16, 60], B: [2.1, 16], A: [1.4, 2.1], F: [1.1, 1.4],
-      G: [0.9, 1.1], K: [0.6, 0.9], M: [0.08, 0.6]
-    };
-    const m = randRange(rng, ...massRanges[spectral]);
-    const L = luminosityFromMassSolar(m);
-    const R = radiusFromMassSolar(m);
-    // very rough temperature (not used elsewhere, but nice to have)
-    const Teff = 5772 * Math.pow(L / (R*R), 0.25);
-  
-    const hz = habitableZoneAU(L);
-    return {
-      name: starName(seed),
-      spectralType: spectral,
-      massSolar: m,
-      luminositySolar: L,
-      radiusSolar: R,
-      temperatureK: Math.round(Teff),
-      habitableZone: hz
-    };
-  }
-  function starName(seed) {
-    const syll = ["al","be","ce","do","er","fi","ga","ha","io","ju","ka","lu","me","no","or","pi","qu","ra","su","ta","ul","ve","wo","xi","ya","zo"];
-    const rng = mulberry32(seed ^ 0x9e3779b9);
-    const pick = () => syll[Math.floor(rng()*syll.length)];
-    const core = (pick()+pick()+pick());
-    const num = Math.floor(rng()*999)+1;
-    return core.charAt(0).toUpperCase()+core.slice(1)+"-"+num;
-  }
-  
-  // --- Orbit sampler (AU), log-spread
-  function sampleOrbitAU(rng, i) {
-    // 0.2–30 AU, mild spacing by index
-    const min = 0.2, max = 30;
-    const t = rng(); // 0..1
-    const logMin = Math.log(min), logMax = Math.log(max);
-    const base = Math.exp(logMin + (logMax - logMin) * t);
-    // Nudge outward with index to avoid heavy overlaps
-    return base * (1 + 0.25 * i);
-  }
-  
-  // --- Gas giant maker (for moons)
-  function makeGasGiant(rng) {
-    const Mj = 1.898e27;
-    const mass = randRange(rng, 0.3, 3.0) * Mj;
-    const radius_km = randRange(rng, 30000, 80000);
-    return { name: "GasGiant", mass, radius_km, orbitRadius_km: Math.floor(randRange(rng, 600000, 2_500_000)) };
-  }
-  
-  // --- Planet bulk pick for rocky/icy bodies (mass-radius-density consistency)
-  function sampleBulk(rng, archetype) {
-    const Me = 5.972e24, Re_km = 6371;
-    // Radius ranges (Earth radii) by archetype
-    const radiusRanges = {
-      "venus-like":       [0.85, 1.05],
-      "mars-like":        [0.30, 0.60],
-      "hot-rocky":        [0.50, 1.40],
-      "icy-moon":         [0.25, 0.70],
-      "titan-like":       [0.25, 0.60],
-      "cold-desert":      [0.40, 0.90]
-    }[archetype];
+}
 
-    // Density ranges relative to Earth (rocky ~0.8–1.1, icy ~0.3–0.6)
-    const densityRanges = {
-      "venus-like":       [0.95, 1.10],
-      "mars-like":        [0.70, 0.95],
-      "hot-rocky":        [0.85, 1.05],
-      "icy-moon":         [0.30, 0.55],
-      "titan-like":       [0.35, 0.60],
-      "cold-desert":      [0.80, 1.00]
-    }[archetype];
+// Provide defaultPlanetParameters if not present (very light stub)
+if (typeof globalThis.defaultPlanetParameters === "undefined") {
+  globalThis.defaultPlanetParameters = { resources: { colony: {} } };
+}
 
-    // Sample radius first to set surface area/land; then mass from density * R^3
-    const radius_rel = randRange(rng, radiusRanges[0], radiusRanges[1]);
-    const density_rel = randRange(rng, densityRanges[0], densityRanges[1]);
-    const mass_rel = density_rel * Math.pow(radius_rel, 3);
+// EffectableEntity shim
+if (typeof globalThis.EffectableEntity === "undefined") {
+  try { globalThis.EffectableEntity = require("./effectable-entity.js"); }
+  catch (_) { globalThis.EffectableEntity = class {}; }
+}
 
-    const mass = mass_rel * Me;
-    const radius_km = radius_rel * Re_km;
-    const gravity = gravityFromMassRadius(mass, radius_km);
-    return { mass, radius_km, gravity };
-  }
-  
-  // --- Archetype classifier from star/orbit/equil temp and "moon-ness"
-  function classifyWorld({rng, star, aAU, isMoon}) {
-    // quick first-pass albedo guess to compute T_eq
-    const albedoGuess = aAU > star.habitableZone.outer ? 0.55 : 0.3;
-    const Teq = eqTempK(star.luminositySolar, aAU, albedoGuess);
-  
-    // Decide archetype
-    if (isMoon) {
-      if (Teq >= 80 && Teq <= 110 && rng() < 0.7) return { type: "titan-like", Teq, albedo: 0.15 };
-      return { type: "icy-moon", Teq, albedo: 0.17 };
+// Physics hooks (optional project-level overrides)
+let dayNightTemperaturesModelFn = globalThis.dayNightTemperaturesModel;
+let calcAtmPressure = globalThis.calculateAtmosphericPressure;
+try {
+  const physics = require("./physics.js");
+  dayNightTemperaturesModelFn = dayNightTemperaturesModelFn || physics.dayNightTemperaturesModel;
+  calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
+} catch (_) {}
+
+// ===================== Parameter Pack (edit here) =====================
+const DEFAULT_PARAMS = {
+  naming: {
+    starSyllables: ["al","be","ce","do","er","fi","ga","ha","io","ju","ka","lu","me","no","or","pi","qu","ra","su","ta","ul","ve","wo","xi","ya","zo"],
+    planetSyllables: ["ta","ri","no","ka","mi","sa","lo","ve","du","an","ke","yo","ze","ur","phi","ran","sol","ter","mar","cal","thy","gan","tan","cys"]
+  },
+  star: {
+    spectralWeights: [
+      { v: "M", w: 76 }, { v: "K", w: 12 }, { v: "G", w: 7.6 },
+      { v: "F", w: 3.0 }, { v: "A", w: 1.2 }, { v: "B", w: 0.2 }, { v: "O", w: 0.02 }
+    ],
+    massRanges: { O:[16,60], B:[2.1,16], A:[1.4,2.1], F:[1.1,1.4], G:[0.9,1.1], K:[0.6,0.9], M:[0.08,0.6] }
+  },
+  orbit: {
+    logAU: { min: 0.2, max: 30, outwardIndexScale: 0.25 },
+    presets: {
+      hotFluxWm2: [1500, 2500],
+      hzInnerFluxWm2: [1200, 1500],
+      hzMidFluxWm2:   [800, 1200],
+      hzOuterFluxWm2: [500, 800],
+      coldFluxWm2: [100, 500]
+    },
+    moonChance: { thresholdAU: 3, chance: 0.35 }
+  },
+  classification: {
+    typeAlbedo: {
+      "venus-like": 0.75, "mars-like": 0.25, rocky: 0.35, "cold-desert": 0.5,
+      "icy-moon": 0.17, "titan-like": 0.15, "hot-rocky": 0.35,
+      "carbon-planet": 0.08,
+      "desiccated-desert": 0.38,
+      "super-earth": 0.30,
+    },
+    albedoGuess: { default: 0.3, beyondHZouter: 0.55 },
+    thresholdsK: { venusMin: 330, rockyMin: 290, marsLow: 200, marsHigh: 255 },
+    moonTitanLike: { rangeK: [80,110], chance: 0.7 }
+  },
+  bulk: {
+    radiusER: {
+      "venus-like": [0.85,1.05], "mars-like": [0.3,0.6], "hot-rocky": [0.5,1.4],
+      "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9], rocky: [0.6,1.2],
+      "carbon-planet": [0.7, 1.4],
+      "desiccated-desert": [0.6, 1.2],
+      "super-earth": [1.2, 2.0]
+    },
+    densityRel: {
+      "venus-like": [0.95,1.1], "mars-like": [0.7,0.95], "hot-rocky": [0.85,1.05],
+      "icy-moon": [0.3,0.55], "titan-like": [0.35,0.6], "cold-desert": [0.8,1.0], rocky: [0.8,1.1],
+      "carbon-planet": [0.90, 1.20],
+      "desiccated-desert": [0.80, 1.05],
+      "super-earth": [0.90, 1.30]
     }
-    if (Teq > 330) return { type: "venus-like", Teq, albedo: 0.75 };
-    if (Teq > 290) return { type: "rocky", Teq, albedo: 0.35 };
-    if (Teq >= 200 && Teq < 255) return { type: "mars-like", Teq, albedo: 0.25 };
-    if (Teq < 200) return { type: "cold-desert", Teq, albedo: 0.5 };
-    return { type: "mars-like", Teq, albedo: 0.25 };
+  },
+  atmosphere: {
+    templates: {
+      "venus-like": { pressureBar: 90, mix: { carbonDioxide: 0.965, inertGas: 0.03, oxygen: 0.0003, atmosphericWater: 0.0047 } },
+      "mars-like": { pressureBar: 0.006, mix: { carbonDioxide: 0.95, inertGas: 0.03, oxygen: 0.0016, atmosphericWater: 0.0004 } },
+      rocky: { pressureBar: 0.6, mix: { carbonDioxide: 0.9, inertGas: 0.09, oxygen: 0.005, atmosphericWater: 0.005 } },
+      "cold-desert": { pressureBar: 0.02, mix: { carbonDioxide: 0.85, inertGas: 0.14, oxygen: 0.0005, atmosphericWater: 0.0095 } },
+      "icy-moon": { pressureBar: 1e-5, mix: { carbonDioxide: 0.7, inertGas: 0.299, oxygen: 0.001, atmosphericWater: 0.0001 } },
+      "titan-like": { pressureBar: 1.4, mix: { carbonDioxide: 0.00006, inertGas: 0.98, oxygen: 1e-6, atmosphericWater: 1e-9, atmosphericMethane: 0.02 } },
+      "carbon-planet":     { pressureBar: 1.0,  mix: { atmosphericMethane: 0.5, inertGas: 0.49, carbonDioxide: 0.01 } },
+      "desiccated-desert": { pressureBar: 0.05, mix: { carbonDioxide: 0.85, inertGas: 0.15 } },
+      "super-earth": {
+        pressureBar: 1.2,
+        mix: {
+          inertGas: 0.95,
+          carbonDioxide: 0.045,
+          oxygen: 0.001,
+          atmosphericWater: 0.004
+        }
+      }
+    },
+    pressureBands: {
+      "venus-like": [0.8,1.2], rocky: [0.3,2.0], "mars-like": [0.3,3.0],
+      "cold-desert": [0.2,2.0], "icy-moon": [0.1,10.0], "titan-like": [0.7,1.3],
+      "carbon-planet": [0.5, 1.5],
+      "desiccated-desert": [0.5, 2.0], 
+      "super-earth": [0.7, 2.2],
+    }
+  },
+  volatiles: {
+    H2O_total: {
+      "venus-like": 1e12, "mars-like": 8e15, rocky: 5e14, "cold-desert": 2e14, "icy-moon": 4e19, "titan-like": 1e16,
+      "carbon-planet": 5e13,
+      "desiccated-desert": 1e13, "super-earth": 2e15,
+    },
+    CH4_total: {
+      "titan-like": 3e14, "icy-moon": 0, "cold-desert": 0, "mars-like": 0, "venus-like": 0, rocky: 0,
+      "carbon-planet": 5e14,
+      "desiccated-desert": 0, "super-earth": 0,
+    },
+    referenceLandHa: 14_400_000_000
+  },
+  zonal: {
+    defaultZoneFractions: { tropical: 0.4, temperate: 0.4, polar: 0.2 },
+    warmBiasK: { tropical: 1.0, temperate: 0.6, polar: 0.1 },
+    coldBiasK: { tropical: 0.05, temperate: 0.2, polar: 0.75 },
+    buriedFactorByType: {
+      "icy-moon": 5.0, "titan-like": 3.0, "cold-desert": 2.0, "mars-like": 1.5, "venus-like": 0.1, rocky: 0.1,
+      "carbon-planet": 0.5,
+      "desiccated-desert": 0.8, "super-earth": 0.2,
+    },
+    titanLiquidBiasK: { tropical: 0.05, temperate: 0.25, polar: 0.7 },
+    coldLiquidBiasK: { tropical: 0.1, temperate: 0.4, polar: 0.5 },
+    dryIceBias: { tropical: 0.0, temperate: 0.05, polar: 0.95 }
+  },
+  deposits: { areaPerDepositHa: 1_000_000, maxDepositsFraction: 0.10, geoVentInit: { rocky: 5, "mars-like": 3, default: 2, coldLow: 1 } },
+  colonyCaps: { energy: 50_000_000, metal: 5000, silicon: 5000, glass: 5000, water: 5000, food: 5000, components: 500, electronics: 200, superconductors: 200, androids: 1000 },
+  specials: { includeAlbedoUpgrades: true, includeSpaceships: true, includeAlienArtifact: true },
+  magnetosphere: {
+    chanceByType: {
+      "venus-like": 0.02, "mars-like": 0.06, rocky: 0.25, "cold-desert": 0.12,
+      "icy-moon": 0.03, "titan-like": 0.03, "hot-rocky": 0.08,
+      "carbon-planet": 0.15,
+      "desiccated-desert": 0.10,
+      "super-earth": 0.35,
+    },
+    defaultChance: 0.12
   }
-  
-  // --- Atmosphere templates (target surface pressure + gas fractions)
-  const atmoTemplates = {
-    "venus-like":       { pressureBar: 90,  mix: { carbonDioxide: 0.965, inertGas: 0.03, oxygen: 0.0003, atmosphericWater: 0.0047 } },
-    "mars-like":        { pressureBar: 0.006, mix: { carbonDioxide: 0.95, inertGas: 0.03, oxygen: 0.0016, atmosphericWater: 0.0004 } },
-    "rocky":            { pressureBar: 0.6,  mix: { carbonDioxide: 0.9, inertGas: 0.09, oxygen: 0.005, atmosphericWater: 0.005 } },
-    "cold-desert":      { pressureBar: 0.02, mix: { carbonDioxide: 0.85, inertGas: 0.14, oxygen: 0.0005, atmosphericWater: 0.0095 } },
-    "icy-moon":         { pressureBar: 0.00001, mix: { carbonDioxide: 0.7, inertGas: 0.299, oxygen: 0.001, atmosphericWater: 0.0001 } },
-    "titan-like":       { pressureBar: 1.4,  mix: { carbonDioxide: 0.00006, inertGas: 0.98, oxygen: 1e-6, atmosphericWater: 1e-9, atmosphericMethane: 0.02 } }
-  };
-  
-  function buildAtmosphere(archetype, radius_km, gravity, rng) {
-    const tpl = atmoTemplates[archetype];
-    // Randomize pressure around template by type-specific bands
-    const bands = {
-      'venus-like': [0.8, 1.2],
-      'rocky': [0.3, 2.0],
-      'mars-like': [0.3, 3.0],
-      'cold-desert': [0.2, 2.0],
-      'icy-moon': [0.1, 10.0],
-      'titan-like': [0.7, 1.3]
-    };
-    const band = bands[archetype] || [0.5, 1.5];
-    const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
+};
 
-    const totalTons = totalAtmosphereMassTons(pressureBar, radius_km, gravity);
 
-    // Jitter gas mix slightly and renormalize
-    const baseMix = (tpl && tpl.mix) ? tpl.mix : {};
-    const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane"];
-    const jittered = {};
-    let sum = 0;
-    for (const k of mixKeys) {
-      const base = baseMix[k] || 0;
-      if (base <= 0) { jittered[k] = 0; continue; }
-      const jitter = 1 + randRange(rng, -0.25, 0.25);
-      const val = Math.max(0, base * jitter);
-      jittered[k] = val;
-      sum += val;
-    }
-    // Renormalize to 1. If all zeros, allocate all to inert gas
-    const gas = {};
-    if (sum <= 0) {
-      gas.inertGas = { initialValue: totalTons, unlocked: false };
-      for (const k of mixKeys) if (k !== 'inertGas') gas[k] = { initialValue: 0, unlocked: false };
-      return gas;
-    }
-    let allocated = 0;
-    for (const k of mixKeys) {
-      const frac = (jittered[k] || 0) / sum;
-      const v = frac * totalTons;
-      gas[k] = { initialValue: v, unlocked: false };
-      allocated += v;
-    }
-    // rounding guard: distribute residue to inert gas
-    const residue = totalTons - allocated;
-    if (residue > 0 && gas.inertGas) gas.inertGas.initialValue += residue;
+function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
 
-    return gas;
-  }
-  
-  // --- Resource scaler helpers
-  function depositsFromLandHa(landHa) {
-    const areaTotal = Math.round(landHa / 100000);      // matches your convention
-    const maxDeposits = Math.round(areaTotal * 0.10);   // 1 per 1e6 ha
-    return { areaTotal, maxDeposits };
-  }
-  
-  // --- Water/hydrocarbon partitioner
-  function buildVolatiles(archetype, Teq, landHa, rng) {
-    // crude stocks (tons) scaled by body size; tuned to feel right vs Mars/Titan
-    const landScale = landHa / 14_400_000_000; // relative to Mars
-    const surface = {
-      land: { initialValue: landHa, hasCap: true, unlocked: false },
-      ice: { initialValue: 0, unlocked: false, unit: 'ton' },
-      liquidWater: { initialValue: 0, unlocked: false, unit: 'ton' },
-      dryIce: { initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      liquidMethane: { initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      hydrocarbonIce: { initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      scrapMetal: { initialValue: 0, unlocked: false, unit: 'ton' },
-      biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' }
-    };
-  
-    // Baselines (order of magnitude)
-    const H2O_total = {
-      "venus-like":       1e12,
-      "mars-like":        8e15,
-      "rocky":            5e14,
-      "cold-desert":      2e14,
-      "icy-moon":         4e19,
-      "titan-like":       1e16
-    }[archetype] * landScale;
-  
-    const CH4_total = {
-      "titan-like":       3e14,
-      "icy-moon":         0,
-      "cold-desert":      0,
-      "mars-like":        0,
-      "venus-like":       0,
-      "rocky":            0
-    }[archetype] * landScale;
-  
-    // Partition water by temperature
-    if (Teq < 273) {
-      // cold worlds: mostly ice, some dry ice if CO2 freezes (Teq < ~195 K)
-      surface.ice.initialValue = H2O_total * 0.999;
-      if (Teq < 195) surface.dryIce.initialValue = 1e10 * landScale;
-    } else {
-      // hot: no surface ice, maybe some water
-      surface.liquidWater.initialValue = H2O_total * 0.05;
-    }
-  
-    // Hydrocarbons
-    if (CH4_total > 0) {
-      if (Teq < 95) {
-        surface.hydrocarbonIce.initialValue = CH4_total;
-      } else if (Teq < 110) {
-        surface.liquidMethane.initialValue = CH4_total;
+// ===================== Seed helpers =====================
+// Supports both legacy k=v annotations and positional: S|<planet|moon>|<type>|<orbitPreset>
+function parseSeedSpec(seedInput) {
+  let base = "";
+  let ann = {}; // { target, type, orbitPreset, aAU }
+  let seedInt;
+  if (typeof seedInput === "string") {
+    const segs = seedInput.split("|");
+    base = (segs[0] || "").trim();
+    const baseIsInt = /^\d+$/.test(base);
+    const unkeyed = [];
+    for (let i = 1; i < segs.length; i++) {
+      const seg = (segs[i] || "").trim();
+      if (!seg) continue;
+      if (seg.includes("=")) {
+        const [kRaw, vRaw] = seg.split("=");
+        const k = (kRaw || "").trim().toLowerCase();
+        const v = (vRaw || "").trim();
+        if (!k || !v) continue;
+        if (k === "t" || k === "type" || k === "archetype") ann.type = v;
+        else if (k === "o" || k === "orbit" || k === "orbitpreset") ann.orbitPreset = v;
+        else if (k === "tg" || k === "target") ann.target = v.toLowerCase();
+        else if (k === "d" || k === "au") {
+          const num = parseFloat(v);
+          if (!Number.isNaN(num)) ann.aAU = num;
+        }
       } else {
-        // unstable methane at higher temps
-        surface.hydrocarbonIce.initialValue = CH4_total * 0.2;
+        unkeyed.push(seg);
       }
     }
-  
-    return surface;
+    if (unkeyed.length) {
+      const [p0, p1, p2] = unkeyed;
+      const p0l = (p0 || "").toLowerCase();
+      if (p0l === "planet" || p0l === "moon") ann.target = p0l;
+      if (p1) ann.type = p1;
+      if (p2) ann.orbitPreset = p2;
+    }
+    seedInt = baseIsInt ? (parseInt(base, 10) >>> 0) : hashStringToInt(base);
+  } else {
+    seedInt = seedInput >>> 0;
+    base = String(seedInput ?? seedInt);
+  }
+  return { seedInt, baseSeed: base, ann };
+}
+function buildSeedSpec(baseInt, { target, type, orbitPreset } = {}) {
+  const parts = [String(baseInt >>> 0)];
+  if (target) parts.push(String(target));
+  if (type) parts.push(String(type));
+  if (orbitPreset) parts.push(String(orbitPreset));
+  return parts.join("|");
+}
+
+// ===================== Physics-ish helpers =====================
+function pickWeighted(rng, items) { const sum = items.reduce((s, it) => s + it.w, 0); let r = rng() * sum; for (const it of items) { r -= it.w; if (r <= 0) return it.v; } return items[items.length - 1].v; }
+function luminosityFromMassSolar(m) { return Math.max(0.0005, Math.min(100000, Math.pow(m, 3.5))); }
+function radiusFromMassSolar(m) { return Math.pow(m, 0.8); }
+function eqTempK(L, dAU, albedo = 0.3) { const base = (278 * Math.pow(L, 0.25)) / Math.sqrt(dAU); return base * Math.pow((1 - albedo) / (1 - 0.3), 0.25); }
+function gravityFromMassRadius(M_kg, R_km) { const G = 6.6743e-11; const R_m = R_km * 1000; return (G * M_kg) / (R_m * R_m); }
+function surfaceAreaHa(radius_km) { const area_km2 = 4 * Math.PI * radius_km * radius_km; return Math.round(area_km2 * 100); }
+function totalAtmosphereMassTons(pressureBar, radius_km, gravity_ms2) { const P = pressureBar * 1e5; const R_m = radius_km * 1000; const M_kg = (4 * Math.PI * R_m * R_m * P) / gravity_ms2; return toTons(M_kg); }
+
+// ===================== Naming =====================
+function starName(seed, params) {
+  const rng = mulberry32(seed ^ 0x9e3779b9);
+  const s = params.naming.starSyllables; const pick = () => s[Math.floor(rng() * s.length)];
+  const core = pick() + pick() + pick(); const num = Math.floor(rng() * 999) + 1;
+  return core.charAt(0).toUpperCase() + core.slice(1) + "-" + num;
+}
+function planetName(seed, params) {
+  const rng = mulberry32(seed ^ 0xa5a5a5);
+  const s = params.naming.planetSyllables; const pick = () => s[Math.floor(rng() * s.length)];
+  const core = pick() + pick() + pick();
+  return core.charAt(0).toUpperCase() + core.slice(1);
+}
+
+// ===================== Star & Orbit =====================
+function generateStar(seed, params) {
+  const rng = mulberry32(seed);
+  const spectral = pickWeighted(rng, params.star.spectralWeights);
+  const m = randRange(rng, ...params.star.massRanges[spectral]);
+  const L = luminosityFromMassSolar(m); const R = radiusFromMassSolar(m);
+  const Teff = 5772 * Math.pow(L / (R * R), 0.25);
+  return { name: starName(seed, params), spectralType: spectral, massSolar: m, luminositySolar: L, radiusSolar: R, temperatureK: Math.round(Teff)};
+}
+function sampleOrbitAU(rng, i, params) {
+  const { min, max, outwardIndexScale } = params.orbit.logAU; const t = rng();
+  const base = Math.exp(Math.log(min) + (Math.log(max) - Math.log(min)) * t);
+  return base * (1 + outwardIndexScale * i);
+}
+// ===================== World building helpers =====================
+function sampleBulk(rng, archetype, params) {
+  const Me = 5.972e24, Re_km = 6371;
+  const rr = params.bulk.radiusER[archetype] || [0.5, 1.2];
+  const dr = params.bulk.densityRel[archetype] || [0.7, 1.1];
+  const radius_rel = randRange(rng, rr[0], rr[1]);
+  const density_rel = randRange(rng, dr[0], dr[1]);
+  const mass_rel = density_rel * Math.pow(radius_rel, 3);
+  const mass = mass_rel * Me; const radius_km = radius_rel * Re_km; const gravity = gravityFromMassRadius(mass, radius_km);
+  return { mass, radius_km, gravity };
+}
+function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
+  const tpl = params.atmosphere.templates[archetype];
+  const band = (params.atmosphere.pressureBands[archetype] || [0.5, 1.5]);
+  const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
+  const totalTons = totalAtmosphereMassTons(pressureBar, radius_km, gravity);
+  const baseMix = (tpl && tpl.mix) ? tpl.mix : {};
+  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane"];
+  const jittered = {}; let sum = 0;
+  for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
+  const gas = {}; if (sum <= 0) { gas.inertGas = { initialValue: totalTons, unlocked: false }; for (const k of mixKeys) if (k !== "inertGas") gas[k] = { initialValue: 0, unlocked: false }; return gas; }
+  let allocated = 0; for (const k of mixKeys) { const frac = (jittered[k] || 0) / sum; const v = frac * totalTons; gas[k] = { initialValue: v, unlocked: false }; allocated += v; }
+  const residue = totalTons - allocated; if (residue > 0 && gas.inertGas) gas.inertGas.initialValue += residue;
+  return gas;
+}
+function depositsFromLandHa(landHa, params) { const areaTotal = Math.round(landHa / params.deposits.areaPerDepositHa); const maxDeposits = Math.round(areaTotal * params.deposits.maxDepositsFraction); return { areaTotal, maxDeposits }; }
+function buildVolatiles(archetype, Teq, landHa, rng, params) {
+  const landScale = landHa / params.volatiles.referenceLandHa;
+  const surface = {
+    land: { initialValue: landHa, hasCap: true, unlocked: false },
+    ice: { initialValue: 0, unlocked: false, unit: "ton" },
+    liquidWater: { initialValue: 0, unlocked: false, unit: "ton" },
+    dryIce: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
+    liquidMethane: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
+    hydrocarbonIce: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
+    scrapMetal: { initialValue: 0, unlocked: false, unit: "ton" },
+    biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: "ton" },
+  };
+  const H2O_total = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
+  const CH4_total = (params.volatiles.CH4_total[archetype] ?? 0) * landScale;
+  if (Teq < 273) { surface.ice.initialValue = H2O_total * 0.999; if (Teq < 195) surface.dryIce.initialValue = 1e10 * landScale; }
+  else { surface.liquidWater.initialValue = H2O_total * 0.05; }
+  if (CH4_total > 0) {
+    if (Teq < 95) surface.hydrocarbonIce.initialValue = CH4_total;
+    else if (Teq < 110) surface.liquidMethane.initialValue = CH4_total;
+    else surface.hydrocarbonIce.initialValue = CH4_total * 0.2;
+  }
+  return surface;
+}
+function getZoneFractionsSafe(params) {
+  try { if (typeof getZonePercentage === "function") return { tropical: getZonePercentage("tropical"), temperate: getZonePercentage("temperate"), polar: getZonePercentage("polar") }; }
+  catch (_) {}
+  return params.zonal.defaultZoneFractions;
+}
+function estimateCoverage(amount, zoneArea, scale = 0.0001) {
+  const resourceRatio = (scale * amount) / zoneArea; const R0 = 0.002926577381; const LINEAR_SLOPE = 50; const LOG_A = LINEAR_SLOPE * R0; const LOG_B = 1;
+  if (resourceRatio <= 0) return 0; if (resourceRatio <= R0) return LINEAR_SLOPE * resourceRatio; if (resourceRatio < 1) return LOG_A * Math.log(resourceRatio) + LOG_B; return 1;
+}
+function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
+  const frac = getZoneFractionsSafe(params)[zone] || 0; const zoneArea = tf.celestialParameters.surfaceArea * frac; if (zoneArea <= 0) return 0;
+  const zw = tf.zonalWater?.[zone] || {}; const zh = tf.zonalHydrocarbons?.[zone] || {}; const zs = tf.zonalSurface?.[zone] || {}; let amount = 0;
+  switch (resourceType) { case "liquidWater": amount = zw.liquid || 0; break; case "ice": amount = zw.ice || 0; break; case "buriedIce": amount = zw.buriedIce || 0; break; case "biomass": amount = zs.biomass || 0; break; case "dryIce": amount = zs.dryIce || 0; break; case "liquidMethane": amount = zh.liquid || 0; break; case "hydrocarbonIce": amount = zh.ice || 0; break; }
+  let scale = 0.0001; if (["dryIce","ice","hydrocarbonIce"].includes(resourceType)) scale *= 100; else if (resourceType === "biomass") scale *= 100000; return estimateCoverage(amount, zoneArea, scale);
+}
+function calculateAverageCoverageLocal(cache, resourceType, params) { const frac = getZoneFractionsSafe(params); const zones = ["tropical","temperate","polar"]; let total = 0; for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0); return Math.max(0, Math.min(total, 1)); }
+function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0) { const bio = Math.min(biomass, 1); const remaining = 1 - bio; const surfaces = { ocean: Math.max(0, water), ice: Math.max(0, ice), hydrocarbon: Math.max(0, hydro), hydrocarbonIce: Math.max(0, hydroIce), co2_ice: Math.max(0, dryIce) }; const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0); let scale = 1; if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther; for (const k in surfaces) surfaces[k] *= scale; return { ...surfaces, biomass: bio }; }
+function distribute(amount, weights, rng) { const keys = Object.keys(weights); const jittered = {}; let sum = 0; for (const k of keys) { const j = 1 + randRange(rng, -0.1, 0.1); const val = Math.max(0, weights[k] * j); jittered[k] = val; sum += val; } const out = {}; if (sum <= 0 || !isFinite(sum)) { keys.forEach((k) => (out[k] = 0)); } else { keys.forEach((k) => (out[k] = amount * (jittered[k] / sum))); } return out; }
+function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
+  const frac = getZoneFractionsSafe(params);
+  const zonalWater = { tropical: { liquid: 0, ice: 0, buriedIce: 0 }, temperate: { liquid: 0, ice: 0, buriedIce: 0 }, polar: { liquid: 0, ice: 0, buriedIce: 0 } };
+  const zonalHydrocarbons = { tropical: { liquid: 0, ice: 0 }, temperate: { liquid: 0, ice: 0 }, polar: { liquid: 0, ice: 0 } };
+  const zonalSurface = { tropical: { dryIce: 0 }, temperate: { dryIce: 0 }, polar: { dryIce: 0 } };
+  const warmBias = { tropical: params.zonal.warmBiasK.tropical * (frac.tropical||0), temperate: params.zonal.warmBiasK.temperate * (frac.temperate||0), polar: params.zonal.warmBiasK.polar * (frac.polar||0) };
+  const coldBias = { tropical: params.zonal.coldBiasK.tropical * (frac.tropical||0), temperate: params.zonal.coldBiasK.temperate * (frac.temperate||0), polar: params.zonal.coldBiasK.polar * (frac.polar||0) };
+  const liquidWater = surface.liquidWater?.initialValue || 0; const ice = surface.ice?.initialValue || 0; const hasPolarIce = ice > 0 || Teq < 273;
+  const liquidSplit = distribute(liquidWater, warmBias, rng); const iceSplit = distribute(ice, coldBias, rng);
+  zonalWater.tropical.liquid = liquidSplit.tropical; zonalWater.temperate.liquid = liquidSplit.temperate; zonalWater.polar.liquid = liquidSplit.polar;
+  zonalWater.tropical.ice = iceSplit.tropical; zonalWater.temperate.ice = iceSplit.temperate; zonalWater.polar.ice = iceSplit.polar;
+  let buriedFactor = params.zonal.buriedFactorByType[type]; if (typeof buriedFactor !== "number") buriedFactor = 0.5;
+  const buriedTotal = (surface.ice?.initialValue || 0) * buriedFactor; const buriedBias = { tropical: 1.0 * (frac.tropical||0), temperate: 1.0 * (frac.temperate||0), polar: 0.3 * (frac.polar||0) };
+  const buriedSplit = distribute(buriedTotal, buriedBias, rng); zonalWater.tropical.buriedIce = buriedSplit.tropical; zonalWater.temperate.buriedIce = buriedSplit.temperate; zonalWater.polar.buriedIce = buriedSplit.polar;
+  const liquidMethane = surface.liquidMethane?.initialValue || 0; const hydrocarbonIce = surface.hydrocarbonIce?.initialValue || 0;
+  const liqBiasSrc = (type === "titan-like") ? params.zonal.titanLiquidBiasK : params.zonal.coldLiquidBiasK;
+  const liquidCH4Bias = { tropical: liqBiasSrc.tropical * (frac.tropical||0), temperate: liqBiasSrc.temperate * (frac.temperate||0), polar: liqBiasSrc.polar * (frac.polar||0) };
+  const liquidCH4Split = distribute(liquidMethane, liquidCH4Bias, rng);
+  zonalHydrocarbons.tropical.liquid = liquidCH4Split.tropical; zonalHydrocarbons.temperate.liquid = liquidCH4Split.temperate; zonalHydrocarbons.polar.liquid = liquidCH4Split.polar;
+  const hcIceSplit = distribute(hydrocarbonIce, coldBias, rng);
+  zonalHydrocarbons.tropical.ice = hcIceSplit.tropical; zonalHydrocarbons.temperate.ice = hcIceSplit.temperate; zonalHydrocarbons.polar.ice = hcIceSplit.polar;
+  const dryIceGlobal = surface.dryIce?.initialValue || 0; if (dryIceGlobal > 0 || hasPolarIce) { const d = params.zonal.dryIceBias; const diBias = { tropical: d.tropical, temperate: d.temperate, polar: d.polar }; const diSplit = distribute(dryIceGlobal, diBias, rng); zonalSurface.tropical.dryIce = diSplit.tropical; zonalSurface.temperate.dryIce = diSplit.temperate; zonalSurface.polar.dryIce = diSplit.polar; }
+  return { zonalWater, zonalHydrocarbons, zonalSurface };
+}
+
+// ===================== Planet override =====================
+function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
+  const rng = mulberry32(seed);
+  let classification;
+  if (forcedType) {
+    const typeAlb = params.classification.typeAlbedo[forcedType] ?? 0.3;
+    const Teq = eqTempK(star.luminositySolar, aAU, typeAlb);
+    classification = { type: forcedType, Teq, albedo: typeAlb };
+  }
+  let type = classification.type;
+  const bulk = sampleBulk(rng, type, params);
+  const landHa = surfaceAreaHa(bulk.radius_km);
+  const { areaTotal, maxDeposits } = depositsFromLandHa(landHa, params);
+  if (!params.atmosphere.templates[type]) type = (classification.Teq > params.classification.thresholdsK.rockyMin && classification.Teq <= params.classification.thresholdsK.venusMin) ? "rocky" : "mars-like";
+  const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
+  const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
+  const rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
+  const albedo = classification.albedo;
+  const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
+  const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
+  const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
+  const zonesList = ["tropical","temperate","polar"]; const zonalCoverageCache = {};
+  for (const z of zonesList) {
+    zonalCoverageCache[z] = {
+      liquidWater: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidWater", params),
+      ice: calculateZonalCoverageLocal(tmpTerraforming, z, "ice", params),
+      buriedIce: calculateZonalCoverageLocal(tmpTerraforming, z, "buriedIce", params),
+      biomass: calculateZonalCoverageLocal(tmpTerraforming, z, "biomass", params),
+      dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, "dryIce", params),
+      liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidMethane", params),
+      hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, "hydrocarbonIce", params),
+    };
+  }
+  const avgWater = calculateAverageCoverageLocal(zonalCoverageCache, "liquidWater", params);
+  const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, "ice", params);
+  const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, "biomass", params);
+  const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, "liquidMethane", params);
+  const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, "hydrocarbonIce", params);
+  const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, "dryIce", params);
+  const surfaceFractions = calculateSurfaceFractionsLocal(avgWater, avgIce, avgBio, avgHydro, avgHydroIce, avgDryIce);
+
+  // Atmosphere composition & pressure for physics model
+  let totalAtmoMass = 0; const compMass = {};
+  for (const g in atmo) { const m = atmo[g]?.initialValue || 0; compMass[g] = m; totalAtmoMass += m; }
+  const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; }
+  const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
+  const SOLAR_FLUX_1AU = 1361; const flux = (SOLAR_FLUX_1AU * (star.luminositySolar || 1)) / (aAU * aAU);
+  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotation, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
+  classification.Teq = temps.mean;
+
+  // Natural magnetosphere roll (centralized)
+  const magChance = (params.magnetosphere.chanceByType[type] ?? params.magnetosphere.defaultChance);
+  const hasNaturalMagnetosphere = (mulberry32(seed ^ 0xA11CE)() < magChance);
+
+  // Underground resources
+  const underground = {
+    ore: { name: "Ore deposits", initialValue: Math.max(2, Math.floor(maxDeposits * 0.0002)), maxDeposits, hasCap: true, areaTotal, unlocked: false },
+    geothermal: { name: "Geo. vent", initialValue:
+      (type === "rocky") ? params.deposits.geoVentInit.rocky :
+      (type === "mars-like") ? params.deposits.geoVentInit["mars-like"] :
+      (type === "titan-like" || type === "icy-moon" || type === "cold-desert") ? params.deposits.geoVentInit.coldLow :
+      params.deposits.geoVentInit.default,
+      maxDeposits: Math.max(3, Math.floor(areaTotal * 0.002)), hasCap: true, areaTotal, unlocked: false },
+  };
+
+  // Specials / collectibles
+  const special = {};
+  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
+  special.seed = { name: "Generator Seed", hasCap: false, initialValue: seed, unlocked: false };
+
+  // Optional parent body for moons
+  let parentBody = undefined; if (isMoon) { const gg = (function makeGasGiant(r) { const Mj = 1.898e27; return { mass: randRange(r, 0.3, 3.0) * Mj, radius_km: randRange(r, 30000, 80000), orbitRadius_km: Math.floor(randRange(r, 600000, 2500000)) }; })(mulberry32(seed ^ 0xFACE)); parentBody = { name: "Gas Giant", mass: gg.mass, radius: gg.radius_km, orbitRadius: gg.orbitRadius_km }; }
+
+  // Initial colony caps scale
+  const baseCapScale = clamp(landHa / DEFAULT_PARAMS.volatiles.referenceLandHa, 0.3, 3);
+  const colonyCaps = { energy: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.energy * baseCapScale) }, metal: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.metal * baseCapScale) }, silicon: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.silicon * baseCapScale) }, glass: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.glass * baseCapScale) }, water: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.water * baseCapScale) }, food: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.food * baseCapScale) }, components: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.components * baseCapScale) }, electronics: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.electronics * baseCapScale) }, superconductors: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.superconductors * baseCapScale) }, androids: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.androids * baseCapScale) } };
+
+  const overrides = {
+    name: planetName(seed, params),
+    resources: { colony: deepMerge(defaultPlanetParameters.resources.colony, colonyCaps), surface, underground, atmospheric: atmo, special },
+    ...zonal,
+    zonalCoverageCache,
+    finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
+    fundingRate: Math.round(randRange(mulberry32(seed ^ 0xB00B), 5, 15)),
+    buildingParameters: { maintenanceFraction: 0.001 },
+    populationParameters: { workerRatio: 0.5 },
+    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: star.luminositySolar, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
+    classification: { archetype: type, TeqK: Math.round(classification.Teq) },
+  };
+  return overrides;
+}
+
+// ===================== Manager =====================
+class RwgManager extends EffectableEntity {
+  constructor(paramsOverride) {
+    super({ description: "Random World Generator Manager" });
+    this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
+    this.lockedOrbits = new Set(["hot"]);
+    this.lockedTypes = new Set(["hot-rocky", "venus-like"]);
+  }
+  // Param API
+  setParams(overrides) { this.params = resolveParams(this.params, overrides); }
+  getParams() { return JSON.parse(JSON.stringify(this.params)); }
+  withParams(overrides) { const merged = resolveParams(this.params, overrides || {}); return new RwgManager(merged); }
+
+  // Locks
+  isOrbitLocked(o) { return this.lockedOrbits.has(o); }
+  lockOrbit(o) { this.lockedOrbits.add(o); }
+  unlockOrbit(o) { this.lockedOrbits.delete(o); }
+  isTypeLocked(t) { return this.lockedTypes.has(t); }
+  lockType(t) { this.lockedTypes.add(t); }
+  unlockType(t) { this.lockedTypes.delete(t); }
+  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold"].filter((o) => !this.lockedOrbits.has(o)); }
+  getAvailableTypes(isMoon) {
+    const base = isMoon
+      ? ["icy-moon", "titan-like"]
+      : ["mars-like", "hot-rocky", "cold-desert", "titan-like", "venus-like", "rocky",
+        "carbon-planet", "desiccated-desert", "super-earth"];
+    return base.filter((t) => !this.lockedTypes.has(t));
   }
 
-  // --- Zonal initial guesses (tropical/temperate/polar)
-  function getZoneFractionsSafe() {
-    try {
-      if (typeof getZonePercentage === 'function') {
-        return {
-          tropical: getZonePercentage('tropical'),
-          temperate: getZonePercentage('temperate'),
-          polar: getZonePercentage('polar')
-        };
+  generateRandomPlanet(seed, opts = {}) {
+    const P = resolveParams(this.params, opts.params);
+    const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
+
+    // Star
+    const star = opts.star ?? generateStar(S ^ 0x1234, P);
+
+    // Orbit preset & aAU — single orbit RNG stream
+    const rngOrbit = mulberry32(S ^ 0xF00D);
+    let aAU = opts.aAU;
+    let usedPreset = opts.orbitPreset;
+    if ((!usedPreset || usedPreset === "auto") && seedAnn?.orbitPreset) usedPreset = seedAnn.orbitPreset;
+
+    if (aAU === undefined) {
+      // (1) Choose the preset using rngOrbit
+      if (!usedPreset || usedPreset === "auto") {
+        let candidates = Array.isArray(opts.availableOrbits) ? opts.availableOrbits.slice() : this.getAvailableOrbits();
+        if (Array.isArray(opts.lockedOrbits)) candidates = candidates.filter(o => !opts.lockedOrbits.includes(o));
+        candidates = candidates.filter(Boolean);
+        if (candidates.length > 0) usedPreset = candidates[Math.floor(rngOrbit() * candidates.length)];
       }
-    } catch (_) {}
-    // Fallback rough areas if zones.js isn't available
-    return { tropical: 0.4, temperate: 0.4, polar: 0.2 };
-  }
 
-  function estimateCoverage(amount, zoneArea, scale = 0.0001) {
-    const resourceRatio = (scale * amount) / zoneArea;
-    const R0 = 0.002926577381;
-    const LINEAR_SLOPE = 50;
-    const LOG_A = LINEAR_SLOPE * R0;
-    const LOG_B = 1;
-    if (resourceRatio <= 0) return 0;
-    if (resourceRatio <= R0) return LINEAR_SLOPE * resourceRatio;
-    if (resourceRatio < 1) return LOG_A * Math.log(resourceRatio) + LOG_B;
-    return 1;
-  }
+      // (2) Draw r from the same rngOrbit and place orbit by flux band
+      if (usedPreset && usedPreset !== "auto") {
+        const r = rngOrbit();
+        const lum = star.luminositySolar || 1;
+        const SOLAR = 1361;
+        const band = (name) => P.orbit.presets[name];
 
-  function calculateZonalCoverageLocal(tf, zone, resourceType) {
-    const frac = getZoneFractionsSafe()[zone] || 0;
-    const zoneArea = tf.celestialParameters.surfaceArea * frac;
-    if (zoneArea <= 0) return 0;
-    const zw = tf.zonalWater?.[zone] || {};
-    const zh = tf.zonalHydrocarbons?.[zone] || {};
-    const zs = tf.zonalSurface?.[zone] || {};
-    let amount = 0;
-    switch (resourceType) {
-      case 'liquidWater': amount = zw.liquid || 0; break;
-      case 'ice': amount = zw.ice || 0; break;
-      case 'buriedIce': amount = zw.buriedIce || 0; break;
-      case 'biomass': amount = zs.biomass || 0; break;
-      case 'dryIce': amount = zs.dryIce || 0; break;
-      case 'liquidMethane': amount = zh.liquid || 0; break;
-      case 'hydrocarbonIce': amount = zh.ice || 0; break;
-    }
-    let scale = 0.0001;
-    if (['dryIce','ice','hydrocarbonIce'].includes(resourceType)) scale *= 100;
-    else if (resourceType === 'biomass') scale *= 100000;
-    return estimateCoverage(amount, zoneArea, scale);
-  }
+        let lo, hi;
+        if      (usedPreset === "hz-inner") [lo, hi] = band("hzInnerFluxWm2");
+        else if (usedPreset === "hz-mid")   [lo, hi] = band("hzMidFluxWm2");
+        else if (usedPreset === "hz-outer") [lo, hi] = band("hzOuterFluxWm2");
+        else if (usedPreset === "hot")      [lo, hi] = band("hotFluxWm2");
+        else if (usedPreset === "cold")     [lo, hi] = band("coldFluxWm2");
 
-  function calculateAverageCoverageLocal(cache, resourceType) {
-    const frac = getZoneFractionsSafe();
-    const zones = ['tropical','temperate','polar'];
-    let total = 0;
-    for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0);
-    return Math.max(0, Math.min(total, 1));
-  }
-
-  function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0) {
-    const bio = Math.min(biomass, 1);
-    const remaining = 1 - bio;
-    const surfaces = {
-      ocean: Math.max(0, water),
-      ice: Math.max(0, ice),
-      hydrocarbon: Math.max(0, hydro),
-      hydrocarbonIce: Math.max(0, hydroIce),
-      co2_ice: Math.max(0, dryIce)
-    };
-    const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
-    let scale = 1;
-    if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther;
-    for (const k in surfaces) surfaces[k] *= scale;
-    return { ...surfaces, biomass: bio };
-  }
-
-  function distribute(amount, weights, rng) {
-    const keys = Object.keys(weights);
-    // jitter weights ±10% to create variability
-    const jittered = {};
-    let sum = 0;
-    for (const k of keys) {
-      const j = 1 + randRange(rng, -0.1, 0.1);
-      const val = Math.max(0, weights[k] * j);
-      jittered[k] = val;
-      sum += val;
-    }
-    const out = {};
-    if (sum <= 0 || !isFinite(sum)) {
-      keys.forEach(k => out[k] = 0);
-    } else {
-      keys.forEach(k => out[k] = amount * (jittered[k] / sum));
-    }
-    return out;
-  }
-
-  function buildZonalDistributions(type, Teq, surface, landHa, rng) {
-    const frac = getZoneFractionsSafe();
-    const zonalWater = { tropical: { liquid: 0, ice: 0, buriedIce: 0 }, temperate: { liquid: 0, ice: 0, buriedIce: 0 }, polar: { liquid: 0, ice: 0, buriedIce: 0 } };
-    const zonalHydrocarbons = { tropical: { liquid: 0, ice: 0 }, temperate: { liquid: 0, ice: 0 }, polar: { liquid: 0, ice: 0 } };
-    const zonalSurface = { tropical: { dryIce: 0 }, temperate: { dryIce: 0 }, polar: { dryIce: 0 } };
-
-    // Liquid water prefers warmer zones; ice prefers polar
-    const liquidWater = surface.liquidWater?.initialValue || 0;
-    const ice = surface.ice?.initialValue || 0;
-    const hasPolarIce = ice > 0 || Teq < 273;
-    const warmBias = { tropical: 1.0 * frac.tropical, temperate: 0.6 * frac.temperate, polar: 0.1 * frac.polar };
-    const coldBias = { tropical: 0.05 * frac.tropical, temperate: 0.2 * frac.temperate, polar: 0.75 * frac.polar };
-    const liquidSplit = distribute(liquidWater, warmBias, rng);
-    const iceSplit = distribute(ice, coldBias, rng);
-    zonalWater.tropical.liquid = liquidSplit.tropical;
-    zonalWater.temperate.liquid = liquidSplit.temperate;
-    zonalWater.polar.liquid = liquidSplit.polar;
-    zonalWater.tropical.ice = iceSplit.tropical;
-    zonalWater.temperate.ice = iceSplit.temperate;
-    zonalWater.polar.ice = iceSplit.polar;
-
-    // Buried ice heuristic: scale with climate
-    let buriedFactor = 0.5;
-    if (type === 'icy-moon') buriedFactor = 5.0;
-    else if (type === 'titan-like') buriedFactor = 3.0;
-    else if (type === 'cold-desert') buriedFactor = 2.0;
-    else if (type === 'mars-like') buriedFactor = 1.5;
-    else if (type === 'venus-like' || type === 'rocky') buriedFactor = 0.1;
-    const buriedTotal = (surface.ice?.initialValue || 0) * buriedFactor;
-    // Favor lower latitudes for buried ice but still allow polar storage
-    const buriedBias = { tropical: 1.0 * frac.tropical, temperate: 1.0 * frac.temperate, polar: 0.3 * frac.polar };
-    const buriedSplit = distribute(buriedTotal, buriedBias, rng);
-    zonalWater.tropical.buriedIce = buriedSplit.tropical;
-    zonalWater.temperate.buriedIce = buriedSplit.temperate;
-    zonalWater.polar.buriedIce = buriedSplit.polar;
-
-    // Hydrocarbons: Titan-like puts liquids at poles, icy-moon puts ices at poles
-    const liquidMethane = surface.liquidMethane?.initialValue || 0;
-    const hydrocarbonIce = surface.hydrocarbonIce?.initialValue || 0;
-    const titanLiquidBias = { tropical: 0.05 * frac.tropical, temperate: 0.25 * frac.temperate, polar: 0.70 * frac.polar };
-    const coldLiquidBias = { tropical: 0.10 * frac.tropical, temperate: 0.40 * frac.temperate, polar: 0.50 * frac.polar };
-    const liquidCH4Bias = (type === 'titan-like') ? titanLiquidBias : coldLiquidBias;
-    const liquidCH4Split = distribute(liquidMethane, liquidCH4Bias, rng);
-    zonalHydrocarbons.tropical.liquid = liquidCH4Split.tropical;
-    zonalHydrocarbons.temperate.liquid = liquidCH4Split.temperate;
-    zonalHydrocarbons.polar.liquid = liquidCH4Split.polar;
-    const hcIceBias = coldBias;
-    const hcIceSplit = distribute(hydrocarbonIce, hcIceBias, rng);
-    zonalHydrocarbons.tropical.ice = hcIceSplit.tropical;
-    zonalHydrocarbons.temperate.ice = hcIceSplit.temperate;
-    zonalHydrocarbons.polar.ice = hcIceSplit.polar;
-
-    // Dry ice mostly polar if present
-    const dryIceGlobal = surface.dryIce?.initialValue || 0;
-    if (dryIceGlobal > 0 || hasPolarIce) {
-      const diBias = { tropical: 0.0, temperate: 0.05, polar: 0.95 };
-      const diSplit = distribute(dryIceGlobal, diBias, rng);
-      zonalSurface.tropical.dryIce = diSplit.tropical;
-      zonalSurface.temperate.dryIce = diSplit.temperate;
-      zonalSurface.polar.dryIce = diSplit.polar;
-    }
-
-    return { zonalWater, zonalHydrocarbons, zonalSurface };
-  }
-  
-  // --- Build a planet override (the bit you merge with defaults)
-  function buildPlanetOverride({seed, star, aAU, isMoon, forcedType}) {
-    const rng = mulberry32(seed);
-    let classification;
-    if (forcedType) {
-      const typeAlb = {
-        'venus-like': 0.75,
-        'mars-like': 0.25,
-        'rocky': 0.35,
-        'cold-desert': 0.50,
-        'icy-moon': 0.17,
-        'titan-like': 0.15
-      }[forcedType] ?? 0.30;
-      const Teq = eqTempK(star.luminositySolar, aAU, typeAlb);
-      classification = { type: forcedType, Teq, albedo: typeAlb };
-    } else {
-      classification = classifyWorld({rng, star, aAU, isMoon});
-    }
-    let type = classification.type;
-  
-    // bulk properties
-    const bulk = sampleBulk(rng, type);
-    const landHa = surfaceAreaHa(bulk.radius_km);
-    const { areaTotal, maxDeposits } = depositsFromLandHa(landHa);
-  
-    // atmosphere (ensure template exists for this type)
-    if (!atmoTemplates[type]) {
-      type = (classification.Teq > 290 && classification.Teq <= 330) ? 'rocky' : 'mars-like';
-    }
-    const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng);
-
-    // volatiles (surface water, ice, methane…)
-    const surface = buildVolatiles(type, classification.Teq, landHa, rng);
-
-    // celestial basics
-    const rotation = (type === 'titan-like' || type === 'icy-moon') ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
-    const distanceFromSun = aAU;
-    const albedo = classification.albedo;
-
-    // zonal distributions and coverage
-    const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng);
-    const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
-    const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
-    const zonesList = ['tropical', 'temperate', 'polar'];
-    const zonalCoverageCache = {};
-    for (const z of zonesList) {
-      zonalCoverageCache[z] = {
-        liquidWater: calculateZonalCoverageLocal(tmpTerraforming, z, 'liquidWater'),
-        ice: calculateZonalCoverageLocal(tmpTerraforming, z, 'ice'),
-        buriedIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'buriedIce'),
-        biomass: calculateZonalCoverageLocal(tmpTerraforming, z, 'biomass'),
-        dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'dryIce'),
-        liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, 'liquidMethane'),
-        hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, 'hydrocarbonIce')
-      };
-    }
-    const avgWater = calculateAverageCoverageLocal(zonalCoverageCache, 'liquidWater');
-    const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, 'ice');
-    const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, 'biomass');
-    const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, 'liquidMethane');
-    const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, 'hydrocarbonIce');
-    const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, 'dryIce');
-    const surfaceFractions = calculateSurfaceFractionsLocal(avgWater, avgIce, avgBio, avgHydro, avgHydroIce, avgDryIce);
-
-    // atmosphere composition & pressure for physics model
-    let totalAtmoMass = 0;
-    const compMass = {};
-    for (const g in atmo) {
-      const m = atmo[g]?.initialValue || 0;
-      compMass[g] = m;
-      totalAtmoMass += m;
-    }
-    const composition = {};
-    if (totalAtmoMass > 0) {
-      if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass;
-      if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass;
-      if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass;
-    }
-    const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
-    const SOLAR_FLUX_1AU = 1361;
-    const flux = SOLAR_FLUX_1AU * (star.luminositySolar || 1) / (distanceFromSun * distanceFromSun);
-    const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({
-      groundAlbedo: classification.albedo,
-      flux,
-      rotationPeriodH: rotation,
-      surfacePressureBar,
-      composition,
-      surfaceFractions,
-      gSurface: bulk.gravity
-    }) : { day: 0, night: 0, mean: 0, albedo };
-    classification.Teq = temps.mean;
-
-    // underground
-    const underground = {
-      ore: { name: 'Ore deposits', initialValue: Math.max(2, Math.floor(maxDeposits * 0.0002)), maxDeposits, hasCap: true, areaTotal, unlocked: false },
-      geothermal: { name: 'Geo. vent', initialValue:
-        (type === 'rocky') ? 5 :
-        (type === 'mars-like') ? 3 :
-        (type === 'titan-like' || type === 'icy-moon' || type === 'cold-desert') ? 1 : 2,
-        maxDeposits: Math.max(3, Math.floor(areaTotal * 0.002)), hasCap: true, areaTotal, unlocked: false }
-    };
-  
-    // specials
-    const special = {
-      albedoUpgrades: { name: 'Albedo upgrades', hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false },
-      spaceships: { name: 'Spaceships', hasCap: false, initialValue: 0, unlocked: false },
-      alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
-      seed: { name: 'Generator Seed', hasCap: false, initialValue: seed, unlocked: false }
-    };
-
-    // optional parent body for moons
-    let parentBody = undefined;
-    if (isMoon) {
-      const gg = makeGasGiant(rng);
-      parentBody = {
-        name: 'Gas Giant',
-        mass: gg.mass,
-        radius: gg.radius_km,
-        orbitRadius: gg.orbitRadius_km
-      };
-    }
-  
-    // initial colony caps: scale with size a bit
-    const baseCapScale = clamp(landHa / 14_400_000_000, 0.3, 3);
-    const colonyCaps = {
-      energy: { baseCap: Math.round(50_000_000 * baseCapScale) },
-      metal: { baseCap: Math.round(5000 * baseCapScale) },
-      silicon: { baseCap: Math.round(5000 * baseCapScale) },
-      glass: { baseCap: Math.round(5000 * baseCapScale) },
-      water: { baseCap: Math.round(5000 * baseCapScale) },
-      food: { baseCap: Math.round(5000 * baseCapScale) },
-      components: { baseCap: Math.round(500 * baseCapScale) },
-      electronics: { baseCap: Math.round(200 * baseCapScale) },
-      superconductors: { baseCap: Math.round(200 * baseCapScale) },
-      androids: { baseCap: Math.round(1000 * baseCapScale) }
-    };
-  
-    const overrides = {
-      name: planetName(seed),
-      resources: {
-        colony: deepMerge(defaultPlanetParameters.resources.colony, colonyCaps),
-        surface,
-        underground,
-        atmospheric: atmo,
-        special
-      },
-      // Initial zonal guesses to seed terraforming models
-      ...zonal,
-      zonalCoverageCache,
-      finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
-      fundingRate: Math.round(randRange(rng, 5, 15)), // tweak to taste
-      buildingParameters: { maintenanceFraction: 0.001 },
-      populationParameters: { workerRatio: 0.5 },
-      celestialParameters: {
-        distanceFromSun,
-        gravity: bulk.gravity,
-        radius: bulk.radius_km,
-        mass: bulk.mass,
-        albedo,
-        rotationPeriod: rotation,
-        starLuminosity: star.luminositySolar,
-        parentBody,
-        surfaceArea,
-        temperature: { day: temps.day, night: temps.night, mean: temps.mean },
-        actualAlbedo: temps.albedo,
-        cloudFraction: temps.cfCloud,
-        hazeFraction: temps.cfHaze
-      },
-      // lightweight tag to your requested classification
-      classification: { archetype: type, TeqK: Math.round(classification.Teq) }
-    };
-  
-    return overrides;
-  }
-  function planetName(seed) {
-    const rng = mulberry32(seed ^ 0xA5A5A5);
-    const syll = ["ta","ri","no","ka","mi","sa","lo","ve","du","an","ke","yo","ze","ur","phi","ran","sol","ter","mar","cal","thy","gan","tan","cys"];
-    const s = () => syll[Math.floor(rng()*syll.length)];
-    const core = s()+s()+s();
-    return core.charAt(0).toUpperCase() + core.slice(1);
-  }
-  
-  class RwgManager extends EffectableEntity {
-    constructor() {
-      super({ description: 'Random World Generator Manager' });
-      this.lockedOrbits = new Set(['hot']);
-      this.lockedTypes = new Set(['hot-rocky', 'venus-like']);
-    }
-
-    // Locking helpers
-    isOrbitLocked(o) { return this.lockedOrbits.has(o); }
-    lockOrbit(o) { this.lockedOrbits.add(o); }
-    unlockOrbit(o) { this.lockedOrbits.delete(o); }
-    isTypeLocked(t) { return this.lockedTypes.has(t); }
-    lockType(t) { this.lockedTypes.add(t); }
-    unlockType(t) { this.lockedTypes.delete(t); }
-
-    getAvailableOrbits() {
-      const base = ['hz-inner', 'hz-mid', 'hz-outer', 'hot', 'cold'];
-      return base.filter(o => !this.lockedOrbits.has(o));
-    }
-
-    getAvailableTypes(isMoon) {
-      const base = isMoon
-        ? ['icy-moon', 'titan-like']
-        : ['mars-like', 'hot-rocky', 'cold-desert', 'titan-like', 'venus-like'];
-      return base.filter(t => !this.lockedTypes.has(t));
-    }
-
-    // --- Public API -------------------------------------------------------
-    generateRandomPlanet(seed, opts = {}) {
-      const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
-      const rng = mulberry32(s);
-      const star = opts.star ?? generateStar(s ^ 0x1234);
-      const index = opts.index ?? 0;
-
-      // --- Resolve orbit preset and semimajor axis ---
-      let aAU = opts.aAU;
-      let usedPreset = opts.orbitPreset;
-      if (aAU === undefined) {
-        if (!usedPreset || usedPreset === 'auto') {
-          const rngOrbit = mulberry32(s ^ 0xF00D);
-          let candidates = Array.isArray(opts.availableOrbits)
-            ? opts.availableOrbits.slice()
-            : this.getAvailableOrbits();
-          if (Array.isArray(opts.lockedOrbits)) {
-            candidates = candidates.filter(o => !opts.lockedOrbits.includes(o));
-          }
-          candidates = candidates.filter(Boolean);
-          if (candidates.length > 0) {
-            usedPreset = candidates[Math.floor(rngOrbit() * candidates.length)];
-          }
-        }
-        if (usedPreset && usedPreset !== 'auto') {
-          const hz = star.habitableZone;
-          const range = hz.outer - hz.inner;
-          if (usedPreset === 'hz-inner') {
-            aAU = hz.inner + rng() * range / 3;
-          } else if (usedPreset === 'hz-mid') {
-            aAU = hz.inner + range / 3 + rng() * range / 3;
-          } else if (usedPreset === 'hz-outer') {
-            aAU = hz.outer - rng() * range / 3;
-          } else {
-            const SOLAR_FLUX_1AU = 1361;
-            const lum = star.luminositySolar || 1;
-            const mapping = {
-              hot: () => {
-                const flux = 1500 + rng() * 1000;
-                return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-              },
-              cold: () => {
-                const flux = 100 + rng() * 400;
-                return Math.sqrt((lum * SOLAR_FLUX_1AU) / flux);
-              }
-            };
-            const fn = mapping[usedPreset];
-            if (typeof fn === 'function') aAU = fn();
-          }
+        if (lo !== undefined) {
+          const flux = lo + r * (hi - lo);
+          aAU = Math.sqrt((lum * SOLAR) / flux);
         }
       }
-      if (aAU === undefined) aAU = sampleOrbitAU(rng, index);
+    }
+    // Target (planet vs moon) — derived
+    let isMoon = (typeof opts.isMoon === "boolean") ? opts.isMoon : undefined;
+    const tgt = opts.target || seedAnn?.target;
+    if (typeof isMoon !== "boolean") { if (tgt === "moon") isMoon = true; else if (tgt === "planet") isMoon = false; else isMoon = (aAU > P.orbit.moonChance.thresholdAU && mulberry32(S ^ 0xBADA55)() < P.orbit.moonChance.chance); }
 
-      // --- Resolve target (moon vs planet) ---
-      let isMoon = opts.isMoon;
-      const tgt = opts.target;
-      if (typeof isMoon !== 'boolean') {
-        if (tgt === 'moon') isMoon = true;
-        else if (tgt === 'planet') isMoon = false;
-        else isMoon = (aAU > 3 && rng() < 0.35);
-      }
-
-      // --- Resolve type/archetype ---
-      let forcedType = opts.archetype || opts.type;
-      if (!forcedType || forcedType === 'auto') {
-        const rngType = mulberry32(s ^ 0xC0FFEE);
-        let candidates = Array.isArray(opts.availableTypes)
-          ? opts.availableTypes.slice()
-          : this.getAvailableTypes(isMoon);
-        if (Array.isArray(opts.lockedTypes)) {
-          candidates = candidates.filter(c => !opts.lockedTypes.includes(c));
-        }
-        if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
-        forcedType = candidates[Math.floor(rngType() * candidates.length)];
-      }
-
-      const override = buildPlanetOverride({ seed: s ^ 0xBEEF, star, aAU, isMoon, forcedType });
-      return {
-        star,
-        orbitAU: aAU,
-        orbitPreset: usedPreset,
-        isMoon,
-        archetype: forcedType,
-        override,
-        merged: deepMerge(defaultPlanetParameters, override) // ready to play
-      };
+    // Type — derived
+    let forcedType = opts.archetype || opts.type; if ((!forcedType || forcedType === "auto") && seedAnn?.type) { forcedType = seedAnn.type; }
+    if (!forcedType || forcedType === "auto") {
+      const rngType = mulberry32(S ^ 0xC0FFEE);
+      let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
+      if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
+      if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
+      forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
 
-    generateSystem(seed, planetCount) {
-      const s = (typeof seed === 'string') ? hashStringToInt(seed) : (seed >>> 0);
-      const rng = mulberry32(s);
-      const star = generateStar(s);
-      const n = planetCount ?? Math.floor(randRange(rng, 3, 9));
-      const planets = [];
-      for (let i = 0; i < n; i++) {
-        const aAU = sampleOrbitAU(rng, i);
-        const isMoon = (aAU > 3 && rng() < 0.35);
-        const ov = buildPlanetOverride({ seed: (s ^ (i + 1) * 0x9E37), star, aAU, isMoon });
-        planets.push({
-          name: ov.name,
-          classification: ov.classification,
-          orbitAU: aAU,
-          merged: deepMerge(defaultPlanetParameters, ov)
-        });
-      }
-      return { star, planets };
-    }
+    // Generate the rest using S directly
+    const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType }, P);
+
+    // Canonical seed string (positional), always returned
+    const canonicalSeed = buildSeedSpec(S, { target: isMoon ? "moon" : "planet", type: forcedType, orbitPreset: usedPreset });
+
+    return { star, orbitAU: aAU, orbitPreset: usedPreset, isMoon, archetype: forcedType, seedInt: S, seedString: canonicalSeed, override, merged: deepMerge(defaultPlanetParameters, override) };
   }
 
-  const rwgManager = new RwgManager();
-
-  // Backwards-compatible wrapper functions
-  function generateRandomPlanet(seed, opts) {
-    return rwgManager.generateRandomPlanet(seed, opts);
+  generateSystem(seed, planetCount, opts = {}) {
+    const P = resolveParams(this.params, opts.params || {});
+    const { seedInt: S } = parseSeedSpec(seed);
+    const rng = mulberry32(S); const star = generateStar(S, P); const n = planetCount ?? Math.floor(randRange(rng, 3, 9)); const planets = [];
+    for (let i = 0; i < n; i++) { const aAU = sampleOrbitAU(rng, i, P); const isMoon = aAU > P.orbit.moonChance.thresholdAU && rng() < P.orbit.moonChance.chance; const typePick = mulberry32(S ^ (0xC0FFEE ^ (i + 1)))(); const typeList = this.getAvailableTypes(isMoon); const forcedType = typeList[Math.floor(typePick * typeList.length)] || "mars-like"; const ov = buildPlanetOverride({ seed: S ^ ((i + 1) * 0x9e37), star, aAU, isMoon, forcedType }, P); planets.push({ name: ov.name, classification: ov.classification, orbitAU: aAU, merged: deepMerge(defaultPlanetParameters, ov) }); }
+    return { star, planets };
   }
+}
 
-  function generateSystem(seed, planetCount) {
-    return rwgManager.generateSystem(seed, planetCount);
-  }
+// Instance + wrappers
+const rwgManager = new RwgManager();
+function generateRandomPlanet(seed, opts) { return rwgManager.generateRandomPlanet(seed, opts); }
+function generateSystem(seed, planetCount, opts) { return rwgManager.generateSystem(seed, planetCount, opts); }
 
-  // Expose globally for browser
-  if (typeof globalThis !== 'undefined') {
-    globalThis.rwgManager = rwgManager;
-    globalThis.generateRandomPlanet = generateRandomPlanet;
-    globalThis.generateSystem = generateSystem;
-  }
+// Expose globals (browser)
+if (typeof globalThis !== "undefined") { globalThis.rwgManager = rwgManager; globalThis.generateRandomPlanet = generateRandomPlanet; globalThis.generateSystem = generateSystem; globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS; }
 
-  // Optional export(s)
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports.RwgManager = RwgManager;
-    module.exports.rwgManager = rwgManager;
-    module.exports.generateRandomPlanet = generateRandomPlanet;
-    module.exports.generateSystem = generateSystem;
-  }
-  
+// CommonJS exports
+try { module.exports = { RwgManager, rwgManager, generateRandomPlanet, generateSystem, DEFAULT_PARAMS }; } catch (_) {}

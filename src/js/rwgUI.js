@@ -45,10 +45,12 @@ function initializeRandomWorldUI() {
       <select id="rwg-type">
         <option value="auto" selected>Type: Auto</option>
         <option value="mars-like">Type: Mars-like</option>
-        <option value="rocky" disabled>Type: Hot Rocky (Locked)</option>
         <option value="cold-desert">Type: Cold Desert</option>
         <option value="icy-moon">Type: Icy</option>
         <option value="titan-like">Type: Titan-like</option>
+        <option value="carbon-planet">Type: Carbon</option>
+        <option value="desiccated-desert">Type: Desiccated-desert</option>
+        <option value="super-earth">Type: Super-Earth</option>
         <option value="venus-like" disabled>Type: Venus-like (Locked)</option>
       </select>
       <select id="rwg-orbit">
@@ -335,6 +337,7 @@ function renderPlanetCard(p, index) {
 function renderWorldDetail(res, seedUsed, forcedType) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = res.merged?.celestialParameters || {};
+  const seedString = res.seedString;
   const r = res.merged?.resources || {};
   const cls = res.override?.classification || res.merged?.classification;
   const surf = r.surface || {};
@@ -354,7 +357,6 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Luminosity</div><div class="value">${(star.luminositySolar).toFixed(3)} L☉</div></div>
         <div class="rwg-chip"><div class="label">Mass</div><div class="value">${(star.massSolar).toFixed(3)} M☉</div></div>
         <div class="rwg-chip"><div class="label">Temp</div><div class="value">${fmt(toDisplayTemp(star.temperatureK))} ${tempUnit}</div></div>
-        <div class="rwg-chip"><div class="label">Habitable Zone</div><div class="value">${star.habitableZone.inner.toFixed(2)}–${star.habitableZone.outer.toFixed(2)} AU</div></div>
       </div>
     </div>`;
 
@@ -386,7 +388,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         ${warningMsg ? `<span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span>` : ''}
       </div>
       <div class="rwg-infobar">
-        <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedUsed !== undefined ? seedUsed : ''}</div></div>
+        <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedString}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>
         <div class="rwg-chip"><div class="label">Radius</div><div class="value">${fmt(c.radius)} km</div></div>
         <div class="rwg-chip"><div class="label">Gravity</div><div class="value">${fmt(c.gravity)} m/s²</div></div>
