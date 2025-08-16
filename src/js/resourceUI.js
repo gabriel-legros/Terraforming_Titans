@@ -10,15 +10,30 @@ function createResourceContainers(resourcesData) {
 
     // Create and append the header for the category
     const header = document.createElement('h3');
-    header.textContent = `${capitalizeFirstLetter(category)} Resources`;
     header.id = `${category}-resources-header`;
     header.style.display = 'none'; // Initially hidden
+    header.style.cursor = 'pointer';
+
+    const arrow = document.createElement('span');
+    arrow.classList.add('collapse-arrow');
+    arrow.innerHTML = '&#9660;';
+    header.appendChild(arrow);
+
+    const label = document.createElement('span');
+    label.textContent = `${capitalizeFirstLetter(category)} Resources`;
+    header.appendChild(label);
     categoryContainer.appendChild(header);
 
     // Create and append the resource list container
     const resourceList = document.createElement('div');
     resourceList.id = `${category}-resources-resources-container`;
     categoryContainer.appendChild(resourceList);
+
+    header.addEventListener('click', () => {
+      const hidden = resourceList.style.display === 'none';
+      resourceList.style.display = hidden ? '' : 'none';
+      arrow.innerHTML = hidden ? '&#9660;' : '&#9654;';
+    });
 
     // Append the complete category container to the main container
     resourcesContainer.appendChild(categoryContainer);
