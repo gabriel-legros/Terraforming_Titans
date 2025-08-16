@@ -392,7 +392,7 @@ const projectParameters = {
     category : 'mega',
     cost: {
       colony: {
-        metal: 1_000_000_000_000,
+        metal: 100_000_000_000,
       }
     },
     duration: 300000,
