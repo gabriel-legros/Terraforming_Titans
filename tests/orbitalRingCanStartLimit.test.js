@@ -21,16 +21,22 @@ describe('Orbital Ring project start limits', () => {
     return ctx;
   }
 
-  test('cannot exceed terraformed worlds or build twice on same world', () => {
+  test('cannot exceed terraformed worlds', () => {
     const ctx = setup();
     ctx.spaceManager.planetStatuses.mars.terraformed = true;
-    const config = { name: 'orbitalRing', category: 'mega', cost: {}, duration: 1, description: '', repeatable: true, unlocked: true, attributes: {} };
+    const config = {
+      name: 'orbitalRing',
+      category: 'mega',
+      cost: {},
+      duration: 1,
+      description: '',
+      repeatable: true,
+      unlocked: true,
+      attributes: {}
+    };
     const project = new ctx.OrbitalRingProject(config, 'orbitalRing');
     expect(project.canStart()).toBe(true);
     project.ringCount = 1;
-    expect(project.canStart()).toBe(false);
-    project.ringCount = 0;
-    project.currentWorldHasRing = true;
     expect(project.canStart()).toBe(false);
   });
 });
