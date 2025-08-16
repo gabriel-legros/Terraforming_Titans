@@ -15,9 +15,30 @@ class UndergroundExpansionProject extends AndroidProject {
     return scaledCost;
   }
 
+  canStart() {
+    if (this.repeatCount >= this.maxRepeatCount) {
+      return false;
+    }
+    return Project.prototype.canStart.call(this);
+  }
+
+  updateUI() {
+    super.updateUI();
+    const elements = projectElements[this.name];
+    if (elements?.repeatCountElement && typeof terraforming !== 'undefined') {
+      const maxLand = terraforming.initialLand || 0;
+      const perCompletion = maxLand / 1000;
+      const expanded = Math.min(this.repeatCount * perCompletion, maxLand);
+      elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true)} / ${formatNumber(maxLand, true)}`;
+    }
+  }
+
   complete() {
     super.complete();
-    // Completion effect to increase land will be implemented later.
+    if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
+      const increase = (terraforming.initialLand || 0) / 1000;
+      resources.surface.land.increase(increase);
+    }
   }
 }
 
