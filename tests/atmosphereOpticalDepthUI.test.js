@@ -17,8 +17,22 @@ describe('atmosphere UI optical depth', () => {
     ctx.DEFAULT_SURFACE_ALBEDO = physics.DEFAULT_SURFACE_ALBEDO;
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 
-    ctx.resources = { atmospheric: { o2: { displayName: 'O2' } } };
-    ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };
+    ctx.resources = {
+      atmospheric: {
+        o2: { displayName: 'O2' },
+        carbonDioxide: { displayName: 'Carbon Dioxide' },
+        atmosphericWater: { displayName: 'Water Vap.' }
+      }
+    };
+    ctx.currentPlanetParameters = {
+      resources: {
+        atmospheric: {
+          o2: { initialValue: 0 },
+          carbonDioxide: { initialValue: 0 },
+          atmosphericWater: { initialValue: 0 }
+        }
+      }
+    };
     ctx.terraformingGasTargets = { o2: { min: 0, max: 100 } };
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
@@ -56,8 +70,8 @@ describe('atmosphere UI optical depth', () => {
     expect(info.getAttribute('title')).toBeNull();
     const tooltip = pEls[1].querySelector('#optical-depth-tooltip');
     expect(tooltip).not.toBeNull();
-    expect(tooltip.textContent).toContain('CO2: 0.30');
-    expect(tooltip.textContent).toContain('H2O: 0.20');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.30');
+    expect(tooltip.textContent).toContain('Water Vap.: 0.20');
     expect(box.querySelector('#emissivity')).toBeNull();
     expect(pEls[2].querySelector('#wind-turbine-multiplier')).not.toBeNull();
     expect(pEls[1].classList.contains('no-margin')).toBe(true);
@@ -76,8 +90,22 @@ describe('atmosphere UI optical depth', () => {
     ctx.DEFAULT_SURFACE_ALBEDO = physics.DEFAULT_SURFACE_ALBEDO;
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 
-    ctx.resources = { atmospheric: { o2: { displayName: 'O2' } } };
-    ctx.currentPlanetParameters = { resources: { atmospheric: { o2: { initialValue: 0 } } } };
+    ctx.resources = {
+      atmospheric: {
+        o2: { displayName: 'O2' },
+        carbonDioxide: { displayName: 'Carbon Dioxide' },
+        atmosphericWater: { displayName: 'Water Vap.' }
+      }
+    };
+    ctx.currentPlanetParameters = {
+      resources: {
+        atmospheric: {
+          o2: { initialValue: 0 },
+          carbonDioxide: { initialValue: 0 },
+          atmosphericWater: { initialValue: 0 }
+        }
+      }
+    };
     ctx.terraformingGasTargets = { o2: { min: 0, max: 100 } };
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
@@ -106,10 +134,10 @@ describe('atmosphere UI optical depth', () => {
     ctx.updateAtmosphereBox();
 
     const tooltip = dom.window.document.getElementById('optical-depth-tooltip');
-    expect(tooltip.textContent).toContain('CO2: 0.30');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.30');
     ctx.terraforming.temperature.opticalDepthContributions = { co2: 0.1, h2o: 0.4 };
     ctx.updateAtmosphereBox();
-    expect(tooltip.textContent).toContain('CO2: 0.10');
-    expect(tooltip.textContent).toContain('H2O: 0.40');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.10');
+    expect(tooltip.textContent).toContain('Water Vap.: 0.40');
   });
 });
