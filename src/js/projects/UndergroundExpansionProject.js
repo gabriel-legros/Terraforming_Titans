@@ -1,7 +1,7 @@
 class UndergroundExpansionProject extends AndroidProject {
   getScaledCost() {
     const cost = super.getScaledCost();
-    const land = (resources?.surface?.land?.value) || 0;
+    const land = (terraforming.initialLand) || 0;
     if (!land) {
       return cost;
     }
@@ -37,7 +37,7 @@ class UndergroundExpansionProject extends AndroidProject {
     super.complete();
     if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
       const increase = (terraforming.initialLand || 0) / 1000;
-      resources.surface.land.increase(increase);
+      resources.surface.land.value += increase;
     }
   }
 }
