@@ -463,7 +463,7 @@ const buildingsParameters = {
     description: 'Produces very potent, safe greenhouse gases.',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000000} },
-    production: { atmospheric: { greenhouseGas: 25 } },
+    production: { atmospheric: { greenhouseGas: 1 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
