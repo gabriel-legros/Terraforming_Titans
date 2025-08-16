@@ -15,12 +15,16 @@ class OrbitalRingProject extends TerraformingDurationProject {
     const status = document.createElement('div');
     status.id = `${this.name}-ring-status`;
     grid.appendChild(status);
+    const count = document.createElement('div');
+    count.id = `${this.name}-ring-count`;
+    grid.appendChild(count);
     const effect = document.createElement('div');
-    effect.innerHTML = 'Orbital rings count as additional terraformed worlds <span class="info-tooltip-icon" title="Each orbital ring increases the terraformed world count.">&#9432;</span>';
+    effect.innerHTML = 'Orbital rings count as additional terraformed worlds.  You can build a ring on previously terraformed worlds.  Building a ring on the current world also increases its land by its initial land value.';
     grid.appendChild(effect);
     topSection.appendChild(grid);
     container.appendChild(topSection);
     els.statusElement = status;
+    els.countElement = count;
     this.updateUI();
   }
 
@@ -29,11 +33,17 @@ class OrbitalRingProject extends TerraformingDurationProject {
     if (els?.statusElement) {
       els.statusElement.textContent = `Current World Ring: ${this.currentWorldHasRing ? 'Yes' : 'No'}`;
     }
+    if (els?.countElement) {
+      const terraformedWorlds =
+        typeof spaceManager !== 'undefined' && typeof spaceManager.getUnmodifiedTerraformedWorldCount === 'function'
+          ? spaceManager.getUnmodifiedTerraformedWorldCount()
+          : 0;
+      els.countElement.textContent = `Built: ${this.ringCount} / ${terraformedWorlds}`;
+    }
   }
 
   canStart() {
     if (!super.canStart()) return false;
-    if (this.currentWorldHasRing) return false;
     if (
       typeof spaceManager === 'undefined' ||
       typeof spaceManager.getUnmodifiedTerraformedWorldCount !== 'function'
@@ -51,9 +61,9 @@ class OrbitalRingProject extends TerraformingDurationProject {
       if (typeof spaceManager !== 'undefined' && typeof spaceManager.setCurrentWorldHasOrbitalRing === 'function') {
         spaceManager.setCurrentWorldHasOrbitalRing(true);
       }
-      const initialLand = currentPlanetParameters?.resources?.colony?.land?.initialValue || 0;
-      if (resources?.colony?.land) {
-        resources.colony.land.value += initialLand;
+      const initialLand = terraforming.initialLand || 0;
+      if (resources?.surface?.land) {
+        resources.surface.land.value += initialLand;
       }
     }
   }
