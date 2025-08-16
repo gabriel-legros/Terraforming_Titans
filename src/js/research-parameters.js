@@ -378,6 +378,29 @@ const researchParameters = {
         ],
       },
       {
+        id: 'underground_land_expansion',
+        name: 'Underground Land Expansion',
+        description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
+        cost: { research: 2000000 },
+        prerequisites: ['android_factory'],
+        requiredFlags: ['undergroundHabitatsResearchUnlocked'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'undergroundExpansion',
+            type: 'enable',
+            value: true,
+          },
+          {
+            target: 'project',
+            targetId: 'undergroundExpansion',
+            type: 'booleanFlag',
+            flagId: 'androidAssist',
+            value: true
+          }
+        ],
+      },
+      {
         id: 'superconductor_factory',
         name: 'Superconductor Factory',
         description: 'Enables the fabrication of superconductors locally.',
@@ -1305,10 +1328,16 @@ const researchParameters = {
       {
         id: 'underground_habitats',
         name: 'Underground habitats',
-        description: 'TBA',
+        description: 'Opens research into expanding land through subterranean construction.',
         cost: { advancedResearch: 50000 },
         prerequisites: [],
         effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'undergroundHabitatsResearchUnlocked',
+            value: true
+          }
         ]
       },
       {
