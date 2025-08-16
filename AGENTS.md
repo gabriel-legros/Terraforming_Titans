@@ -230,3 +230,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
 - Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
 - Life designer ±1/±10 buttons include tooltips noting Shift spends or recovers all points.
+- Random World Generator UI indicates whether a world has a magnetosphere.
