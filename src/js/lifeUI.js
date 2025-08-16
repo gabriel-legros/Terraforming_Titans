@@ -276,15 +276,32 @@ function initializeLifeTerraformingDesignerUI() {
             lifeDesigner.tentativeDesign.getDesignCost() +
             Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
 
-          let newValue = currentTentativeValue + changeAmount;
+          let costExcludingCurrent, available;
+          if (attributeName === 'optimalGrowthTemperature') {
+              costExcludingCurrent =
+                lifeDesigner.tentativeDesign.getDesignCost() -
+                Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
+              available =
+                lifeDesigner.maxLifeDesignPoints() - costExcludingCurrent;
+          }
+
+          let newValue;
+          if (event.shiftKey) {
+              if (changeAmount > 0) {
+                  if (attributeName === 'optimalGrowthTemperature') {
+                      newValue = Math.min(15, available);
+                  } else {
+                      newValue = remainingPoints;
+                  }
+              } else {
+                  newValue = 0;
+              }
+          } else {
+              newValue = currentTentativeValue + changeAmount;
+          }
 
           if (attributeName === 'optimalGrowthTemperature') {
               newValue = Math.max(-15, Math.min(15, newValue));
-              const costExcludingCurrent =
-                lifeDesigner.tentativeDesign.getDesignCost() -
-                Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
-              const available =
-                lifeDesigner.maxLifeDesignPoints() - costExcludingCurrent;
               const allowed = Math.min(Math.abs(newValue), Math.max(0, available));
               newValue = Math.sign(newValue) * allowed;
           } else {
