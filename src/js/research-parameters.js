@@ -178,6 +178,12 @@ const researchParameters = {
             targetId: 'fusionPowerPlant',
             type: 'productionMultiplier',
             value: 2
+          },
+          {
+            target: 'building',
+            targetId: 'superalloyFusionReactor',
+            type: 'productionMultiplier',
+            value: 2
           }
         ],
       },
