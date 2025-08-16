@@ -409,13 +409,13 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        metal: 1000000000,
-        components: 10000000,
-        superalloys: 100000
+        metal: 1_000_000_000_000_000,
+        components: 100_000_000_000_000,
+        superalloys: 10_000_000_000_000
       }
     },
     duration: 1800000,
-    description: 'Construct a planetary ring that counts as a terraformed world.',
+    description: 'Orbital rings count as additional terraformed worlds.  You can build a ring on previously terraformed worlds.  Building a ring on the current world also increases its land by its initial land value.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,

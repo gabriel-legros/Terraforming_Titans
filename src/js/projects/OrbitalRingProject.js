@@ -6,39 +6,14 @@ class OrbitalRingProject extends TerraformingDurationProject {
   }
 
   renderUI(container) {
-    projectElements[this.name] = projectElements[this.name] || {};
-    const els = projectElements[this.name];
-    const topSection = document.createElement('div');
-    topSection.classList.add('project-top-section');
-    const grid = document.createElement('div');
-    grid.classList.add('project-details-grid');
-    const status = document.createElement('div');
-    status.id = `${this.name}-ring-status`;
-    grid.appendChild(status);
-    const count = document.createElement('div');
-    count.id = `${this.name}-ring-count`;
-    grid.appendChild(count);
-    const effect = document.createElement('div');
-    effect.innerHTML = 'Orbital rings count as additional terraformed worlds.  You can build a ring on previously terraformed worlds.  Building a ring on the current world also increases its land by its initial land value.';
-    grid.appendChild(effect);
-    topSection.appendChild(grid);
-    container.appendChild(topSection);
-    els.statusElement = status;
-    els.countElement = count;
-    this.updateUI();
+    if (typeof renderOrbitalRingUI === 'function') {
+      renderOrbitalRingUI(this, container);
+    }
   }
 
   updateUI() {
-    const els = projectElements[this.name];
-    if (els?.statusElement) {
-      els.statusElement.textContent = `Current World Ring: ${this.currentWorldHasRing ? 'Yes' : 'No'}`;
-    }
-    if (els?.countElement) {
-      const terraformedWorlds =
-        typeof spaceManager !== 'undefined' && typeof spaceManager.getUnmodifiedTerraformedWorldCount === 'function'
-          ? spaceManager.getUnmodifiedTerraformedWorldCount()
-          : 0;
-      els.countElement.textContent = `Built: ${this.ringCount} / ${terraformedWorlds}`;
+    if (typeof updateOrbitalRingUI === 'function') {
+      updateOrbitalRingUI(this);
     }
   }
 
