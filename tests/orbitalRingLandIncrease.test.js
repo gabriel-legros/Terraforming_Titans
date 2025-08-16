@@ -6,8 +6,14 @@ describe('Orbital Ring project land effect', () => {
   function setup() {
     const ctx = { console, projectElements: {} };
     ctx.EffectableEntity = require('../src/js/effectable-entity.js');
-    ctx.resources = { colony: { land: { value: 100 } } };
-    ctx.currentPlanetParameters = { resources: { colony: { land: { initialValue: 100 } } } };
+    ctx.resources = {
+      colony: { land: { value: 100 } },
+      surface: { land: { value: 100 } }
+    };
+    ctx.currentPlanetParameters = {
+      resources: { colony: { land: { initialValue: 100 } } }
+    };
+    ctx.terraforming = { initialLand: 100 };
     vm.createContext(ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     const tdpCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'TerraformingDurationProject.js'), 'utf8');
@@ -31,6 +37,6 @@ describe('Orbital Ring project land effect', () => {
     expect(project.ringCount).toBe(1);
     expect(project.currentWorldHasRing).toBe(true);
     expect(ctx.spaceManager.planetStatuses.mars.orbitalRing).toBe(true);
-    expect(ctx.resources.colony.land.value).toBe(200);
+    expect(ctx.resources.surface.land.value).toBe(200);
   });
 });
