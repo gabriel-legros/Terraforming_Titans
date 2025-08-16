@@ -231,3 +231,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
 - Life designer ±1/±10 buttons include tooltips noting Shift spends or recovers all points.
 - High-gravity worlds (>10 m/s²) show a warning in the random world generator and reduce colony happiness by 10% per m/s² above 10, capped at 100%.
+- Worlds generated with a natural magnetosphere start with the magnetic shield effect and display as "Natural magnetosphere" in the terraforming summary.
+- Random World Generator UI indicates whether a world has a magnetosphere.
