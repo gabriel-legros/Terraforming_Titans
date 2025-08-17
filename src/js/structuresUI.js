@@ -517,6 +517,7 @@ function updateDecreaseButtonText(button, buildCount) {
       button.dataset.keys = keyString;
       button.dataset.amount = amountString;
       button.textContent = '';
+      button.append('Upgrade ');
       button.append(`${formatNumber(amount, true)} \u2192 ${formatNumber(upgradeCount, true)} `);
       list = document.createElement('span');
       button.appendChild(list);

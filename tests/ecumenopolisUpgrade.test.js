@@ -143,7 +143,7 @@ describe('Ecumenopolis upgrade', () => {
     ctx.resources.colony.superalloys.value = 2000000;
 
     ctx.createColonyButtons(ctx.colonies);
-    vm.runInContext("selectedBuildCounts['t6_colony'] = 2;", ctx);
+    vm.runInContext("selectedBuildCounts['t6_colony'] = 20;", ctx);
     ctx.updateStructureDisplay(ctx.colonies);
 
     const button = dom.window.document.getElementById('t6_colony-upgrade-button');
