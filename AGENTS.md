@@ -142,6 +142,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Androids above their storage cap no longer contribute workers, and excess project assignments are reduced.
 - Worker and android resource tooltips reflect effective android counts when storage is over capacity.
 - Auto-build percentages for buildings and colonies persist through planet travel while all auto-build checkboxes reset.
+- Auto-build settings can target population or worker counts.
 - Colonists slightly over their cap (by less than 0.01) are cropped to the cap instead of decaying.
 - Repeatable projects clear their completed flag on load when more repetitions remain.
 - Deeper mining proceeds without android assignments, running at normal speed.
