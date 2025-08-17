@@ -24,6 +24,7 @@ class Resource extends EffectableEntity {
     this.maintenanceMultiplier = resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1; // Multiplier for maintenance costs
     this.conversionValue = resourceData.conversionValue || 1; // Default to 1 if not provided
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
+    this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
   }
 
@@ -58,6 +59,9 @@ class Resource extends EffectableEntity {
     }
     if (config.hideWhenSmall !== undefined) {
       this.hideWhenSmall = config.hideWhenSmall;
+    }
+    if (config.hideRate !== undefined) {
+      this.hideRate = config.hideRate;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {
