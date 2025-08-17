@@ -101,7 +101,6 @@ function setStrategicReserve(value) {
     if (isNaN(val)) val = 0;
     val = Math.max(0, Math.min(100, val));
     constructionOfficeState.strategicReserve = val;
-    updateConstructionOfficeUI();
 }
 
 function saveConstructionOfficeState() {
@@ -168,7 +167,7 @@ function initializeConstructionOfficeUI() {
     reserveInput.min = '0';
     reserveInput.max = '100';
     reserveInput.id = 'strategic-reserve-input';
-    reserveInput.addEventListener('change', () => {
+    reserveInput.addEventListener('input', () => {
         setStrategicReserve(reserveInput.value);
     });
     const percentSpan = document.createElement('span');
