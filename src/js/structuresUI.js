@@ -288,8 +288,25 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildInputContainer.appendChild(autoBuildCheckbox);
 
   const autoBuildLabel = document.createElement('span');
-  autoBuildLabel.textContent = 'Auto-build % of pop: ';
+  autoBuildLabel.textContent = 'Auto-build % of ';
   autoBuildInputContainer.appendChild(autoBuildLabel);
+
+  const autoBuildBasisSelect = document.createElement('select');
+  autoBuildBasisSelect.classList.add('auto-build-basis');
+  const popOption = document.createElement('option');
+  popOption.value = 'population';
+  popOption.textContent = 'pop';
+  autoBuildBasisSelect.appendChild(popOption);
+  const workerOption = document.createElement('option');
+  workerOption.value = 'workers';
+  workerOption.textContent = 'workers';
+  autoBuildBasisSelect.appendChild(workerOption);
+  autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
+  autoBuildBasisSelect.addEventListener('change', () => {
+    structure.autoBuildBasis = autoBuildBasisSelect.value;
+  });
+  autoBuildInputContainer.appendChild(autoBuildBasisSelect);
+  autoBuildInputContainer.appendChild(document.createTextNode(': '));
 
   const autoBuildInput = document.createElement('input');
   autoBuildInput.type = 'number';
@@ -337,8 +354,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.id = `${structure.name}-set-active-button`;
   setActiveButton.textContent = 'Set active to target';
   setActiveButton.addEventListener('click', () => {
-    const population = resources.colony.colonists.value;
-    const targetCount = Math.ceil((structure.autoBuildPercent * population) / 100);
+    const pop = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
+    const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
+    const targetCount = Math.ceil((structure.autoBuildPercent * base) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
@@ -650,7 +669,8 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures) {
-    const population = resources.colony.colonists.value;
+    const pop = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
     for (const structureName in structures) {
       const structure = structures[structureName];
       const combinedStructureRow = document.getElementById(`build-${structureName}`).closest('.combined-building-row');
@@ -715,9 +735,15 @@ function updateDecreaseButtonText(button, buildCount) {
           priorityCheckbox.checked = structure.autoBuildPriority;
         }
 
-        const targetCount = Math.ceil((structure.autoBuildPercent * population) / 100);
+        const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
+        const targetCount = Math.ceil((structure.autoBuildPercent * base) / 100);
         const autoBuildTarget = document.getElementById(`${structure.name}-auto-build-target`);
         autoBuildTarget.textContent = `Target : ${formatBigInteger(targetCount)}`;
+
+        const basisSelect = autoBuildContainer.querySelector('.auto-build-basis');
+        if (basisSelect) {
+          basisSelect.value = structure.autoBuildBasis || 'population';
+        }
 
         const tempControl = autoBuildContainer.querySelector('.ghg-temp-control');
         if(tempControl){

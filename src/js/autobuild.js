@@ -67,6 +67,7 @@ function captureAutoBuildSettings(structures) {
         const s = structures[name];
         savedAutoBuildSettings[name] = {
             percent: s.autoBuildPercent,
+            basis: s.autoBuildBasis,
         };
     }
 }
@@ -76,6 +77,9 @@ function restoreAutoBuildSettings(structures) {
         const s = structures[name];
         if (savedAutoBuildSettings[name]) {
             s.autoBuildPercent = savedAutoBuildSettings[name].percent;
+            s.autoBuildBasis = savedAutoBuildSettings[name].basis || 'population';
+        } else {
+            s.autoBuildBasis = 'population';
         }
         s.autoBuildEnabled = false;
         s.autoBuildPriority = false;
@@ -85,13 +89,15 @@ function restoreAutoBuildSettings(structures) {
 function autoBuild(buildings, delta = 0) {
     autobuildCostTracker.update(delta);
     const population = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
     const buildableBuildings = [];
 
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled) {
-            const targetCount = Math.ceil((building.autoBuildPercent * population) / 100);
+            const base = building.autoBuildBasis === 'workers' ? workerCap : population;
+            const targetCount = Math.ceil((building.autoBuildPercent * base) / 100);
             const currentRatio = building.count / targetCount;
             const requiredAmount = targetCount - building.count;
 
