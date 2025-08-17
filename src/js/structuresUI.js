@@ -161,7 +161,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
     upgradeButton.addEventListener('click', function () {
-      const upgrades = Math.max(1, selectedBuildCounts[structure.name] || 1);
+      const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
       if (structure.upgrade && structure.upgrade(upgrades)) {
         updateStructureDisplay(colonies);
       }
@@ -487,7 +487,7 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const upgradeCount = Math.max(1, selectedBuildCounts[colony.name] || 1);
+    const upgradeCount = Math.max(1, selectedBuildCounts[colony.name] / 10 || 1);
     const amount = Math.min(upgradeCount * 10, colony.count);
     const cost = colony.getUpgradeCost(upgradeCount);
     if (!cost) {
