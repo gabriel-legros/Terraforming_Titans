@@ -474,8 +474,19 @@ class PlanetaryThrustersProject extends Project{
         const dΩ=sign*dvTick/(p.radius*1e3);
         const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
         p.rotationPeriod=2*Math.PI/ω/3600;
-        if(typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc){
+        if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
+          const oldDur = dayNightCycle.dayDuration;
+          const progress = typeof dayNightCycle.getDayProgress === 'function'
+            ? dayNightCycle.getDayProgress()
+            : 0;
+          const daysElapsed = dayNightCycle.elapsedTime / oldDur;
           dayNightCycle.dayDuration = rotationPeriodToDurationFunc(p.rotationPeriod);
+          dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
+          if (typeof dayNightCycle.setDayProgress === 'function') {
+            dayNightCycle.setDayProgress(progress);
+          } else {
+            dayNightCycle.dayProgress = progress;
+          }
         }
         if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;}
         this.updateUI(); return;
