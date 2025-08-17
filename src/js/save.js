@@ -112,10 +112,12 @@ function loadGame(slotOrCustomString) {
                 if (!resources[category][resourceName].hasCap) {
                   resources[category][resourceName].cap = Infinity;
                 }
-                const newConfig = currentPlanetParameters.resources[category][resourceName];
-                resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
-                resources[category][resourceName].activeEffects = [];
-                resources[category][resourceName].booleanFlags = new Set();
+                const newConfig = planetParameters.mars.resources[category][resourceName];
+                if(newConfig){
+                  resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
+                }
+                  resources[category][resourceName].activeEffects = [];
+                  resources[category][resourceName].booleanFlags = new Set();
               }
             }
           }
