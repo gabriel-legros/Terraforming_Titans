@@ -117,11 +117,15 @@ function initializeGameState(options = {}) {
   let savedAdvancedResearch = null;
   let savedAlienArtifact = null;
   let savedProjectTravelState = null;
+  let savedConstructionOffice = null;
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
   }
   if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
     captureAutoBuildSettings(structures);
+  }
+  if (preserveManagers && typeof captureConstructionOfficeSettings === 'function') {
+    savedConstructionOffice = captureConstructionOfficeSettings();
   }
   if (preserveManagers && resources && resources.colony && resources.colony.advancedResearch) {
     savedAdvancedResearch = {
@@ -193,6 +197,9 @@ function initializeGameState(options = {}) {
   structures = { ...buildings, ...colonies };
   if (preserveManagers && typeof restoreAutoBuildSettings === 'function') {
     restoreAutoBuildSettings(structures);
+  }
+  if (savedConstructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
+    restoreConstructionOfficeSettings(savedConstructionOffice);
   }
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);

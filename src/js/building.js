@@ -260,13 +260,16 @@ class Building extends EffectableEntity {
     return maintenanceCost;
   }
 
-  // Adjusted canAfford method to use effective cost
-  canAfford(buildCount = 1) {
+  // Adjusted canAfford method to use effective cost and an optional strategic reserve
+  canAfford(buildCount = 1, reservePercent = 0) {
     const effectiveCost = this.getEffectiveCost(buildCount);
 
     for (const category in effectiveCost) {
       for (const resource in effectiveCost[category]) {
-        if (resources[category][resource].value < effectiveCost[category][resource]) {
+        const resObj = resources[category][resource];
+        const cap = resObj.cap || 0;
+        const reserve = (reservePercent / 100) * cap;
+        if (resObj.value - reserve < effectiveCost[category][resource]) {
           return false;
         }
       }
@@ -309,39 +312,43 @@ class Building extends EffectableEntity {
     }
   }
 
-  maxBuildable() {
+  maxBuildable(reservePercent = 0) {
     let maxByResource = Infinity;
 
     // Check effective cost resources
-    for (const category in this.getEffectiveCost(1)) {
-        for (const resource in this.getEffectiveCost(1)[category]) {
-            const available = resources[category][resource].value;
-            const costPerUnit = this.getEffectiveCost(1)[category][resource];
+    const costObj = this.getEffectiveCost(1);
+    for (const category in costObj) {
+      for (const resource in costObj[category]) {
+        const resObj = resources[category][resource];
+        const cap = resObj.cap || 0;
+        const reserve = (reservePercent / 100) * cap;
+        const available = Math.max(resObj.value - reserve, 0);
+        const costPerUnit = costObj[category][resource];
 
-            if (costPerUnit > 0) {
-                const possibleCount = Math.floor(available / costPerUnit);
-                maxByResource = Math.min(maxByResource, possibleCount);
-            }
+        if (costPerUnit > 0) {
+          const possibleCount = Math.floor(available / costPerUnit);
+          maxByResource = Math.min(maxByResource, possibleCount);
         }
+      }
     }
 
     // Check deposit requirements
     if (this.requiresDeposit) {
-        for (const deposit in this.requiresDeposit.underground) {
-            const availableDeposit = resources.underground[deposit]?.value ?? 0;
-            const reservedDeposit = resources.underground[deposit]?.reserved ?? 0;
-            const depositPerUnit = this.requiresDeposit.underground[deposit];
+      for (const deposit in this.requiresDeposit.underground) {
+        const availableDeposit = resources.underground[deposit]?.value ?? 0;
+        const reservedDeposit = resources.underground[deposit]?.reserved ?? 0;
+        const depositPerUnit = this.requiresDeposit.underground[deposit];
 
-            const available = availableDeposit - reservedDeposit;
-            if (depositPerUnit > 0) {
-                const possibleCount = Math.floor(available / depositPerUnit);
-                maxByResource = Math.min(maxByResource, possibleCount);
-            }
+        const available = availableDeposit - reservedDeposit;
+        if (depositPerUnit > 0) {
+          const possibleCount = Math.floor(available / depositPerUnit);
+          maxByResource = Math.min(maxByResource, possibleCount);
         }
+      }
     }
 
     return Math.max(maxByResource, 0); // Ensure non-negative result
-}
+  }
 
   build(buildCount = 1) {
     if (this.canAfford(buildCount)) {

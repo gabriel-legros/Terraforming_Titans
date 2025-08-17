@@ -25,6 +25,7 @@ function getGameState() {
     colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
     ghgFactorySettings: typeof ghgFactorySettings !== 'undefined' ? ghgFactorySettings : undefined,
     mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
+    constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined
   };
 }
@@ -320,6 +321,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.mirrorOversightSettings){
       Object.assign(mirrorOversightSettings, gameState.mirrorOversightSettings);
+    }
+
+    if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
+      loadConstructionOfficeState(gameState.constructionOffice);
     }
 
     if(gameState.playTimeSeconds !== undefined){

@@ -383,4 +383,5 @@ function initializeColonies(coloniesParameters) {
  
   function updateColonyDisplay(colonies) {
     updateStructureDisplay(colonies);
+    updateConstructionOfficeUI();
   }

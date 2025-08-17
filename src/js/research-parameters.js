@@ -758,6 +758,11 @@ const researchParameters = {
             flagId: 'automateConstruction',
             value: true
           },
+          {
+            target: 'tabContent',
+            targetId: 'construction-office-container',
+            type: 'enableContent'
+          }
         ],
       },
       {

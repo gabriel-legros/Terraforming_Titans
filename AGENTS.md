@@ -244,3 +244,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Orbital Ring project retains active status and remaining time through planet travel, continuing construction mid-journey.
 - Worker resource can display negative values and hides its rate when `hideRate` is enabled in planet parameters.
 - Resources with `hideRate` enabled no longer display a per-second rate in the resource list.
+- Construction Office UI card unlocks with research and sits to the right of colony sliders.
+- Construction Office card manages autobuilder status and strategic reserve, persisting settings through saves and travel.
+- Construction Office visibility updates dynamically based on research unlocks.
+- Autobuilder respects a strategic reserve percentage, preventing builds that would dip resources below the configured reserve.
