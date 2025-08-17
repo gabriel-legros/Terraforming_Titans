@@ -342,7 +342,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
         ` : ''}
-        <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+        ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
       </div>
     `;
     resourceElement.appendChild(createTooltipElement(resourceName));
@@ -356,7 +356,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
         ` : ''}
-        <div class="resource-pps"></div>
+        ${resourceObj.hideRate ? '' : '<div class="resource-pps"></div>'}
       </div>
     `;
     if (resourceObj.name === 'land') {
@@ -378,7 +378,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
         ` : ''}
-        <div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>
+        ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
       </div>
     `;
     resourceElement.appendChild(createTooltipElement(resourceName));

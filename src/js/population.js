@@ -132,7 +132,7 @@ class PopulationModule extends EffectableEntity {
     // Update worker cap based on current population and worker ratio
     this.updateWorkerCap();
 
-    this.workerResource.value = Math.max(0, this.workerResource.cap - this.totalWorkersRequired);
+    this.workerResource.value = this.workerResource.cap - this.totalWorkersRequired;
   }
 
   updateWorkerCap() {
