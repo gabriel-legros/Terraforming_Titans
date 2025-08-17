@@ -206,4 +206,84 @@ describe('colony upgrade', () => {
     const button = dom.window.document.getElementById('t1_colony-upgrade-button');
     expect(button.style.display).toBe('none');
   });
+
+  test('upgrade consumes active colonies before inactive ones', () => {
+    const { ctx } = setupContext();
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = 15; // 10 inactive, 5 active
+    t1.active = 5;
+
+    ctx.resources.colony.metal.value = 125;
+    ctx.resources.colony.glass.value = 125;
+
+    const upgraded = t1.upgrade(1);
+    expect(upgraded).toBe(true);
+    expect(t1.count).toBe(5);
+    expect(t1.active).toBe(0); // active colonies consumed first
+    expect(t2.count).toBe(1);
+    expect(ctx.resources.colony.metal.value).toBe(0);
+    expect(ctx.resources.colony.glass.value).toBe(0);
+  });
+
+  test('upgrade does not drop active count below zero', () => {
+    const { ctx } = setupContext();
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = 6; // 2 inactive, 4 active
+    t1.active = 4;
+
+    ctx.resources.colony.metal.value = 200;
+    ctx.resources.colony.glass.value = 200;
+    ctx.resources.colony.water.value = 200;
+    ctx.resources.surface.land.value = 10;
+
+    const upgraded = t1.upgrade(1);
+    expect(upgraded).toBe(true);
+    expect(t1.count).toBe(0);
+    expect(t1.active).toBe(0); // should not go negative
+    expect(t2.count).toBe(1);
+    expect(ctx.resources.surface.land.reserved).toBe(6);
+  });
+
+  test('upgrade requires land for inactive colonies even with active land available', () => {
+    const { ctx } = setupContext();
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = 10; // 5 active, 5 inactive
+    t1.active = 5;
+
+    ctx.resources.colony.metal.value = 125;
+    ctx.resources.colony.glass.value = 125;
+    ctx.resources.surface.land.value = 7; // less than required 10
+
+    expect(t1.canAffordUpgrade(1)).toBe(false);
+    expect(t1.upgrade(1)).toBe(false);
+  });
+
+  test('upgrade fails when insufficient land even with inactive colonies', () => {
+    const { ctx } = setupContext();
+    const t1 = ctx.colonies.t1_colony;
+    const t2 = ctx.colonies.t2_colony;
+    t1.unlocked = true;
+    t2.unlocked = true;
+    t1.count = 6; // all inactive
+    t1.active = 0;
+
+    ctx.resources.colony.metal.value = 200;
+    ctx.resources.colony.glass.value = 200;
+    ctx.resources.colony.water.value = 200;
+    ctx.resources.surface.land.value = 3; // less than required 4
+
+    expect(t1.canAffordUpgrade(1)).toBe(false);
+    expect(t1.upgrade(1)).toBe(false);
+    expect(t1.count).toBe(6);
+    expect(t2.count).toBe(0);
+  });
 });
