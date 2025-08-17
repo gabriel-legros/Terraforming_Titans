@@ -256,7 +256,9 @@ class Colony extends Building {
     const nextCost = next.getEffectiveCost(1);
     const cost = {};
     const amount = upgradeCount * 10;
-    const removeCount = Math.min(amount, this.count);
+    const activeToRemove = Math.min(amount, this.active);
+    const inactiveToRemove = Math.min(amount - activeToRemove, this.count - this.active);
+    const removeCount = activeToRemove + inactiveToRemove;
     const missingRatio = (amount - removeCount) / amount;
 
     for (const category in nextCost) {
@@ -277,7 +279,7 @@ class Colony extends Building {
       }
     }
 
-    const landNeeded = upgradeCount * next.requiresLand - removeCount * (this.requiresLand || 0);
+    let landNeeded = upgradeCount * next.requiresLand + inactiveToRemove * (this.requiresLand || 0) - activeToRemove * (this.requiresLand || 0);
     if (landNeeded > 0) {
       if (!cost.surface) cost.surface = {};
       cost.surface.land = landNeeded;
@@ -314,7 +316,11 @@ class Colony extends Building {
     if (!this.canAffordUpgrade(upgradeCount)) return false;
     const cost = this.getUpgradeCost(upgradeCount);
     const amount = upgradeCount * 10;
-    const removeCount = Math.min(amount, this.count);
+
+    // Determine how many colonies to remove, prioritizing active ones
+    const activeToRemove = Math.min(amount, this.active);
+    const inactiveToRemove = Math.min(amount - activeToRemove, this.count - this.active);
+    const removeCount = activeToRemove + inactiveToRemove;
 
     // Pay cost
     for (const category in cost) {
@@ -325,12 +331,13 @@ class Colony extends Building {
     }
 
     // Adjust land usage
-    if (this.requiresLand) this.adjustLand(-removeCount);
+    if (this.requiresLand) this.adjustLand(-activeToRemove);
     if (next.requiresLand) next.adjustLand(upgradeCount);
 
     // Remove lower tier buildings
     this.count -= removeCount;
-    this.active -= removeCount;
+    this.active -= activeToRemove;
+    if (this.active < 0) this.active = 0;
     this.updateResourceStorage();
 
     // Add upgraded building
