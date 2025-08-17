@@ -67,9 +67,15 @@ const constructionOfficeState = {
 };
 
 function updateConstructionOfficeUI() {
+    const container = typeof document !== 'undefined' ? document.getElementById('construction-office-container') : null;
     const statusSpan = typeof document !== 'undefined' ? document.getElementById('autobuilder-status') : null;
     const pauseBtn = typeof document !== 'undefined' ? document.getElementById('autobuilder-pause-btn') : null;
     const reserveInput = typeof document !== 'undefined' ? document.getElementById('strategic-reserve-input') : null;
+
+    if (container && typeof globalEffects !== 'undefined' && typeof globalEffects.isBooleanFlagSet === 'function') {
+        const unlocked = globalEffects.isBooleanFlagSet('automateConstruction');
+        container.classList.toggle('invisible', !unlocked);
+    }
     if (statusSpan) {
         statusSpan.textContent = constructionOfficeState.autobuilderActive ? 'active' : 'disabled';
     }
@@ -242,11 +248,12 @@ function autoBuild(buildings, delta = 0) {
     // Step 3: Efficiently allocate builds
     buildableBuildings.forEach(({ building, requiredAmount }) => {
         let buildCount = 0;
-        const canBuildFull = building.canAfford(requiredAmount);
+        const reserve = constructionOfficeState.strategicReserve;
+        const canBuildFull = building.canAfford(requiredAmount, reserve);
         if (canBuildFull) {
             buildCount = requiredAmount;
         } else {
-            let maxBuildable = building.maxBuildable();
+            let maxBuildable = building.maxBuildable(reserve);
 
             if (building.requiresLand && typeof building.landAffordCount === 'function') {
                 maxBuildable = Math.min(maxBuildable, building.landAffordCount());

@@ -246,3 +246,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resources with `hideRate` enabled no longer display a per-second rate in the resource list.
 - Construction Office UI card unlocks with research and sits to the right of colony sliders.
 - Construction Office card manages autobuilder status and strategic reserve, persisting settings through saves and travel.
+- Construction Office visibility updates dynamically based on research unlocks.
+- Autobuilder respects a strategic reserve percentage, preventing builds that would dip resources below the configured reserve.
