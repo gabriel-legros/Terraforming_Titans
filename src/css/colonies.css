@@ -173,3 +173,23 @@
   gap: 20px;
   align-items: start;
 }
+
+#construction-office-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#construction-office-card .card-body > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#construction-office-card #autobuilder-pause-btn {
+  align-self: flex-start;
+}
+
+#construction-office-card #strategic-reserve-input {
+  width: 50px;
+}
