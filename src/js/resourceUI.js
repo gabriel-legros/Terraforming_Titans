@@ -539,7 +539,11 @@ function updateResourceDisplay(resources) {
 
 function updateResourceRateDisplay(resource){
   const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
-  if (ppsElement) {
+  if (resource.hideRate) {
+    if (ppsElement) {
+      ppsElement.remove();
+    }
+  } else if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
     if (Math.abs(netRate) < 1e-3) {
       ppsElement.textContent = `0/s`;
