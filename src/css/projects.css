@@ -598,6 +598,7 @@
 
 #construction-office-container {
     flex: 0 0 auto; /* Same width behavior as growth rate card */
+    display:flex;
 }
 
 #unhide-obsolete-container {

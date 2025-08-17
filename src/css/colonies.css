@@ -26,7 +26,6 @@
     flex-direction: column;
     gap: 2px;
     justify-self: start;
-    margin-right: 50px;
   }
 
   .growth-rate-line {
