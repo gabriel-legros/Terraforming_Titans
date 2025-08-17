@@ -113,7 +113,7 @@ function loadGame(slotOrCustomString) {
                   resources[category][resourceName].cap = Infinity;
                 }
                 const newConfig = planetParameters.mars.resources[category][resourceName];
-                if(newConfig){
+                if(newConfig && resourceName != 'land'){
                   resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
                 }
                   resources[category][resourceName].activeEffects = [];
