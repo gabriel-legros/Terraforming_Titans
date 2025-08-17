@@ -54,12 +54,23 @@ class OrbitalRingProject extends TerraformingDurationProject {
   }
 
   saveTravelState() {
-    return { ringCount: this.ringCount };
+    const state = { ringCount: this.ringCount };
+    if (this.isActive) {
+      state.isActive = true;
+      state.remainingTime = this.remainingTime;
+      state.startingDuration = this.startingDuration;
+    }
+    return state;
   }
 
   loadTravelState(state = {}) {
     this.ringCount = state.ringCount || 0;
     this.currentWorldHasRing = false;
+    if (state.isActive) {
+      this.isActive = true;
+      this.remainingTime = state.remainingTime || this.remainingTime;
+      this.startingDuration = state.startingDuration || this.getEffectiveDuration();
+    }
   }
 }
 
