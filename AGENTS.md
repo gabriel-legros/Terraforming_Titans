@@ -243,3 +243,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource category headers include collapse triangles like special project cards.
 - Orbital Ring project retains active status and remaining time through planet travel, continuing construction mid-journey.
 - Worker resource can display negative values and hides its rate when `hideRate` is enabled in planet parameters.
+- Resources with `hideRate` enabled no longer display a per-second rate in the resource list.
