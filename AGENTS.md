@@ -239,3 +239,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Random World Generator temperature fields (Mean/Day/Night T) display '-' until the world is equilibrated.
 - Added Orbital Rings advanced research unlocking a repeatable orbital ring megastructure that counts as additional terraformed worlds and can draw from space storage resources.
 - Resource category headers include collapse triangles like special project cards.
+- Orbital Ring project retains active status and remaining time through planet travel, continuing construction mid-journey.
