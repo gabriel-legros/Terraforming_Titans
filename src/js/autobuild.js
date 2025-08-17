@@ -60,6 +60,124 @@ const autobuildCostTracker = {
     }
 };
 
+// Construction Office state and UI
+const constructionOfficeState = {
+    autobuilderActive: true,
+    strategicReserve: 0,
+};
+
+function updateConstructionOfficeUI() {
+    const statusSpan = typeof document !== 'undefined' ? document.getElementById('autobuilder-status') : null;
+    const pauseBtn = typeof document !== 'undefined' ? document.getElementById('autobuilder-pause-btn') : null;
+    const reserveInput = typeof document !== 'undefined' ? document.getElementById('strategic-reserve-input') : null;
+    if (statusSpan) {
+        statusSpan.textContent = constructionOfficeState.autobuilderActive ? 'active' : 'disabled';
+    }
+    if (pauseBtn) {
+        pauseBtn.textContent = constructionOfficeState.autobuilderActive ? 'Pause' : 'Resume';
+    }
+    if (reserveInput) {
+        reserveInput.value = constructionOfficeState.strategicReserve;
+    }
+}
+
+function setAutobuilderActive(active) {
+    constructionOfficeState.autobuilderActive = !!active;
+    updateConstructionOfficeUI();
+}
+
+function toggleAutobuilder() {
+    setAutobuilderActive(!constructionOfficeState.autobuilderActive);
+}
+
+function setStrategicReserve(value) {
+    let val = parseInt(value, 10);
+    if (isNaN(val)) val = 0;
+    val = Math.max(0, Math.min(100, val));
+    constructionOfficeState.strategicReserve = val;
+    updateConstructionOfficeUI();
+}
+
+function saveConstructionOfficeState() {
+    return { ...constructionOfficeState };
+}
+
+function loadConstructionOfficeState(state) {
+    if (!state) return;
+    setAutobuilderActive(state.autobuilderActive);
+    setStrategicReserve(state.strategicReserve);
+}
+
+function captureConstructionOfficeSettings() {
+    return saveConstructionOfficeState();
+}
+
+function restoreConstructionOfficeSettings(state) {
+    loadConstructionOfficeState(state);
+}
+
+function initializeConstructionOfficeUI() {
+    const container = typeof document !== 'undefined' ? document.getElementById('construction-office-container') : null;
+    if (!container) return;
+
+    container.innerHTML = '';
+    container.classList.add('invisible');
+
+    const card = document.createElement('div');
+    card.classList.add('project-card');
+    card.id = 'construction-office-card';
+
+    const header = document.createElement('div');
+    header.classList.add('card-header');
+    const title = document.createElement('span');
+    title.classList.add('card-title');
+    title.textContent = 'Construction Office';
+    header.appendChild(title);
+    card.appendChild(header);
+
+    const body = document.createElement('div');
+    body.classList.add('card-body');
+
+    const statusDiv = document.createElement('div');
+    const statusLabel = document.createElement('span');
+    statusLabel.textContent = 'Autobuilder: ';
+    const statusValue = document.createElement('span');
+    statusValue.id = 'autobuilder-status';
+    statusDiv.appendChild(statusLabel);
+    statusDiv.appendChild(statusValue);
+    body.appendChild(statusDiv);
+
+    const pauseBtn = document.createElement('button');
+    pauseBtn.id = 'autobuilder-pause-btn';
+    pauseBtn.addEventListener('click', () => {
+        toggleAutobuilder();
+    });
+    body.appendChild(pauseBtn);
+
+    const reserveDiv = document.createElement('div');
+    const reserveLabel = document.createElement('label');
+    reserveLabel.textContent = 'Strategic reserve: ';
+    const reserveInput = document.createElement('input');
+    reserveInput.type = 'number';
+    reserveInput.min = '0';
+    reserveInput.max = '100';
+    reserveInput.id = 'strategic-reserve-input';
+    reserveInput.addEventListener('change', () => {
+        setStrategicReserve(reserveInput.value);
+    });
+    const percentSpan = document.createElement('span');
+    percentSpan.textContent = '%';
+    reserveDiv.appendChild(reserveLabel);
+    reserveDiv.appendChild(reserveInput);
+    reserveDiv.appendChild(percentSpan);
+    body.appendChild(reserveDiv);
+
+    card.appendChild(body);
+    container.appendChild(card);
+
+    updateConstructionOfficeUI();
+}
+
 const savedAutoBuildSettings = {};
 
 function captureAutoBuildSettings(structures) {
@@ -87,6 +205,9 @@ function restoreAutoBuildSettings(structures) {
 }
 
 function autoBuild(buildings, delta = 0) {
+    if (typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive) {
+        return;
+    }
     autobuildCostTracker.update(delta);
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
@@ -162,7 +283,22 @@ function autoBuild(buildings, delta = 0) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { autoBuild, autobuildCostTracker, captureAutoBuildSettings, restoreAutoBuildSettings };
+    module.exports = {
+        autoBuild,
+        autobuildCostTracker,
+        captureAutoBuildSettings,
+        restoreAutoBuildSettings,
+        constructionOfficeState,
+        setAutobuilderActive,
+        toggleAutobuilder,
+        setStrategicReserve,
+        saveConstructionOfficeState,
+        loadConstructionOfficeState,
+        captureConstructionOfficeSettings,
+        restoreConstructionOfficeSettings,
+        updateConstructionOfficeUI,
+        initializeConstructionOfficeUI,
+    };
 }
 
 if (typeof window !== 'undefined') {
@@ -170,4 +306,14 @@ if (typeof window !== 'undefined') {
     window.autobuildCostTracker = autobuildCostTracker;
     window.captureAutoBuildSettings = captureAutoBuildSettings;
     window.restoreAutoBuildSettings = restoreAutoBuildSettings;
+    window.constructionOfficeState = constructionOfficeState;
+    window.setAutobuilderActive = setAutobuilderActive;
+    window.toggleAutobuilder = toggleAutobuilder;
+    window.setStrategicReserve = setStrategicReserve;
+    window.saveConstructionOfficeState = saveConstructionOfficeState;
+    window.loadConstructionOfficeState = loadConstructionOfficeState;
+    window.captureConstructionOfficeSettings = captureConstructionOfficeSettings;
+    window.restoreConstructionOfficeSettings = restoreConstructionOfficeSettings;
+    window.updateConstructionOfficeUI = updateConstructionOfficeUI;
+    window.initializeConstructionOfficeUI = initializeConstructionOfficeUI;
 }

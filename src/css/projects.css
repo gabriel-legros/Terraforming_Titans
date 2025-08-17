@@ -596,6 +596,10 @@
     flex: 2; /* Makes the management card wider */
 }
 
+#construction-office-container {
+    flex: 0 0 auto; /* Same width behavior as growth rate card */
+}
+
 #unhide-obsolete-container {
     margin-left: auto; /* Pushes the button to the right */
 }

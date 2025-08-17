@@ -258,4 +258,5 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   createGrowthRateDisplay();
+  initializeConstructionOfficeUI();
 });
