@@ -72,7 +72,7 @@ const defaultPlanetParameters = {
       atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
     special: {
-      albedoUpgrades: {name : 'Albedo upg.', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
+      albedoUpgrades: {name : 'Albedo Upgr.', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false }
     }

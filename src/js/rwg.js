@@ -443,7 +443,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
 
   // Specials / collectibles
   const special = {};
-  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo Upgr.", hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
   special.seed = { name: "Generator Seed", hasCap: false, initialValue: seed, unlocked: false };
