@@ -107,7 +107,7 @@ second time they speak in a chapter to help clarify who is talking.
 Warp Gate Command provides a dedicated subtab for managing teams that embark on timed operations through the warp gate. Players recruit custom-named members with classes and skills, track their health, and choose operation difficulty. Operations grant experience and Alien artifacts, while R&D and Facilities menus offer equipment and training upgrades. Statistics and logs persist across planets so progress carries over between worlds.
 
 ## Space Mirror Facility
-Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally.
+Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally. The display now shows average temperature in each zone.
 
 ## Random World Generator
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
@@ -249,3 +249,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Construction Office visibility updates dynamically based on research unlocks.
 - Autobuilder respects a strategic reserve percentage, preventing builds that would dip resources below the configured reserve.
 - Life UI checkmark table lists day and night temperatures for each zone.
+- Buildings requiring workers can be prioritized via a checkbox, allocating workers to them before others.

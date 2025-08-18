@@ -14,12 +14,15 @@ describe('SpaceMirrorFacilityProject', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
+    ctx.toDisplayTemperature = numbers.toDisplayTemperature;
+    ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.projectElements = {};
     ctx.buildings = { spaceMirror: { active: 5 }, hyperionLantern: { active: 2, powerPerBuilding: 100, productivity: 0.5, unlocked: false } };
     ctx.terraforming = {
       calculateMirrorEffect: () => ({ interceptedPower: 10, powerPerUnitArea: 0.5 }),
       calculateZoneSolarFlux: zone => ({ tropical: 100, temperate: 50, polar: 25 })[zone],
-      celestialParameters: { crossSectionArea: 100, surfaceArea: 100 }
+      celestialParameters: { crossSectionArea: 100, surfaceArea: 100 },
+      temperature: { zones: { tropical: { value: 290 }, temperate: { value: 280 }, polar: { value: 270 } } }
     };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
@@ -61,6 +64,8 @@ describe('SpaceMirrorFacilityProject', () => {
 
     const fluxCell = dom.window.document.getElementById('mirror-flux-tropical');
     expect(fluxCell.textContent).toBe('100.00');
+    const tempCell = dom.window.document.getElementById('mirror-temp-tropical');
+    expect(tempCell.textContent).toBe('290.00');
   });
 
   test('shows lantern details when unlocked', () => {
