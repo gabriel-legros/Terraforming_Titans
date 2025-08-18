@@ -177,7 +177,79 @@ const DEFAULT_PARAMS = {
     coldLiquidBiasK: { tropical: 0.1, temperate: 0.4, polar: 0.5 },
     dryIceBias: { tropical: 0.0, temperate: 0.05, polar: 0.95 }
   },
-  deposits: { areaPerDepositHa: 1_000_000, maxDepositsFraction: 0.10, geoVentInit: { rocky: 5, "mars-like": 3, default: 2, coldLow: 1 } },
+ deposits: {
+    // Scaling by surface area
+    areaPerDepositHa: 1_000_000,
+    maxDepositsFraction: 1,
+
+    // RANDOM ORE TUNING (all tunable):
+    ore: {
+      // Type density multiplier (affects the max cap)
+      densityByType: {
+        "hot-rocky": 1.20,
+        "super-earth": 1.30,
+        rocky: 1.00,
+        "venus-like": 1.00,
+        "mars-like": 0.90,
+        "carbon-planet": 0.90,
+        "desiccated-desert": 0.70,
+        "cold-desert": 0.80,
+        "icy-moon": 0.60,
+        "titan-like": 0.50,
+        default: 1.00
+      },
+      // Initial fraction of max (randomized around this)
+      initFracByType: {
+        // ~2% by default; tweak per type if you want flavor
+        default: 0.002,
+        "super-earth": 0.003,
+        "hot-rocky": 0.0025,
+        "icy-moon": 0.001,
+        "titan-like": 0.001
+      },
+      // Jitter knobs
+      maxJitterRange: [0.85, 1.15], // applied to max
+      initFracJitter: 0.5,          // ±50% around init fraction
+      minMax: 5                     // minimum max cap
+    },
+
+    // Legacy seeds kept as hints; geothermal now uses an activity model
+    geoVentInit: { rocky: 5, "mars-like": 0, default: 2, coldLow: 1 },
+
+    // RANDOM GEOTHERMAL ACTIVITY MODEL
+    geothermal: {
+      // Require fairly strong activity to exist at all
+      activityThreshold: 0.35,
+
+      // randomness for vents-per-area (independent of ore)
+      perAreaMin: 0.0005,
+      perAreaMax: 0.005,
+
+      // Keep caps conservative
+      maxPerArea: 0.001,
+
+      // Intrinsic activity by archetype (0 = none unless tides help)
+      baseActivityByType: {
+        "hot-rocky": 0.90,
+        "venus-like": 0.80,
+        "super-earth": 0.60,
+        rocky: 0.40,
+        "carbon-planet": 0.35,
+
+        // These only get geothermal if tides push them over threshold
+        "mars-like": 0.00,
+        "cold-desert": 0.00,
+        "desiccated-desert": 0.00,
+        "icy-moon": 0.00,
+        "titan-like": 0.00,
+        default: 0.00
+      },
+
+      // Tidal heating: only some moons have the right geometry
+      moonTidalChance: 0.45,     // % of moons that get significant tidal forcing
+      tidalBonusIfMoon: 0.35     // enough to push some moons over the threshold
+    }
+  },
   colonyCaps: { energy: 50_000_000, metal: 5000, silicon: 5000, glass: 5000, water: 5000, food: 5000, components: 500, electronics: 200, superconductors: 200, androids: 1000 },
   specials: { includeAlbedoUpgrades: true, includeSpaceships: true, includeAlienArtifact: true },
   magnetosphere: {
@@ -388,7 +460,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   let type = classification.type;
   const bulk = sampleBulk(rng, type, params);
   const landHa = surfaceAreaHa(bulk.radius_km);
-  const { areaTotal, maxDeposits } = depositsFromLandHa(landHa, params);
+  const { areaTotal } = depositsFromLandHa(landHa, params);
   if (!params.atmosphere.templates[type]) type = (classification.Teq > params.classification.thresholdsK.rockyMin && classification.Teq <= params.classification.thresholdsK.venusMin) ? "rocky" : "mars-like";
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
   const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
@@ -430,15 +502,31 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   const magChance = (params.magnetosphere.chanceByType[type] ?? params.magnetosphere.defaultChance);
   const hasNaturalMagnetosphere = (mulberry32(seed ^ 0xA11CE)() < magChance);
 
-  // Underground resources
+ // Randomized, seed-stable ore + geothermal
+  const oreRng = mulberry32(seed ^ 0x0A11);
+  const geoRng = mulberry32(seed ^ 0x0A12);
+  const oreCaps = computeOreCaps(areaTotal, type, oreRng, params);
+  const geoCaps = computeGeothermalCaps(type, areaTotal, isMoon, geoRng, params);
+
   const underground = {
-    ore: { name: "Ore deposits", initialValue: Math.max(2, Math.floor(maxDeposits * 0.0002)), maxDeposits, hasCap: true, areaTotal, unlocked: false },
-    geothermal: { name: "Geo. vent", initialValue:
-      (type === "rocky") ? params.deposits.geoVentInit.rocky :
-      (type === "mars-like") ? params.deposits.geoVentInit["mars-like"] :
-      (type === "titan-like" || type === "icy-moon" || type === "cold-desert") ? params.deposits.geoVentInit.coldLow :
-      params.deposits.geoVentInit.default,
-      maxDeposits: Math.max(3, Math.floor(areaTotal * 0.002)), hasCap: true, areaTotal, unlocked: false },
+    ore: {
+      name: "Ore deposits",
+      initialValue: oreCaps.initial,
+      maxDeposits: oreCaps.max,
+      hasCap: true,
+      areaTotal,
+      unlocked: false
+    },
+    ...({
+      geothermal: {
+        name: "Geo. vent",
+        initialValue: geoCaps.initial,
+        maxDeposits: geoCaps.max,
+        hasCap: true,
+        areaTotal,
+        unlocked: false
+      }
+    })
   };
 
   // Specials / collectibles
@@ -469,6 +557,57 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   };
   return overrides;
 }
+
+function computeOreCaps(areaTotal, type, rng, params) {
+  const p = params.deposits.ore || {};
+  const density = (p.densityByType?.[type] ?? p.densityByType?.default ?? 1);
+  const jitterRange = p.maxJitterRange || [0.85, 1.15];
+  const jitterMax = randRange(rng, jitterRange[0], jitterRange[1]);
+
+  const baseMax = Math.round(areaTotal * params.deposits.maxDepositsFraction);
+  let max = Math.max(p.minMax ?? 5, Math.round(baseMax * density * jitterMax));
+
+  // NEW: uniform integer initial in [3, 10], clamped by max (and >=1 for tiny worlds)
+  const rollInt = (lo, hi) => Math.floor(randRange(rng, lo, hi + 1));
+  const lo = (max >= 3) ? 3 : 1;
+  const hi = Math.min(10, max);
+  const initial = (hi >= lo) ? rollInt(lo, hi) : Math.max(1, Math.min(max, 3));
+
+  if (initial > max) initial = max;
+  return { initial, max };
+}
+
+function computeGeothermalCaps(type, areaTotal, isMoon, rng, params) {
+  const g = params.deposits.geothermal;
+
+  // Intrinsic activity + occasional tidal boost for moons
+  const base = g.baseActivityByType?.[type] ?? g.baseActivityByType?.default ?? 0;
+  const jitter = 1 + randRange(rng, -0.10, 0.10);
+  const tidalActive = isMoon && (rng() < (g.moonTidalChance ?? 0.45));
+  const tidal = tidalActive ? (g.tidalBonusIfMoon ?? 0.35) : 0;
+  const activity = clamp((base + tidal) * jitter, 0, 1);
+
+  // Most worlds: no geothermal at all
+  if (activity < (g.activityThreshold ?? 0.35)) {
+    return { present: false, initial: 0, max: 0 };
+  }
+
+  // Independent randomness: vents per area (not tied to ore)
+  const perAreaMin = Math.max(0, g.perAreaMin ?? 0.00005);
+  const perAreaMax = Math.max(perAreaMin, g.perAreaMax ?? 0.00080);
+  const ventsPerArea = randRange(rng, perAreaMin, perAreaMax) * activity;
+
+  // Varied max; small but nonzero worlds won’t all land on the same number
+  const rawMax = areaTotal * ventsPerArea;
+  const max = Math.max(3, Math.round(rawMax));
+
+  // Seed-random initial between ~10–40% of max (at least 1)
+  const initFrac = randRange(rng, 0.10, 0.40);
+  const initial = Math.max(1, Math.min(max, Math.round(max * initFrac)));
+
+  return { present: true, initial, max };
+}
+
 
 // ===================== Manager =====================
 class RwgManager extends EffectableEntity {
