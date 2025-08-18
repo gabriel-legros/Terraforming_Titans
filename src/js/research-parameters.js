@@ -21,6 +21,7 @@ const researchParameters = {
         description: 'Unlocks geothermal generators, which require reduced maintenance, and a project to scan for suitable vents.',
         cost: { research: 1000 },
         prerequisites: [],
+        requiresGeothermal: true,
         effects: [
           {
             target: 'building',

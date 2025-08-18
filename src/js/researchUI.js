@@ -230,8 +230,16 @@ function loadResearchCategory(category) {
                (atm.atmosphericMethane?.initialValue || 0) > 0;
     };
 
+    const planetHasGeothermal = () => {
+        const geo = currentPlanetParameters.resources.underground?.geothermal;
+        return (geo?.maxDeposits || 0) > 0;
+    };
+
     researches.forEach((research) => {
         if (research.requiresMethane && !planetHasMethane()) {
+            return;
+        }
+        if (research.requiresGeothermal && !planetHasGeothermal()) {
             return;
         }
         if (research.requiredFlags && !research.requiredFlags.every(f => researchManager.isBooleanFlagSet(f))) {

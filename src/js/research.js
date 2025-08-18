@@ -118,11 +118,20 @@ class Research {
              (atm.atmosphericMethane?.initialValue || 0) > 0;
     }
 
+    planetHasGeothermalDeposits() {
+      if (typeof currentPlanetParameters === 'undefined') return true;
+      const geo = currentPlanetParameters.resources.underground?.geothermal;
+      return (geo?.maxDeposits || 0) > 0;
+    }
+
     isResearchDisplayable(research) {
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
       }
       if (research.requiresMethane && !this.planetHasMethane()) {
+        return false;
+      }
+      if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
         return false;
       }
       if (research.requiredFlags && !research.requiredFlags.every(f => this.isBooleanFlagSet(f))) {
