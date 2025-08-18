@@ -511,7 +511,7 @@ const researchParameters = {
       id: 'self_replicating_ships',
       name: 'Self Replicating Ships',
       description: 'Unused spaceships duplicate themselves over time.',
-      cost: { research: 10000000000 },
+      cost: { advancedResearch: 8000000 },
       prerequisites: [],
       requiredFlags: ['selfReplicatingShipsUnlocked'],
       effects: [
