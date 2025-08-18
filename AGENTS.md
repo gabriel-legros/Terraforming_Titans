@@ -248,4 +248,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Construction Office card manages autobuilder status and strategic reserve, persisting settings through saves and travel.
 - Construction Office visibility updates dynamically based on research unlocks.
 - Autobuilder respects a strategic reserve percentage, preventing builds that would dip resources below the configured reserve.
+- Life UI checkmark table lists day and night temperatures for each zone.
 - Buildings requiring workers can be prioritized via a checkbox, allocating workers to them before others.
