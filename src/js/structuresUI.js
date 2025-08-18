@@ -646,8 +646,40 @@ function updateDecreaseButtonText(button, buildCount) {
       const span = costElement._spans.get(item.key);
       if (!span) return;
       const text = `${item.label}: ${formatNumber(requiredAmount, true)}`;
-      if (span.textContent !== text) {
-        span.textContent = text;
+
+      if (item.key === 'colony.workers') {
+        let textSpan = span._textSpan;
+        if (!textSpan) {
+          textSpan = document.createElement('span');
+          span._textSpan = textSpan;
+          span.textContent = '';
+          span.appendChild(textSpan);
+
+          const label = document.createElement('label');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = structure.workerPriority;
+          checkbox.addEventListener('change', () => {
+            structure.workerPriority = checkbox.checked;
+            if (typeof populationModule !== 'undefined' && typeof populationModule.updateWorkerRequirements === 'function') {
+              populationModule.updateWorkerRequirements();
+              if (populationModule.workerResource) {
+                populationModule.workerResource.value = populationModule.workerResource.cap - populationModule.totalWorkersRequired;
+              }
+            }
+          });
+          label.append(checkbox, ' prioritize');
+          const container = document.createElement('span');
+          container.append(' (', label, ')');
+          span.appendChild(container);
+          span._priorityCheckbox = checkbox;
+        }
+        textSpan.textContent = text;
+        span._priorityCheckbox.checked = structure.workerPriority;
+      } else {
+        if (span.textContent !== text) {
+          span.textContent = text;
+        }
       }
       const hasEnough = item.available >= requiredAmount;
       const color = hasEnough ? '' : item.insufficientColor;

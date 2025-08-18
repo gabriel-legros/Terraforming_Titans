@@ -8,6 +8,8 @@ class PopulationModule extends EffectableEntity {
       this.workerRatio = this.baseWorkerRatio; // Current ratio of colonists that become workers
       this.growthRate = 0; // Population growth rate, e.g., 0.01 for 1% per second
       this.totalWorkersRequired = 0;
+      this.totalWorkersRequiredPrioritized = 0;
+      this.totalWorkersRequiredNonPrioritized = 0;
       this.lastGrowthPerSecond = 0; // Tracks actual population change per second
     }
 
@@ -164,24 +166,40 @@ class PopulationModule extends EffectableEntity {
 
   updateWorkerRequirements() {
     let totalWorkersRequired = 0;
+    let prioritized = 0;
+    let nonPrioritized = 0;
 
     // Calculate total workers required based on active buildings
     for (const buildingName in buildings) {
       const building = buildings[buildingName];
       if (building.active > 0 && building.getTotalWorkerNeed() > 0) {
-        totalWorkersRequired += building.active * (building.getTotalWorkerNeed()) * building.getEffectiveWorkerMultiplier();
+        const req = building.active * (building.getTotalWorkerNeed()) * building.getEffectiveWorkerMultiplier();
+        totalWorkersRequired += req;
+        if (building.workerPriority) {
+          prioritized += req;
+        } else {
+          nonPrioritized += req;
+        }
       }
     }
 
     this.totalWorkersRequired = totalWorkersRequired; // Store the total workers required
+    this.totalWorkersRequiredPrioritized = prioritized;
+    this.totalWorkersRequiredNonPrioritized = nonPrioritized;
   }
 
   // Method to return the ratio of available workers to required workers
-  getWorkerAvailabilityRatio() {
+  getWorkerAvailabilityRatio(isPrioritized) {
     if (this.totalWorkersRequired === 0) {
       return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
     }
-    return this.workerResource.cap / this.totalWorkersRequired;
+    if (isPrioritized) {
+      if (this.totalWorkersRequiredPrioritized === 0) return 1;
+      return Math.min(1, this.workerResource.cap / this.totalWorkersRequiredPrioritized);
+    }
+    const remaining = Math.max(0, this.workerResource.cap - this.totalWorkersRequiredPrioritized);
+    if (this.totalWorkersRequiredNonPrioritized === 0) return 1;
+    return Math.min(1, remaining / this.totalWorkersRequiredNonPrioritized);
   }
 
   applyWorkerRatio(effect){

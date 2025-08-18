@@ -18,6 +18,7 @@ class Building extends EffectableEntity {
     this.autoBuildPercent = 0.1;
     this.autoBuildPriority = false;
     this.autoBuildBasis = 'population';
+    this.workerPriority = false;
 
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
@@ -423,7 +424,7 @@ class Building extends EffectableEntity {
 
     // Calculate minRatio based on worker availability if applicable
     if (this.getTotalWorkerNeed() > 0) {
-      const workerRatio = populationModule.getWorkerAvailabilityRatio();
+      const workerRatio = populationModule.getWorkerAvailabilityRatio(this.workerPriority);
       minRatio = Math.min(minRatio, workerRatio);
     }
 
