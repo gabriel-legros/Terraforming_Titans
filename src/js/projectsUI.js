@@ -423,7 +423,8 @@ function updateProjectUI(projectName) {
     const planetOk = !project.attributes.planet ||
       (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
        spaceManager.getCurrentPlanetKey() === project.attributes.planet);
-    if (project.unlocked && planetOk) {
+    const showDueToCollectors = project.name === 'dysonSwarmReceiver' && project.collectors > 0;
+    if ((project.unlocked || showDueToCollectors) && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
@@ -650,6 +651,12 @@ function updateProjectUI(projectName) {
   if (elements.downButton) {
     elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
   }
+
+  if (!project.unlocked && project.name === 'dysonSwarmReceiver' && project.collectors > 0) {
+    if (elements.progressButton) elements.progressButton.style.display = 'none';
+    if (elements.autoStartCheckboxContainer) elements.autoStartCheckboxContainer.style.display = 'none';
+    if (elements.cardFooter) elements.cardFooter.style.display = 'none';
+  }
 }
 
 
@@ -761,7 +768,8 @@ function updateMegaProjectsVisibility() {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
-      return p.category === 'mega' && p.unlocked && planetOk;
+      const dysonCollectors = p.name === 'dysonSwarmReceiver' && p.collectors > 0;
+      return p.category === 'mega' && planetOk && (p.unlocked || dysonCollectors);
     });
   }
 

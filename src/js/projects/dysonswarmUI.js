@@ -35,9 +35,12 @@ function renderDysonSwarmUI(project, container) {
 function updateDysonSwarmUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
+  const showCard = project.isCompleted || project.collectors > 0;
   if (els.swarmCard) {
-    els.swarmCard.style.display = project.isCompleted ? 'block' : 'none';
+    els.swarmCard.style.display = showCard ? 'block' : 'none';
   }
+  if (!showCard) return;
+
   els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 2);
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
   const total = project.energyPerCollector * project.collectors;
@@ -54,15 +57,16 @@ function updateDysonSwarmUI(project) {
     }
     els.costDisplay.textContent = parts.join(', ');
   }
-  if (!project.isCompleted) {
-    els.startButton.textContent = 'Receiver Incomplete';
-    els.startButton.style.background = '#999';
-    els.startButton.disabled = true;
-    els.autoCheckbox.disabled = true;
-    return;
-  } else {
-    els.startButton.disabled = false;
-    els.autoCheckbox.disabled = false;
+  if (els.startButton) {
+    els.startButton.parentElement.style.display = '';
+  }
+  if (els.autoCheckbox) {
+    const canAuto = project.unlocked || project.collectors > 0;
+    els.autoCheckbox.parentElement.style.display = canAuto ? '' : 'none';
+    els.autoCheckbox.disabled = !canAuto;
+  }
+  if (els.totalPowerDisplay) {
+    els.totalPowerDisplay.parentElement.style.display = (project.unlocked && project.isCompleted) ? '' : 'none';
   }
   if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
@@ -74,6 +78,7 @@ function updateDysonSwarmUI(project) {
     const dur = Math.round(project.collectorDuration / 1000);
     els.startButton.textContent = `Deploy Collector (${dur}s)`;
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
+    els.startButton.disabled = !can;
   }
   els.autoCheckbox.checked = project.autoDeployCollectors;
 }

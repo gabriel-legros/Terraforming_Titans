@@ -5,7 +5,7 @@ const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
 describe('Dyson Swarm card visibility', () => {
-  test('card hidden until project complete', () => {
+  test('shows when collectors exist even without receiver', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -24,6 +24,7 @@ describe('Dyson Swarm card visibility', () => {
       collectorProgress: 0,
       autoDeployCollectors: false,
       isCompleted: false,
+      unlocked: false,
       canStartCollector: () => true,
       startCollector: () => {}
     };
@@ -35,8 +36,18 @@ describe('Dyson Swarm card visibility', () => {
     const card = ctx.projectElements[project.name].swarmCard;
     expect(card.style.display).toBe('none');
 
-    project.isCompleted = true;
+    project.collectors = 5;
     ctx.updateDysonSwarmUI(project);
     expect(card.style.display).toBe('block');
+    const els = ctx.projectElements[project.name];
+    expect(els.startButton.parentElement.style.display).toBe('');
+    expect(els.autoCheckbox.parentElement.style.display).toBe('');
+    expect(els.autoCheckbox.disabled).toBe(false);
+    expect(els.totalPowerDisplay.parentElement.style.display).toBe('none');
+
+    project.unlocked = true;
+    project.isCompleted = true;
+    ctx.updateDysonSwarmUI(project);
+    expect(els.startButton.parentElement.style.display).toBe('');
   });
 });
