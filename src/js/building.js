@@ -460,6 +460,36 @@ class Building extends EffectableEntity {
         }
       }
 
+      // Automatically disable Oxygen factory if O2 pressure exceeds threshold
+      if(
+        this.name === 'oxygenFactory' &&
+        this.isBooleanFlagSet('terraformingBureauFeature') &&
+        oxygenFactorySettings.autoDisableAbovePressure &&
+        terraforming && resources.atmospheric?.oxygen
+      ){
+        const amount = resources.atmospheric.oxygen.value || 0;
+        const pressurePa = calculateAtmosphericPressure(
+          amount,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
+        );
+        const pressureKPa = pressurePa / 1000;
+        if(pressureKPa > oxygenFactorySettings.disablePressureThreshold){
+          targetProductivity = 0;
+          oxygenFactorySettings.restartCap = 0;
+          oxygenFactorySettings.restartTimer = 0;
+        } else {
+          if(oxygenFactorySettings.restartCap < 1){
+            oxygenFactorySettings.restartTimer += deltaTime;
+            const progress = Math.min(oxygenFactorySettings.restartTimer, 5000);
+            oxygenFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log1p(2);
+          } else {
+            oxygenFactorySettings.restartCap = 1;
+          }
+          targetProductivity *= oxygenFactorySettings.restartCap;
+        }
+      }
+
       // Disable Biodome when designed life cannot survive anywhere
       if(
         this.name === 'biodome' &&

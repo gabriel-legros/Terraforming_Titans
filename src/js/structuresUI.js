@@ -404,6 +404,44 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoBuildContainer.appendChild(tempControl);
   }
 
+  if(structure.name === 'oxygenFactory') {
+    const pressureControl = document.createElement('div');
+    pressureControl.id = `${structure.name}-pressure-control`;
+    pressureControl.classList.add('o2-pressure-control');
+    pressureControl.style.display = structure.isBooleanFlagSet('terraformingBureauFeature') ? 'flex' : 'none';
+
+    const pressureCheckbox = document.createElement('input');
+    pressureCheckbox.type = 'checkbox';
+    pressureCheckbox.classList.add('o2-pressure-checkbox');
+    pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+    pressureCheckbox.addEventListener('change', () => {
+      oxygenFactorySettings.autoDisableAbovePressure = pressureCheckbox.checked;
+    });
+    pressureControl.appendChild(pressureCheckbox);
+
+    const pressureLabel = document.createElement('span');
+    pressureLabel.textContent = 'Disable if O2 P > ';
+    pressureControl.appendChild(pressureLabel);
+
+    const pressureInput = document.createElement('input');
+    pressureInput.type = 'number';
+    pressureInput.step = 1;
+    pressureInput.classList.add('o2-pressure-input');
+    pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
+    pressureInput.addEventListener('input', () => {
+      const val = parseFloat(pressureInput.value);
+      oxygenFactorySettings.disablePressureThreshold = val;
+    });
+    pressureControl.appendChild(pressureInput);
+
+    const unitSpan = document.createElement('span');
+    unitSpan.classList.add('o2-pressure-unit');
+    unitSpan.textContent = 'kPa';
+    pressureControl.appendChild(unitSpan);
+
+    autoBuildContainer.appendChild(pressureControl);
+  }
+
   combinedStructureRow.append(autoBuildContainer);
 
   return combinedStructureRow;
@@ -792,6 +830,20 @@ function updateDecreaseButtonText(button, buildCount) {
           const unitSpan = tempControl.querySelector('.ghg-temp-unit');
           if(unitSpan){
             unitSpan.textContent = getTemperatureUnit();
+          }
+        }
+
+        const pressureControl = autoBuildContainer.querySelector('.o2-pressure-control');
+        if(pressureControl){
+          const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
+          pressureControl.style.display = enabled ? 'flex' : 'none';
+          const pressureCheckbox = pressureControl.querySelector('.o2-pressure-checkbox');
+          if(pressureCheckbox){
+            pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+          }
+          const pressureInput = pressureControl.querySelector('.o2-pressure-input');
+          if(pressureInput){
+            pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
           }
         }
       }

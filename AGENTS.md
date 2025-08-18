@@ -258,3 +258,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.
 - Cargo Rocket project applies rates only once by honoring the `applyRates` flag in `estimateProjectCostAndGain`.
 - Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.
+- Terraforming Bureau oversight adds an auto-disable option for oxygen factories when O2 pressure exceeds a configurable threshold (default 15 kPa).

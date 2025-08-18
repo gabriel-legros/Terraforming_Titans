@@ -126,7 +126,8 @@
 }
 
 .auto-build-input,
-.ghg-temp-input {
+.ghg-temp-input,
+.o2-pressure-input {
     width: 60px;
     text-align: right;
 }
@@ -138,7 +139,8 @@
 .auto-build-input-container,
 .auto-build-target-container,
 .auto-build-setactive-container,
-.ghg-temp-control {
+.ghg-temp-control,
+.o2-pressure-control {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -150,7 +152,8 @@
     margin-left: 5px;
 }
 
-.ghg-temp-control {
+.ghg-temp-control,
+.o2-pressure-control {
     display: flex;
     align-items: center;
     justify-content: flex-end;

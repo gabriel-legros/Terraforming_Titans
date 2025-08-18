@@ -24,6 +24,7 @@ function getGameState() {
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
     ghgFactorySettings: typeof ghgFactorySettings !== 'undefined' ? ghgFactorySettings : undefined,
+    oxygenFactorySettings: typeof oxygenFactorySettings !== 'undefined' ? oxygenFactorySettings : undefined,
     mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined
@@ -319,6 +320,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.ghgFactorySettings){
       Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
+    }
+
+    if(gameState.oxygenFactorySettings){
+      Object.assign(oxygenFactorySettings, gameState.oxygenFactorySettings);
     }
 
     if(gameState.mirrorOversightSettings){
