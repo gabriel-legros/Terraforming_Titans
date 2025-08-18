@@ -541,11 +541,9 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
 
   // Initial colony caps scale
   const baseCapScale = clamp(landHa / DEFAULT_PARAMS.volatiles.referenceLandHa, 0.3, 3);
-  const colonyCaps = { energy: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.energy * baseCapScale) }, metal: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.metal * baseCapScale) }, silicon: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.silicon * baseCapScale) }, glass: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.glass * baseCapScale) }, water: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.water * baseCapScale) }, food: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.food * baseCapScale) }, components: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.components * baseCapScale) }, electronics: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.electronics * baseCapScale) }, superconductors: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.superconductors * baseCapScale) }, androids: { baseCap: Math.round(DEFAULT_PARAMS.colonyCaps.androids * baseCapScale) } };
-
   const overrides = {
     name: planetName(seed, params),
-    resources: { colony: deepMerge(defaultPlanetParameters.resources.colony, colonyCaps), surface, underground, atmospheric: atmo, special },
+    resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
     ...zonal,
     zonalCoverageCache,
     finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
