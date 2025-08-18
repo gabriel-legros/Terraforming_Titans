@@ -647,34 +647,40 @@ function updateLifeStatusTable() {
         return Math.exp(-(diff * diff) / (2 * tolerance * tolerance));
     };
 
-    const getTempStatus = (temp, mult) => {
+    const getTempStatus = (temp, mult, timeOfDay = '') => {
+        const prefix = timeOfDay ? `${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)} ` : '';
         if (temp < survivalRange.min) {
-            return { symbol: '&#x274C;', title: `Too cold (${formatNumber(temp,false,1)}K < ${formatNumber(survivalRange.min,false,1)}K)` };
+            return { symbol: '&#x274C;', title: `${prefix}too cold (${formatNumber(temp,false,1)}K < ${formatNumber(survivalRange.min,false,1)}K)` };
         }
         if (temp > survivalRange.max) {
-            return { symbol: '&#x274C;', title: `Too hot (${formatNumber(temp,false,1)}K > ${formatNumber(survivalRange.max,false,1)}K)` };
+            return { symbol: '&#x274C;', title: `${prefix}too hot (${formatNumber(temp,false,1)}K > ${formatNumber(survivalRange.max,false,1)}K)` };
         }
         if (mult === 0) {
-            return { symbol: '&#x26A0;', title: 'Survives but cannot grow' };
+            return { symbol: '&#x26A0;', title: `${prefix}survives but cannot grow` };
         }
         return { symbol: '&#x2705;', title: '' };
     };
 
+    let anyDayGreen = false;
+    let anyNightGreen = false;
+
     // Update table cells row by row
     zones.forEach(zone => {
         const dayCell = document.getElementById(`day-temp-${zone}`);
-        if (dayCell) {
+        if (dayCell && zone !== 'global') {
             const dayTemp = dayTemps[zone];
             const dayMult = growthTempResults[zone]?.multiplier ?? calcGrowthMult(dayTemp);
-            const status = getTempStatus(dayTemp, dayMult);
+            const status = getTempStatus(dayTemp, dayMult, 'day');
             dayCell.innerHTML = `${formatNumber(toDisplayTemperature(dayTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
+            if (status.symbol === '&#x2705;') { anyDayGreen = true; }
         }
         const nightCell = document.getElementById(`night-temp-${zone}`);
-        if (nightCell) {
+        if (nightCell && zone !== 'global') {
             const nightTemp = nightTemps[zone];
             const nightMult = calcGrowthMult(nightTemp);
-            const status = getTempStatus(nightTemp, nightMult);
+            const status = getTempStatus(nightTemp, nightMult, 'night');
             nightCell.innerHTML = `${formatNumber(toDisplayTemperature(nightTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
+            if (status.symbol === '&#x2705;') { anyNightGreen = true; }
         }
         // --- Update Status Checks ---
         const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
@@ -739,6 +745,15 @@ function updateLifeStatusTable() {
             }
         }
     });
+
+    const dayGlobalCell = document.getElementById('day-temp-global');
+    if (dayGlobalCell) {
+        dayGlobalCell.innerHTML = anyDayGreen ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
+    }
+    const nightGlobalCell = document.getElementById('night-temp-global');
+    if (nightGlobalCell) {
+        nightGlobalCell.innerHTML = anyNightGreen ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
+    }
 }
 
 // Removed old updateZonalBiomassDensities function
