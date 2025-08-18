@@ -286,30 +286,50 @@ class CargoRocketProject extends Project {
     }
   }
 
-  estimateProjectCostAndGain() {
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const totals = { cost: {}, gain: {} };
     if (this.isActive && this.autoStart) {
+      const duration = this.getEffectiveDuration();
+      const rate = 1000 / duration;
+      const timeFraction = deltaTime / duration;
+
       const totalGain = this.pendingResourceGains;
       if (totalGain) {
         totalGain.forEach((gain) => {
-          resources[gain.category][gain.resource].modifyRate(
-            1000 * gain.quantity / this.getEffectiveDuration(),
-            'Cargo Rockets',
-            'project'
-          );
+          const rateValue = gain.quantity * rate * (applyRates ? productivity : 1);
+          if (applyRates) {
+            resources[gain.category][gain.resource].modifyRate(
+              rateValue,
+              'Cargo Rockets',
+              'project'
+            );
+          }
+          if (!totals.gain[gain.category]) totals.gain[gain.category] = {};
+          totals.gain[gain.category][gain.resource] =
+            (totals.gain[gain.category][gain.resource] || 0) + gain.quantity * timeFraction;
         });
       }
 
-      const fundingCost = 1000 * this.getResourceChoiceGainCost(false) / this.getEffectiveDuration();
-      resources.colony.funding.modifyRate(
-        -fundingCost,
-        'Cargo Rockets',
-        'project'
-      );
+      const fundingCost = this.getResourceChoiceGainCost(false);
+      if (fundingCost) {
+        const rateValue = fundingCost * rate * (applyRates ? productivity : 1);
+        if (applyRates) {
+          resources.colony.funding.modifyRate(
+            -rateValue,
+            'Cargo Rockets',
+            'project'
+          );
+        }
+        if (!totals.cost.colony) totals.cost.colony = {};
+        totals.cost.colony.funding =
+          (totals.cost.colony.funding || 0) + fundingCost * timeFraction;
+      }
     }
+    return totals;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
-    this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
   }
 }
 
