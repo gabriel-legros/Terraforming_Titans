@@ -101,11 +101,8 @@ function createSkillTree() {
         const costEl = document.createElement('span');
 
         button.appendChild(nameEl);
-        button.appendChild(document.createElement('br'));
         button.appendChild(descEl);
-        button.appendChild(document.createElement('br'));
         button.appendChild(rankEl);
-        button.appendChild(document.createElement('br'));
         button.appendChild(costEl);
 
         button._skillEls = { name: nameEl, desc: descEl, rank: rankEl, cost: costEl };
