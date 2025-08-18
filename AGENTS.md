@@ -257,3 +257,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self Replicating Ships research now costs 8M advanced research points.
 - Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.
 - Cargo Rocket project applies rates only once by honoring the `applyRates` flag in `estimateProjectCostAndGain`.
+- Save-to-file default filenames include the current world name and timestamp.
