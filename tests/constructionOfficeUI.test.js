@@ -18,11 +18,15 @@ describe('Construction Office UI', () => {
     const status = document.getElementById('autobuilder-status');
     const pauseBtn = document.getElementById('autobuilder-pause-btn');
     const reserveInput = document.getElementById('strategic-reserve-input');
+    const reserveLabel = reserveInput.previousSibling;
+    const reserveIcon = reserveLabel.querySelector('.info-tooltip-icon');
 
     expect(status.textContent).toBe('active');
     expect(pauseBtn.textContent).toBe('Pause');
     expect(reserveInput.value).toBe('0');
     expect(reserveInput.nextSibling.textContent).toBe('%');
+    expect(reserveIcon).toBeTruthy();
+    expect(reserveIcon.getAttribute('title')).toBe('Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.');
 
     pauseBtn.click();
     expect(status.textContent).toBe('disabled');
