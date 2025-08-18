@@ -257,5 +257,9 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self Replicating Ships research now costs 8M advanced research points.
 - Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.
 - Cargo Rocket project applies rates only once by honoring the `applyRates` flag in `estimateProjectCostAndGain`.
+- Milestone festival color changed to a warm green.
+- Save-to-file default filenames include the current world name and timestamp.
 - Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.
 - Terraforming Bureau oversight adds an auto-disable option for oxygen factories when O2 pressure exceeds a configurable threshold (default 15 kPa).
+- Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
+- Production, consumption, and maintenance displays scale with selected build count.

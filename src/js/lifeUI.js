@@ -119,13 +119,6 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Survival Temp</td>
-                        <td id="survival-temp-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="survival-temp-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="survival-temp-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="survival-temp-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                    </tr>
-                    <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Temp Multiplier</td>
                         <td id="temp-multiplier-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="temp-multiplier-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -600,7 +593,6 @@ function updateLifeStatusTable() {
     };
 
     // Get results from check functions
-    const survivalTempResults = designToCheck.temperatureSurvivalCheck();
     const growthTempResults = designToCheck.temperatureGrowthCheck();
     const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
     const radiationResult = designToCheck.radiationCheck(); // Global check
@@ -645,19 +637,45 @@ function updateLifeStatusTable() {
         tableEl.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
     }
 
+    const survivalRange = designToCheck.getTemperatureRanges().survival;
+    const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + designToCheck.optimalGrowthTemperature.value;
+    const tolerance = designToCheck.growthTemperatureTolerance.value * 0.5;
+    const calcGrowthMult = temp => {
+        if (tolerance <= 0) return temp === optimal ? 1 : 0;
+        const diff = temp - optimal;
+        return Math.exp(-(diff * diff) / (2 * tolerance * tolerance));
+    };
+
+    const getTempStatus = (temp, mult) => {
+        if (temp < survivalRange.min) {
+            return { symbol: '&#x274C;', title: `Too cold (${formatNumber(temp,false,1)}K < ${formatNumber(survivalRange.min,false,1)}K)` };
+        }
+        if (temp > survivalRange.max) {
+            return { symbol: '&#x274C;', title: `Too hot (${formatNumber(temp,false,1)}K > ${formatNumber(survivalRange.max,false,1)}K)` };
+        }
+        if (mult === 0) {
+            return { symbol: '&#x26A0;', title: 'Survives but cannot grow' };
+        }
+        return { symbol: '&#x2705;', title: '' };
+    };
+
     // Update table cells row by row
     zones.forEach(zone => {
         const dayCell = document.getElementById(`day-temp-${zone}`);
         if (dayCell) {
-            dayCell.textContent = formatNumber(toDisplayTemperature(dayTemps[zone]), false, 2);
+            const dayTemp = dayTemps[zone];
+            const dayMult = growthTempResults[zone]?.multiplier ?? calcGrowthMult(dayTemp);
+            const status = getTempStatus(dayTemp, dayMult);
+            dayCell.innerHTML = `${formatNumber(toDisplayTemperature(dayTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
         }
         const nightCell = document.getElementById(`night-temp-${zone}`);
         if (nightCell) {
-            nightCell.textContent = formatNumber(toDisplayTemperature(nightTemps[zone]), false, 2);
+            const nightTemp = nightTemps[zone];
+            const nightMult = calcGrowthMult(nightTemp);
+            const status = getTempStatus(nightTemp, nightMult);
+            nightCell.innerHTML = `${formatNumber(toDisplayTemperature(nightTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
         }
         // --- Update Status Checks ---
-        // Survival Temp
-        updateStatusCell(`survival-temp-${zone}-status`, survivalTempResults[zone]);
         const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
         if (tempMultCell && growthTempResults[zone]) {
             tempMultCell.textContent = formatNumber(growthTempResults[zone].multiplier, false, 2);

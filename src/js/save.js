@@ -397,7 +397,12 @@ function saveGameToFile() {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'game_save.json';
+  const worldName = (typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentWorldName === 'function')
+    ? spaceManager.getCurrentWorldName()
+    : 'game';
+  const safeWorldName = worldName.replace(/[^a-z0-9_\-]/gi, '_');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  a.download = `${safeWorldName}_${timestamp}.json`;
   a.click();
 
   URL.revokeObjectURL(url);

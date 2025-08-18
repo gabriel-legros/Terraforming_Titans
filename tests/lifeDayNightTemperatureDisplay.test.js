@@ -57,14 +57,15 @@ describe('life day/night temperature rows', () => {
     ctx.updateLifeUI();
 
     const getText = id => dom.window.document.getElementById(id).textContent;
-    expect(getText('day-temp-tropical')).toBe('300.00');
-    expect(getText('night-temp-temperate')).toBe('270.00');
+    expect(getText('day-temp-tropical')).toBe('300.00 ⚠');
+    expect(getText('night-temp-temperate')).toBe('270.00 ❌');
 
     const p = ctx.getZonePercentage;
     const expectedGlobalDay = (300 * p('tropical') + 290 * p('temperate') + 260 * p('polar'));
     const expectedGlobalNight = (280 * p('tropical') + 270 * p('temperate') + 240 * p('polar'));
-    expect(getText('day-temp-global')).toBe(numbers.formatNumber(expectedGlobalDay, false, 2));
-    expect(getText('night-temp-global')).toBe(numbers.formatNumber(expectedGlobalNight, false, 2));
+    expect(getText('day-temp-global')).toBe(numbers.formatNumber(expectedGlobalDay, false, 2) + ' ⚠');
+    expect(getText('night-temp-global')).toBe(numbers.formatNumber(expectedGlobalNight, false, 2) + ' ❌');
+    expect(dom.window.document.getElementById('survival-temp-global-status')).toBeNull();
   });
 });
 
