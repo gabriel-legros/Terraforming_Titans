@@ -66,10 +66,14 @@ describe('life requirement icon tooltips', () => {
     expect(dayCell.textContent).toBe('❌');
     expect(dayIcon.getAttribute('title')).toBe('Fails in all zones');
 
-    const tropicalDay = dom.window.document.getElementById('day-temp-tropical').querySelector('span');
+    const tropicalDay = dom.window.document
+      .getElementById('day-temp-tropical')
+      .querySelector('.temp-status');
     expect(tropicalDay.getAttribute('title')).toMatch(/^Day too hot/);
 
-    const temperateNight = dom.window.document.getElementById('night-temp-temperate').querySelector('span');
+    const temperateNight = dom.window.document
+      .getElementById('night-temp-temperate')
+      .querySelector('.temp-status');
     expect(temperateNight.getAttribute('title')).toMatch(/^Night too cold/);
   });
 });

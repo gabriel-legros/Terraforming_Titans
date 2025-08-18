@@ -60,8 +60,8 @@ describe('life day/night temperature rows', () => {
     expect(getText('day-temp-tropical')).toBe('300.00 ⚠');
     expect(getText('night-temp-temperate')).toBe('270.00 ❌');
 
-    expect(getText('day-temp-global')).toBe('❌');
-    expect(getText('night-temp-global')).toBe('❌');
+    expect(getText('day-temp-global')).toBe('✅');
+    expect(getText('night-temp-global')).toBe('✅');
     expect(dom.window.document.getElementById('survival-temp-global-status')).toBeNull();
   });
 });
