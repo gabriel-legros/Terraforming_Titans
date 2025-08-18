@@ -260,4 +260,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Milestone festival color changed to a warm green.
 - Save-to-file default filenames include the current world name and timestamp.
 - Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.
+- Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.
