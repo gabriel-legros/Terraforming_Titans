@@ -183,6 +183,9 @@ function updateMirrorOversightUI() {
 
 function updateZonalFluxTable() {
   if (typeof document === 'undefined' || typeof terraforming === 'undefined') return;
+  const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
+  const header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
+  if (header) header.textContent = `Temperature (${tempUnit})`;
   const zones = ['tropical', 'temperate', 'polar'];
   zones.forEach(zone => {
     const fluxCell = document.getElementById(`mirror-flux-${zone}`);
