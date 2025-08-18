@@ -106,7 +106,7 @@
 
 .colony-slider {
   display: grid;
-  grid-template-columns: 160px 1fr auto auto;
+  grid-template-columns: 160px 80px 1fr 120px;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
@@ -128,11 +128,42 @@
 .colony-slider input[type="range"] {
   width: 100%;
 }
+
+.colony-slider .slider-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .colony-slider input[type="range"].pretty-slider {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
   cursor: pointer;
+  width: 100%;
+}
+
+.colony-slider .slider-container .tick-marks {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 5px;
+  pointer-events: none;
+}
+
+.colony-slider .slider-container .tick-marks span {
+  width: 1px;
+  height: 5px;
+  background-color: #888;
+}
+
+.colony-slider .slider-container .tick-marks span:first-child,
+.colony-slider .slider-container .tick-marks span:last-child {
+  background-color: transparent;
 }
 
 /*-webkit-*/

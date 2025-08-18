@@ -43,7 +43,19 @@ function initializeColonySlidersUI() {
   input.value = colonySliderSettings.workerRatio * 100;
   input.setAttribute('list', 'workforce-slider-ticks');
   input.classList.add('pretty-slider');
-  sliderRow.appendChild(input);
+
+  const sliderContainer = document.createElement('div');
+  sliderContainer.classList.add('slider-container');
+  sliderContainer.appendChild(input);
+
+  const tickMarks = document.createElement('div');
+  tickMarks.classList.add('tick-marks');
+  for (let i = 25; i <= 90; i += 5) {
+    const tick = document.createElement('span');
+    tickMarks.appendChild(tick);
+  }
+  sliderContainer.appendChild(tickMarks);
+  sliderRow.appendChild(sliderContainer);
 
   const effectSpan = document.createElement('span');
   effectSpan.id = 'workforce-slider-effect';
@@ -111,7 +123,19 @@ function initializeColonySlidersUI() {
   foodInput.value = colonySliderSettings.foodConsumption;
   foodInput.setAttribute('list', 'food-slider-ticks');
   foodInput.classList.add('pretty-slider');
-  foodRow.appendChild(foodInput);
+
+  const foodSliderContainer = document.createElement('div');
+  foodSliderContainer.classList.add('slider-container');
+  foodSliderContainer.appendChild(foodInput);
+
+  const foodTickMarks = document.createElement('div');
+  foodTickMarks.classList.add('tick-marks');
+  for (let i = 1; i <= 6; i += 0.5) {
+    const tick = document.createElement('span');
+    foodTickMarks.appendChild(tick);
+  }
+  foodSliderContainer.appendChild(foodTickMarks);
+  foodRow.appendChild(foodSliderContainer);
 
   const foodEffect = document.createElement('span');
   foodEffect.id = 'food-slider-effect';
@@ -173,7 +197,19 @@ function initializeColonySlidersUI() {
   waterInput.value = colonySliderSettings.luxuryWater;
   waterInput.setAttribute('list', 'water-slider-ticks');
   waterInput.classList.add('pretty-slider');
-  waterRow.appendChild(waterInput);
+
+  const waterSliderContainer = document.createElement('div');
+  waterSliderContainer.classList.add('slider-container');
+  waterSliderContainer.appendChild(waterInput);
+
+  const waterTickMarks = document.createElement('div');
+  waterTickMarks.classList.add('tick-marks');
+  for (let i = 1; i <= 6; i += 0.5) {
+    const tick = document.createElement('span');
+    waterTickMarks.appendChild(tick);
+  }
+  waterSliderContainer.appendChild(waterTickMarks);
+  waterRow.appendChild(waterSliderContainer);
 
   const waterEffect = document.createElement('span');
   waterEffect.id = 'water-slider-effect';
@@ -236,7 +272,19 @@ function initializeColonySlidersUI() {
   oreInput.value = colonySliderSettings.oreMineWorkers;
   oreInput.setAttribute('list', 'ore-worker-slider-ticks');
   oreInput.classList.add('pretty-slider');
-  oreRow.appendChild(oreInput);
+
+  const oreSliderContainer = document.createElement('div');
+  oreSliderContainer.classList.add('slider-container');
+  oreSliderContainer.appendChild(oreInput);
+
+  const oreTickMarks = document.createElement('div');
+  oreTickMarks.classList.add('tick-marks');
+  for (let i = 0; i <= 10; i += 1) {
+    const tick = document.createElement('span');
+    oreTickMarks.appendChild(tick);
+  }
+  oreSliderContainer.appendChild(oreTickMarks);
+  oreRow.appendChild(oreSliderContainer);
 
   const oreEffect = document.createElement('span');
   oreEffect.id = 'ore-worker-slider-effect';
