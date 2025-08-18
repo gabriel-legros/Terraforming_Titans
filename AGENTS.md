@@ -251,3 +251,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life UI checkmark table lists day and night temperatures for each zone.
 - Buildings requiring workers can be prioritized via a checkbox, allocating workers to them before others.
 - Storage Depot maintenance cost reduced to 10% of its previous value.
+- Self Replicating Ships research now costs 8M advanced research points.

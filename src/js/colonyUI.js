@@ -36,7 +36,7 @@ function createGrowthRateDisplay(){
   baseLine.innerHTML = '<span>Base rate:</span> <span id="growth-base-value">0%/s</span>';
   const baseInfo = document.createElement('span');
   baseInfo.classList.add('info-tooltip-icon');
-  baseInfo.title = 'Base growth rate derived from happiness: (happiness - 50%) / 300. Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating, which can be acquired from researching and constructing better colony buildings. Each luxury resource can add 10 happiness if food and energy are met, and milestones ready to claim or claimed provide 10 more. Happiness above 50% increases growth while below 50% causes decay.';
+  baseInfo.title = 'Base growth rate derived from happiness: (happiness - 50%) / 300. Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating, which can be acquired from researching and constructing better colony buildings. Each luxury resource (electronics and androids) can add 10 happiness if food and energy are met and can be turned off.  Milestones ready to claim or claimed provide 10 more. Happiness above 50% increases growth while below 50% causes decay.';
   baseInfo.innerHTML = '&#9432;';
   baseLine.appendChild(baseInfo);
   body.appendChild(baseLine);
