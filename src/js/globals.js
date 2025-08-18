@@ -56,6 +56,13 @@ let ghgFactorySettings = {
   restartTimer: 0
 };
 
+let oxygenFactorySettings = {
+  autoDisableAbovePressure: false,
+  disablePressureThreshold: 15, // kPa
+  restartCap: 1,
+  restartTimer: 0
+};
+
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
