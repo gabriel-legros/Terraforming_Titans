@@ -375,9 +375,9 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresProductivity: false,
     requiresWorker: 0,
-    maintenanceFactor: 1,
+    maintenanceFactor: 0.1,
     unlocked: false
-  },  
+  },
   hydrogenBattery: {
     name: 'Hydrogen Battery',
     category: 'storage',
