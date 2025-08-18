@@ -179,8 +179,8 @@ const DEFAULT_PARAMS = {
   },
  deposits: {
     // Scaling by surface area
-    areaPerDepositHa: 1_000_000,
-    maxDepositsFraction: 1,
+    areaPerDepositHa: 100_000,
+    maxDepositsFraction: 0.1,
 
     // RANDOM ORE TUNING (all tunable):
     ore: {
