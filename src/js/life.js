@@ -177,9 +177,33 @@ class LifeDesign {
 
       return { pass: reason === null, reason: reason };
   }
-
-  // Returns an object indicating survival status for all zones
-  temperatureSurvivalCheck() {
+ 
+  // Checks only daytime survival temperature for a specific zone
+  daytimeTemperatureSurvivalCheckZone(zoneName) {
+      const temperatureRanges = this.getTemperatureRanges().survival;
+      const zoneData = terraforming.temperature.zones[zoneName];
+      let reason = null;
+ 
+      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${formatNumber(zoneData.day,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
+      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${formatNumber(zoneData.day,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
+ 
+      return { pass: reason === null, reason: reason };
+  }
+ 
+  // Checks only nighttime survival temperature for a specific zone
+  nighttimeTemperatureSurvivalCheckZone(zoneName) {
+      const temperatureRanges = this.getTemperatureRanges().survival;
+      const zoneData = terraforming.temperature.zones[zoneName];
+      let reason = null;
+ 
+      if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${formatNumber(zoneData.night,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
+      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${formatNumber(zoneData.night,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
+ 
+      return { pass: reason === null, reason: reason };
+  }
+ 
+   // Returns an object indicating survival status for all zones
+   temperatureSurvivalCheck() {
       const results = {};
       // Global pass requires ANY zone to pass
       let globalPass = false;

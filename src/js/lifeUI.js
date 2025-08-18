@@ -107,16 +107,16 @@ function initializeLifeTerraformingDesignerUI() {
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Day Temp (<span class="temp-unit"></span>)</td>
                         <td id="day-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="day-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="day-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="day-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="day-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
+                        <td id="day-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
+                        <td id="day-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                     </tr>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Night Temp (<span class="temp-unit"></span>)</td>
                         <td id="night-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="night-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="night-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="night-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
+                        <td id="night-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
+                        <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                     </tr>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Temp Multiplier</td>
@@ -595,6 +595,7 @@ function updateLifeStatusTable() {
 
     // Get results from check functions
     const growthTempResults = designToCheck.temperatureGrowthCheck();
+    const survivalTempResults = designToCheck.temperatureSurvivalCheck();
     const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
     const radiationResult = designToCheck.radiationCheck(); // Global check
     const toxicityResult = designToCheck.toxicityCheck();   // Global check
@@ -647,40 +648,49 @@ function updateLifeStatusTable() {
         return Math.exp(-(diff * diff) / (2 * tolerance * tolerance));
     };
 
-    const getTempStatus = (temp, mult, timeOfDay = '') => {
-        const prefix = timeOfDay ? `${timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)} ` : '';
-        if (temp < survivalRange.min) {
-            return { symbol: '&#x274C;', title: `${prefix}too cold (${formatNumber(temp,false,1)}K < ${formatNumber(survivalRange.min,false,1)}K)` };
-        }
-        if (temp > survivalRange.max) {
-            return { symbol: '&#x274C;', title: `${prefix}too hot (${formatNumber(temp,false,1)}K > ${formatNumber(survivalRange.max,false,1)}K)` };
-        }
-        if (mult === 0) {
-            return { symbol: '&#x26A0;', title: `${prefix}survives but cannot grow` };
-        }
-        return { symbol: '&#x2705;', title: '' };
-    };
-
-    let anyDayGreen = false;
-    let anyNightGreen = false;
-
     // Update table cells row by row
     zones.forEach(zone => {
-        const dayCell = document.getElementById(`day-temp-${zone}`);
-        if (dayCell && zone !== 'global') {
+        if (zone !== 'global') {
+            const dayCell = document.getElementById(`day-temp-${zone}`);
+            const nightCell = document.getElementById(`night-temp-${zone}`);
             const dayTemp = dayTemps[zone];
-            const dayMult = growthTempResults[zone]?.multiplier ?? calcGrowthMult(dayTemp);
-            const status = getTempStatus(dayTemp, dayMult, 'day');
-            dayCell.innerHTML = `${formatNumber(toDisplayTemperature(dayTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
-            if (status.symbol === '&#x2705;') { anyDayGreen = true; }
-        }
-        const nightCell = document.getElementById(`night-temp-${zone}`);
-        if (nightCell && zone !== 'global') {
             const nightTemp = nightTemps[zone];
-            const nightMult = calcGrowthMult(nightTemp);
-            const status = getTempStatus(nightTemp, nightMult, 'night');
-            nightCell.innerHTML = `${formatNumber(toDisplayTemperature(nightTemp), false, 2)} <span title="${status.title}">${status.symbol}</span>`;
-            if (status.symbol === '&#x2705;') { anyNightGreen = true; }
+            const dayMult = growthTempResults[zone]?.multiplier ?? 0;
+
+            const daySurvivalStatus = designToCheck.daytimeTemperatureSurvivalCheckZone(zone);
+            let symbol = daySurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
+            let title = daySurvivalStatus.reason || '';
+
+            // If it can survive the day, but can't grow, show a warning
+            if (daySurvivalStatus.pass && dayMult === 0) {
+                symbol = '&#x26A0;';
+                title = 'Survives but cannot grow';
+            }
+
+            if (dayCell) {
+                const valueSpan = dayCell.querySelector('.temp-value');
+                const statusSpan = dayCell.querySelector('.temp-status');
+                if (valueSpan) valueSpan.textContent = formatNumber(toDisplayTemperature(dayTemp), false, 2);
+                if (statusSpan && (statusSpan.innerHTML !== symbol || statusSpan.title !== title)) {
+                    statusSpan.innerHTML = symbol;
+                    statusSpan.title = title;
+                }
+            }
+
+            if (nightCell) {
+                const valueSpan = nightCell.querySelector('.temp-value');
+                const statusSpan = nightCell.querySelector('.temp-status');
+                if (valueSpan) valueSpan.textContent = formatNumber(toDisplayTemperature(nightTemp), false, 2);
+
+                const nightSurvivalStatus = designToCheck.nighttimeTemperatureSurvivalCheckZone(zone);
+                const nightSymbol = nightSurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
+                const nightTitle = nightSurvivalStatus.reason || '';
+
+                if (statusSpan && (statusSpan.innerHTML !== nightSymbol || statusSpan.title !== nightTitle)) {
+                    statusSpan.innerHTML = nightSymbol;
+                    statusSpan.title = nightTitle;
+                }
+            }
         }
         // --- Update Status Checks ---
         const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
@@ -748,11 +758,17 @@ function updateLifeStatusTable() {
 
     const dayGlobalCell = document.getElementById('day-temp-global');
     if (dayGlobalCell) {
-        dayGlobalCell.innerHTML = anyDayGreen ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
+        dayGlobalCell.innerHTML = survivalTempResults.global.pass ? '&#x2705;' : `<span title="${survivalTempResults.global.reason}">&#x274C;</span>`;
     }
     const nightGlobalCell = document.getElementById('night-temp-global');
     if (nightGlobalCell) {
-        nightGlobalCell.innerHTML = anyNightGreen ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
+        // This logic is a bit simplified for the global night view.
+        // A true global check would see if *any* zone's night temp is survivable.
+        const anyNightSurvivable = ['tropical', 'temperate', 'polar'].some(z => {
+            const temp = nightTemps[z];
+            return temp >= survivalRange.min && temp <= survivalRange.max;
+        });
+        nightGlobalCell.innerHTML = anyNightSurvivable ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
     }
 }
 
