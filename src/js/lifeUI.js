@@ -105,6 +105,20 @@ function initializeLifeTerraformingDesignerUI() {
                 </thead>
                 <tbody>
                     <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Day Temp (<span class="temp-unit"></span>)</td>
+                        <td id="day-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="day-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="day-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="day-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 5px;">Night Temp (<span class="temp-unit"></span>)</td>
+                        <td id="night-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="night-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="night-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                    </tr>
+                    <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Survival Temp</td>
                         <td id="survival-temp-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="survival-temp-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -601,8 +615,46 @@ function updateLifeStatusTable() {
     const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
     const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
 
+    // Precompute day and night temperatures
+    const zonePerc = {
+        tropical: getZonePercentage('tropical'),
+        temperate: getZonePercentage('temperate'),
+        polar: getZonePercentage('polar')
+    };
+    const globalDayTemp = terraforming.temperature.zones.tropical.day * zonePerc.tropical +
+        terraforming.temperature.zones.temperate.day * zonePerc.temperate +
+        terraforming.temperature.zones.polar.day * zonePerc.polar;
+    const globalNightTemp = terraforming.temperature.zones.tropical.night * zonePerc.tropical +
+        terraforming.temperature.zones.temperate.night * zonePerc.temperate +
+        terraforming.temperature.zones.polar.night * zonePerc.polar;
+    const dayTemps = {
+        global: globalDayTemp,
+        tropical: terraforming.temperature.zones.tropical.day,
+        temperate: terraforming.temperature.zones.temperate.day,
+        polar: terraforming.temperature.zones.polar.day
+    };
+    const nightTemps = {
+        global: globalNightTemp,
+        tropical: terraforming.temperature.zones.tropical.night,
+        temperate: terraforming.temperature.zones.temperate.night,
+        polar: terraforming.temperature.zones.polar.night
+    };
+    const unit = getTemperatureUnit();
+    const tableEl = document.getElementById('life-status-table');
+    if (tableEl) {
+        tableEl.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
+    }
+
     // Update table cells row by row
     zones.forEach(zone => {
+        const dayCell = document.getElementById(`day-temp-${zone}`);
+        if (dayCell) {
+            dayCell.textContent = formatNumber(toDisplayTemperature(dayTemps[zone]), false, 2);
+        }
+        const nightCell = document.getElementById(`night-temp-${zone}`);
+        if (nightCell) {
+            nightCell.textContent = formatNumber(toDisplayTemperature(nightTemps[zone]), false, 2);
+        }
         // --- Update Status Checks ---
         // Survival Temp
         updateStatusCell(`survival-temp-${zone}-status`, survivalTempResults[zone]);
