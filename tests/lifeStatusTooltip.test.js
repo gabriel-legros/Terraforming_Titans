@@ -8,7 +8,7 @@ const physics = require('../src/js/physics.js');
 const zones = require('../src/js/zones.js');
 
 describe('life requirement icon tooltips', () => {
-  test('failing icons show explanatory tooltips', () => {
+  test('temperature icons show detailed failure reasons', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="life-terraforming"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
@@ -31,9 +31,9 @@ describe('life requirement icon tooltips', () => {
     ctx.terraforming = {
       temperature: {
         zones: {
-          tropical: { day: 303.15, night: 303.15 },
-          temperate: { day: 303.15, night: 303.15 },
-          polar: { day: 303.15, night: 303.15 }
+          tropical: { day: 400, night: 100 },
+          temperate: { day: 400, night: 100 },
+          polar: { day: 400, night: 100 }
         }
       },
       zonalSurface: { tropical: { biomass: 0 }, temperate: { biomass: 0 }, polar: { biomass: 0 } },
@@ -63,7 +63,14 @@ describe('life requirement icon tooltips', () => {
 
     const dayCell = dom.window.document.getElementById('day-temp-global');
     const dayIcon = dayCell.querySelector('span');
-    expect(dayIcon.getAttribute('title')).toBe('Survives but cannot grow');
+    expect(dayCell.textContent).toBe('❌');
+    expect(dayIcon.getAttribute('title')).toBe('Fails in all zones');
+
+    const tropicalDay = dom.window.document.getElementById('day-temp-tropical').querySelector('span');
+    expect(tropicalDay.getAttribute('title')).toMatch(/^Day too hot/);
+
+    const temperateNight = dom.window.document.getElementById('night-temp-temperate').querySelector('span');
+    expect(temperateNight.getAttribute('title')).toMatch(/^Night too cold/);
   });
 });
 
