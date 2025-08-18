@@ -161,7 +161,13 @@ function initializeConstructionOfficeUI() {
 
     const reserveDiv = document.createElement('div');
     const reserveLabel = document.createElement('label');
-    reserveLabel.textContent = 'Strategic reserve: ';
+    reserveLabel.textContent = 'Strategic reserve ';
+    const reserveInfo = document.createElement('span');
+    reserveInfo.classList.add('info-tooltip-icon');
+    reserveInfo.innerHTML = '&#9432;';
+    reserveInfo.title = 'Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.';
+    reserveLabel.appendChild(reserveInfo);
+    reserveLabel.appendChild(document.createTextNode(': '));
     const reserveInput = document.createElement('input');
     reserveInput.type = 'number';
     reserveInput.min = '0';
