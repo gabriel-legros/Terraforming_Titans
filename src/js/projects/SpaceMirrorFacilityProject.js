@@ -99,17 +99,18 @@ function initializeMirrorOversightUI(container) {
     updateMirrorOversightUI();
   });
 
-  // Table showing zonal solar flux
+  // Table showing zonal solar flux and temperature
   const fluxTable = document.createElement('table');
   fluxTable.id = 'mirror-flux-table';
+  const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Solar Flux (W/m²)</th></tr>
+      <tr><th>Zone</th><th>Solar Flux (W/m²)</th><th>Temperature (${tempUnit})</th></tr>
     </thead>
     <tbody>
-      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td></tr>
-      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td></tr>
-      <tr><td>Polar</td><td id="mirror-flux-polar">0</td></tr>
+      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td></tr>
+      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0</td></tr>
+      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0</td></tr>
     </tbody>
   `;
   div.appendChild(fluxTable);
@@ -184,13 +185,24 @@ function updateZonalFluxTable() {
   if (typeof document === 'undefined' || typeof terraforming === 'undefined') return;
   const zones = ['tropical', 'temperate', 'polar'];
   zones.forEach(zone => {
-    const cell = document.getElementById(`mirror-flux-${zone}`);
-    if (!cell) return;
+    const fluxCell = document.getElementById(`mirror-flux-${zone}`);
+    const tempCell = document.getElementById(`mirror-temp-${zone}`);
     let flux = 0;
     if (typeof terraforming.calculateZoneSolarFlux === 'function') {
       flux = terraforming.calculateZoneSolarFlux(zone);
     }
-    cell.textContent = formatNumber(flux, false, 2);
+    if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
+
+    if (tempCell) {
+      let temp = 0;
+      if (terraforming.temperature && terraforming.temperature.zones && terraforming.temperature.zones[zone]) {
+        temp = terraforming.temperature.zones[zone].value;
+      }
+      if (typeof toDisplayTemperature === 'function') {
+        temp = toDisplayTemperature(temp);
+      }
+      tempCell.textContent = formatNumber(temp, false, 2);
+    }
   });
 }
 
