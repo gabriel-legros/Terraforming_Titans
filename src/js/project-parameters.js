@@ -214,7 +214,8 @@ const projectParameters = {
       spaceMining : true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}},
-      maxPressure: 0.01
+      maxPressure: 0.01,
+      maxOxygenPressure: 15
     }
   },
   waterSpaceMining: {
