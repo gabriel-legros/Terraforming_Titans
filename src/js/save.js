@@ -114,7 +114,9 @@ function loadGame(slotOrCustomString) {
                   resources[category][resourceName].cap = Infinity;
                 }
                 const newConfig = currentPlanetParameters.resources[category][resourceName];
-                resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
+                if(newConfig){
+                  resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
+                }
                 resources[category][resourceName].activeEffects = [];
                 resources[category][resourceName].booleanFlags = new Set();
               }
