@@ -263,3 +263,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Terraforming Bureau oversight adds an auto-disable option for oxygen factories when O2 pressure exceeds a configurable threshold (default 15 kPa).
 - Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.
+- Life UI requirement icons display tooltips explaining failure when hovered.

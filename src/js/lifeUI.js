@@ -573,22 +573,23 @@ function updateLifeStatusTable() {
         if (!cell) return;
         
         if (typeof result !== 'object' || result === null || typeof result.pass === 'undefined') {
-             console.error(`Invalid result format for ${elementId}:`, result);
-             cell.innerHTML = '?';
-             cell.title = 'Error fetching status';
-             return;
+            console.error(`Invalid result format for ${elementId}:`, result);
+            cell.innerHTML = '<span title="Error fetching status">?</span>';
+            cell.title = 'Error fetching status';
+            return;
         }
 
         if (result.pass) {
             cell.innerHTML = '&#x2705;';
             cell.title = '';
         } else {
+            const reason = result.reason || 'Failed';
             // Add reduction % for global radiation cell if applicable
             const reductionText = (isGlobalRadiation && result.reduction > 0)
                                  ? ` (-${result.reduction.toFixed(0)}% Growth)`
                                  : '';
-            cell.innerHTML = `&#x274C;${reductionText}`; // Display X and reduction
-            cell.title = result.reason || 'Failed';
+            cell.innerHTML = `<span title="${reason}">&#x274C;</span>${reductionText}`; // Display X with tooltip and reduction
+            cell.title = reason;
         }
     };
 
