@@ -126,6 +126,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
     updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
     updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
     if (structure.canBeToggled) {
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -143,6 +144,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
     updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
     updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
     if (structure.canBeToggled) {
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -193,7 +195,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   productionConsumptionDetails.classList.add('building-production-consumption');
   productionConsumptionDetails.classList.add('small-text'); // Add the 'small-text' class
   productionConsumptionDetails.id = `${structure.name}-production-consumption`;
-  updateProductionConsumptionDetails(structure, productionConsumptionDetails);
+  updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
   structureRow.appendChild(productionConsumptionDetails);
 
   const constructedCountContainer = document.createElement('div');
@@ -828,7 +830,7 @@ function updateDecreaseButtonText(button, buildCount) {
       // Update the production and consumption details
       const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
       if (productionConsumptionDetails) {
-        updateProductionConsumptionDetails(structure, productionConsumptionDetails);
+        updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structureName]);
       }
 
       // Update the cost display
@@ -845,10 +847,10 @@ function updateDecreaseButtonText(button, buildCount) {
     updateUnhideButtons();
   }
 
-  function updateProductionConsumptionDetails(structure, productionConsumptionElement) {
+  function updateProductionConsumptionDetails(structure, productionConsumptionElement, buildCount = 1) {
     if (!productionConsumptionElement) return;
 
-    const sections = getProdConsSections(structure);
+    const sections = getProdConsSections(structure, buildCount);
     const keyString = sections
       .map(sec => `${sec.key}:${(sec.keys || []).join('|')}`)
       .join(';');
@@ -888,8 +890,19 @@ function updateDecreaseButtonText(button, buildCount) {
     });
   }
 
-  function getProdConsSections(structure) {
+  function getProdConsSections(structure, buildCount = 1) {
     const sections = [];
+
+    function scaleResourceMap(map, scale) {
+      const scaled = {};
+      for (const category in map) {
+        scaled[category] = {};
+        for (const resource in map[category]) {
+          scaled[category][resource] = map[category][resource] * scale;
+        }
+      }
+      return scaled;
+    }
 
     const providesParts = [];
     const storageText = formatStorageDetails(structure.getModifiedStorage());
@@ -912,13 +925,13 @@ function updateDecreaseButtonText(button, buildCount) {
       sections.push({ key: 'provides', label: 'Provides', data: providesParts });
     }
 
-    const production = structure.getModifiedProduction();
+    const production = scaleResourceMap(structure.getModifiedProduction(), buildCount);
     const prodKeys = collectResourceKeys(production);
     if (prodKeys.length > 0) {
       sections.push({ key: 'production', label: 'Production', data: production, keys: prodKeys });
     }
 
-    const consumption = structure.getModifiedConsumption();
+    const consumption = scaleResourceMap(structure.getModifiedConsumption(), buildCount);
     const consKeys = collectResourceKeys(consumption);
     if (consKeys.length > 0) {
       sections.push({ key: 'consumption', label: 'Consumption', data: consumption, keys: consKeys });
@@ -928,7 +941,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const filteredMaintenance = Object.entries(structure.maintenanceCost)
         .filter(([_, cost]) => cost > 0)
         .reduce((acc, [res, cost]) => {
-          acc[res] = cost;
+          acc[res] = cost * buildCount;
           return acc;
         }, {});
       const maintenanceKeys = Object.keys(filteredMaintenance).map(r => `colony.${r}`);
