@@ -255,3 +255,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Geothermal power generation research only appears on worlds with geothermal deposits.
 - Storage Depot maintenance cost reduced to 10% of its previous value.
 - Self Replicating Ships research now costs 8M advanced research points.
+- Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.

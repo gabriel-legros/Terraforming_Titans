@@ -42,6 +42,7 @@ describe('Dyson Swarm collector duration UI', () => {
       collectorProgress: 0,
       autoDeployCollectors: false,
       isCompleted: true,
+      unlocked: true,
       canStartCollector: () => true,
       startCollector: () => {},
       renderUI(container) { ctx.renderDysonSwarmUI(this, container); },

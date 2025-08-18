@@ -28,7 +28,6 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   }
 
   canStartCollector() {
-    if (!this.isCompleted) return false;
     if (this.collectorProgress > 0) return false;
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const cat in this.collectorCost) {
@@ -102,17 +101,15 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   update(delta) {
     super.update(delta);
-    if (this.isCompleted) {
-      if (this.collectorProgress > 0) {
-        this.collectorProgress -= delta;
-        if (this.collectorProgress <= 0) {
-          this.collectorProgress = 0;
-          this.collectors += 1;
-          if (this.autoDeployCollectors) this.startCollector();
-        }
-      } else if (this.autoDeployCollectors) {
-        this.startCollector();
+    if (this.collectorProgress > 0) {
+      this.collectorProgress -= delta;
+      if (this.collectorProgress <= 0) {
+        this.collectorProgress = 0;
+        this.collectors += 1;
+        if (this.autoDeployCollectors && (this.isCompleted || this.collectors > 0)) this.startCollector();
       }
+    } else if (this.autoDeployCollectors && (this.isCompleted || this.collectors > 0)) {
+      this.startCollector();
     }
   }
 
