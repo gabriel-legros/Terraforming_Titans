@@ -765,7 +765,7 @@ function updateLifeBox() {
         </thead>
         <tbody>
           <tr>
-            <td>Ground Albedo <span id="ground-albedo-tooltip" class="info-tooltip-icon" title="Base albedo blended with black dust upgrades.">&#9432;</span></td>
+            <td>Ground Albedo <span id="ground-albedo-tooltip" class="info-tooltip-icon" title="Base albedo blended with black dust (0.05 albedo) upgrades.">&#9432;</span></td>
             <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
@@ -826,7 +826,8 @@ function updateLifeBox() {
         ? resources.special.albedoUpgrades.value : 0;
       const area = terraforming.celestialParameters.surfaceArea || 1;
       const coverage = area > 0 ? Math.min(upgrades / area, 1) : 0;
-      groundTooltip.title = `Base: ${base.toFixed(2)}\nBlack dust coverage: ${(coverage*100).toFixed(1)}%`;
+      const dustAlbedo = 0.05;
+      groundTooltip.title = `Base: ${base.toFixed(2)}\nBlack dust albedo: ${dustAlbedo.toFixed(2)}\nBlack dust coverage: ${(coverage*100).toFixed(1)}%`;
     }
 
     const surfAlbEl = document.getElementById('surface-albedo');
