@@ -189,7 +189,7 @@ const titanOverrides = {
     },
     underground: {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
-      geothermal: { initialValue: 1, maxDeposits: 3, areaTotal: 83000 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
     atmospheric: {
       inertGas: { initialValue: 9e15 }, // Override name and value
@@ -293,7 +293,7 @@ const callistoOverrides = {
     underground: {
       /* 1 deposit / 10⁶ ha rule ⇒ 7 300 maximum */
       ore:        { initialValue: 3, maxDeposits: 7300, areaTotal: 73000 },
-      geothermal: { initialValue: 1, maxDeposits:   3, areaTotal: 73000 } // geologically quiet
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
 
     /* ---------- ATMOSPHERE (ultra‑thin CO₂/O₂ exosphere) ---------- */
@@ -403,7 +403,7 @@ const ganymedeOverrides = {
     underground: {
       /* 1 deposit / 10⁶ ha rule ⇒ 8 720 maximum */
       ore:        { initialValue: 3, maxDeposits: 8720, areaTotal: 87200 },
-      geothermal: { initialValue: 1, maxDeposits:   3, areaTotal: 87200 } // geologically quiet
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
 
     /* ATMOSPHERE — ultra-thin CO₂ / O₂ exosphere */
