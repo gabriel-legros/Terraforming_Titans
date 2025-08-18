@@ -26,7 +26,7 @@ describe('Construction Office UI', () => {
     expect(reserveInput.value).toBe('0');
     expect(reserveInput.nextSibling.textContent).toBe('%');
     expect(reserveIcon).toBeTruthy();
-    expect(reserveIcon.getAttribute('title')).toBe('Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.');
+    expect(reserveIcon.getAttribute('title')).toBe('Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.  Does not apply to workers.');
 
     pauseBtn.click();
     expect(status.textContent).toBe('disabled');

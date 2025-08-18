@@ -36,7 +36,7 @@ describe('SpaceMiningProject pressure disable', () => {
     context.resources = {
       colony: { metal: { value: 0 } },
       special: { spaceships: { value: 1 } },
-      atmospheric: { carbonDioxide: { value: 0 }, inertGas: { value: 0 } },
+      atmospheric: { carbonDioxide: { value: 0 }, inertGas: { value: 0 }, oxygen: { value: 0 } },
       surface: {},
       underground: {}
     };
@@ -88,6 +88,22 @@ describe('SpaceMiningProject pressure disable', () => {
     project.disableAbovePressure = true;
     project.disablePressureThreshold = 2e-7;
     context.resources.atmospheric.inertGas.value = 2;
+    expect(project.canStart()).toBe(true);
+  });
+
+  test('cannot start when O2 pressure above threshold', () => {
+    const project = createProject('carbonDioxide');
+    project.disableAboveOxygenPressure = true;
+    project.disableOxygenPressureThreshold = 1e-7;
+    context.resources.atmospheric.oxygen.value = 2;
+    expect(project.canStart()).toBe(false);
+  });
+
+  test('can start when O2 pressure below threshold', () => {
+    const project = createProject('carbonDioxide');
+    project.disableAboveOxygenPressure = true;
+    project.disableOxygenPressureThreshold = 2e-7;
+    context.resources.atmospheric.oxygen.value = 2;
     expect(project.canStart()).toBe(true);
   });
 });

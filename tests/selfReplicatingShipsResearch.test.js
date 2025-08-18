@@ -24,7 +24,7 @@ describe('Self Replicating Ships research', () => {
     const industry = ctx.researchParameters.industry;
     const research = industry.find(r => r.id === 'self_replicating_ships');
     expect(research).toBeDefined();
-    expect(research.cost.advancedResearch).toBe(8000000);
+    expect(research.cost.research).toBe(10000000000);
     expect(research.requiredFlags).toEqual(['selfReplicatingShipsUnlocked']);
     const flag = research.effects.find(e => e.type === 'booleanFlag' && e.flagId === 'selfReplicatingShips' && e.target === 'global' && e.value === true);
     expect(flag).toBeDefined();

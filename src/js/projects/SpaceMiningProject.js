@@ -3,10 +3,19 @@ class SpaceMiningProject extends SpaceshipProject {
     super(config, name);
     this.disableAbovePressure = false;
     this.disablePressureThreshold = 0;
+    this.disableAboveOxygenPressure = false;
+    this.disableOxygenPressureThreshold = 0;
+    this.hasOxygenPressureControl = false;
     const maxPressure = config.attributes?.maxPressure;
     if (typeof maxPressure === 'number') {
       this.disableAbovePressure = true;
       this.disablePressureThreshold = maxPressure;
+    }
+    const maxOxygenPressure = config.attributes?.maxOxygenPressure;
+    if (typeof maxOxygenPressure === 'number') {
+      this.disableAboveOxygenPressure = true;
+      this.disableOxygenPressureThreshold = maxOxygenPressure;
+      this.hasOxygenPressureControl = true;
     }
   }
 
@@ -33,52 +42,67 @@ class SpaceMiningProject extends SpaceshipProject {
     }
   }
 
-  createPressureControl() {
+  getGasAbbreviation(gas) {
+    const map = { carbonDioxide: 'CO2', inertGas: 'N2', oxygen: 'O2' };
+    return map[gas] || gas;
+  }
+
+  createGasPressureControl(gas, checkedProp, thresholdProp, key) {
     const control = document.createElement('div');
-    control.classList.add('checkbox-container', 'pressure-control');
-    control.id = `${this.name}-pressure-control`;
+    control.classList.add('checkbox-container', `${key}-control`);
+    control.id = `${this.name}-${key}-control`;
     control.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
-  
+
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.classList.add('pressure-checkbox');
-    checkbox.checked = this.disableAbovePressure;
+    checkbox.classList.add(`${key}-checkbox`);
+    checkbox.checked = this[checkedProp];
     checkbox.addEventListener('change', () => {
-      this.disableAbovePressure = checkbox.checked;
+      this[checkedProp] = checkbox.checked;
     });
     control.appendChild(checkbox);
-  
+
     const label = document.createElement('label');
-    label.textContent = 'Disable if pressure above: ';
+    const gasLabel = this.getGasAbbreviation(gas);
+    label.textContent = `Disable if ${gasLabel} pressure above: `;
     control.appendChild(label);
-  
+
     const input = document.createElement('input');
     input.type = 'number';
     input.step = 'any';
-    input.classList.add('pressure-input');
-    input.value = this.disablePressureThreshold;
+    input.classList.add(`${key}-input`);
+    input.value = this[thresholdProp];
     input.addEventListener('input', () => {
-      this.disablePressureThreshold = parseFloat(input.value) || 0;
+      this[thresholdProp] = parseFloat(input.value) || 0;
     });
     control.appendChild(input);
-  
+
     const unit = document.createElement('span');
     unit.textContent = 'kPa';
     control.appendChild(unit);
-  
+
     projectElements[this.name] = {
       ...projectElements[this.name],
-      pressureControl: control,
-      pressureCheckbox: checkbox,
-      pressureInput: input,
+      [`${key}Control`]: control,
+      [`${key}Checkbox`]: checkbox,
+      [`${key}Input`]: input,
     };
-  
+
     return control;
+  }
+
+  createPressureControl() {
+    const gas = this.getTargetAtmosphericResource();
+    return this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure');
   }
 
   renderAutomationUI(container) {
     if (!projectElements[this.name]?.pressureControl) {
-      container.appendChild(this.createPressureControl());
+      const gas = this.getTargetAtmosphericResource();
+      container.appendChild(this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure'));
+    }
+    if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
+      container.appendChild(this.createGasPressureControl('oxygen', 'disableAboveOxygenPressure', 'disableOxygenPressureThreshold', 'oxygenPressure'));
     }
   }
 
@@ -96,10 +120,17 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableAbovePressure;
     }
-    if (elements.pressureInput) {
-      if (document.activeElement !== elements.pressureInput) {
-        elements.pressureInput.value = this.disablePressureThreshold;
-      }
+    if (elements.pressureInput && document.activeElement !== elements.pressureInput) {
+      elements.pressureInput.value = this.disablePressureThreshold;
+    }
+    if (elements.oxygenPressureControl) {
+      elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+    }
+    if (elements.oxygenPressureCheckbox) {
+      elements.oxygenPressureCheckbox.checked = this.disableAboveOxygenPressure;
+    }
+    if (elements.oxygenPressureInput && document.activeElement !== elements.oxygenPressureInput) {
+      elements.oxygenPressureInput.value = this.disableOxygenPressureThreshold;
     }
   }
 
@@ -130,6 +161,18 @@ class SpaceMiningProject extends SpaceshipProject {
         }
       }
     }
+    if (this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
+      const amount = resources.atmospheric.oxygen.value || 0;
+      const pressurePa = calculateAtmosphericPressure(
+        amount,
+        terraforming.celestialParameters.gravity,
+        terraforming.celestialParameters.radius
+      );
+      const pressureKPa = pressurePa / 1000;
+      if (pressureKPa >= this.disableOxygenPressureThreshold) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -151,6 +194,18 @@ class SpaceMiningProject extends SpaceshipProject {
         }
       }
     }
+    if (this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
+      const amount = resources.atmospheric.oxygen.value || 0;
+      const pressurePa = calculateAtmosphericPressure(
+        amount,
+        terraforming.celestialParameters.gravity,
+        terraforming.celestialParameters.radius
+      );
+      const pressureKPa = pressurePa / 1000;
+      if (pressureKPa >= this.disableOxygenPressureThreshold) {
+        return false;
+      }
+    }
 
     return true;
   }
@@ -160,6 +215,8 @@ class SpaceMiningProject extends SpaceshipProject {
       ...super.saveState(),
       disableAbovePressure: this.disableAbovePressure,
       disablePressureThreshold: this.disablePressureThreshold,
+      disableAboveOxygenPressure: this.disableAboveOxygenPressure,
+      disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
     };
   }
 
@@ -167,6 +224,8 @@ class SpaceMiningProject extends SpaceshipProject {
     super.loadState(state);
     this.disableAbovePressure = state.disableAbovePressure || false;
     this.disablePressureThreshold = state.disablePressureThreshold || 0;
+    this.disableAboveOxygenPressure = state.disableAboveOxygenPressure || false;
+    this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold || 0;
   }
 
   calculateSpaceshipGainPerShip() {
