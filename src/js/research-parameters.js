@@ -657,7 +657,7 @@ const researchParameters = {
       },
       {
         id: 't2_colony',
-        name: 'Small outpost',
+        name: 'Permanent outpost',
         description: 'Enables a larger colony for more efficient colonization.',
         cost: { research: 1000 },
         prerequisites: [],
