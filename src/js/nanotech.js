@@ -2,7 +2,6 @@ class NanotechManager extends EffectableEntity {
   constructor() {
     super({ description: 'Manages the nanobot swarm' });
     this.nanobots = 1; // starting nanobot count
-    this.growthSlider = 0; // 0-10
     this.siliconSlider = 0; // 0-10
     this.maintenanceSlider = 0; // 0-10
     this.glassSlider = 0; // 0-10
@@ -15,6 +14,8 @@ class NanotechManager extends EffectableEntity {
     this.enabled = false;
     this.powerFraction = 1;
     this.siliconFraction = 1;
+    this.hasEnoughEnergy = true;
+    this.hasEnoughSilicon = true;
     this.effectiveGrowthRate = 0;
     this.maxEnergyPercent = 10;
   }
@@ -29,7 +30,7 @@ class NanotechManager extends EffectableEntity {
 
   produceResources(deltaTime, accumulatedChanges) {
     if (!this.enabled) return;
-    const baseRate = (this.growthSlider / 10) * 0.0025;
+    const baseRate = 0.0025;
     let powerFraction = 1;
     let siliconFraction = 1;
     this.currentEnergyConsumption = 0;
@@ -43,7 +44,9 @@ class NanotechManager extends EffectableEntity {
       if (siliconRes && accumulatedChanges?.colony) {
         const needed = this.optimalSiliconConsumption * (deltaTime / 1000);
         const available = siliconRes.value + (accumulatedChanges.colony.silicon || 0);
-        const used = Math.min(needed, available);
+        this.hasEnoughSilicon = available >= this.optimalSiliconConsumption * (deltaTime / 1000);
+        const used = this.hasEnoughSilicon ? needed : available;
+
         this.currentSiliconConsumption = used / (deltaTime / 1000);
         accumulatedChanges.colony.silicon =
           (accumulatedChanges.colony.silicon || 0) - used;
@@ -52,7 +55,7 @@ class NanotechManager extends EffectableEntity {
           'Nanotech Silicon',
           'nanotech'
         );
-        siliconFraction = needed > 0 ? used / needed : 1;
+        siliconFraction = this.hasEnoughSilicon ? 1 : (needed > 0 ? used / needed : 1);
       } else if (this.siliconSlider > 0) {
         siliconFraction = 0;
       }
@@ -76,12 +79,17 @@ class NanotechManager extends EffectableEntity {
         const availableEnergy =
           energyRes.value + (accumulatedChanges.colony.energy || 0);
         const requiredEnergy = maxPossible * (deltaTime / 1000);
-        const actualEnergy = Math.min(requiredEnergy, availableEnergy);
-        const actualPower = (actualEnergy * 1000) / deltaTime;
-        powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
-        this.currentEnergyConsumption = actualPower;
+        const requiredEnergyForOptimal = this.optimalEnergyConsumption * (deltaTime / 1000);
+        const canDrawOptimal = Math.min(requiredEnergyForOptimal, allowedPower * (deltaTime / 1000));
+        const actualEnergy = Math.min(canDrawOptimal, availableEnergy);
+        this.currentEnergyConsumption = (actualEnergy * 1000) / deltaTime;
+
+        powerFraction = this.optimalEnergyConsumption > 0 ? this.currentEnergyConsumption / this.optimalEnergyConsumption : 0;
+
+        this.hasEnoughEnergy = allowedPower >= this.optimalEnergyConsumption;
+
         accumulatedChanges.colony.energy -= actualEnergy;
-        energyRes.modifyRate(-actualPower, 'Nanotech Growth', 'nanotech');
+        energyRes.modifyRate(-this.currentEnergyConsumption, 'Nanotech Growth', 'nanotech');
       } else if (baseRate > 0) {
         powerFraction = 0;
       }
@@ -178,19 +186,12 @@ class NanotechManager extends EffectableEntity {
             </div>
           </div>
           <div class="control-group">
-            <label for="nanotech-growth-slider">Growth</label>
-            <div class="slider-container">
-              <input type="range" id="nanotech-growth-slider" min="0" max="10" step="1">
-              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
-            </div>
-            <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
+            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Maximum percentage of total energy production the swarm may consume per second.">&#9432;</span></label>
+            <input type="number" id="nanotech-energy-limit" min="0" max="100" step="any" value="${this.maxEnergyPercent}">
             <span id="nanotech-growth-energy" class="slider-value">0 W</span>
+            <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
           </div>
           <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
-          <div class="control-group">
-            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Maximum percentage of total energy production the swarm may consume per second.">&#9432;</span></label>
-            <input type="number" id="nanotech-energy-limit" min="0" max="100" step="1" value="${this.maxEnergyPercent}">
-          </div>
 
           <h4>Stage I</h4>
           <div class="control-group">
@@ -225,12 +226,6 @@ class NanotechManager extends EffectableEntity {
           <div class="slider-description"><small>Diverts growth to fabricate glass.</small></div>
         </div>`;
       document
-        .getElementById('nanotech-growth-slider')
-        .addEventListener('input', (e) => {
-          this.growthSlider = parseInt(e.target.value);
-          this.updateUI();
-        });
-      document
         .getElementById('nanotech-silicon-slider')
         .addEventListener('input', (e) => {
           this.siliconSlider = parseInt(e.target.value);
@@ -264,7 +259,7 @@ class NanotechManager extends EffectableEntity {
     if (capEl) capEl.textContent = formatNumber(max);
     const growthEl = document.getElementById('nanobot-growth-rate');
     if (growthEl) {
-      const baseOpt = (this.growthSlider / 10) * 0.0025;
+      const baseOpt = 0.0025;
       const siliconOpt = (this.siliconSlider / 10) * 0.0015;
       const penalty =
         (this.maintenanceSlider / 10) * 0.0015 +
@@ -275,11 +270,9 @@ class NanotechManager extends EffectableEntity {
         siliconOpt * this.siliconFraction -
         penalty;
       growthEl.textContent = `${(effectiveRate * 100).toFixed(2)}%`;
-      growthEl.style.color = effectiveRate < optimalRate ? 'orange' : '';
+      growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon) ? 'orange' : '';
       this.effectiveGrowthRate = effectiveRate;
     }
-    const gSlider = document.getElementById('nanotech-growth-slider');
-    if (gSlider) gSlider.value = this.growthSlider;
     const sSlider = document.getElementById('nanotech-silicon-slider');
     if (sSlider) sSlider.value = this.siliconSlider;
     const mSlider = document.getElementById('nanotech-maintenance-slider');
@@ -287,21 +280,23 @@ class NanotechManager extends EffectableEntity {
     const glSlider = document.getElementById('nanotech-glass-slider');
     if (glSlider) glSlider.value = this.glassSlider;
     const eLimit = document.getElementById('nanotech-energy-limit');
-    if (eLimit) eLimit.value = this.maxEnergyPercent;
+    if (eLimit && document.activeElement !== eLimit) {
+      eLimit.value = this.maxEnergyPercent;
+    }
 
     const growthImpactEl = document.getElementById('nanotech-growth-impact');
     if (growthImpactEl) {
-      const optimal = (this.growthSlider / 10) * 0.25;
+      const optimal = 0.25;
       const effective = optimal * this.powerFraction;
       growthImpactEl.textContent = `+${effective.toFixed(2)}%`;
-      growthImpactEl.style.color = effective < optimal ? 'orange' : '';
+      growthImpactEl.style.color = !this.hasEnoughEnergy ? 'orange' : '';
     }
     const siliconImpactEl = document.getElementById('nanotech-silicon-impact');
     if (siliconImpactEl) {
       const optimal = (this.siliconSlider / 10) * 0.15;
       const effective = optimal * this.siliconFraction;
       siliconImpactEl.textContent = `+${effective.toFixed(2)}%`;
-      siliconImpactEl.style.color = effective < optimal ? 'orange' : '';
+      siliconImpactEl.style.color = !this.hasEnoughSilicon ? 'orange' : '';
     }
     const maintenanceImpactEl = document.getElementById('nanotech-maintenance-impact');
     if (maintenanceImpactEl) {
@@ -319,14 +314,12 @@ class NanotechManager extends EffectableEntity {
     const energyRateEl = document.getElementById('nanotech-growth-energy');
     if (energyRateEl) {
       energyRateEl.textContent = `${formatNumber(this.currentEnergyConsumption, false, 2, true)} / ${formatNumber(this.optimalEnergyConsumption, false, 2, true)} W`;
-      energyRateEl.style.color =
-        this.currentEnergyConsumption < this.optimalEnergyConsumption ? 'orange' : '';
+      energyRateEl.style.color = !this.hasEnoughEnergy ? 'orange' : '';
     }
     const siliconRateEl = document.getElementById('nanotech-silicon-rate');
     if (siliconRateEl) {
       siliconRateEl.textContent = `${formatNumber(this.currentSiliconConsumption, false, 2, true)} / ${formatNumber(this.optimalSiliconConsumption, false, 2, true)} ton/s`;
-      siliconRateEl.style.color =
-        this.currentSiliconConsumption < this.optimalSiliconConsumption ? 'orange' : '';
+      siliconRateEl.style.color = !this.hasEnoughSilicon ? 'orange' : '';
     }
     const maintenanceRateEl = document.getElementById('nanotech-maintenance-rate');
     if (maintenanceRateEl)
@@ -339,7 +332,6 @@ class NanotechManager extends EffectableEntity {
   saveState() {
     return {
       nanobots: this.nanobots,
-      growthSlider: this.growthSlider,
       siliconSlider: this.siliconSlider,
       maintenanceSlider: this.maintenanceSlider,
       glassSlider: this.glassSlider,
@@ -350,7 +342,6 @@ class NanotechManager extends EffectableEntity {
   loadState(state) {
     if (!state) return;
     this.nanobots = state.nanobots || 1;
-    this.growthSlider = state.growthSlider || 0;
     this.siliconSlider = state.siliconSlider || 0;
     this.maintenanceSlider = state.maintenanceSlider || 0;
     this.glassSlider = state.glassSlider || 0;
