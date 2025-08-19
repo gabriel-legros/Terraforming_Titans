@@ -45,7 +45,7 @@ class NanotechManager extends EffectableEntity {
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
         const needed = this.optimalSiliconConsumption * (deltaTime / 1000);
-        const available = siliconRes.value + (accumulatedChanges.colony.silicon || 0);
+        const available = Math.max(siliconRes.value + (accumulatedChanges.colony.silicon || 0),0);
         this.hasEnoughSilicon = available >= this.optimalSiliconConsumption * (deltaTime / 1000);
         const used = this.hasEnoughSilicon ? needed : available;
 
@@ -81,7 +81,7 @@ class NanotechManager extends EffectableEntity {
         const requiredPower = this.nanobots * 1e-12;
         const maxPossible = Math.min(requiredPower, allowedPower);
         const availableEnergy =
-          energyRes.value + (accumulatedChanges.colony.energy || 0);
+          Math.max(energyRes.value + (accumulatedChanges.colony.energy || 0),0);
         const requiredEnergy = maxPossible * (deltaTime / 1000);
         const requiredEnergyForOptimal = this.optimalEnergyConsumption * (deltaTime / 1000);
         const canDrawOptimal = Math.min(requiredEnergyForOptimal, allowedPower * (deltaTime / 1000));
@@ -113,7 +113,7 @@ class NanotechManager extends EffectableEntity {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
     }
     const max = this.getMaxNanobots();
-    this.nanobots = Math.min(this.nanobots, max);
+    this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.applyMaintenanceEffects();
     this.updateUI();
   }
@@ -380,7 +380,7 @@ class NanotechManager extends EffectableEntity {
     this.maxEnergyAbsolute = state.maxEnergyAbsolute || 0;
     this.energyLimitMode = state.energyLimitMode || 'percent';
     const max = this.getMaxNanobots();
-    this.nanobots = Math.min(this.nanobots, max);
+    this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.reapplyEffects();
     this.updateUI();
   }
