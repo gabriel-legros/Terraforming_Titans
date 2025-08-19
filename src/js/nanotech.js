@@ -14,17 +14,10 @@ class NanotechManager extends EffectableEntity {
     this.optimalSiliconConsumption = 0;
     this.enabled = false;
     this.powerFraction = 1;
+    this.siliconFraction = 1;
     this.effectiveGrowthRate = 0;
   }
 
-  getGrowthRate() {
-    return (
-      (this.growthSlider / 10) * 0.0025 +
-      (this.siliconSlider / 10) * 0.0015 -
-      (this.maintenanceSlider / 10) * 0.0015 -
-      (this.glassSlider / 10) * 0.0015
-    );
-  }
 
   getMaxNanobots() {
     if (typeof resources !== 'undefined' && resources.surface?.land) {
@@ -35,31 +28,15 @@ class NanotechManager extends EffectableEntity {
 
   produceResources(deltaTime, accumulatedChanges) {
     if (!this.enabled) return;
-    const rate = this.getGrowthRate();
-    let effectiveRate = rate;
+    const baseRate = (this.growthSlider / 10) * 0.0025;
     let powerFraction = 1;
+    let siliconFraction = 1;
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
     this.optimalEnergyConsumption = rate > 0 ? this.nanobots * 1e-12 : 0;
     this.optimalSiliconConsumption = this.nanobots * 1e-18 * (this.siliconSlider / 10);
     if (typeof resources !== 'undefined') {
-      const energyRes = resources.colony?.energy;
-      if (rate > 0 && energyRes && accumulatedChanges?.colony) {
-        const projected = energyRes.value + (accumulatedChanges.colony.energy || 0);
-        const overflowEnergy = Math.max(0, projected - energyRes.cap);
-        const availablePower = overflowEnergy;
-        const requiredPower = this.optimalEnergyConsumption * deltaTime / 1000;
-        const actualPower = Math.min(requiredPower, availablePower);
-        powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
-        effectiveRate = rate * powerFraction;
-        this.currentEnergyConsumption = actualPower * 1000 / deltaTime;
-        const energyUsed = actualPower;
-        accumulatedChanges.colony.energy -= energyUsed;
-      } else if (rate > 0) {
-        effectiveRate = 0;
-        powerFraction = 0;
-      }
 
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
@@ -69,7 +46,14 @@ class NanotechManager extends EffectableEntity {
         this.currentSiliconConsumption = used / (deltaTime / 1000);
         accumulatedChanges.colony.silicon =
           (accumulatedChanges.colony.silicon || 0) - used;
-        siliconRes.modifyRate(-this.currentSiliconConsumption, 'Nanotech Silicon', 'nanotech');
+        siliconRes.modifyRate(
+          -this.currentSiliconConsumption,
+          'Nanotech Silicon',
+          'nanotech'
+        );
+        siliconFraction = needed > 0 ? used / needed : 1;
+      } else if (this.siliconSlider > 0) {
+        siliconFraction = 0;
       }
 
       const glassRes = resources.colony?.glass;
@@ -80,8 +64,31 @@ class NanotechManager extends EffectableEntity {
           (accumulatedChanges.colony.glass || 0) + glassRate * (deltaTime / 1000);
         glassRes.modifyRate(glassRate, 'Nanotech Glass', 'nanotech');
       }
+
+      const energyRes = resources.colony?.energy;
+      if (baseRate > 0 && energyRes && accumulatedChanges?.colony) {
+        const projected = energyRes.value + (accumulatedChanges.colony.energy || 0);
+        const overflowEnergy = Math.max(0, projected - energyRes.cap);
+        const availablePower = overflowEnergy;
+        const requiredPower = (this.nanobots * 1e-12 * deltaTime) / 1000;
+        const actualPower = Math.min(requiredPower, availablePower);
+        powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
+        this.currentEnergyConsumption = (actualPower * 1000) / deltaTime;
+        accumulatedChanges.colony.energy -= actualPower;
+      } else if (baseRate > 0) {
+        powerFraction = 0;
+      }
+    } else if (this.siliconSlider > 0) {
+      siliconFraction = 0;
     }
     this.powerFraction = powerFraction;
+    this.siliconFraction = siliconFraction;
+    const siliconRate =
+      (this.siliconSlider / 10) * 0.0015 * this.siliconFraction;
+    const penalty =
+      (this.maintenanceSlider / 10) * 0.0015 +
+      (this.glassSlider / 10) * 0.0015;
+    const effectiveRate = baseRate * this.powerFraction + siliconRate - penalty;
     this.effectiveGrowthRate = effectiveRate;
     if (effectiveRate !== 0) {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
@@ -240,13 +247,16 @@ class NanotechManager extends EffectableEntity {
     if (capEl) capEl.textContent = formatNumber(max);
     const growthEl = document.getElementById('nanobot-growth-rate');
     if (growthEl) {
-      const positiveOpt =
-        (this.growthSlider / 10) * 0.0025 + (this.siliconSlider / 10) * 0.0015;
-      const negativeOpt =
-        -(this.maintenanceSlider / 10) * 0.0015 -
+      const baseOpt = (this.growthSlider / 10) * 0.0025;
+      const siliconOpt = (this.siliconSlider / 10) * 0.0015;
+      const penalty =
+        (this.maintenanceSlider / 10) * 0.0015 +
         (this.glassSlider / 10) * 0.0015;
-      const optimalRate = positiveOpt + negativeOpt;
-      const effectiveRate = positiveOpt * this.powerFraction + negativeOpt;
+      const optimalRate = baseOpt + siliconOpt - penalty;
+      const effectiveRate =
+        baseOpt * this.powerFraction +
+        siliconOpt * this.siliconFraction -
+        penalty;
       growthEl.textContent = `${(effectiveRate * 100).toFixed(2)}%`;
       growthEl.style.color = effectiveRate < optimalRate ? 'orange' : '';
       this.effectiveGrowthRate = effectiveRate;
@@ -270,7 +280,7 @@ class NanotechManager extends EffectableEntity {
     const siliconImpactEl = document.getElementById('nanotech-silicon-impact');
     if (siliconImpactEl) {
       const optimal = (this.siliconSlider / 10) * 0.15;
-      const effective = optimal * this.powerFraction;
+      const effective = optimal * this.siliconFraction;
       siliconImpactEl.textContent = `+${effective.toFixed(2)}%`;
       siliconImpactEl.style.color = effective < optimal ? 'orange' : '';
     }
