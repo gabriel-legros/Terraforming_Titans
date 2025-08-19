@@ -40,6 +40,31 @@ describe('nanotech growth', () => {
     expect(manager.nanobots).toBeCloseTo(1 * (1 + 0.0015 * 0.5));
   });
 
+  test('silicon growth scales with silicon consumption', () => {
+    const manager = new NanotechManager();
+    manager.enable();
+    manager.siliconSlider = 10; // 0.15% per second
+    const dt = 1000;
+    const requiredEnergy = manager.nanobots * 1e-11 * (dt / 1000);
+    const neededSilicon = manager.nanobots * 1e-18 * (dt / 1000);
+    global.resources.colony.silicon.value = neededSilicon / 2;
+    const accumulated = { colony: { energy: requiredEnergy } };
+    manager.produceResources(dt, accumulated);
+    expect(manager.nanobots).toBeCloseTo(1 * (1 + 0.0015 * 0.5));
+  });
+
+  test('silicon growth unaffected by energy shortage', () => {
+    const manager = new NanotechManager();
+    manager.enable();
+    manager.siliconSlider = 10;
+    const dt = 1000;
+    const neededSilicon = manager.nanobots * 1e-18 * (dt / 1000);
+    global.resources.colony.silicon.value = neededSilicon;
+    const accumulated = { colony: { energy: 0 } };
+    manager.produceResources(dt, accumulated);
+    expect(manager.nanobots).toBeCloseTo(1 * (1 + 0.0015));
+  });
+
   test('swarm capped by land area', () => {
     const manager = new NanotechManager();
     manager.enable();

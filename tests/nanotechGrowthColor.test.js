@@ -17,7 +17,7 @@ describe('nanotech growth rate color', () => {
     ctx.resources = {
       colony: {
         energy: new Resource({ name: 'energy', category: 'colony', initialValue: 0, hasCap: true, baseCap: 0 }),
-        silicon: new Resource({ name: 'silicon', category: 'colony', initialValue: 1, hasCap: true, baseCap: 1 }),
+        silicon: new Resource({ name: 'silicon', category: 'colony', initialValue: 0, hasCap: true, baseCap: 1 }),
         glass: new Resource({ name: 'glass', category: 'colony', initialValue: 0, hasCap: true, baseCap: 1 })
       },
       surface: { land: new Resource({ name: 'land', category: 'surface', initialValue: 1e9, hasCap: true, baseCap: 1e9 }) }
