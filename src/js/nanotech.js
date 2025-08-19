@@ -113,7 +113,7 @@ class NanotechManager extends EffectableEntity {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
     }
     const max = this.getMaxNanobots();
-    this.nanobots = Math.max(0, Math.min(this.nanobots, max));
+    this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.applyMaintenanceEffects();
     this.updateUI();
   }
@@ -380,7 +380,7 @@ class NanotechManager extends EffectableEntity {
     this.maxEnergyAbsolute = state.maxEnergyAbsolute || 0;
     this.energyLimitMode = state.energyLimitMode || 'percent';
     const max = this.getMaxNanobots();
-    this.nanobots = Math.max(0, Math.min(this.nanobots, max));
+    this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.reapplyEffects();
     this.updateUI();
   }
