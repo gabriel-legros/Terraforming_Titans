@@ -157,6 +157,7 @@ function initializeGameState(options = {}) {
     if (dayNightToggle) {
       dayNightToggle.checked = gameSettings.disableDayNightCycle;
     }
+    nanotechManager.reset();
   }
   
   globalEffects = new EffectableEntity({description : 'Manages global effects'});

@@ -381,6 +381,29 @@ class NanotechManager extends EffectableEntity {
     this.updateUI();
   }
 
+  reset() {
+    this.nanobots = 1;
+    this.siliconSlider = 0;
+    this.maintenanceSlider = 0;
+    this.glassSlider = 0;
+    this.currentEnergyConsumption = 0;
+    this.currentSiliconConsumption = 0;
+    this.currentGlassProduction = 0;
+    this.currentMaintenanceReduction = 0;
+    this.optimalEnergyConsumption = 0;
+    this.optimalSiliconConsumption = 0;
+    this.enabled = false;
+    this.powerFraction = 1;
+    this.siliconFraction = 1;
+    this.hasEnoughEnergy = true;
+    this.hasEnoughSilicon = true;
+    this.effectiveGrowthRate = 0;
+    this.maxEnergyPercent = 10;
+    this.maxEnergyAbsolute = 0;
+    this.energyLimitMode = 'percent';
+    this.updateUI();
+  }
+
   reapplyEffects() {
     this.applyMaintenanceEffects();
   }
