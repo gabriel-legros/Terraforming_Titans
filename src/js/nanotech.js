@@ -10,6 +10,8 @@ class NanotechManager extends EffectableEntity {
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
     this.currentMaintenanceReduction = 0;
+    this.optimalEnergyConsumption = 0;
+    this.optimalSiliconConsumption = 0;
     this.enabled = false;
     this.powerFraction = 1;
     this.effectiveGrowthRate = 0;
@@ -39,13 +41,15 @@ class NanotechManager extends EffectableEntity {
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
+    this.optimalEnergyConsumption = rate > 0 ? this.nanobots * 1e-12 : 0;
+    this.optimalSiliconConsumption = this.nanobots * 1e-18 * (this.siliconSlider / 10);
     if (typeof resources !== 'undefined') {
       const energyRes = resources.colony?.energy;
       if (rate > 0 && energyRes && accumulatedChanges?.colony) {
         const projected = energyRes.value + (accumulatedChanges.colony.energy || 0);
         const overflowEnergy = Math.max(0, projected - energyRes.cap);
         const availablePower = overflowEnergy;
-        const requiredPower = this.nanobots * 1e-12 * deltaTime / 1000;
+        const requiredPower = this.optimalEnergyConsumption * deltaTime / 1000;
         const actualPower = Math.min(requiredPower, availablePower);
         powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
         effectiveRate = rate * powerFraction;
@@ -59,8 +63,7 @@ class NanotechManager extends EffectableEntity {
 
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
-        const siliconRate = this.nanobots * 1e-18 * (this.siliconSlider / 10);
-        const needed = siliconRate * (deltaTime / 1000);
+        const needed = this.optimalSiliconConsumption * (deltaTime / 1000);
         const available = siliconRes.value + (accumulatedChanges.colony.silicon || 0);
         const used = Math.min(needed, available);
         this.currentSiliconConsumption = used / (deltaTime / 1000);
@@ -285,11 +288,17 @@ class NanotechManager extends EffectableEntity {
     }
 
     const energyRateEl = document.getElementById('nanotech-growth-energy');
-    if (energyRateEl)
-      energyRateEl.textContent = `${formatNumber(this.currentEnergyConsumption, false, 2, true)} W`;
+    if (energyRateEl) {
+      energyRateEl.textContent = `${formatNumber(this.currentEnergyConsumption, false, 2, true)} / ${formatNumber(this.optimalEnergyConsumption, false, 2, true)} W`;
+      energyRateEl.style.color =
+        this.currentEnergyConsumption < this.optimalEnergyConsumption ? 'orange' : '';
+    }
     const siliconRateEl = document.getElementById('nanotech-silicon-rate');
-    if (siliconRateEl)
-      siliconRateEl.textContent = `${formatNumber(this.currentSiliconConsumption, false, 2, true)} ton/s`;
+    if (siliconRateEl) {
+      siliconRateEl.textContent = `${formatNumber(this.currentSiliconConsumption, false, 2, true)} / ${formatNumber(this.optimalSiliconConsumption, false, 2, true)} ton/s`;
+      siliconRateEl.style.color =
+        this.currentSiliconConsumption < this.optimalSiliconConsumption ? 'orange' : '';
+    }
     const maintenanceRateEl = document.getElementById('nanotech-maintenance-rate');
     if (maintenanceRateEl)
       maintenanceRateEl.textContent = `-${(this.currentMaintenanceReduction * 100).toFixed(2)}%`;

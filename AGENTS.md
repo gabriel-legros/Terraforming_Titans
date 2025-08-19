@@ -278,3 +278,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life UI requirement icons display tooltips explaining failure when hovered.
 - Nanotechnology system tracks a nanobot swarm with growth and Stage I sliders, consuming excess power, silicon, and producing glass while limiting maintenance. Silicon consumption draws from accumulated changes plus stored value, swarm size scales with land area, and only 1e15 bots survive travel.
 - Nanobot growth rate displays turn orange when power limits prevent reaching the optimal rate.
+- Nanotech UI shows both optimal and actual energy and silicon consumption rates, highlighting shortfalls in orange.
