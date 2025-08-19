@@ -203,7 +203,7 @@ class NanotechManager extends EffectableEntity {
             <span id="nanotech-silicon-impact" class="slider-value">+0.00%</span>
             <span id="nanotech-silicon-rate" class="slider-value">0 ton/s</span>
           </div>
-          <div class="slider-description"><small>Consumes silicon (including silicon in storage) to boost growth.</small></div>
+          <div class="slider-description"><small>Consumes silicon to boost growth.</small></div>
           <div class="control-group">
             <label for="nanotech-maintenance-slider">Maintenance I</label>
             <div class="slider-container">
