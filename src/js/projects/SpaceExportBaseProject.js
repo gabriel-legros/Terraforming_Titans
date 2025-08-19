@@ -195,14 +195,19 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     if (elements.totalDisposalElement) {
-      const totalDisposal = this.calculateSpaceshipTotalDisposal();
+      const perShip = this.calculateSpaceshipTotalDisposal();
       let total = 0;
-      for (const category in totalDisposal) {
-        for (const resource in totalDisposal[category]) {
-          total += totalDisposal[category][resource];
+      for (const category in perShip) {
+        for (const resource in perShip[category]) {
+          total += perShip[category][resource];
         }
       }
-      elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
+      if (this.isContinuous()) {
+        total *= this.assignedSpaceships * (1000 / this.getEffectiveDuration());
+        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}/s`;
+      } else {
+        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
+      }
     }
 
     if (elements.maxDisposalElement && typeof this.getExportCap === 'function') {
