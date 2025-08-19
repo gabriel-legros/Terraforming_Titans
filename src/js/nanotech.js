@@ -158,11 +158,7 @@ class NanotechManager extends EffectableEntity {
           effectId: `nanotechMaint_${res}`,
           sourceId: 'nanotechMaintenance',
         };
-        if (mult !== 1) {
           addEffect(effect);
-        } else if (typeof removeEffect === 'function') {
-          removeEffect(effect);
-        }
       }
     });
   }
