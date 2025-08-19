@@ -86,7 +86,7 @@ class NanotechManager extends EffectableEntity {
         const requiredEnergyForOptimal = this.optimalEnergyConsumption * (deltaTime / 1000);
         const canDrawOptimal = Math.min(requiredEnergyForOptimal, allowedPower * (deltaTime / 1000));
         const actualEnergy = Math.min(canDrawOptimal, availableEnergy);
-        this.currentEnergyConsumption = (actualEnergy * 1000) / deltaTime;
+        this.currentEnergyConsumption = deltaTime > 0 ? (actualEnergy * 1000) / deltaTime : 0;
 
         powerFraction = this.optimalEnergyConsumption > 0 ? this.currentEnergyConsumption / this.optimalEnergyConsumption : 0;
 
