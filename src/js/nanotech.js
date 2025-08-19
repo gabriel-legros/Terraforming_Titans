@@ -16,6 +16,7 @@ class NanotechManager extends EffectableEntity {
     this.powerFraction = 1;
     this.siliconFraction = 1;
     this.effectiveGrowthRate = 0;
+    this.maxEnergyPercent = 10;
   }
 
 
@@ -67,14 +68,20 @@ class NanotechManager extends EffectableEntity {
 
       const energyRes = resources.colony?.energy;
       if (baseRate > 0 && energyRes && accumulatedChanges?.colony) {
-        const projected = energyRes.value + (accumulatedChanges.colony.energy || 0);
-        const overflowEnergy = Math.max(0, projected - energyRes.cap);
-        const availablePower = overflowEnergy;
-        const requiredPower = (this.nanobots * 1e-12 * deltaTime) / 1000;
-        const actualPower = Math.min(requiredPower, availablePower);
+        const productionRate = energyRes.productionRate || 0;
+        const allowedPower =
+          (productionRate * this.maxEnergyPercent) / 100;
+        const requiredPower = this.nanobots * 1e-12;
+        const maxPossible = Math.min(requiredPower, allowedPower);
+        const availableEnergy =
+          energyRes.value + (accumulatedChanges.colony.energy || 0);
+        const requiredEnergy = maxPossible * (deltaTime / 1000);
+        const actualEnergy = Math.min(requiredEnergy, availableEnergy);
+        const actualPower = (actualEnergy * 1000) / deltaTime;
         powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
-        this.currentEnergyConsumption = (actualPower * 1000) / deltaTime;
-        accumulatedChanges.colony.energy -= actualPower;
+        this.currentEnergyConsumption = actualPower;
+        accumulatedChanges.colony.energy -= actualEnergy;
+        energyRes.modifyRate(-actualPower, 'Nanotech Growth', 'nanotech');
       } else if (baseRate > 0) {
         powerFraction = 0;
       }
@@ -180,7 +187,11 @@ class NanotechManager extends EffectableEntity {
             <span id="nanotech-growth-energy" class="slider-value">0 W</span>
           </div>
           <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
-          
+          <div class="control-group">
+            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Maximum percentage of total energy production the swarm may consume per second.">&#9432;</span></label>
+            <input type="number" id="nanotech-energy-limit" min="0" max="100" step="1" value="${this.maxEnergyPercent}">
+          </div>
+
           <h4>Stage I</h4>
           <div class="control-group">
             <label for="nanotech-silicon-slider">Silicon Consumption</label>
@@ -237,6 +248,12 @@ class NanotechManager extends EffectableEntity {
           this.glassSlider = parseInt(e.target.value);
           this.updateUI();
         });
+      document
+        .getElementById('nanotech-energy-limit')
+        .addEventListener('input', (e) => {
+          this.maxEnergyPercent = parseFloat(e.target.value) || 0;
+          this.updateUI();
+        });
     }
     if (!container) return;
     container.style.display = this.enabled ? '' : 'none';
@@ -269,6 +286,8 @@ class NanotechManager extends EffectableEntity {
     if (mSlider) mSlider.value = this.maintenanceSlider;
     const glSlider = document.getElementById('nanotech-glass-slider');
     if (glSlider) glSlider.value = this.glassSlider;
+    const eLimit = document.getElementById('nanotech-energy-limit');
+    if (eLimit) eLimit.value = this.maxEnergyPercent;
 
     const growthImpactEl = document.getElementById('nanotech-growth-impact');
     if (growthImpactEl) {
@@ -324,6 +343,7 @@ class NanotechManager extends EffectableEntity {
       siliconSlider: this.siliconSlider,
       maintenanceSlider: this.maintenanceSlider,
       glassSlider: this.glassSlider,
+      maxEnergyPercent: this.maxEnergyPercent,
     };
   }
 
@@ -334,6 +354,7 @@ class NanotechManager extends EffectableEntity {
     this.siliconSlider = state.siliconSlider || 0;
     this.maintenanceSlider = state.maintenanceSlider || 0;
     this.glassSlider = state.glassSlider || 0;
+    this.maxEnergyPercent = state.maxEnergyPercent ?? 10;
     const max = this.getMaxNanobots();
     this.nanobots = Math.min(this.nanobots, max);
     this.reapplyEffects();
