@@ -567,7 +567,8 @@ function addOrRemoveEffect(effect, action) {
     'researchManager' : researchManager,
     'solisManager' : solisManager,
     'spaceManager' : spaceManager,
-    'warpGateCommand' : warpGateCommand
+    'warpGateCommand' : warpGateCommand,
+    'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined
   };
 
   if (effect.target in targetHandlers &&

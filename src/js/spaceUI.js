@@ -249,6 +249,10 @@ function selectPlanet(planetKey){
         ? projectManager.projects.spaceStorage.saveTravelState()
         : null;
 
+    if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.prepareForTravel === 'function') {
+        nanotechManager.prepareForTravel();
+    }
+
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 
     // World has changed, invalidate cached details before rebuilding UI

@@ -1411,6 +1411,10 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'nanotechnologyStage1',
             value: true
+          },
+          {
+            target: 'nanotechManager',
+            type: 'enable'
           }
         ]
       },

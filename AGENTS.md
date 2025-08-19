@@ -267,3 +267,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added nanotechManager and Nanocolony UI with growth and Stage I sliders.
 - Nanocolony growth consumes excess power and caps swarm size to land area m² × 10e18.
 - Nanotech sliders show per-second energy, silicon, and glass rates and apply up to 50% maintenance coverage.
+- Nanobot swarm unlocks via Nanotechnology Stage I research, shows current and capped counts, displays growth impacts, and only 1e15 bots persist through travel.

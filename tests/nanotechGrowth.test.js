@@ -19,6 +19,7 @@ describe('nanotech growth', () => {
 
   test('grows at full rate when power available', () => {
     const manager = new NanotechManager();
+    manager.enable();
     manager.growthSlider = 10; // 0.15% per second
     const dt = 1000;
     const requiredEnergy = manager.nanobots * 1e-11 * (dt / 1000);
@@ -30,6 +31,7 @@ describe('nanotech growth', () => {
 
   test('growth scales with limited power', () => {
     const manager = new NanotechManager();
+    manager.enable();
     manager.growthSlider = 10;
     const dt = 1000;
     const requiredEnergy = manager.nanobots * 1e-11 * (dt / 1000);
@@ -40,6 +42,7 @@ describe('nanotech growth', () => {
 
   test('swarm capped by land area', () => {
     const manager = new NanotechManager();
+    manager.enable();
     const land = global.resources.surface.land;
     land.value = 0;
     manager.nanobots = 5;
@@ -51,6 +54,7 @@ describe('nanotech growth', () => {
 
   test('tracks silicon use and glass production', () => {
     const manager = new NanotechManager();
+    manager.enable();
     manager.siliconSlider = 10;
     manager.glassSlider = 10;
     const dt = 1000;
@@ -64,6 +68,7 @@ describe('nanotech growth', () => {
 
   test('maintenance slider applies up to 50% reduction', () => {
     const manager = new NanotechManager();
+    manager.enable();
     manager.maintenanceSlider = 10;
     global.structures = {
       b1: { maintenanceCost: { metal: 1e-20 }, active: 1, productivity: 1 },
