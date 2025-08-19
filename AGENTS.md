@@ -281,4 +281,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Nanobot silicon growth boost scales with actual silicon consumption rather than energy availability.
 - Nanotech UI shows both optimal and actual energy and silicon consumption rates, highlighting shortfalls in orange.
 - Nanotech swarm energy usage can be limited to a player-defined percentage of total energy production (default 10%).
-- Nanotech energy limit input now supports percentage of power or absolute watt modes via a dropdown with an explanatory tooltip.
+- Nanotech energy limit input now supports percentage of power or absolute (MW) modes via a dropdown with an explanatory tooltip, multiplying absolute entries by one million.
