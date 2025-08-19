@@ -401,10 +401,6 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
-  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
-    nanotechManager.produceResources(deltaTime, accumulatedChanges);
-  }
-
   if (projectManager) {
     const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
     const projectData = {};
@@ -430,6 +426,10 @@ function produceResources(deltaTime, buildings) {
       project.estimateCostAndGain(deltaTime, true, productivity);
       project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
+  }
+
+  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
+    nanotechManager.produceResources(deltaTime, accumulatedChanges);
   }
 
   // Apply accumulated changes to resources

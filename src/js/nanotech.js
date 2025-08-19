@@ -15,7 +15,7 @@ class NanotechManager extends EffectableEntity {
 
   getGrowthRate() {
     return (
-      (this.growthSlider / 10) * 0.0015 +
+      (this.growthSlider / 10) * 0.0025 +
       (this.siliconSlider / 10) * 0.0015 -
       (this.maintenanceSlider / 10) * 0.0015 -
       (this.glassSlider / 10) * 0.0015
@@ -41,15 +41,15 @@ class NanotechManager extends EffectableEntity {
       if (rate > 0 && energyRes && accumulatedChanges?.colony) {
         const projected = energyRes.value + (accumulatedChanges.colony.energy || 0);
         const overflowEnergy = Math.max(0, projected - energyRes.cap);
-        const availablePower = overflowEnergy / (deltaTime / 1000);
-        const requiredPower = this.nanobots * 1e-11;
+        const availablePower = overflowEnergy;
+        const requiredPower = this.nanobots * 1e-12 * deltaTime / 1000;
         const actualPower = Math.min(requiredPower, availablePower);
         const powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
         effectiveRate = rate * powerFraction;
-        this.currentEnergyConsumption = actualPower;
-        const energyUsed = actualPower * (deltaTime / 1000);
+        this.currentEnergyConsumption = actualPower * 1000 / deltaTime;
+        const energyUsed = actualPower;
         accumulatedChanges.colony.energy -= energyUsed;
-        energyRes.modifyRate(-actualPower, 'Nanotech Growth', 'nanotech');
+        energyRes.modifyRate(-actualPower * 1000 / deltaTime, 'Nanotech Growth', 'nanotech');
       } else if (rate > 0) {
         effectiveRate = 0;
       }
@@ -145,42 +145,58 @@ class NanotechManager extends EffectableEntity {
       container.innerHTML = `
         <div class="card-header"><span class="card-title">Nanocolony</span></div>
         <div class="card-body">
-          <div class="nanobot-stats">
-            <div class="nanobot-count">Nanobots: <span id="nanobot-count">1</span>/<span id="nanobot-cap">1</span></div>
-            <div class="nanobot-growth">Growth rate: <span id="nanobot-growth-rate">0%</span></div>
+          <div class="stats-grid two-col">
+            <div class="stat-item">
+              <span class="stat-label">Nanobots:</span>
+              <span class="stat-value"><span id="nanobot-count">1</span>/<span id="nanobot-cap">1</span></span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Growth rate:</span>
+              <span class="stat-value" id="nanobot-growth-rate">0%</span>
+            </div>
           </div>
-          <div class="slider-row">
+          <div class="control-group">
             <label for="nanotech-growth-slider">Growth</label>
-            <input type="range" id="nanotech-growth-slider" min="0" max="10" step="1">
-            <span id="nanotech-growth-impact" class="slider-impact">+0.00%</span>
-            <span id="nanotech-growth-energy" class="slider-rate">0 W</span>
-            <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 10e-12W.</small></div>
+            <div class="slider-container">
+              <input type="range" id="nanotech-growth-slider" min="0" max="10" step="1">
+              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+            </div>
+            <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
+            <span id="nanotech-growth-energy" class="slider-value">0 W</span>
           </div>
-          <div class="nanotech-stage">
-            <h4>Stage I</h4>
-            <div class="slider-row">
-              <label for="nanotech-silicon-slider">Silicon Consumption</label>
+          <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 10e-12W. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
+          
+          <h4>Stage I</h4>
+          <div class="control-group">
+            <label for="nanotech-silicon-slider">Silicon Consumption</label>
+            <div class="slider-container">
               <input type="range" id="nanotech-silicon-slider" min="0" max="10" step="1">
-              <span id="nanotech-silicon-impact" class="slider-impact">+0.00%</span>
-              <span id="nanotech-silicon-rate" class="slider-rate">0 ton/s</span>
-              <div class="slider-description"><small>Consumes silicon to boost growth.</small></div>
+              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
             </div>
-            <div class="slider-row">
-              <label for="nanotech-maintenance-slider">Maintenance I<span class="info-tooltip-icon" title="Reduces metal, glass, and water maintenance by up to 50%, if the swarm is large enough">&#9432;</span></label>
-              <input type="range" id="nanotech-maintenance-slider" min="0" max="10" step="1">
-              <span id="nanotech-maintenance-impact" class="slider-impact">0.00%</span>
-              <span id="nanotech-maintenance-rate" class="slider-rate">0%</span>
-              <div class="slider-description"><small>Reduces metal, glass, and water maintenance by up to 50%.</small></div>
-            </div>
-            <div class="slider-row">
-              <label for="nanotech-glass-slider">Glass Production</label>
-              <input type="range" id="nanotech-glass-slider" min="0" max="10" step="1">
-              <span id="nanotech-glass-impact" class="slider-impact">0.00%</span>
-              <span id="nanotech-glass-rate" class="slider-rate">0 ton/s</span>
-              <div class="slider-description"><small>Diverts growth to fabricate glass.</small></div>
-            </div>
+            <span id="nanotech-silicon-impact" class="slider-value">+0.00%</span>
+            <span id="nanotech-silicon-rate" class="slider-value">0 ton/s</span>
           </div>
-          <div class="slider-description"><small>When travelling, HOPE can hide 1e15 nanobots from the Dead Hand Protocol.</small></div>
+          <div class="slider-description"><small>Consumes silicon (including silicon in storage) to boost growth.</small></div>
+          <div class="control-group">
+            <label for="nanotech-maintenance-slider">Maintenance I</label>
+            <div class="slider-container">
+              <input type="range" id="nanotech-maintenance-slider" min="0" max="10" step="1">
+              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+            </div>
+            <span id="nanotech-maintenance-impact" class="slider-value">0.00%</span>
+            <span id="nanotech-maintenance-rate" class="slider-value">0%</span>
+          </div>
+          <div class="slider-description"><small>Reduces metal, glass, and water maintenance by up to 50%.</small></div>
+          <div class="control-group">
+            <label for="nanotech-glass-slider">Glass Production</label>
+            <div class="slider-container">
+              <input type="range" id="nanotech-glass-slider" min="0" max="10" step="1">
+              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+            </div>
+            <span id="nanotech-glass-impact" class="slider-value">0.00%</span>
+            <span id="nanotech-glass-rate" class="slider-value">0 ton/s</span>
+          </div>
+          <div class="slider-description"><small>Diverts growth to fabricate glass.</small></div>
         </div>`;
       document
         .getElementById('nanotech-growth-slider')
@@ -211,9 +227,9 @@ class NanotechManager extends EffectableEntity {
     container.style.display = this.enabled ? '' : 'none';
     const max = this.getMaxNanobots();
     const countEl = document.getElementById('nanobot-count');
-    if (countEl) countEl.textContent = this.nanobots.toExponential(2);
+    if (countEl) countEl.textContent = formatNumber(this.nanobots, false, 2);
     const capEl = document.getElementById('nanobot-cap');
-    if (capEl) capEl.textContent = max.toExponential(2);
+    if (capEl) capEl.textContent = formatNumber(max);
     const growthEl = document.getElementById('nanobot-growth-rate');
     if (growthEl)
       growthEl.textContent = `${(this.getGrowthRate() * 100).toFixed(2)}%`;
@@ -228,7 +244,7 @@ class NanotechManager extends EffectableEntity {
 
     const growthImpactEl = document.getElementById('nanotech-growth-impact');
     if (growthImpactEl)
-      growthImpactEl.textContent = `+${((this.growthSlider / 10) * 0.15).toFixed(2)}%`;
+      growthImpactEl.textContent = `+${((this.growthSlider / 10) * 0.25).toFixed(2)}%`;
     const siliconImpactEl = document.getElementById('nanotech-silicon-impact');
     if (siliconImpactEl)
       siliconImpactEl.textContent = `+${((this.siliconSlider / 10) * 0.15).toFixed(2)}%`;
@@ -241,16 +257,16 @@ class NanotechManager extends EffectableEntity {
 
     const energyRateEl = document.getElementById('nanotech-growth-energy');
     if (energyRateEl)
-      energyRateEl.textContent = `${this.currentEnergyConsumption.toExponential(2)} W`;
+      energyRateEl.textContent = `${formatNumber(this.currentEnergyConsumption, false, 2, true)} W`;
     const siliconRateEl = document.getElementById('nanotech-silicon-rate');
     if (siliconRateEl)
-      siliconRateEl.textContent = `${this.currentSiliconConsumption.toExponential(2)} ton/s`;
+      siliconRateEl.textContent = `${formatNumber(this.currentSiliconConsumption, false, 2, true)} ton/s`;
     const maintenanceRateEl = document.getElementById('nanotech-maintenance-rate');
     if (maintenanceRateEl)
       maintenanceRateEl.textContent = `-${(this.currentMaintenanceReduction * 100).toFixed(2)}%`;
     const glassRateEl = document.getElementById('nanotech-glass-rate');
     if (glassRateEl)
-      glassRateEl.textContent = `${this.currentGlassProduction.toExponential(2)} ton/s`;
+      glassRateEl.textContent = `${formatNumber(this.currentGlassProduction, false, 2, true)} ton/s`;
   }
 
   saveState() {

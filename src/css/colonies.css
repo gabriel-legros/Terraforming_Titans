@@ -224,3 +224,141 @@
 #construction-office-card #strategic-reserve-input {
   width: 50px;
 }
+
+/* --- Nanocolony Card --- */
+#nanocolony-container .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#nanocolony-container .stats-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+#nanocolony-container .stat-item {
+    background-color: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+#nanocolony-container .stat-label {
+    font-weight: 600;
+    color: #6c757d;
+    display: block;
+    font-size: 0.9em;
+}
+
+#nanocolony-container .stat-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #343a40;
+}
+
+#nanocolony-container .control-group {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) 80px 80px;
+    align-items: center;
+    gap: 8px;
+    max-width: 600px;
+}
+
+#nanocolony-container .control-group label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#nanocolony-container .control-group .slider-container {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+#nanocolony-container .control-group input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #e9ecef;
+    outline: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#nanocolony-container .control-group .tick-marks {
+    position: absolute;
+    top: 12px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 5px;
+    pointer-events: none;
+}
+
+#nanocolony-container .control-group .tick-marks span {
+    width: 1px;
+    height: 5px;
+    background-color: #888;
+}
+
+#nanocolony-container .control-group .tick-marks span:first-child,
+#nanocolony-container .control-group .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+#nanocolony-container .control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #007bff;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+#nanocolony-container .control-group input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #007bff;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+#nanocolony-container .slider-value {
+    font-size: 1em;
+    font-weight: bold;
+    color: #343a40;
+    min-width: 40px;
+    text-align: right;
+}
+
+#nanocolony-container .slider-description {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: -8px;
+    margin-left: 158px;
+    padding-bottom: 8px;
+    grid-column: 2 / -1;
+}
+
+#nanocolony-container h4 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 5px;
+}

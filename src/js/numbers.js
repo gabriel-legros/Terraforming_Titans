@@ -1,4 +1,4 @@
-function formatNumber(value, integer = false, precision = 1) {
+function formatNumber(value, integer = false, precision = 1, allowSmall = false) {
     const absValue = Math.abs(value);
     let formatted;
 
@@ -30,7 +30,11 @@ function formatNumber(value, integer = false, precision = 1) {
       formatted = (absValue / 1e-6).toFixed(precision) + 'µ'; // Micro
     } else if (absValue >= 1e-9 - 1e-12) {
       formatted = (absValue / 1e-9).toFixed(precision) + 'n'; // Nano
-    } else if (absValue <= 1e-12) {
+    } else if (allowSmall && absValue >= 1e-12 - 1e-15) {
+        formatted = (absValue / 1e-12).toFixed(precision) + 'p'; // Pico
+    } else if (allowSmall && absValue >= 1e-15 - 1e-18) {
+        formatted = (absValue / 1e-15).toFixed(precision) + 'f'; // Femto
+    } else if (absValue < 1e-12 && !allowSmall) {
       formatted = 0;
       value = 0;
     } else {
