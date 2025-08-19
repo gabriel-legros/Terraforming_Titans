@@ -286,3 +286,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Story and random world travel now share preparation logic, saving Space Storage state and capping nanobots before initializing the new planet.
 - Resource disposal and space export in continuous mode display total export as per-second rates.
 - Space export and disposal projects use a shared `getShipCapacity` method so ship capacity effects scale assignment limits and per-ship amounts.
+- Starting a new game now fully resets the nanotech swarm and its sliders.
