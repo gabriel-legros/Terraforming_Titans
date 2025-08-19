@@ -11,6 +11,8 @@ class NanotechManager extends EffectableEntity {
     this.currentGlassProduction = 0;
     this.currentMaintenanceReduction = 0;
     this.enabled = false;
+    this.powerFraction = 1;
+    this.effectiveGrowthRate = 0;
   }
 
   getGrowthRate() {
@@ -33,6 +35,7 @@ class NanotechManager extends EffectableEntity {
     if (!this.enabled) return;
     const rate = this.getGrowthRate();
     let effectiveRate = rate;
+    let powerFraction = 1;
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
@@ -44,13 +47,14 @@ class NanotechManager extends EffectableEntity {
         const availablePower = overflowEnergy;
         const requiredPower = this.nanobots * 1e-12 * deltaTime / 1000;
         const actualPower = Math.min(requiredPower, availablePower);
-        const powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
+        powerFraction = requiredPower > 0 ? actualPower / requiredPower : 0;
         effectiveRate = rate * powerFraction;
         this.currentEnergyConsumption = actualPower * 1000 / deltaTime;
         const energyUsed = actualPower;
         accumulatedChanges.colony.energy -= energyUsed;
       } else if (rate > 0) {
         effectiveRate = 0;
+        powerFraction = 0;
       }
 
       const siliconRes = resources.colony?.silicon;
@@ -74,6 +78,8 @@ class NanotechManager extends EffectableEntity {
         glassRes.modifyRate(glassRate, 'Nanotech Glass', 'nanotech');
       }
     }
+    this.powerFraction = powerFraction;
+    this.effectiveGrowthRate = effectiveRate;
     if (effectiveRate !== 0) {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
     }
@@ -230,8 +236,18 @@ class NanotechManager extends EffectableEntity {
     const capEl = document.getElementById('nanobot-cap');
     if (capEl) capEl.textContent = formatNumber(max);
     const growthEl = document.getElementById('nanobot-growth-rate');
-    if (growthEl)
-      growthEl.textContent = `${(this.getGrowthRate() * 100).toFixed(2)}%`;
+    if (growthEl) {
+      const positiveOpt =
+        (this.growthSlider / 10) * 0.0025 + (this.siliconSlider / 10) * 0.0015;
+      const negativeOpt =
+        -(this.maintenanceSlider / 10) * 0.0015 -
+        (this.glassSlider / 10) * 0.0015;
+      const optimalRate = positiveOpt + negativeOpt;
+      const effectiveRate = positiveOpt * this.powerFraction + negativeOpt;
+      growthEl.textContent = `${(effectiveRate * 100).toFixed(2)}%`;
+      growthEl.style.color = effectiveRate < optimalRate ? 'orange' : '';
+      this.effectiveGrowthRate = effectiveRate;
+    }
     const gSlider = document.getElementById('nanotech-growth-slider');
     if (gSlider) gSlider.value = this.growthSlider;
     const sSlider = document.getElementById('nanotech-silicon-slider');
@@ -242,17 +258,31 @@ class NanotechManager extends EffectableEntity {
     if (glSlider) glSlider.value = this.glassSlider;
 
     const growthImpactEl = document.getElementById('nanotech-growth-impact');
-    if (growthImpactEl)
-      growthImpactEl.textContent = `+${((this.growthSlider / 10) * 0.25).toFixed(2)}%`;
+    if (growthImpactEl) {
+      const optimal = (this.growthSlider / 10) * 0.25;
+      const effective = optimal * this.powerFraction;
+      growthImpactEl.textContent = `+${effective.toFixed(2)}%`;
+      growthImpactEl.style.color = effective < optimal ? 'orange' : '';
+    }
     const siliconImpactEl = document.getElementById('nanotech-silicon-impact');
-    if (siliconImpactEl)
-      siliconImpactEl.textContent = `+${((this.siliconSlider / 10) * 0.15).toFixed(2)}%`;
+    if (siliconImpactEl) {
+      const optimal = (this.siliconSlider / 10) * 0.15;
+      const effective = optimal * this.powerFraction;
+      siliconImpactEl.textContent = `+${effective.toFixed(2)}%`;
+      siliconImpactEl.style.color = effective < optimal ? 'orange' : '';
+    }
     const maintenanceImpactEl = document.getElementById('nanotech-maintenance-impact');
-    if (maintenanceImpactEl)
-      maintenanceImpactEl.textContent = `${(- (this.maintenanceSlider / 10) * 0.15).toFixed(2)}%`;
+    if (maintenanceImpactEl) {
+      const value = -(this.maintenanceSlider / 10) * 0.15;
+      maintenanceImpactEl.textContent = `${value.toFixed(2)}%`;
+      maintenanceImpactEl.style.color = '';
+    }
     const glassImpactEl = document.getElementById('nanotech-glass-impact');
-    if (glassImpactEl)
-      glassImpactEl.textContent = `${(- (this.glassSlider / 10) * 0.15).toFixed(2)}%`;
+    if (glassImpactEl) {
+      const value = -(this.glassSlider / 10) * 0.15;
+      glassImpactEl.textContent = `${value.toFixed(2)}%`;
+      glassImpactEl.style.color = '';
+    }
 
     const energyRateEl = document.getElementById('nanotech-growth-energy');
     if (energyRateEl)
