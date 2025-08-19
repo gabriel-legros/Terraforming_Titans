@@ -34,7 +34,7 @@ class NanotechManager extends EffectableEntity {
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
-    this.optimalEnergyConsumption = rate > 0 ? this.nanobots * 1e-12 : 0;
+    this.optimalEnergyConsumption = this.nanobots * 1e-12;
     this.optimalSiliconConsumption = this.nanobots * 1e-18 * (this.siliconSlider / 10);
     if (typeof resources !== 'undefined') {
 
