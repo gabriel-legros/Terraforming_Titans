@@ -179,7 +179,7 @@ class NanotechManager extends EffectableEntity {
             <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
             <span id="nanotech-growth-energy" class="slider-value">0 W</span>
           </div>
-          <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 10e-12W. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
+          <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
           
           <h4>Stage I</h4>
           <div class="control-group">
