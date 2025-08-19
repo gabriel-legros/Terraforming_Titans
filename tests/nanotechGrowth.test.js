@@ -6,7 +6,7 @@ const { Resource } = require('../src/js/resource.js');
 describe('nanotech growth', () => {
   beforeEach(() => {
     const energy = new Resource({ name: 'energy', category: 'colony', initialValue: 0, hasCap: true, baseCap: 0 });
-    const silicon = new Resource({ name: 'silicon', category: 'colony', initialValue: 0, hasCap: true, baseCap: 1 });
+    const silicon = new Resource({ name: 'silicon', category: 'colony', initialValue: 1, hasCap: true, baseCap: 1 });
     const glass = new Resource({ name: 'glass', category: 'colony', initialValue: 0, hasCap: true, baseCap: 1 });
     const land = new Resource({ name: 'land', category: 'surface', initialValue: 1e9, hasCap: true, baseCap: 1e9 });
     global.resources = { colony: { energy, silicon, glass }, surface: { land } };
@@ -64,6 +64,18 @@ describe('nanotech growth', () => {
     expect(accumulated.colony.glass).toBeCloseTo(1e-20);
     expect(global.resources.colony.silicon.consumptionRate).toBeCloseTo(1e-20);
     expect(global.resources.colony.glass.productionRate).toBeCloseTo(1e-20);
+  });
+
+  test('silicon draws from accumulated changes and stored value', () => {
+    const manager = new NanotechManager();
+    manager.enable();
+    manager.siliconSlider = 10;
+    const dt = 1000;
+    global.resources.colony.silicon.value = 5e-21;
+    const accumulated = { colony: { energy: 0, silicon: 5e-21 } };
+    manager.produceResources(dt, accumulated);
+    // total available was 1e-20, so accumulated should end at -5e-21
+    expect(accumulated.colony.silicon).toBeCloseTo(-5e-21);
   });
 
   test('maintenance slider applies up to 50% reduction', () => {

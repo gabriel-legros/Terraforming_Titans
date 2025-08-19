@@ -57,10 +57,13 @@ class NanotechManager extends EffectableEntity {
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
         const siliconRate = this.nanobots * 1e-20 * (this.siliconSlider / 10);
-        this.currentSiliconConsumption = siliconRate;
+        const needed = siliconRate * (deltaTime / 1000);
+        const available = siliconRes.value + (accumulatedChanges.colony.silicon || 0);
+        const used = Math.min(needed, available);
+        this.currentSiliconConsumption = used / (deltaTime / 1000);
         accumulatedChanges.colony.silicon =
-          (accumulatedChanges.colony.silicon || 0) - siliconRate * (deltaTime / 1000);
-        siliconRes.modifyRate(-siliconRate, 'Nanotech Silicon', 'nanotech');
+          (accumulatedChanges.colony.silicon || 0) - used;
+        siliconRes.modifyRate(-this.currentSiliconConsumption, 'Nanotech Silicon', 'nanotech');
       }
 
       const glassRes = resources.colony?.glass;
