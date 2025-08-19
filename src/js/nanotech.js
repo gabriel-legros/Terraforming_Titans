@@ -188,10 +188,10 @@ class NanotechManager extends EffectableEntity {
           <div class="control-group">
             <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Maximum percentage of total energy production the swarm may consume per second.">&#9432;</span></label>
             <input type="number" id="nanotech-energy-limit" min="0" max="100" step="any" value="${this.maxEnergyPercent}">
-            <span id="nanotech-growth-energy" class="slider-value">0 W</span>
             <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
+            <span id="nanotech-growth-energy" class="slider-value">0 W</span>
           </div>
-          <div class="slider-description"><small>The swarm will consume power over storage (not stored energy) to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
+          <div class="slider-description"><small>The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
 
           <h4>Stage I</h4>
           <div class="control-group">
