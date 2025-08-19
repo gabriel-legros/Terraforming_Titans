@@ -425,3 +425,46 @@ body.dark-mode {
     color: #ffffff;
     border-color: #444;
 }
+.dark-mode #nanocolony-container .stat-item {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode #nanocolony-container .stat-label {
+    color: #bbbbbb;
+}
+
+.dark-mode #nanocolony-container .stat-value {
+    color: #ffffff;
+}
+
+.dark-mode #nanocolony-container .control-group label {
+    color: #ffffff;
+}
+
+.dark-mode #nanocolony-container .control-group input[type="range"] {
+    background: #4d4d4d;
+}
+
+.dark-mode #nanocolony-container .control-group input[type="range"]::-webkit-slider-thumb {
+    background: #007bff;
+    border-color: #1e1e1e;
+}
+
+.dark-mode #nanocolony-container .control-group input[type="range"]::-moz-range-thumb {
+    background: #007bff;
+    border-color: #1e1e1e;
+}
+
+.dark-mode #nanocolony-container .slider-value {
+    color: #ffffff;
+}
+
+.dark-mode #nanocolony-container .slider-description {
+    color: #bbbbbb;
+}
+
+.dark-mode #nanocolony-container h4 {
+    color: #ffffff;
+    border-bottom-color: #444;
+}
