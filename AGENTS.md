@@ -4,6 +4,7 @@
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
+- Keep checks of the kind (typeof something === 'function') and if(resources && resources.special && resources.special.spaceships) to a minimum.  If the checks fail, the code fails and it is better to catch it than let it fail.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
