@@ -241,17 +241,7 @@ function selectPlanet(planetKey){
         console.warn('Target planet already terraformed.');
         return;
     }
-    if (typeof saveGameToSlot === 'function') {
-        saveGameToSlot('pretravel');
-    }
-
-    const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
-        ? projectManager.projects.spaceStorage.saveTravelState()
-        : null;
-
-    if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.prepareForTravel === 'function') {
-        nanotechManager.prepareForTravel();
-    }
+    const storageState = _spaceManagerInstance.prepareForTravel();
 
     if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
 

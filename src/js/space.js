@@ -357,6 +357,20 @@ class SpaceManager extends EffectableEntity {
         return !!this.planetStatuses[key]?.visited;
     }
 
+    prepareForTravel() {
+        if (typeof saveGameToSlot === 'function') {
+            try { saveGameToSlot('pretravel'); } catch (_) {}
+        }
+        const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
+            ? projectManager.projects.spaceStorage.saveTravelState()
+            : null;
+        if (typeof nanotechManager !== 'undefined'
+            && typeof nanotechManager.prepareForTravel === 'function') {
+            nanotechManager.prepareForTravel();
+        }
+        return storageState;
+    }
+
     recordCurrentWorldPopulation(pop) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
@@ -387,9 +401,6 @@ class SpaceManager extends EffectableEntity {
 
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         this.recordCurrentWorldPopulation(pop);
-        if (typeof saveGameToSlot === 'function') {
-            try { saveGameToSlot('pretravel'); } catch (_) {}
-        }
 
         const departingTerraformed = this.currentRandomSeed !== null
             ? this.isSeedTerraformed(String(this.currentRandomSeed))
@@ -398,6 +409,8 @@ class SpaceManager extends EffectableEntity {
         const existing = this.randomWorldStatuses[s];
         const firstVisit = !existing?.visited;
         const destinationTerraformed = existing?.terraformed || false;
+
+        const storageState = this.prepareForTravel();
 
         this.currentRandomSeed = s;
         this.currentPlanetKey = s;
@@ -419,8 +432,6 @@ class SpaceManager extends EffectableEntity {
         if (firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager) {
             skillManager.skillPoints += 1;
         }
-        const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
-            ? projectManager.projects.spaceStorage.saveTravelState() : null;
         globalThis.currentPlanetParameters = res?.merged;
         if (typeof initializeGameState === 'function') {
             initializeGameState({ preserveManagers: true, preserveJournal: true });
