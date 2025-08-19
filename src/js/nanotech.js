@@ -49,7 +49,6 @@ class NanotechManager extends EffectableEntity {
         this.currentEnergyConsumption = actualPower * 1000 / deltaTime;
         const energyUsed = actualPower;
         accumulatedChanges.colony.energy -= energyUsed;
-        energyRes.modifyRate(-actualPower * 1000 / deltaTime, 'Nanotech Growth', 'nanotech');
       } else if (rate > 0) {
         effectiveRate = 0;
       }
