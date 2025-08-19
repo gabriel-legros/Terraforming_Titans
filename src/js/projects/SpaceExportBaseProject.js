@@ -189,8 +189,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     if (elements.disposalPerShipElement) {
-      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-      const perShip = this.attributes.disposalAmount * efficiency;
+      const perShip = this.getShipCapacity();
       elements.disposalPerShipElement.textContent = `Max Export/Ship: ${formatNumber(perShip, true)}`;
     }
 

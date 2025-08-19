@@ -230,11 +230,11 @@ class SpaceMiningProject extends SpaceshipProject {
 
   calculateSpaceshipGainPerShip() {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
-      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
       const zones = ['tropical', 'temperate', 'polar'];
       const allBelow = zones.every(z => (terraforming?.temperature?.zones?.[z]?.value || 0) <= 273.15);
       const resource = allBelow ? 'ice' : 'liquidWater';
-      return { surface: { [resource]: this.attributes.resourceGainPerShip.surface.ice * efficiency } };
+      const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
+      return { surface: { [resource]: capacity } };
     }
     return super.calculateSpaceshipGainPerShip();
   }

@@ -42,11 +42,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     let removed = 0;
     if (this.isContinuous()) {
-      const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
       removed =
-        (this.attributes.disposalAmount || 0) *
+        this.getShipCapacity() *
         this.assignedSpaceships *
-        efficiency *
         (1000 / this.getEffectiveDuration());
     } else {
       const totalDisposal = this.calculateSpaceshipTotalDisposal();

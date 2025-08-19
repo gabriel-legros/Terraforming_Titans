@@ -11,8 +11,8 @@ class SpaceExportProject extends SpaceExportBaseProject {
   }
 
   getMaxAssignableShips() {
-    const capacity = this.attributes.disposalAmount || 1;
-    return Math.floor((this.getEffectiveDuration()/1000)*this.getExportCap() / (capacity));
+    const capacity = this.getShipCapacity() || 1;
+    return Math.floor((this.getEffectiveDuration()/1000)*this.getExportCap() / capacity);
   }
 
   assignSpaceships(count) {
