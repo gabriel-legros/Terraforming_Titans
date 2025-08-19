@@ -65,7 +65,7 @@ describe('nanotech growth', () => {
     expect(manager.nanobots).toBeCloseTo(1 * (1 + 0.0015));
   });
 
-  test('swarm capped by land area', () => {
+  test('swarm capped by land area but never below one', () => {
     const manager = new NanotechManager();
     manager.enable();
     const land = global.resources.surface.land;
@@ -74,7 +74,7 @@ describe('nanotech growth', () => {
     const dt = 1000;
     const accumulated = { colony: { energy: 1 } };
     manager.produceResources(dt, accumulated);
-    expect(manager.nanobots).toBe(0);
+    expect(manager.nanobots).toBe(1);
   });
 
   test('tracks silicon use and glass production', () => {
