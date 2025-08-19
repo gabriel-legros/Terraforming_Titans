@@ -55,7 +55,7 @@ class NanotechManager extends EffectableEntity {
 
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
-        const siliconRate = this.nanobots * 1e-20 * (this.siliconSlider / 10);
+        const siliconRate = this.nanobots * 1e-18 * (this.siliconSlider / 10);
         const needed = siliconRate * (deltaTime / 1000);
         const available = siliconRes.value + (accumulatedChanges.colony.silicon || 0);
         const used = Math.min(needed, available);
@@ -67,7 +67,7 @@ class NanotechManager extends EffectableEntity {
 
       const glassRes = resources.colony?.glass;
       if (glassRes && accumulatedChanges?.colony) {
-        const glassRate = this.nanobots * 1e-20 * (this.glassSlider / 10);
+        const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10);
         this.currentGlassProduction = glassRate;
         accumulatedChanges.colony.glass =
           (accumulatedChanges.colony.glass || 0) + glassRate * (deltaTime / 1000);
