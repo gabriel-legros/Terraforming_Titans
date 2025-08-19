@@ -135,7 +135,7 @@ class NanotechManager extends EffectableEntity {
       totals.water += (s.maintenanceCost.water || 0) * (s.active || 0) * prod;
     }
     const total = totals.metal + totals.glass + totals.water;
-    const coveragePerBot = 1e-20;
+    const coveragePerBot = 1e-18;
     let coverage = total > 0 ? (this.nanobots * coveragePerBot) / total : 0;
     coverage = Math.min(coverage, 0.5);
     const reduction = coverage * (this.maintenanceSlider / 10);
