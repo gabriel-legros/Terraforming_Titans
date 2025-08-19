@@ -14,6 +14,7 @@ function getGameState() {
     journalEntrySources: typeof journalEntrySources !== 'undefined' ? journalEntrySources : undefined,
     journalHistorySources: typeof journalHistorySources !== 'undefined' ? journalHistorySources : undefined,
     goldenAsteroid: (typeof goldenAsteroid !== 'undefined' && typeof goldenAsteroid.saveState === 'function') ? goldenAsteroid.saveState() : undefined,
+    nanotechManager: (typeof nanotechManager !== 'undefined' && typeof nanotechManager.saveState === 'function') ? nanotechManager.saveState() : undefined,
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
@@ -231,6 +232,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.goldenAsteroid){
       goldenAsteroid.loadState(gameState.goldenAsteroid);
+    }
+
+    if(gameState.nanotechManager){
+      nanotechManager.loadState(gameState.nanotechManager);
     }
 
     if(gameState.solisManager){

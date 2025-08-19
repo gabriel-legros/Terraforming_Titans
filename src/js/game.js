@@ -61,6 +61,9 @@ function create() {
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
   initializeColonySlidersUI();
+  if (typeof nanotechManager !== 'undefined') {
+    nanotechManager.updateUI();
+  }
 
   // Combine buildings and colonies into the structures object
   structures = { ...buildings, ...colonies };
@@ -292,6 +295,10 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
     warpGateCommand.reapplyEffects();
+  }
+  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
+    nanotechManager.reapplyEffects();
+    nanotechManager.updateUI();
   }
 }
 

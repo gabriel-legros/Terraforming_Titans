@@ -428,6 +428,10 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
+    nanotechManager.produceResources(deltaTime, accumulatedChanges);
+  }
+
   // Apply accumulated changes to resources
   for (const category in resources) {
     for (const resourceName in resources[category]) {

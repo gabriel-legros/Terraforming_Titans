@@ -71,6 +71,18 @@ Resources are created via `createResources` and updated each tick by
 Helper functions like `checkResourceAvailability` help modules plan without consuming
 resources immediately.
 
+## Nanotechnology
+The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechnology Stage I** research. The UI remains hidden until `enable()` is called.
+
+- Swarm growth requires surplus power beyond storage; each bot draws 1e-11 W.
+- Maximum nanobots equal planetary land area (m²) × 1e19, and only 1e15 bots survive travel.
+- The growth slider adds up to +0.15 % growth. Stage I sliders modify growth while:
+  - **Silicon Consumption** grants up to +0.15 % growth and consumes silicon from current storage plus accumulated changes.
+  - **Maintenance I** reduces metal, glass, and water maintenance by up to 50 % but subtracts up to 0.15 % growth.
+  - **Glass Production** yields glass at 1e-20 t/s per bot and also subtracts up to 0.15 % growth.
+- Per-second energy, silicon, maintenance, and glass rates appear beside each slider with brief descriptions.
+- Travel text notes that H.O.P.E. can hide 1e15 nanobots from the Dead Hand Protocol.
+
 # UI refresh requirements
 - **Starting a new game** – call `startNewGame()` which rebuilds game state.
 - **Loading a save** – `loadGame()` invokes `initializeGameState({ skipStoryInitialization: true })` then applies the saved data.
@@ -264,3 +276,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.
 - Life UI requirement icons display tooltips explaining failure when hovered.
+- Nanotechnology system tracks a nanobot swarm with growth and Stage I sliders, consuming excess power, silicon, and producing glass while limiting maintenance. Silicon consumption draws from accumulated changes plus stored value, swarm size scales with land area, and only 1e15 bots survive travel.

@@ -1402,7 +1402,7 @@ const researchParameters = {
       {
         id: 'nanotechnology_stage_1',
         name: 'Nanotechnology Stage I',
-        description: 'Placeholder for future nanotechnology research.',
+        description: 'Unlocks the nanocolony in the colony tab.',
         cost: { advancedResearch: 125000 },
         prerequisites: [],
         effects: [
@@ -1411,6 +1411,10 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'nanotechnologyStage1',
             value: true
+          },
+          {
+            target: 'nanotechManager',
+            type: 'enable'
           }
         ]
       },
