@@ -37,7 +37,11 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
     } else if (absValue < 1e-12 && !allowSmall) {
       formatted = 0;
       value = 0;
-    } else {
+    } else if (absValue < 1e-18){
+      formatted = 0;
+      value = 0;
+    }
+    else {
       formatted = absValue.toExponential(1); // Scientific notation
     }
   
