@@ -264,3 +264,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.
 - Life UI requirement icons display tooltips explaining failure when hovered.
+- Added nanotechManager and Nanocolony UI with growth and Stage I sliders.
+- Nanocolony growth consumes excess power and caps swarm size to land area m² × 10e18.
