@@ -285,3 +285,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Nanotech energy limit input now supports percentage of power or absolute (MW) modes via a dropdown with an explanatory tooltip, multiplying absolute entries by one million.
 - Story and random world travel now share preparation logic, saving Space Storage state and capping nanobots before initializing the new planet.
 - Resource disposal and space export in continuous mode display total export as per-second rates.
+- Space export and disposal projects use a shared `getShipCapacity` method so ship capacity effects scale assignment limits and per-ship amounts.
