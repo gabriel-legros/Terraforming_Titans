@@ -18,6 +18,8 @@ class NanotechManager extends EffectableEntity {
     this.hasEnoughSilicon = true;
     this.effectiveGrowthRate = 0;
     this.maxEnergyPercent = 10;
+    this.maxEnergyAbsolute = 0;
+    this.energyLimitMode = 'percent';
   }
 
 
@@ -73,7 +75,9 @@ class NanotechManager extends EffectableEntity {
       if (baseRate > 0 && energyRes && accumulatedChanges?.colony) {
         const productionRate = energyRes.productionRate || 0;
         const allowedPower =
-          (productionRate * this.maxEnergyPercent) / 100;
+          this.energyLimitMode === 'absolute'
+            ? this.maxEnergyAbsolute
+            : (productionRate * this.maxEnergyPercent) / 100;
         const requiredPower = this.nanobots * 1e-12;
         const maxPossible = Math.min(requiredPower, allowedPower);
         const availableEnergy =
@@ -186,8 +190,14 @@ class NanotechManager extends EffectableEntity {
             </div>
           </div>
           <div class="control-group">
-            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Maximum percentage of total energy production the swarm may consume per second.">&#9432;</span></label>
-            <input type="number" id="nanotech-energy-limit" min="0" max="100" step="any" value="${this.maxEnergyPercent}">
+            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute: Fixed energy limit in watts the swarm may consume per second.">&#9432;</span></label>
+            <div style="display: flex; gap: 4px;">
+              <input type="number" id="nanotech-energy-limit" min="0" max="100" step="any" value="${this.maxEnergyPercent}" style="flex:1;">
+              <select id="nanotech-energy-limit-mode" style="flex:1;">
+                <option value="percent" selected>percentage of power</option>
+                <option value="absolute">absolute</option>
+              </select>
+            </div>
             <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
             <span id="nanotech-growth-energy" class="slider-value">0 W</span>
           </div>
@@ -246,7 +256,18 @@ class NanotechManager extends EffectableEntity {
       document
         .getElementById('nanotech-energy-limit')
         .addEventListener('input', (e) => {
-          this.maxEnergyPercent = parseFloat(e.target.value) || 0;
+          const val = parseFloat(e.target.value) || 0;
+          if (this.energyLimitMode === 'absolute') {
+            this.maxEnergyAbsolute = val;
+          } else {
+            this.maxEnergyPercent = val;
+          }
+          this.updateUI();
+        });
+      document
+        .getElementById('nanotech-energy-limit-mode')
+        .addEventListener('change', (e) => {
+          this.energyLimitMode = e.target.value;
           this.updateUI();
         });
     }
@@ -280,8 +301,16 @@ class NanotechManager extends EffectableEntity {
     const glSlider = document.getElementById('nanotech-glass-slider');
     if (glSlider) glSlider.value = this.glassSlider;
     const eLimit = document.getElementById('nanotech-energy-limit');
+    const eMode = document.getElementById('nanotech-energy-limit-mode');
+    if (eMode) eMode.value = this.energyLimitMode;
     if (eLimit && document.activeElement !== eLimit) {
-      eLimit.value = this.maxEnergyPercent;
+      if (this.energyLimitMode === 'absolute') {
+        eLimit.value = this.maxEnergyAbsolute;
+        eLimit.removeAttribute('max');
+      } else {
+        eLimit.value = this.maxEnergyPercent;
+        eLimit.max = 100;
+      }
     }
 
     const growthImpactEl = document.getElementById('nanotech-growth-impact');
@@ -336,6 +365,8 @@ class NanotechManager extends EffectableEntity {
       maintenanceSlider: this.maintenanceSlider,
       glassSlider: this.glassSlider,
       maxEnergyPercent: this.maxEnergyPercent,
+      maxEnergyAbsolute: this.maxEnergyAbsolute,
+      energyLimitMode: this.energyLimitMode,
     };
   }
 
@@ -346,6 +377,8 @@ class NanotechManager extends EffectableEntity {
     this.maintenanceSlider = state.maintenanceSlider || 0;
     this.glassSlider = state.glassSlider || 0;
     this.maxEnergyPercent = state.maxEnergyPercent ?? 10;
+    this.maxEnergyAbsolute = state.maxEnergyAbsolute || 0;
+    this.energyLimitMode = state.energyLimitMode || 'percent';
     const max = this.getMaxNanobots();
     this.nanobots = Math.min(this.nanobots, max);
     this.reapplyEffects();
