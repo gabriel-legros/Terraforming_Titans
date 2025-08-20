@@ -287,3 +287,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource disposal and space export in continuous mode display total export as per-second rates.
 - Space export and disposal projects use a shared `getShipCapacity` method so ship capacity effects scale assignment limits and per-ship amounts.
 - Starting a new game now fully resets the nanotech swarm and its sliders.
+- Projects can be reordered based on visibility rather than unlocked status, using a new `isVisible` method; Dyson Swarm has a custom implementation.

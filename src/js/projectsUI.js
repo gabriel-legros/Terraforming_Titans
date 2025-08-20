@@ -285,26 +285,36 @@ function getOrCreateCategoryContainer(category) {
 function moveProject(projectName, direction, shiftKey = false) {
     const project = projectManager.projects[projectName];
     const category = project.category || 'general';
-    const categoryProjects = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
-    const unlockedIndexes = [];
-    categoryProjects.forEach((p, idx) => { if (p.unlocked) unlockedIndexes.push(idx); });
+    const categoryProjects = projectManager
+      .getProjectStatuses()
+      .filter(p => (p.category || 'general') === category);
+    const visibleIndexes = [];
+    categoryProjects.forEach((p, idx) => {
+      if (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) {
+        visibleIndexes.push(idx);
+      }
+    });
     const fromIndexFull = categoryProjects.findIndex(p => p.name === projectName);
-    const fromUnlockedPos = unlockedIndexes.indexOf(fromIndexFull);
+    const fromVisiblePos = visibleIndexes.indexOf(fromIndexFull);
 
-    if (fromUnlockedPos === -1) return;
+    if (fromVisiblePos === -1) return;
 
-    let targetUnlockedPos = fromUnlockedPos;
+    let targetVisiblePos = fromVisiblePos;
     if (shiftKey) {
-        targetUnlockedPos = direction === 'up' ? 0 : unlockedIndexes.length - 1;
+      targetVisiblePos = direction === 'up' ? 0 : visibleIndexes.length - 1;
     } else {
-        targetUnlockedPos = direction === 'up' ? fromUnlockedPos - 1 : fromUnlockedPos + 1;
+      targetVisiblePos = direction === 'up' ? fromVisiblePos - 1 : fromVisiblePos + 1;
     }
 
-    if (targetUnlockedPos < 0 || targetUnlockedPos >= unlockedIndexes.length || targetUnlockedPos === fromUnlockedPos) {
-        return;
+    if (
+      targetVisiblePos < 0 ||
+      targetVisiblePos >= visibleIndexes.length ||
+      targetVisiblePos === fromVisiblePos
+    ) {
+      return;
     }
 
-    const toIndexFull = unlockedIndexes[targetUnlockedPos];
+    const toIndexFull = visibleIndexes[targetVisiblePos];
     projectManager.reorderProject(fromIndexFull, toIndexFull, category);
 
     // Manually reorder the DOM to avoid full re-render
@@ -417,14 +427,16 @@ function updateProjectUI(projectName) {
     return;
   }
 
-  // Update the project item's visibility based on the unlocked state
+  // Update the project item's visibility based on project visibility
   const projectItem = elements.projectItem;
   if (projectItem) {
-    const planetOk = !project.attributes.planet ||
-      (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-       spaceManager.getCurrentPlanetKey() === project.attributes.planet);
-    const showDueToCollectors = project.name === 'dysonSwarmReceiver' && project.collectors > 0;
-    if ((project.unlocked || showDueToCollectors) && planetOk) {
+    const planetOk =
+      !project.attributes.planet ||
+      (typeof spaceManager !== 'undefined' &&
+        spaceManager.getCurrentPlanetKey &&
+        spaceManager.getCurrentPlanetKey() === project.attributes.planet);
+    const visible = typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked;
+    if (visible && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
@@ -641,8 +653,12 @@ function updateProjectUI(projectName) {
 
   // Disable/enable reorder buttons
   const category = project.category || 'general';
-  const categoryProjectsAll = projectManager.getProjectStatuses().filter(p => (p.category || 'general') === category);
-  const categoryProjects = categoryProjectsAll.filter(p => p.unlocked);
+  const categoryProjectsAll = projectManager
+    .getProjectStatuses()
+    .filter(p => (p.category || 'general') === category);
+  const categoryProjects = categoryProjectsAll.filter(p =>
+    typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked
+  );
   const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
   if (elements.upButton) {
@@ -744,7 +760,11 @@ function updateStoryProjectsVisibility() {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
-      return p.category === 'story' && p.unlocked && planetOk;
+      return (
+        p.category === 'story' &&
+        (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) &&
+        planetOk
+      );
     });
   }
 
@@ -768,8 +788,11 @@ function updateMegaProjectsVisibility() {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
-      const dysonCollectors = p.name === 'dysonSwarmReceiver' && p.collectors > 0;
-      return p.category === 'mega' && planetOk && (p.unlocked || dysonCollectors);
+      return (
+        p.category === 'mega' &&
+        planetOk &&
+        (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
+      );
     });
   }
 

@@ -11,6 +11,11 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.energyPerCollector = 10000000000000;
   }
 
+  // Visible either when unlocked or when collectors already exist
+  isVisible() {
+    return this.unlocked || this.collectors > 0;
+  }
+
   get collectorDuration() {
     return this.getDurationWithTerraformBonus(this.baseCollectorDuration);
   }
