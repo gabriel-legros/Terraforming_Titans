@@ -125,7 +125,12 @@ class NanotechManager extends EffectableEntity {
   }
 
   prepareForTravel() {
-    this.nanobots = Math.min(this.nanobots, 1e15);
+    if(!isNaN(this.nanobots)){
+      this.nanobots = Math.min(this.nanobots, 1e15);
+    }
+    else{
+      this.nanobots = 1e15;
+    }
   }
 
   applyMaintenanceEffects() {
