@@ -32,6 +32,7 @@ describe('Dyson Swarm project visibility without tech', () => {
       category: 'mega',
       unlocked: false,
       collectors: 2,
+      isVisible() { return this.unlocked || this.collectors > 0; },
       isCompleted: false,
       repeatable: false,
       repeatCount: 0,

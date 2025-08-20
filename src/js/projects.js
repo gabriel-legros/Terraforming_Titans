@@ -351,6 +351,13 @@ class Project extends EffectableEntity {
     return Math.max(0, ((this.startingDuration - this.remainingTime) / this.startingDuration) * 100).toFixed(2);
   }
 
+  // Determines if the project should be shown in the UI.
+  // By default projects are visible when unlocked, but subclasses
+  // can override this to remain visible in other states.
+  isVisible() {
+    return this.unlocked;
+  }
+
   enable() {
     const first = !this.unlocked;
     this.unlocked = true;
