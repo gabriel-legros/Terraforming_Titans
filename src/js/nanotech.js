@@ -27,7 +27,7 @@ class NanotechManager extends EffectableEntity {
     if (typeof resources !== 'undefined' && resources.surface?.land) {
       return resources.surface.land.value * 10000 * 1e19;
     }
-    return Infinity;
+    return 1e40;
   }
 
   produceResources(deltaTime, accumulatedChanges) {
@@ -107,9 +107,10 @@ class NanotechManager extends EffectableEntity {
     const penalty =
       (this.maintenanceSlider / 10) * 0.0015 +
       (this.glassSlider / 10) * 0.0015;
+      
     const effectiveRate = baseRate * this.powerFraction + siliconRate - penalty;
     this.effectiveGrowthRate = effectiveRate;
-    if (effectiveRate !== 0) {
+    if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
     }
     const max = this.getMaxNanobots();
