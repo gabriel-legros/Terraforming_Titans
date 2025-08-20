@@ -31,6 +31,9 @@ class NanotechManager extends EffectableEntity {
   }
 
   produceResources(deltaTime, accumulatedChanges) {
+    if(deltaTime == 0){
+      return;
+    }
     if (!this.enabled) return;
     const baseRate = 0.0025;
     let powerFraction = 1;
