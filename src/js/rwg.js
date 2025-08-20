@@ -600,7 +600,7 @@ function computeGeothermalCaps(type, areaTotal, isMoon, rng, params) {
   const max = Math.max(3, Math.round(rawMax));
 
   // Seed-random initial between ~10–40% of max (at least 1)
-  const initFrac = randRange(rng, 0.10, 0.40);
+  const initFrac = randRange(rng, 0.01, 0.04);
   const initial = Math.max(1, Math.min(max, Math.round(max * initFrac)));
 
   return { present: true, initial, max };
