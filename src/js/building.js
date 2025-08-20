@@ -452,7 +452,7 @@ class Building extends EffectableEntity {
           if(ghgFactorySettings.restartCap < 1){
             ghgFactorySettings.restartTimer += deltaTime;
             const progress = Math.min(ghgFactorySettings.restartTimer, 5000);
-            ghgFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log1p(2);
+            ghgFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log10(2);
           } else {
             ghgFactorySettings.restartCap = 1;
           }
@@ -482,7 +482,7 @@ class Building extends EffectableEntity {
           if(oxygenFactorySettings.restartCap < 1){
             oxygenFactorySettings.restartTimer += deltaTime;
             const progress = Math.min(oxygenFactorySettings.restartTimer, 5000);
-            oxygenFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log1p(2);
+            oxygenFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log10(2);
           } else {
             oxygenFactorySettings.restartCap = 1;
           }
