@@ -49,7 +49,7 @@ class NanotechManager extends EffectableEntity {
         this.hasEnoughSilicon = available >= this.optimalSiliconConsumption * (deltaTime / 1000);
         const used = this.hasEnoughSilicon ? needed : available;
 
-        this.currentSiliconConsumption = used / (deltaTime / 1000);
+        this.currentSiliconConsumption = deltaTime > 0 ? used / (deltaTime / 1000) : 0;
         accumulatedChanges.colony.silicon =
           (accumulatedChanges.colony.silicon || 0) - used;
         siliconRes.modifyRate(
