@@ -132,15 +132,15 @@
         out.classification.TeqK = Math.round(eqT);
       }
 
-      if (terra.temperature && terra.temperature.zones && typeof getZoneRatio === 'function') {
+      if (terra.temperature && terra.temperature.zones && typeof getZonePercentage === 'function') {
         const z = terra.temperature.zones;
-        const ratios = {
-          tropical: getZoneRatio('tropical'),
-          temperate: getZoneRatio('temperate'),
-          polar: getZoneRatio('polar')
+        const weights = {
+          tropical: getZonePercentage('tropical'),
+          temperate: getZonePercentage('temperate'),
+          polar: getZonePercentage('polar')
         };
-        const day = z.tropical.day * ratios.tropical + z.temperate.day * ratios.temperate + z.polar.day * ratios.polar;
-        const night = z.tropical.night * ratios.tropical + z.temperate.night * ratios.temperate + z.polar.night * ratios.polar;
+        const day = z.tropical.day * weights.tropical + z.temperate.day * weights.temperate + z.polar.day * weights.polar;
+        const night = z.tropical.night * weights.tropical + z.temperate.night * weights.temperate + z.polar.night * weights.polar;
         out.finalTemps = { mean: terra.temperature.value, day, night };
       }
     }
@@ -352,7 +352,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { runEquilibration, buildSandboxResourcesFromOverride };
+    module.exports = { runEquilibration, buildSandboxResourcesFromOverride, copyBackToOverrideFromSandbox };
   } else {
     globalThis.runEquilibration = runEquilibration;
   }
