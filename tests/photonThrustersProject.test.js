@@ -40,7 +40,36 @@ describe('Planetary Thrusters project', () => {
     project.prepareJob();
     project.updateUI = () => {};
     project.update(2000);
+    project.applyCostAndGain(2000, null, 1);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(900);
+  });
+
+  test('consumes accumulated energy when provided', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { value: 0, decrease(v){ this.value -= v; }, updateStorageCap(){ } } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
+    project.isCompleted = true;
+    project.power = 50;
+    project.spinInvest = true;
+    project.prepareJob();
+    project.updateUI = () => {};
+    project.update(2000);
+    const changes = { colony: { energy: 200 } };
+    project.applyCostAndGain(2000, changes, 1);
+    expect(changes.colony.energy).toBeCloseTo(100);
+    expect(ctx.resources.colony.energy.value).toBe(0);
   });
 
   test('estimateCostAndGain adds energy rate', () => {
@@ -63,7 +92,8 @@ describe('Planetary Thrusters project', () => {
     project.power = 20;
     project.spinInvest = true;
     project.prepareJob();
-    project.estimateCostAndGain();
+    project.update(1000);
+    project.estimateCostAndGain(1000, true, 1);
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-20, 'Planetary Thrusters', 'project');
   });
 

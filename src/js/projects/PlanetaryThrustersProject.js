@@ -103,6 +103,7 @@ class PlanetaryThrustersProject extends Project{
     this.escapeTargetRkm = null;
     this.escapeComplete = false;     // persisted fallback if planet flag unavailable on load
     this.el={};
+    this.lastActiveTime = 0;
   }
 
   hasTractorBeams(){
@@ -447,35 +448,61 @@ class PlanetaryThrustersProject extends Project{
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
     super.update(dtMs);
-    if(!this.isCompleted) return;
-    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return;
-
-    const p=terraforming.celestialParameters;if(!p)return;
-
-    // If project says we escaped earlier, mirror that onto the planet (handles load-order)
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
+      this.lastActiveTime = 0;
+      return;
+    }
+    const p = terraforming.celestialParameters;
+    if(!p){ this.lastActiveTime = 0; return; }
     if(this.escapeComplete && !p.hasEscapedParent){ p.hasEscapedParent = true; }
+    this.lastActiveTime = dtMs;
+  }
 
-    const dt=dtMs/1000;
-    const need=this.power*dt;
-    if(resources.colony && resources.colony.energy && resources.colony.energy.value<need) return;
-    resources.colony.energy.decrease(need);
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
+    const totals = { cost: {}, gain: {} };
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
+    const activeTime = this.lastActiveTime || 0;
+    if(activeTime <= 0) return totals;
+    const fraction = Math.min(1, activeTime / deltaTime);
+    if (applyRates && resources?.colony?.energy?.modifyRate) {
+      resources.colony.energy.modifyRate(-this.power * fraction * productivity, 'Planetary Thrusters', 'project');
+    }
+    totals.cost.colony = { energy: this.power * fraction * (deltaTime / 1000) };
+    return totals;
+  }
 
-    const energySpent=need*86400;
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
+    const activeTime = this.lastActiveTime || 0;
+    if(!this.isCompleted || activeTime<=0 || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
+      this.lastActiveTime = 0;
+      return;
+    }
+    const p = terraforming.celestialParameters;
+    if(!p){ this.lastActiveTime = 0; return; }
 
+    const dt = activeTime / 1000;
+    const energyUsed = this.power * dt * productivity;
+    if(accumulatedChanges){
+      if(!accumulatedChanges.colony) accumulatedChanges.colony = {};
+      accumulatedChanges.colony.energy = (accumulatedChanges.colony.energy || 0) - energyUsed;
+    }else if(resources.colony?.energy){
+      resources.colony.energy.decrease(energyUsed);
+    }
+    const energySpent = energyUsed * 86400;
     if(this.spinInvest){ this.energySpentSpin += energySpent; }
     else if(this.motionInvest){ this.energySpentMotion += energySpent; }
 
-    const a=this.power*this.getThrustPowerRatio()/p.mass*86400;
-    const dvTick=a*dt; this.dVdone+=dvTick;
+    const a = this.power * this.getThrustPowerRatio() / p.mass * 86400 * productivity;
+    const dvTick = a * dt;
+    this.dVdone += dvTick;
 
-    /* ------ spin -------- */
     if(this.spinInvest){
       const curHours = getRotHours(p);
       const curDays = curHours / 24;
       const sign = this.tgtDays < curDays ? 1 : -1;
-      const dΩ = sign * dvTick / (p.radius * 1e3);
-      const ω = 2 * Math.PI / (curHours * 3600) + dΩ;
-      let newPeriod = 2 * Math.PI / ω / 3600;
+      const dOmega = sign * dvTick / (p.radius * 1e3);
+      const omega = 2 * Math.PI / (curHours * 3600) + dOmega;
+      let newPeriod = 2 * Math.PI / omega / 3600;
       const targetHours = this.tgtDays * 24;
       const overshoot = (sign > 0 && newPeriod < targetHours) ||
                         (sign < 0 && newPeriod > targetHours);
@@ -499,56 +526,47 @@ class PlanetaryThrustersProject extends Project{
         } else {
           dayNightCycle.dayProgress = progress;
         }
-        this.updateUI(); return;
       }
-      this.updateUI(); return;
+      this.updateUI();
+      this.lastActiveTime = 0;
+      return;
     }
 
-    /* ------ motion ------- */
     if(this.motionInvest){
-      if (isBoundToParent(p)) { // escape phase while truly bound to a parent
+      if (isBoundToParent(p)) {
         const parent = p.parentBody;
         const mu = G * parent.mass;
         const starM = (p.starMass || SOLAR_MASS);
-
-        // Current circular orbit about parent
         let r = parent.orbitRadius * 1e3;
         const v = Math.sqrt(mu / r);
-
-        // Energy after this tick (tangential thrust)
-        let E = -mu / (2 * r) + v * a * dt;  // a is your tangential accel
-
-        // Threshold: **arrive** at L1/Hill radius (not just injection)
+        let E = -mu / (2 * r) + v * a * dt;
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
-
-        // Advance to new (circularized) radius from the updated energy
         const a_new = -mu / (2 * E);
         parent.orbitRadius = a_new / 1e3;
-        r = a_new; // update local meters value
-
+        r = a_new;
         if (r >= rL1) {
-          parent.orbitRadius = rL1 / 1e3; // clamp to Hill radius in km
-          // Mark escaped without deleting parent to avoid save/load regeneration issues
+          parent.orbitRadius = rL1 / 1e3;
           p.hasEscapedParent = true;
           this.escapeComplete = true;
           this.escapePhase = false;
-          this.startAU = p.distanceFromSun; // stays on the planet per your model
+          this.startAU = p.distanceFromSun;
           this.dVdone = 0;
-          this.energySpentMotion = 0;    // optional reset for clarity
-          const starM = (p.starMass || SOLAR_MASS);
-          this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM);
+          this.energySpentMotion = 0;
+          const starM2 = (p.starMass || SOLAR_MASS);
+          this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM2);
           this.calcMotionCost();
           this.updateUI();
+          this.lastActiveTime = 0;
           return;
         }
       } else {
-        const mu=G*(p.starMass || SOLAR_MASS);
-        let a_sma=p.distanceFromSun*AU_IN_METERS;
-        const v=Math.sqrt(mu/a_sma);
+        const mu = G * (p.starMass || SOLAR_MASS);
+        let a_sma = p.distanceFromSun * AU_IN_METERS;
+        const v = Math.sqrt(mu / a_sma);
         const orientation = this.tgtAU > p.distanceFromSun ? 1 : -1;
-        let E=-mu/(2*a_sma)+v*a*dt*orientation;
-        a_sma=-mu/(2*E);
-        p.distanceFromSun=a_sma/AU_IN_METERS;
+        let E = -mu / (2 * a_sma) + v * a * dt * orientation;
+        a_sma = -mu / (2 * E);
+        p.distanceFromSun = a_sma / AU_IN_METERS;
         if((this.tgtAU>this.startAU&&p.distanceFromSun>=this.tgtAU)||
            (this.tgtAU<this.startAU&&p.distanceFromSun<=this.tgtAU)||
            this.dVdone>=this.dVreq){
@@ -558,17 +576,7 @@ class PlanetaryThrustersProject extends Project{
       }
       this.updateUI();
     }
-  }
-
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
-    const totals = { cost: {}, gain: {} };
-    if(!this.isCompleted) return totals;
-    if((!this.spinInvest && !this.motionInvest) || this.power<=0) return totals;
-    if (applyRates && resources?.colony?.energy && typeof resources.colony.energy.modifyRate === 'function') {
-      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
-    }
-    totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
-    return totals;
+    this.lastActiveTime = 0;
   }
 
   saveState(){
