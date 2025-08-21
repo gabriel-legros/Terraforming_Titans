@@ -292,3 +292,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Planetary thrusters clamp spin and motion changes to their targets, preventing overshoot.
 - Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
+- Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
