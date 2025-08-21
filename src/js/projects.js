@@ -63,10 +63,18 @@ class Project extends EffectableEntity {
     return effectiveCost;
   }
 
+  applyDurationEffects(baseDuration) {
+    const multiplier =
+      typeof projectManager !== 'undefined' &&
+      projectManager.durationMultiplier !== undefined
+        ? projectManager.durationMultiplier
+        : 1;
+    return baseDuration * multiplier;
+  }
+
   getEffectiveDuration(){
     const base = this.getBaseDuration();
-    const multiplier = (typeof projectManager !== 'undefined' && projectManager.durationMultiplier !== undefined) ? projectManager.durationMultiplier : 1;
-    return base * multiplier;
+    return this.applyDurationEffects(base);
   }
 
   getBaseDuration(){

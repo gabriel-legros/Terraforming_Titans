@@ -65,7 +65,8 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getShipOperationDuration() {
-    return this.calculateSpaceshipAdjustedDuration();
+    const base = this.calculateSpaceshipAdjustedDuration();
+    return this.applyDurationEffects(base);
   }
 
   toggleResourceSelection(category, resource, isSelected) {

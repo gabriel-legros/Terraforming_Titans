@@ -53,12 +53,12 @@ describe('Space Storage project', () => {
     project.repeatCount = 1;
     expect(project.getBaseDuration()).toBeCloseTo(100000);
     expect(project.getEffectiveDuration()).toBeCloseTo(50000);
-    expect(project.getShipOperationDuration()).toBeCloseTo(100000);
+    expect(project.getShipOperationDuration()).toBeCloseTo(50000);
     project.assignedSpaceships = 10;
-    expect(project.getShipOperationDuration()).toBeCloseTo(100000 / 10);
+    expect(project.getShipOperationDuration()).toBeCloseTo(5000);
     project.assignedSpaceships = 150;
     expect(project.getBaseDuration()).toBeCloseTo(100000);
-    expect(project.getShipOperationDuration()).toBeCloseTo(100000);
+    expect(project.getShipOperationDuration()).toBeCloseTo(50000);
     expect(project.calculateTransferAmount()).toBe(150_000_000_000);
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(200_000_000_000);
