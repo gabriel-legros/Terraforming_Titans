@@ -155,9 +155,9 @@ const calculateZonalMeltingFreezingRates = (terraforming, zone, temperature) => 
   const availableBuriedIce = terraforming.zonalWater?.[zone]?.buriedIce || 0;
   const availableLiquid = terraforming.zonalWater?.[zone]?.liquid || 0;
   const zoneArea = terraforming.celestialParameters.surfaceArea * zonePercentage(zone);
-  const iceCoverageFn = () => terraforming.zonalCoverageCache[zone]?.ice ?? 0;
-  const liquidCoverageFn = () => terraforming.zonalCoverageCache[zone]?.liquidWater ?? 0;
-  return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid, availableBuriedIce, zoneArea, iceCoverageFn, liquidCoverageFn);
+  const iceCoverage = terraforming.zonalCoverageCache[zone]?.ice ?? 0;
+  const liquidCoverage = terraforming.zonalCoverageCache[zone]?.liquidWater ?? 0;
+  return baseCalculateMeltFreeze(temperature, availableIce, availableLiquid, availableBuriedIce, zoneArea, iceCoverage, liquidCoverage);
 };
 
 if (!isNode) {
