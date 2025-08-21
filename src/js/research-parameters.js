@@ -226,6 +226,23 @@ const researchParameters = {
           { target: 'building', targetId: 'superalloyFusionReactor', type: 'enable' }
         ]
       },
+      {
+        id: 'next_generation_fusion',
+        name: 'Next-Generation Fusion',
+        description: 'Doubles superalloy fusion reactor energy output.',
+        cost: { research: 100000000000000 },
+        prerequisites: [],
+        requiredFlags: ['superalloyResearchUnlocked'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superalloyFusionReactor',
+            effectId: 'next_generation_fusion_research',
+            type: 'productionMultiplier',
+            value: 2
+          }
+        ]
+      },
     ],
     industry: [
       {

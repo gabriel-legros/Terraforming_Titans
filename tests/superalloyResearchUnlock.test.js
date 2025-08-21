@@ -6,7 +6,7 @@ const researchPath = path.join(__dirname, '..', 'src/js', 'research-parameters.j
 const code = fs.readFileSync(researchPath, 'utf8');
 
 describe('Superalloys advanced research', () => {
-  test('exists with correct cost and flag', () => {
+  test('exists with correct cost and flags', () => {
     const ctx = {};
     vm.createContext(ctx);
     vm.runInContext(code + '; this.researchParameters = researchParameters;', ctx);
@@ -18,5 +18,9 @@ describe('Superalloys advanced research', () => {
       e => e.type === 'booleanFlag' && e.flagId === 'superalloyResearchUnlocked' && e.value === true
     );
     expect(flagEffect).toBeDefined();
+    const nextGenFlag = research.effects.find(
+      e => e.type === 'booleanFlag' && e.flagId === 'nextGenerationFusionResearchUnlocked'
+    );
+    expect(nextGenFlag).toBeUndefined();
   });
 });
