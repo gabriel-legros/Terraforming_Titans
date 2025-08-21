@@ -226,7 +226,7 @@ class WarpGateCommand extends EffectableEntity {
     const rollsStr = rollResult.rolls.join(',');
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
     const rollerName = roller ? ` (${roller.firstName})` : '';
-    const artText = artifact ? ` +${artifactReward} Artifact${artifactReward === 1 ? '' : 's'}` : '';
+    const artText = artifact ? ` +${formatNumber(artifactReward, false, 2)} Artifact${artifactReward === 1 ? '' : 's'}` : '';
     let skillDetail = formatNumber(skillTotal, false, 2);
     if (event.type === 'individual' || event.type === 'science') {
       skillDetail = `${formatNumber(baseSkill, false, 2)}`;
@@ -411,7 +411,7 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(art, false, 2)} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
@@ -425,7 +425,7 @@ class WarpGateCommand extends EffectableEntity {
         resources.special.alienArtifact.increase(bonus);
       }
       this.totalArtifacts += bonus;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${formatNumber(bonus, false, 2)} Artifact${bonus === 1 ? '' : 's'}`);
     }
 
     this.teamOperationCounts[teamIndex] += 1;

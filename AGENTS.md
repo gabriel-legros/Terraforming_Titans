@@ -294,3 +294,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
 - Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
+- WGC logs now format artifact gains with two decimal places.
