@@ -296,3 +296,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
 - WGC logs now format artifact gains with two decimal places.
 - Methane melting and freezing now respect methane ice coverage.
+- Freezing processes scale with liquid surface area and accept liquid coverage functions.

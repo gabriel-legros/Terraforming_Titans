@@ -34,7 +34,8 @@
    availableLiquid = 0,
    availableBuriedIce = 0,
    zoneArea = 1,
-   coverageFn
+   iceCoverageFn,
+   liquidCoverageFn
  }) {
    const meltingRateMultiplier = 0.000001; // per K per second
    const freezingRateMultiplier = 0.000001; // per K per second
@@ -44,10 +45,10 @@
  
    if (temperature > freezingPoint) {
      const diff = temperature - freezingPoint;
- 
+
      let surfaceIceCoverage = 1;
-     if (coverageFn) {
-       surfaceIceCoverage = coverageFn();
+     if (iceCoverageFn) {
+       surfaceIceCoverage = iceCoverageFn();
      }
      const surfaceMeltCap = surfaceIceCoverage > 1e-10 ? zoneArea * surfaceIceCoverage * 0.1 : zoneArea * Math.sqrt(surfaceIceCoverage) * 0.1 * 1e-5;
      const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
@@ -66,8 +67,14 @@
      meltingRate = surfaceMeltRate + actualBuriedMeltRate;
    } else if (temperature < freezingPoint && availableLiquid > 0) {
      const diff = freezingPoint - temperature;
-     freezingRate = availableLiquid * freezingRateMultiplier * diff;
-   }
+
+     let surfaceLiquidCoverage = 1;
+     if (liquidCoverageFn) {
+       surfaceLiquidCoverage = liquidCoverageFn();
+     }
+
+     freezingRate = availableLiquid * freezingRateMultiplier * diff * surfaceLiquidCoverage;
+  }
  
    return { meltingRate, freezingRate };
  }
