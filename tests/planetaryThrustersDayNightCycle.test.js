@@ -47,6 +47,7 @@ describe('Planetary Thrusters day-night cycle', () => {
 
     const initialDuration = ctx.dayNightCycle.dayDuration;
     project.update(10000000);
+    project.applyCostAndGain(10000000, null, 1);
     const newPeriod = ctx.terraforming.celestialParameters.rotationPeriod;
 
     expect(newPeriod).not.toBe(20);

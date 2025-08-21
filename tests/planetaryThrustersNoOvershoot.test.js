@@ -44,6 +44,7 @@ describe('Planetary Thrusters target clamping', () => {
     const requiredPower = project.dVreq * p.mass / (project.getThrustPowerRatio() * 86400);
     project.power = requiredPower * 2; // overshoot in one tick
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     expect(p.rotationPeriod).toBeCloseTo(project.tgtDays * 24, 10);
     expect(project.spinInvest).toBe(false);
 
@@ -59,6 +60,7 @@ describe('Planetary Thrusters target clamping', () => {
     const requiredPowerM = project.dVreq * p.mass / (project.getThrustPowerRatio() * 86400);
     project.power = requiredPowerM * 2;
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     expect(p.distanceFromSun).toBeCloseTo(project.tgtAU, 10);
     expect(project.motionInvest).toBe(false);
   });
