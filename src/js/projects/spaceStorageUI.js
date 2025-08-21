@@ -349,7 +349,7 @@ function updateSpaceStorageUI(project) {
         els.shipProgressButton.style.background = '#f44336';
       }
     } else {
-      const duration = project.getEffectiveDuration();
+      const duration = project.getShipOperationDuration();
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
       if (project.shipOperationIsActive) {
         const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
