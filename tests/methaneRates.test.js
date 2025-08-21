@@ -9,10 +9,8 @@ const hydrocarbon = require('../src/js/hydrocarbon-cycle.js');
 jest.mock('../src/js/hydrology.js', () => {
   const original = jest.requireActual('../src/js/hydrology.js');
   const mockMethaneRates = jest.fn((...args) => {
-    const iceCoverageFn = args[5];
-    const liquidCoverageFn = args[6];
-    mockMethaneRates.coverageIceValue = iceCoverageFn ? iceCoverageFn() : undefined;
-    mockMethaneRates.coverageLiquidValue = liquidCoverageFn ? liquidCoverageFn() : undefined;
+    mockMethaneRates.coverageIceValue = args[5];
+    mockMethaneRates.coverageLiquidValue = args[6];
     return { meltingRate: 0, freezingRate: 0 };
   });
   return {
@@ -92,7 +90,7 @@ describe('methane atmospheric rate tracking', () => {
 });
 
 describe('methane melting/freezing coverage', () => {
-  test('passes methane ice coverage function', () => {
+  test('passes methane coverage values', () => {
     const params = getPlanetParameters('titan');
     global.currentPlanetParameters = params;
     const res = createResources();
