@@ -289,4 +289,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Starting a new game now fully resets the nanotech swarm and its sliders.
 - Projects can be reordered based on visibility rather than unlocked status, using a new `isVisible` method; Dyson Swarm has a custom implementation.
 - Random world equilibration now weights final day and night temperatures by each zone's surface area percentage.
+- Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
