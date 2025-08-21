@@ -1385,7 +1385,7 @@ class Terraforming extends EffectableEntity{
 
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty()
       
-      for (let i = 1; i <= 6; i++) {
+      for (let i = 1; i <= 7; i++) {
         const temperaturePenaltyEffect = {
             effectId: 'temperaturePenalty',
             target: 'colony',
