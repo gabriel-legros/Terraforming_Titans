@@ -69,6 +69,41 @@ describe('fastForwardToEquilibrium', () => {
     expect(steps.every(s => s > 95 && s < 105)).toBe(true);
   });
 
+  test('zonal biomass and buried hydrocarbons affect stability', () => {
+    global.resources = {
+      surface: { ice: { value: 0 }, liquidWater: { value: 0 }, dryIce: { value: 0 } },
+      atmospheric: { carbonDioxide: { value: 0 }, atmosphericWater: { value: 0 } }
+    };
+    global.ZONES = ['tropical'];
+    global.terraforming = {
+      zonalWater: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
+      zonalSurface: { tropical: { dryIce: 0, biomass: 0 } },
+      zonalHydrocarbons: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
+      synchronizeGlobalResources: () => {},
+      _updateZonalCoverageCache: () => {},
+      updateLuminosity: () => {},
+      updateSurfaceTemperature: () => {},
+      updateResources: ms => global.updateLogic(ms)
+    };
+
+    const steps = [];
+    global.updateLogic = ms => {
+      steps.push(ms);
+      terraforming.zonalSurface.tropical.biomass += 5;
+      terraforming.zonalHydrocarbons.tropical.buriedIce += 5;
+    };
+
+    fastForwardToEquilibrium({
+      stepMs: 1000,
+      minStepMs: 1000,
+      stableSteps: 1,
+      threshold: 1,
+      maxSteps: 3
+    });
+
+    expect(steps.length).toBeGreaterThan(1);
+  });
+
   test('generateOverrideSnippet includes hydrocarbon values', () => {
     const snippet = generateOverrideSnippet({
       global: {

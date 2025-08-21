@@ -75,8 +75,10 @@
           buriedIce: bIce,
           liquidWater: terraforming.zonalWater[zone]?.liquid || 0,
           dryIce: terraforming.zonalSurface[zone]?.dryIce || 0,
+          biomass: terraforming.zonalSurface[zone]?.biomass || 0,
           liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
-          hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0
+          hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
+          buriedHydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.buriedIce || 0
         };
       });
     }
@@ -89,7 +91,7 @@
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice','buriedIce','liquidWater','dryIce','liquidMethane','hydrocarbonIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }

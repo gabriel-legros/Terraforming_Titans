@@ -300,3 +300,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Planetary thrusters appear in the Energy resource rate tooltip, listing their consumption.
 - Freezing processes scale with liquid surface area and accept liquid coverage functions.
 - Melting and freezing rate calculations use cached coverage values.
+- fastForwardToEquilibrium now checks zonal biomass and buried hydrocarbons for stability, matching equilibrate.
