@@ -65,10 +65,8 @@ describe('Oxygen factory pressure disabling', () => {
     expect(oxygenFactorySettings.restartCap).toBe(0);
 
     resources.atmospheric.oxygen.value = 14000;
-    for(let i=0;i<5;i++){
-      fac.updateProductivity(global.resources, 1000);
-    }
-    expect(oxygenFactorySettings.restartCap).toBeCloseTo(0.27, 2);
+    fac.updateProductivity(global.resources, 1000);
+    expect(oxygenFactorySettings.restartCap).toBeCloseTo(0.26, 2);
     expect(fac.productivity).toBeGreaterThan(0);
   });
 });

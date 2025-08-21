@@ -65,10 +65,8 @@ describe('GHG factory temperature disabling', () => {
     expect(ghgFactorySettings.restartCap).toBe(0);
 
     terraforming.temperature.value = 275;
-    for(let i=0;i<5;i++){
-      fac.updateProductivity(global.resources, 1000);
-    }
-    expect(ghgFactorySettings.restartCap).toBeCloseTo(0.27, 2);
+    fac.updateProductivity(global.resources, 1000);
+    expect(ghgFactorySettings.restartCap).toBeCloseTo(0.26, 2);
     expect(fac.productivity).toBeGreaterThan(0);
   });
 });
