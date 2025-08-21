@@ -56,7 +56,7 @@ describe('Space Storage transfer rate display', () => {
 
     const els = ctx.projectElements[project.name];
     const transferEl = els.transferRateElement;
-    const expectedRate = numbers.formatNumber(1_000_000 / (project.getEffectiveDuration() / 1000), true);
+    const expectedRate = numbers.formatNumber(1_000_000 / (project.getShipOperationDuration() / 1000), true);
     expect(transferEl.textContent).toBe(`Transfer Rate: ${expectedRate}/s`);
   });
 });
