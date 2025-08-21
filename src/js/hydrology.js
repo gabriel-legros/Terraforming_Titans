@@ -14,7 +14,7 @@ if (isNodeHydro) {
 meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezingRates;
 
 function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElevationsInput, config) {
-    const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity } = config;
+    const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity, iceCoverageType } = config;
     const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
     const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
 
@@ -54,7 +54,12 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
         let coveredArea = 1;
         if (terraforming && getZonePercentageFn) {
             const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
-            const iceCoverage = estimateCoverageFn(surfaceIce, zoneArea);
+            const cacheCov = terraforming.zonalCoverageCache && iceCoverageType
+                ? terraforming.zonalCoverageCache[zone]?.[iceCoverageType]
+                : undefined;
+            const iceCoverage = (typeof cacheCov === 'number')
+                ? cacheCov
+                : estimateCoverageFn(surfaceIce, zoneArea);
             meltCap = zoneArea * iceCoverage * 0.1;
             coveredArea = zoneArea;
         }
@@ -179,7 +184,8 @@ function simulateSurfaceWaterFlow(zonalWaterInput, deltaTime, zonalTemperatures 
         buriedIceProp: 'buriedIce',
         meltingPoint: 273.15,
         zonalDataKey: 'zonalWater',
-        viscosity: 0.89 // Baseline viscosity for water
+        viscosity: 0.89, // Baseline viscosity for water
+        iceCoverageType: 'ice'
     });
 }
 
@@ -190,7 +196,8 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalT
         buriedIceProp: null,
         meltingPoint: 90.7,
         zonalDataKey: 'zonalHydrocarbons',
-        viscosity: 0.12 // Methane is less viscous than water
+        viscosity: 0.12, // Methane is less viscous than water
+        iceCoverageType: 'hydrocarbonIce'
     });
 }
 
