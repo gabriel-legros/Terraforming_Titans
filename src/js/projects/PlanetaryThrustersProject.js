@@ -473,14 +473,19 @@ class PlanetaryThrustersProject extends Project{
       const sign=this.tgtDays<this.spinStartDays?1:-1;
         const dΩ=sign*dvTick/(p.radius*1e3);
         const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
-        p.rotationPeriod=2*Math.PI/ω/3600;
+        let newPeriod=2*Math.PI/ω/3600;
+        if(this.dVdone>=this.dVreq){
+          newPeriod=this.tgtDays*24;
+          this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;
+        }
+        p.rotationPeriod=newPeriod;
         if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
           const oldDur = dayNightCycle.dayDuration;
           const progress = typeof dayNightCycle.getDayProgress === 'function'
             ? dayNightCycle.getDayProgress()
             : 0;
           const daysElapsed = dayNightCycle.elapsedTime / oldDur;
-          dayNightCycle.dayDuration = rotationPeriodToDurationFunc(p.rotationPeriod);
+          dayNightCycle.dayDuration = rotationPeriodToDurationFunc(newPeriod);
           dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
           if (typeof dayNightCycle.setDayProgress === 'function') {
             dayNightCycle.setDayProgress(progress);
@@ -488,7 +493,6 @@ class PlanetaryThrustersProject extends Project{
             dayNightCycle.dayProgress = progress;
           }
         }
-        if(this.dVdone>=this.dVreq){this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;}
         this.updateUI(); return;
       }
 
@@ -515,6 +519,7 @@ class PlanetaryThrustersProject extends Project{
         r = a_new; // update local meters value
 
         if (r >= rL1) {
+          parent.orbitRadius = rL1 / 1e3; // clamp to Hill radius in km
           // Mark escaped without deleting parent to avoid save/load regeneration issues
           p.hasEscapedParent = true;
           this.escapeComplete = true;
