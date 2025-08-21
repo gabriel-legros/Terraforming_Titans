@@ -226,7 +226,7 @@ class WarpGateCommand extends EffectableEntity {
     const rollsStr = rollResult.rolls.join(',');
     const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
     const rollerName = roller ? ` (${roller.firstName})` : '';
-    const artText = artifact ? ` +${artifactReward} Artifact${artifactReward === 1 ? '' : 's'}` : '';
+    const artText = artifact ? ` +${formatNumber(artifactReward, false, 2)} Artifact${artifactReward === 1 ? '' : 's'}` : '';
     let skillDetail = formatNumber(skillTotal, false, 2);
     if (event.type === 'individual' || event.type === 'science') {
       skillDetail = `${formatNumber(baseSkill, false, 2)}`;
