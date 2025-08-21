@@ -13,7 +13,7 @@ if (isNodeHydro) {
 }
 meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezingRates;
 
-function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElevationsInput, config) {
+function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zoneElevationsInput, config) {
     const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity, iceCoverageType } = config;
     const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
     const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
@@ -26,7 +26,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
 
     const baseFlowRate = 0.001;
     const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
-    const secondsMultiplier = deltaTime / 1000;
+    const secondsMultiplier = durationSeconds;
     let totalMelt = 0;
 
     const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
@@ -177,8 +177,8 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
     return { changes, totalMelt };
 }
 
-function simulateSurfaceWaterFlow(zonalWaterInput, deltaTime, zonalTemperatures = {}, zoneElevationsInput) {
-    return _simulateSurfaceFlow(zonalWaterInput, deltaTime, zonalTemperatures, zoneElevationsInput, {
+function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+    return _simulateSurfaceFlow(zonalWaterInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquid',
         iceProp: 'ice',
         buriedIceProp: 'buriedIce',
@@ -189,8 +189,8 @@ function simulateSurfaceWaterFlow(zonalWaterInput, deltaTime, zonalTemperatures 
     });
 }
 
-function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalTemperatures = {}, zoneElevationsInput) {
-    return _simulateSurfaceFlow(zonalHydrocarbonInput, deltaTime, zonalTemperatures, zoneElevationsInput, {
+function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+    return _simulateSurfaceFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquid',
         iceProp: 'ice',
         buriedIceProp: null,
