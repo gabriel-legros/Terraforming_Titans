@@ -9,8 +9,10 @@ const hydrocarbon = require('../src/js/hydrocarbon-cycle.js');
 jest.mock('../src/js/hydrology.js', () => {
   const original = jest.requireActual('../src/js/hydrology.js');
   const mockMethaneRates = jest.fn((...args) => {
-    const coverageFn = args[5];
-    mockMethaneRates.coverageValue = coverageFn ? coverageFn() : undefined;
+    const iceCoverageFn = args[5];
+    const liquidCoverageFn = args[6];
+    mockMethaneRates.coverageIceValue = iceCoverageFn ? iceCoverageFn() : undefined;
+    mockMethaneRates.coverageLiquidValue = liquidCoverageFn ? liquidCoverageFn() : undefined;
     return { meltingRate: 0, freezingRate: 0 };
   });
   return {
@@ -99,13 +101,14 @@ describe('methane melting/freezing coverage', () => {
 
     terra._updateZonalCoverageCache = function () {
       for (const z of ['tropical', 'temperate', 'polar']) {
-        this.zonalCoverageCache[z] = { hydrocarbonIce: 0.25, liquidMethane: 0 };
+        this.zonalCoverageCache[z] = { hydrocarbonIce: 0.25, liquidMethane: 0.5 };
       }
     };
 
     terra.calculateInitialValues(params);
     terra.updateResources(1000);
 
-    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageValue).toBeCloseTo(0.25);
+    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageIceValue).toBeCloseTo(0.25);
+    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageLiquidValue).toBeCloseTo(0.5);
   });
 });

@@ -35,9 +35,19 @@ function makeTerraformingWithRadius(zonalWater, radius) {
 describe('hydrology melting with buried ice', () => {
   test('calculateMeltingFreezingRates respects area cap', () => {
     const T = 280; // above freezing
-    const res = calculateMeltingFreezingRates(T, 0, 0, 10, 1);
+    const res = calculateMeltingFreezingRates(T, 0, 0, 10, 1, () => 0, () => 0);
     expect(res.meltingRate).toBeCloseTo(0);
     expect(res.freezingRate).toBe(0);
+  });
+
+  test('calculateMeltingFreezingRates scales freezing by liquid coverage', () => {
+    const T = 260; // below freezing
+    const diff = 273.15 - T;
+    const coverage = 0.2;
+    const availableLiquid = 10;
+    const res = calculateMeltingFreezingRates(T, 0, availableLiquid, 0, 1, () => 0, () => coverage);
+    const expected = availableLiquid * 0.000001 * diff * coverage;
+    expect(res.freezingRate).toBeCloseTo(expected);
   });
 
   test('calculateZonalMeltingFreezingRates caps melt by coverage', () => {
