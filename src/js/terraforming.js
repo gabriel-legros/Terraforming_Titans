@@ -75,7 +75,8 @@ function getEffectiveLifeFraction(terraforming) {
 }
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
-const BASE_COMFORTABLE_TEMPERATURE = 295.15;
+const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
+const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const KPA_PER_ATM = 101.325;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
@@ -1326,17 +1327,23 @@ class Terraforming extends EffectableEntity{
 
     calculateColonyEnergyPenalty() {
       const zones = this.temperature.zones;
-      const baseTemperature = BASE_COMFORTABLE_TEMPERATURE;
-  
-      // Find the smallest difference across all zones
-      const smallestDifference = Math.min(
-          Math.abs(zones.tropical.value - baseTemperature),
-          Math.abs(zones.temperate.value - baseTemperature),
-          Math.abs(zones.polar.value - baseTemperature)
-      );
-  
-      // Calculate penalty based on the smallest difference
-      return smallestDifference <= 2 ? 1 : 1 + smallestDifference / 10;
+
+      const differences = [
+          zones.tropical.value,
+          zones.temperate.value,
+          zones.polar.value
+      ].map(temp => {
+          if (temp > COMFORTABLE_TEMPERATURE_MAX) {
+              return temp - COMFORTABLE_TEMPERATURE_MAX;
+          }
+          if (temp < COMFORTABLE_TEMPERATURE_MIN) {
+              return COMFORTABLE_TEMPERATURE_MIN - temp;
+          }
+          return 0;
+      });
+
+      const smallestDifference = Math.min(...differences);
+      return 1 + smallestDifference / 10;
   }
 
     // Calculates the sum of absolute pressure changes for each gas since initialization

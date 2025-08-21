@@ -293,3 +293,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Planetary thrusters now apply delta v toward the target, accelerating or decelerating depending on whether the goal is lower or higher.
 - Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
+- Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
