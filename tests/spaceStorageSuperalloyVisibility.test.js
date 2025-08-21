@@ -35,6 +35,7 @@ describe('Space Storage superalloy option visibility', () => {
       shipWithdrawMode: false,
       isShipOperationContinuous: () => false,
       getEffectiveDuration: () => 1000,
+      getShipOperationDuration: () => 1000,
       createSpaceshipAssignmentUI() {},
       createProjectDetailsGridUI() {},
       toggleResourceSelection() {}

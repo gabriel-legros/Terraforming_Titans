@@ -35,6 +35,7 @@ describe('Space Storage ship auto-start label', () => {
       renderUI: () => {},
       updateUI() { ctx.updateSpaceStorageUI(this); },
       getEffectiveDuration: () => 1000,
+      getShipOperationDuration: () => 1000,
       canStart: () => true,
       repeatable: true,
       maxRepeatCount: Infinity,

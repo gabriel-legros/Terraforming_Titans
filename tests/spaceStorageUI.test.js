@@ -32,7 +32,9 @@ describe('Space Storage UI', () => {
       shipOperationIsActive: false,
       shipWithdrawMode: false,
       isShipOperationContinuous: () => false,
-      getEffectiveDuration: () => 1000,
+      getEffectiveDuration: () => 2000,
+      getShipOperationDuration: () => 1000,
+      canStartShipOperation: () => true,
       createSpaceshipAssignmentUI(container) {
         const doc = container.ownerDocument;
         const section = doc.createElement('div');
@@ -78,6 +80,7 @@ describe('Space Storage UI', () => {
     expect(els.shipProgressButton).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
     expect(els.storeButton).toBeDefined();
+    expect(els.shipProgressButton.textContent).toBe('Start ship transfers (Duration: 1.00 seconds)');
 
     expect(els.storeButton.classList.contains('selected')).toBe(true);
     project.shipWithdrawMode = true;
@@ -125,6 +128,7 @@ describe('Space Storage UI', () => {
       shipWithdrawMode: false,
       isShipOperationContinuous: () => false,
       getEffectiveDuration: () => 1000,
+      getShipOperationDuration: () => 1000,
       createSpaceshipAssignmentUI() {},
       createProjectDetailsGridUI() {},
       toggleResourceSelection() {},
