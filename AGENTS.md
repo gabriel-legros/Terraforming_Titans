@@ -290,4 +290,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Projects can be reordered based on visibility rather than unlocked status, using a new `isVisible` method; Dyson Swarm has a custom implementation.
 - Random world equilibration now weights final day and night temperatures by each zone's surface area percentage.
 - Planetary thrusters clamp spin and motion changes to their targets, preventing overshoot.
+- Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
