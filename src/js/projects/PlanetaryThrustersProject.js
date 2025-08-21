@@ -470,7 +470,7 @@ class PlanetaryThrustersProject extends Project{
 
     /* ------ spin -------- */
     if(this.spinInvest){
-      const sign=this.tgtDays<this.spinStartDays?1:-1;
+      const sign = this.tgtDays < getRotHours(p) / 24 ? 1 : -1;
         const dΩ=sign*dvTick/(p.radius*1e3);
         const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
         let newPeriod=2*Math.PI/ω/3600;
@@ -537,7 +537,8 @@ class PlanetaryThrustersProject extends Project{
         const mu=G*(p.starMass || SOLAR_MASS);
         let a_sma=p.distanceFromSun*AU_IN_METERS;
         const v=Math.sqrt(mu/a_sma);
-        let E=-mu/(2*a_sma)+v*a*dt*(this.tgtAU>this.startAU?+1:-1);
+        const orientation = this.tgtAU > p.distanceFromSun ? 1 : -1;
+        let E=-mu/(2*a_sma)+v*a*dt*orientation;
         a_sma=-mu/(2*E);
         p.distanceFromSun=a_sma/AU_IN_METERS;
         if((this.tgtAU>this.startAU&&p.distanceFromSun>=this.tgtAU)||
