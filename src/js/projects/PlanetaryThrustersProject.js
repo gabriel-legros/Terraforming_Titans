@@ -479,7 +479,10 @@ class PlanetaryThrustersProject extends Project{
     }
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
-
+    const fraction = Math.min(1, activeTime / deltaTime);
+    if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
+      resources.colony.energy.modifyRate(-this.power * fraction * productivity, 'Planetary Thrusters', 'project');
+    }
     const dt = activeTime / 1000;
     const energyUsed = this.power * dt * productivity;
     if(accumulatedChanges){

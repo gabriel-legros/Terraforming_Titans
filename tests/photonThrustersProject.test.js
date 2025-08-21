@@ -97,6 +97,32 @@ describe('Planetary Thrusters project', () => {
     expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-20, 'Planetary Thrusters', 'project');
   });
 
+  test('applyCostAndGain adds energy rate when autoStart disabled', () => {
+    const ctx = { console, EffectableEntity };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const subclassCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'PlanetaryThrustersProject.js'), 'utf8');
+    vm.runInContext(subclassCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    ctx.resources = { colony: { energy: { modifyRate: jest.fn(), value: 100, decrease(){}, updateStorageCap(){} } } };
+    global.resources = ctx.resources;
+    ctx.terraforming = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+
+    const config = ctx.projectParameters.planetaryThruster;
+    const project = new ctx.PlanetaryThrustersProject(config, 'pt');
+    project.isCompleted = true;
+    project.power = 20;
+    project.spinInvest = true;
+    project.prepareJob();
+    project.update(1000);
+    project.updateUI = () => {};
+    project.applyCostAndGain(1000, null, 1);
+    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(-20, 'Planetary Thrusters', 'project');
+  });
+
   test('saveState and loadState preserve settings', () => {
     const ctx = { console, EffectableEntity };
     vm.createContext(ctx);
