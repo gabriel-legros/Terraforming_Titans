@@ -411,7 +411,7 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(art, false, 2)} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
@@ -425,7 +425,7 @@ class WarpGateCommand extends EffectableEntity {
         resources.special.alienArtifact.increase(bonus);
       }
       this.totalArtifacts += bonus;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${formatNumber(bonus, false, 2)} Artifact${bonus === 1 ? '' : 's'}`);
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
     }
 
     this.teamOperationCounts[teamIndex] += 1;

@@ -499,6 +499,7 @@ class PlanetaryThrustersProject extends Project{
         } else {
           dayNightCycle.dayProgress = progress;
         }
+        this.updateUI(); return;
       }
       this.updateUI(); return;
     }

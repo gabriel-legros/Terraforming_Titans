@@ -49,7 +49,7 @@
      if (coverageFn) {
        surfaceIceCoverage = coverageFn();
      }
-     const surfaceMeltCap = zoneArea * surfaceIceCoverage * 0.1;
+     const surfaceMeltCap = surfaceIceCoverage > 1e-10 ? zoneArea * surfaceIceCoverage * 0.1 : zoneArea * Math.sqrt(surfaceIceCoverage) * 0.1 * 1e-5;
      const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
      const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
  
