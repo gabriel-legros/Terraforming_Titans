@@ -1,4 +1,4 @@
-const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow } = require('../src/js/hydrology.js');
+const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow, simulateSurfaceHydrocarbonFlow } = require('../src/js/hydrology.js');
 const { calculateMeltingFreezingRates: zonalRates, calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
 const { getZonePercentage, estimateCoverage } = require('../src/js/zones.js');
 
@@ -30,6 +30,16 @@ function makeTerraformingWithRadius(zonalWater, radius) {
     zonalSurface: {},
     celestialParameters: { surfaceArea: 1, radius }
   };
+}
+
+function makeHydroTerraforming(zonalHydro) {
+  const cache = {};
+  for (const zone in zonalHydro) {
+    cache[zone] = {
+      hydrocarbonIce: (zonalHydro[zone].ice || 0) > 0 ? 0.2 : 0
+    };
+  }
+  return { zonalHydrocarbons: zonalHydro, zonalCoverageCache: cache, zonalSurface: {}, celestialParameters: { surfaceArea: 1 } };
 }
 
 describe('hydrology melting with buried ice', () => {
@@ -160,5 +170,26 @@ describe('hydrology melting with buried ice', () => {
     ).totalMelt;
 
     expect(meltBig).toBeCloseTo(meltMars * 2);
+  });
+});
+
+describe('hydrocarbon flow', () => {
+  test('uses cached coverage for melting', () => {
+    const zonalHydro = {
+      polar: { liquid: 0, ice: 50 },
+      temperate: { liquid: 0, ice: 0 },
+      tropical: { liquid: 0, ice: 0 }
+    };
+    const temps = { polar: 85, temperate: 95, tropical: 85 };
+    const terra = makeHydroTerraforming(zonalHydro);
+    const { totalMelt: melt } = simulateSurfaceHydrocarbonFlow(terra, 1000, temps, zoneElevations);
+    const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
+    const zoneArea = getZonePercentage('polar');
+    const coverage = terra.zonalCoverageCache.polar.hydrocarbonIce;
+    const meltCap = zoneArea * coverage * 0.1;
+    const expectedMelt = meltCap * (0.001 / 0.12) * slopeFactor;
+    expect(melt).toBeCloseTo(expectedMelt);
+    expect(zonalHydro.polar.ice).toBeCloseTo(50 - expectedMelt);
+    expect(zonalHydro.temperate.liquid).toBeCloseTo(expectedMelt);
   });
 });
