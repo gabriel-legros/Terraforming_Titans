@@ -2,7 +2,13 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
     const absValue = Math.abs(value);
     let formatted;
 
-    if (absValue >= 1e30 - 1e27) {
+    if (absValue >= 1e39 - 1e36) {
+      formatted = integer && absValue % 1e39 === 0 ? (absValue / 1e39) + 'Dd' : (absValue / 1e39).toFixed(precision) + 'Dd';
+    } else if (absValue >= 1e36 - 1e33) {
+      formatted = integer && absValue % 1e36 === 0 ? (absValue / 1e36) + 'Ud' : (absValue / 1e36).toFixed(precision) + 'Ud';
+    } else if (absValue >= 1e33 - 1e30) {
+      formatted = integer && absValue % 1e33 === 0 ? (absValue / 1e33) + 'De' : (absValue / 1e33).toFixed(precision) + 'De';
+    } else if (absValue >= 1e30 - 1e27) {
       formatted = integer && absValue % 1e30 === 0 ? (absValue / 1e30) + 'No' : (absValue / 1e30).toFixed(precision) + 'No';
     } else if (absValue >= 1e27 - 1e24) {
       formatted = integer && absValue % 1e27 === 0 ? (absValue / 1e27) + 'Oc' : (absValue / 1e27).toFixed(precision) + 'Oc';
