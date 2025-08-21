@@ -149,10 +149,10 @@
     for (step = 0; step < maxSteps; step++) {
         const numUpdates = Math.max(1, Math.floor(stepMs / fixedUpdateStep));
         for (let i = 0; i < numUpdates; i++) {
+            terraforming.synchronizeGlobalResources();
             terraforming._updateZonalCoverageCache();
             terraforming.updateLuminosity();
             terraforming.updateSurfaceTemperature();
-            terraforming.synchronizeGlobalResources();
             const noisyStepMs = fixedUpdateStep * (0.95 + Math.random() * 0.1);
             terraforming.updateResources(noisyStepMs);
         }
