@@ -120,10 +120,10 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 22522299021317.324
+        "initialValue": 22522291804315.43
       },
       "atmosphericWater": {
-        "initialValue": 14700077.113325292
+        "initialValue": 13424529.769739749
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -133,17 +133,17 @@ const marsOverrides = {
   "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 29437122.81635771,
+      "ice": 6633389.2531730505,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 44611661.56616815,
+      "ice": 10052865.477006223,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007911249903,
+      "ice": 4500007969887731.5,
       "buriedIce": 700000000000000
     }
   },
@@ -155,7 +155,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 1476511541532.2644
+      "dryIce": 1476518758536.3564
     }
   },
   "zonalHydrocarbons": {
@@ -408,11 +408,17 @@ const ganymedeOverrides = {
 
     /* ATMOSPHERE — ultra-thin CO₂ / O₂ exosphere */
     atmospheric: {
-      carbonDioxide:     { initialValue: 3100.0 },     // CO₂ sputtered & sublimation-sourced
       inertGas:          { initialValue: 1e5 },        // trace Ar, Na, etc.
       oxygen:            { initialValue: 1.0e4 },      // molecular O₂ from radiolysis
-      atmosphericWater:  { initialValue: 12037151.807012564 },
-      atmosphericMethane:{ initialValue: 0 }
+      "carbonDioxide": {
+        "initialValue": 19581.082138345577
+      },
+      "atmosphericWater": {
+        "initialValue": 1449808.3984938771
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      }
     },
 
     /* SPECIAL */
@@ -423,34 +429,47 @@ const ganymedeOverrides = {
   },
 
   /* ---------- PER-LATITUDE WATER PARTITION ---------- */
- zonalWater: {
+"zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 94676233227887.31,
-      "buriedIce": 5e+18
+      "ice": 12060677183.489607,
+      "buriedIce": 5000000000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 151906523027232.84,
-      "buriedIce": 7e+18
+      "ice": 231139054089932.4,
+      "buriedIce": 7000000000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 51417217563592.55,
-      "buriedIce": 2e+18
+      "ice": 66844272381537.48,
+      "buriedIce": 2000000000000000000
     }
   },
-
-  zonalSurface: {
-    tropical:  { dryIce: 16000.0 },
-    temperate: { dryIce: 28000.0 },
-    polar:     { dryIce: 12000.0 }
+  "zonalSurface": {
+    "tropical": {
+      "dryIce": 11290.626327030594
+    },
+    "temperate": {
+      "dryIce": 19713.53127523749
+    },
+    "polar": {
+      "dryIce": 8514.760259471892
+    }
   },
-
-  zonalHydrocarbons: {
-    tropical:  { liquid: 0, ice: 0 },
-    temperate: { liquid: 0, ice: 0 },
-    polar:     { liquid: 0, ice: 0 }
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
   },
 
   /* ---------- CELESTIAL PARAMETERS ---------- */
