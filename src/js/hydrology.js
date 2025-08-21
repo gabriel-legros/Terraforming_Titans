@@ -87,7 +87,7 @@ function _simulateSurfaceFlow(zonalInput, deltaTime, zonalTemperatures, zoneElev
                 let slopeFactor = 1 + ((zoneElevations[source] || 0) - (zoneElevations[target] || 0));
                 if (slopeFactor < 0.1) slopeFactor = 0.1;
                 const meltCoefficient = flowRateCoefficient * Math.min(Math.sqrt(diff), 1);
-                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
+                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier * 0.1;
                 melts[source][target] = potentialMelt;
                 meltOut[source] += potentialMelt;
             }
