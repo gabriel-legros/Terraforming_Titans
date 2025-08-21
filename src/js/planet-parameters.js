@@ -198,10 +198,10 @@ const titanOverrides = {
         "initialValue": 99350.54723638295
       },
       "atmosphericWater": {
-        "initialValue": 1.2413980331315933e-13
+        "initialValue": 1.241398030464275e-13
       },
       "atmosphericMethane": {
-        "initialValue": 433519719373986.56,
+         "initialValue": 433519719615774.8
       }
     },
     special: {
@@ -227,27 +227,27 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 254.98121115826453
+      "dryIce": 254.9812111538728
     },
     "temperate": {
-      "dryIce": 336.3240078485391
+      "dryIce": 336.3240078433197
     },
     "polar": {
-      "dryIce": 58.14754571793028
+      "dryIce": 58.14754571756022
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 667904861729.3489,
+      "liquid": 667904862996.1549,
       "ice": 0
     },
     "temperate": {
-      "liquid": 870778509096.8667,
+      "liquid": 870778529782.2084,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 15441597255820.94
+      "ice": 15441596990899.879
     }
   },
 
