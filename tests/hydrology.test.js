@@ -84,7 +84,7 @@ describe('hydrology melting with buried ice', () => {
     };
     const temps = { polar: 250, temperate: 274, tropical: 260 };
     const terra = makeTerraforming(zonalWater);
-    const { totalMelt: melt } = simulateSurfaceWaterFlow(terra, 1000, temps, zoneElevations);
+    const { totalMelt: melt } = simulateSurfaceWaterFlow(terra, 1, temps, zoneElevations);
     const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
     const zoneArea = getZonePercentage('polar');
     const coverage = terra.zonalCoverageCache.polar.ice;
@@ -106,7 +106,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 20, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    const { totalMelt: moved } = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    const { totalMelt: moved } = simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1, temps, zoneElevations);
     expect(moved).toBeCloseTo(0); // no melting expected
     expect(zonalWater.polar.liquid).toBeCloseTo(5);
     expect(zonalWater.temperate.liquid).toBeCloseTo(50);
@@ -119,7 +119,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 40, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1, temps, zoneElevations);
     expect(zonalWater.temperate.liquid).toBeGreaterThanOrEqual(40);
     expect(zonalWater.polar.liquid).toBeLessThanOrEqual(10);
   });
@@ -131,7 +131,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 10, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1, temps, zoneElevations);
     expect(zonalWater.polar.liquid).toBeLessThanOrEqual(10);
     expect(zonalWater.temperate.liquid).toBeGreaterThanOrEqual(10);
   });
@@ -143,7 +143,7 @@ describe('hydrology melting with buried ice', () => {
       tropical: { liquid: 0, ice: 0, buriedIce: 0 }
     };
     const temps = { polar: 260, temperate: 260, tropical: 260 };
-    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1000, temps, zoneElevations);
+    simulateSurfaceWaterFlow(makeTerraforming(zonalWater), 1, temps, zoneElevations);
     expect(zonalWater.tropical.liquid).toBeCloseTo(0, 5);
   });
 
@@ -157,14 +157,14 @@ describe('hydrology melting with buried ice', () => {
     const temps = { polar: 250, temperate: 274, tropical: 260 };
     const meltMars = simulateSurfaceWaterFlow(
       makeTerraformingWithRadius(JSON.parse(JSON.stringify(zonalWater)), marsRadius),
-      1000,
+      1,
       temps,
       zoneElevations
     ).totalMelt;
 
     const meltBig = simulateSurfaceWaterFlow(
       makeTerraformingWithRadius(JSON.parse(JSON.stringify(zonalWater)), marsRadius * 2),
-      1000,
+      1,
       temps,
       zoneElevations
     ).totalMelt;
@@ -182,7 +182,7 @@ describe('hydrocarbon flow', () => {
     };
     const temps = { polar: 85, temperate: 95, tropical: 85 };
     const terra = makeHydroTerraforming(zonalHydro);
-    const { totalMelt: melt } = simulateSurfaceHydrocarbonFlow(terra, 1000, temps, zoneElevations);
+    const { totalMelt: melt } = simulateSurfaceHydrocarbonFlow(terra, 1, temps, zoneElevations);
     const slopeFactor = 1 + (zoneElevations.polar - zoneElevations.temperate);
     const zoneArea = getZonePercentage('polar');
     const coverage = terra.zonalCoverageCache.polar.hydrocarbonIce;
