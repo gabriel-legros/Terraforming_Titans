@@ -220,6 +220,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added Superalloys advanced research unlocking Superalloy Foundry, Superalloy Fusion Reactor, and Ecumenopolis District.
 - Space Storage ship transfers scale with assigned ships, matching rates across the 100-ship transition.
 - Space Storage transfers appear in resource tooltips as production or consumption.
+- Space Storage expansion duration no longer decreases when ships are assigned; transfer duration scales separately with ship count.
+- Space Storage ship transfer duration uses a fixed 100 s base unaffected by terraforming bonuses or duration multipliers, while expansion timing still honors those effects.
 - WGC shop offers a Superalloy production multiplier upgrade unlocked by Superalloys research, capped at 900 purchases, and increasing production by 100% per purchase.
 - Added a maintenanceMultiplier attribute for resources; superalloys use a multiplier of 0 and maintenance costs scale with each resource's multiplier.
 - Added placeholder Nanotechnology Stage I advanced research costing 125k.

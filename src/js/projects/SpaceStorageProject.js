@@ -2,6 +2,7 @@ class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
     this.baseDuration = config.duration;
+    this.shipBaseDuration = 100_000;
     this.capacityPerCompletion = 100_000_000_000;
     this.usedStorage = 0;
     this.selectedResources = [];
@@ -50,15 +51,21 @@ class SpaceStorageProject extends SpaceshipProject {
   calculateSpaceshipAdjustedDuration() {
     const maxShipsForDurationReduction = 100;
     if (this.isShipOperationContinuous()) {
-      return this.baseDuration;
+      return this.shipBaseDuration;
     }
-    const ships = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction);
-    return this.baseDuration / ships;
+    const ships = Math.min(
+      Math.max(this.assignedSpaceships, 1),
+      maxShipsForDurationReduction
+    );
+    return this.shipBaseDuration / ships;
   }
 
   getBaseDuration() {
-    const duration = this.calculateSpaceshipAdjustedDuration();
-    return this.getDurationWithTerraformBonus(duration);
+    return this.getDurationWithTerraformBonus(this.baseDuration);
+  }
+
+  getShipOperationDuration() {
+    return this.calculateSpaceshipAdjustedDuration();
   }
 
   toggleResourceSelection(category, resource, isSelected) {
@@ -197,7 +204,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     const plan = this.calculateTransferPlan(false);
     this.pendingTransfers = plan.transfers;
-    this.shipOperationRemainingTime = this.getEffectiveDuration();
+    this.shipOperationRemainingTime = this.getShipOperationDuration();
     this.shipOperationStartingDuration = this.shipOperationRemainingTime;
     this.shipOperationIsActive = true;
     this.shipOperationIsPaused = false;
@@ -232,7 +239,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyContinuousShipOperation(deltaTime) {
-    const fraction = deltaTime / this.getEffectiveDuration();
+    const fraction = deltaTime / this.getShipOperationDuration();
     const capacity = this.calculateTransferAmount() * fraction;
     if (capacity <= 0) {
       this.shipOperationIsActive = false;
@@ -324,7 +331,7 @@ class SpaceStorageProject extends SpaceshipProject {
     super.updateCostAndGains(elements);
     if (elements.transferRateElement) {
       const amount = this.calculateTransferAmount();
-      const seconds = this.getEffectiveDuration() / 1000;
+      const seconds = this.getShipOperationDuration() / 1000;
       const rate = seconds > 0 ? amount / seconds : 0;
       elements.transferRateElement.textContent = `Transfer Rate: ${formatNumber(rate, true)}/s`;
     }

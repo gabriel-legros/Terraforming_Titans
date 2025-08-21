@@ -31,12 +31,13 @@ describe('Space Storage project', () => {
       colonies: {},
       projectElements: {},
       addEffect: () => {},
-        globalGameIsLoadingFromSave: false,
-        spaceManager: {
-          getTerraformedPlanetCount: () => 2,
-          getTerraformedPlanetCountIncludingCurrent: () => 3
-        }
-      };
+      globalGameIsLoadingFromSave: false,
+      spaceManager: {
+        getTerraformedPlanetCount: () => 2,
+        getTerraformedPlanetCountIncludingCurrent: () => 3
+      },
+      projectManager: { durationMultiplier: 0.5 }
+    };
     vm.createContext(ctx);
     vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
@@ -51,8 +52,13 @@ describe('Space Storage project', () => {
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
     project.repeatCount = 1;
     expect(project.getBaseDuration()).toBeCloseTo(100000);
+    expect(project.getEffectiveDuration()).toBeCloseTo(50000);
+    expect(project.getShipOperationDuration()).toBeCloseTo(100000);
+    project.assignedSpaceships = 10;
+    expect(project.getShipOperationDuration()).toBeCloseTo(100000 / 10);
     project.assignedSpaceships = 150;
     expect(project.getBaseDuration()).toBeCloseTo(100000);
+    expect(project.getShipOperationDuration()).toBeCloseTo(100000);
     expect(project.calculateTransferAmount()).toBe(150_000_000_000);
     project.repeatCount = 2;
     expect(project.maxStorage).toBe(200_000_000_000);
@@ -121,6 +127,44 @@ describe('Space Storage project', () => {
     visibleCheckboxes[0].checked = true;
     visibleCheckboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
+  });
+
+  test('expansion duration unaffected by ship assignment and transfers scale with ships', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: { special: { spaceships: { value: 0 } }, colony: { energy: { value: 0 } } },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      spaceManager: {
+        getTerraformedPlanetCountIncludingCurrent: () => 1,
+        getTerraformedPlanetCount: () => 0
+      },
+      projectManager: { durationMultiplier: 1 },
+    };
+    vm.createContext(ctx);
+    vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+
+    const attrs = { costPerShip: { colony: { energy: 1 } }, transportPerShip: 1 };
+    const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+
+    const baseDuration = project.getEffectiveDuration();
+    project.assignedSpaceships = 10;
+    const afterAssignDuration = project.getEffectiveDuration();
+    expect(afterAssignDuration).toBeCloseTo(baseDuration);
+
+    const shipDuration = project.getShipOperationDuration();
+    expect(shipDuration).toBeCloseTo(100000 / 10);
   });
 
   test('hides default project cost display', () => {
@@ -524,21 +568,21 @@ describe('Space Storage project', () => {
     project.shipOperationAutoStart = true;
 
     project.update(1000);
-    expect(project.resourceUsage.metal).toBeCloseTo(1000);
-    expect(project.usedStorage).toBeCloseTo(1000);
-    expect(ctx.resources.colony.metal.value).toBeCloseTo(0);
-    expect(ctx.resources.colony.energy.value).toBeCloseTo(8000);
+    expect(project.resourceUsage.metal).toBeCloseTo(200);
+    expect(project.usedStorage).toBeCloseTo(200);
+    expect(ctx.resources.colony.metal.value).toBeCloseTo(800);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(9980);
     expect(ctx.resources.colony.metal.consumptionRateByType.project['Space Storage'])
-      .toBeCloseTo(1000);
+      .toBeCloseTo(200);
 
     project.shipWithdrawMode = true;
     project.update(1000);
     expect(project.resourceUsage.metal).toBeUndefined();
     expect(project.usedStorage).toBeCloseTo(0);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1000);
-    expect(ctx.resources.colony.energy.value).toBeCloseTo(6000);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(9960);
     expect(ctx.resources.colony.metal.productionRateByType.project['Space Storage'])
-      .toBeCloseTo(1000);
+      .toBeCloseTo(200);
   });
 
   test('transfer rate matches at 100-ship transition', () => {
@@ -566,9 +610,9 @@ describe('Space Storage project', () => {
     const params = { name: 'spaceStorage', displayName: 'Space Storage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
     const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
     project.assignedSpaceships = 100;
-    const discreteRate = project.calculateTransferAmount() / (project.getBaseDuration() / 1000);
+    const discreteRate = project.calculateTransferAmount() / (project.getShipOperationDuration() / 1000);
     project.assignedSpaceships = 101;
-    const continuousRate = project.calculateTransferAmount() / (project.getBaseDuration() / 1000);
+    const continuousRate = project.calculateTransferAmount() / (project.getShipOperationDuration() / 1000);
     expect(continuousRate / discreteRate).toBeCloseTo(101 / 100);
   });
 
