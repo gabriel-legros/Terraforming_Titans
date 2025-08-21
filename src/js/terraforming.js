@@ -684,7 +684,8 @@ class Terraforming extends EffectableEntity{
                 availableHydrocarbonIce,
                 availableLiquidMethane,
                 availableBuriedHydrocarbonIce,
-                zoneArea
+                zoneArea,
+                () => this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0
             );
             const availableForMethaneMelt = availableHydrocarbonIce + availableBuriedHydrocarbonIce + (zonalChanges[zone].hydrocarbonIce || 0);
             const methaneMeltAmount = Math.min(methaneMeltFreezeRates.meltingRate * durationSeconds, availableForMethaneMelt);

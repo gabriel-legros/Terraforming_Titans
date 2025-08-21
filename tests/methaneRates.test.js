@@ -6,6 +6,20 @@ const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
 const hydrocarbon = require('../src/js/hydrocarbon-cycle.js');
 
+jest.mock('../src/js/hydrology.js', () => {
+  const original = jest.requireActual('../src/js/hydrology.js');
+  const mockMethaneRates = jest.fn((...args) => {
+    const coverageFn = args[5];
+    mockMethaneRates.coverageValue = coverageFn ? coverageFn() : undefined;
+    return { meltingRate: 0, freezingRate: 0 };
+  });
+  return {
+    ...original,
+    calculateMethaneMeltingFreezingRates: mockMethaneRates
+  };
+});
+const hydrology = require('../src/js/hydrology.js');
+
 // Required globals for terraforming.js
 global.getZoneRatio = getZoneRatio;
 global.getZonePercentage = getZonePercentage;
@@ -72,5 +86,26 @@ describe('methane atmospheric rate tracking', () => {
     const labels = calls.map(c => c[1]);
     expect(labels).toContain('Evaporation/Sublimation');
     expect(labels).toContain('Precipitation');
+  });
+});
+
+describe('methane melting/freezing coverage', () => {
+  test('passes methane ice coverage function', () => {
+    const params = getPlanetParameters('titan');
+    global.currentPlanetParameters = params;
+    const res = createResources();
+    global.resources = res;
+    const terra = new Terraforming(res, params.celestialParameters);
+
+    terra._updateZonalCoverageCache = function () {
+      for (const z of ['tropical', 'temperate', 'polar']) {
+        this.zonalCoverageCache[z] = { hydrocarbonIce: 0.25, liquidMethane: 0 };
+      }
+    };
+
+    terra.calculateInitialValues(params);
+    terra.updateResources(1000);
+
+    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageValue).toBeCloseTo(0.25);
   });
 });
