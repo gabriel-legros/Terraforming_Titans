@@ -195,7 +195,7 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, deltaTime, zonalT
 }
 
 // Compute melting and freezing rates for a surface zone based on temperature
-function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, coverageFn) {
+function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, iceCoverageFn, liquidCoverageFn) {
     return meltingFreezingRatesUtil({
         temperature,
         freezingPoint: 273.15,
@@ -203,11 +203,12 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
         availableLiquid,
         availableBuriedIce,
         zoneArea,
-        coverageFn
+        iceCoverageFn,
+        liquidCoverageFn
     });
 }
 
-function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, coverageFn) {
+function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, iceCoverageFn, liquidCoverageFn) {
     return meltingFreezingRatesUtil({
         temperature,
         freezingPoint: 90.7,
@@ -215,7 +216,8 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
         availableLiquid,
         availableBuriedIce,
         zoneArea,
-        coverageFn,
+        iceCoverageFn,
+        liquidCoverageFn,
     });
 }
 
