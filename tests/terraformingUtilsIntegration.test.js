@@ -90,6 +90,8 @@ describe('terraforming-utils integration', () => {
       terra.zonalWater[z].liquid = 0;
     }
 
+    terra._updateZonalCoverageCache();
+
     const rates = calculateEvaporationSublimationRates(
       terra,
       'polar',

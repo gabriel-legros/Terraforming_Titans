@@ -302,4 +302,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added decillion, undecillion, and duodecillion number units.
 - Melting and freezing rate calculations use cached coverage values.
 - Hydrology surface flow uses cached zonal coverage values.
+- Evaporation and sublimation rate calculations use cached zonal coverage values.
 - fastForwardToEquilibrium now checks zonal biomass and buried hydrocarbons for stability, matching equilibrate.
