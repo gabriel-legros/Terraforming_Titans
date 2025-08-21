@@ -24,7 +24,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
         : marsRadiusKm;
     const radiusScale = planetRadius / marsRadiusKm;
 
-    const baseFlowRate = 0.001;
+    const baseFlowRate = 0.00001;
     const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
     const secondsMultiplier = durationSeconds;
     let totalMelt = 0;
