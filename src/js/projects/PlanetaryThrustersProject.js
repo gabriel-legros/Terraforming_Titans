@@ -470,31 +470,38 @@ class PlanetaryThrustersProject extends Project{
 
     /* ------ spin -------- */
     if(this.spinInvest){
-      const sign = this.tgtDays < getRotHours(p) / 24 ? 1 : -1;
-        const dΩ=sign*dvTick/(p.radius*1e3);
-        const ω=2*Math.PI/(getRotHours(p)*3600)+dΩ;
-        let newPeriod=2*Math.PI/ω/3600;
-        if(this.dVdone>=this.dVreq){
-          newPeriod=this.tgtDays*24;
-          this.spinInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;
-        }
-        p.rotationPeriod=newPeriod;
-        if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
-          const oldDur = dayNightCycle.dayDuration;
-          const progress = typeof dayNightCycle.getDayProgress === 'function'
-            ? dayNightCycle.getDayProgress()
-            : 0;
-          const daysElapsed = dayNightCycle.elapsedTime / oldDur;
-          dayNightCycle.dayDuration = rotationPeriodToDurationFunc(newPeriod);
-          dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
-          if (typeof dayNightCycle.setDayProgress === 'function') {
-            dayNightCycle.setDayProgress(progress);
-          } else {
-            dayNightCycle.dayProgress = progress;
-          }
-        }
-        this.updateUI(); return;
+      const curHours = getRotHours(p);
+      const curDays = curHours / 24;
+      const sign = this.tgtDays < curDays ? 1 : -1;
+      const dΩ = sign * dvTick / (p.radius * 1e3);
+      const ω = 2 * Math.PI / (curHours * 3600) + dΩ;
+      let newPeriod = 2 * Math.PI / ω / 3600;
+      const targetHours = this.tgtDays * 24;
+      const overshoot = (sign > 0 && newPeriod < targetHours) ||
+                        (sign < 0 && newPeriod > targetHours);
+      if (overshoot || this.dVdone >= this.dVreq) {
+        newPeriod = targetHours;
+        this.spinInvest = false;
+        this.dVreq = this.dVdone = 0;
+        this.activeMode = null;
       }
+      p.rotationPeriod = newPeriod;
+      if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
+        const oldDur = dayNightCycle.dayDuration;
+        const progress = typeof dayNightCycle.getDayProgress === 'function'
+          ? dayNightCycle.getDayProgress()
+          : 0;
+        const daysElapsed = dayNightCycle.elapsedTime / oldDur;
+        dayNightCycle.dayDuration = rotationPeriodToDurationFunc(newPeriod);
+        dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
+        if (typeof dayNightCycle.setDayProgress === 'function') {
+          dayNightCycle.setDayProgress(progress);
+        } else {
+          dayNightCycle.dayProgress = progress;
+        }
+      }
+      this.updateUI(); return;
+    }
 
     /* ------ motion ------- */
     if(this.motionInvest){
