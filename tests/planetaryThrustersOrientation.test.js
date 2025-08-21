@@ -42,6 +42,7 @@ describe('Planetary Thrusters orientation', () => {
     const requiredPower = project.dVreq * p.mass / (project.getThrustPowerRatio() * 86400);
     project.power = requiredPower / 10;
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     expect(p.rotationPeriod).toBeGreaterThan(6);
 
     // motion orientation
@@ -56,6 +57,7 @@ describe('Planetary Thrusters orientation', () => {
     const requiredPowerM = project.dVreq * p.mass / (project.getThrustPowerRatio() * 86400);
     project.power = requiredPowerM / 10;
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     expect(p.distanceFromSun).toBeGreaterThan(1);
   });
 });

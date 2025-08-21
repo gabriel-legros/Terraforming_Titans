@@ -38,6 +38,7 @@ describe('Planetary Thrusters energy tracking', () => {
     project.prepareJob(true, true);
     project.activeMode = 'spin';
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     const spinEnergy = project.energySpentSpin;
 
     // switch to motion without resetting spin energy
@@ -54,6 +55,7 @@ describe('Planetary Thrusters energy tracking', () => {
 
     // accumulate motion energy
     project.update(1000);
+    project.applyCostAndGain(1000, null, 1);
     const motionEnergy = project.energySpentMotion;
 
     // switch to spin without resetting motion energy
