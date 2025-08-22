@@ -546,9 +546,9 @@ function updateResourceRateDisplay(resource){
   } else if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
     if (Math.abs(netRate) < 1e-3) {
-      ppsElement.textContent = `0/s`;
+      ppsElement.textContent = `0`;
     } else {
-      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}/s`;
+      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
     }
     if (netRate < 0 && Math.abs(netRate) > resource.value) {
       ppsElement.style.color = 'red';

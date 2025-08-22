@@ -461,13 +461,10 @@ class PlanetaryThrustersProject extends Project{
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
     const totals = { cost: {}, gain: {} };
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
-    const activeTime = this.lastActiveTime || 0;
-    if(activeTime <= 0) return totals;
-    const fraction = Math.min(1, activeTime / deltaTime);
     if (applyRates && resources?.colony?.energy?.modifyRate) {
-      resources.colony.energy.modifyRate(-this.power * fraction * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
-    totals.cost.colony = { energy: this.power * fraction * (deltaTime / 1000) };
+    totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
     return totals;
   }
 
