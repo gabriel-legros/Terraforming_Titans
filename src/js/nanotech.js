@@ -282,7 +282,7 @@ class NanotechManager extends EffectableEntity {
     const countEl = document.getElementById('nanobot-count');
     if (countEl) countEl.textContent = formatNumber(this.nanobots, false, 2);
     const capEl = document.getElementById('nanobot-cap');
-    if (capEl) capEl.textContent = formatNumber(max);
+    if (capEl) capEl.textContent = formatNumber(max, false, 2);
     const growthEl = document.getElementById('nanobot-growth-rate');
     if (growthEl) {
       const baseOpt = 0.0025;
