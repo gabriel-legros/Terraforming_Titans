@@ -126,6 +126,14 @@ class Project extends EffectableEntity {
       return this.hasSustainResources();
     }
 
+    if (
+      this.category === 'story' &&
+      this.attributes.planet &&
+      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
+    ) {
+      return false;
+    }
+
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const category in cost) {
@@ -253,6 +261,15 @@ class Project extends EffectableEntity {
 
   update(deltaTime) {
     if (!this.isActive || this.isCompleted || this.isPaused) return;
+
+    if (
+      this.category === 'story' &&
+      this.attributes.planet &&
+      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
+    ) {
+      this.isActive = false;
+      return;
+    }
 
     if (!this.hasSustainResources(deltaTime)) {
       this.isActive = false;
