@@ -174,11 +174,14 @@ function updateSpaceUI() {
     if (!allPlanetData) return;
 
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
-    const canChangePlanet = _spaceManagerInstance.isPlanetTerraformed(currentKey);
+    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed ? _spaceManagerInstance.getCurrentRandomSeed() : null;
+    const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
+    const canChangePlanet = currentSeed !== null || isTerraformed;
 
     if (statusContainer) {
-        statusContainer.style.display = canChangePlanet ? 'none' : 'block';
-        statusContainer.textContent = canChangePlanet ? '' : 'Current planet must be fully terraformed before traveling.';
+        const showWarning = currentSeed === null && !isTerraformed;
+        statusContainer.style.display = showWarning ? 'block' : 'none';
+        statusContainer.textContent = showWarning ? 'Current planet must be fully terraformed before traveling.' : '';
     }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
@@ -229,7 +232,8 @@ function selectPlanet(planetKey){
         return;
     }
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
-    if(!_spaceManagerInstance.isPlanetTerraformed(currentKey)) {
+    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed ? _spaceManagerInstance.getCurrentRandomSeed() : null;
+    if(currentSeed === null && !_spaceManagerInstance.isPlanetTerraformed(currentKey)) {
         console.warn('Cannot travel until current planet is terraformed.');
         return;
     }
