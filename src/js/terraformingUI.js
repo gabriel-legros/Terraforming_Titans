@@ -862,7 +862,10 @@ function updateLifeBox() {
   Biomass: ${pct(fr.biomass)}%`
         );
       }
-      surfTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}`;
+      const explanation =
+        'Biomass claims its share first based on zonal biomass. ' +
+        'Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.';
+      surfTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}\n\n${explanation}`;
     }
 
     const actualTooltip = document.getElementById('actual-albedo-tooltip');

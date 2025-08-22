@@ -314,3 +314,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Water overflow in resource tooltips now appears in its own section beneath Consumption and Maintenance.
 - Surface ice and liquid water tooltips display overflow in a dedicated section.
 - Added spacing before the Autobuild Cost section in resource tooltips.
+- Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
