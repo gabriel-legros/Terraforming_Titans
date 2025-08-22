@@ -465,7 +465,13 @@ progressGanymede.chapters.push(
                 contentClass: 'space-subtab-content',
                 targetId: 'space-random',
                 unhide: true
-            }
+            },          
+            {
+                target: 'resource',
+                resourceType: 'surface',
+                targetId : 'liquidWater',
+                type: 'enable'
+            },
         ]
     }
 );
