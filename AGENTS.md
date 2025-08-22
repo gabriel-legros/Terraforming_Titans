@@ -312,3 +312,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource tooltips display total production and total consumption at the top of their tables.
 - Atmospheric oxygen and methane above 1 Pa combust into water and carbon dioxide at a rate proportional to the world's surface area and the excess pressure product.
 - Water overflow in resource tooltips now appears in its own section beneath Consumption and Maintenance.
+- Surface ice and liquid water tooltips display overflow in a dedicated section.
+- Added spacing before the Autobuild Cost section in resource tooltips.

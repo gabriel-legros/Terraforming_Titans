@@ -44,13 +44,14 @@ describe('overflow rate appears in tooltip', () => {
     ctx.updateResourceRateDisplay(liquid);
     const cwCons = dom.window.document.getElementById('water-tooltip-consumption').textContent;
     const cwOver = dom.window.document.getElementById('water-tooltip-overflow').textContent;
-    const lw = dom.window.document.getElementById('liquidWater-tooltip').innerHTML;
+    const lwProd = dom.window.document.getElementById('liquidWater-tooltip-production');
+    const lwOver = dom.window.document.getElementById('liquidWater-tooltip-overflow').textContent;
     expect(cwCons).not.toContain('Overflow');
     expect(cwOver).toContain('Overflow');
     expect(cwOver).toContain(numbers.formatNumber(5, false, 2));
-    expect(lw).toContain('Production');
-    expect(lw).toContain('Overflow');
-    expect(lw).toContain(numbers.formatNumber(5, false, 2));
+    expect(lwProd.style.display).toBe('none');
+    expect(lwOver).toContain('Overflow');
+    expect(lwOver).toContain(numbers.formatNumber(5, false, 2));
   });
 
   test('shows on colony water and ice', () => {
@@ -80,13 +81,14 @@ describe('overflow rate appears in tooltip', () => {
     ctx.updateResourceRateDisplay(ice);
     const cwCons = dom.window.document.getElementById('water-tooltip-consumption').textContent;
     const cwOver = dom.window.document.getElementById('water-tooltip-overflow').textContent;
-    const iw = dom.window.document.getElementById('ice-tooltip').innerHTML;
+    const iwProd = dom.window.document.getElementById('ice-tooltip-production');
+    const iwOver = dom.window.document.getElementById('ice-tooltip-overflow').textContent;
     expect(cwCons).not.toContain('Overflow');
     expect(cwOver).toContain('Overflow');
     expect(cwOver).toContain(numbers.formatNumber(2, false, 2));
-    expect(iw).toContain('Production');
-    expect(iw).toContain('Overflow');
-    expect(iw).toContain(numbers.formatNumber(2, false, 2));
+    expect(iwProd.style.display).toBe('none');
+    expect(iwOver).toContain('Overflow');
+    expect(iwOver).toContain(numbers.formatNumber(2, false, 2));
   });
 
   test('hides overflow section when none', () => {
