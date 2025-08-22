@@ -82,6 +82,7 @@ const KPA_PER_ATM = 101.325;
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.0000095;
 const EQUILIBRIUM_CO2_PARAMETER = 5.5e-9;
+const METHANE_COMBUSTION_PARAMETER = 1e-6; // Rate coefficient for CH4/O2 combustion
 
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
@@ -164,6 +165,10 @@ class Terraforming extends EffectableEntity{
     this.totalMethaneFreezeRate = 0;
     this.flowMethaneMeltAmount = 0;
     this.flowMethaneMeltRate = 0;
+    this.totalMethaneCombustionRate = 0;
+    this.totalOxygenCombustionRate = 0;
+    this.totalCombustionWaterRate = 0;
+    this.totalCombustionCo2Rate = 0;
 
     // Zonal Water Data - Replaces global this.water
     this.zonalWater = {};
@@ -469,6 +474,7 @@ class Terraforming extends EffectableEntity{
         let globalWaterPressurePa = 0;
         let globalCo2PressurePa = 0;
         let globalMethanePressurePa = 0;
+        let globalOxygenPressurePa = 0;
         for (const gas in this.resources.atmospheric) {
              const amount = this.resources.atmospheric[gas].value || 0;
              const pressure = calculateAtmosphericPressure(amount, gravity, this.celestialParameters.radius);
@@ -476,10 +482,12 @@ class Terraforming extends EffectableEntity{
              if (gas === 'atmosphericWater') globalWaterPressurePa = pressure;
              if (gas === 'carbonDioxide') globalCo2PressurePa = pressure;
              if (gas === 'atmosphericMethane') globalMethanePressurePa = pressure;
+             if (gas === 'oxygen') globalOxygenPressurePa = pressure;
         }
         const availableGlobalWaterVapor = this.resources.atmospheric['atmosphericWater']?.value || 0; // tons
         const availableGlobalCo2Gas = this.resources.atmospheric['carbonDioxide']?.value || 0; // tons
         const availableGlobalMethaneGas = this.resources.atmospheric['atmosphericMethane']?.value || 0; // tons
+        const availableGlobalOxygenGas = this.resources.atmospheric['oxygen']?.value || 0; // tons
 
         const precipitationMultiplier = this.equilibriumPrecipitationMultiplier;
         const condensationParameter = this.equilibriumCondensationParameter;
@@ -539,6 +547,7 @@ class Terraforming extends EffectableEntity{
         let totalAtmosphericWaterChange = 0;
         let totalAtmosphericCO2Change = 0;
         let totalAtmosphericMethaneChange = 0;
+        let totalOxygenChange = 0;
         // Store total amounts for individual processes for UI rate reporting
         let totalEvaporationAmount = 0, totalWaterSublimationAmount = 0, totalCo2SublimationAmount = 0, totalMethaneEvaporationAmount = 0, totalMethaneSublimationAmount = 0;
         let totalRainfallAmount = 0, totalSnowfallAmount = 0, totalCo2CondensationAmount = 0, totalMethaneCondensationAmount = 0, totalMethaneIceCondensationAmount = 0;
@@ -860,11 +869,36 @@ class Terraforming extends EffectableEntity{
             totalMethaneIceCondensationAmount += zonalChanges[zone].actualMethaneIceCondensation || 0;
         });
 
+        // --- 4.5. Spontaneous methane/oxygen combustion ---
+        let combustionMethaneAmount = 0;
+        let combustionOxygenAmount = 0;
+        let combustionWaterAmount = 0;
+        let combustionCO2Amount = 0;
+        if (globalOxygenPressurePa > 1 && globalMethanePressurePa > 1) {
+            const rate = METHANE_COMBUSTION_PARAMETER *
+                (globalOxygenPressurePa - 1) *
+                (globalMethanePressurePa - 1) *
+                this.celestialParameters.surfaceArea;
+            combustionMethaneAmount = Math.min(
+                rate * durationSeconds,
+                availableGlobalMethaneGas,
+                availableGlobalOxygenGas / 4
+            );
+            combustionOxygenAmount = combustionMethaneAmount * 4;
+            combustionWaterAmount = combustionMethaneAmount * 2.25;
+            combustionCO2Amount = combustionMethaneAmount * 2.75;
+            totalAtmosphericMethaneChange -= combustionMethaneAmount;
+            totalAtmosphericWaterChange += combustionWaterAmount;
+            totalAtmosphericCO2Change += combustionCO2Amount;
+            totalOxygenChange -= combustionOxygenAmount;
+        }
+
         // --- 5. Apply net changes ---
         // Ensure aggregated changes are finite numbers before applying
         if(!Number.isFinite(totalAtmosphericWaterChange)) totalAtmosphericWaterChange = 0;
         if(!Number.isFinite(totalAtmosphericCO2Change)) totalAtmosphericCO2Change = 0;
         if(!Number.isFinite(totalAtmosphericMethaneChange)) totalAtmosphericMethaneChange = 0;
+        if(!Number.isFinite(totalOxygenChange)) totalOxygenChange = 0;
 
         // Apply directly to Global Resources (Atmosphere)
         if (this.resources.atmospheric['atmosphericWater']) {
@@ -878,6 +912,10 @@ class Terraforming extends EffectableEntity{
         if (this.resources.atmospheric['atmosphericMethane']) {
             this.resources.atmospheric['atmosphericMethane'].value += totalAtmosphericMethaneChange;
             this.resources.atmospheric['atmosphericMethane'].value = Math.max(0, this.resources.atmospheric['atmosphericMethane'].value);
+        }
+        if (this.resources.atmospheric['oxygen']) {
+            this.resources.atmospheric['oxygen'].value += totalOxygenChange;
+            this.resources.atmospheric['oxygen'].value = Math.max(0, this.resources.atmospheric['oxygen'].value);
         }
 
         // Apply to Zonal Surface Stores
@@ -921,6 +959,10 @@ class Terraforming extends EffectableEntity{
         this.totalMethaneIceCondensationRate = totalMethaneIceCondensationAmount / durationSeconds * 86400;
         this.totalMethaneMeltRate = totalMethaneMeltAmount / durationSeconds * 86400;
         this.totalMethaneFreezeRate = totalMethaneFreezeAmount / durationSeconds * 86400;
+        this.totalMethaneCombustionRate = combustionMethaneAmount / durationSeconds * 86400;
+        this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
+        this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
+        this.totalCombustionCo2Rate = combustionCO2Amount / durationSeconds * 86400;
 
         // Keep local consts for modifyRate calls below if needed, or use this. properties directly
         const evaporationRate = this.totalEvaporationRate;
@@ -933,6 +975,10 @@ class Terraforming extends EffectableEntity{
         const meltingRate = this.totalMeltRate - focusedMeltRate - flowMeltRate;
         const freezingRate = this.totalFreezeRate;
         const co2CondensationRate = this.totalCo2CondensationRate;
+        const combustionMethaneRate = this.totalMethaneCombustionRate;
+        const combustionOxygenRate = this.totalOxygenCombustionRate;
+        const combustionWaterRate = this.totalCombustionWaterRate;
+        const combustionCo2Rate = this.totalCombustionCo2Rate;
 
         // Calculate individual atmospheric process rates
         const atmosphericWaterProductionRate = (totalEvaporationAmount + totalWaterSublimationAmount) / durationSeconds * 86400;
@@ -956,6 +1002,35 @@ class Terraforming extends EffectableEntity{
         if (this.resources.atmospheric.atmosphericMethane) {
             this.resources.atmospheric.atmosphericMethane.modifyRate(atmosphericMethaneProductionRate, 'Evaporation/Sublimation', rateType);
             this.resources.atmospheric.atmosphericMethane.modifyRate(-atmosphericMethaneConsumptionRate, 'Precipitation', rateType); // Consumption is negative
+        }
+
+        if (combustionWaterRate && this.resources.atmospheric.atmosphericWater) {
+            this.resources.atmospheric.atmosphericWater.modifyRate(
+                combustionWaterRate,
+                'Spontaneous Methane Combustion',
+                rateType
+            );
+        }
+        if (combustionCo2Rate && this.resources.atmospheric.carbonDioxide) {
+            this.resources.atmospheric.carbonDioxide.modifyRate(
+                combustionCo2Rate,
+                'Spontaneous Methane Combustion',
+                rateType
+            );
+        }
+        if (combustionMethaneRate && this.resources.atmospheric.atmosphericMethane) {
+            this.resources.atmospheric.atmosphericMethane.modifyRate(
+                -combustionMethaneRate,
+                'Spontaneous Methane Combustion',
+                rateType
+            );
+        }
+        if (combustionOxygenRate && this.resources.atmospheric.oxygen) {
+            this.resources.atmospheric.oxygen.modifyRate(
+                -combustionOxygenRate,
+                'Spontaneous Methane Combustion',
+                rateType
+            );
         }
 
         // Update Surface Resource Rates (Individual Processes for Tooltip)
@@ -1730,6 +1805,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.setStarLuminosity = setStarLuminosity;
   module.exports.getStarLuminosity = getStarLuminosity;
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
+  module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;
   globalThis.getStarLuminosity = getStarLuminosity;
