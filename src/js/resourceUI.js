@@ -143,6 +143,38 @@ function createTooltipElement(resourceName) {
   consumptionDiv._info = { table: consTable, rows: new Map(), totalRow: consTotalRow, totalRight: consTotalRightStrong };
   tooltip.appendChild(consumptionDiv);
 
+  const overflowDiv = document.createElement('div');
+  overflowDiv.id = `${resourceName}-tooltip-overflow`;
+  overflowDiv.style.display = 'none';
+  overflowDiv.appendChild(document.createElement('br'));
+  const overflowHeader = document.createElement('strong');
+  overflowHeader.textContent = 'Overflow:';
+  overflowDiv.appendChild(overflowHeader);
+  overflowDiv.appendChild(document.createElement('br'));
+  const overflowTable = document.createElement('div');
+  overflowTable.style.display = 'table';
+  overflowTable.style.width = '100%';
+  overflowDiv.appendChild(overflowTable);
+  const overflowTotalRow = document.createElement('div');
+  overflowTotalRow.style.display = 'table-row';
+  const overflowTotalLeft = document.createElement('div');
+  overflowTotalLeft.style.display = 'table-cell';
+  overflowTotalLeft.style.textAlign = 'left';
+  overflowTotalLeft.style.paddingRight = '10px';
+  const overflowTotalLeftStrong = document.createElement('strong');
+  overflowTotalLeftStrong.textContent = 'Total :';
+  overflowTotalLeft.appendChild(overflowTotalLeftStrong);
+  const overflowTotalRight = document.createElement('div');
+  overflowTotalRight.style.display = 'table-cell';
+  overflowTotalRight.style.textAlign = 'right';
+  const overflowTotalRightStrong = document.createElement('strong');
+  overflowTotalRight.appendChild(overflowTotalRightStrong);
+  overflowTotalRow.appendChild(overflowTotalLeft);
+  overflowTotalRow.appendChild(overflowTotalRight);
+  overflowTable.appendChild(overflowTotalRow);
+  overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
+  tooltip.appendChild(overflowDiv);
+
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
   autobuildDiv.style.display = 'none';
@@ -607,6 +639,7 @@ function updateResourceRateDisplay(resource){
   const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
   const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
   const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
+  const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
   const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
 
   const netRate = resource.productionRate - resource.consumptionRate;
@@ -733,9 +766,18 @@ function updateResourceRateDisplay(resource){
   }
 
   if (consumptionDiv) {
-    const consumptionEntries = Object.entries(resource.consumptionRateBySource).filter(([source, rate]) => rate !== 0);
+    const consumptionEntries = Object.entries(resource.consumptionRateBySource)
+      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
     updateRateTable(consumptionDiv, consumptionEntries, r => `${formatNumber(r, false, 2)}/s`);
     consumptionDiv.style.display = consumptionEntries.length > 0 ? 'block' : 'none';
+  }
+
+  if (overflowDiv) {
+    const overflowEntries = Object.entries(resource.consumptionRateByType?.overflow || {})
+      .filter(([, rate]) => rate !== 0)
+      .map(([src, rate]) => [src.replace(' (not summed)', ''), rate]);
+    updateRateTable(overflowDiv, overflowEntries, r => `${formatNumber(r, false, 2)}/s`);
+    overflowDiv.style.display = overflowEntries.length > 0 ? 'block' : 'none';
   }
 
   if (autobuildDiv) {
