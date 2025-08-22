@@ -82,7 +82,7 @@ const KPA_PER_ATM = 101.325;
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.0000095;
 const EQUILIBRIUM_CO2_PARAMETER = 5.5e-9;
-const METHANE_COMBUSTION_PARAMETER = 1e-6; // Rate coefficient for CH4/O2 combustion
+const METHANE_COMBUSTION_PARAMETER = 1e-18; // Rate coefficient for CH4/O2 combustion
 
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
@@ -1007,28 +1007,28 @@ class Terraforming extends EffectableEntity{
         if (combustionWaterRate && this.resources.atmospheric.atmosphericWater) {
             this.resources.atmospheric.atmosphericWater.modifyRate(
                 combustionWaterRate,
-                'Spontaneous Methane Combustion',
+                'Methane Combustion',
                 rateType
             );
         }
         if (combustionCo2Rate && this.resources.atmospheric.carbonDioxide) {
             this.resources.atmospheric.carbonDioxide.modifyRate(
                 combustionCo2Rate,
-                'Spontaneous Methane Combustion',
+                'Methane Combustion',
                 rateType
             );
         }
         if (combustionMethaneRate && this.resources.atmospheric.atmosphericMethane) {
             this.resources.atmospheric.atmosphericMethane.modifyRate(
                 -combustionMethaneRate,
-                'Spontaneous Methane Combustion',
+                'Methane Combustion',
                 rateType
             );
         }
         if (combustionOxygenRate && this.resources.atmospheric.oxygen) {
             this.resources.atmospheric.oxygen.modifyRate(
                 -combustionOxygenRate,
-                'Spontaneous Methane Combustion',
+                'Methane Combustion',
                 rateType
             );
         }
