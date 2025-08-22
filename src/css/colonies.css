@@ -132,6 +132,7 @@
 .colony-slider .slider-container {
   position: relative;
   width: 100%;
+  min-width: 150px;
   display: flex;
   align-items: center;
 }
@@ -278,6 +279,7 @@
 #nanocolony-container .control-group .slider-container {
     position: relative;
     flex-grow: 1;
+    min-width: 150px;
     display: flex;
     align-items: center;
 }
