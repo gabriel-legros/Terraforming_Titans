@@ -91,7 +91,24 @@ function createTooltipElement(resourceName) {
   prodTable.style.display = 'table';
   prodTable.style.width = '100%';
   productionDiv.appendChild(prodTable);
-  productionDiv._info = { table: prodTable, rows: new Map() };
+  const prodTotalRow = document.createElement('div');
+  prodTotalRow.style.display = 'table-row';
+  const prodTotalLeft = document.createElement('div');
+  prodTotalLeft.style.display = 'table-cell';
+  prodTotalLeft.style.textAlign = 'left';
+  prodTotalLeft.style.paddingRight = '10px';
+  const prodTotalLeftStrong = document.createElement('strong');
+  prodTotalLeftStrong.textContent = 'Total :';
+  prodTotalLeft.appendChild(prodTotalLeftStrong);
+  const prodTotalRight = document.createElement('div');
+  prodTotalRight.style.display = 'table-cell';
+  prodTotalRight.style.textAlign = 'right';
+  const prodTotalRightStrong = document.createElement('strong');
+  prodTotalRight.appendChild(prodTotalRightStrong);
+  prodTotalRow.appendChild(prodTotalLeft);
+  prodTotalRow.appendChild(prodTotalRight);
+  prodTable.appendChild(prodTotalRow);
+  productionDiv._info = { table: prodTable, rows: new Map(), totalRow: prodTotalRow, totalRight: prodTotalRightStrong };
   tooltip.appendChild(productionDiv);
 
   const consumptionDiv = document.createElement('div');
@@ -106,7 +123,24 @@ function createTooltipElement(resourceName) {
   consTable.style.display = 'table';
   consTable.style.width = '100%';
   consumptionDiv.appendChild(consTable);
-  consumptionDiv._info = { table: consTable, rows: new Map() };
+  const consTotalRow = document.createElement('div');
+  consTotalRow.style.display = 'table-row';
+  const consTotalLeft = document.createElement('div');
+  consTotalLeft.style.display = 'table-cell';
+  consTotalLeft.style.textAlign = 'left';
+  consTotalLeft.style.paddingRight = '10px';
+  const consTotalLeftStrong = document.createElement('strong');
+  consTotalLeftStrong.textContent = 'Total :';
+  consTotalLeft.appendChild(consTotalLeftStrong);
+  const consTotalRight = document.createElement('div');
+  consTotalRight.style.display = 'table-cell';
+  consTotalRight.style.textAlign = 'right';
+  const consTotalRightStrong = document.createElement('strong');
+  consTotalRight.appendChild(consTotalRightStrong);
+  consTotalRow.appendChild(consTotalLeft);
+  consTotalRow.appendChild(consTotalRight);
+  consTable.appendChild(consTotalRow);
+  consumptionDiv._info = { table: consTable, rows: new Map(), totalRow: consTotalRow, totalRight: consTotalRightStrong };
   tooltip.appendChild(consumptionDiv);
 
   const autobuildDiv = document.createElement('div');
@@ -138,6 +172,11 @@ function updateRateTable(container, entries, formatter) {
   if (!container) return;
   const info = container._info;
   const used = new Set();
+  const total = entries.reduce((sum, [, val]) => sum + val, 0);
+  if (info.totalRight) {
+    info.totalRight.textContent = formatter(total);
+    info.totalRow.style.display = 'table-row';
+  }
   entries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
     let rowInfo = info.rows.get(name);
     if (!rowInfo) {
