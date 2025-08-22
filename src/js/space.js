@@ -147,12 +147,14 @@ class SpaceManager extends EffectableEntity {
      * @returns {number}
      */
     getTerraformedPlanetCountExcludingCurrent() {
-        const count = this.getTerraformedPlanetCount();
-        const hasRing = this.currentWorldHasOrbitalRing();
+        let count = this.getTerraformedPlanetCount();
+        if (this.currentWorldHasOrbitalRing()) count--;
         if (this.currentRandomSeed !== null) {
-            return (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? Math.max(count - 1, 0) : count;
+            if (this.isSeedTerraformed(String(this.currentRandomSeed))) count--;
+            return Math.max(count, 0);
         }
-        return (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? Math.max(count - 1, 0) : count;
+        if (this.isPlanetTerraformed(this.currentPlanetKey)) count--;
+        return Math.max(count, 0);
     }
 
     getCurrentWorldName() {
