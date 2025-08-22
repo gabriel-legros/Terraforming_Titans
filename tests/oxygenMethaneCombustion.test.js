@@ -99,13 +99,13 @@ test('oxygen and methane combust into water and CO2', () => {
   expect(res.atmospheric.carbonDioxide.value).toBeGreaterThan(0);
 
   const methaneLabels = res.atmospheric.atmosphericMethane.modifyRate.mock.calls.map(c => c[1]);
-  expect(methaneLabels).toContain('Spontaneous Methane Combustion');
+  expect(methaneLabels).toContain('Methane Combustion');
   const oxygenLabels = res.atmospheric.oxygen.modifyRate.mock.calls.map(c => c[1]);
-  expect(oxygenLabels).toContain('Spontaneous Methane Combustion');
+  expect(oxygenLabels).toContain('Methane Combustion');
   const waterLabels = res.atmospheric.atmosphericWater.modifyRate.mock.calls.map(c => c[1]);
-  expect(waterLabels).toContain('Spontaneous Methane Combustion');
+  expect(waterLabels).toContain('Methane Combustion');
   const co2Labels = res.atmospheric.carbonDioxide.modifyRate.mock.calls.map(c => c[1]);
-  expect(co2Labels).toContain('Spontaneous Methane Combustion');
+  expect(co2Labels).toContain('Methane Combustion');
 });
 
 test('combustion scales with surface area', () => {

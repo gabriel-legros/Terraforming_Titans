@@ -464,7 +464,8 @@ class SpaceManager extends EffectableEntity {
             planetStatuses: this.planetStatuses,
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
-            randomWorldStatuses: this.randomWorldStatuses
+            randomWorldStatuses: this.randomWorldStatuses,
+            randomTabEnabled: this.randomTabEnabled
         };
     }
 
@@ -474,6 +475,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = null;
         this.currentRandomName = '';
         this.randomWorldStatuses = {};
+        this.randomTabEnabled = false;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
@@ -525,6 +527,10 @@ class SpaceManager extends EffectableEntity {
 
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
+        }
+
+        if (typeof savedData.randomTabEnabled === 'boolean') {
+            this.randomTabEnabled = savedData.randomTabEnabled;
         }
 
         // Ensure the loaded current world is marked visited
