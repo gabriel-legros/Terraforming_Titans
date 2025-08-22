@@ -411,7 +411,7 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${art} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(art, false, 2)} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
