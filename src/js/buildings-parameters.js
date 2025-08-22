@@ -221,7 +221,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
-    requiresWorker: 100,
+    requiresWorker: 80,
     maintenanceFactor: 1,
     unlocked: false,
   },
