@@ -160,6 +160,10 @@ function initializeConstructionOfficeUI() {
     body.appendChild(pauseBtn);
 
     const reserveDiv = document.createElement('div');
+    reserveDiv.style.display = 'flex';
+    reserveDiv.style.flexDirection = 'column';
+    reserveDiv.style.gap = '4px';
+
     const reserveLabel = document.createElement('label');
     reserveLabel.textContent = 'Strategic reserve';
     const reserveInfo = document.createElement('span');
@@ -167,7 +171,13 @@ function initializeConstructionOfficeUI() {
     reserveInfo.innerHTML = '&#9432;';
     reserveInfo.title = 'Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity.  Does not apply to workers.';
     reserveLabel.appendChild(reserveInfo);
-    reserveLabel.appendChild(document.createTextNode(' : '));
+    reserveDiv.appendChild(reserveLabel);
+
+    const reserveControlsDiv = document.createElement('div');
+    reserveControlsDiv.style.display = 'flex';
+    reserveControlsDiv.style.alignItems = 'flex-start';
+    reserveControlsDiv.style.gap = '4px';
+
     const reserveInput = document.createElement('input');
     reserveInput.type = 'number';
     reserveInput.min = '0';
@@ -178,9 +188,10 @@ function initializeConstructionOfficeUI() {
     });
     const percentSpan = document.createElement('span');
     percentSpan.textContent = '%';
-    reserveDiv.appendChild(reserveLabel);
-    reserveDiv.appendChild(reserveInput);
-    reserveDiv.appendChild(percentSpan);
+
+    reserveControlsDiv.appendChild(reserveInput);
+    reserveControlsDiv.appendChild(percentSpan);
+    reserveDiv.appendChild(reserveControlsDiv);
     body.appendChild(reserveDiv);
 
     card.appendChild(body);
