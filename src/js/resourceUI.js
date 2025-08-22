@@ -178,6 +178,7 @@ function createTooltipElement(resourceName) {
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
   autobuildDiv.style.display = 'none';
+  autobuildDiv.appendChild(document.createElement('br'));
   const autoHeader = document.createElement('strong');
   autoHeader.textContent = 'Autobuild Cost (avg 10s):';
   autobuildDiv.appendChild(autoHeader);
@@ -760,7 +761,8 @@ function updateResourceRateDisplay(resource){
   }
 
   if (productionDiv) {
-    const productionEntries = Object.entries(resource.productionRateBySource).filter(([source, rate]) => rate !== 0);
+    const productionEntries = Object.entries(resource.productionRateBySource)
+      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
     updateRateTable(productionDiv, productionEntries, r => `${formatNumber(r, false, 2)}/s`);
     productionDiv.style.display = productionEntries.length > 0 ? 'block' : 'none';
   }
@@ -773,7 +775,10 @@ function updateResourceRateDisplay(resource){
   }
 
   if (overflowDiv) {
-    const overflowEntries = Object.entries(resource.consumptionRateByType?.overflow || {})
+    const overflowEntries = [
+      ...Object.entries(resource.consumptionRateByType?.overflow || {}),
+      ...Object.entries(resource.productionRateByType?.overflow || {})
+    ]
       .filter(([, rate]) => rate !== 0)
       .map(([src, rate]) => [src.replace(' (not summed)', ''), rate]);
     updateRateTable(overflowDiv, overflowEntries, r => `${formatNumber(r, false, 2)}/s`);
