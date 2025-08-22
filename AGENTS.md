@@ -310,3 +310,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - `getTerraformedPlanetCountExcludingCurrent` now deducts the current world's orbital ring, if present, when tallying previously terraformed worlds.
 - Story projects stop running and cannot be started on worlds other than their designated planet.
 - Resource tooltips display total production and total consumption at the top of their tables.
+- Atmospheric oxygen and methane above 1 Pa combust into water and carbon dioxide at a rate proportional to the world's surface area and the excess pressure product.
