@@ -307,3 +307,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Evaporation and sublimation rate calculations use cached zonal coverage values.
 - fastForwardToEquilibrium now checks zonal biomass and buried hydrocarbons for stability, matching equilibrate.
 - Hydrology surface flow now uses durationSeconds instead of deltaTime to avoid floating point drift.
+- `getTerraformedPlanetCountExcludingCurrent` now deducts the current world's orbital ring, if present, when tallying previously terraformed worlds.

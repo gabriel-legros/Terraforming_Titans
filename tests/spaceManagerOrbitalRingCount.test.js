@@ -14,6 +14,17 @@ describe('SpaceManager orbital ring counting', () => {
     expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(2);
     delete global.projectManager;
   });
+
+  test('current world ring not counted in excluding method', () => {
+    const sm = new SpaceManager({ mars: {}, titan: {} });
+    sm.planetStatuses.mars.terraformed = true;
+    sm.planetStatuses.mars.orbitalRing = true;
+    sm.currentPlanetKey = 'mars';
+    global.projectManager = { projects: { orbitalRing: { ringCount: 1 } } };
+    expect(sm.getTerraformedPlanetCount()).toBe(2);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
+    delete global.projectManager;
+  });
 });
 
 delete global.EffectableEntity;
