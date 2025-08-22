@@ -146,12 +146,12 @@
 
 .colony-slider .slider-container .tick-marks {
   position: absolute;
-  top: 12px;
-  left: 0;
-  right: 0;
+  top: 8px;
+  left: 8px;
+  right: 8px;
   display: flex;
   justify-content: space-between;
-  padding: 0 5px;
+  padding: 0;
   pointer-events: none;
 }
 
@@ -295,12 +295,12 @@
 
 #nanocolony-container .control-group .tick-marks {
     position: absolute;
-    top: 12px;
-    left: 0;
-    right: 0;
+    top: 8px;
+    left: 9px;
+    right: 9px;
     display: flex;
     justify-content: space-between;
-    padding: 0 5px;
+    padding: 0;
     pointer-events: none;
 }
 
