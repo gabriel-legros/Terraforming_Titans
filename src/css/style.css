@@ -37,8 +37,22 @@ body {
 .terraforming-subtabs,
 .hope-subtabs,
 .space-subtabs
- {
-    margin-right:25px;
+{
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #333;
+}
+
+/* Adjust subtab spacing when journal is collapsed to account for show button */
+body.journal-collapsed .buildings-subtabs,
+body.journal-collapsed .research-subtabs,
+body.journal-collapsed .projects-subtabs,
+body.journal-collapsed .terraforming-subtabs,
+body.journal-collapsed .hope-subtabs,
+body.journal-collapsed .space-subtabs
+{
+    margin-right: 25px; /* Original 25px + 60px for show button space */
 }
 
 .tab,
@@ -96,6 +110,11 @@ body {
     overflow-y: auto; /* Scroll if content exceeds space */
     padding-left:10px;
     padding-right:10px;
+}
+
+/* Add extra space for show journal button when journal is collapsed */
+body.journal-collapsed .tab-content {
+    margin-right: 60px; /* Leave space for the fixed show journal button */
 }
 
 .tab-content.active {

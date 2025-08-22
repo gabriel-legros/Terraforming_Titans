@@ -288,6 +288,7 @@ function toggleJournal() {
     journal.classList.add('collapsed');
     showButton.classList.remove('hidden');
     updateShowJournalButtonPosition();
+    document.body.classList.add('journal-collapsed'); // Add class to body for CSS targeting
   } else {
     journal.classList.remove('collapsed');
     showButton.classList.add('hidden');
@@ -296,6 +297,7 @@ function toggleJournal() {
     if (showButton) {
       showButton.classList.remove('unread');
     }
+    document.body.classList.remove('journal-collapsed'); // Remove class from body
   }
 }
 
@@ -407,4 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   updateJournalNavArrows();
+
+  // Initialize body class based on journal state
+  if (journalCollapsed) {
+    document.body.classList.add('journal-collapsed');
+  }
 });
