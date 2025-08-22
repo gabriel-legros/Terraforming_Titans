@@ -372,11 +372,15 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     statValues.power = newBaseStats.power;
     statValues.athletics = newBaseStats.athletics;
     statValues.wit = newBaseStats.wit;
+    alloc.power = 0;
+    alloc.athletics = 0;
+    alloc.wit = 0;
     const statContainers = statsDiv.querySelectorAll('.wgc-stat-container');
     statContainers.forEach((container, index) => {
       const statName = ['power', 'athletics', 'wit'][index];
       container.querySelector('span:nth-child(2)').textContent = statValues[statName];
     });
+    remainingSpan.textContent = `Points left: ${pointsToSpend}`;
     classDescDiv.textContent = classDescriptions[classSelect.value] || '';
   });
   win.appendChild(statsDiv);
