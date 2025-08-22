@@ -18,7 +18,7 @@ describe('Construction Office UI', () => {
     const status = document.getElementById('autobuilder-status');
     const pauseBtn = document.getElementById('autobuilder-pause-btn');
     const reserveInput = document.getElementById('strategic-reserve-input');
-    const reserveLabel = reserveInput.previousSibling;
+    const reserveLabel = reserveInput.parentElement.previousSibling;
     const reserveIcon = reserveLabel.querySelector('.info-tooltip-icon');
 
     expect(status.textContent).toBe('active');
