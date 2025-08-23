@@ -285,8 +285,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   autoBuildCheckbox.addEventListener('change', () => {
     structure.autoBuildEnabled = autoBuildCheckbox.checked;
+    if (autoBuildCheckbox.checked && typeof gameSettings !== 'undefined' && gameSettings.autobuildAlsoSetsActive) {
+      autoActiveCheckbox.checked = true;
+      structure.autoActiveEnabled = true;
+    }
     // Additional logic for enabling/disabling auto-build can go here
-  }); 
+  });
   autoBuildInputContainer.appendChild(autoBuildCheckbox);
 
   const autoBuildLabel = document.createElement('span');

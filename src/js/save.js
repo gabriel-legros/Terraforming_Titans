@@ -307,6 +307,10 @@ function loadGame(slotOrCustomString) {
       if(preserveAutoStartToggle){
         preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       }
+      const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
+      if(autobuildSetActiveToggle){
+        autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
+      }
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {

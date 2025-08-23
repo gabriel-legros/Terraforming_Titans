@@ -40,6 +40,7 @@ let gameSettings = {
   silenceUnlockAlert: false,
   disableDayNightCycle: false,
   preserveProjectAutoStart: false,
+  autobuildAlsoSetsActive: true,
 };
 
 let colonySliderSettings = {
