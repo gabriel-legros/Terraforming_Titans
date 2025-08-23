@@ -230,6 +230,7 @@ function restoreAutoBuildSettings(structures) {
             s.autoActiveEnabled = true;
         }
         s.autoBuildEnabled = false;
+        s.autoActiveEnabled = false;
     }
 }
 
