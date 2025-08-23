@@ -122,6 +122,8 @@ Warp Gate Command provides a dedicated subtab for managing teams that embark on 
 ## Space Mirror Facility
 Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally. The display now shows average temperature in each zone.
 The temperature column header updates to match the current Celsius or Kelvin setting.
+Oversight now includes a collapsible **Finer Controls** section for manual mirror and Hyperion Lantern assignments with adjustable step sizes and per‑zone auto‑assign checkboxes that funnel leftover units into the selected zones while locking sliders or buttons accordingly.
+Unassigned mirrors or lanterns no longer affect luminosity, and lantern controls remain hidden until Hyperion Lanterns are unlocked.
 
 ## Random World Generator
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
@@ -326,3 +328,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Settings page arranged in three columns with temperature and dark mode options first.
 - Colony tab split into separate structures and controls sections, placing the Nanocolony below colony controls.
 - Storage capacity display now scales with the selected build count.
+- Added an Any Zone option to space mirror finer controls for global distribution based on slider percentages.
+- Any Zone row now supports manual 0/±/Max assignment buttons for mirrors and lanterns.
