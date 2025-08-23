@@ -8,12 +8,10 @@ class SpaceMiningProject extends SpaceshipProject {
     this.hasOxygenPressureControl = false;
     const maxPressure = config.attributes?.maxPressure;
     if (typeof maxPressure === 'number') {
-      this.disableAbovePressure = true;
       this.disablePressureThreshold = maxPressure;
     }
     const maxOxygenPressure = config.attributes?.maxOxygenPressure;
     if (typeof maxOxygenPressure === 'number') {
-      this.disableAboveOxygenPressure = true;
       this.disableOxygenPressureThreshold = maxOxygenPressure;
       this.hasOxygenPressureControl = true;
     }
