@@ -315,7 +315,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Surface ice and liquid water tooltips display overflow in a dedicated section.
 - Added spacing before the Autobuild Cost section in resource tooltips.
 - Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
-- Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves.
+ - Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves. The checkbox is unchecked by default.
 - calculateInitialValues now records initial solar flux so luminosity deltas compare against the baseline value.
 - Luminosity tooltips and the Space Mirror Facility now display average solar flux (dividing day flux by four to account for day/night cycles and sunlight angle).
-- Autobuild now constructs structures inactive and the auto-set-active option (enabled by default) applies activation afterward, letting players queue builds without immediately increasing active counts.
+ - Autobuild now constructs structures inactive and the auto-set-active option is disabled by default, letting players queue builds without immediately increasing active counts.

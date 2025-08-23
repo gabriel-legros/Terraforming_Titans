@@ -223,7 +223,7 @@ function restoreAutoBuildSettings(structures) {
         }
         s.autoBuildEnabled = false;
         s.autoBuildPriority = false;
-        s.autoActiveEnabled = true;
+        s.autoActiveEnabled = false;
     }
 }
 
