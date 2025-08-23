@@ -208,6 +208,8 @@ function captureAutoBuildSettings(structures) {
         savedAutoBuildSettings[name] = {
             percent: s.autoBuildPercent,
             basis: s.autoBuildBasis,
+            priority: s.autoBuildPriority,
+            autoActive: s.autoActiveEnabled,
         };
     }
 }
@@ -218,12 +220,17 @@ function restoreAutoBuildSettings(structures) {
         if (savedAutoBuildSettings[name]) {
             s.autoBuildPercent = savedAutoBuildSettings[name].percent;
             s.autoBuildBasis = savedAutoBuildSettings[name].basis || 'population';
+            s.autoBuildPriority = !!savedAutoBuildSettings[name].priority;
+            s.autoActiveEnabled = savedAutoBuildSettings[name].autoActive !== undefined
+                ? savedAutoBuildSettings[name].autoActive
+                : true;
         } else {
             s.autoBuildBasis = 'population';
+            s.autoBuildPriority = false;
+            s.autoActiveEnabled = true;
         }
         s.autoBuildEnabled = false;
-        s.autoBuildPriority = false;
-        s.autoActiveEnabled = true;
+        s.autoActiveEnabled = false;
     }
 }
 
