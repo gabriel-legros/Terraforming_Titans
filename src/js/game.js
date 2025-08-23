@@ -304,7 +304,9 @@ function initializeGameState(options = {}) {
 }
 
 function updateLogic(delta) {
-  playTimeSeconds += delta / 1000;
+  const increment = delta / 1000;
+  playTimeSeconds += increment;
+  totalPlayTimeSeconds += increment;
   dayNightCycle.update(delta);
 
   const allStructures = {...buildings, ...colonies};
@@ -358,6 +360,7 @@ function updateRender() {
   renderProjects();                  // Render project information (handled in projects.js)
   updateResearchUI();
   updateTerraformingUI();
+  updateStatisticsDisplay();
   updateWarnings();
   updateMilestonesUI();
   updateHopeUI();
@@ -378,5 +381,6 @@ function update(time, delta) {
 function startNewGame() {
   defaultPlanet = 'mars';
   currentPlanetParameters = planetParameters.mars;
+  totalPlayTimeSeconds = 0;
   initializeGameState();
 }
