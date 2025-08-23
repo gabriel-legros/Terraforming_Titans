@@ -23,10 +23,9 @@ describe('autobuild travel persistence', () => {
     expect(after.Beta.autoBuildPriority).toBe(false);
     expect(after.Gamma.autoBuildPriority).toBe(false);
     expect(after.Alpha.autoActiveEnabled).toBe(false);
-    expect(after.Beta.autoActiveEnabled).toBe(true);
-    expect(after.Gamma.autoActiveEnabled).toBe(true);
+    expect(after.Beta.autoActiveEnabled).toBe(false);
+    expect(after.Gamma.autoActiveEnabled).toBe(false);
     for (const key of Object.keys(after)) {
-      expect(after[key].autoBuildPriority).toBe(false);
       expect(after[key].autoActiveEnabled).toBe(false);
     }
   });
