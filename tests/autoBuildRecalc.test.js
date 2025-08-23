@@ -32,7 +32,7 @@ describe('autoBuild recalculates max buildable after each build', () => {
 
     autoBuild({ A: buildingA, B: buildingB });
 
-    expect(buildingA.build).toHaveBeenCalledWith(1);
+    expect(buildingA.build).toHaveBeenCalledWith(1, false);
     expect(buildingB.maxBuildable).toHaveBeenCalled();
     expect(buildingB.build).not.toHaveBeenCalled();
   });
