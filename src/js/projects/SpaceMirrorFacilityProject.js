@@ -299,10 +299,18 @@ function initializeMirrorOversightUI(container) {
         <tr data-zone="any" id="assignment-any-row">
           <td>Any Zone</td>
           <td class="assign-cell" data-type="mirrors" data-zone="any">
+            <button class="assign-zero">0</button>
+            <button class="assign-minus">-1</button>
             <span id="mirrors-assign-any"></span>
+            <button class="assign-plus">+1</button>
+            <button class="assign-max">Max</button>
           </td>
           <td class="assign-cell" data-type="lanterns" data-zone="any">
+            <button class="assign-zero">0</button>
+            <button class="assign-minus">-1</button>
             <span id="lanterns-assign-any"></span>
+            <button class="assign-plus">+1</button>
+            <button class="assign-max">Max</button>
           </td>
           <td><input type="checkbox" class="auto-assign" data-zone="any"></td>
         </tr>

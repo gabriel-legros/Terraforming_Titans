@@ -171,6 +171,26 @@ describe('Space Mirror finer controls', () => {
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(4);
   });
 
+  test('manual controls adjust any zone assignments', () => {
+    resetMirrorOversightSettings();
+    const dom = new JSDOM('<div id="container"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    const container = document.getElementById('container');
+    global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 0 } };
+    initializeMirrorOversightUI(container);
+    toggleFinerControls(true);
+    const minusBtn = container.querySelector('#assignment-any-row td.assign-cell[data-type="mirrors"] .assign-minus');
+    const plusBtn = container.querySelector('#assignment-any-row td.assign-cell[data-type="mirrors"] .assign-plus');
+    expect(mirrorOversightSettings.assignments.mirrors.any).toBe(10);
+    minusBtn.click();
+    expect(mirrorOversightSettings.assignments.mirrors.any).toBe(9);
+    plusBtn.click();
+    expect(mirrorOversightSettings.assignments.mirrors.any).toBe(10);
+    delete global.window;
+    delete global.document;
+  });
+
   test('any zone assignments add global flux', () => {
     resetMirrorOversightSettings();
     const terra = createTerraforming();
