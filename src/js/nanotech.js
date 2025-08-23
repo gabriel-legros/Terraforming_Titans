@@ -174,13 +174,16 @@ class NanotechManager extends EffectableEntity {
 
   updateUI() {
     if (typeof document === 'undefined') return;
-    const buildingList = document.getElementById('colony-buildings-buttons');
+    const controlsSection =
+      document.getElementById('colony-controls-section') ||
+      document.getElementById('colony-controls-container') ||
+      document.getElementById('colony-buildings-buttons');
     let container = document.getElementById('nanocolony-container');
-    if (!container && buildingList) {
+    if (!container && controlsSection) {
       container = document.createElement('div');
       container.id = 'nanocolony-container';
       container.classList.add('project-card');
-      buildingList.insertAdjacentElement('afterend', container);
+      controlsSection.insertAdjacentElement('afterend', container);
       container.innerHTML = `
         <div class="card-header"><span class="card-title">Nanocolony</span></div>
         <div class="card-body">

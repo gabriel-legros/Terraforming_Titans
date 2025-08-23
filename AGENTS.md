@@ -324,3 +324,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added setting so enabling autobuild also toggles Set Active to Target, enabled by default.
 - Autobuild priority and auto-active settings persist through planet travel.
 - Settings page arranged in three columns with temperature and dark mode options first.
+- Colony tab split into separate structures and controls sections, placing the Nanocolony below colony controls.

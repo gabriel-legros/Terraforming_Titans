@@ -10,7 +10,7 @@ const { Resource } = require('../src/js/resource.js');
 
 describe('nanotech consumption display', () => {
   test('shows actual and optimal rates', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="colony-buildings-buttons"></div>', { runScripts: 'outside-only' });
+    const dom = new JSDOM('<!DOCTYPE html><div id="colony-structures-section"><div id="colony-buildings-buttons"></div></div><div id="colony-controls-section"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.formatNumber = numbers.formatNumber;
     ctx.EffectableEntity = EffectableEntity;
