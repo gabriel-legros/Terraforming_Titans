@@ -1,6 +1,7 @@
 const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
+const { JSDOM } = require('jsdom');
 
 global.Project = class {};
 global.projectElements = {};
@@ -10,7 +11,9 @@ const {
   calculateZoneSolarFluxWithFacility,
   distributeAssignmentsFromSliders,
   distributeAutoAssignments,
-  resetMirrorOversightSettings
+  resetMirrorOversightSettings,
+  initializeMirrorOversightUI,
+  updateMirrorOversightUI
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 
 global.mirrorOversightSettings = mirrorOversightSettings;
@@ -85,6 +88,51 @@ describe('Space Mirror finer controls', () => {
     const expectedTemp = baseSolar * ratioTemp;
     const resultTemp = terra.calculateZoneSolarFlux('temperate');
     expect(resultTemp).toBeCloseTo(expectedTemp, 5);
+  });
+
+  test('unassigned units produce no luminosity', () => {
+    resetMirrorOversightSettings();
+    const terra = createTerraforming();
+    global.buildings = {
+      spaceMirror: { surfaceArea: 500, active: 10 },
+      hyperionLantern: { active: 6, powerPerBuilding: 100, productivity: 1 }
+    };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
+    };
+    mirrorOversightSettings.useFinerControls = true;
+    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 5, temperate: 0, polar: 0, focus: 0 };
+    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 3, temperate: 0, polar: 0, focus: 0 };
+    distributeAutoAssignments('mirrors');
+    distributeAutoAssignments('lanterns');
+
+    terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+    terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+
+    const baseSolar = terra.luminosity.solarFlux;
+    const ratioTemp = getZoneRatio('temperate') / 0.25;
+    const expectedTemp = baseSolar * ratioTemp;
+    const resultTemp = terra.calculateZoneSolarFlux('temperate');
+    expect(resultTemp).toBeCloseTo(expectedTemp, 5);
+  });
+
+  test('lantern assignment section hidden when lantern locked', () => {
+    resetMirrorOversightSettings();
+    const dom = new JSDOM('<div id="container"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    const container = document.getElementById('container');
+    global.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { active: 0, unlocked: false } };
+    global.projectManager = {
+      isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
+    };
+    initializeMirrorOversightUI(container);
+    updateMirrorOversightUI();
+    const cell = container.querySelector('#assignment-table td.assign-cell[data-type="lanterns"]');
+    expect(cell.style.display).toBe('none');
+    delete global.window;
+    delete global.document;
   });
 
   test('auto-assign zones distributes remaining units', () => {

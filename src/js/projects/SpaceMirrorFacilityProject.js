@@ -435,10 +435,15 @@ function updateMirrorOversightUI() {
   const lantern = document.getElementById('mirror-oversight-lantern');
   const lanternDiv = document.getElementById('mirror-oversight-lantern-div');
   if (lantern) lantern.checked = !!mirrorOversightSettings.applyToLantern;
+  const lanternUnlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
   if (lanternDiv) {
-    const unlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
-    lanternDiv.style.display = unlocked ? 'flex' : 'none';
+    lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
   }
+  const lanternHeader = document.querySelector('#assignment-table thead th:nth-child(3)');
+  if (lanternHeader) lanternHeader.style.display = lanternUnlocked ? '' : 'none';
+  document.querySelectorAll('#assignment-table td.assign-cell[data-type="lanterns"]').forEach(cell => {
+    cell.style.display = lanternUnlocked ? '' : 'none';
+  });
 
   const useFiner = mirrorOversightSettings.useFinerControls;
   ['tropical','temperate','polar','focus','any'].forEach(zone => {
@@ -594,12 +599,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
-      const totalAssignedM = Object.values(assignM).reduce((s,v)=>s+(v||0),0);
-      const totalAssignedL = Object.values(assignL).reduce((s,v)=>s+(v||0),0);
-      const leftoverM = Math.max(0, (buildings?.spaceMirror?.active || 0) - totalAssignedM);
-      const leftoverL = Math.max(0, (lantern?.active || 0) - totalAssignedL);
-      distributedMirrorPower = mirrorPowerPer * leftoverM;
-      distributedLanternPower = lanternPowerPer * leftoverL;
+      // Unassigned mirrors or lanterns have no luminosity effect
+      distributedMirrorPower = 0;
+      distributedLanternPower = 0;
       focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
       focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
     } else {
