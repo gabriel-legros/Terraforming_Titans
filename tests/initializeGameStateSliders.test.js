@@ -95,5 +95,15 @@ test('initializeGameState resets colony sliders to defaults', () => {
   }
 
   expect(settings).toEqual({ workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 });
-  expect(oversight).toEqual({ distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0 }, applyToLantern: false });
+  expect(oversight).toEqual({
+    distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
+    applyToLantern: false,
+    useFinerControls: false,
+    assignmentStep: 1,
+    autoAssign: null,
+    assignments: {
+      mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
+      lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0 }
+    }
+  });
 });
