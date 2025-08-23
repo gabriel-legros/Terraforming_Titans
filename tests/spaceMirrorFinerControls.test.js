@@ -66,8 +66,6 @@ describe('Space Mirror finer controls', () => {
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.useFinerControls = true;
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 10, temperate: 0, polar: 0, focus: 0, any: 0 };
-    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
     mirrorOversightSettings.assignments.mirrors = { tropical: 10, temperate: 0, polar: 0, focus: 0, any: 0 };
     mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
 
@@ -102,10 +100,8 @@ describe('Space Mirror finer controls', () => {
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.useFinerControls = true;
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 5, temperate: 0, polar: 0, focus: 0, any: 0 };
-    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 3, temperate: 0, polar: 0, focus: 0, any: 0 };
-    distributeAutoAssignments('mirrors');
-    distributeAutoAssignments('lanterns');
+    mirrorOversightSettings.assignments.mirrors = { tropical: 5, temperate: 0, polar: 0, focus: 0, any: 0 };
+    mirrorOversightSettings.assignments.lanterns = { tropical: 3, temperate: 0, polar: 0, focus: 0, any: 0 };
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
@@ -137,8 +133,8 @@ describe('Space Mirror finer controls', () => {
 
   test('auto-assign zones distributes remaining units', () => {
     resetMirrorOversightSettings();
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 3, any: 0 };
-    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 1, any: 0 };
+    mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 3, any: 0 };
+    mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 1, any: 0 };
     mirrorOversightSettings.autoAssign.tropical = true;
     mirrorOversightSettings.autoAssign.temperate = true;
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 6 } };
@@ -150,8 +146,8 @@ describe('Space Mirror finer controls', () => {
 
   test('auto-assign focus distributes remaining units', () => {
     resetMirrorOversightSettings();
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 4, temperate: 3, polar: 0, focus: 0, any: 0 };
-    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 3, temperate: 2, polar: 0, focus: 0, any: 0 };
+    mirrorOversightSettings.assignments.mirrors = { tropical: 4, temperate: 3, polar: 0, focus: 0, any: 0 };
+    mirrorOversightSettings.assignments.lanterns = { tropical: 3, temperate: 2, polar: 0, focus: 0, any: 0 };
     mirrorOversightSettings.autoAssign.focus = true;
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 6 } };
     distributeAutoAssignments('mirrors');
@@ -168,7 +164,7 @@ describe('Space Mirror finer controls', () => {
     mirrorOversightSettings.distribution.temperate = 0.2;
     mirrorOversightSettings.distribution.polar = 0.1;
     mirrorOversightSettings.distribution.focus = 0;
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 3, temperate: 2, polar: 1, focus: 0, any: 0 };
+    mirrorOversightSettings.assignments.mirrors = { tropical: 3, temperate: 2, polar: 1, focus: 0, any: 0 };
     mirrorOversightSettings.autoAssign.any = true;
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 0 } };
     distributeAutoAssignments('mirrors');
@@ -184,7 +180,6 @@ describe('Space Mirror finer controls', () => {
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.useFinerControls = true;
-    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 10 };
     mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 10 };
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
     terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
