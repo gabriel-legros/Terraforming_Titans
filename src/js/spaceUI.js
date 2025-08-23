@@ -297,7 +297,11 @@ function updateCurrentWorldUI() {
         if (data && typeof renderWorldDetail === 'function') {
             const wrapper = document.createElement('div');
             wrapper.innerHTML = renderWorldDetail(data, seedArg);
-            wrapper.querySelector('#rwg-equilibrate-btn')?.remove();
+            const eqBtn = wrapper.querySelector('#rwg-equilibrate-btn');
+            if (eqBtn) {
+                eqBtn.nextElementSibling?.remove();
+                eqBtn.remove();
+            }
             wrapper.querySelector('#rwg-travel-btn')?.remove();
             wrapper.querySelector('#rwg-travel-warning')?.remove();
             wrapper.querySelectorAll('[id]').forEach(el => {
