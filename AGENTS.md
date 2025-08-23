@@ -315,3 +315,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Surface ice and liquid water tooltips display overflow in a dedicated section.
 - Added spacing before the Autobuild Cost section in resource tooltips.
 - Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
+- Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves.
