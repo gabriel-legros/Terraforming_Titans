@@ -5,6 +5,7 @@ class ScannerProject extends Project {
     this.buildCount = 1;
     this.step = 1;
     this.activeBuildCount = 1;
+    this.autoMax = true;
     this.el = {};
   }
 
@@ -57,6 +58,7 @@ class ScannerProject extends Project {
       buildCount: this.buildCount,
       activeBuildCount: this.activeBuildCount,
       step: this.step,
+      autoMax: this.autoMax,
       scanData: savedState
     };
   }
@@ -80,6 +82,9 @@ class ScannerProject extends Project {
     }
     if (state.step !== undefined) {
       this.step = state.step;
+    }
+    if (state.autoMax !== undefined) {
+      this.autoMax = state.autoMax;
     }
   }
 
@@ -158,6 +163,15 @@ class ScannerProject extends Project {
 
   update(deltaTime) {
     super.update(deltaTime);
+    if (this.autoMax) {
+      const limit = this.getColonistLimit();
+      if (this.buildCount < limit) {
+        this.buildCount = limit;
+        if (typeof updateProjectUI === 'function') {
+          updateProjectUI(this.name);
+        }
+      }
+    }
     if (this.scanData) {
       if (
         this.attributes.scanner &&
@@ -357,8 +371,22 @@ class ScannerProject extends Project {
     bMul.textContent = 'x10';
     mult.append(bDiv, bMul);
 
+    const autoContainer = document.createElement('div');
+    autoContainer.className = 'checkbox-container';
+    const autoMaxCheckbox = document.createElement('input');
+    autoMaxCheckbox.type = 'checkbox';
+    autoMaxCheckbox.id = `${this.name}-auto-max`;
+    autoMaxCheckbox.checked = this.autoMax;
+    autoMaxCheckbox.addEventListener('change', (e) => {
+      this.autoMax = e.target.checked;
+    });
+    const autoLabel = document.createElement('label');
+    autoLabel.htmlFor = autoMaxCheckbox.id;
+    autoLabel.textContent = 'Auto Max';
+    autoContainer.append(autoMaxCheckbox, autoLabel);
+
     controls.append(main, mult);
-    amountSection.append(amountTitle, amountDisplay, controls);
+    amountSection.append(amountTitle, amountDisplay, controls, autoContainer);
     topSection.appendChild(amountSection);
 
     // Deposits Section
@@ -388,7 +416,7 @@ class ScannerProject extends Project {
 
     container.appendChild(topSection);
 
-    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0, bMax, costSection, amountSection };
+    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0, bMax, costSection, amountSection, autoMaxCheckbox };
     if (dVal && dMax) {
       this.el.dVal = dVal;
       this.el.dMax = dMax;
@@ -419,6 +447,9 @@ class ScannerProject extends Project {
     }
     if (this.el.bMinus) {
       this.el.bMinus.textContent = `-${formatNumber(this.step, true)}`;
+    }
+    if (this.el.autoMaxCheckbox) {
+      this.el.autoMaxCheckbox.checked = this.autoMax;
     }
     if (this.el.dVal && this.el.dMax) {
       const depositType = this.attributes?.scanner?.depositType;
