@@ -1,7 +1,7 @@
 // Colony sliders logic
 
 
-const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony, t7_colony'];
+const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
 function setWorkforceRatio(value) {
   value = Math.min(0.9, Math.max(0.25, value));
