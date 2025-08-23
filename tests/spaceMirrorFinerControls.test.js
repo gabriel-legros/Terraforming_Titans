@@ -1,10 +1,15 @@
 const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
+const numbers = require('../src/js/numbers.js');
 const { JSDOM } = require('jsdom');
 
 global.Project = class {};
 global.projectElements = {};
+global.formatNumber = numbers.formatNumber;
+global.formatBuildingCount = numbers.formatBuildingCount;
+global.toDisplayTemperature = numbers.toDisplayTemperature;
+global.getTemperatureUnit = numbers.getTemperatureUnit;
 const {
   mirrorOversightSettings,
   toggleFinerControls,
@@ -125,7 +130,7 @@ describe('Space Mirror finer controls', () => {
     };
     initializeMirrorOversightUI(container);
     updateMirrorOversightUI();
-    const cell = container.querySelector('#assignment-table td.assign-cell[data-type="lanterns"]');
+    const cell = container.querySelector('#assignment-grid .assign-cell[data-type="lanterns"]');
     expect(cell.style.display).toBe('none');
     delete global.window;
     delete global.document;
@@ -180,8 +185,8 @@ describe('Space Mirror finer controls', () => {
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 0 } };
     initializeMirrorOversightUI(container);
     toggleFinerControls(true);
-    const minusBtn = container.querySelector('#assignment-any-row td.assign-cell[data-type="mirrors"] .assign-minus');
-    const plusBtn = container.querySelector('#assignment-any-row td.assign-cell[data-type="mirrors"] .assign-plus');
+    const minusBtn = container.querySelector('#assignment-grid .assign-cell[data-type="mirrors"][data-zone="any"] .assign-minus');
+    const plusBtn = container.querySelector('#assignment-grid .assign-cell[data-type="mirrors"][data-zone="any"] .assign-plus');
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(10);
     minusBtn.click();
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(9);
