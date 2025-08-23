@@ -894,7 +894,10 @@ function updateLifeBox() {
 
     const solarFluxDeltaEl = document.getElementById('solar-flux-delta');
     if (solarFluxDeltaEl) {
-      const deltaF = terraforming.luminosity.modifiedSolarFlux - terraforming.luminosity.solarFlux;
+      const baseFlux = (terraforming.luminosity.initialSolarFlux !== undefined)
+        ? terraforming.luminosity.initialSolarFlux
+        : terraforming.luminosity.solarFlux;
+      const deltaF = terraforming.luminosity.modifiedSolarFlux - baseFlux;
       solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 

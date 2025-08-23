@@ -316,3 +316,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added spacing before the Autobuild Cost section in resource tooltips.
 - Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
 - Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves.
+- calculateInitialValues now records initial solar flux so luminosity deltas compare against the baseline value.
