@@ -83,6 +83,8 @@ const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.0000095;
 const EQUILIBRIUM_CO2_PARAMETER = 5.5e-9;
 const METHANE_COMBUSTION_PARAMETER = 1e-18; // Rate coefficient for CH4/O2 combustion
+const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure for combustion
+const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
 
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
@@ -874,10 +876,10 @@ class Terraforming extends EffectableEntity{
         let combustionOxygenAmount = 0;
         let combustionWaterAmount = 0;
         let combustionCO2Amount = 0;
-        if (globalOxygenPressurePa > 1 && globalMethanePressurePa > 1) {
+        if (globalOxygenPressurePa > OXYGEN_COMBUSTION_THRESHOLD && globalMethanePressurePa > METHANE_COMBUSTION_THRESHOLD) {
             const rate = METHANE_COMBUSTION_PARAMETER *
-                (globalOxygenPressurePa - 1) *
-                (globalMethanePressurePa - 1) *
+                (globalOxygenPressurePa - OXYGEN_COMBUSTION_THRESHOLD) *
+                (globalMethanePressurePa - METHANE_COMBUSTION_THRESHOLD) *
                 this.celestialParameters.surfaceArea;
             combustionMethaneAmount = Math.min(
                 rate * durationSeconds,
