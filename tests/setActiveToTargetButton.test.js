@@ -5,7 +5,7 @@ const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
 describe('Set active to target button', () => {
-  test('clicking sets active count to auto build target', () => {
+  function setup() {
     const dom = new JSDOM('<!DOCTYPE html><div id="root"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
 
@@ -69,9 +69,20 @@ describe('Set active to target button', () => {
 
     ctx.updateStructureDisplay({ [structure.name]: structure });
 
+    return { dom, ctx, structure };
+  }
+
+  test('clicking sets active count to auto build target', () => {
+    const { dom, structure } = setup();
     const btn = dom.window.document.getElementById(`${structure.name}-set-active-button`);
     btn.click();
-
     expect(structure.active).toBe(3);
+  });
+
+  test('checkbox appears before label inside button', () => {
+    const { dom, structure } = setup();
+    const btn = dom.window.document.getElementById(`${structure.name}-set-active-button`);
+    const checkbox = btn.querySelector('input.auto-active-checkbox');
+    expect(btn.firstChild).toBe(checkbox);
   });
 });
