@@ -223,7 +223,7 @@ function restoreAutoBuildSettings(structures) {
         }
         s.autoBuildEnabled = false;
         s.autoBuildPriority = false;
-        s.autoActiveEnabled = false;
+        s.autoActiveEnabled = true;
     }
 }
 
@@ -235,6 +235,7 @@ function autoBuild(buildings, delta = 0) {
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const buildableBuildings = [];
+    const buildingInfos = [];
 
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
@@ -243,17 +244,7 @@ function autoBuild(buildings, delta = 0) {
             const base = building.autoBuildBasis === 'workers' ? workerCap : population;
             const targetCount = Math.ceil((building.autoBuildPercent * base) / 100);
 
-            if (building.autoActiveEnabled) {
-                const desiredActive = Math.min(targetCount, building.count);
-                const change = desiredActive - building.active;
-                if (change !== 0) {
-                    if (typeof adjustStructureActivation === 'function') {
-                        adjustStructureActivation(building, change);
-                    } else {
-                        building.active = Math.max(0, Math.min(building.active + change, building.count));
-                    }
-                }
-            }
+            buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
                 const currentRatio = building.count / targetCount;
@@ -311,13 +302,28 @@ function autoBuild(buildings, delta = 0) {
 
             let built = false;
             if (typeof building.build === 'function') {
-                built = building.build(buildCount);
+                built = building.build(buildCount, false);
             }
             if (built) {
                 autobuildCostTracker.recordCost(building.displayName, cost);
             }
         }
         // Skip incremental building as it significantly impacts performance
+    });
+
+    // Step 4: Auto-set active counts after building
+    buildingInfos.forEach(({ building, targetCount }) => {
+        if (building.autoActiveEnabled) {
+            const desiredActive = Math.min(targetCount, building.count);
+            const change = desiredActive - building.active;
+            if (change !== 0) {
+                if (typeof adjustStructureActivation === 'function') {
+                    adjustStructureActivation(building, change);
+                } else {
+                    building.active = Math.max(0, Math.min(building.active + change, building.count));
+                }
+            }
+        }
     });
 }
 

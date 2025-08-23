@@ -316,3 +316,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added spacing before the Autobuild Cost section in resource tooltips.
 - Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
 - Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves.
+- Autobuild now constructs structures inactive and the auto-set-active option (enabled by default) applies activation afterward, letting players queue builds without immediately increasing active counts.

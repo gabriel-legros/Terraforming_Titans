@@ -23,6 +23,6 @@ describe('autoBuild limited by land', () => {
     autobuildCostTracker.currentCosts = {};
     autoBuild({ c: building });
 
-    expect(building.build).toHaveBeenCalledWith(5);
+    expect(building.build).toHaveBeenCalledWith(5, false);
   });
 });
