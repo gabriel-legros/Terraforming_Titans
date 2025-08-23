@@ -43,6 +43,7 @@ describe('Set active to target button', () => {
       autoBuildEnabled: true,
       autoBuildPercent: 10,
       autoBuildPriority: false,
+      autoActiveEnabled: false,
       getTotalWorkerNeed: () => 0,
       getEffectiveWorkerMultiplier: () => 1,
       getEffectiveCost: () => ({}),

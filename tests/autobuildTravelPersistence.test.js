@@ -3,14 +3,14 @@ const { captureAutoBuildSettings, restoreAutoBuildSettings } = require('../src/j
 describe('autobuild travel persistence', () => {
   test('percent persists and checkboxes reset', () => {
     const before = {
-      Alpha: { autoBuildPercent: 2, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population' },
-      Beta: { autoBuildPercent: 5, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'workers' },
+      Alpha: { autoBuildPercent: 2, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population', autoActiveEnabled: true },
+      Beta: { autoBuildPercent: 5, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'workers', autoActiveEnabled: true },
     };
     captureAutoBuildSettings(before);
     const after = {
-      Alpha: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population' },
-      Beta: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population' },
-      Gamma: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population' },
+      Alpha: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population', autoActiveEnabled: true },
+      Beta: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population', autoActiveEnabled: true },
+      Gamma: { autoBuildPercent: 0.1, autoBuildEnabled: true, autoBuildPriority: true, autoBuildBasis: 'population', autoActiveEnabled: true },
     };
     restoreAutoBuildSettings(after);
     expect(after.Alpha.autoBuildPercent).toBe(2);
@@ -22,6 +22,7 @@ describe('autobuild travel persistence', () => {
     for (const key of Object.keys(after)) {
       expect(after[key].autoBuildEnabled).toBe(false);
       expect(after[key].autoBuildPriority).toBe(false);
+      expect(after[key].autoActiveEnabled).toBe(false);
     }
   });
 });

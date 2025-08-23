@@ -354,7 +354,22 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveContainer.classList.add('auto-build-setactive-container');
   const setActiveButton = document.createElement('button');
   setActiveButton.id = `${structure.name}-set-active-button`;
-  setActiveButton.textContent = 'Set active to target';
+
+  const setActiveLabel = document.createElement('span');
+  setActiveLabel.textContent = 'Set active to target';
+  setActiveButton.appendChild(setActiveLabel);
+
+  const autoActiveCheckbox = document.createElement('input');
+  autoActiveCheckbox.type = 'checkbox';
+  autoActiveCheckbox.classList.add('auto-active-checkbox');
+  autoActiveCheckbox.checked = structure.autoActiveEnabled;
+  autoActiveCheckbox.addEventListener('change', (e) => {
+    e.stopPropagation();
+    structure.autoActiveEnabled = autoActiveCheckbox.checked;
+  });
+  autoActiveCheckbox.addEventListener('click', e => e.stopPropagation());
+  setActiveButton.appendChild(autoActiveCheckbox);
+
   setActiveButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
@@ -815,6 +830,14 @@ function updateDecreaseButtonText(button, buildCount) {
         const basisSelect = autoBuildContainer.querySelector('.auto-build-basis');
         if (basisSelect) {
           basisSelect.value = structure.autoBuildBasis || 'population';
+        }
+
+        const setActiveBtn = autoBuildContainer.querySelector(`#${structure.name}-set-active-button`);
+        if (setActiveBtn) {
+          const autoActive = setActiveBtn.querySelector('.auto-active-checkbox');
+          if (autoActive) {
+            autoActive.checked = structure.autoActiveEnabled;
+          }
         }
 
         const tempControl = autoBuildContainer.querySelector('.ghg-temp-control');

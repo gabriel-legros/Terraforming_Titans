@@ -223,6 +223,7 @@ function restoreAutoBuildSettings(structures) {
         }
         s.autoBuildEnabled = false;
         s.autoBuildPriority = false;
+        s.autoActiveEnabled = false;
     }
 }
 
@@ -238,18 +239,33 @@ function autoBuild(buildings, delta = 0) {
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
-        if (building.autoBuildEnabled) {
+        if (building.autoBuildEnabled || building.autoActiveEnabled) {
             const base = building.autoBuildBasis === 'workers' ? workerCap : population;
             const targetCount = Math.ceil((building.autoBuildPercent * base) / 100);
-            const currentRatio = building.count / targetCount;
-            const requiredAmount = targetCount - building.count;
 
-            if (requiredAmount > 0) {
-                buildableBuildings.push({
-                    building,
-                    currentRatio,
-                    requiredAmount,
-                });
+            if (building.autoActiveEnabled) {
+                const desiredActive = Math.min(targetCount, building.count);
+                const change = desiredActive - building.active;
+                if (change !== 0) {
+                    if (typeof adjustStructureActivation === 'function') {
+                        adjustStructureActivation(building, change);
+                    } else {
+                        building.active = Math.max(0, Math.min(building.active + change, building.count));
+                    }
+                }
+            }
+
+            if (building.autoBuildEnabled) {
+                const currentRatio = building.count / targetCount;
+                const requiredAmount = targetCount - building.count;
+
+                if (requiredAmount > 0) {
+                    buildableBuildings.push({
+                        building,
+                        currentRatio,
+                        requiredAmount,
+                    });
+                }
             }
         }
     }
