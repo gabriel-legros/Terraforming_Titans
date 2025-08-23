@@ -321,3 +321,4 @@ The Random World Generator manager builds procedural planets and moons with lock
  - Autobuild now constructs structures inactive and the auto-set-active option is disabled by default, letting players queue builds without immediately increasing active counts.
 - Autobuild now constructs structures inactive and the auto-set-active option (enabled by default) applies activation afterward, letting players queue builds without immediately increasing active counts.
 - Added a Statistics section under Save and Settings showing total playtime across all planets.
+- Autobuild priority and auto-active settings persist through planet travel.
