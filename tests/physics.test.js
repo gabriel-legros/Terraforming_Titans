@@ -1,4 +1,4 @@
-const { calculateAtmosphericPressure, effectiveTemp, calculateEmissivity, calculateActualAlbedoPhysics, opticalDepth, opticalDepthSat } = require('../src/js/physics.js');
+const { calculateAtmosphericPressure, effectiveTemp, calculateEmissivity, calculateActualAlbedoPhysics, opticalDepth } = require('../src/js/physics.js');
 
 describe('physics helpers', () => {
   test('calculateAtmosphericPressure basic case', () => {
@@ -11,17 +11,15 @@ describe('physics helpers', () => {
     expect(T).toBeCloseTo(216.6828649, 5);
   });
 
-  test('calculateEmissivity uses saturated optical depth', () => {
+  test('calculateEmissivity uses optical depth', () => {
     const comp = { ch4: 0.5 };
     const pBar = 2;
-    const { total: tauUnsat } = opticalDepth(comp, pBar, 9.81);
-    const { total: tauSat } = opticalDepthSat(comp, pBar, 9.81);
-    const { emissivity, tau, contributions } = calculateEmissivity(comp, pBar, 9.81);
+    const { total: tau } = opticalDepth(comp, pBar, 9.81);
+    const { emissivity, tau: emissivityTau, contributions } = calculateEmissivity(comp, pBar, 9.81);
     expect(emissivity).toBeGreaterThan(0);
     expect(emissivity).toBeLessThan(1);
-    expect(tau).toBeCloseTo(tauSat);
-    expect(tau).toBeLessThan(tauUnsat);
-    expect(contributions.ch4).toBeCloseTo(tauSat);
+    expect(emissivityTau).toBeCloseTo(tau);
+    expect(contributions.ch4).toBeCloseTo(tau);
   });
 
   test('calculateActualAlbedoPhysics includes clouds and haze', () => {

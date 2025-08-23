@@ -21,9 +21,9 @@ const R_AIR = 287;
     return pressure;
 }
 
-// Calculate atmospheric emissivity directly from saturated optical depth
+// Calculate atmospheric emissivity directly from optical depth
 function calculateEmissivity(composition, surfacePressureBar, gSurface){
-  const { total: tau, contributions } = opticalDepthSat(composition, surfacePressureBar, gSurface);
+  const { total: tau, contributions } = opticalDepth(composition, surfacePressureBar, gSurface);
   return {
     emissivity: 1 - Math.exp(-tau),
     tau,
@@ -59,13 +59,13 @@ const BETA  = 0.55;              // was 0.6 in old pressure law
 const GAMMA = {
   h2o           : 10.0,     // tuned so Earth ≈ 288 K
   co2           : 10.0,
-  ch4           : 150.0,
+  ch4           : 30.0,
   h2so4         : 50.0,
   greenhousegas : 2500.0
 };
 
 // Saturation only for CH4 (and H2SO4 if you like)
-const MU_SAT = { ch4: 110.0, h2so4: 2000.0 }; // kg/m²
+const MU_SAT = { ch4: 3, h2so4: 2000.0 }; // kg/m²
 const SAT_EXP = { ch4: 1.0, h2so4: 1.0 };    // exponent n_i
 
 /*  Each entry describes how *that* condensate behaves.
@@ -171,40 +171,28 @@ function opticalDepth(comp, pBar, gSurface) {
 
     const mu_i = x * mcolT;                      // column mass of gas i
     const R    = mu_i / COLUMN_MASS_REF;         // dimensionless
-    const tau_i = G * Math.pow(R, BETA);
-    total += tau_i;
-    contributions[k] = tau_i;
-  }
-  return { total, contributions };
-}
+    let tau_i;
 
-function opticalDepthSat(comp, pBar, gSurface) {
-  const pPa   = pBar * 1e5;
-  const mcolT = pPa / gSurface;
-  let total = 0;
-  const contributions = {};
+    if (k === 'ch4') {
+      // Apply saturation to methane optical depth to make it scale much slower after R = 0.0015
+      const saturationThreshold = 0.075;
 
-  for (const key in comp) {
-    const x = comp[key] ?? comp[key.toLowerCase()] ?? 0;
-    if (x <= 0) continue;
-
-    const k = key.toLowerCase();
-    const G = GAMMA[k] ?? 0;
-    if (!G) continue;
-
-    const mu_i = x * mcolT;
-    const R    = mu_i / COLUMN_MASS_REF;
-
-    let tau_i = G * Math.pow(R, BETA);
-    if (MU_SAT[k]) {
-      const n = SAT_EXP[k] ?? 1.0;
-      tau_i /= (1 + Math.pow(mu_i / MU_SAT[k], n)); // saturation only for CH4/H2SO4
+      if (R <= saturationThreshold) {
+        tau_i = G * Math.pow(R, 1);
+      } else {
+        tau_i = G * Math.pow(0.075, 1) * Math.pow(R, BETA);
+      }
+    } else {
+      // Default behavior for other gases
+      tau_i = G * Math.pow(R, BETA);
     }
+
     total += tau_i;
     contributions[k] = tau_i;
   }
   return { total, contributions };
 }
+
 
 function cloudFraction(pBar) {
   const cf = 1.0 - Math.exp(-pBar / 3.0);
@@ -264,7 +252,6 @@ function dayNightTemperaturesModel({
 
   // greenhouse optical depth
   const { total: tau } = opticalDepth(composition, surfacePressureBar, gSurface);
-  const { total: tauSat } = opticalDepthSat(composition, surfacePressureBar, gSurface);
 
   // NEW: smoothly blended clouds + haze
   const { cfCloud, aCloud, cfHaze, aHaze } =
@@ -276,7 +263,7 @@ function dayNightTemperaturesModel({
 
   // Temperatures
   const T_eff  = effectiveTemp(A, flux);
-  const T_surf = T_eff * Math.pow(1 + 0.75 * tauSat, 0.25);
+  const T_surf = T_eff * Math.pow(1 + 0.75 * tau, 0.25);
 
   const dT = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);
 
@@ -299,7 +286,6 @@ if (typeof module !== 'undefined' && module.exports) {
     autoSlabHeatCapacity,
     effectiveTemp,
     opticalDepth,
-    opticalDepthSat,
     cloudFraction,
     surfaceAlbedoMix,
     diurnalAmplitude,

@@ -69,7 +69,7 @@ function updateDayNightDisplay() {
   progressBar.style.width = dayProgress + '%';
 
   // Update text, optionally round to 2 decimal places for display
-  progressText.textContent = `Day Progress: ${dayProgress.toFixed(1)}%`;
+  progressText.textContent = `Day Cycle: ${dayProgress.toFixed(1)}%`;
 
   // Change color gradually between yellow (day) and dark blue (night)
   if (dayNightStatus === 'Day') {
