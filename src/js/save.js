@@ -144,6 +144,9 @@ function loadGame(slotOrCustomString) {
             } else {
               building.booleanFlags = new Set();
             }
+            if(building.active == null){
+              building.active = 0;
+            }
           }
         }
       }
