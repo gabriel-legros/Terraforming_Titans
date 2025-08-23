@@ -4,8 +4,8 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-describe('play time persistence', () => {
-  test('playTimeSeconds persists through save/load', () => {
+describe('total play time travel persistence', () => {
+  test('initializeGameState with preserveManagers keeps totalPlayTimeSeconds', () => {
     const htmlPath = path.join(__dirname, '..', 'index.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
@@ -61,6 +61,7 @@ describe('play time persistence', () => {
         errors.push({ script: src, message: err.message });
       }
     }
+
     const overrides = `
       createPopup=()=>{};
       createResourceDisplay=()=>{};
@@ -79,12 +80,10 @@ describe('play time persistence', () => {
     vm.runInContext(overrides, ctx);
 
     vm.runInContext('initializeGameState();', ctx);
-    vm.runInContext('playTimeSeconds = 730; totalPlayTimeSeconds = 1000;', ctx);
-    vm.runInContext('var saved = JSON.stringify(getGameState());', ctx);
-    vm.runInContext('playTimeSeconds = 0; totalPlayTimeSeconds = 0;', ctx);
-    vm.runInContext('loadGame(saved);', ctx);
-    const result = vm.runInContext('playTimeSeconds', ctx);
-    const totalResult = vm.runInContext('totalPlayTimeSeconds', ctx);
+    vm.runInContext('playTimeSeconds = 730; totalPlayTimeSeconds = 730;', ctx);
+    vm.runInContext('initializeGameState({preserveManagers: true});', ctx);
+    const playTime = vm.runInContext('playTimeSeconds', ctx);
+    const totalPlayTime = vm.runInContext('totalPlayTimeSeconds', ctx);
 
     global.window = originalWindow;
     global.document = originalDocument;
@@ -95,7 +94,7 @@ describe('play time persistence', () => {
       throw new Error('Script errors: ' + JSON.stringify(errors, null, 2));
     }
 
-    expect(result).toBe(730);
-    expect(totalResult).toBe(1000);
+    expect(playTime).toBe(0);
+    expect(totalPlayTime).toBe(730);
   });
 });
