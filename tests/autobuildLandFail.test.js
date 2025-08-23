@@ -22,7 +22,7 @@ describe('autoBuild land availability', () => {
     autobuildCostTracker.currentCosts = {};
     autoBuild({ c: building });
 
-    expect(building.build).toHaveBeenCalledWith(1);
+    expect(building.build).toHaveBeenCalledWith(1, false);
     expect(Object.keys(autobuildCostTracker.currentCosts).length).toBe(0);
   });
 });

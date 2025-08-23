@@ -15,6 +15,6 @@ describe('autobuild worker basis', () => {
       build: jest.fn(() => true)
     };
     autoBuild({ Test: building });
-    expect(building.build).toHaveBeenCalledWith(5);
+    expect(building.build).toHaveBeenCalledWith(5, false);
   });
 });

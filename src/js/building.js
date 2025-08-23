@@ -19,7 +19,7 @@ class Building extends EffectableEntity {
     this.autoBuildPriority = false;
     this.autoBuildBasis = 'population';
     this.workerPriority = false;
-    this.autoActiveEnabled = false;
+    this.autoActiveEnabled = true;
 
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
@@ -352,7 +352,7 @@ class Building extends EffectableEntity {
     return Math.max(maxByResource, 0); // Ensure non-negative result
   }
 
-  build(buildCount = 1) {
+  build(buildCount = 1, activate = true) {
     if (this.canAfford(buildCount)) {
       const effectiveCost = this.getEffectiveCost(buildCount);
       for (const category in effectiveCost) {
@@ -371,7 +371,9 @@ class Building extends EffectableEntity {
       const oldActive = this.active;
       const oldProductivity = this.productivity;
       this.count += buildCount;
-      this.active += buildCount;
+      if (activate) {
+        this.active += buildCount;
+      }
       if (this.name === 'oreMine' && typeof projectManager !== 'undefined') {
         const dm = projectManager.projects?.deeperMining;
         if (dm && typeof dm.registerMine === 'function') {
