@@ -45,7 +45,7 @@ describe('nanotech energy usage limit', () => {
 
   test('absolute energy limit input uses MW', () => {
     const { JSDOM } = require('jsdom');
-    const dom = new JSDOM('<!DOCTYPE html><div id="colony-buildings-buttons"></div>');
+    const dom = new JSDOM('<!DOCTYPE html><div id="colony-structures-section"><div id="colony-buildings-buttons"></div></div><div id="colony-controls-section"></div>');
     global.document = dom.window.document;
     global.window = dom.window;
     global.Event = dom.window.Event;

@@ -8,9 +8,9 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Resource } = require('../src/js/resource.js');
 
-describe('nanotech growth rate color', () => {
-  test('shows orange when growth below optimal', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="colony-structures-section"><div id="colony-buildings-buttons"></div></div><div id="colony-controls-section"></div>', { runScripts: 'outside-only' });
+describe('nanocolony placement', () => {
+  test('appears after colony controls', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="colony-structures-section"><div id="colony-buildings-buttons"></div></div><div id="colony-controls-section"><div id="colony-controls-container"></div></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.formatNumber = numbers.formatNumber;
     ctx.EffectableEntity = EffectableEntity;
@@ -32,15 +32,10 @@ describe('nanotech growth rate color', () => {
     vm.runInContext(code, ctx);
     const manager = ctx.nanotechManager;
     manager.enable();
-    manager.growthSlider = 10;
-    manager.siliconSlider = 10;
-    const dt = 1000;
-    const required = manager.nanobots * 1e-12 * (dt / 1000);
-    const accumulated = { colony: { energy: required / 2, silicon: 0, glass: 0 } };
-    manager.produceResources(dt, accumulated);
+
     const doc = dom.window.document;
-    expect(doc.getElementById('nanobot-growth-rate').style.color).toBe('orange');
-    expect(doc.getElementById('nanotech-growth-impact').style.color).toBe('orange');
-    expect(doc.getElementById('nanotech-silicon-impact').style.color).toBe('orange');
+    const nano = doc.getElementById('nanocolony-container');
+    const controlsSection = doc.getElementById('colony-controls-section');
+    expect(nano.previousElementSibling).toBe(controlsSection);
   });
 });
