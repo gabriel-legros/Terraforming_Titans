@@ -323,3 +323,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added a Statistics section under Save and Settings showing total playtime across all planets.
 - Added setting so enabling autobuild also toggles Set Active to Target, enabled by default.
 - Autobuild priority and auto-active settings persist through planet travel.
+- Settings page arranged in three columns with temperature and dark mode options first.
