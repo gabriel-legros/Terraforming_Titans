@@ -985,7 +985,9 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const providesParts = [];
-    const storageText = formatStorageDetails(structure.getModifiedStorage());
+    const storageText = formatStorageDetails(
+      scaleResourceMap(structure.getModifiedStorage(), buildCount)
+    );
     if (storageText) {
       providesParts.push(storageText);
     }
