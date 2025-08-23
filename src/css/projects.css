@@ -708,3 +708,75 @@
     cursor: help;
     margin-left: 4px;
 }
+/* Finer Controls Grid */
+#assignment-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 50px;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.grid-header {
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.grid-zone-label {
+    font-weight: 600;
+    text-align: right;
+}
+
+#assignment-grid .assign-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+#assignment-grid .assign-cell span {
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+}
+
+#assignment-grid .assign-cell button {
+    padding: 2px 6px;
+    font-size: 0.85em;
+    min-width: 25px;
+}
+
+.grid-auto-cell {
+    text-align: center;
+}
+
+.finer-controls-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 20px;
+}
+
+.finer-controls-header .control-group {
+    margin-bottom: 0;
+}
+
+.step-controls {
+    justify-content: flex-end;
+}
+
+.mirror-oversight-card input[type="range"]:disabled {
+    background: #e9ecef;
+    cursor: not-allowed;
+}
+
+.mirror-oversight-card input[type="range"]:disabled::-webkit-slider-thumb {
+    background: #adb5bd;
+}
+
+.mirror-oversight-card input[type="range"]:disabled::-moz-range-thumb {
+    background: #adb5bd;
+}

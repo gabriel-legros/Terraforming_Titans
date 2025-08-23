@@ -131,12 +131,21 @@ function updateAssignmentDisplays() {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);
       if (el) {
-        el.textContent = mirrorOversightSettings.assignments[type][zone] || 0;
+        el.textContent = formatBuildingCount(mirrorOversightSettings.assignments[type][zone] || 0);
       }
     });
   });
   const stepEl = document.getElementById('assignment-step-display');
-  if (stepEl) stepEl.textContent = mirrorOversightSettings.assignmentStep;
+  if (stepEl) stepEl.textContent = `x${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+
+  zones.forEach(zone => {
+    types.forEach(type => {
+      const plusBtn = document.querySelector(`.assign-plus[data-type="${type}"][data-zone="${zone}"]`);
+      if (plusBtn) plusBtn.textContent = `+${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+      const minusBtn = document.querySelector(`.assign-minus[data-type="${type}"][data-zone="${zone}"]`);
+      if (minusBtn) minusBtn.textContent = `-${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+    });
+  });
 }
 
 function initializeMirrorOversightUI(container) {
@@ -230,110 +239,62 @@ function initializeMirrorOversightUI(container) {
   finerContent.id = 'mirror-finer-content';
   finerContent.style.display = 'none';
   finerContent.innerHTML = `
-    <div class="control-group">
-      <input type="checkbox" id="mirror-use-finer">
-      <label for="mirror-use-finer">Use Finer Controls</label>
+    <div class="finer-controls-header">
+      <div class="control-group">
+        <input type="checkbox" id="mirror-use-finer">
+        <label for="mirror-use-finer">Use Finer Controls</label>
+      </div>
+      <div class="control-group step-controls">
+        <button id="assignment-div10">/10</button>
+        <span id="assignment-step-display">x1</span>
+        <button id="assignment-mul10">x10</button>
+      </div>
     </div>
-    <div class="control-group">
-      <button id="assignment-div10">/10</button>
-      <span id="assignment-step-display">1</span>
-      <button id="assignment-mul10">x10</button>
+    <div id="assignment-grid">
+      <div class="grid-header">Zone</div>
+      <div class="grid-header">Mirrors</div>
+      <div class="grid-header">Lanterns</div>
+      <div class="grid-header">Auto</div>
+
+      ${['tropical', 'temperate', 'polar', 'any'].map(zone => `
+        <div class="grid-zone-label" data-zone="${zone}">${zone === 'any' ? 'Any Zone' : zone.charAt(0).toUpperCase() + zone.slice(1)}</div>
+        <div class="assign-cell" data-type="mirrors" data-zone="${zone}">
+          <button class="assign-zero" data-type="mirrors" data-zone="${zone}">0</button>
+          <button class="assign-minus" data-type="mirrors" data-zone="${zone}">-1</button>
+          <span id="mirrors-assign-${zone}">0</span>
+          <button class="assign-plus" data-type="mirrors" data-zone="${zone}">+1</button>
+          <button class="assign-max" data-type="mirrors" data-zone="${zone}">Max</button>
+        </div>
+        <div class="assign-cell" data-type="lanterns" data-zone="${zone}">
+          <button class="assign-zero" data-type="lanterns" data-zone="${zone}">0</button>
+          <button class="assign-minus" data-type="lanterns" data-zone="${zone}">-1</button>
+          <span id="lanterns-assign-${zone}">0</span>
+          <button class="assign-plus" data-type="lanterns" data-zone="${zone}">+1</button>
+          <button class="assign-max" data-type="lanterns" data-zone="${zone}">Max</button>
+        </div>
+        <div class="grid-auto-cell">
+          <input type="checkbox" class="auto-assign" data-zone="${zone}">
+        </div>
+      `).join('')}
+      <div class="grid-zone-label" data-zone="focus" style="display:none;">Focusing</div>
+      <div class="assign-cell" data-type="mirrors" data-zone="focus" style="display:none;">
+        <button class="assign-zero" data-type="mirrors" data-zone="focus">0</button>
+        <button class="assign-minus" data-type="mirrors" data-zone="focus">-1</button>
+        <span id="mirrors-assign-focus">0</span>
+        <button class="assign-plus" data-type="mirrors" data-zone="focus">+1</button>
+        <button class="assign-max" data-type="mirrors" data-zone="focus">Max</button>
+      </div>
+      <div class="assign-cell" data-type="lanterns" data-zone="focus" style="display:none;">
+        <button class="assign-zero" data-type="lanterns" data-zone="focus">0</button>
+        <button class="assign-minus" data-type="lanterns" data-zone="focus">-1</button>
+        <span id="lanterns-assign-focus">0</span>
+        <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
+        <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
+      </div>
+      <div class="grid-auto-cell" data-zone="focus" style="display:none;">
+        <input type="checkbox" class="auto-assign" data-zone="focus">
+      </div>
     </div>
-    <table id="assignment-table">
-      <thead><tr><th>Zone</th><th>Mirrors</th><th>Lanterns</th><th>Auto</th></tr></thead>
-      <tbody>
-        <tr data-zone="tropical">
-          <td>Tropical</td>
-          <td class="assign-cell" data-type="mirrors" data-zone="tropical">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="mirrors-assign-tropical"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td class="assign-cell" data-type="lanterns" data-zone="tropical">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="lanterns-assign-tropical"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td><input type="checkbox" class="auto-assign" data-zone="tropical"></td>
-        </tr>
-        <tr data-zone="temperate">
-          <td>Temperate</td>
-          <td class="assign-cell" data-type="mirrors" data-zone="temperate">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="mirrors-assign-temperate"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td class="assign-cell" data-type="lanterns" data-zone="temperate">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="lanterns-assign-temperate"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td><input type="checkbox" class="auto-assign" data-zone="temperate"></td>
-        </tr>
-        <tr data-zone="polar">
-          <td>Polar</td>
-          <td class="assign-cell" data-type="mirrors" data-zone="polar">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="mirrors-assign-polar"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td class="assign-cell" data-type="lanterns" data-zone="polar">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="lanterns-assign-polar"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td><input type="checkbox" class="auto-assign" data-zone="polar"></td>
-        </tr>
-        <tr data-zone="any" id="assignment-any-row">
-          <td>Any Zone</td>
-          <td class="assign-cell" data-type="mirrors" data-zone="any">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="mirrors-assign-any"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td class="assign-cell" data-type="lanterns" data-zone="any">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="lanterns-assign-any"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td><input type="checkbox" class="auto-assign" data-zone="any"></td>
-        </tr>
-        <tr data-zone="focus" id="assignment-focus-row" style="display:none;">
-          <td>Focusing</td>
-          <td class="assign-cell" data-type="mirrors" data-zone="focus">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="mirrors-assign-focus"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td class="assign-cell" data-type="lanterns" data-zone="focus">
-            <button class="assign-zero">0</button>
-            <button class="assign-minus">-1</button>
-            <span id="lanterns-assign-focus"></span>
-            <button class="assign-plus">+1</button>
-            <button class="assign-max">Max</button>
-          </td>
-          <td><input type="checkbox" class="auto-assign" data-zone="focus"></td>
-        </tr>
-      </tbody>
-    </table>
   `;
   div.appendChild(finerToggle);
   div.appendChild(finerContent);
@@ -367,57 +328,34 @@ function initializeMirrorOversightUI(container) {
     mirrorOversightSettings.assignmentStep = Math.max(1, Math.floor(mirrorOversightSettings.assignmentStep / 10));
     updateAssignmentDisplays();
   });
-  finerContent.querySelectorAll('.assign-cell').forEach(cell => {
-    const zone = cell.dataset.zone;
-    const type = cell.dataset.type;
-    const getTotal = () => type === 'mirrors' ? (buildings?.spaceMirror?.active || 0) : (buildings?.hyperionLantern?.active || 0);
-    const zeroBtn = cell.querySelector('.assign-zero');
-    const minusBtn = cell.querySelector('.assign-minus');
-    const plusBtn = cell.querySelector('.assign-plus');
-    const maxBtn = cell.querySelector('.assign-max');
-    if (zeroBtn) {
-      zeroBtn.addEventListener('click', () => {
-        mirrorOversightSettings.assignments[type][zone] = 0;
-        distributeAutoAssignments(type);
-        updateAssignmentDisplays();
-        updateZonalFluxTable();
-      });
-    }
-    if (minusBtn) {
-      minusBtn.addEventListener('click', () => {
-        const step = mirrorOversightSettings.assignmentStep;
-        mirrorOversightSettings.assignments[type][zone] = Math.max(0, (mirrorOversightSettings.assignments[type][zone] || 0) - step);
-        distributeAutoAssignments(type);
-        updateAssignmentDisplays();
-        updateZonalFluxTable();
-      });
-    }
-    if (plusBtn) {
-      plusBtn.addEventListener('click', () => {
-        const step = mirrorOversightSettings.assignmentStep;
-        const current = mirrorOversightSettings.assignments[type][zone] || 0;
-        const other = Object.keys(mirrorOversightSettings.assignments[type])
-          .filter(z => z !== zone)
-          .reduce((s,z)=>s+(mirrorOversightSettings.assignments[type][z]||0),0);
+
+  finerContent.querySelectorAll('.assign-zero, .assign-minus, .assign-plus, .assign-max').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const zone = btn.dataset.zone;
+      const type = btn.dataset.type;
+      const getTotal = () => type === 'mirrors' ? (buildings?.spaceMirror?.active || 0) : (buildings?.hyperionLantern?.active || 0);
+      const assignments = mirrorOversightSettings.assignments[type];
+      const step = mirrorOversightSettings.assignmentStep;
+      const current = assignments[zone] || 0;
+
+      if (btn.classList.contains('assign-zero')) {
+        assignments[zone] = 0;
+      } else if (btn.classList.contains('assign-minus')) {
+        assignments[zone] = Math.max(0, current - step);
+      } else if (btn.classList.contains('assign-plus')) {
+        const other = Object.keys(assignments).filter(z => z !== zone).reduce((s, z) => s + (assignments[z] || 0), 0);
         const total = getTotal();
-        mirrorOversightSettings.assignments[type][zone] = Math.min(current + step, total - other);
-        distributeAutoAssignments(type);
-        updateAssignmentDisplays();
-        updateZonalFluxTable();
-      });
-    }
-    if (maxBtn) {
-      maxBtn.addEventListener('click', () => {
-        const other = Object.keys(mirrorOversightSettings.assignments[type])
-          .filter(z => z !== zone)
-          .reduce((s,z)=>s+(mirrorOversightSettings.assignments[type][z]||0),0);
+        assignments[zone] = Math.min(current + step, total - other);
+      } else if (btn.classList.contains('assign-max')) {
+        const other = Object.keys(assignments).filter(z => z !== zone).reduce((s, z) => s + (assignments[z] || 0), 0);
         const total = getTotal();
-        mirrorOversightSettings.assignments[type][zone] = Math.max(0, total - other);
-        distributeAutoAssignments(type);
-        updateAssignmentDisplays();
-        updateZonalFluxTable();
-      });
-    }
+        assignments[zone] = Math.max(0, total - other);
+      }
+
+      distributeAutoAssignments(type);
+      updateAssignmentDisplays();
+      updateZonalFluxTable();
+    });
   });
 
   updateAssignmentDisplays();
@@ -482,10 +420,10 @@ function updateMirrorOversightUI() {
   if (lanternDiv) {
     lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
   }
-  const lanternHeader = document.querySelector('#assignment-table thead th:nth-child(3)');
+  const lanternHeader = document.querySelector('#assignment-grid .grid-header:nth-child(3)');
   if (lanternHeader) lanternHeader.style.display = lanternUnlocked ? '' : 'none';
-  document.querySelectorAll('#assignment-table td.assign-cell[data-type="lanterns"]').forEach(cell => {
-    cell.style.display = lanternUnlocked ? '' : 'none';
+  document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]').forEach(cell => {
+    cell.style.display = lanternUnlocked ? 'flex' : 'none';
   });
 
   const useFiner = mirrorOversightSettings.useFinerControls;
@@ -506,8 +444,12 @@ function updateMirrorOversightUI() {
     distributeAutoAssignments('lanterns');
     updateAssignmentDisplays();
   }
-  const focusRow = document.getElementById('assignment-focus-row');
-  if (focusRow) focusRow.style.display = focusEnabled ? '' : 'none';
+  document.querySelectorAll('#assignment-grid > div[data-zone="focus"]').forEach(el => {
+    el.style.display = focusEnabled ? '' : 'none';
+  });
+  const focusCell = document.querySelector('.assign-cell[data-zone="focus"]');
+  if (focusCell) focusCell.style.display = focusEnabled ? 'flex' : 'none';
+
 
   if (enabled) {
     updateZonalFluxTable();
