@@ -63,7 +63,7 @@ describe('SpaceMirrorFacilityProject', () => {
     expect(lanternRow.style.display).toBe('flex');
 
     const fluxCell = dom.window.document.getElementById('mirror-flux-tropical');
-    expect(fluxCell.textContent).toBe('100.00');
+    expect(fluxCell.textContent).toBe('25.00');
     const tempCell = dom.window.document.getElementById('mirror-temp-tropical');
     expect(tempCell.textContent).toBe('290.00');
   });

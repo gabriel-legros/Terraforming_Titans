@@ -58,6 +58,7 @@ global.EPSILON = 0.622;
 global.R_AIR = 287;
 
 const Terraforming = require('../src/js/terraforming.js');
+delete global.calculateZoneSolarFluxWithFacility;
 function createResources() {
   return {
     atmospheric: {
