@@ -144,7 +144,8 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   shouldAutomationDisable() {
-    if (this.disableAbovePressure) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
         const amount = resources.atmospheric[gas].value || 0;
@@ -159,7 +160,7 @@ class SpaceMiningProject extends SpaceshipProject {
         }
       }
     }
-    if (this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
+    if (hasMonitoring && this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
       const amount = resources.atmospheric.oxygen.value || 0;
       const pressurePa = calculateAtmosphericPressure(
         amount,
@@ -176,8 +177,8 @@ class SpaceMiningProject extends SpaceshipProject {
 
   canStart() {
     if (!super.canStart()) return false;
-
-    if (this.disableAbovePressure) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
         const amount = resources.atmospheric[gas].value || 0;
@@ -192,7 +193,7 @@ class SpaceMiningProject extends SpaceshipProject {
         }
       }
     }
-    if (this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
+    if (hasMonitoring && this.disableAboveOxygenPressure && typeof terraforming !== 'undefined' && resources.atmospheric?.oxygen) {
       const amount = resources.atmospheric.oxygen.value || 0;
       const pressurePa = calculateAtmosphericPressure(
         amount,
@@ -275,7 +276,7 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       return;
     }
-    if (this.disableAbovePressure && gain.atmospheric) {
+    if (this.isBooleanFlagSet('atmosphericMonitoring') && this.disableAbovePressure && gain.atmospheric) {
       const gas = this.getTargetAtmosphericResource();
       const entry = gain.atmospheric;
       if (

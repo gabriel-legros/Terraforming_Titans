@@ -94,6 +94,7 @@ describe('SpaceMiningProject pressure limit capping', () => {
       }
     };
     const project = new ctx.SpaceMiningProject(config, 'mine');
+    project.addEffect({ type: 'booleanFlag', flagId: 'atmosphericMonitoring', value: true });
     project.disableAbovePressure = true;
     project.disablePressureThreshold = threshold;
     project.assignSpaceships(200);

@@ -91,6 +91,7 @@ describe('continuous spaceship project automation', () => {
       }
     };
     const project = new ctx.SpaceMiningProject(config, 'importCarbon');
+    project.addEffect({ type: 'booleanFlag', flagId: 'atmosphericMonitoring', value: true });
     project.assignedSpaceships = 150;
     project.autoStart = true;
     project.disableAbovePressure = true;
