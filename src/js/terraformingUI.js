@@ -901,7 +901,15 @@ function updateLifeBox() {
     const fluxTooltip = document.getElementById('solar-flux-breakdown');
     if (fluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
-      fluxTooltip.title = `Day Flux by zone \n Tropical: ${z.tropical.toFixed(1)}\nTemperate: ${z.temperate.toFixed(1)}\nPolar: ${z.polar.toFixed(1)}`;
+      const t = (z.tropical / 4).toFixed(1);
+      const m = (z.temperate / 4).toFixed(1);
+      const p = (z.polar / 4).toFixed(1);
+      fluxTooltip.title =
+        `Average Solar Flux by zone\n` +
+        `Tropical: ${t}\n` +
+        `Temperate: ${m}\n` +
+        `Polar: ${p}\n\n` +
+        'Values are lower because of day/night and the angle of sunlight.';
     }
 
     const mainTooltip = document.getElementById('luminosity-tooltip');

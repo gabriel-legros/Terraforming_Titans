@@ -15,6 +15,19 @@ global.resources = { atmospheric: {} };
 
 const Terraforming = require('../src/js/terraforming.js');
 
+afterAll(() => {
+  delete global.Project;
+  delete global.projectElements;
+  delete global.buildings;
+  delete global.calculateZoneSolarFluxWithFacility;
+  delete global.setMirrorDistribution;
+  delete global.resetMirrorOversightSettings;
+  delete global.initializeMirrorOversightUI;
+  delete global.updateMirrorOversightUI;
+  delete global.updateZonalFluxTable;
+  delete global.applyFocusedMelt;
+});
+
 Terraforming.prototype.updateLuminosity = function(){};
 Terraforming.prototype.updateSurfaceTemperature = function(){};
 Terraforming.prototype.calculateLanternFlux = function(){ return 0; };

@@ -99,13 +99,13 @@ function initializeMirrorOversightUI(container) {
     updateMirrorOversightUI();
   });
 
-  // Table showing zonal solar flux and temperature
+  // Table showing zonal average solar flux and temperature
   const fluxTable = document.createElement('table');
   fluxTable.id = 'mirror-flux-table';
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Solar Flux (W/m²)</th><th>Temperature (${tempUnit})</th></tr>
+      <tr><th>Zone</th><th>Average Solar Flux (W/m²)</th><th>Temperature (${tempUnit})</th></tr>
     </thead>
     <tbody>
       <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td></tr>
@@ -186,15 +186,15 @@ function updateZonalFluxTable() {
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   const header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
   if (header) header.textContent = `Temperature (${tempUnit})`;
-  const zones = ['tropical', 'temperate', 'polar'];
-  zones.forEach(zone => {
-    const fluxCell = document.getElementById(`mirror-flux-${zone}`);
-    const tempCell = document.getElementById(`mirror-temp-${zone}`);
-    let flux = 0;
-    if (typeof terraforming.calculateZoneSolarFlux === 'function') {
-      flux = terraforming.calculateZoneSolarFlux(zone);
-    }
-    if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
+    const zones = ['tropical', 'temperate', 'polar'];
+    zones.forEach(zone => {
+      const fluxCell = document.getElementById(`mirror-flux-${zone}`);
+      const tempCell = document.getElementById(`mirror-temp-${zone}`);
+      let flux = 0;
+      if (typeof terraforming.calculateZoneSolarFlux === 'function') {
+        flux = terraforming.calculateZoneSolarFlux(zone) / 4;
+      }
+      if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
 
     if (tempCell) {
       let temp = 0;

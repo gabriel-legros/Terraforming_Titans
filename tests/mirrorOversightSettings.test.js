@@ -15,6 +15,14 @@ delete global.projectElements;
 delete global.buildings;
 delete global.terraforming;
 delete global.formatNumber;
+delete global.calculateZoneSolarFluxWithFacility;
+delete global.mirrorOversightSettings;
+delete global.setMirrorDistribution;
+delete global.resetMirrorOversightSettings;
+delete global.initializeMirrorOversightUI;
+delete global.updateMirrorOversightUI;
+delete global.updateZonalFluxTable;
+delete global.applyFocusedMelt;
 
 describe('mirror oversight settings', () => {
   test('setters modify settings', () => {
