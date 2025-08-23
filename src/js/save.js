@@ -28,7 +28,8 @@ function getGameState() {
     oxygenFactorySettings: typeof oxygenFactorySettings !== 'undefined' ? oxygenFactorySettings : undefined,
     mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
-    playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined
+    playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
+    totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined
   };
 }
 
@@ -335,15 +336,19 @@ function loadGame(slotOrCustomString) {
       Object.assign(mirrorOversightSettings, gameState.mirrorOversightSettings);
     }
 
-    if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
-      loadConstructionOfficeState(gameState.constructionOffice);
-    }
+      if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
+        loadConstructionOfficeState(gameState.constructionOffice);
+      }
 
-    if(gameState.playTimeSeconds !== undefined){
-      playTimeSeconds = gameState.playTimeSeconds;
-    }
+      if(gameState.playTimeSeconds !== undefined){
+        playTimeSeconds = gameState.playTimeSeconds;
+      }
 
-    tabManager.activateTab('buildings');
+      if(gameState.totalPlayTimeSeconds !== undefined){
+        totalPlayTimeSeconds = gameState.totalPlayTimeSeconds;
+      }
+
+      tabManager.activateTab('buildings');
 
     if(typeof applyDayNightSettingEffects === 'function'){
       applyDayNightSettingEffects();
@@ -577,6 +582,12 @@ function updateAutosaveText() {
   const minutes = Math.floor(autosaveTimer / 60);
   const seconds = Math.floor(autosaveTimer % 60);
   autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
+}
+
+function updateStatisticsDisplay() {
+  const el = document.getElementById('total-playtime-display');
+  if (!el) return;
+  el.textContent = formatPlayTime(totalPlayTimeSeconds);
 }
 
 // Call the function to add event listeners when the page loads

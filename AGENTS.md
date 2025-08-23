@@ -319,3 +319,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - calculateInitialValues now records initial solar flux so luminosity deltas compare against the baseline value.
 - Luminosity tooltips and the Space Mirror Facility now display average solar flux (dividing day flux by four to account for day/night cycles and sunlight angle).
  - Autobuild now constructs structures inactive and the auto-set-active option is disabled by default, letting players queue builds without immediately increasing active counts.
+- Autobuild now constructs structures inactive and the auto-set-active option (enabled by default) applies activation afterward, letting players queue builds without immediately increasing active counts.
+- Added a Statistics section under Save and Settings showing total playtime across all planets.
