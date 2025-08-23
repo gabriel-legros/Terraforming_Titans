@@ -275,7 +275,7 @@ const buildingsParameters = {
     name: 'Methane Flare',
     category: 'energy',
     description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
-    cost: { colony: { metal: 15, components: 2} },
+    cost: { colony: { metal: 10, components: 1} },
     consumption: { atmospheric: { atmosphericMethane: 5, oxygen: 19.95 } },
     production: {
       colony: { energy: 1000000 },
