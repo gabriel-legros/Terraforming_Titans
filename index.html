@@ -575,6 +575,9 @@
           <label style="display:block;margin-bottom:8px;">
             <input type="checkbox" id="preserve-project-auto-start-toggle"> Preserve project auto-start between worlds <span class="info-tooltip-icon" title="Keeps project auto-start selections when travelling.">&#9432;</span>
           </label>
+          <label style="display:block;margin-bottom:8px;">
+            <input type="checkbox" id="autobuild-set-active-toggle" checked> Checking autobuild also checks Set Active to Target
+          </label>
 
           <h2>Statistics</h2>
           <p>Total Playtime: <span id="total-playtime-display"></span></p>
@@ -724,6 +727,14 @@
         preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
         preserveAutoStartToggle.addEventListener('change', () => {
             gameSettings.preserveProjectAutoStart = preserveAutoStartToggle.checked;
+        });
+    }
+
+    const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
+    if (autobuildSetActiveToggle) {
+        autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
+        autobuildSetActiveToggle.addEventListener('change', () => {
+            gameSettings.autobuildAlsoSetsActive = autobuildSetActiveToggle.checked;
         });
     }
 
