@@ -178,7 +178,7 @@ function opticalDepth(comp, pBar, gSurface) {
       const saturationThreshold = 0.075;
 
       if (R <= saturationThreshold) {
-        tau_i = G * Math.pow(R, 1);
+        tau_i = G * Math.pow(R, 1) * Math.pow(0.075, BETA);
       } else {
         tau_i = G * Math.pow(0.075, 1) * Math.pow(R, BETA);
       }
