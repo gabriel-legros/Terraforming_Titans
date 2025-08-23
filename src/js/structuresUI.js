@@ -379,7 +379,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
-    const targetCount = Math.ceil((structure.autoBuildPercent * base) / 100);
+    const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
@@ -828,7 +828,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }
 
         const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
-        const targetCount = Math.ceil((structure.autoBuildPercent * base) / 100);
+        const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
         const autoBuildTarget = document.getElementById(`${structure.name}-auto-build-target`);
         autoBuildTarget.textContent = `Target : ${formatBigInteger(targetCount)}`;
 
