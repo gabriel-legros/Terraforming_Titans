@@ -357,7 +357,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const setActiveLabel = document.createElement('span');
   setActiveLabel.textContent = 'Set active to target';
-  setActiveButton.appendChild(setActiveLabel);
 
   const autoActiveCheckbox = document.createElement('input');
   autoActiveCheckbox.type = 'checkbox';
@@ -368,7 +367,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structure.autoActiveEnabled = autoActiveCheckbox.checked;
   });
   autoActiveCheckbox.addEventListener('click', e => e.stopPropagation());
+
   setActiveButton.appendChild(autoActiveCheckbox);
+  setActiveButton.appendChild(setActiveLabel);
 
   setActiveButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
