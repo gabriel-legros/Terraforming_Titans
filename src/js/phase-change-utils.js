@@ -47,7 +47,7 @@
      const diff = temperature - freezingPoint;
 
     const surfaceIceCoverage = iceCoverage;
-    const surfaceMeltCap = surfaceIceCoverage > 1e-10 ? zoneArea * surfaceIceCoverage : zoneArea * Math.sqrt(surfaceIceCoverage) * 1e-5;
+    const surfaceMeltCap = surfaceIceCoverage > 1e-6 ? zoneArea * surfaceIceCoverage : zoneArea * Math.sqrt(surfaceIceCoverage) * 1e-3;
      const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
      const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
  
@@ -67,7 +67,7 @@
 
     const surfaceLiquidCoverage = liquidCoverage;
     const baseFreezeRate = freezingRateMultiplier * diff;
-    const surfaceFreezeCap = surfaceLiquidCoverage > 1e-10 ? zoneArea * surfaceLiquidCoverage : zoneArea * Math.sqrt(surfaceLiquidCoverage) * 1e-5;
+    const surfaceFreezeCap = surfaceLiquidCoverage > 1e-6 ? zoneArea * surfaceLiquidCoverage : zoneArea * Math.sqrt(surfaceLiquidCoverage) * 1e-3;
 
     const cappedLiquid = Math.min(availableLiquid || 0, surfaceFreezeCap);
 
