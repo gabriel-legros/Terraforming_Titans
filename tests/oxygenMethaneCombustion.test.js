@@ -87,8 +87,8 @@ test('oxygen and methane combust into water and CO2', () => {
   const terra = new Terraforming(res, params.celestialParameters);
   terra.calculateInitialValues(params);
 
-  const methane = 5e10;
-  const oxygen = methane * 4;
+  const methane = 5e12;
+  const oxygen = 5e14;
   res.atmospheric.atmosphericMethane.value = methane;
   res.atmospheric.oxygen.value = oxygen;
 
@@ -104,8 +104,8 @@ test('combustion scales with surface area', () => {
   const baseParams = getPlanetParameters('mars');
   const radiusMeters = baseParams.celestialParameters.radius * 1000;
   const surfaceArea = 4 * Math.PI * Math.pow(radiusMeters, 2);
-  const methane = 5e10;
-  const oxygen = methane * 4;
+  const methane = 5e12;
+  const oxygen = 5e14;
 
   // Large planet (full surface area)
   const largeParams = JSON.parse(JSON.stringify(baseParams));

@@ -448,6 +448,7 @@ class Terraforming extends EffectableEntity{
     this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
     this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
     this.updateSurfaceTemperature();
+    this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
 
     this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
     this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
