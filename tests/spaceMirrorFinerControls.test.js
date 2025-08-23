@@ -8,7 +8,9 @@ const {
   mirrorOversightSettings,
   toggleFinerControls,
   calculateZoneSolarFluxWithFacility,
-  distributeAssignmentsFromSliders
+  distributeAssignmentsFromSliders,
+  distributeAutoAssignments,
+  resetMirrorOversightSettings
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 
 global.mirrorOversightSettings = mirrorOversightSettings;
@@ -39,6 +41,7 @@ afterAll(() => {
 
 describe('Space Mirror finer controls', () => {
   test('enabling finer controls distributes assignments from sliders', () => {
+    resetMirrorOversightSettings();
     mirrorOversightSettings.distribution.tropical = 0.5;
     mirrorOversightSettings.distribution.temperate = 0.5;
     mirrorOversightSettings.distribution.polar = 0;
@@ -52,6 +55,7 @@ describe('Space Mirror finer controls', () => {
   });
 
   test('zone flux uses manual assignments', () => {
+    resetMirrorOversightSettings();
     const terra = createTerraforming();
     global.buildings = { spaceMirror: { surfaceArea: 500, active: 10 } };
     global.projectManager = {
@@ -59,6 +63,8 @@ describe('Space Mirror finer controls', () => {
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.useFinerControls = true;
+    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 10, temperate: 0, polar: 0, focus: 0 };
+    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
     mirrorOversightSettings.assignments.mirrors = { tropical: 10, temperate: 0, polar: 0, focus: 0 };
     mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
 
@@ -82,29 +88,26 @@ describe('Space Mirror finer controls', () => {
   });
 
   test('auto-assign zones distributes remaining units', () => {
-    mirrorOversightSettings.distribution.tropical = 0.6;
-    mirrorOversightSettings.distribution.temperate = 0.4;
-    mirrorOversightSettings.distribution.polar = 0;
-    mirrorOversightSettings.distribution.focus = 0;
-    mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 3 };
-    mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 1 };
+    resetMirrorOversightSettings();
+    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 3 };
+    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 1 };
+    mirrorOversightSettings.autoAssign.tropical = true;
+    mirrorOversightSettings.autoAssign.temperate = true;
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 6 } };
-    distributeAssignmentsFromSliders('mirrors', 'zones');
-    distributeAssignmentsFromSliders('lanterns', 'zones');
+    distributeAutoAssignments('mirrors');
+    distributeAutoAssignments('lanterns');
     expect(mirrorOversightSettings.assignments.mirrors).toEqual({ tropical: 4, temperate: 3, polar: 0, focus: 3 });
     expect(mirrorOversightSettings.assignments.lanterns).toEqual({ tropical: 3, temperate: 2, polar: 0, focus: 1 });
   });
 
   test('auto-assign focus distributes remaining units', () => {
-    mirrorOversightSettings.distribution.tropical = 0.5;
-    mirrorOversightSettings.distribution.temperate = 0.2;
-    mirrorOversightSettings.distribution.polar = 0.0;
-    mirrorOversightSettings.distribution.focus = 0.3;
-    mirrorOversightSettings.assignments.mirrors = { tropical: 4, temperate: 3, polar: 0, focus: 0 };
-    mirrorOversightSettings.assignments.lanterns = { tropical: 3, temperate: 2, polar: 0, focus: 0 };
+    resetMirrorOversightSettings();
+    mirrorOversightSettings.manualAssignments.mirrors = { tropical: 4, temperate: 3, polar: 0, focus: 0 };
+    mirrorOversightSettings.manualAssignments.lanterns = { tropical: 3, temperate: 2, polar: 0, focus: 0 };
+    mirrorOversightSettings.autoAssign.focus = true;
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 6 } };
-    distributeAssignmentsFromSliders('mirrors', 'focus');
-    distributeAssignmentsFromSliders('lanterns', 'focus');
+    distributeAutoAssignments('mirrors');
+    distributeAutoAssignments('lanterns');
     expect(mirrorOversightSettings.assignments.mirrors.focus).toBe(3);
     expect(mirrorOversightSettings.assignments.lanterns.focus).toBe(1);
     expect(mirrorOversightSettings.assignments.mirrors.tropical).toBe(4);

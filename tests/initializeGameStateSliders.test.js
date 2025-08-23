@@ -100,8 +100,12 @@ test('initializeGameState resets colony sliders to defaults', () => {
     applyToLantern: false,
     useFinerControls: false,
     assignmentStep: 1,
-    autoAssign: null,
+    autoAssign: { tropical: false, temperate: false, polar: false, focus: false },
     assignments: {
+      mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
+      lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0 }
+    },
+    manualAssignments: {
       mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
       lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0 }
     }

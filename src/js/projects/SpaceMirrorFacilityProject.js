@@ -4,8 +4,12 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   applyToLantern: false,
   useFinerControls: false,
   assignmentStep: 1,
-  autoAssign: null, // 'zones' | 'focus'
+  autoAssign: { tropical: false, temperate: false, polar: false, focus: false },
   assignments: {
+    mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
+    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0 }
+  },
+  manualAssignments: {
     mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
     lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0 }
   }
@@ -39,66 +43,63 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.applyToLantern = false;
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.assignmentStep = 1;
-  mirrorOversightSettings.autoAssign = null;
+  mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
+  mirrorOversightSettings.manualAssignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
+  mirrorOversightSettings.manualAssignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0 };
   updateMirrorOversightUI();
 }
 
-function distributeAssignmentsFromSliders(type, target = 'all') {
+function distributeAssignmentsFromSliders(type) {
   if (typeof buildings === 'undefined') return;
   const dist = mirrorOversightSettings.distribution || {};
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
-
-  if (target === 'zones') {
-    const manualFocus = mirrorOversightSettings.assignments[type].focus || 0;
-    const available = Math.max(0, total - manualFocus);
-    const zoneKeys = ['tropical', 'temperate', 'polar'];
-    const distSum = zoneKeys.reduce((s, z) => s + (dist[z] || 0), 0) || 1;
-    const raw = zoneKeys.map(z => ({ zone: z, value: available * (dist[z] || 0) / distSum }));
-    const assignments = {};
-    let used = 0;
-    raw.forEach(r => {
-      assignments[r.zone] = Math.floor(r.value);
-      used += assignments[r.zone];
-    });
-    let remaining = available - used;
-    raw.sort((a, b) => (b.value % 1) - (a.value % 1));
-    for (const r of raw) {
-      if (remaining <= 0) break;
-      assignments[r.zone] += 1;
-      remaining--;
-    }
-    Object.assign(mirrorOversightSettings.assignments[type], assignments);
-    return;
-  }
-
-  if (target === 'focus') {
-    const manualZones = ['tropical', 'temperate', 'polar'].reduce((s, z) => s + (mirrorOversightSettings.assignments[type][z] || 0), 0);
-    const available = Math.max(0, total - manualZones);
-    const desired = Math.floor((dist.focus || 0) * total);
-    mirrorOversightSettings.assignments[type].focus = Math.min(desired, available);
-    return;
-  }
-
   const zones = ['tropical', 'temperate', 'polar', 'focus'];
   const raw = zones.map(z => ({ zone: z, value: total * (dist[z] || 0) }));
-  const assignments = {};
+  const manual = {};
   let used = 0;
   raw.forEach(r => {
-    assignments[r.zone] = Math.floor(r.value);
-    used += assignments[r.zone];
+    manual[r.zone] = Math.floor(r.value);
+    used += manual[r.zone];
   });
   let remaining = total - used;
   raw.sort((a, b) => (b.value % 1) - (a.value % 1));
   for (const r of raw) {
     if (remaining <= 0) break;
-    assignments[r.zone] += 1;
+    manual[r.zone] += 1;
     remaining--;
   }
-  mirrorOversightSettings.assignments[type] = assignments;
+  mirrorOversightSettings.manualAssignments[type] = manual;
+  distributeAutoAssignments(type);
+}
+
+function distributeAutoAssignments(type) {
+  if (typeof buildings === 'undefined') return;
+  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  const total = type === 'mirrors'
+    ? (buildings.spaceMirror?.active || 0)
+    : (buildings.hyperionLantern?.active || 0);
+  const manual = mirrorOversightSettings.manualAssignments[type];
+  const assignments = mirrorOversightSettings.assignments[type];
+  zones.forEach(z => { assignments[z] = manual[z] || 0; });
+  let used = zones.reduce((s, z) => s + (assignments[z] || 0), 0);
+  let remaining = Math.max(0, total - used);
+  const activeZones = zones.filter(z => mirrorOversightSettings.autoAssign[z]);
+  if (activeZones.length && remaining > 0) {
+    const base = Math.floor(remaining / activeZones.length);
+    activeZones.forEach(z => {
+      assignments[z] += base;
+    });
+    remaining -= base * activeZones.length;
+    for (const z of activeZones) {
+      if (remaining <= 0) break;
+      assignments[z] += 1;
+      remaining--;
+    }
+  }
 }
 
 function toggleFinerControls(enabled) {
@@ -221,18 +222,12 @@ function initializeMirrorOversightUI(container) {
       <label for="mirror-use-finer">Use Finer Controls</label>
     </div>
     <div class="control-group">
-      <input type="checkbox" id="auto-assign-zones">
-      <label for="auto-assign-zones">Auto-assign Zones</label>
-      <input type="checkbox" id="auto-assign-focus">
-      <label for="auto-assign-focus">Auto-assign Focusing</label>
-    </div>
-    <div class="control-group">
       <button id="assignment-div10">/10</button>
       <span id="assignment-step-display">1</span>
       <button id="assignment-mul10">x10</button>
     </div>
     <table id="assignment-table">
-      <thead><tr><th>Zone</th><th>Mirrors</th><th>Lanterns</th></tr></thead>
+      <thead><tr><th>Zone</th><th>Mirrors</th><th>Lanterns</th><th>Auto</th></tr></thead>
       <tbody>
         <tr data-zone="tropical">
           <td>Tropical</td>
@@ -250,6 +245,7 @@ function initializeMirrorOversightUI(container) {
             <button class="assign-plus">+1</button>
             <button class="assign-max">Max</button>
           </td>
+          <td><input type="checkbox" class="auto-assign" data-zone="tropical"></td>
         </tr>
         <tr data-zone="temperate">
           <td>Temperate</td>
@@ -267,6 +263,7 @@ function initializeMirrorOversightUI(container) {
             <button class="assign-plus">+1</button>
             <button class="assign-max">Max</button>
           </td>
+          <td><input type="checkbox" class="auto-assign" data-zone="temperate"></td>
         </tr>
         <tr data-zone="polar">
           <td>Polar</td>
@@ -284,6 +281,7 @@ function initializeMirrorOversightUI(container) {
             <button class="assign-plus">+1</button>
             <button class="assign-max">Max</button>
           </td>
+          <td><input type="checkbox" class="auto-assign" data-zone="polar"></td>
         </tr>
         <tr data-zone="focus" id="assignment-focus-row" style="display:none;">
           <td>Focusing</td>
@@ -301,6 +299,7 @@ function initializeMirrorOversightUI(container) {
             <button class="assign-plus">+1</button>
             <button class="assign-max">Max</button>
           </td>
+          <td><input type="checkbox" class="auto-assign" data-zone="focus"></td>
         </tr>
       </tbody>
     </table>
@@ -319,25 +318,15 @@ function initializeMirrorOversightUI(container) {
   useFiner.addEventListener('change', () => {
     toggleFinerControls(useFiner.checked);
   });
-  const autoZones = finerContent.querySelector('#auto-assign-zones');
-  const autoFocus = finerContent.querySelector('#auto-assign-focus');
-  autoZones.addEventListener('change', () => {
-    if (autoZones.checked) {
-      autoFocus.checked = false;
-      mirrorOversightSettings.autoAssign = 'zones';
-    } else if (!autoFocus.checked) {
-      mirrorOversightSettings.autoAssign = null;
-    }
-    updateMirrorOversightUI();
-  });
-  autoFocus.addEventListener('change', () => {
-    if (autoFocus.checked) {
-      autoZones.checked = false;
-      mirrorOversightSettings.autoAssign = 'focus';
-    } else if (!autoZones.checked) {
-      mirrorOversightSettings.autoAssign = null;
-    }
-    updateMirrorOversightUI();
+  finerContent.querySelectorAll('.auto-assign').forEach(box => {
+    box.addEventListener('change', () => {
+      const zone = box.dataset.zone;
+      mirrorOversightSettings.autoAssign[zone] = box.checked;
+      distributeAutoAssignments('mirrors');
+      distributeAutoAssignments('lanterns');
+      updateAssignmentDisplays();
+      updateZonalFluxTable();
+    });
   });
   finerContent.querySelector('#assignment-mul10').addEventListener('click', () => {
     mirrorOversightSettings.assignmentStep *= 10;
@@ -352,30 +341,37 @@ function initializeMirrorOversightUI(container) {
     const type = cell.dataset.type;
     const getTotal = () => type === 'mirrors' ? (buildings?.spaceMirror?.active || 0) : (buildings?.hyperionLantern?.active || 0);
     cell.querySelector('.assign-zero').addEventListener('click', () => {
-      mirrorOversightSettings.assignments[type][zone] = 0;
+      mirrorOversightSettings.manualAssignments[type][zone] = 0;
+      distributeAutoAssignments(type);
       updateAssignmentDisplays();
       updateZonalFluxTable();
     });
     cell.querySelector('.assign-minus').addEventListener('click', () => {
       const step = mirrorOversightSettings.assignmentStep;
-      mirrorOversightSettings.assignments[type][zone] = Math.max(0, (mirrorOversightSettings.assignments[type][zone] || 0) - step);
+      mirrorOversightSettings.manualAssignments[type][zone] = Math.max(0, (mirrorOversightSettings.manualAssignments[type][zone] || 0) - step);
+      distributeAutoAssignments(type);
       updateAssignmentDisplays();
       updateZonalFluxTable();
     });
     cell.querySelector('.assign-plus').addEventListener('click', () => {
       const step = mirrorOversightSettings.assignmentStep;
-      const current = mirrorOversightSettings.assignments[type][zone] || 0;
-      const other = Object.values(mirrorOversightSettings.assignments[type]).reduce((s,v)=>s+(v||0),0) - current;
+      const current = mirrorOversightSettings.manualAssignments[type][zone] || 0;
+      const other = Object.keys(mirrorOversightSettings.manualAssignments[type])
+        .filter(z => z !== zone)
+        .reduce((s,z)=>s+(mirrorOversightSettings.manualAssignments[type][z]||0),0);
       const total = getTotal();
-      mirrorOversightSettings.assignments[type][zone] = Math.min(current + step, total - other);
+      mirrorOversightSettings.manualAssignments[type][zone] = Math.min(current + step, total - other);
+      distributeAutoAssignments(type);
       updateAssignmentDisplays();
       updateZonalFluxTable();
     });
     cell.querySelector('.assign-max').addEventListener('click', () => {
-      const current = mirrorOversightSettings.assignments[type][zone] || 0;
-      const other = Object.values(mirrorOversightSettings.assignments[type]).reduce((s,v)=>s+(v||0),0) - current;
+      const other = Object.keys(mirrorOversightSettings.manualAssignments[type])
+        .filter(z => z !== zone)
+        .reduce((s,z)=>s+(mirrorOversightSettings.manualAssignments[type][z]||0),0);
       const total = getTotal();
-      mirrorOversightSettings.assignments[type][zone] = Math.max(0, total - other);
+      mirrorOversightSettings.manualAssignments[type][zone] = Math.max(0, total - other);
+      distributeAutoAssignments(type);
       updateAssignmentDisplays();
       updateZonalFluxTable();
     });
@@ -451,21 +447,15 @@ function updateMirrorOversightUI() {
   });
   const useFinerEl = document.getElementById('mirror-use-finer');
   if (useFinerEl) useFinerEl.checked = useFiner;
-  const autoZones = document.getElementById('auto-assign-zones');
-  const autoFocus = document.getElementById('auto-assign-focus');
-  if (autoZones) autoZones.checked = mirrorOversightSettings.autoAssign === 'zones';
-  if (autoFocus) autoFocus.checked = mirrorOversightSettings.autoAssign === 'focus';
+  document.querySelectorAll('#assignment-table .auto-assign').forEach(box => {
+    const zone = box.dataset.zone;
+    box.checked = !!mirrorOversightSettings.autoAssign[zone];
+  });
   const assignmentControls = document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)');
   assignmentControls.forEach(el => { el.disabled = !useFiner; });
   if (useFiner) {
-    if (mirrorOversightSettings.autoAssign === 'zones') {
-      distributeAssignmentsFromSliders('mirrors','zones');
-      distributeAssignmentsFromSliders('lanterns','zones');
-    }
-    if (mirrorOversightSettings.autoAssign === 'focus') {
-      distributeAssignmentsFromSliders('mirrors','focus');
-      distributeAssignmentsFromSliders('lanterns','focus');
-    }
+    distributeAutoAssignments('mirrors');
+    distributeAutoAssignments('lanterns');
     updateAssignmentDisplays();
   }
   const focusRow = document.getElementById('assignment-focus-row');
@@ -514,6 +504,8 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing')))) {
     let focusPower = 0;
     if (mirrorOversightSettings.useFinerControls) {
+      distributeAutoAssignments('mirrors');
+      distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
@@ -598,8 +590,8 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     typeof mirrorOversightSettings !== 'undefined'
   ) {
     if (mirrorOversightSettings.useFinerControls) {
-      if (mirrorOversightSettings.autoAssign === 'mirrors') distributeAssignmentsFromSliders('mirrors');
-      if (mirrorOversightSettings.autoAssign === 'lanterns') distributeAssignmentsFromSliders('lanterns');
+      distributeAutoAssignments('mirrors');
+      distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
       const totalAssignedM = Object.values(assignM).reduce((s,v)=>s+(v||0),0);
@@ -799,6 +791,7 @@ if (typeof module !== 'undefined' && module.exports) {
     applyFocusedMelt,
     calculateZoneSolarFluxWithFacility,
     distributeAssignmentsFromSliders,
+    distributeAutoAssignments,
     toggleFinerControls,
   };
 }
