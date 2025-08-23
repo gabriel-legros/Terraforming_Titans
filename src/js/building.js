@@ -440,10 +440,16 @@ class Building extends EffectableEntity {
     } else{
       let targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
 
+      const hasAtmosphericOversight =
+        this.isBooleanFlagSet('terraformingBureauFeature') &&
+        typeof researchManager !== 'undefined' &&
+        typeof researchManager.getResearchById === 'function' &&
+        researchManager.getResearchById('terraforming_bureau')?.isResearched;
+
       // Automatically disable GHG factory if temperature exceeds threshold
       if(
         this.name === 'ghgFactory' &&
-        this.isBooleanFlagSet('terraformingBureauFeature') &&
+        hasAtmosphericOversight &&
         ghgFactorySettings.autoDisableAboveTemp &&
         terraforming && terraforming.temperature
       ){
@@ -466,7 +472,7 @@ class Building extends EffectableEntity {
       // Automatically disable Oxygen factory if O2 pressure exceeds threshold
       if(
         this.name === 'oxygenFactory' &&
-        this.isBooleanFlagSet('terraformingBureauFeature') &&
+        hasAtmosphericOversight &&
         oxygenFactorySettings.autoDisableAbovePressure &&
         terraforming && resources.atmospheric?.oxygen
       ){

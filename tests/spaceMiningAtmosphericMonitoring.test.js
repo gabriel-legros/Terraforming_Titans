@@ -4,7 +4,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const physics = require('../src/js/physics.js');
 
-describe('SpaceMiningProject pressure disable', () => {
+describe('SpaceMiningProject atmospheric monitoring gating', () => {
   let context;
   beforeEach(() => {
     context = {
@@ -38,7 +38,7 @@ describe('SpaceMiningProject pressure disable', () => {
       special: { spaceships: { value: 1 } },
       atmospheric: { carbonDioxide: { value: 0 }, inertGas: { value: 0 }, oxygen: { value: 0 } },
       surface: {},
-      underground: {}
+      underground: {},
     };
     global.resources = context.resources;
     global.projectManager = context.projectManager;
@@ -52,6 +52,21 @@ describe('SpaceMiningProject pressure disable', () => {
     global.globalEffects = context.globalEffects;
     global.shipEfficiency = context.shipEfficiency;
     global.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.projectManager;
+    delete global.populationModule;
+    delete global.tabManager;
+    delete global.fundingModule;
+    delete global.terraforming;
+    delete global.lifeDesigner;
+    delete global.lifeManager;
+    delete global.oreScanner;
+    delete global.globalEffects;
+    delete global.shipEfficiency;
+    delete global.calculateAtmosphericPressure;
   });
 
   function createProject(gas) {
@@ -72,39 +87,26 @@ describe('SpaceMiningProject pressure disable', () => {
     };
     const project = new context.SpaceMiningProject(config, 'mine');
     project.assignedSpaceships = 1;
-    project.addEffect({ type: 'booleanFlag', flagId: 'atmosphericMonitoring', value: true });
     return project;
   }
 
-  test('cannot start when CO2 pressure above threshold', () => {
-    const project = createProject('carbonDioxide');
-    project.disableAbovePressure = true;
-    project.disablePressureThreshold = 1e-7;
-    context.resources.atmospheric.carbonDioxide.value = 2;
-    expect(project.canStart()).toBe(false);
-  });
-
-  test('can start when inert gas pressure below threshold', () => {
-    const project = createProject('inertGas');
-    project.disableAbovePressure = true;
-    project.disablePressureThreshold = 2e-7;
-    context.resources.atmospheric.inertGas.value = 2;
-    expect(project.canStart()).toBe(true);
-  });
-
-  test('cannot start when O2 pressure above threshold', () => {
+  test('carbon mining ignores O2 limit without research', () => {
     const project = createProject('carbonDioxide');
     project.disableAboveOxygenPressure = true;
     project.disableOxygenPressureThreshold = 1e-7;
     context.resources.atmospheric.oxygen.value = 2;
+    expect(project.canStart()).toBe(true);
+    project.addEffect({ type: 'booleanFlag', flagId: 'atmosphericMonitoring', value: true });
     expect(project.canStart()).toBe(false);
   });
 
-  test('can start when O2 pressure below threshold', () => {
-    const project = createProject('carbonDioxide');
-    project.disableAboveOxygenPressure = true;
-    project.disableOxygenPressureThreshold = 2e-7;
-    context.resources.atmospheric.oxygen.value = 2;
+  test('nitrogen mining ignores pressure limit without research', () => {
+    const project = createProject('inertGas');
+    project.disableAbovePressure = true;
+    project.disablePressureThreshold = 1e-7;
+    context.resources.atmospheric.inertGas.value = 2;
     expect(project.canStart()).toBe(true);
+    project.addEffect({ type: 'booleanFlag', flagId: 'atmosphericMonitoring', value: true });
+    expect(project.canStart()).toBe(false);
   });
 });
