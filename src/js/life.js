@@ -170,10 +170,17 @@ class LifeDesign {
       const zoneData = terraforming.temperature.zones[zoneName];
       let reason = null;
 
-      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${formatNumber(zoneData.day,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
-      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${formatNumber(zoneData.day,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
-      else if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${formatNumber(zoneData.night,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
-      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${formatNumber(zoneData.night,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
+      const unit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
+      const fmt = v => formatNumber(
+        typeof toDisplayTemperature === 'function' ? toDisplayTemperature(v) : v,
+        false,
+        1
+      );
+
+      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
+      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
+      else if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
+      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
 
       return { pass: reason === null, reason: reason };
   }
@@ -183,9 +190,16 @@ class LifeDesign {
       const temperatureRanges = this.getTemperatureRanges().survival;
       const zoneData = terraforming.temperature.zones[zoneName];
       let reason = null;
- 
-      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${formatNumber(zoneData.day,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
-      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${formatNumber(zoneData.day,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
+
+      const unit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
+      const fmt = v => formatNumber(
+        typeof toDisplayTemperature === 'function' ? toDisplayTemperature(v) : v,
+        false,
+        1
+      );
+
+      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
+      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
  
       return { pass: reason === null, reason: reason };
   }
@@ -195,9 +209,16 @@ class LifeDesign {
       const temperatureRanges = this.getTemperatureRanges().survival;
       const zoneData = terraforming.temperature.zones[zoneName];
       let reason = null;
- 
-      if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${formatNumber(zoneData.night,false,1)}K < ${formatNumber(temperatureRanges.min,false,1)}K)`;
-      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${formatNumber(zoneData.night,false,1)}K > ${formatNumber(temperatureRanges.max,false,1)}K)`;
+
+      const unit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
+      const fmt = v => formatNumber(
+        typeof toDisplayTemperature === 'function' ? toDisplayTemperature(v) : v,
+        false,
+        1
+      );
+
+      if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
+      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
  
       return { pass: reason === null, reason: reason };
   }
