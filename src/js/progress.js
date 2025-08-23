@@ -170,7 +170,7 @@ class StoryManager {
         if (eventChapter !== -1) {
             if (this.currentChapter === null) {
                 this.currentChapter = eventChapter;
-            } else if (eventChapter !== this.currentChapter) {
+            } else if (eventChapter > this.currentChapter) {
                 clearJournal();
                 this.currentChapter = eventChapter;
                 chapterChanged = true;
@@ -685,7 +685,7 @@ class StoryManager {
     }
 }
 
-// StoryEvent class remains the same
+// StoryEvent class
 class StoryEvent {
     constructor(config) {
         this.id = config.id;
@@ -702,7 +702,23 @@ class StoryEvent {
         this.prerequisites = config.prerequisites || [];
     }
 
-    trigger() { // Keep as is
+    // Check if this event should skip journal entry due to being on an outdated chapter
+    shouldSkipJournalForOutdatedChapter() {
+        // Chapter -1 should always show journal entries
+        if (this.chapter === -1) {
+            return false;
+        }
+
+        // Check if StoryManager exists and has currentChapter
+        if (!window.storyManager || window.storyManager.currentChapter === null) {
+            return false;
+        }
+
+        // Skip journal entry if this event's chapter is less than current chapter
+        return this.chapter < window.storyManager.currentChapter;
+    }
+
+    trigger() { // Modified to skip journal entries for outdated chapters
         switch (this.type) {
             case "pop-up":
                 createPopup(
@@ -719,6 +735,17 @@ class StoryEvent {
                 );
                 break;
             case "journal":
+                 // Check if this event is on an outdated chapter (except -1)
+                 const shouldSkipJournal = this.shouldSkipJournalForOutdatedChapter();
+                 if (shouldSkipJournal) {
+                     console.log(`Skipping journal entry for outdated chapter event: ${this.id} (chapter ${this.chapter}, current: ${window.storyManager?.currentChapter})`);
+                     // Mark event as completed immediately since no journal typing is needed
+                     if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
+                         window.storyManager.processEventCompletion(this.id);
+                     }
+                     break;
+                 }
+
                  const text = joinLines(this.narrative);
                  if (this.title) {
                     addJournalEntry([`${this.title}`, text], this.id, { type: 'chapter', id: this.id });

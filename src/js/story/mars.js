@@ -39,18 +39,6 @@ var progressMars = {
             {
               target: 'resource',
               resourceType: 'colony',
-              targetId: 'colonists',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'workers',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
               targetId: 'energy',
               type: 'enable'
             },
@@ -58,30 +46,6 @@ var progressMars = {
               target: 'resource',
               resourceType: 'colony',
               targetId: 'metal',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'silicon',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'glass',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'water',
-              type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'food',
               type: 'enable'
             },
             {
@@ -95,12 +59,6 @@ var progressMars = {
               resourceType: 'colony',
               targetId: 'electronics',
               type: 'enable'
-            },
-            {
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'research',
-              type: 'enable'
             }
           ],
         rewardDelay: 500  // Delay between rewards in milliseconds
@@ -109,30 +67,8 @@ var progressMars = {
         id: "chapter1.1",
         type: "journal",
         chapter: 0,
-        narrative: "Loading surface resources interface...",
-        prerequisites: ["chapter1"],
-        objectives: [
-        ],
-        reward: [   {
-          target: 'resource',
-          resourceType: 'surface',
-          targetId: 'land',
-          type: 'enable'
-        },
-        {
-            target: 'resource',
-            resourceType: 'surface',
-            targetId: 'ice',
-            type: 'enable'
-          },
-        ]
-      },
-      {
-        id: "chapter1.2",
-        type: "journal",
-        chapter: 0,
         narrative: "Loading underground resources interface...",
-        prerequisites: ["chapter1.1"],
+        prerequisites: ["chapter1"],
         objectives: [
         ],
         reward: [     {
@@ -144,11 +80,11 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.3",
+        id: "chapter1.2",
         type: "journal",
         chapter: 0,
         narrative: "Loading special projects interface...",
-        prerequisites: ["chapter1.2"],
+        prerequisites: ["chapter1.1"],
         objectives: [
         ],
         reward: [     {
@@ -165,11 +101,11 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.3b",
+        id: "chapter1.3",
         type: "journal",
         chapter: 0,
         narrative: "Awaiting resource payload from Earth...",
-        prerequisites: ["chapter1.3"],
+        prerequisites: ["chapter1.2"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -181,11 +117,11 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.3c",
+        id: "chapter1.3b",
         type: "journal",
         chapter: 0,
         narrative: "Loading construction interface...",
-        prerequisites: ["chapter1.3b"],
+        prerequisites: ["chapter1.3"],
         objectives: [
         ],
         reward: [     {
@@ -200,7 +136,7 @@ var progressMars = {
         type: "journal",
         chapter: 0,
         narrative: "Integrating building categories...",
-        prerequisites: ["chapter1.3c"],
+        prerequisites: ["chapter1.3b"],
         objectives: [
         ],
         reward: [ {
@@ -334,7 +270,12 @@ var progressMars = {
             target: 'building',
             targetId: 'sandQuarry',
             type: 'enable'
-        }]
+        },            {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'silicon',
+              type: 'enable'
+            },,]
       },
       {
         id: "chapter1.15",
@@ -348,7 +289,13 @@ var progressMars = {
             target: 'building',
             targetId: 'glassSmelter',
             type: 'enable'
-        }]
+        }            
+        ,{
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'glass',
+              type: 'enable'
+            }]
       },
       {
         id: "chapter1.16",
@@ -380,7 +327,13 @@ var progressMars = {
             target: 'building',
             targetId: 'iceHarvester',
             type: 'enable'
-        }]
+        },
+                  {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'water',
+              type: 'enable'
+            },]
       },
       {
         id: "chapter1.18",
@@ -388,6 +341,17 @@ var progressMars = {
         chapter: 0,
         narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 units of water.",
         prerequisites: ["chapter1.17"],
+        objectives: [
+        ],
+        reward: [{
+        }]
+      },
+      {
+        id: "chapter1.18b",
+        type: "journal",
+        chapter: 0,
+        narrative: "Loading surface resources interface...",
+        prerequisites: ["chapter1.18"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -395,15 +359,26 @@ var progressMars = {
             quantity: 100
         }
         ],
-        reward: [{
-        }]
+        reward: [   {
+          target: 'resource',
+          resourceType: 'surface',
+          targetId: 'land',
+          type: 'enable'
+        },
+        {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'ice',
+            type: 'enable'
+          },
+        ]
       },
       {
         id: "chapter1.19",
         type: "journal",
         chapter: 0,
         narrative: "Authorization granted: Colony construction and personnel importation from Earth are now enabled.",
-        prerequisites: ["chapter1.18"],
+        prerequisites: ["chapter1.18b"],
         objectives: [
         ],
         reward: [{
@@ -421,7 +396,7 @@ var progressMars = {
             targetId: 'colonies',
             type: 'activateTab',
             onLoad : false
-          }
+          },            
     ]
       },
       {
@@ -440,7 +415,25 @@ var progressMars = {
           target: 'project',
           targetId: 'import_colonists_1',
           type: 'enable'
-          }]
+          },          
+          {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'colonists',
+              type: 'enable'
+            },
+            {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'workers',
+              type: 'enable'
+            }, 
+            {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'food',
+              type: 'enable'
+            },]
       },
       {
         id: "chapter1.20",
@@ -454,7 +447,13 @@ var progressMars = {
             resource: 'colonists',
             quantity: 10
         }],
-        reward: [
+        reward: [,
+            {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'research',
+              type: 'enable'
+            },
         {
             target: 'tab',
             targetId: 'research-tab',
