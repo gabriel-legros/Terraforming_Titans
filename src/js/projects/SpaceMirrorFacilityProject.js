@@ -177,7 +177,7 @@ function sanitizeMirrorDistribution() {
     total += v;
   });
 
-  if (total !== 1) {
+  if (total > 1) {
     changed = true;
     if (total > 1) {
       let excess = total - 1;
@@ -289,6 +289,8 @@ function initializeMirrorOversightUI(container) {
     sliders[zone].addEventListener('input', () => {
       const raw = sliders[zone].value;
       const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
+      val < 0 ? 0 : val;
+      val > 1 ? 1 : val;
       setMirrorDistribution(zone, val);
     });
   });
@@ -705,6 +707,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
 class SpaceMirrorFacilityProject extends Project {
   update(deltaTime) {
+    sanitizeMirrorDistribution();
     super.update(deltaTime);
   }
 
