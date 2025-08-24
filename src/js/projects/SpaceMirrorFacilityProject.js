@@ -158,6 +158,57 @@ function toggleFinerControls(enabled) {
   updateMirrorOversightUI();
 }
 
+function sanitizeMirrorDistribution() {
+  const dist = mirrorOversightSettings.distribution;
+  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  let total = 0;
+  let changed = false;
+
+  zones.forEach(zone => {
+    let v = dist[zone];
+    if (v < 0) {
+      v = 0;
+      changed = true;
+    } else if (v > 1) {
+      v = 1;
+      changed = true;
+    }
+    dist[zone] = v;
+    total += v;
+  });
+
+  if (total !== 1) {
+    changed = true;
+    if (total > 1) {
+      let excess = total - 1;
+      zones
+        .slice()
+        .sort((a, b) => dist[b] - dist[a])
+        .forEach(zone => {
+          if (excess <= 0) return;
+          const reduce = Math.min(dist[zone], excess);
+          dist[zone] -= reduce;
+          excess -= reduce;
+        });
+    } else {
+      let deficit = 1 - total;
+      zones
+        .slice()
+        .sort((a, b) => dist[b] - dist[a])
+        .forEach(zone => {
+          if (deficit <= 0) return;
+          const add = Math.min(1 - dist[zone], deficit);
+          dist[zone] += add;
+          deficit -= add;
+        });
+    }
+  }
+
+  if (changed && typeof updateMirrorOversightUI === 'function') {
+    updateMirrorOversightUI();
+  }
+}
+
 function updateAssignmentDisplays() {
   const types = ['mirrors', 'lanterns'];
   const zones = ['tropical', 'temperate', 'polar', 'focus', 'any'];
@@ -653,6 +704,10 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 }
 
 class SpaceMirrorFacilityProject extends Project {
+  update(deltaTime) {
+    super.update(deltaTime);
+  }
+
   renderUI(container) {
     const mirrorDetails = document.createElement('div');
     mirrorDetails.classList.add('info-card', 'mirror-details-card');
