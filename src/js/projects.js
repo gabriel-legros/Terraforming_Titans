@@ -122,7 +122,7 @@ class Project extends EffectableEntity {
       return false;
     }
 
-    if(this.repeatCount >= this.maxRepeatCount){
+    if(this.repeatCount && this.maxRepeatCount && this.repeatCount >= this.maxRepeatCount){
       return false;
     }
 
