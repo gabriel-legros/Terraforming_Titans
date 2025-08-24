@@ -447,7 +447,14 @@ function updateProjectUI(projectName) {
 
   // Update Spaceships Assigned display if applicable
   if (elements?.assignedSpaceshipsDisplay && project.assignedSpaceships != null) {
-    elements.assignedSpaceshipsDisplay.textContent = `Spaceships Assigned: ${formatBigInteger(project.assignedSpaceships)}`;
+    const maxShips = typeof project.getMaxAssignableShips === 'function'
+      ? project.getMaxAssignableShips()
+      : null;
+    const assignedText = formatBigInteger(project.assignedSpaceships);
+    elements.assignedSpaceshipsDisplay.textContent =
+      maxShips != null
+        ? `Spaceships Assigned: ${assignedText}/${formatBigInteger(maxShips)}`
+        : `Spaceships Assigned: ${assignedText}`;
   }
 
   // Update Available Spaceships display if applicable
