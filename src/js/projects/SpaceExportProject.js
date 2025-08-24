@@ -33,6 +33,7 @@ class SpaceExportProject extends SpaceExportBaseProject {
       tooltip.classList.add('info-tooltip-icon');
       tooltip.title =
         'Earth is not interested in purchasing more metal than about 2 order of magnitude its 2025 yearly metal production.  This value may change as you progress further into the game.';
+      tooltip.innerHTML = '&#9432;';
       elements.maxDisposalElement.appendChild(document.createTextNode(' '));
       elements.maxDisposalElement.appendChild(tooltip);
     }
