@@ -15,11 +15,17 @@ describe('new game resets journal history', () => {
     });
 
     function createNullElement() {
-      return new Proxy(function () {}, {
-        get: () => createNullElement(),
-        apply: () => createNullElement(),
+      const handler = {
+        get: (target, prop) => {
+          if (prop === 'firstChild') return null;
+          if (prop === 'children' || prop === 'childNodes') return [];
+          if (prop === 'classList') return { add() {}, remove() {}, toggle() {}, contains() { return false; } };
+          return new Proxy(function () {}, handler);
+        },
+        apply: () => new Proxy(function () {}, handler),
         set: () => true,
-      });
+      };
+      return new Proxy(function () {}, handler);
     }
     const nullElement = createNullElement();
     const doc = dom.window.document;
@@ -74,6 +80,7 @@ describe('new game resets journal history', () => {
       createMilestonesUI=()=>{};
       updateDayNightDisplay=()=>{};
       initializeSpaceUI=()=>{};
+      updateResourceDisplay=()=>{};
       addEffect=()=>{};
       removeEffect=()=>{};
       createPopup=()=>{};
