@@ -178,7 +178,7 @@
 
   /**
    * Run isolated equilibration.
-   * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync, timeoutMs, minRunMs }
+   * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync, timeoutMs, minRunMs, maxIterations }
    * onProgress: fn(0..1, info)
    */
   function runEquilibration(fullParams, options = {}, onProgress) {
@@ -189,6 +189,7 @@
     const chunkSteps = options.chunkSteps ?? 1000;
     const cancelToken = options.cancelToken;
     const minRunMs = options.minRunMs ?? (options.sync ? 0 : 30000);
+    const maxIterations = options.maxIterations ?? Infinity;
     let additionalRunMs = options.additionalRunMs ?? 60000;
     let timeoutMs = options.timeoutMs ?? (minRunMs + additionalRunMs);
 
@@ -273,7 +274,7 @@
               timeoutHandle = setTimeout(() => { timedOut = true; }, remainingTime); // Set a new one
             }
           }
-          const end = stepIdx + chunkSteps;
+          const end = Math.min(stepIdx + chunkSteps, maxIterations);
           for (; stepIdx < end; stepIdx++) {
             // Mirror the essential parts of terraforming.update():
             // 1) update luminosity/flux, 2) update surface temperatures, 3) advance resources
@@ -336,6 +337,7 @@
               }
             }
           }
+          if (stepIdx >= maxIterations) { finalize(true); return; }
           elapsed = Date.now() - startTime;
           if (options.sync) { loopChunk(); return; }
           setTimeout(loopChunk, 0);

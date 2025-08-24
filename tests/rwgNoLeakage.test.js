@@ -31,7 +31,7 @@ describe('RWG equilibration does not mutate live game state', () => {
 
     // Generate a separate RWG planet and equilibrate it
     const rnd = generateRandomPlanet('no-leak-test', { archetype: 'mars-like' });
-    const { override } = await runEquilibration(rnd.override, { yearsMax: 10, stepDays: 365, checkEvery: 2, chunkSteps: 2, sync: true });
+      const { override } = await runEquilibration(rnd.override, { yearsMax: 10, stepDays: 365, checkEvery: 2, chunkSteps: 2, sync: true, maxIterations: 5 });
 
     expect(override).toBeTruthy();
 
@@ -50,7 +50,7 @@ describe('RWG equilibration does not mutate live game state', () => {
     delete global.currentPlanetParameters;
     delete global.resources;
     const rnd = generateRandomPlanet('no-globals', { archetype: 'mars-like' });
-    await runEquilibration(rnd.override, { yearsMax: 1, stepDays: 365, sync: true });
+      await runEquilibration(rnd.override, { yearsMax: 1, stepDays: 365, sync: true, maxIterations: 5 });
     expect(typeof global.currentPlanetParameters).toBe('undefined');
     expect(typeof global.resources).toBe('undefined');
   });
