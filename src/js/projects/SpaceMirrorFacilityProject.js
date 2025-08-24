@@ -219,6 +219,15 @@ function updateAssignmentDisplays() {
         el.textContent = formatBuildingCount(mirrorOversightSettings.assignments[type][zone] || 0);
       }
     });
+
+    const availableEl = document.getElementById(`available-${type}`);
+    if (availableEl) {
+      const total = type === 'mirrors'
+        ? (buildings?.spaceMirror?.active || 0)
+        : (buildings?.hyperionLantern?.active || 0);
+      const assigned = zones.reduce((s, z) => s + (mirrorOversightSettings.assignments[type][z] || 0), 0);
+      availableEl.textContent = formatBuildingCount(Math.max(0, total - assigned));
+    }
   });
   const stepEl = document.getElementById('assignment-step-display');
   if (stepEl) stepEl.textContent = `x${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
@@ -337,6 +346,10 @@ function initializeMirrorOversightUI(container) {
         <span id="assignment-step-display">x1</span>
         <button id="assignment-mul10">x10</button>
       </div>
+    </div>
+    <div class="available-counts">
+      <div>Mirrors available: <span id="available-mirrors">0</span></div>
+      <div>Lanterns available: <span id="available-lanterns">0</span></div>
     </div>
     <div id="assignment-grid">
       <div class="grid-header">Zone</div>
@@ -856,6 +869,7 @@ if (typeof globalThis !== 'undefined') {
   globalThis.applyFocusedMelt = applyFocusedMelt;
   globalThis.calculateZoneSolarFluxWithFacility = calculateZoneSolarFluxWithFacility;
   globalThis.toggleFinerControls = toggleFinerControls;
+  globalThis.updateAssignmentDisplays = updateAssignmentDisplays;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -872,5 +886,6 @@ if (typeof module !== 'undefined' && module.exports) {
     distributeAssignmentsFromSliders,
     distributeAutoAssignments,
     toggleFinerControls,
+    updateAssignmentDisplays,
   };
 }
