@@ -565,8 +565,7 @@ class ProjectManager extends EffectableEntity {
       project.update(deltaTime);
 
       if (
-        typeof SpaceshipProject !== 'undefined' &&
-        project instanceof SpaceshipProject &&
+        typeof project.isContinuous === 'function' &&
         project.isContinuous() &&
         !project.autoStart &&
         project.isActive

@@ -196,6 +196,7 @@ describe('Cargo Rocket project', () => {
     expect(ctx.resources.colony.metal.value).toBe(1);
     expect(project.pendingResourceGains).toBeNull();
     expect(project.isContinuous()).toBe(true);
+    project.autoStart = true;
 
     project.selectedResources = [{ category: 'colony', resource: 'metal', quantity: 1 }];
     project.applyCostAndGain(1000);

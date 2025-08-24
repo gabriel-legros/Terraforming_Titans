@@ -129,6 +129,7 @@ Unassigned mirrors or lanterns no longer affect luminosity, and lantern controls
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
 
 # Changelogs
+- Cargo rocket continuous mode only produces or consumes resources when the Run checkbox is enabled.
 - The collector progress bar continues updating after the receiver is finished and controls stay disabled until the receiver completes.
 - The solar collector UI remains hidden until the receiver is built.
 - The collector cost now appears on the Dyson Swarm card.
