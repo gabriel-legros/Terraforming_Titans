@@ -23,10 +23,15 @@ function setMirrorDistribution(zone, value) {
     zones.filter(z => z !== zone).forEach(z => {
       if (excess > 0) {
         const reduce = Math.min(dist[z], excess);
-        dist[z] -= reduce;
+        dist[z] = Math.max(0, dist[z] - reduce);
         excess -= reduce;
       }
     });
+    total = dist.tropical + dist.temperate + dist.polar + dist.focus;
+    if (total > 1) {
+      const factor = 1 / total;
+      zones.forEach(z => { dist[z] = Math.max(0, dist[z] * factor); });
+    }
   }
   updateMirrorOversightUI();
 }
@@ -52,8 +57,8 @@ function distributeAssignmentsFromSliders(type) {
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
   const zones = ['tropical', 'temperate', 'polar', 'focus'];
-  const raw = zones.map(z => ({ zone: z, value: total * (dist[z] || 0) }));
-  const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
+  const raw = zones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
+  const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
   raw.push({ zone: 'any', value: total * globalPerc });
   const assignments = {};
   let used = 0;
@@ -61,7 +66,7 @@ function distributeAssignmentsFromSliders(type) {
     assignments[r.zone] = Math.floor(r.value);
     used += assignments[r.zone];
   });
-  let remaining = total - used;
+  let remaining = Math.max(0, total - used);
   raw.sort((a, b) => (b.value % 1) - (a.value % 1));
   for (const r of raw) {
     if (remaining <= 0) break;
@@ -82,13 +87,13 @@ function distributeAutoAssignments(type) {
   zones.forEach(z => {
     if (mirrorOversightSettings.autoAssign[z]) assignments[z] = 0;
   });
-  let used = zones.reduce((s, z) => s + (assignments[z] || 0), 0);
+  let used = zones.reduce((s, z) => s + Math.max(0, assignments[z] || 0), 0);
   let remaining = Math.max(0, total - used);
   const activeZones = zones.filter(z => mirrorOversightSettings.autoAssign[z]);
   if (activeZones.length && remaining > 0) {
     if (mirrorOversightSettings.autoAssign.any) {
       const dist = mirrorOversightSettings.distribution || {};
-      const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
+      const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
       if (activeZones.length === 1) {
         assignments.any += remaining;
         remaining = 0;
@@ -384,12 +389,12 @@ function updateMirrorOversightUI() {
   container.style.display = enabled ? 'block' : 'none';
   const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0 };
   const vals = {
-    tropical: Math.round((dist.tropical || 0) * 100),
-    temperate: Math.round((dist.temperate || 0) * 100),
-    polar: Math.round((dist.polar || 0) * 100),
-    focus: Math.round((dist.focus || 0) * 100)
+    tropical: Math.max(0, Math.round((dist.tropical || 0) * 100)),
+    temperate: Math.max(0, Math.round((dist.temperate || 0) * 100)),
+    polar: Math.max(0, Math.round((dist.polar || 0) * 100)),
+    focus: Math.max(0, Math.round((dist.focus || 0) * 100))
   };
-  const anyVal = 100 - vals.tropical - vals.temperate - vals.polar - vals.focus;
+  const anyVal = Math.max(0, 100 - vals.tropical - vals.temperate - vals.polar - vals.focus);
 
   const focusGroup = document.getElementById('mirror-oversight-focus-group');
   let focusEnabled = false;
@@ -590,8 +595,8 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
     } else {
       const dist = mirrorOversightSettings.distribution || {};
-      const zonePerc = dist[zone] || 0;
-      const globalPerc = 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0));
+      const zonePerc = Math.max(0, dist[zone] || 0);
+      const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
 
       distributedMirrorPower = totalMirrorPower * globalPerc;
       focusedMirrorPower = totalMirrorPower * zonePerc;

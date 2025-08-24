@@ -332,3 +332,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added an Any Zone option to space mirror finer controls for global distribution based on slider percentages.
 - Any Zone row now supports manual 0/±/Max assignment buttons for mirrors and lanterns.
 - Satellites project now features an Auto Max option that raises build count to the current colonist cap.
+- Space mirror oversight sliders now clamp values so none go negative and their total always sums to 100.
