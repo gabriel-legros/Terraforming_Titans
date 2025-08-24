@@ -21,6 +21,7 @@ describe('Import colonists auto-start rate', () => {
 
     const config = ctx.projectParameters.import_colonists_1;
     const project = new ctx.Project(config, 'import');
+    project.unlocked = true;
     project.start(ctx.resources);
     project.autoStart = true;
 

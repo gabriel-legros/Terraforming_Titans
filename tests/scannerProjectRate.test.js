@@ -26,6 +26,7 @@ describe('ScannerProject auto-start cost rate', () => {
 
     const config = ctx.projectParameters.satellite;
     const project = new ctx.ScannerProject(config, 'sat');
+    project.unlocked = true;
     project.buildCount = 5;
     project.start(ctx.resources);
     project.autoStart = true;
