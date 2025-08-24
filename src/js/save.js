@@ -198,9 +198,6 @@ function loadGame(slotOrCustomString) {
         }
       createColonyButtons(colonies);
       recalculateLandUsage();
-      if (typeof updateResourceDisplay === 'function') {
-        updateResourceDisplay(resources);
-      }
 
       if (gameState.selectedBuildCounts) {
         for (const key in gameState.selectedBuildCounts) {
