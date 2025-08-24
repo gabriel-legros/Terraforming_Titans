@@ -1,5 +1,27 @@
 globalGameIsLoadingFromSave = false;
 
+function recalculateLandUsage() {
+  if (!resources || !resources.surface || !resources.surface.land) return;
+  let reserved = 0;
+  if (typeof buildings !== 'undefined') {
+    for (const name in buildings) {
+      const b = buildings[name];
+      if (b.requiresLand && b.active > 0) {
+        reserved += b.active * b.requiresLand;
+      }
+    }
+  }
+  if (typeof colonies !== 'undefined') {
+    for (const name in colonies) {
+      const c = colonies[name];
+      if (c.requiresLand && c.active > 0) {
+        reserved += c.active * c.requiresLand;
+      }
+    }
+  }
+  resources.surface.land.reserved = reserved;
+}
+
 function getGameState() {
   return {
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
@@ -175,6 +197,10 @@ function loadGame(slotOrCustomString) {
           }
         }
       createColonyButtons(colonies);
+      recalculateLandUsage();
+      if (typeof updateResourceDisplay === 'function') {
+        updateResourceDisplay(resources);
+      }
 
       if (gameState.selectedBuildCounts) {
         for (const key in gameState.selectedBuildCounts) {
@@ -599,3 +625,7 @@ function updateStatisticsDisplay() {
 
 // Call the function to add event listeners when the page loads
 document.addEventListener('DOMContentLoaded', addSaveSlotListeners);
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { getGameState, loadGame, recalculateLandUsage };
+}

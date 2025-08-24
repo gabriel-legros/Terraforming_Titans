@@ -365,7 +365,7 @@ class Building extends EffectableEntity {
           resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
       }
-      if(this.requiresLand){
+      if(this.requiresLand && activate){
         resources.surface.land.reserve(this.requiresLand*buildCount);
       }
       const oldActive = this.active;

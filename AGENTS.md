@@ -335,3 +335,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror oversight sliders now clamp values so none go negative and their total always sums to 100.
 - Space disposal projects can auto-disable gas exports when atmospheric pressure falls below a configurable kPa threshold.
 - The Any Zone slider in the space mirror facility can be increased, taking percentage from the largest other sliders so the total remains 100%.
+- Land usage recalculates on save load, and inactive structure construction checks land without reserving it.
