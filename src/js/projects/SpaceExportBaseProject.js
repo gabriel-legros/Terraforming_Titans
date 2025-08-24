@@ -3,6 +3,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
     super(config, name);
     this.disableBelowTemperature = false;
     this.disableTemperatureThreshold = 303.15;
+    this.disableBelowPressure = false;
+    this.disablePressureThreshold = 0;
   }
   renderUI(container) {
     super.renderUI(container);
@@ -74,6 +76,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     disposalSelect.addEventListener('change', (event) => {
       const [category, resource] = event.target.value.split(':');
       this.selectedDisposalResource = { category, resource };
+      this.updateUI();
     });
     selectContainer.append(disposalLabel, disposalSelect);
   
@@ -102,6 +105,54 @@ class SpaceExportBaseProject extends SpaceshipProject {
     };
 
     return sectionContainer;
+  }
+
+  isGasResource(resource) {
+    const gases = ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane'];
+    return gases.includes(resource);
+  }
+
+  createPressureControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'pressure-control');
+    control.id = `${this.name}-pressure-control`;
+    control.style.display = 'none';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('pressure-checkbox');
+    checkbox.checked = this.disableBelowPressure;
+    checkbox.addEventListener('change', () => {
+      this.disableBelowPressure = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.textContent = 'Disable if pressure below: ';
+    control.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.classList.add('pressure-input');
+    input.value = this.disablePressureThreshold;
+    input.addEventListener('input', () => {
+      this.disablePressureThreshold = parseFloat(input.value) || 0;
+    });
+    control.appendChild(input);
+
+    const unit = document.createElement('span');
+    unit.textContent = 'kPa';
+    control.appendChild(unit);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      pressureControl: control,
+      pressureCheckbox: checkbox,
+      pressureInput: input,
+    };
+
+    return control;
   }
 
   createTemperatureControl() {
@@ -158,6 +209,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (!elements.temperatureControl) {
       container.appendChild(this.createTemperatureControl());
     }
+    if (!elements.pressureControl) {
+      container.appendChild(this.createPressureControl());
+    }
   }
 
   updateUI() {
@@ -173,8 +227,12 @@ class SpaceExportBaseProject extends SpaceshipProject {
           projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
     }
 
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    const isGas = this.selectedDisposalResource?.category === 'atmospheric' &&
+      this.isGasResource(this.selectedDisposalResource.resource);
+
     if (elements.temperatureControl) {
-      elements.temperatureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+      elements.temperatureControl.style.display = hasMonitoring ? 'flex' : 'none';
     }
     if (elements.temperatureCheckbox) {
       elements.temperatureCheckbox.checked = this.disableBelowTemperature;
@@ -186,6 +244,16 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     if (elements.temperatureUnit) {
       elements.temperatureUnit.textContent = getTemperatureUnit();
+    }
+
+    if (elements.pressureControl) {
+      elements.pressureControl.style.display = hasMonitoring && isGas ? 'flex' : 'none';
+    }
+    if (elements.pressureCheckbox) {
+      elements.pressureCheckbox.checked = this.disableBelowPressure;
+    }
+    if (elements.pressureInput && document.activeElement !== elements.pressureInput) {
+      elements.pressureInput.value = this.disablePressureThreshold;
     }
 
     if (elements.disposalPerShipElement) {
@@ -254,6 +322,21 @@ class SpaceExportBaseProject extends SpaceshipProject {
         }
       }
     }
+    if (this.disableBelowPressure && this.selectedDisposalResource?.category === 'atmospheric' &&
+        this.isGasResource(this.selectedDisposalResource.resource) && typeof calculateAtmosphericPressure === 'function') {
+      if (typeof terraforming !== 'undefined' && resources.atmospheric?.[this.selectedDisposalResource.resource]) {
+        const amount = resources.atmospheric[this.selectedDisposalResource.resource].value || 0;
+        const pressurePa = calculateAtmosphericPressure(
+          amount,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
+        );
+        const pressureKPa = pressurePa / 1000;
+        if (pressureKPa <= this.disablePressureThreshold) {
+          return true;
+        }
+      }
+    }
     return false;
   }
 
@@ -269,6 +352,22 @@ class SpaceExportBaseProject extends SpaceshipProject {
       }
     }
 
+    if (this.disableBelowPressure && this.selectedDisposalResource?.category === 'atmospheric' &&
+        this.isGasResource(this.selectedDisposalResource.resource) && typeof calculateAtmosphericPressure === 'function') {
+      if (typeof terraforming !== 'undefined' && resources.atmospheric?.[this.selectedDisposalResource.resource]) {
+        const amount = resources.atmospheric[this.selectedDisposalResource.resource].value || 0;
+        const pressurePa = calculateAtmosphericPressure(
+          amount,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
+        );
+        const pressureKPa = pressurePa / 1000;
+        if (pressureKPa <= this.disablePressureThreshold) {
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 
@@ -277,6 +376,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
       ...super.saveState(),
       disableBelowTemperature: this.disableBelowTemperature,
       disableTemperatureThreshold: this.disableTemperatureThreshold,
+      disableBelowPressure: this.disableBelowPressure,
+      disablePressureThreshold: this.disablePressureThreshold,
     };
   }
 
@@ -284,6 +385,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
     super.loadState(state);
     this.disableBelowTemperature = state.disableBelowTemperature || false;
     this.disableTemperatureThreshold = typeof state.disableTemperatureThreshold === 'number' ? state.disableTemperatureThreshold : 303.15;
+    this.disableBelowPressure = state.disableBelowPressure || false;
+    this.disablePressureThreshold = typeof state.disablePressureThreshold === 'number' ? state.disablePressureThreshold : 0;
   }
 }
 
