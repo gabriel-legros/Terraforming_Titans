@@ -470,14 +470,10 @@ function updateProjectUI(projectName) {
   if (elements.autoStartCheckbox) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
   }
-  if (
-    elements.autoStartLabel &&
-    typeof SpaceshipProject !== 'undefined' &&
-    project instanceof SpaceshipProject
-  ) {
-    elements.autoStartLabel.textContent = project.isContinuous()
-      ? 'Run'
-      : 'Auto start';
+  if (elements.autoStartLabel) {
+    const continuous =
+      typeof project.isContinuous === 'function' && project.isContinuous();
+    elements.autoStartLabel.textContent = continuous ? 'Run' : 'Auto start';
   }
 
 
@@ -541,7 +537,12 @@ function updateProjectUI(projectName) {
 
       // Update the duration in the progress bar display
       if (elements.progressButton) {
-        if (typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject && project.isContinuous()) {
+        const isContinuousProject =
+          typeof project.isContinuous === 'function' &&
+          project.isContinuous() &&
+          ((typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) ||
+            (typeof CargoRocketProject !== 'undefined' && project instanceof CargoRocketProject));
+        if (isContinuousProject) {
           if (project.autoStart && project.isActive && !project.isPaused) {
             elements.progressButton.textContent = 'Continuous';
             elements.progressButton.style.background = '#4caf50';

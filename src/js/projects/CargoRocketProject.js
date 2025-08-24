@@ -2,6 +2,11 @@ class CargoRocketProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.spaceshipPriceIncrease = 0;
+    this.convertedToContinuous = false;
+  }
+
+  isContinuous() {
+    return this.isBooleanFlagSet && this.isBooleanFlagSet('continuousTrading');
   }
 
   createCargoSelectionUI(container) {
@@ -189,7 +194,30 @@ class CargoRocketProject extends Project {
         this.spaceshipPriceIncrease = 0;
       }
     }
+    if (this.isContinuous() && !this.convertedToContinuous) {
+      if (this.pendingResourceGains && this.pendingResourceGains.length) {
+        this.applyResourceChoiceGain();
+      }
+      this.pendingResourceGains = null;
+      this.convertedToContinuous = true;
+      if (this.isActive) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+      }
+    }
     super.update(delta);
+  }
+
+  start(resources) {
+    if (this.isContinuous()) {
+      if (!this.canStart()) return false;
+      this.isActive = true;
+      this.isPaused = false;
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return true;
+    }
+    return super.start(resources);
   }
 
   applyOneTimeStart(effect) {
@@ -216,6 +244,10 @@ class CargoRocketProject extends Project {
       return false;
     }
 
+    if (this.isContinuous()) {
+      return true;
+    }
+
     let totalFundingCost = 0;
     this.selectedResources.forEach(({ category, resource, quantity }) => {
       const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
@@ -234,6 +266,7 @@ class CargoRocketProject extends Project {
   }
 
   deductResources(resources) {
+    if (this.isContinuous()) return;
     super.deductResources(resources);
     const cost = this.getResourceChoiceGainCost();
     resources.colony.funding.decrease(cost);
@@ -247,6 +280,22 @@ class CargoRocketProject extends Project {
   }
 
   getResourceChoiceGainCost(useSelected = true) {
+    if (this.isContinuous()) {
+      const source = this.selectedResources;
+      if (source && source.length > 0) {
+        let totalFundingCost = 0;
+        source.forEach(({ category, resource, quantity }) => {
+          const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+          const cost = resource === 'spaceships'
+            ? this.getSpaceshipTotalCost(quantity, basePrice)
+            : basePrice * quantity;
+          totalFundingCost += cost;
+        });
+        return totalFundingCost;
+      }
+      return 0;
+    }
+
     // Calculate funding cost for selected resources. When useSelected is true,
     // this also updates pendingResourceGains which are applied on completion.
     const source = useSelected ? this.selectedResources : this.pendingResourceGains;
@@ -288,7 +337,45 @@ class CargoRocketProject extends Project {
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
-    if (this.isActive && this.autoStart) {
+    if (!this.isActive) return totals;
+    if (this.isContinuous()) {
+      const seconds = deltaTime / 1000;
+      if (this.selectedResources && this.selectedResources.length > 0) {
+        let costPerSecond = 0;
+        this.selectedResources.forEach(({ category, resource, quantity }) => {
+          const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+          const perSecCost = resource === 'spaceships'
+            ? this.getSpaceshipTotalCost(quantity, basePrice)
+            : basePrice * quantity;
+          costPerSecond += perSecCost;
+          if (!totals.gain[category]) totals.gain[category] = {};
+          totals.gain[category][resource] =
+            (totals.gain[category][resource] || 0) + quantity * seconds;
+          if (applyRates) {
+            resources[category][resource].modifyRate(
+              quantity * (applyRates ? productivity : 1),
+              'Cargo Rockets',
+              'project'
+            );
+          }
+        });
+        if (costPerSecond) {
+          if (!totals.cost.colony) totals.cost.colony = {};
+          totals.cost.colony.funding =
+            (totals.cost.colony.funding || 0) + costPerSecond * seconds;
+          if (applyRates) {
+            resources.colony.funding.modifyRate(
+              -costPerSecond * (applyRates ? productivity : 1),
+              'Cargo Rockets',
+              'project'
+            );
+          }
+        }
+      }
+      return totals;
+    }
+
+    if (this.autoStart) {
       const duration = this.getEffectiveDuration();
       const rate = 1000 / duration;
       const timeFraction = deltaTime / duration;
@@ -326,6 +413,50 @@ class CargoRocketProject extends Project {
       }
     }
     return totals;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isActive || !this.isContinuous()) return;
+    if (!this.selectedResources || this.selectedResources.length === 0) return;
+    const seconds = deltaTime / 1000;
+    const purchases = [];
+    let costPerSecond = 0;
+    this.selectedResources.forEach(({ category, resource, quantity }) => {
+      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+      const perSecCost = resource === 'spaceships'
+        ? this.getSpaceshipTotalCost(quantity, basePrice)
+        : basePrice * quantity;
+      purchases.push({ category, resource, quantity, perSecCost });
+      costPerSecond += perSecCost;
+    });
+    let totalCost = costPerSecond * seconds * productivity;
+    let available = resources.colony.funding.value;
+    if (totalCost > available) {
+      if (available <= 0) return;
+      const scale = available / totalCost;
+      purchases.forEach(p => { p.quantity *= scale; p.perSecCost *= scale; });
+      totalCost = available;
+    }
+    if (totalCost > 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+        accumulatedChanges.colony.funding = (accumulatedChanges.colony.funding || 0) - totalCost;
+      } else {
+        resources.colony.funding.decrease(totalCost);
+      }
+    }
+    purchases.forEach(({ category, resource, quantity }) => {
+      const amount = quantity * seconds * productivity;
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+        accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) + amount;
+      } else {
+        resources[category][resource].increase(amount);
+      }
+      if (resource === 'spaceships') {
+        this.applySpaceshipPurchase(amount);
+      }
+    });
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {

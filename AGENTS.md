@@ -274,6 +274,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Self Replicating Ships research now costs 8M advanced research points.
 - Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.
 - Cargo Rocket project applies rates only once by honoring the `applyRates` flag in `estimateProjectCostAndGain`.
+- Cargo Rocket project becomes continuous after Ship trading research, immediately granting any pending gains and purchasing resources with funding over time.
+- Cargo Rocket continuous mode displays a "Continuous" progress bar and a "Run" auto-start label.
 - Milestone festival color changed to a warm green.
 - Save-to-file default filenames include the current world name and timestamp.
 - Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.

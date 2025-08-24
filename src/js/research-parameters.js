@@ -800,7 +800,7 @@ const researchParameters = {
       {
         id: 'trading',
         name: 'Ship trading',
-        description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Also significantly reduces the duration of cargo rockets.',
+        description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Cargo rockets become continuous, consuming funding and delivering purchases in real time.',
         cost: { research: 50000000 },
         prerequisites: [],
         effects: [
@@ -819,7 +819,7 @@ const researchParameters = {
               target : 'project',
               targetId : 'cargo_rocket',
               type: 'booleanFlag',
-              flagId : 'instantDuration',
+              flagId : 'continuousTrading',
               value : true
             }
         ],
