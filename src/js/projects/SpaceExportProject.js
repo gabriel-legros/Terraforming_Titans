@@ -25,13 +25,18 @@ class SpaceExportProject extends SpaceExportBaseProject {
     super.assignSpaceships(adjusted);
   }
 
-  updateUI() {
-    super.updateUI();
+  createResourceDisposalUI() {
+    const sectionContainer = super.createResourceDisposalUI();
     const elements = projectElements[this.name];
     if (elements && elements.maxDisposalElement) {
-      const capText = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
-      elements.maxDisposalElement.innerHTML = `${capText} <span class="info-tooltip-icon" title="Earth is not interested in purchasing more metal than about 2 order of magnitude its 2025 yearly metal production.  This value may change as you progress further into the game.">&#9432;</span>`;
+      const tooltip = document.createElement('span');
+      tooltip.classList.add('info-tooltip-icon');
+      tooltip.title =
+        'Earth is not interested in purchasing more metal than about 2 order of magnitude its 2025 yearly metal production.  This value may change as you progress further into the game.';
+      elements.maxDisposalElement.appendChild(document.createTextNode(' '));
+      elements.maxDisposalElement.appendChild(tooltip);
     }
+    return sectionContainer;
   }
 }
 

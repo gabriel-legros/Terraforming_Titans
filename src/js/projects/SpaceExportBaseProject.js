@@ -88,6 +88,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
     totalDisposal.id = `${this.name}-total-disposal`;
     const maxDisposal = document.createElement('div');
     maxDisposal.id = `${this.name}-max-disposal`;
+    const maxDisposalText = document.createElement('span');
+    maxDisposal.appendChild(maxDisposalText);
     const gainPerResource = document.createElement('div');
     gainPerResource.id = `${this.name}-gain-per-ship`;
     detailsGrid.append(selectContainer, disposalPerShip, totalDisposal, maxDisposal, gainPerResource);
@@ -101,6 +103,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       disposalPerShipElement: disposalPerShip,
       totalDisposalElement: totalDisposal,
       maxDisposalElement: maxDisposal,
+      maxDisposalText,
       gainPerResourceElement: gainPerResource,
     };
 
@@ -277,8 +280,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
       }
     }
 
-    if (elements.maxDisposalElement && typeof this.getExportCap === 'function') {
-      elements.maxDisposalElement.textContent = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
+    if (elements.maxDisposalText && typeof this.getExportCap === 'function') {
+      elements.maxDisposalText.textContent = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
     }
     
     if (elements.gainPerResourceElement && this.attributes.fundingGainAmount) {
