@@ -347,15 +347,28 @@ function initializeMirrorOversightUI(container) {
         <button id="assignment-mul10">x10</button>
       </div>
     </div>
-    <div class="available-counts">
-      <div>Mirrors available: <span id="available-mirrors">0</span></div>
-      <div>Lanterns available: <span id="available-lanterns">0</span></div>
-    </div>
     <div id="assignment-grid">
       <div class="grid-header">Zone</div>
       <div class="grid-header">Mirrors</div>
       <div class="grid-header">Lanterns</div>
       <div class="grid-header">Auto</div>
+
+      <div class="grid-zone-label">Available</div>
+      <div class="assign-cell">
+        <button class="assign-zero" style="visibility: hidden;">0</button>
+        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <span id="available-mirrors">0</span>
+        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assign-max" style="visibility: hidden;">Max</button>
+      </div>
+      <div class="assign-cell available-lantern-cell" data-type="lanterns">
+        <button class="assign-zero" style="visibility: hidden;">0</button>
+        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <span id="available-lanterns">0</span>
+        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assign-max" style="visibility: hidden;">Max</button>
+      </div>
+      <div class="grid-auto-cell"></div>
 
       ${['tropical', 'temperate', 'polar', 'any'].map(zone => `
         <div class="grid-zone-label" data-zone="${zone}">${zone === 'any' ? 'Any Zone' : zone.charAt(0).toUpperCase() + zone.slice(1)}</div>
@@ -526,6 +539,15 @@ function updateMirrorOversightUI() {
   document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]').forEach(cell => {
     cell.style.display = lanternUnlocked ? 'flex' : 'none';
   });
+
+  document.querySelectorAll('.available-lantern-cell').forEach(cell => {
+    cell.style.display = lanternUnlocked ? 'flex' : 'none';
+  });
+
+  const assignmentGrid = document.getElementById('assignment-grid');
+  if (assignmentGrid) {
+    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 50px' : '100px 1fr 50px';
+  }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
   ['tropical','temperate','polar','focus','any'].forEach(zone => {
