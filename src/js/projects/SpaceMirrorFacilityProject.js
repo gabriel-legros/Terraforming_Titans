@@ -705,7 +705,6 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
 class SpaceMirrorFacilityProject extends Project {
   update(deltaTime) {
-    sanitizeMirrorDistribution();
     super.update(deltaTime);
   }
 
