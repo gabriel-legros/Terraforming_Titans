@@ -219,6 +219,15 @@ function updateAssignmentDisplays() {
         el.textContent = formatBuildingCount(mirrorOversightSettings.assignments[type][zone] || 0);
       }
     });
+
+    const availableEl = document.getElementById(`available-${type}`);
+    if (availableEl) {
+      const total = type === 'mirrors'
+        ? (buildings?.spaceMirror?.active || 0)
+        : (buildings?.hyperionLantern?.active || 0);
+      const assigned = zones.reduce((s, z) => s + (mirrorOversightSettings.assignments[type][z] || 0), 0);
+      availableEl.textContent = formatBuildingCount(Math.max(0, total - assigned));
+    }
   });
   const stepEl = document.getElementById('assignment-step-display');
   if (stepEl) stepEl.textContent = `x${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
@@ -343,6 +352,23 @@ function initializeMirrorOversightUI(container) {
       <div class="grid-header">Mirrors</div>
       <div class="grid-header">Lanterns</div>
       <div class="grid-header">Auto</div>
+
+      <div class="grid-zone-label">Available</div>
+      <div class="assign-cell">
+        <button class="assign-zero" style="visibility: hidden;">0</button>
+        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <span id="available-mirrors">0</span>
+        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assign-max" style="visibility: hidden;">Max</button>
+      </div>
+      <div class="assign-cell available-lantern-cell" data-type="lanterns">
+        <button class="assign-zero" style="visibility: hidden;">0</button>
+        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <span id="available-lanterns">0</span>
+        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assign-max" style="visibility: hidden;">Max</button>
+      </div>
+      <div class="grid-auto-cell"></div>
 
       ${['tropical', 'temperate', 'polar', 'any'].map(zone => `
         <div class="grid-zone-label" data-zone="${zone}">${zone === 'any' ? 'Any Zone' : zone.charAt(0).toUpperCase() + zone.slice(1)}</div>
@@ -513,6 +539,15 @@ function updateMirrorOversightUI() {
   document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]').forEach(cell => {
     cell.style.display = lanternUnlocked ? 'flex' : 'none';
   });
+
+  document.querySelectorAll('.available-lantern-cell').forEach(cell => {
+    cell.style.display = lanternUnlocked ? 'flex' : 'none';
+  });
+
+  const assignmentGrid = document.getElementById('assignment-grid');
+  if (assignmentGrid) {
+    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 50px' : '100px 1fr 50px';
+  }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
   ['tropical','temperate','polar','focus','any'].forEach(zone => {
@@ -856,6 +891,7 @@ if (typeof globalThis !== 'undefined') {
   globalThis.applyFocusedMelt = applyFocusedMelt;
   globalThis.calculateZoneSolarFluxWithFacility = calculateZoneSolarFluxWithFacility;
   globalThis.toggleFinerControls = toggleFinerControls;
+  globalThis.updateAssignmentDisplays = updateAssignmentDisplays;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -872,5 +908,6 @@ if (typeof module !== 'undefined' && module.exports) {
     distributeAssignmentsFromSliders,
     distributeAutoAssignments,
     toggleFinerControls,
+    updateAssignmentDisplays,
   };
 }

@@ -735,7 +735,6 @@
     justify-content: center;
     gap: 4px;
 }
-
 #assignment-grid .assign-cell span {
     font-weight: bold;
     min-width: 40px;
