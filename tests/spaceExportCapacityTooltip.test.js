@@ -82,6 +82,7 @@ describe('Space export max capacity tooltip', () => {
     const element = ctx.projectElements.export.maxDisposalElement;
     const tooltip = element.querySelector('.info-tooltip-icon');
     expect(tooltip).not.toBeNull();
+    expect(tooltip.textContent).toBe('\u24D8');
     expect(tooltip.getAttribute('title')).toBe(
       'Earth is not interested in purchasing more metal than about 2 order of magnitude its 2025 yearly metal production.  This value may change as you progress further into the game.'
     );

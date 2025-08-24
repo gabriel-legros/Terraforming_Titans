@@ -343,3 +343,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Metal exportation project shows assigned ship count as current/maximum so players know remaining capacity.
 - Space export project's max export capacity line includes a tooltip explaining Earth's metal purchase limit.
 - Max export capacity tooltip is generated once and no longer updates each tick, making it readable.
+- Max export capacity tooltip now displays an info icon so the explanation is visible.
