@@ -118,6 +118,10 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
+    if (!this.unlocked){
+      return false;
+    }
+
     if (this.isActive) {
       return false;
     }
