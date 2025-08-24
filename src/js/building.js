@@ -303,7 +303,10 @@ class Building extends EffectableEntity {
   }
 
   landAffordCount(){
-    return Math.floor((resources.surface.land.value - resources.surface.land.reserved) / this.requiresLand);  
+    if(!this.requiresLand){
+      return Infinity;
+    }
+    return Math.floor((resources.surface.land.value - resources.surface.land.reserved) / this.requiresLand);
   }
 
   adjustLand(amount){
@@ -365,7 +368,7 @@ class Building extends EffectableEntity {
           resources['underground'][deposit].reserve(this.requiresDeposit.underground[deposit]*buildCount);
         }
       }
-      if(this.requiresLand){
+      if(this.requiresLand && activate){
         resources.surface.land.reserve(this.requiresLand*buildCount);
       }
       const oldActive = this.active;
