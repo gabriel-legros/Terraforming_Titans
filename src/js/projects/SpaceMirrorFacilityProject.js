@@ -13,26 +13,55 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
 
 function setMirrorDistribution(zone, value) {
   const zones = ['tropical', 'temperate', 'polar', 'focus'];
-  if (!zones.includes(zone)) return;
   const dist = mirrorOversightSettings.distribution;
-  const v = Math.max(0, Math.min(100, Math.round(value)));
-  dist[zone] = v / 100;
-  let total = dist.tropical + dist.temperate + dist.polar + dist.focus;
-  if (total > 1) {
-    let excess = total - 1;
-    zones.filter(z => z !== zone).forEach(z => {
-      if (excess > 0) {
-        const reduce = Math.min(dist[z], excess);
-        dist[z] = Math.max(0, dist[z] - reduce);
-        excess -= reduce;
+  const v = Math.max(0, Math.min(100, Math.round(value))) / 100;
+
+  if (zone === 'any') {
+    const currentAny = 1 - (dist.tropical + dist.temperate + dist.polar + dist.focus);
+    let delta = v - currentAny;
+    if (delta > 0) {
+      const sorted = zones.map(z => ({ zone: z, val: dist[z] }))
+        .sort((a, b) => b.val - a.val);
+      for (const item of sorted) {
+        if (delta <= 0) break;
+        const take = Math.min(item.val, delta);
+        dist[item.zone] = item.val - take;
+        delta -= take;
       }
-    });
-    total = dist.tropical + dist.temperate + dist.polar + dist.focus;
-    if (total > 1) {
-      const factor = 1 / total;
-      zones.forEach(z => { dist[z] = Math.max(0, dist[z] * factor); });
+    } else if (delta < 0) {
+      let remaining = -delta;
+      const sorted = zones.map(z => ({ zone: z, val: dist[z] }))
+        .sort((a, b) => b.val - a.val);
+      for (const item of sorted) {
+        if (remaining <= 0) break;
+        const add = Math.min(1 - item.val, remaining);
+        dist[item.zone] = item.val + add;
+        remaining -= add;
+      }
     }
+  } else if (zones.includes(zone)) {
+    dist[zone] = v;
+    let total = dist.tropical + dist.temperate + dist.polar + dist.focus;
+    if (total > 1) {
+      let excess = total - 1;
+      zones.filter(z => z !== zone)
+        .sort((a, b) => dist[b] - dist[a])
+        .forEach(z => {
+          if (excess > 0) {
+            const reduce = Math.min(dist[z], excess);
+            dist[z] = Math.max(0, dist[z] - reduce);
+            excess -= reduce;
+          }
+        });
+    }
+  } else {
+    return;
   }
+
+  zones.forEach(z => {
+    dist[z] = Math.max(0, Math.min(1, dist[z]));
+  });
+
   updateMirrorOversightUI();
 }
 
@@ -188,7 +217,7 @@ function initializeMirrorOversightUI(container) {
       </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
-        <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100" disabled>
+        <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100">
         <span id="mirror-oversight-any-value" class="slider-value">100%</span>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
@@ -203,6 +232,7 @@ function initializeMirrorOversightUI(container) {
     temperate: div.querySelector('#mirror-oversight-temperate'),
     polar: div.querySelector('#mirror-oversight-polar'),
     focus: div.querySelector('#mirror-oversight-focus'),
+    any: div.querySelector('#mirror-oversight-any'),
   };
   Object.keys(sliders).forEach(zone => {
     sliders[zone].addEventListener('input', () => {
