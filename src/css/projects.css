@@ -737,7 +737,7 @@
 }
 #assignment-grid .assign-cell span {
     font-weight: bold;
-    min-width: 40px;
+    min-width: 60px;
     text-align: center;
 }
 
