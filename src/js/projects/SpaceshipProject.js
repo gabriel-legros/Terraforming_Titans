@@ -309,7 +309,14 @@ class SpaceshipProject extends Project {
       elements.autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
     }
     if (elements.assignedSpaceshipsDisplay) {
-        elements.assignedSpaceshipsDisplay.textContent = formatBigInteger(this.assignedSpaceships);
+        const maxShips = typeof this.getMaxAssignableShips === 'function'
+          ? this.getMaxAssignableShips()
+          : null;
+        const assignedText = formatBigInteger(this.assignedSpaceships);
+        elements.assignedSpaceshipsDisplay.textContent =
+          maxShips != null
+            ? `${assignedText}/${formatBigInteger(maxShips)}`
+            : assignedText;
     }
     if (elements.availableSpaceshipsDisplay) {
         elements.availableSpaceshipsDisplay.textContent = formatBigInteger(Math.floor(resources.special.spaceships.value));

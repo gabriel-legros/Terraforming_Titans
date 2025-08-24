@@ -340,3 +340,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - The Any Zone slider in the space mirror facility can be increased, taking percentage from the largest other sliders so the total remains 100%.
 - Land usage recalculates on save load, and inactive structure construction checks land without reserving it.
 - Space mirror facility now verifies slider percentages each tick, clamping out-of-range values and ensuring they total 100%.
+- Metal exportation project shows assigned ship count as current/maximum so players know remaining capacity.
