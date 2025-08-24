@@ -122,6 +122,10 @@ class Project extends EffectableEntity {
       return false;
     }
 
+    if(this.repeatCount >= this.maxRepeatCount){
+      return false;
+    }
+
     if (this.isActive) {
       return false;
     }
