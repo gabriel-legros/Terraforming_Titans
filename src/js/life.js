@@ -40,7 +40,7 @@ class LifeAttribute {
           BASE_OPTIMAL_GROWTH_TEMPERATURE + this.value
         ).toFixed(2) + 'K';
       case 'growthTemperatureTolerance':
-        return (this.value * 0.5).toFixed(2) + 'K';
+        return (this.value * 0.5).toFixed(2);
       case 'photosynthesisEfficiency':
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'radiationTolerance':
