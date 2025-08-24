@@ -169,4 +169,54 @@ describe('continuous spaceship project automation', () => {
     applyChanges(ctx.resources, changes);
     expect(ctx.resources.atmospheric.greenhouseGas.value).toBeLessThan(ghgAfterStop);
   });
+
+  test('space disposal halts and resumes based on pressure automation', () => {
+    const config = {
+      name: 'Disposal',
+      category: 'resources',
+      cost: {},
+      duration: 1000,
+      description: '',
+      repeatable: true,
+      unlocked: true,
+      attributes: {
+        spaceExport: true,
+        disposalAmount: 10,
+        costPerShip: { colony: { energy: 5 } },
+        disposable: { atmospheric: ['oxygen'] },
+        defaultDisposal: { category: 'atmospheric', resource: 'oxygen' }
+      }
+    };
+    ctx.resources.atmospheric.oxygen = stubResource(6);
+    const project = new ctx.SpaceDisposalProject(config, 'disposePressure');
+    project.assignedSpaceships = 150;
+    project.autoStart = true;
+    project.disableBelowPressure = true;
+    project.disablePressureThreshold = 5;
+    project.waitForCapacity = false;
+    project.selectedDisposalResource = { category: 'atmospheric', resource: 'oxygen' };
+    expect(project.canStart()).toBe(true);
+    project.start(ctx.resources);
+    project.update(1000);
+    let changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
+    expect(ctx.resources.atmospheric.oxygen.value).toBeLessThan(6);
+    ctx.resources.atmospheric.oxygen.value = 4; // below threshold
+    project.update(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
+    expect(project.isActive).toBe(false);
+    const oxygenAfterStop = ctx.resources.atmospheric.oxygen.value;
+    ctx.resources.atmospheric.oxygen.value = 6; // above threshold
+    if (project.autoStart && !project.isActive && project.canStart()) {
+      project.start(ctx.resources);
+    }
+    project.update(1000);
+    changes = createChanges(ctx.resources);
+    project.applyCostAndGain(1000, changes);
+    applyChanges(ctx.resources, changes);
+    expect(ctx.resources.atmospheric.oxygen.value).toBeLessThan(oxygenAfterStop);
+  });
 });
