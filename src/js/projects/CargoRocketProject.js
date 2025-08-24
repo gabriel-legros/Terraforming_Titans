@@ -339,6 +339,7 @@ class CargoRocketProject extends Project {
     const totals = { cost: {}, gain: {} };
     if (!this.isActive) return totals;
     if (this.isContinuous()) {
+      if (!this.autoStart) return totals;
       const seconds = deltaTime / 1000;
       if (this.selectedResources && this.selectedResources.length > 0) {
         let costPerSecond = 0;
@@ -416,7 +417,7 @@ class CargoRocketProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.isActive || !this.isContinuous()) return;
+    if (!this.isActive || !this.isContinuous() || !this.autoStart) return;
     if (!this.selectedResources || this.selectedResources.length === 0) return;
     const seconds = deltaTime / 1000;
     const purchases = [];
