@@ -27,6 +27,11 @@ class SpaceExportProject extends SpaceExportBaseProject {
 
   updateUI() {
     super.updateUI();
+    const elements = projectElements[this.name];
+    if (elements && elements.maxDisposalElement) {
+      const capText = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
+      elements.maxDisposalElement.innerHTML = `${capText} <span class="info-tooltip-icon" title="Earth is not interested in purchasing more metal than about 2 order of magnitude its 2025 yearly metal production.  This value may change as you progress further into the game.">&#9432;</span>`;
+    }
   }
 }
 
