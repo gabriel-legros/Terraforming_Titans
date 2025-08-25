@@ -38,17 +38,15 @@ describe('resource rate unstable display', () => {
 
     ctx.createResourceDisplay({ colony: { testResource: res } });
 
-    // five positive rates
-    for (let i = 0; i < 5; i++) {
-      res.productionRate = 1;
-      res.consumptionRate = 0;
-      ctx.updateResourceRateDisplay(res);
-    }
-
-    // five negative rates
-    for (let i = 0; i < 5; i++) {
-      res.productionRate = 0;
-      res.consumptionRate = 1;
+    // alternate positive and negative rates to trigger instability
+    for (let i = 0; i < 10; i++) {
+      if (i % 2 === 0) {
+        res.productionRate = 1;
+        res.consumptionRate = 0;
+      } else {
+        res.productionRate = 0;
+        res.consumptionRate = 1;
+      }
       ctx.updateResourceRateDisplay(res);
     }
 
