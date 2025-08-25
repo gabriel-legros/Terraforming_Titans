@@ -192,6 +192,11 @@ describe('Space Storage UI', () => {
     const select = dom.window.document.getElementById('spaceStorage-water-destination');
     expect(select.style.display).toBe('none');
 
+    const span = select.parentElement;
+    expect(span.tagName).toBe('SPAN');
+    expect(span.textContent.startsWith('Water')).toBe(true);
+    expect(span.parentElement.tagName).toBe('LABEL');
+
     project.shipWithdrawMode = true;
     ctx.updateSpaceStorageUI(project);
     expect(select.style.display).toBe('');

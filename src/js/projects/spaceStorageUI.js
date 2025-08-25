@@ -130,14 +130,15 @@ function renderSpaceStorageUI(project, container) {
 
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = opt.label;
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = opt.label;
 
     const fullIcon = document.createElement('span');
     fullIcon.classList.add('storage-full-icon');
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
     fullIcon.title = 'Colony storage full';
     fullIcon.style.display = 'none';
-    label.appendChild(fullIcon);
 
     const usage = document.createElement('span');
     usage.id = `${project.name}-usage-${opt.resource}`;
@@ -160,10 +161,11 @@ function renderSpaceStorageUI(project, container) {
           updateSpaceStorageUI(project);
         }
       });
-      resourceItem.append(checkbox, label, waterSelect, usage);
-    } else {
-      resourceItem.append(checkbox, label, usage);
+      textSpan.append(' ', waterSelect);
     }
+
+    label.append(textSpan, fullIcon);
+    resourceItem.append(checkbox, label, usage);
     resourceGrid.appendChild(resourceItem);
 
     if (opt.requiresFlag) {
