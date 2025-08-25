@@ -128,8 +128,8 @@ function cloudAndHazeProps (pBar, tau, comp = {}) {
   const aCloud = cfTot > 0 ? aCloudWeighted / cfTot : 0;
 
   // --- photochemical haze (depends mainly on τ) --------------
-  const cfHaze = Math.min(0.90, tau / 2.0);                // saturates by τ≈5
-  const aHaze  = 0.02 + 0.23 * (1 - Math.exp(-tau / 3.0)); // ≈0.25 at τ≈5
+  const cfHaze = Math.min(0.90, tau);                // saturates by τ≈5
+  const aHaze  = 0.02 + 0.23 * (1 - Math.exp(-tau / 0.1)); // ≈0.25 at τ≈5
 
   return { cfCloud: Math.min(0.99, cfTot), aCloud, cfHaze, aHaze };
 }
@@ -204,8 +204,8 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
   const { total: tau } = opticalDepth(composition, pressureBar, gSurface);
   const { cfCloud, aCloud, cfHaze, aHaze } =
         cloudAndHazeProps(pressureBar, tau, composition);
-  const A_noCloud = (1 - cfHaze) * surfaceAlbedo + cfHaze * aHaze;
-  const A         = (1 - cfCloud) * A_noCloud + cfCloud * aCloud;
+  const A_noCloud = Math.max((1 - cfHaze) * surfaceAlbedo + cfHaze * aHaze, surfaceAlbedo);
+  const A         = Math.max((1 - cfCloud) * A_noCloud + cfCloud * aCloud, A_noCloud);
   return { albedo: A, cfCloud, cfHaze };
 }
 
