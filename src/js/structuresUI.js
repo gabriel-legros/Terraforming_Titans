@@ -944,7 +944,12 @@ function updateDecreaseButtonText(button, buildCount) {
 
     const sections = getProdConsSections(structure, buildCount);
     const keyString = sections
-      .map(sec => `${sec.key}:${(sec.keys || []).join('|')}`)
+      .map(sec => {
+        const keys = sec.key === 'provides'
+          ? sec.data.map((_, i) => String(i)).join('|')
+          : (sec.keys || []).join('|');
+        return `${sec.key}:${keys}`;
+      })
       .join(';');
 
     if (productionConsumptionElement.dataset.sectionKeys !== keyString) {

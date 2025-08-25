@@ -348,3 +348,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space storage water withdrawals can target colony water or surface via a withdraw-mode dropdown.
 - Manual building toggle buttons now uncheck the Set active to target option when clicked.
 - Colony and nanocolony sliders now share styling, differing only in width.
+- Production and consumption displays update existing DOM nodes without rebuilding, preventing orphaned elements.
