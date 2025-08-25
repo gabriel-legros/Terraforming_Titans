@@ -617,17 +617,48 @@ function updateResourceRateDisplay(resource){
     }
   } else if (ppsElement) {
     const netRate = resource.productionRate - resource.consumptionRate;
-    if (Math.abs(netRate) < 1e-3) {
-      ppsElement.textContent = `0`;
+
+    // Record net rate history
+    if (typeof resource.recordNetRate === 'function') {
+      resource.recordNetRate(netRate);
     } else {
-      ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+      resource.rateHistory = resource.rateHistory || [];
+      resource.rateHistory.push(netRate);
+      if (resource.rateHistory.length > 10) {
+        resource.rateHistory.shift();
+      }
     }
-    if (netRate < 0 && Math.abs(netRate) > resource.value) {
-      ppsElement.style.color = 'red';
-    } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
-      ppsElement.style.color = 'orange';
-    } else {
+
+    let showUnstable = false;
+    const history = resource.rateHistory || [];
+    if (history.length >= 10) {
+      const positives = history.filter(r => r > 0).length;
+      const negatives = history.filter(r => r < 0).length;
+      if (
+        (positives === 4 && negatives === 6) ||
+        (positives === 5 && negatives === 5) ||
+        (positives === 6 && negatives === 4)
+      ) {
+        showUnstable = true;
+      }
+    }
+
+    if (showUnstable) {
+      ppsElement.textContent = 'Unstable';
       ppsElement.style.color = '';
+    } else {
+      if (Math.abs(netRate) < 1e-3) {
+        ppsElement.textContent = `0`;
+      } else {
+        ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+      }
+      if (netRate < 0 && Math.abs(netRate) > resource.value) {
+        ppsElement.style.color = 'red';
+      } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
+        ppsElement.style.color = 'orange';
+      } else {
+        ppsElement.style.color = '';
+      }
     }
   }
 

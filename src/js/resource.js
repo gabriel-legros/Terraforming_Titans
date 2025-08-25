@@ -26,6 +26,7 @@ class Resource extends EffectableEntity {
     this.hideWhenSmall = resourceData.hideWhenSmall || false; // Flag to hide when value is very small
     this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
+    this.rateHistory = []; // Keep history of recent net rates
   }
 
   // Method to initialize configurable properties
@@ -101,6 +102,14 @@ class Resource extends EffectableEntity {
 
   resetBaseProductionRate() {
     this.baseProductionRate = 0;
+  }
+
+  // Record a net production rate and keep only the last 10 entries
+  recordNetRate(rate) {
+    this.rateHistory.push(rate);
+    if (this.rateHistory.length > 10) {
+      this.rateHistory.shift();
+    }
   }
 
   // Method to update the storage cap based on active structures
