@@ -331,26 +331,26 @@ class NanotechManager extends EffectableEntity {
     if (growthImpactEl) {
       const optimal = 0.25;
       const effective = optimal * this.powerFraction;
-      growthImpactEl.textContent = `+${effective.toFixed(2)}%`;
+      growthImpactEl.textContent = `+${effective.toFixed(3)}%`;
       growthImpactEl.style.color = !this.hasEnoughEnergy ? 'orange' : '';
     }
     const siliconImpactEl = document.getElementById('nanotech-silicon-impact');
     if (siliconImpactEl) {
       const optimal = (this.siliconSlider / 10) * 0.15;
       const effective = optimal * this.siliconFraction;
-      siliconImpactEl.textContent = `+${effective.toFixed(2)}%`;
+      siliconImpactEl.textContent = `+${effective.toFixed(3)}%`;
       siliconImpactEl.style.color = !this.hasEnoughSilicon ? 'orange' : '';
     }
     const maintenanceImpactEl = document.getElementById('nanotech-maintenance-impact');
     if (maintenanceImpactEl) {
       const value = -(this.maintenanceSlider / 10) * 0.15;
-      maintenanceImpactEl.textContent = `${value.toFixed(2)}%`;
+      maintenanceImpactEl.textContent = `${value.toFixed(3)}%`;
       maintenanceImpactEl.style.color = '';
     }
     const glassImpactEl = document.getElementById('nanotech-glass-impact');
     if (glassImpactEl) {
       const value = -(this.glassSlider / 10) * 0.15;
-      glassImpactEl.textContent = `${value.toFixed(2)}%`;
+      glassImpactEl.textContent = `${value.toFixed(3)}%`;
       glassImpactEl.style.color = '';
     }
 
