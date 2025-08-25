@@ -11,7 +11,7 @@ const config = {
   },
   fps: {
     limit: 30,  // The game will run at 30 updates per second
-    forceSetTimeOut: false  // Use RAF
+    forceSetTimeOut: true  // Don't use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
