@@ -632,10 +632,16 @@ function updateResourceRateDisplay(resource){
     let showUnstable = false;
     const history = resource.rateHistory || [];
     if (history.length >= 10) {
-      const positives = history.filter(r => r > 0).length;
-      const negatives = history.filter(r => r < 0).length;
-      if (
-        (positives > 0 && negatives > 0)      ) {
+      // Count sign changes
+      let signChanges = 0;
+      for (let i = 1; i < history.length; i++) {
+        const current = history[i];
+        const previous = history[i - 1];
+        if ((current > 0 && previous < 0) || (current < 0 && previous > 0)) {
+          signChanges++;
+        }
+      }
+      if (signChanges > 2) {
         showUnstable = true;
       }
     }
