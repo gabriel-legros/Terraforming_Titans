@@ -635,10 +635,7 @@ function updateResourceRateDisplay(resource){
       const positives = history.filter(r => r > 0).length;
       const negatives = history.filter(r => r < 0).length;
       if (
-        (positives === 4 && negatives === 6) ||
-        (positives === 5 && negatives === 5) ||
-        (positives === 6 && negatives === 4)
-      ) {
+        (positives > 0 && negatives > 0)      ) {
         showUnstable = true;
       }
     }
