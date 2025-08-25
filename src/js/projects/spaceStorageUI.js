@@ -266,10 +266,10 @@ function updateSpaceStorageUI(project) {
     }
   }
   if (els.usedDisplay) {
-    els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 0);
+    els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
   }
   if (els.maxDisplay) {
-    els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 0);
+    els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 2);
   }
   if (els.expansionCostDisplay) {
     const cost = project.getScaledCost ? project.getScaledCost() : project.cost;
@@ -288,7 +288,7 @@ function updateSpaceStorageUI(project) {
       const cell = els.usageCells[opt.resource];
       if (cell) {
         const amount = project.resourceUsage[opt.resource] || 0;
-        cell.textContent = formatNumber(amount, false, 0);
+        cell.textContent = formatNumber(amount, false, 2);
       }
     });
   }
