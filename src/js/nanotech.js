@@ -215,7 +215,7 @@ class NanotechManager extends EffectableEntity {
           <div class="control-group">
             <label for="nanotech-silicon-slider">Silicon Consumption</label>
             <div class="slider-container">
-              <input type="range" id="nanotech-silicon-slider" min="0" max="10" step="1">
+              <input type="range" id="nanotech-silicon-slider" class="pretty-slider" min="0" max="10" step="1">
               <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
             </div>
             <span id="nanotech-silicon-impact" class="slider-value">+0.00%</span>
@@ -225,7 +225,7 @@ class NanotechManager extends EffectableEntity {
           <div class="control-group">
             <label for="nanotech-maintenance-slider">Maintenance I</label>
             <div class="slider-container">
-              <input type="range" id="nanotech-maintenance-slider" min="0" max="10" step="1">
+              <input type="range" id="nanotech-maintenance-slider" class="pretty-slider" min="0" max="10" step="1">
               <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
             </div>
             <span id="nanotech-maintenance-impact" class="slider-value">0.00%</span>
@@ -235,7 +235,7 @@ class NanotechManager extends EffectableEntity {
           <div class="control-group">
             <label for="nanotech-glass-slider">Glass Production</label>
             <div class="slider-container">
-              <input type="range" id="nanotech-glass-slider" min="0" max="10" step="1">
+              <input type="range" id="nanotech-glass-slider" class="pretty-slider" min="0" max="10" step="1">
               <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
             </div>
             <span id="nanotech-glass-impact" class="slider-value">0.00%</span>

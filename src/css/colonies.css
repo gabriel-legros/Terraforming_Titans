@@ -137,7 +137,7 @@
   align-items: center;
 }
 
-.colony-slider input[type="range"].pretty-slider {
+input[type="range"].pretty-slider {
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -145,7 +145,7 @@
   width: 100%;
 }
 
-.colony-slider .slider-container .tick-marks {
+.slider-container .tick-marks {
   position: absolute;
   top: 8px;
   left: 8px;
@@ -156,25 +156,25 @@
   pointer-events: none;
 }
 
-.colony-slider .slider-container .tick-marks span {
+.slider-container .tick-marks span {
   width: 1px;
   height: 5px;
   background-color: #888;
 }
 
-.colony-slider .slider-container .tick-marks span:first-child,
-.colony-slider .slider-container .tick-marks span:last-child {
+.slider-container .tick-marks span:first-child,
+.slider-container .tick-marks span:last-child {
   background-color: transparent;
 }
 
 /*-webkit-*/
-.colony-slider input[type="range"].pretty-slider::-webkit-slider-runnable-track {
+input[type="range"].pretty-slider::-webkit-slider-runnable-track {
   background: #c0c0c0;
   height: 0.5rem;
   border-radius: 1rem;
 }
 
-.colony-slider input[type="range"].pretty-slider::-webkit-slider-thumb {
+input[type="range"].pretty-slider::-webkit-slider-thumb {
   -webkit-appearance: none; /* Override default look */
   appearance: none;
   margin-top: -4px; /* Centers thumb on the track */
@@ -185,13 +185,13 @@
 }
 
 /*-moz-*/
-.colony-slider input[type="range"].pretty-slider::-moz-range-track {
+input[type="range"].pretty-slider::-moz-range-track {
   background: #c0c0c0;
   height: 0.5rem;
   border-radius: 1rem;
 }
 
-.colony-slider input[type="range"].pretty-slider::-moz-range-thumb {
+input[type="range"].pretty-slider::-moz-range-thumb {
   background-color: #4a4a4a;
   height: 1rem;
   width: 1rem;
@@ -278,6 +278,7 @@
 #nanocolony-container .control-group .slider-container {
     position: relative;
     flex-grow: 1;
+    width: 100%;
     min-width: 150px;
     display: flex;
     align-items: center;
@@ -285,57 +286,6 @@
 
 #nanocolony-container .control-group input[type="range"] {
     width: 100%;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: #e9ecef;
-    outline: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-#nanocolony-container .control-group .tick-marks {
-    position: absolute;
-    top: 8px;
-    left: 9px;
-    right: 9px;
-    display: flex;
-    justify-content: space-between;
-    padding: 0;
-    pointer-events: none;
-}
-
-#nanocolony-container .control-group .tick-marks span {
-    width: 1px;
-    height: 5px;
-    background-color: #888;
-}
-
-#nanocolony-container .control-group .tick-marks span:first-child,
-#nanocolony-container .control-group .tick-marks span:last-child {
-    background-color: transparent;
-}
-
-#nanocolony-container .control-group input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background: #007bff;
-    cursor: pointer;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 0 2px rgba(0,0,0,0.3);
-}
-
-#nanocolony-container .control-group input[type="range"]::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: #007bff;
-    cursor: pointer;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 0 2px rgba(0,0,0,0.3);
 }
 
 #nanocolony-container .slider-value {
