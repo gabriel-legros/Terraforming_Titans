@@ -59,7 +59,7 @@ const BETA  = 0.55;              // was 0.6 in old pressure law
 const GAMMA = {
   h2o           : 10.0,     // tuned so Earth ≈ 288 K
   co2           : 10.0,
-  ch4           : 30.0,
+  ch4           : 42.0,
   h2so4         : 50.0,
   greenhousegas : 2500.0
 };
