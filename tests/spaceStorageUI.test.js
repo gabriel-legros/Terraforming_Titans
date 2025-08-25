@@ -63,7 +63,7 @@ describe('Space Storage UI', () => {
 
     const els = ctx.projectElements[project.name];
     expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
-    expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
+    expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 2)));
     expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
     const items = Array.from(els.resourceGrid.querySelectorAll('.storage-resource-item'));
     expect(items.length).toBe(10);
@@ -94,7 +94,7 @@ describe('Space Storage UI', () => {
     const updatedVisible = updatedItems.filter(i => i.style.display !== 'none');
     expect(updatedVisible.length).toBe(9);
     const metalItem = updatedVisible[0];
-    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 2)));
 
     const topSection = container.querySelector('.project-top-section');
     const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
@@ -145,5 +145,64 @@ describe('Space Storage UI', () => {
     ctx.updateSpaceStorageUI(project);
     expect(icon.style.display).toBe('inline');
     expect(icon.title).toBe('Colony storage full');
+  });
+
+  test('water destination dropdown toggles with withdraw mode and updates project', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.projectElements = {};
+    ctx.formatNumber = numbers.formatNumber;
+    ctx.resources = {
+      colony: { water: { hasCap: true, value: 0, cap: 10 } },
+      surface: { liquidWater: { hasCap: true, value: 0, cap: 10 } }
+    };
+    ctx.researchManager = { isBooleanFlagSet: () => false };
+
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'spaceStorageUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.renderSpaceStorageUI = renderSpaceStorageUI; this.updateSpaceStorageUI = updateSpaceStorageUI;', ctx);
+
+    const project = {
+      name: 'spaceStorage',
+      cost: {},
+      getScaledCost() { return this.cost; },
+      usedStorage: 0,
+      maxStorage: 100,
+      resourceUsage: {},
+      selectedResources: [],
+      shipOperationAutoStart: false,
+      shipOperationRemainingTime: 0,
+      shipOperationStartingDuration: 0,
+      shipOperationIsActive: false,
+      shipWithdrawMode: false,
+      waterWithdrawTarget: 'colony',
+      isShipOperationContinuous: () => false,
+      getEffectiveDuration: () => 1000,
+      getShipOperationDuration: () => 1000,
+      canStartShipOperation: () => true,
+      createSpaceshipAssignmentUI() {},
+      createProjectDetailsGridUI() {},
+      toggleResourceSelection() {},
+    };
+
+    const container = dom.window.document.getElementById('container');
+    ctx.renderSpaceStorageUI(project, container);
+    ctx.updateSpaceStorageUI(project);
+
+    const select = dom.window.document.getElementById('spaceStorage-water-destination');
+    expect(select.style.display).toBe('none');
+
+    project.shipWithdrawMode = true;
+    ctx.updateSpaceStorageUI(project);
+    expect(select.style.display).toBe('');
+    expect(select.value).toBe('colony');
+
+    select.value = 'surface';
+    select.dispatchEvent(new dom.window.Event('change'));
+    expect(project.waterWithdrawTarget).toBe('surface');
+
+    project.shipWithdrawMode = false;
+    ctx.updateSpaceStorageUI(project);
+    expect(select.style.display).toBe('none');
   });
 });

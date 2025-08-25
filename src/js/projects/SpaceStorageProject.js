@@ -15,6 +15,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipWithdrawMode = false;
     this.pendingTransfers = [];
     this.prioritizeMegaProjects = false;
+    this.waterWithdrawTarget = 'colony';
   }
 
   getDurationWithTerraformBonus(baseDuration) {
@@ -93,7 +94,9 @@ class SpaceStorageProject extends SpaceshipProject {
       const all = this.selectedResources.map(({ category, resource }) => {
         const stored = this.resourceUsage[resource] || 0;
         const target = resource === 'liquidWater'
-          ? { category: 'colony', resource: 'water' }
+          ? (this.waterWithdrawTarget === 'surface'
+            ? { category: 'surface', resource: 'liquidWater' }
+            : { category: 'colony', resource: 'water' })
           : { category, resource };
         const targetRes = resources[target.category][target.resource];
         const destFree = targetRes.cap - targetRes.value;
@@ -389,6 +392,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceUsage: this.resourceUsage,
       pendingTransfers: this.pendingTransfers,
       prioritizeMegaProjects: this.prioritizeMegaProjects,
+      waterWithdrawTarget: this.waterWithdrawTarget,
       shipOperation: {
         remainingTime: this.shipOperationRemainingTime,
         startingDuration: this.shipOperationStartingDuration,
@@ -407,6 +411,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceUsage = state.resourceUsage || {};
     this.pendingTransfers = state.pendingTransfers || [];
     this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
+    this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;
