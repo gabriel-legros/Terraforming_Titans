@@ -469,6 +469,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   return combinedStructureRow;
 }
 
+function disableAutoActive(structure) {
+  const checkbox = document.querySelector(`#${structure.name}-set-active-button .auto-active-checkbox`);
+  if (checkbox && checkbox.checked) {
+    checkbox.checked = false;
+    structure.autoActiveEnabled = false;
+  }
+}
+
 // Create structure controls for buildings and colonies
 function createStructureControls(structure, toggleCallback) {
   const structureControls = document.createElement('div');
@@ -486,6 +494,7 @@ function createStructureControls(structure, toggleCallback) {
     zeroButton.textContent = '0';
     zeroButton.addEventListener('click', function () {
       toggleCallback(structure, -structure.active);
+      disableAutoActive(structure);
     });
     structureControls.appendChild(zeroButton);
 
@@ -495,6 +504,7 @@ function createStructureControls(structure, toggleCallback) {
     decreaseButton.addEventListener('click', function () {
       toggleCallback(structure, -selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+      disableAutoActive(structure);
     });
 
     increaseButton = document.createElement('button');
@@ -503,6 +513,7 @@ function createStructureControls(structure, toggleCallback) {
     increaseButton.addEventListener('click', function () {
       toggleCallback(structure, selectedBuildCounts[structure.name]);
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+      disableAutoActive(structure);
     });
 
     structureControls.appendChild(decreaseButton);
@@ -512,6 +523,7 @@ function createStructureControls(structure, toggleCallback) {
     maxButton.textContent = 'Max';
     maxButton.addEventListener('click', function () {
       toggleCallback(structure, structure.count - structure.active);
+      disableAutoActive(structure);
     });
     structureControls.appendChild(maxButton);
   }
