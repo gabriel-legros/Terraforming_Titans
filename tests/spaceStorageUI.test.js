@@ -62,8 +62,8 @@ describe('Space Storage UI', () => {
     ctx.updateSpaceStorageUI(project);
 
     const els = ctx.projectElements[project.name];
-    expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 0)));
-    expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 0)));
+    expect(els.usedDisplay.textContent).toBe(String(numbers.formatNumber(0, false, 2)));
+    expect(els.maxDisplay.textContent).toBe(String(numbers.formatNumber(1000000000000, false, 2)));
     expect(els.expansionCostDisplay.textContent).toBe(`Metal: ${numbers.formatNumber(metalCost, true)}`);
     const items = Array.from(els.resourceGrid.querySelectorAll('.storage-resource-item'));
     expect(items.length).toBe(10);
@@ -76,7 +76,7 @@ describe('Space Storage UI', () => {
     const fullIcon = label.querySelector('.storage-full-icon');
     expect(fullIcon).toBeDefined();
     expect(fullIcon.style.display).toBe('none');
-    expect(firstItem.children[2].textContent).toBe(String(numbers.formatNumber(0, false, 0)));
+    expect(firstItem.children[2].textContent).toBe(String(numbers.formatNumber(0, false, 2)));
     expect(els.shipProgressButton).toBeDefined();
     expect(els.withdrawButton).toBeDefined();
     expect(els.storeButton).toBeDefined();
@@ -94,7 +94,7 @@ describe('Space Storage UI', () => {
     const updatedVisible = updatedItems.filter(i => i.style.display !== 'none');
     expect(updatedVisible.length).toBe(9);
     const metalItem = updatedVisible[0];
-    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 0)));
+    expect(metalItem.children[2].textContent).toBe(String(numbers.formatNumber(500, false, 2)));
 
     const topSection = container.querySelector('.project-top-section');
     const titles = Array.from(topSection.querySelectorAll('.section-title')).map(e => e.textContent);
