@@ -10,8 +10,8 @@ const config = {
     update: update
   },
   fps: {
-    target: 30,  // The game will run at 20 updates per second
-    forceSetTimeOut: true  // Ensure that the tick rate is strictly followed
+    limit: 30,  // The game will run at 30 updates per second
+    forceSetTimeOut: false  // Use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
