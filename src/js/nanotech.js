@@ -283,9 +283,15 @@ class NanotechManager extends EffectableEntity {
     container.style.display = this.enabled ? '' : 'none';
     const max = this.getMaxNanobots();
     const countEl = document.getElementById('nanobot-count');
-    if (countEl) countEl.textContent = formatNumber(this.nanobots, false, 2);
+    if (countEl) {
+      countEl.textContent = formatNumber(this.nanobots, false, 2);
+      countEl.style.color = this.nanobots >= max ? 'green' : '';
+    }
     const capEl = document.getElementById('nanobot-cap');
-    if (capEl) capEl.textContent = formatNumber(max, false, 2);
+    if (capEl) {
+      capEl.textContent = formatNumber(max, false, 2);
+      capEl.style.color = this.nanobots >= max ? 'green' : '';
+    }
     const growthEl = document.getElementById('nanobot-growth-rate');
     if (growthEl) {
       const baseOpt = 0.0025;
@@ -298,7 +304,7 @@ class NanotechManager extends EffectableEntity {
         baseOpt * this.powerFraction +
         siliconOpt * this.siliconFraction -
         penalty;
-      growthEl.textContent = `${(effectiveRate * 100).toFixed(2)}%`;
+      growthEl.textContent = `${(effectiveRate * 100).toFixed(3)}%`;
       growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon) ? 'orange' : '';
       this.effectiveGrowthRate = effectiveRate;
     }
