@@ -65,12 +65,14 @@ describe('Space Storage project', () => {
     project.usedStorage = 1234;
     project.resourceUsage = { metal: 100 };
     project.shipWithdrawMode = true;
+    project.waterWithdrawTarget = 'surface';
     const saved = project.saveState();
     const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
     loaded.loadState(saved);
     expect(loaded.usedStorage).toBe(1234);
     expect(loaded.resourceUsage.metal).toBe(100);
     expect(loaded.shipWithdrawMode).toBe(true);
+    expect(loaded.waterWithdrawTarget).toBe('surface');
   });
 
   test('renders assignment UI with resource checkboxes', () => {
@@ -375,6 +377,52 @@ describe('Space Storage project', () => {
     project.completeShipOperation();
     expect(ctx.resources.colony.metal.value).toBe(500);
     expect(ctx.resources.colony.water.value).toBe(500);
+  });
+
+  test('withdraw mode sends water to surface when target set to surface', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: {
+        colony: {
+          metal: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; }, modifyRate: () => {} },
+          water: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; }, modifyRate: () => {} }
+        },
+        surface: {
+          liquidWater: { value: 0, cap: Infinity, increase(v){ this.value += v; }, decrease(v){ this.value -= v; }, modifyRate: () => {} }
+        }
+      },
+      buildings: {},
+      colonies: {},
+      projectElements: {},
+        addEffect: () => {},
+        globalGameIsLoadingFromSave: false,
+        spaceManager: {
+          getTerraformedPlanetCount: () => 0,
+          getTerraformedPlanetCountIncludingCurrent: () => 1
+        }
+      };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const shipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(shipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const storageCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(storageCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const attrs = { costPerShip: {}, transportPerShip: 1000 };
+    const params = { name: 'spaceStorage', category: 'mega', cost: {}, duration: 1000, description: '', repeatable: true, maxRepeatCount: Infinity, unlocked: true, attributes: attrs };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.selectedResources = [{ category: 'surface', resource: 'liquidWater' }];
+    project.assignedSpaceships = 1;
+    project.resourceUsage = { liquidWater: 1000 };
+    project.usedStorage = 1000;
+    project.shipWithdrawMode = true;
+    project.waterWithdrawTarget = 'surface';
+    project.startShipOperation();
+    expect(project.resourceUsage.liquidWater).toBeUndefined();
+    expect(project.usedStorage).toBe(0);
+    project.completeShipOperation();
+    expect(ctx.resources.surface.liquidWater.value).toBe(1000);
   });
 
   test('store mode removes colony resources and stores them', () => {

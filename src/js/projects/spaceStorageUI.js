@@ -143,7 +143,27 @@ function renderSpaceStorageUI(project, container) {
     usage.id = `${project.name}-usage-${opt.resource}`;
     usage.textContent = '0';
 
-    resourceItem.append(checkbox, label, usage);
+    let waterSelect;
+    if (opt.resource === 'liquidWater') {
+      waterSelect = document.createElement('select');
+      waterSelect.id = `${project.name}-water-destination`;
+      const colonyOpt = document.createElement('option');
+      colonyOpt.value = 'colony';
+      colonyOpt.textContent = 'Colony';
+      const surfaceOpt = document.createElement('option');
+      surfaceOpt.value = 'surface';
+      surfaceOpt.textContent = 'Surface';
+      waterSelect.append(colonyOpt, surfaceOpt);
+      waterSelect.addEventListener('change', e => {
+        project.waterWithdrawTarget = e.target.value;
+        if (typeof updateSpaceStorageUI === 'function') {
+          updateSpaceStorageUI(project);
+        }
+      });
+      resourceItem.append(checkbox, label, waterSelect, usage);
+    } else {
+      resourceItem.append(checkbox, label, usage);
+    }
     resourceGrid.appendChild(resourceItem);
 
     if (opt.requiresFlag) {
@@ -170,7 +190,8 @@ function renderSpaceStorageUI(project, container) {
       resourceItems: {
         ...(projectElements[project.name]?.resourceItems || {}),
         [opt.resource]: resourceItem
-      }
+      },
+      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {})
     };
   });
 
@@ -217,10 +238,16 @@ function renderSpaceStorageUI(project, container) {
   withdrawButton.addEventListener('click', () => {
     project.shipWithdrawMode = true;
     updateModeButtons();
+    if (typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(project);
+    }
   });
   storeButton.addEventListener('click', () => {
     project.shipWithdrawMode = false;
     updateModeButtons();
+    if (typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(project);
+    }
   });
 
   modeContainer.append(modeLabel, withdrawButton, storeButton);
@@ -317,11 +344,23 @@ function updateSpaceStorageUI(project) {
       }
     });
   }
+  if (els.waterDestinationSelect) {
+    els.waterDestinationSelect.value = project.waterWithdrawTarget || 'colony';
+    els.waterDestinationSelect.style.display = project.shipWithdrawMode ? '' : 'none';
+  }
   if (els.fullIcons) {
     storageResourceOptions.forEach(opt => {
       const icon = els.fullIcons[opt.resource];
-      const res = resources[opt.category]?.[opt.resource];
+      let res = resources[opt.category]?.[opt.resource];
       if (icon) {
+        if (opt.resource === 'liquidWater' && project.shipWithdrawMode) {
+          res = project.waterWithdrawTarget === 'surface'
+            ? resources.surface.liquidWater
+            : resources.colony.water;
+          icon.title = project.waterWithdrawTarget === 'surface'
+            ? 'Surface storage full'
+            : 'Colony storage full';
+        }
         if (project.shipWithdrawMode && res && res.hasCap && res.value >= res.cap) {
           icon.style.display = 'inline';
         } else {
