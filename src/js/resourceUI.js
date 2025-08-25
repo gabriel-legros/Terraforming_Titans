@@ -641,7 +641,7 @@ function updateResourceRateDisplay(resource){
           signChanges++;
         }
       }
-      if (signChanges > 2) {
+      if (signChanges > 1) {
         showUnstable = true;
       }
     }
