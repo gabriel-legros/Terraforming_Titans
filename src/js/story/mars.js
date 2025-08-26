@@ -577,7 +577,7 @@ var progressMars = {
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'tropicalTemperature',
-          value: 241
+          value: 238
       }],
         reward: []
       },
@@ -585,7 +585,7 @@ var progressMars = {
         id: "chapter2.4",
         type: "journal",
         chapter: 2,
-        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 241K.",
+        narrative: "Milestone Achievement: Mean Equatorial Temperature has reached 238K.",
         prerequisites: ["chapter2.3"],
         objectives: [],
         reward: []
