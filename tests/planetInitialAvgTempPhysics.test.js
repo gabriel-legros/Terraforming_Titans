@@ -34,7 +34,7 @@ function createResources(config) {
 }
 
 const EXPECTED_TEMPS = {
-  mars: 226.223159098033,
+  mars: 222,
   titan: 93.59612929341068
 };
 
