@@ -1,40 +1,57 @@
+/* Albedo physics refactor: additive deltas + shortwave AOD
+   - Keeps IR opticalDepth() for greenhouse
+   - Adds opticalDepthSW() for visible (albedo) contributions
+   - Rewrites calculateActualAlbedoPhysics() to use the new scheme
+   - Removes cloudAndHazeProps() and replaces with cloudPropsOnly()
+*/
+
 const R_AIR = 287;
-  function calculateAtmosphericPressure(mass, gravity, radius) {
-    // Check for valid input values
-    if (mass < 0) {
-        throw new Error("Mass must be a positive number.");
-    }
-    if (gravity <= 0) {
-        throw new Error("Gravity must be a positive number.");
-    }
-    if (radius <= 0) {
-        throw new Error("Radius must be a positive number.");
-    }
 
-    // Calculate the surface area of the planet (A = 4 * π * R^2)
-    const surfaceArea = 4 * Math.PI * Math.pow(radius*1e3, 2);
+// ===== Tunables (safe defaults) ======================================
+const A_HAZE_CH4_MAX  = 0.24; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
+const K_CH4_ALB       = 4.5;     // how quickly CH4 haze brightening saturates
 
-    // Calculate the atmospheric pressure (P = (m * g) / A)
-    const pressure = (1e3*mass * gravity) / surfaceArea;
+const A_CALCITE_HEADROOM_MAX = 0.15; // calcite can add up to +0.15 in the limit
+const K_CALCITE_ALB  = 1.0;          // saturates near τ_eff ≈ 1
+const OPTICS = {
+  calcite: { omega0: 0.98, g: 0.70 } // bright & moderately forward-scattering
+};
 
-    // Return the pressure in Pascals (Pa)
-    return pressure;
+// ---------- Shortwave (visible) optical depth ----------
+const K_CH4_SW        = 1.0;     // haze build-up rate vs methane column
+const MU_CH4_SAT      = 3.0;     // kg/m²: methane column where haze nearly saturates
+const EPS_EXT_CALCITE = 1500;    // m²/kg: calcite mass-extinction (tunable)
+
+// Haze coverage saturator (diagnostic only)
+const K_HAZE_COVERAGE = 5.5; // larger → coverage approaches 1 faster vs τ
+
+// Effective τ to reflect scattering usefulness (optional but helpful)
+function tauEff(tau, {omega0, g}) {
+  return Math.max(0, (1 - omega0 * g)) * Math.max(0, tau);
 }
 
-// Calculate atmospheric emissivity directly from optical depth
+function hazeCoverageFromTau(tau) {
+  return 1 - Math.exp(-K_HAZE_COVERAGE * Math.max(0, tau));
+}
+
+function calculateAtmosphericPressure(mass, gravity, radius) {
+  if (mass < 0) throw new Error("Mass must be a positive number.");
+  if (gravity <= 0) throw new Error("Gravity must be a positive number.");
+  if (radius <= 0) throw new Error("Radius must be a positive number.");
+  const surfaceArea = 4 * Math.PI * Math.pow(radius*1e3, 2);
+  const pressure = (1e3*mass * gravity) / surfaceArea;
+  return pressure; // Pa
+}
+
+// Calculate atmospheric emissivity directly from *IR* optical depth
 function calculateEmissivity(composition, surfacePressureBar, gSurface){
   const { total: tau, contributions } = opticalDepth(composition, surfacePressureBar, gSurface);
-  return {
-    emissivity: 1 - Math.exp(-tau),
-    tau,
-    contributions
-  };
+  return { emissivity: 1 - Math.exp(-tau), tau, contributions };
 }
-// Function to calculate air density (rho_a)
+
+// Air density (kg/m³)
 function airDensity(atmPressure, T) {
-    // atmPressure: Atmospheric pressure in Pa
-    // T: Temperature in Kelvin (K)
-    return atmPressure / (R_AIR * T); // kg/m³
+  return atmPressure / (R_AIR * T);
 }
 
 function calculateDayNightTemperatureVariation(temperature, columnMass){
@@ -50,7 +67,7 @@ function calculateDayNightTemperatureVariation(temperature, columnMass){
 // ───────────────────────────────────────────────────────────
 const SIGMA = 5.670374419e-8;
 
-// ─── Replace/add near your existing constants ─────────────────────────────
+// ─── Existing IR greenhouse parameters ─────────────────────────────
 const COLUMN_MASS_REF = 5.0e4;   // μ0 in kg/m² (reference column for scaling)
 const ALPHA = 1.0;               // keep
 const BETA  = 0.55;              // was 0.6 in old pressure law
@@ -68,22 +85,16 @@ const GAMMA = {
 const MU_SAT = { ch4: 3, h2so4: 2000.0 }; // kg/m²
 const SAT_EXP = { ch4: 1.0, h2so4: 1.0 };    // exponent n_i
 
-/*  Each entry describes how *that* condensate behaves.
-      refMix  – mixing ratio (mass fraction) that saturates availability (=1)
-      cfMax   – maximum cloud-fraction achievable
-      pScale  – pressure scale (bar) for cloud build-up
-      aBase   – core albedo of an optically thick deck
-      aVar    – extra brightening with pressure          */
+/*  Cloud spec kept for cloud appearance only (no haze here)
+    refMix  – mixing ratio (mass fraction) that saturates availability (=1)
+    cfMax   – maximum cloud-fraction achievable
+    pScale  – pressure scale (bar) for cloud build-up
+    aBase   – core albedo of an optically thick deck
+    aVar    – extra brightening with pressure          */
 const CLOUD_SPEC = {
-  h2o  : {                         
-    refMix : 0.01,
-    cfMax  : 0.50,
-    pScale : 0.8,
-    aBase  : 0.60,
-    aVar   : 0.18
-  },
-  ch4  : { refMix: 0.02,  cfMax: 0.10, pScale: 2.0, aBase: 0.60, aVar: 0.10 },
-  h2so4: { refMix: 1e-4,  cfMax: 0.99, pScale: 5.0, aBase: 0.75, aVar: 0.05 }
+  h2o  : { refMix: 0.01, cfMax: 0.50, pScale: 0.8, aBase: 0.60, aVar: 0.18 },
+  ch4  : { refMix: 0.02, cfMax: 0.10, pScale: 2.0, aBase: 0.60, aVar: 0.10 },
+  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 5.0, aBase: 0.75, aVar: 0.05 }
 };
 
 const DEFAULT_SURFACE_ALBEDO = {
@@ -96,42 +107,81 @@ const DEFAULT_SURFACE_ALBEDO = {
   biomass: 0.20
 };
 
-// ───────────────────────────────────────────────────────────
-//  Cloud & haze properties from composition + pressure + τ
-// ───────────────────────────────────────────────────────────
-function cloudAndHazeProps (pBar, tau, comp = {}) {
+// ===== IR optical depth for greenhouse (unchanged) ==================
+function opticalDepth(comp, pBar, gSurface) {
+  const pPa   = pBar * 1e5;
+  const mcolT = pPa / gSurface;  // total column mass (kg/m²)
+  let total = 0;
+  const contributions = {};
 
-  let cfTot = 0;      // summed cloud-fraction
+  for (const key in comp) {
+    const x = comp[key] ?? comp[key.toLowerCase()] ?? 0; // tolerate key case
+    if (x <= 0) continue;
+
+    const k = key.toLowerCase();
+    const G = GAMMA[k] ?? 0;
+    if (!G) continue;
+
+    const mu_i = x * mcolT;                      // column mass of gas i
+    const R    = mu_i / COLUMN_MASS_REF;         // dimensionless
+    let tau_i;
+
+    if (k === 'ch4') {
+      // Apply saturation to methane optical depth to make it scale much slower after R = 0.0015
+      const saturationThreshold = 0.075;
+      if (R <= saturationThreshold) {
+        tau_i = G * Math.pow(R, 1) * Math.pow(0.075, BETA);
+      } else {
+        tau_i = G * Math.pow(0.075, 1) * Math.pow(R, BETA);
+      }
+    } else {
+      // Default behavior for other gases
+      tau_i = G * Math.pow(R, BETA);
+    }
+
+    total += tau_i;
+    contributions[k] = tau_i;
+  }
+  return { total, contributions };
+}
+
+// ===== NEW: shortwave (visible) optical depth for albedo ============
+function opticalDepthSW(composition, pBar, gSurface, aerosols = {}) {
+  const pPa   = pBar * 1e5;
+  const mcolT = pPa / gSurface;             // kg/m² total air column
+
+  // --- CH4 photochemical haze from methane column mass (not IR τ) ---
+  const x_ch4   = composition.ch4 || 0;     // mass fraction
+  const mu_ch4  = x_ch4 * mcolT;            // kg/m² methane column
+  const tau_ch4 = 1 - Math.exp(-K_CH4_SW * (mu_ch4 / MU_CH4_SAT));
+
+  // --- Calcite aerosol AOD from its column mass (kg/m²) ---
+  const M_calcite   = aerosols.calcite || 0; // pass your evolving column here
+  const tau_calcite = EPS_EXT_CALCITE * M_calcite;
+
+  const contributions = { ch4_haze: tau_ch4, calcite: tau_calcite };
+  return { total: tau_ch4 + tau_calcite, contributions };
+}
+
+// ===== Clouds only (no haze) ========================================
+function cloudPropsOnly(pBar, comp = {}) {
+  let cfTot = 0;
   let aCloudWeighted = 0;
-
-  // --- blend all condensables --------------------------------
   for (const gas in CLOUD_SPEC) {
     const spec = CLOUD_SPEC[gas];
-    const mix  = comp[gas] || 0;           // mass fraction
-
-    if (mix <= 0) continue;                // nothing of this gas
+    const mix  = comp[gas] || 0; // mass fraction
+    if (mix <= 0) continue;
 
     const availability = Math.min(1, mix / spec.refMix);
-
-    const cf = spec.cfMax *
-               (1 - Math.exp(-pBar / spec.pScale)) *
-               availability;               // cloud cover from this gas
-
-    const aGas = spec.aBase +
-                 spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
+    const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
+    const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
 
     aCloudWeighted += cf * aGas;
     cfTot          += cf;
   }
-
-  // normalise albedo if any clouds at all
-  const aCloud = cfTot > 0 ? aCloudWeighted / cfTot : 0;
-
-  // --- photochemical haze (depends mainly on τ) --------------
-  const cfHaze = Math.min(0.90, tau);                // saturates by τ≈5
-  const aHaze  = 0.02 + 0.23 * (1 - Math.exp(-tau / 0.1)); // ≈0.25 at τ≈5
-
-  return { cfCloud: Math.min(0.99, cfTot), aCloud, cfHaze, aHaze };
+  const cfCloud = Math.min(0.99, cfTot);
+  const aCloud  = cfTot > 0 ? aCloudWeighted / cfTot : 0;
+  return { cfCloud, aCloud };
 }
 
 function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, g = 9.81, kappaSoil = 7e-7, rhoCSoil = 1.4e6) {
@@ -155,57 +205,65 @@ function effectiveTemp(albedo, flux) {
   return Math.pow((1 - albedo) * flux / (4 * SIGMA), 0.25);
 }
 
-function opticalDepth(comp, pBar, gSurface) {
-  const pPa   = pBar * 1e5;
-  const mcolT = pPa / gSurface;  // total column mass (kg/m²)
-  let total = 0;
-  const contributions = {};
-
-  for (const key in comp) {
-    const x = comp[key] ?? comp[key.toLowerCase()] ?? 0; // tolerate key case
-    if (x <= 0) continue;
-
-    const k = key.toLowerCase();
-    const G = GAMMA[k] ?? 0;
-    if (!G) continue;
-
-    const mu_i = x * mcolT;                      // column mass of gas i
-    const R    = mu_i / COLUMN_MASS_REF;         // dimensionless
-    let tau_i;
-
-    if (k === 'ch4') {
-      // Apply saturation to methane optical depth to make it scale much slower after R = 0.0015
-      const saturationThreshold = 0.075;
-
-      if (R <= saturationThreshold) {
-        tau_i = G * Math.pow(R, 1) * Math.pow(0.075, BETA);
-      } else {
-        tau_i = G * Math.pow(0.075, 1) * Math.pow(R, BETA);
-      }
-    } else {
-      // Default behavior for other gases
-      tau_i = G * Math.pow(R, BETA);
-    }
-
-    total += tau_i;
-    contributions[k] = tau_i;
-  }
-  return { total, contributions };
-}
-
-
 function cloudFraction(pBar) {
   const cf = 1.0 - Math.exp(-pBar / 3.0);
   return Math.min(cf, 0.99);
 }
 
-// Calculate actual (Bond) albedo and cloud/haze fractions
+// ===== Additive albedo builder ======================================
+function albedoAdditive({
+  surfaceAlbedo, pressureBar, composition = {}, gSurface = 9.81,
+  aerosolsSW = {} // e.g., { calcite: columnMass_kg_per_m2 }
+}) {
+  // Shortwave AODs:
+  const { contributions: sw } = opticalDepthSW(composition, pressureBar, gSurface, aerosolsSW);
+  const tau_ch4_sw     = sw.ch4_haze || 0;
+  const tau_calcite_sw = sw.calcite  || 0;
+
+  // Start from clear sky
+  const A_surf = surfaceAlbedo;
+
+  // --- CH4 photochemical haze (additive delta) ---
+  const headroom_ch4 = Math.max(0, A_HAZE_CH4_MAX - A_surf);
+  const F_ch4        = 1 - Math.exp(-K_CH4_ALB * Math.max(0, tau_ch4_sw));
+  const dA_ch4       = headroom_ch4 * F_ch4;
+  let   A_base       = A_surf + dA_ch4;
+
+  // --- Calcite aerosol (optional) ---
+  const tau_calcite_eff = tauEff(tau_calcite_sw, OPTICS.calcite);
+  const F_calcite       = 1 - Math.exp(-K_CALCITE_ALB * tau_calcite_eff);
+  const headroom_calc   = Math.min(A_CALCITE_HEADROOM_MAX, 1 - A_base);
+  const dA_calcite      = headroom_calc * F_calcite;
+  A_base += dA_calcite;
+
+  // --- Clouds last (brighten what’s left, never dim) ---
+  const { cfCloud, aCloud } = cloudPropsOnly(pressureBar, composition);
+  const dA_cloud = cfCloud * Math.max(0, aCloud - A_base);
+  A_base += dA_cloud;
+
+  const A_final = Math.max(0, Math.min(1, A_base));
+  return {
+    albedo: A_final,
+    components: { A_surf, dA_ch4, dA_calcite, dA_cloud },
+    diagnostics: { tau_ch4_sw, tau_calcite_sw }
+  };
+}
+
+// ===== Updated: Calculate actual (Bond) albedo =======================
+// Signature unchanged to preserve game-wide calls
 function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface) {
-  const { total: tau } = opticalDepth(composition, pressureBar, gSurface);
-  const { cfCloud, aCloud, cfHaze, aHaze } =
-        cloudAndHazeProps(pressureBar, tau, composition);
-  const A_noCloud = Math.max((1 - cfHaze) * surfaceAlbedo + cfHaze * aHaze, surfaceAlbedo);
-  const A         = Math.max((1 - cfCloud) * A_noCloud + cfCloud * aCloud, A_noCloud);
+  // Build albedo via additive scheme (no explicit aerosols passed here yet)
+  const { albedo: A, diagnostics } = albedoAdditive({
+    surfaceAlbedo,
+    pressureBar,
+    composition,
+    gSurface
+  });
+
+  // Back-compat diagnostics
+  const { cfCloud } = cloudPropsOnly(pressureBar, composition);
+  const cfHaze = hazeCoverageFromTau(diagnostics.tau_ch4_sw || 0);
+
   return { albedo: A, cfCloud, cfHaze };
 }
 
@@ -218,7 +276,6 @@ function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
   for (const k in fractions) {
     a += fractions[k] * (albs[k] !== undefined ? albs[k] : rockAlb);
   }
-
   return a;
 }
 
@@ -250,30 +307,25 @@ function dayNightTemperaturesModel({
 
   const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
 
-  // greenhouse optical depth
-  const { total: tau } = opticalDepth(composition, surfacePressureBar, gSurface);
+  const { albedo: A } = albedoAdditive({
+    surfaceAlbedo: aSurf,
+    pressureBar: surfacePressureBar,
+    composition,
+    gSurface
+  });
 
-  // NEW: smoothly blended clouds + haze
-  const { cfCloud, aCloud, cfHaze, aHaze } =
-        cloudAndHazeProps(surfacePressureBar, tau, composition);
-
-  // Bond albedo
-  const A_noCloud = (1 - cfHaze) * aSurf + cfHaze * aHaze;
-  const A         = (1 - cfCloud) * A_noCloud + cfCloud * aCloud;
-
-  // Temperatures
+  // IR greenhouse as before
   const T_eff  = effectiveTemp(A, flux);
-  const T_surf = T_eff * Math.pow(1 + 0.75 * tau, 0.25);
-
-  const dT = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);
+  const { total: tauGHG } = opticalDepth(composition, surfacePressureBar, gSurface);
+  const T_surf = T_eff * Math.pow(1 + 0.75 * tauGHG, 0.25);
+  const dT     = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);
 
   return {
     day   : T_surf + 0.5 * dT,
     night : T_surf - 0.5 * dT,
     mean  : T_surf,
     albedo: A,
-    equilibriumTemperature: T_eff,
-    cfCloud, cfHaze          // diagnostics if you want them
+    equilibriumTemperature: T_eff
   };
 }
 
@@ -285,12 +337,15 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateDayNightTemperatureVariation,
     autoSlabHeatCapacity,
     effectiveTemp,
-    opticalDepth,
+    opticalDepth,        // IR only
+    opticalDepthSW,      // shortwave (new)
     cloudFraction,
     surfaceAlbedoMix,
     diurnalAmplitude,
     dayNightTemperaturesModel,
-    calculateActualAlbedoPhysics,
-    DEFAULT_SURFACE_ALBEDO
+    calculateActualAlbedoPhysics, // updated
+    DEFAULT_SURFACE_ALBEDO,
+    albedoAdditive,      // exported for testing & future tuning
+    cloudPropsOnly       // exported to avoid breaking callers that need cloud stats
   };
 }
