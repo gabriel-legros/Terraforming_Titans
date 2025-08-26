@@ -3,6 +3,7 @@ class CargoRocketProject extends Project {
     super(config, name);
     this.spaceshipPriceIncrease = 0;
     this.convertedToContinuous = false;
+    this.selectedResources = [];
   }
 
   isContinuous() {
@@ -51,7 +52,10 @@ class CargoRocketProject extends Project {
         const quantityInput = document.createElement('input');
         quantityInput.type = 'number';
         quantityInput.min = 0;
-        quantityInput.value = 0;
+        const selected = this.selectedResources.find(
+          (sr) => sr.category === category && sr.resource === resourceId
+        );
+        quantityInput.value = selected ? selected.quantity : 0;
         quantityInput.classList.add('resource-selection-input', `resource-selection-${this.name}`);
         quantityInput.dataset.category = category;
         quantityInput.dataset.resource = resourceId;
@@ -414,6 +418,21 @@ class CargoRocketProject extends Project {
       }
     }
     return totals;
+  }
+
+  saveState() {
+    const state = super.saveState();
+    if (this.autoStart) {
+      state.selectedResources = this.selectedResources;
+    }
+    return state;
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.selectedResources = this.autoStart && state.selectedResources
+      ? state.selectedResources
+      : [];
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
