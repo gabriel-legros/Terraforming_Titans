@@ -355,4 +355,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space Storage project caches ship and expansion auto-start labels and rebuilds them when the automation UI is recreated.
 - Project automation settings cache their child elements for faster visibility checks and refresh the cache when options change.
 - Life UI caches modify buttons, temperature units, and status table cells, refreshing caches when designs change or the table rebuilds.
+- Project resource-selection grids cache their input elements for quicker cost calculations and rebuild those caches when grids are reset.
 - Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.
