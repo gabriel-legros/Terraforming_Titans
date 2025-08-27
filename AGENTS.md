@@ -353,3 +353,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cargo Rocket auto-start now saves selected cargo and clears selections when auto-start is off on load.
 - Research UI caches DOM nodes for faster updates and rebuilds caches when research order changes.
 - Space Storage project caches ship and expansion auto-start labels and rebuilds them when the automation UI is recreated.
+- Project automation settings cache their child elements for faster visibility checks and refresh the cache when options change.

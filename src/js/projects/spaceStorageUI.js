@@ -76,6 +76,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
       const prioritize = this.createPrioritizeMegaCheckbox();
       container.append(ship, prioritize);
     }
+    invalidateAutomationSettingsCache(this.name);
   };
 }
 
