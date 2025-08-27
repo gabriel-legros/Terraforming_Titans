@@ -205,12 +205,17 @@ function updateRateTable(container, entries, formatter) {
   if (!container) return;
   const info = container._info;
   const used = new Set();
-  const total = entries.reduce((sum, [, val]) => sum + val, 0);
+  const validEntries = entries.filter(([, val]) => Math.abs(val) >= 1e-12);
+  const total = validEntries.reduce((sum, [, val]) => sum + val, 0);
   if (info.totalRight) {
-    info.totalRight.textContent = formatter(total);
-    info.totalRow.style.display = 'table-row';
+    if (Math.abs(total) >= 1e-12) {
+      info.totalRight.textContent = formatter(total);
+      info.totalRow.style.display = 'table-row';
+    } else {
+      info.totalRow.style.display = 'none';
+    }
   }
-  entries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
+  validEntries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
     let rowInfo = info.rows.get(name);
     if (!rowInfo) {
       const row = document.createElement('div');
@@ -228,15 +233,17 @@ function updateRateTable(container, entries, formatter) {
       rowInfo = { row, left, right };
       info.rows.set(name, rowInfo);
     }
-    rowInfo.left.textContent = name;
-    rowInfo.right.textContent = formatter(val);
+    const text = formatter(val);
+    if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
+    if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
     rowInfo.row.style.display = 'table-row';
-    info.table.appendChild(rowInfo.row);
+    if (!rowInfo.row.parentNode) info.table.appendChild(rowInfo.row);
     used.add(name);
   });
   info.rows.forEach((rowInfo, name) => {
     if (!used.has(name)) {
-      rowInfo.row.style.display = 'none';
+      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
+      info.rows.delete(name);
     }
   });
 }
