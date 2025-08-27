@@ -303,6 +303,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
 - Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
 - WGC logs now format artifact gains with two decimal places.
+- WGC team cards cache DOM nodes for buttons, inputs, selects, progress bars, logs and HP bars, rebuilding these caches when cards redraw or team counts change for faster updates.
 - Methane melting and freezing now respect methane ice coverage.
 - Planetary thrusters operate as a continuous project, drawing power from ongoing energy production instead of only stored energy.
 - Planetary thrusters appear in the Energy resource rate tooltip, listing their consumption.
@@ -355,4 +356,6 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space Storage project caches ship and expansion auto-start labels and rebuilds them when the automation UI is recreated.
 - Project automation settings cache their child elements for faster visibility checks and refresh the cache when options change.
 - Life UI caches modify buttons, temperature units, and status table cells, refreshing caches when designs change or the table rebuilds.
+- Colony need boxes cache DOM references for faster updates and rebuild when colony needs or structures change.
+- Project resource-selection grids cache their input elements for quicker cost calculations and rebuild those caches when grids are reset.
 - Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.

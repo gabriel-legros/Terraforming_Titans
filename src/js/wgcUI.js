@@ -40,6 +40,7 @@ const facilityDescriptions = {
   library: 'Boosts Wit for challenges by 1% per level.'
 };
 const facilityElements = {};
+const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamUnlocks = [0, 100, 500, 1000];
 const classImages = {
@@ -149,6 +150,36 @@ function generateWGCTeamCards() {
         ${lockMarkup}
       </div>`;
   }).join('');
+}
+
+function invalidateWGCTeamCache() {
+  teamElements.length = 0;
+  const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
+  names.forEach((_, tIdx) => {
+    const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    if (!card) {
+      teamElements[tIdx] = null;
+      return;
+    }
+    const slots = Array.from(card.querySelectorAll('.team-slot')).map(slot => ({
+      slot,
+      bar: slot.querySelector('.team-hp-bar-fill')
+    }));
+    teamElements[tIdx] = {
+      card,
+      startBtn: card.querySelector('.start-button'),
+      recallBtn: card.querySelector('.recall-button'),
+      diffInput: card.querySelector('.difficulty-input'),
+      stanceSelect: card.querySelector('.hbi-select'),
+      artSelect: card.querySelector('.artifact-select'),
+      progressContainer: card.querySelector('.operation-progress'),
+      progressBar: card.querySelector('.operation-progress-bar'),
+      summaryEl: card.querySelector('.operation-summary'),
+      logEl: card.querySelector('.team-log pre'),
+      lockOverlay: card.querySelector('.wgc-team-locked'),
+      slots
+    };
+  });
 }
 
 function createRDItem(key, label) {
@@ -488,6 +519,7 @@ function initializeWGCUI() {
     const teamContainer = container.querySelector('#wgc-team-cards');
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
+      invalidateWGCTeamCache();
       teamContainer.addEventListener('click', e => {
         if (e.target.classList.contains('start-button')) {
           const t = parseInt(e.target.dataset.team, 10);
@@ -686,23 +718,26 @@ function updateWGCUI() {
     }
   }
 
+  if (teamElements.length !== names.length) {
+    invalidateWGCTeamCache();
+  }
+
   names.forEach((_, tIdx) => {
-    const c = wgcElementCache[tIdx] || {};
-    const card = c.card || document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
-    if (!card) return;
-    // If cache is empty for this card, build it now
-    if (!wgcElementCache[tIdx]) {
-      cacheWGCTeamElements();
-    }
-    const startBtn = c.startBtn;
-    const recallBtn = c.recallBtn;
-    const diffInput = c.diffInput;
-    const stanceSelect = c.stanceSelect;
-    const artSelect = c.artSelect;
-    const progressContainer = c.progressContainer;
-    const progressBar = c.progressBar;
-    const summaryEl = c.summaryEl;
-    const lockOverlay = c.lockOverlay;
+    const refs = teamElements[tIdx];
+    if (!refs) return;
+    const {
+      startBtn,
+      recallBtn,
+      diffInput,
+      stanceSelect,
+      artSelect,
+      progressContainer,
+      progressBar,
+      summaryEl,
+      logEl,
+      lockOverlay,
+      slots
+    } = refs;
     const team = warpGateCommand.teams[tIdx] || [];
     const full = team.every(m => m);
     const op = warpGateCommand.operations[tIdx];
@@ -718,11 +753,13 @@ function updateWGCUI() {
       diffInput.disabled = op.active;
     }
     if (stanceSelect) {
-      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx] ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
+      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx]
+        ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
       stanceSelect.value = val;
     }
     if (artSelect) {
-      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx] ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
+      const val = warpGateCommand.stances && warpGateCommand.stances[tIdx]
+        ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
       artSelect.value = val;
     }
     if (progressContainer && progressBar) {
@@ -742,12 +779,13 @@ function updateWGCUI() {
         }
       }
     }
+    if (logEl) {
+      logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
+    }
 
-    team.forEach((member, sIdx) => {
-      const slotCache = (wgcElementCache[tIdx] && wgcElementCache[tIdx].slots && wgcElementCache[tIdx].slots[sIdx]) || {};
-      const bar = slotCache.bar;
-      const slotEl = slotCache.slotEl;
-      if (!slotEl || !member) return;
+    slots.forEach(({ slot, bar }, sIdx) => {
+      const member = team[sIdx];
+      if (!slot || !member) return;
       if (bar) {
         const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
         bar.style.height = `${hpPercent}%`;
@@ -774,14 +812,6 @@ function updateWGCUI() {
     });
   });
 
-  names.forEach((_, tIdx) => {
-    const c = wgcElementCache[tIdx] || {};
-    const logEl = c.logEl;
-    if (logEl) {
-      logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
-    }
-  });
-
   if (activeDialog && activeDialog._member) {
     const m = activeDialog._member;
     const lvlEl = activeDialog._levelEl;
@@ -802,6 +832,7 @@ function redrawWGCTeamCards() {
   const teamContainer = document.getElementById('wgc-team-cards');
   if (teamContainer) {
     teamContainer.innerHTML = generateWGCTeamCards();
+    invalidateWGCTeamCache();
   }
   // Rebuild cache after DOM has been regenerated
   invalidateWGCCache();
@@ -817,6 +848,7 @@ if (typeof module !== 'undefined' && module.exports) {
     initializeWGCUI,
     updateWGCUI,
     redrawWGCTeamCards,
+    invalidateWGCTeamCache,
     populateRDMenu,
     populateFacilityMenu,
     generateWGCTeamCards,
