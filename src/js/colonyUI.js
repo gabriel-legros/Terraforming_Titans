@@ -136,9 +136,11 @@ function createColonyDetails(structure) {
   colonyDetails.classList.add('colony-details');
   colonyDetails.style.display = 'flex';
 
+  structure.needBoxCache = {};
+
   // Add comfort and happiness boxes
-  const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`, false, structure);
-  const comfortBox = createNeedBox('Comfort', structure.baseComfort, `${structure.name}-comfort`, false, structure);
+  const happinessBox = createNeedBox('happiness', 'Happiness', structure.happiness, false, structure);
+  const comfortBox = createNeedBox('comfort', 'Comfort', structure.baseComfort, false, structure);
 
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
@@ -146,7 +148,8 @@ function createColonyDetails(structure) {
   // Add need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
     const isLuxury = luxuryResources[need];
-    const needBox = createNeedBox(need, structure.filledNeeds[need], `${structure.name}-${need}`, isLuxury, structure);
+    const displayName = resources.colony[need].displayName;
+    const needBox = createNeedBox(need, displayName, structure.filledNeeds[need], isLuxury, structure);
     colonyDetails.appendChild(needBox);
   }
 
@@ -157,32 +160,37 @@ function createColonyDetails(structure) {
 function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
 
+  if (!structure.needBoxCache) {
+    structureRow.querySelector('.colony-details')?.remove();
+    structureRow.appendChild(createColonyDetails(structure));
+  }
+
   // Update comfort and happiness boxes
-  updateNeedBox(structureRow.querySelector(`#${structure.name}-happiness`), 'Happiness', structure.happiness, false, structure);
-  updateNeedBox(structureRow.querySelector(`#${structure.name}-comfort`), 'Comfort', structure.baseComfort, false, structure);
+  updateNeedBox(structure.needBoxCache.happiness, 'Happiness', 'happiness', structure.happiness, false, structure);
+  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.baseComfort, false, structure);
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
     const isLuxury = luxuryResources[need];
-    updateNeedBox(structureRow.querySelector(`#${structure.name}-${need}`), resources.colony[need].displayName, structure.filledNeeds[need], isLuxury, structure);
+    updateNeedBox(structure.needBoxCache[need], resources.colony[need].displayName, need, structure.filledNeeds[need], isLuxury, structure);
   }
 }
 
 // Helper function to create a need box with dynamic fill and color
-function createNeedBox(needName, value, id, isLuxury, structure) {
+function createNeedBox(needKey, displayName, value, isLuxury, structure) {
   const needBox = document.createElement('div');
   needBox.classList.add('need-box');
-  needBox.id = id;
+  needBox.id = `${structure.name}-${needKey}`;
 
-  // Add a checkbox for luxury resources
+  let checkbox = null;
   if (isLuxury) {
-    const checkbox = document.createElement('input');
+    checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.id = `${structure.name}-${needName}-checkbox`;
-    checkbox.checked = structure.luxuryResourcesEnabled[needName];
+    checkbox.id = `${structure.name}-${needKey}-checkbox`;
+    checkbox.checked = structure.luxuryResourcesEnabled[needKey];
     checkbox.addEventListener('change', () => {
-      structure.luxuryResourcesEnabled[needName] = checkbox.checked;
-      updateNeedBox(needBox, resources.colony[needName].displayName, structure.filledNeeds[needName], isLuxury, structure);
+      structure.luxuryResourcesEnabled[needKey] = checkbox.checked;
+      updateNeedBox(structure.needBoxCache[needKey], displayName, needKey, structure.filledNeeds[needKey], isLuxury, structure);
     });
 
     const checkboxContainer = document.createElement('div');
@@ -192,45 +200,68 @@ function createNeedBox(needName, value, id, isLuxury, structure) {
     needBox.appendChild(checkboxContainer);
   }
 
-  // Create the text container
   const textContainer = document.createElement('div');
   textContainer.classList.add('text-container');
-  textContainer.innerHTML = `<span>${needName}: ${(value * 100).toFixed(0)}%</span>`;
+  const textSpan = document.createElement('span');
+  textSpan.textContent = `${displayName}: ${(value * 100).toFixed(0)}%`;
+  textContainer.appendChild(textSpan);
 
-  // Create the fill element
   const fillElement = document.createElement('div');
   fillElement.classList.add('need-fill');
   fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
   fillElement.style.backgroundColor = getNeedColor(value);
 
-  // Append the text container and fill element to the need box
   needBox.appendChild(textContainer);
   needBox.appendChild(fillElement);
+
+  structure.needBoxCache[needKey] = {
+    box: needBox,
+    fill: fillElement,
+    text: textSpan,
+    checkbox
+  };
 
   return needBox;
 }
 
 // Helper function to update need boxes dynamically
-function updateNeedBox(needBox, needName, value, isLuxury, structure) {
-  if (needBox) {
-    // Update the text inside the box and the fill
-    const fillElement = needBox.querySelector('.need-fill');
-    const textContainer = needBox.querySelector('span');
-    fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
+function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, structure) {
+  if (cacheEntry) {
+    cacheEntry.fill.style.width = `${value === 0 ? 100 : value * 100}%`;
     const isDarkMode = document.body.classList.contains('dark-mode');
-    fillElement.style.backgroundColor = getNeedColor(value, isDarkMode);
-    textContainer.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
-    textContainer.style.color = isDarkMode ? 'white' : 'black';
+    cacheEntry.fill.style.backgroundColor = getNeedColor(value, isDarkMode);
+    cacheEntry.text.innerText = `${displayName}: ${(value * 100).toFixed(0)}%`;
+    cacheEntry.text.style.color = isDarkMode ? 'white' : 'black';
 
-    // Update the checkbox state for luxury resources
-    if (isLuxury) {
-      const checkbox = needBox.querySelector(`#${structure.name}-${needName}-checkbox`);
-      if (checkbox) {
-        checkbox.checked = structure.luxuryResourcesEnabled[needName];
-      }
+    if (isLuxury && cacheEntry.checkbox) {
+      cacheEntry.checkbox.checked = structure.luxuryResourcesEnabled[needKey];
     }
   }
 }
+
+function rebuildColonyNeedCache(structureRow, structure) {
+  const oldDetails = structureRow.querySelector('.colony-details');
+  if (oldDetails) {
+    oldDetails.replaceWith(createColonyDetails(structure));
+  } else {
+    structureRow.appendChild(createColonyDetails(structure));
+  }
+}
+
+function invalidateColonyNeedCache() {
+  Object.values(colonies).forEach(colony => {
+    colony.needBoxCache = undefined;
+  });
+}
+
+document.addEventListener('colonyNeedsChanged', e => {
+  const detail = e.detail || {};
+  if (detail.structureRow && detail.structure) {
+    rebuildColonyNeedCache(detail.structureRow, detail.structure);
+  }
+});
+
+document.addEventListener('colonyStructuresRebuilt', invalidateColonyNeedCache);
 
 // Helper function to determine the color based on the value
 
@@ -260,3 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
   createGrowthRateDisplay();
   initializeConstructionOfficeUI();
 });
+
+globalThis.rebuildColonyNeedCache = rebuildColonyNeedCache;
+globalThis.invalidateColonyNeedCache = invalidateColonyNeedCache;
+
+if (typeof module !== 'undefined') {
+  module.exports = { createColonyDetails, updateColonyDetailsDisplay, rebuildColonyNeedCache, invalidateColonyNeedCache };
+}
