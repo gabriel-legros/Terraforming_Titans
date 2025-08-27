@@ -11,6 +11,15 @@ const researchSubtabAlerts = {
     'advanced-research': false,
 };
 
+// Cached DOM nodes keyed by research id
+const researchElementCache = new Map();
+// Cached toggle completed buttons
+let cachedToggleButtons = [];
+// Cached advanced research tab elements
+const advancedResearchElements = { subtab: null, content: null };
+// Flag to rebuild caches when invalidated
+let researchUICacheInvalidated = true;
+
 function formatResearchCost(cost) {
     const parts = [];
     if (cost.research) {
@@ -29,35 +38,27 @@ function updateAllResearchButtons(researchData) {
             ? researchManager.getVisibleResearchIdsByCategory(tab)
             : new Set(researchData[tab].map(r => r.id));
         researchData[tab].forEach((researchItem) => {
-            const button = document.getElementById(`research-${researchItem.id}`);
-            if (button) {
-                
-                // Add or remove the 'completed-research' class based on the research status
-                const researchContainer = button.closest('.research-item');
-                if (researchContainer) {
-                    if (researchItem.isResearched) {
-                        researchContainer.classList.add('completed-research');
-                        researchContainer.classList.toggle('hidden', completedResearchHidden);
-                    } else {
-                        researchContainer.classList.remove('completed-research');
-                        researchContainer.classList.remove('hidden');
-                    }
-                    const costEl = researchContainer.querySelector('.research-cost');
-                    const descEl = researchContainer.querySelector('.research-description');
-                    const isVisible = visibleIds.has(researchItem.id);
-                    updateResearchButtonText(button, researchItem, isVisible);
-                    if (costEl && descEl) {
-                        if (isVisible) {
-                            costEl.textContent = `Cost: ${formatResearchCost(researchItem.cost)}`;
-                            descEl.textContent = researchItem.description;
-                        } else {
-                            costEl.textContent = 'Cost: ???';
-                            descEl.textContent = '???';
-                        }
-                    }
+            const elements = researchElementCache.get(researchItem.id);
+            if (!elements) return;
+            const { button, costEl, descEl, container } = elements;
+
+            if (researchItem.isResearched) {
+                container.classList.add('completed-research');
+                container.classList.toggle('hidden', completedResearchHidden);
+            } else {
+                container.classList.remove('completed-research');
+                container.classList.remove('hidden');
+            }
+
+            const isVisible = visibleIds.has(researchItem.id);
+            updateResearchButtonText(button, researchItem, isVisible);
+            if (costEl && descEl) {
+                if (isVisible) {
+                    costEl.textContent = `Cost: ${formatResearchCost(researchItem.cost)}`;
+                    descEl.textContent = researchItem.description;
                 } else {
-                    const isVisible = visibleIds.has(researchItem.id);
-                    updateResearchButtonText(button, researchItem, isVisible);
+                    costEl.textContent = 'Cost: ???';
+                    descEl.textContent = '???';
                 }
             }
         });
@@ -176,21 +177,15 @@ function initializeResearchTabs() {
         };
     });
 
-    // Add event listeners for "Toggle Completed" buttons
-    document.querySelectorAll('.toggle-completed-button').forEach(button => {
+    cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
+    cachedToggleButtons.forEach(button => {
         button.onclick = toggleCompletedResearch;
     });
 
-    updateAdvancedResearchVisibility();
-
-    // Load all research categories
-    const researchCategories = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
-    researchCategories.forEach(category => {
-        loadResearchCategory(category);
-    });
-
+    rebuildResearchCaches();
     updateAllResearchButtons(researchManager.researches);
     updateCompletedResearchVisibility();
+    updateAdvancedResearchVisibility();
 
     // Activate the 'energy' category
     activateResearchSubtab('energy-research');
@@ -278,6 +273,13 @@ function loadResearchCategory(category) {
 
         // Append the research container to the research list
         researchListContainer.appendChild(researchContainer);
+
+        researchElementCache.set(research.id, {
+            container: researchContainer,
+            button: researchButton,
+            costEl: researchCost,
+            descEl: researchDescription,
+        });
     });
 }
 
@@ -292,11 +294,13 @@ function toggleCompletedResearch() {
 
 
 function updateCompletedResearchVisibility() {
-    const toggleButtons = document.querySelectorAll('.toggle-completed-button');
+    if (cachedToggleButtons.length === 0) {
+        cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
+    }
     const allResearches = Object.values(researchManager.researches).flat();
     const completedResearch = allResearches.filter((research) => research.isResearched);
 
-    toggleButtons.forEach((toggleButton) => {
+    cachedToggleButtons.forEach((toggleButton) => {
         if (completedResearch.length === 0) {
             toggleButton.style.display = 'none';
         } else {
@@ -308,8 +312,11 @@ function updateCompletedResearchVisibility() {
 
 function updateAdvancedResearchVisibility() {
     const visible = researchManager && researchManager.isBooleanFlagSet('advancedResearchUnlocked');
-    const subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
-    const content = document.getElementById('advanced-research');
+    if (!advancedResearchElements.subtab || !advancedResearchElements.content) {
+        advancedResearchElements.subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
+        advancedResearchElements.content = document.getElementById('advanced-research');
+    }
+    const { subtab, content } = advancedResearchElements;
     if (subtab && content) {
         if (visible) {
             subtab.classList.remove('hidden');
@@ -321,17 +328,33 @@ function updateAdvancedResearchVisibility() {
     }
 }
 
+function rebuildResearchCaches() {
+    researchElementCache.clear();
+    const categories = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
+    categories.forEach(category => {
+        const container = document.getElementById(`${category}-research-buttons`);
+        if (container) loadResearchCategory(category);
+    });
+    cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
+    advancedResearchElements.subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
+    advancedResearchElements.content = document.getElementById('advanced-research');
+    researchUICacheInvalidated = false;
+}
+
+function invalidateResearchUICache() {
+    researchUICacheInvalidated = true;
+}
+
 function updateResearchUI() {
-    if (researchManager.orderDirty) {
-        const categories = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
-        categories.forEach(category => loadResearchCategory(category));
+    if (researchManager.orderDirty || researchUICacheInvalidated) {
+        rebuildResearchCaches();
         researchManager.orderDirty = false;
     }
-    updateAllResearchButtons(researchManager.researches); // Update research buttons display
+    updateAllResearchButtons(researchManager.researches);
     updateCompletedResearchVisibility();
     updateAdvancedResearchVisibility();
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { registerResearchUnlockAlert, updateResearchAlert, initializeResearchAlerts, markResearchSubtabViewed, markResearchViewed };
+    module.exports = { registerResearchUnlockAlert, updateResearchAlert, initializeResearchAlerts, markResearchSubtabViewed, markResearchViewed, invalidateResearchUICache, rebuildResearchCaches, loadResearchCategory, updateAllResearchButtons, toggleCompletedResearch, updateCompletedResearchVisibility, updateAdvancedResearchVisibility, updateResearchUI };
 }

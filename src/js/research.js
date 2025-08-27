@@ -165,6 +165,9 @@ class Research {
         );
       }
       this.orderDirty = true;
+      if (typeof invalidateResearchUICache === 'function') {
+        invalidateResearchUICache();
+      }
     }
   
     // Check if a research is available (i.e., prerequisites are met)
