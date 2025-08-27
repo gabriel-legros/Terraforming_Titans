@@ -1,5 +1,12 @@
 let projectElements = {};
 
+function invalidateAutomationSettingsCache(projectName) {
+  const els = projectElements[projectName];
+  if (els && els.automationSettingsContainer) {
+    els.cachedAutomationItems = Array.from(els.automationSettingsContainer.children);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Subtab functionality to show/hide project categories
   document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
@@ -259,6 +266,7 @@ function createProjectItem(project) {
   };
   if (typeof project.renderAutomationUI === 'function') {
     project.renderAutomationUI(automationSettingsContainer);
+    invalidateAutomationSettingsCache(project.name);
   }
 
   const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
@@ -633,7 +641,8 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      for (const child of automationSettingsContainer.children) {
+      const items = elements.cachedAutomationItems || [];
+      for (const child of items) {
         if (child && (child.nodeType === 1 || child instanceof Element) &&
             typeof getComputedStyle === 'function' &&
             getComputedStyle(child).display !== 'none') {
