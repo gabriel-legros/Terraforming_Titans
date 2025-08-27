@@ -62,12 +62,12 @@ describe('SpaceshipProject auto-start label', () => {
 
     project.continuous = true;
     ctx.updateProjectUI('test');
-    let label = ctx.projectElements.test.autoStartCheckboxContainer.querySelector('label');
+    let label = ctx.projectElements.test.autoStartLabel;
     expect(label.textContent).toBe('Run');
 
     project.continuous = false;
     ctx.updateProjectUI('test');
-    label = ctx.projectElements.test.autoStartCheckboxContainer.querySelector('label');
+    label = ctx.projectElements.test.autoStartLabel;
     expect(label.textContent).toBe('Auto start');
   });
 });

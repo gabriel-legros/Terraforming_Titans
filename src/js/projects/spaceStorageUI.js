@@ -14,9 +14,8 @@ const storageResourceOptions = [
 if (typeof SpaceStorageProject !== 'undefined') {
   SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
     const els = projectElements[this.name] || {};
-    if (els.autoStartCheckboxContainer) {
-      const autoLabel = els.autoStartCheckboxContainer.querySelector('label');
-      if (autoLabel) autoLabel.textContent = 'Auto Start Expansion';
+    if (els.autoStartLabel) {
+      els.autoStartLabel.textContent = 'Auto Start Expansion';
     }
     const container = document.createElement('div');
     container.classList.add('checkbox-container');
@@ -33,6 +32,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     projectElements[this.name] = {
       ...projectElements[this.name],
       shipAutoStartCheckbox: checkbox,
+      shipAutoStartLabel: label,
       shipAutoStartContainer: container,
     };
     return container;
@@ -61,6 +61,16 @@ if (typeof SpaceStorageProject !== 'undefined') {
 
   SpaceStorageProject.prototype.renderAutomationUI = function (container) {
     const els = projectElements[this.name] || {};
+    if (
+      els.shipAutoStartContainer &&
+      els.shipAutoStartContainer.parentElement !== container
+    ) {
+      delete els.shipAutoStartCheckbox;
+      delete els.shipAutoStartLabel;
+      delete els.shipAutoStartContainer;
+      delete els.prioritizeMegaCheckbox;
+      delete els.prioritizeMegaContainer;
+    }
     if (!els.shipAutoStartContainer) {
       const ship = this.createShipAutoStartCheckbox();
       const prioritize = this.createPrioritizeMegaCheckbox();
@@ -276,9 +286,8 @@ function renderSpaceStorageUI(project, container) {
 function updateSpaceStorageUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
-  if (els.autoStartCheckboxContainer) {
-    const autoLabel = els.autoStartCheckboxContainer.querySelector('label');
-    if (autoLabel) autoLabel.textContent = 'Auto Start Expansion';
+  if (els.autoStartLabel) {
+    els.autoStartLabel.textContent = 'Auto Start Expansion';
   }
   if (els.shipAutoStartContainer && els.prioritizeMegaContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
@@ -286,13 +295,10 @@ function updateSpaceStorageUI(project) {
     els.shipAutoStartContainer.style.display = display;
     els.prioritizeMegaContainer.style.display = display;
   }
-  if (els.shipAutoStartContainer) {
-    const label = els.shipAutoStartContainer.querySelector('label');
-    if (label) {
-      label.textContent = project.isShipOperationContinuous()
-        ? 'Run'
-        : 'Auto Start Ships';
-    }
+  if (els.shipAutoStartLabel) {
+    els.shipAutoStartLabel.textContent = project.isShipOperationContinuous()
+      ? 'Run'
+      : 'Auto Start Ships';
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
