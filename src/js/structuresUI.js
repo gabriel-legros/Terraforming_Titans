@@ -3,6 +3,32 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+// Cache combined building rows for each container
+const buildingContainerIds = [
+  'resource-buildings-buttons',
+  'production-buildings-buttons',
+  'energy-buildings-buttons',
+  'storage-buildings-buttons',
+  'terraforming-buildings-buttons'
+];
+
+const combinedBuildingRowCache = {};
+let structureUICacheInvalidated = true;
+
+function rebuildStructureUICache() {
+  buildingContainerIds.forEach(id => {
+    const container = document.getElementById(id);
+    combinedBuildingRowCache[id] = container
+      ? Array.from(container.getElementsByClassName('combined-building-row'))
+      : [];
+  });
+  structureUICacheInvalidated = false;
+}
+
+function invalidateStructureUICache() {
+  structureUICacheInvalidated = true;
+}
+
 // Create buttons for the buildings based on their categories
 function createBuildingButtons() {
   const categorizedBuildings = {
@@ -40,15 +66,18 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
   while (buttonsContainer.firstChild) {
     buttonsContainer.removeChild(buttonsContainer.firstChild);
   }
-
+  const rows = [];
   structures.forEach((structure) => {
     // Create structure row (shared for buildings and colonies)
     const structureRow = createStructureRow(structure, buildCallback, toggleCallback, isColony);
 
     // Append the structure row to the container
     buttonsContainer.appendChild(structureRow);
-  
+    rows.push(structureRow);
+
   });
+  combinedBuildingRowCache[containerId] = rows;
+  structureUICacheInvalidated = false;
 }
   
 // Create a structure row for both buildings and colonies
@@ -88,6 +117,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.appendChild(countSpan);
   const nameNode = document.createTextNode(` ${structure.displayName}`);
   button.appendChild(nameNode);
+  button.buttonNameNode = nameNode;
 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
@@ -555,7 +585,7 @@ function updateDecreaseButtonText(button, buildCount) {
       countSpan.textContent = newCount;
     }
 
-    const nameNode = button.childNodes[2];
+    const nameNode = button.buttonNameNode;
     const desiredName = ` ${structure.displayName}`;
     if (nameNode && nameNode.textContent !== desiredName) {
       nameNode.textContent = desiredName;
@@ -1160,22 +1190,18 @@ function formatStorageDetails(storageObject) {
 }
 
   function updateEmptyBuildingMessages() {
-  const containerIds = [
-    'resource-buildings-buttons',
-    'production-buildings-buttons',
-    'energy-buildings-buttons',
-    'storage-buildings-buttons',
-    'terraforming-buildings-buttons'
-  ];
+  if (structureUICacheInvalidated) {
+    rebuildStructureUICache();
+  }
 
-  containerIds.forEach(id => {
+  buildingContainerIds.forEach(id => {
     const container = document.getElementById(id);
     if (!container) return;
     const messageId = `${id}-empty-message`;
     let message = document.getElementById(messageId);
 
-    const hasVisible = Array.from(container.getElementsByClassName('combined-building-row'))
-      .some(row => row.style.display !== 'none');
+    const rows = combinedBuildingRowCache[id] || [];
+    const hasVisible = rows.some(row => row.style.display !== 'none');
 
     if (!hasVisible) {
       if (!message) {
@@ -1222,5 +1248,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getProdConsSections, formatMaintenanceDetails };
+  module.exports = { getProdConsSections, formatMaintenanceDetails, rebuildStructureUICache, invalidateStructureUICache };
 }
