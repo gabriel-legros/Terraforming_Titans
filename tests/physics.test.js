@@ -23,7 +23,7 @@ describe('physics helpers', () => {
   });
 
   test('calculateActualAlbedoPhysics includes clouds and haze', () => {
-    const res = calculateActualAlbedoPhysics(0.3, 1, { h2o: 0.02 }, 9.81);
+    const res = calculateActualAlbedoPhysics(0.3, 1, { h2o: 0.02, ch4: 0.01 }, 9.81);
     expect(res.albedo).toBeGreaterThan(0.3);
     expect(res.cfCloud).toBeGreaterThan(0);
     expect(res.cfHaze).toBeGreaterThan(0);

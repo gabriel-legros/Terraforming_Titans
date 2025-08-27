@@ -50,10 +50,17 @@ function rotationPeriodToDuration(rotationHours) {
   return (rotationHours / 24) * 30000;
 }
 
+let dayNightContainer = null;
 
+function resetDayNightContainerCache() {
+  dayNightContainer = null;
+}
 
 function updateDayNightDisplay() {
-  const container = document.querySelector('.day-night-progress-bar-container');
+  if (!dayNightContainer) {
+    dayNightContainer = document.querySelector('.day-night-progress-bar-container');
+  }
+  const container = dayNightContainer;
   if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
     if (container) container.style.display = 'none';
     return;
@@ -83,5 +90,5 @@ function updateDayNightDisplay() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { DayNightCycle, rotationPeriodToDuration, updateDayNightDisplay };
+  module.exports = { DayNightCycle, rotationPeriodToDuration, updateDayNightDisplay, resetDayNightContainerCache };
 }
