@@ -17,6 +17,12 @@ class CargoRocketProject extends Project {
     const selectionGrid = document.createElement('div');
     selectionGrid.classList.add('cargo-selection-grid');
 
+    const elements = projectElements[this.name] = {
+      ...projectElements[this.name],
+      selectionInputs: [],
+      priceSpans: [],
+    };
+
     const headerRow = document.createElement('div');
     headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
     headerRow.innerHTML = `
@@ -68,6 +74,9 @@ class CargoRocketProject extends Project {
         priceDisplay.textContent = `${formatNumber(pricePerUnit, true)}`;
         resourceRow.appendChild(priceDisplay);
 
+        elements.selectionInputs.push(quantityInput);
+        elements.priceSpans.push(priceDisplay);
+
         const buttonsContainer = document.createElement('div');
         buttonsContainer.classList.add('cargo-buttons-container');
         const buttonValues = [0, 1, 10, 100, 1000, 10000, 100000, 1000000];
@@ -111,6 +120,7 @@ class CargoRocketProject extends Project {
     projectElements[this.name] = {
       ...projectElements[this.name],
       totalCostDisplay: totalCostDisplay,
+      totalCostValue: totalCostValue,
       resourceSelectionContainer: container,
     };
   }
@@ -121,39 +131,52 @@ class CargoRocketProject extends Project {
 
     if (this.attributes.resourceChoiceGainCost) {
       updateTotalCostDisplay(this);
-      for (const category in this.attributes.resourceChoiceGainCost) {
-        for (const resourceId in this.attributes.resourceChoiceGainCost[category]) {
-          const resource = resources[category][resourceId];
-          const row = document.getElementById(`${this.name}-${category}-${resourceId}-row`);
-          if (row) {
-            row.style.display = resource.unlocked ? 'grid' : 'none';
-            const priceElement = row.querySelector('.resource-price-display');
-            if (priceElement) {
-              let price = this.attributes.resourceChoiceGainCost[category][resourceId];
-              if (resourceId === 'spaceships') {
-                price += this.getSpaceshipPriceIncrease();
-              }
-              priceElement.textContent = `${formatNumber(price, true)}`;
-            }
-          }
+
+      const inputs = elements.selectionInputs || [];
+      const prices = elements.priceSpans || [];
+      inputs.forEach((input, index) => {
+        const category = input?.dataset?.category;
+        const resourceId = input?.dataset?.resource;
+        if (typeof category !== 'string' || typeof resourceId !== 'string') {
+          return;
         }
-      }
+        const resource = resources[category]?.[resourceId];
+        const row = input.closest('.cargo-resource-row');
+        if (row && resource) {
+          row.style.display = resource.unlocked ? 'grid' : 'none';
+        }
+        const priceSpan = prices[index];
+        if (priceSpan) {
+          let price = this.attributes.resourceChoiceGainCost?.[category]?.[resourceId];
+          if (typeof price !== 'number') return;
+          if (resourceId === 'spaceships') {
+            price += this.getSpaceshipPriceIncrease();
+          }
+          priceSpan.textContent = `${formatNumber(price, true)}`;
+        }
+      });
 
       if (this.oneTimeResourceGainsDisplay) {
-        this.oneTimeResourceGainsDisplay.forEach(({ resource, quantity }) => {
-          const inputElement = document.querySelector(`.resource-selection-${this.name}[data-resource="${resource}"]`);
-          if (inputElement) {
-            inputElement.value = quantity;
+        inputs.forEach((input) => {
+          const match = this.oneTimeResourceGainsDisplay.find(
+            (r) => r.resource === input.dataset.resource
+          );
+          if (match) {
+            input.value = match.quantity;
           }
         });
         this.oneTimeResourceGainsDisplay = null;
       }
 
       const selectedResources = [];
-      document.querySelectorAll(`.resource-selection-${this.name}`).forEach((element) => {
-        const category = element.dataset.category;
-        const resource = element.dataset.resource;
-        const quantity = parseInt(element.value, 10);
+      inputs.forEach((input) => {
+        const category = input?.dataset?.category;
+        const resource = input?.dataset?.resource;
+        if (typeof category !== 'string' || typeof resource !== 'string') {
+          return;
+        }
+        const raw = input.value;
+        const quantity = typeof raw === 'string' ? parseInt(raw, 10) : 0;
         if (quantity > 0) {
           selectedResources.push({ category, resource, quantity });
         }
@@ -484,10 +507,26 @@ class CargoRocketProject extends Project {
   }
 }
 
+function invalidateCargoSelectionCache(project) {
+  const elements = projectElements[project.name];
+  if (!elements || !elements.resourceSelectionContainer) return;
+  const inputs = Array.from(
+    elements.resourceSelectionContainer.querySelectorAll(
+      `.resource-selection-${project.name}`
+    )
+  );
+  elements.selectionInputs = inputs;
+  elements.priceSpans = inputs.map((input) =>
+    input.parentElement.querySelector('.resource-price-display')
+  );
+}
+
 if (typeof globalThis !== 'undefined') {
   globalThis.CargoRocketProject = CargoRocketProject;
+  globalThis.invalidateCargoSelectionCache = invalidateCargoSelectionCache;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = CargoRocketProject;
+  module.exports.invalidateCargoSelectionCache = invalidateCargoSelectionCache;
 }

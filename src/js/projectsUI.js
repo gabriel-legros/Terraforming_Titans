@@ -395,13 +395,18 @@ function updateSustainCostDisplay(project) {
 function updateTotalCostDisplay(project) {
   let totalCost = 0;
 
-  // Iterate through each resource input to calculate the total funding cost
-  const quantityInputs = document.querySelectorAll(`.resource-selection-${project.name}`);
+  const elements = projectElements[project.name] || {};
+  const quantityInputs = elements.selectionInputs || [];
   quantityInputs.forEach((input) => {
-    const category = input.dataset.category;
-    const resource = input.dataset.resource;
-    const quantity = parseInt(input.value, 10);
-    const basePrice = project.attributes.resourceChoiceGainCost[category][resource];
+    const category = input?.dataset?.category;
+    const resource = input?.dataset?.resource;
+    if (typeof category !== 'string' || typeof resource !== 'string') {
+      return;
+    }
+    const raw = input.value;
+    const quantity = typeof raw === 'string' ? parseInt(raw, 10) : 0;
+    const basePrice = project.attributes.resourceChoiceGainCost?.[category]?.[resource];
+    if (typeof basePrice !== 'number') return;
     if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
       totalCost += project.getSpaceshipTotalCost(quantity, basePrice);
     } else {
@@ -409,8 +414,7 @@ function updateTotalCostDisplay(project) {
     }
   });
 
-  // Update the total cost display element
-  const totalCostValue = document.getElementById(`${project.name}-total-cost-display-value`);
+  const totalCostValue = elements.totalCostValue;
   if (totalCostValue) {
     totalCostValue.textContent = formatNumber(totalCost, true);
     const available = resources.colony?.funding?.value || 0;
