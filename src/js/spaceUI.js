@@ -8,28 +8,59 @@ const planetUIElements = {};
 let spaceUIInitialized = false;
 // Track visibility of the Random subtab
 let spaceRandomTabVisible = false;
+// Cached nodes for the Random world subtab button and content container
+let spaceRandomTabButton = null;
+let spaceRandomContentContainer = null;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
 
+function cacheSpaceRandomElements() {
+    spaceRandomTabButton = document.querySelector('.space-subtab[data-subtab="space-random"]');
+    spaceRandomContentContainer = document.getElementById('space-random');
+}
+
+function ensureSpaceRandomElements() {
+    if (!spaceRandomTabButton || !spaceRandomContentContainer) {
+        cacheSpaceRandomElements();
+        return;
+    }
+    const body = document.body;
+    if (!body) {
+        cacheSpaceRandomElements();
+        return;
+    }
+    try {
+        if (!body.contains(spaceRandomTabButton) || !body.contains(spaceRandomContentContainer)) {
+            cacheSpaceRandomElements();
+        }
+    } catch {
+        cacheSpaceRandomElements();
+    }
+}
+
+function invalidateSpaceRandomCache() {
+    spaceRandomTabButton = null;
+    spaceRandomContentContainer = null;
+}
+
 function showSpaceRandomTab() {
     spaceRandomTabVisible = true;
-    const tab = document.querySelector('.space-subtab[data-subtab="space-random"]');
-    const content = document.getElementById('space-random');
-    if (tab) tab.classList.remove('hidden');
-    if (content) content.classList.remove('hidden');
+    ensureSpaceRandomElements();
+    if (spaceRandomTabButton) spaceRandomTabButton.classList.remove('hidden');
+    if (spaceRandomContentContainer) spaceRandomContentContainer.classList.remove('hidden');
 }
 
 function hideSpaceRandomTab() {
     spaceRandomTabVisible = false;
-    const tab = document.querySelector('.space-subtab[data-subtab="space-random"]');
-    const content = document.getElementById('space-random');
-    if (tab) tab.classList.add('hidden');
-    if (content) content.classList.add('hidden');
+    ensureSpaceRandomElements();
+    if (spaceRandomTabButton) spaceRandomTabButton.classList.add('hidden');
+    if (spaceRandomContentContainer) spaceRandomContentContainer.classList.add('hidden');
 }
 
 function updateSpaceRandomVisibility() {
     if (!_spaceManagerInstance) return;
+    ensureSpaceRandomElements();
     if (_spaceManagerInstance.randomTabEnabled) {
         if (!spaceRandomTabVisible) {
             showSpaceRandomTab();
@@ -40,6 +71,7 @@ function updateSpaceRandomVisibility() {
 }
 
 function initializeSpaceTabs() {
+    invalidateSpaceRandomCache();
     document.querySelectorAll('.space-subtab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.space-subtab').forEach(t => t.classList.remove('active'));
@@ -49,6 +81,7 @@ function initializeSpaceTabs() {
             document.getElementById(id).classList.add('active');
         });
     });
+    cacheSpaceRandomElements();
 }
 
 function activateSpaceSubtab(subtabId) {
