@@ -17,6 +17,22 @@ function getGasRangeString(gasName) {
 let terraformingTabsInitialized = false;
 let terraformingSummaryInitialized = false;
 
+const terraformingUICache = {
+  temperature: {},
+  atmosphere: {},
+  water: {},
+  life: {},
+  magnetosphere: {},
+  luminosity: {}
+};
+
+function resetTerraformingUI() {
+  terraformingSummaryInitialized = false;
+  Object.keys(terraformingUICache).forEach(key => {
+    terraformingUICache[key] = {};
+  });
+}
+
 function initializeTerraformingTabs() {
   if (terraformingTabsInitialized) {
     return;
@@ -177,68 +193,71 @@ function createTemperatureBox(row) {
     temperatureBox.appendChild(targetSpan);
 
     row.appendChild(temperatureBox);
+    terraformingUICache.temperature = {
+      box: temperatureBox,
+      tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
+      target: temperatureBox.querySelector('#temperature-target'),
+      current: temperatureBox.querySelector('#temperature-current'),
+      equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
+      tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
+      tropicalEqTemp: temperatureBox.querySelector('#tropical-eq-temp'),
+      tropicalDelta: temperatureBox.querySelector('#tropical-delta'),
+      tropicalDay: temperatureBox.querySelector('#tropical-day'),
+      tropicalNight: temperatureBox.querySelector('#tropical-night'),
+      temperateTemp: temperatureBox.querySelector('#temperate-temp'),
+      temperateEqTemp: temperatureBox.querySelector('#temperate-eq-temp'),
+      temperateDelta: temperatureBox.querySelector('#temperate-delta'),
+      temperateDay: temperatureBox.querySelector('#temperate-day'),
+      temperateNight: temperatureBox.querySelector('#temperate-night'),
+      polarTemp: temperatureBox.querySelector('#polar-temp'),
+      polarEqTemp: temperatureBox.querySelector('#polar-eq-temp'),
+      polarDelta: temperatureBox.querySelector('#polar-delta'),
+      polarDay: temperatureBox.querySelector('#polar-day'),
+      polarNight: temperatureBox.querySelector('#polar-night'),
+      penalty: temperatureBox.querySelector('#temperature-energy-penalty')
+    };
   }
-  
+
   function updateTemperatureBox() {
-    const temperatureBox = document.getElementById('temperature-box');
+    const els = terraformingUICache.temperature;
+    const temperatureBox = els.box;
+    if (!temperatureBox) return;
 
     const unit = getTemperatureUnit();
-    temperatureBox.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
-    const targetSpan = document.getElementById('temperature-target');
-    if(targetSpan){
-      targetSpan.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
+    els.tempUnits.forEach(el => el.textContent = unit);
+    if (els.target) {
+      els.target.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
     }
 
-    const temperatureCurrent = document.getElementById('temperature-current');
-    temperatureCurrent.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
-  
-    const equilibriumTemp = document.getElementById('equilibrium-temp');
-    equilibriumTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
+    els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
+    els.equilibrium.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
 
-    const tropicalTemp = document.getElementById('tropical-temp');
-    tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
-    const tropicalEqTemp = document.getElementById('tropical-eq-temp');
-    tropicalEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.equilibriumTemperature), false, 2);
-    const tropicalDelta = document.getElementById('tropical-delta');
+    els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
+    els.tropicalEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.equilibriumTemperature), false, 2);
     const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
-    tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
-    const tropicalDay = document.getElementById('tropical-day');
-    tropicalDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
-    const tropicalNight = document.getElementById('tropical-night');
-    tropicalNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
-  
-    const temperateTemp = document.getElementById('temperate-temp');
-    temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
-    const temperateEqTemp = document.getElementById('temperate-eq-temp');
-    temperateEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.equilibriumTemperature), false, 2);
-    const temperateDelta = document.getElementById('temperate-delta');
+    els.tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
+    els.tropicalDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
+    els.tropicalNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
+
+    els.temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
+    els.temperateEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.equilibriumTemperature), false, 2);
     const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
-    temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
-    const temperateDay = document.getElementById('temperate-day');
-    temperateDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
-    const temperateNight = document.getElementById('temperate-night');
-    temperateNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
-  
-    const polarTemp = document.getElementById('polar-temp');
-    polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
-    const polarEqTemp = document.getElementById('polar-eq-temp');
-    polarEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.equilibriumTemperature), false, 2);
-    const polarDelta = document.getElementById('polar-delta');
+    els.temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
+    els.temperateDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
+    els.temperateNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
+
+    els.polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
+    els.polarEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.equilibriumTemperature), false, 2);
     const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
-    polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
-    const polarDay = document.getElementById('polar-day');
-    polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
-    const polarNight = document.getElementById('polar-night');
-    polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
+    els.polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
+    els.polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
+    els.polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
 
-    if(terraforming.getTemperatureStatus()){
-      temperatureBox.style.borderColor = 'green';
-    } else {
-      temperatureBox.style.borderColor = 'red';
+    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? 'green' : 'red';
+
+    if (els.penalty) {
+      els.penalty.textContent = `Colony energy cost multiplier from temperature : ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
     }
-
-    const temperatureEnergyPenalty = document.getElementById('temperature-energy-penalty');
-    temperatureEnergyPenalty.textContent = `Colony energy cost multiplier from temperature : ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`
   }
 
   function createAtmosphereBox(row) {
@@ -296,26 +315,37 @@ function createTemperatureBox(row) {
     }
 
     row.appendChild(atmosphereBox);
+    const gasElements = {};
+    for (const gas in resources.atmospheric) {
+      gasElements[gas] = {
+        pressure: atmosphereBox.querySelector(`#${gas}-pressure`),
+        delta: atmosphereBox.querySelector(`#${gas}-delta`),
+        status: atmosphereBox.querySelector(`#${gas}-status`)
+      };
+    }
+    terraformingUICache.atmosphere = {
+      box: atmosphereBox,
+      current: atmosphereBox.querySelector('#atmosphere-current'),
+      opticalDepth: atmosphereBox.querySelector('#optical-depth'),
+      opticalDepthInfo: atmosphereBox.querySelector('#optical-depth-info'),
+      opticalDepthTooltip: atmosphereBox.querySelector('#optical-depth-tooltip'),
+      windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
+      gases: gasElements
+    };
   }
-  
+
   function updateAtmosphereBox() {
-    const atmosphereBox = document.getElementById('atmosphere-box');
-    if(terraforming.getAtmosphereStatus()){
-      atmosphereBox.style.borderColor = 'green';
-    } else {
-      atmosphereBox.style.borderColor = 'red';
-    }
+    const els = terraformingUICache.atmosphere;
+    const atmosphereBox = els.box;
+    if (!atmosphereBox) return;
+    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
 
-    const atmosphereCurrent = document.getElementById('atmosphere-current');
-    // Calculate total pressure on the fly
-    atmosphereCurrent.textContent = terraforming.calculateTotalPressure().toFixed(2);
+    els.current.textContent = terraforming.calculateTotalPressure().toFixed(2);
 
-    const opticalDepth = document.getElementById('optical-depth');
-    if (opticalDepth) {
-      opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(2);
+    if (els.opticalDepth) {
+      els.opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(2);
     }
-    const opticalDepthInfo = document.getElementById('optical-depth-info');
-    if (opticalDepthInfo) {
+    if (els.opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
       const lines = Object.entries(contributions)
         .map(([gas, val]) => {
@@ -331,21 +361,16 @@ function createTemperatureBox(row) {
             : gas.toUpperCase();
           return `${displayName}: ${val.toFixed(2)}`;
         });
-      const tooltip = document.getElementById('optical-depth-tooltip');
-      if (tooltip) {
-        tooltip.innerHTML = lines.join('<br>');
+      if (els.opticalDepthTooltip) {
+        els.opticalDepthTooltip.innerHTML = lines.join('<br>');
       }
     }
 
-
-    const windMultiplier = document.getElementById('wind-turbine-multiplier');
-    if (windMultiplier) {
-      windMultiplier.textContent = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
+    if (els.windMultiplier) {
+      els.windMultiplier.textContent = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
     }
-  
-    // Iterate through gases defined in the global resources (which the UI table expects)
+
     for (const gas in resources.atmospheric) {
-        // Calculate current global pressure for this gas on the fly (in Pa)
         const currentAmount = resources.atmospheric[gas]?.value || 0;
         const currentGlobalPressurePa = calculateAtmosphericPressure(
             currentAmount,
@@ -353,13 +378,11 @@ function createTemperatureBox(row) {
             terraforming.celestialParameters.radius
         );
 
-        const gasPressureElement = document.getElementById(`${gas}-pressure`);
-        if (gasPressureElement) {
-            // Display the pressure in Pa
-            gasPressureElement.textContent = formatNumber(currentGlobalPressurePa, false, 2);
+        const gasEls = els.gases[gas];
+        if (gasEls && gasEls.pressure) {
+            gasEls.pressure.textContent = formatNumber(currentGlobalPressurePa, false, 2);
         }
 
-        // Calculate initial pressure from initial parameters
         const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
         const initialGlobalPressurePa = calculateAtmosphericPressure(
              initialAmount,
@@ -367,26 +390,24 @@ function createTemperatureBox(row) {
              terraforming.celestialParameters.radius
         );
 
-        const gasDeltaElement = document.getElementById(`${gas}-delta`);
-        if (gasDeltaElement) {
-            const delta = currentGlobalPressurePa - initialGlobalPressurePa; // Delta in Pa
-            gasDeltaElement.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+        if (gasEls && gasEls.delta) {
+            const delta = currentGlobalPressurePa - initialGlobalPressurePa;
+            gasEls.delta.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
         }
 
-        const statusElement = document.getElementById(`${gas}-status`);
-        if (statusElement) {
+        if (gasEls && gasEls.status) {
             const target = terraformingGasTargets[gas];
             if (!target) {
-                statusElement.textContent = '';
-                statusElement.classList.remove('status-check', 'status-cross');
+                gasEls.status.textContent = '';
+                gasEls.status.classList.remove('status-check', 'status-cross');
             } else if (currentGlobalPressurePa >= target.min && currentGlobalPressurePa <= target.max) {
-                statusElement.textContent = '✓';
-                statusElement.classList.add('status-check');
-                statusElement.classList.remove('status-cross');
+                gasEls.status.textContent = '✓';
+                gasEls.status.classList.add('status-check');
+                gasEls.status.classList.remove('status-cross');
             } else {
-                statusElement.textContent = '✗';
-                statusElement.classList.add('status-cross');
-                statusElement.classList.remove('status-check');
+                gasEls.status.textContent = '✗';
+                gasEls.status.classList.add('status-cross');
+                gasEls.status.classList.remove('status-check');
             }
         }
     }
@@ -460,6 +481,23 @@ function createWaterBox(row) {
     waterBox.appendChild(targetSpan);
 
     row.appendChild(waterBox);
+    terraformingUICache.water = {
+      box: waterBox,
+      waterCurrent: waterBox.querySelector('#water-current'),
+      iceCurrent: waterBox.querySelector('#ice-current'),
+      evaporationRate: waterBox.querySelector('#evaporation-rate'),
+      sublimationRate: waterBox.querySelector('#sublimation-rate'),
+      rainfallRate: waterBox.querySelector('#rainfall-rate'),
+      snowfallRate: waterBox.querySelector('#snowfall-rate'),
+      meltingRate: waterBox.querySelector('#melting-rate'),
+      freezingRate: waterBox.querySelector('#freezing-rate'),
+      evaporationRateKg: waterBox.querySelector('#evaporation-rate-kg'),
+      sublimationRateKg: waterBox.querySelector('#sublimation-rate-kg'),
+      rainfallRateKg: waterBox.querySelector('#rainfall-rate-kg'),
+      snowfallRateKg: waterBox.querySelector('#snowfall-rate-kg'),
+      meltingRateKg: waterBox.querySelector('#melting-rate-kg'),
+      freezingRateKg: waterBox.querySelector('#freezing-rate-kg')
+    };
   }
 
   function formatWaterRate(value) {
@@ -467,7 +505,9 @@ function createWaterBox(row) {
   }
   
   function updateWaterBox() {
-    const waterBox = document.getElementById('water-box');
+    const els = terraformingUICache.water;
+    const waterBox = els.box;
+    if (!waterBox) return;
     const zones = ZONES;
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
@@ -493,45 +533,25 @@ function createWaterBox(row) {
     const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice');
 
     // Update border based on average liquid coverage vs target
-    if (avgLiquidCoverage > terraforming.waterTarget) { // Use the stored global target
-        waterBox.style.borderColor = 'green';
-    } else {
-        waterBox.style.borderColor = 'red';
-    }
+    waterBox.style.borderColor = avgLiquidCoverage > terraforming.waterTarget ? 'green' : 'red';
 
-    // Update UI elements
-    const waterCurrent = document.getElementById('water-current');
-    waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
+    els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
+    els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
 
-    const iceCurrent = document.getElementById('ice-current');
-    iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
+    els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);
+    els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate);
+    els.rainfallRate.textContent = formatWaterRate(terraforming.totalRainfallRate);
+    els.snowfallRate.textContent = formatWaterRate(terraforming.totalSnowfallRate);
+    els.meltingRate.textContent = formatWaterRate(terraforming.totalMeltRate);
+    els.freezingRate.textContent = formatWaterRate(terraforming.totalFreezeRate);
 
-    // Update rates (displaying total tons/s from terraforming object)
-    document.getElementById('evaporation-rate').textContent = formatWaterRate(terraforming.totalEvaporationRate);
-    document.getElementById('sublimation-rate').textContent = formatWaterRate(terraforming.totalWaterSublimationRate); // Corrected property name
-    document.getElementById('rainfall-rate').textContent = formatWaterRate(terraforming.totalRainfallRate);
-    document.getElementById('snowfall-rate').textContent = formatWaterRate(terraforming.totalSnowfallRate);
-    document.getElementById('melting-rate').textContent = formatWaterRate(terraforming.totalMeltRate); // Corrected property name
-    document.getElementById('freezing-rate').textContent = formatWaterRate(terraforming.totalFreezeRate); // Corrected property name
-
-    // Update rates (displaying kg/m²/s average)
-    const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1; // Avoid division by zero
-    document.getElementById('evaporation-rate-kg').textContent = formatWaterRate(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
-    // Use the stored total rates from terraforming object for kg/m²/s display
-    const sublimationRateKg = document.getElementById('sublimation-rate-kg');
-    sublimationRateKg.textContent = formatWaterRate(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea); // Corrected property name
-
-    const rainfallRateKg = document.getElementById('rainfall-rate-kg');
-    rainfallRateKg.textContent = formatWaterRate(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
-
-    const snowfallRateKg = document.getElementById('snowfall-rate-kg');
-    snowfallRateKg.textContent = formatWaterRate(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
-
-    const meltingRateKg = document.getElementById('melting-rate-kg');
-    meltingRateKg.textContent = formatWaterRate(terraforming.totalMeltRate * 1000 / safeSurfaceArea); // Corrected property name
-
-    const freezingRateKg = document.getElementById('freezing-rate-kg');
-    freezingRateKg.textContent = formatWaterRate(terraforming.totalFreezeRate * 1000 / safeSurfaceArea); // Corrected property name
+    const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1;
+    els.evaporationRateKg.textContent = formatWaterRate(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
+    els.sublimationRateKg.textContent = formatWaterRate(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea);
+    els.rainfallRateKg.textContent = formatWaterRate(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
+    els.snowfallRateKg.textContent = formatWaterRate(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
+    els.meltingRateKg.textContent = formatWaterRate(terraforming.totalMeltRate * 1000 / safeSurfaceArea);
+    els.freezingRateKg.textContent = formatWaterRate(terraforming.totalFreezeRate * 1000 / safeSurfaceArea);
   }
 
   function createLifeBox(row) {
@@ -577,10 +597,24 @@ function createWaterBox(row) {
     lifeBox.appendChild(targetSpan);
 
     row.appendChild(lifeBox);
+    terraformingUICache.life = {
+      box: lifeBox,
+      target: lifeBox.querySelector('.terraforming-target'),
+      coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
+      coveragePolar: lifeBox.querySelector('#life-coverage-polar'),
+      coverageTemperate: lifeBox.querySelector('#life-coverage-temperate'),
+      coverageTropical: lifeBox.querySelector('#life-coverage-tropical'),
+      photoOverall: lifeBox.querySelector('#life-photo-overall'),
+      photoPolar: lifeBox.querySelector('#life-photo-polar'),
+      photoTemperate: lifeBox.querySelector('#life-photo-temperate'),
+      photoTropical: lifeBox.querySelector('#life-photo-tropical')
+    };
 }
 
 function updateLifeBox() {
-    const lifeBox = document.getElementById('life-box');
+    const els = terraformingUICache.life;
+    const lifeBox = els.box;
+    if (!lifeBox) return;
     const zones = ZONES;
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
@@ -594,14 +628,8 @@ function updateLifeBox() {
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     const effectiveTarget = getEffectiveLifeFraction(terraforming);
-    if (avgBiomassCoverage > effectiveTarget) {
-        lifeBox.style.borderColor = 'green';
-    } else {
-        lifeBox.style.borderColor = 'red';
-    }
-
-    const targetSpan = lifeBox.querySelector('.terraforming-target');
-    if (targetSpan) targetSpan.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
+    lifeBox.style.borderColor = avgBiomassCoverage > effectiveTarget ? 'green' : 'red';
+    if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
 
     // Calculate zonal coverage percentages
     const polarCov = terraforming.zonalCoverageCache['polar']?.biomass ?? 0;
@@ -609,21 +637,14 @@ function updateLifeBox() {
     const tropicalCov = terraforming.zonalCoverageCache['tropical']?.biomass ?? 0;
 
     // Update life coverage display
-    const overallEl = document.getElementById('life-coverage-overall');
-    if (overallEl) overallEl.textContent = (avgBiomassCoverage * 100).toFixed(2);
-    const polarEl = document.getElementById('life-coverage-polar');
-    if (polarEl) polarEl.textContent = (polarCov * 100).toFixed(2);
-    const temperateEl = document.getElementById('life-coverage-temperate');
-    if (temperateEl) temperateEl.textContent = (temperateCov * 100).toFixed(2);
-    const tropicalEl = document.getElementById('life-coverage-tropical');
-    if (tropicalEl) tropicalEl.textContent = (tropicalCov * 100).toFixed(2);
+    if (els.coverageOverall) els.coverageOverall.textContent = (avgBiomassCoverage * 100).toFixed(2);
+    if (els.coveragePolar) els.coveragePolar.textContent = (polarCov * 100).toFixed(2);
+    if (els.coverageTemperate) els.coverageTemperate.textContent = (temperateCov * 100).toFixed(2);
+    if (els.coverageTropical) els.coverageTropical.textContent = (tropicalCov * 100).toFixed(2);
 
-    const photoTrop = document.getElementById('life-photo-tropical');
-    if (photoTrop) photoTrop.textContent = (terraforming.calculateZonalSolarPanelMultiplier('tropical')*100).toFixed(2);
-    const photoTemp = document.getElementById('life-photo-temperate');
-    if (photoTemp) photoTemp.textContent = (terraforming.calculateZonalSolarPanelMultiplier('temperate')*100).toFixed(2);
-    const photoPolar = document.getElementById('life-photo-polar');
-    if (photoPolar) photoPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
+    if (els.photoTropical) els.photoTropical.textContent = (terraforming.calculateZonalSolarPanelMultiplier('tropical')*100).toFixed(2);
+    if (els.photoTemperate) els.photoTemperate.textContent = (terraforming.calculateZonalSolarPanelMultiplier('temperate')*100).toFixed(2);
+    if (els.photoPolar) els.photoPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
   }
 
   function formatRadiation(value){
@@ -668,15 +689,24 @@ function updateLifeBox() {
     }
 
     row.appendChild(magnetosphereBox);
+    terraformingUICache.magnetosphere = {
+      box: magnetosphereBox,
+      status: magnetosphereBox.querySelector('#magnetosphere-status'),
+      surfaceRadiation: magnetosphereBox.querySelector('#surface-radiation'),
+      orbitalRadiation: magnetosphereBox.querySelector('#orbital-radiation'),
+      surfaceRadiationPenalty: magnetosphereBox.querySelector('#surface-radiation-penalty')
+    };
   }
 
   // Function to update the magnetosphere box with the latest values
   function updateMagnetosphereBox() {
-    const magnetosphereBox = document.getElementById('magnetosphere-box');
-      const magnetosphereStatus = document.getElementById('magnetosphere-status');
-      const surfaceRadiation = document.getElementById('surface-radiation');
-      const orbitalRadiation = document.getElementById('orbital-radiation');
-      const surfaceRadiationPenalty = document.getElementById('surface-radiation-penalty');
+    const els = terraformingUICache.magnetosphere;
+    const magnetosphereBox = els.box;
+    if (!magnetosphereBox) return;
+    const magnetosphereStatus = els.status;
+    const surfaceRadiation = els.surfaceRadiation;
+    const orbitalRadiation = els.orbitalRadiation;
+    const surfaceRadiationPenalty = els.surfaceRadiationPenalty;
 
     // Update status based on natural or artificial magnetosphere
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
@@ -685,30 +715,28 @@ function updateLifeBox() {
         ? 'Artificial magnetosphere'
         : 'No magnetosphere';
 
-    magnetosphereStatus.textContent = magnetosphereStatusText;
-
-      if (orbitalRadiation) {
-        orbitalRadiation.textContent = formatRadiation(terraforming.orbitalRadiation || 0);
-      }
-      if (surfaceRadiation) {
-        surfaceRadiation.textContent = formatRadiation(terraforming.surfaceRadiation || 0);
-      }
-      if (surfaceRadiationPenalty) {
-        const penaltyRow = surfaceRadiationPenalty.parentElement;
-        const penaltyValue = terraforming.radiationPenalty || 0;
-        if (penaltyValue < 0.0001) {
-          penaltyRow.style.display = 'none';
-        } else {
-          penaltyRow.style.display = '';
-          surfaceRadiationPenalty.textContent = formatNumber(penaltyValue * 100, false, 0);
-        }
-      }
-
-    if(terraforming.getMagnetosphereStatus()){
-      magnetosphereBox.style.borderColor = 'green';
-    } else {
-      magnetosphereBox.style.borderColor = 'red';
+    if (magnetosphereStatus) {
+      magnetosphereStatus.textContent = magnetosphereStatusText;
     }
+
+    if (orbitalRadiation) {
+      orbitalRadiation.textContent = formatRadiation(terraforming.orbitalRadiation || 0);
+    }
+    if (surfaceRadiation) {
+      surfaceRadiation.textContent = formatRadiation(terraforming.surfaceRadiation || 0);
+    }
+    if (surfaceRadiationPenalty) {
+      const penaltyRow = surfaceRadiationPenalty.parentElement;
+      const penaltyValue = terraforming.radiationPenalty || 0;
+      if (penaltyValue < 0.0001) {
+        penaltyRow.style.display = 'none';
+      } else {
+        penaltyRow.style.display = '';
+        surfaceRadiationPenalty.textContent = formatNumber(penaltyValue * 100, false, 0);
+      }
+    }
+
+    magnetosphereBox.style.borderColor = terraforming.getMagnetosphereStatus() ? 'green' : 'red';
   }
   
   function buildAlbedoTable() {
@@ -799,52 +827,61 @@ function updateLifeBox() {
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
+    terraformingUICache.luminosity = {
+      box: luminosityBox,
+      groundAlbedo: luminosityBox.querySelector('#ground-albedo'),
+      groundAlbedoDelta: luminosityBox.querySelector('#ground-albedo-delta'),
+      groundAlbedoTooltip: luminosityBox.querySelector('#ground-albedo-tooltip'),
+      surfaceAlbedo: luminosityBox.querySelector('#surface-albedo'),
+      surfaceAlbedoDelta: luminosityBox.querySelector('#surface-albedo-delta'),
+      surfaceAlbedoTooltip: luminosityBox.querySelector('#surface-albedo-tooltip'),
+      actualAlbedo: luminosityBox.querySelector('#actual-albedo'),
+      actualAlbedoDelta: luminosityBox.querySelector('#actual-albedo-delta'),
+      actualAlbedoTooltip: luminosityBox.querySelector('#actual-albedo-tooltip'),
+      modifiedSolarFlux: luminosityBox.querySelector('#modified-solar-flux'),
+      solarFluxDelta: luminosityBox.querySelector('#solar-flux-delta'),
+      solarFluxBreakdown: luminosityBox.querySelector('#solar-flux-breakdown'),
+      mainTooltip: luminosityBox.querySelector('#luminosity-tooltip'),
+      solarPanelMultiplier: luminosityBox.querySelector('#solar-panel-multiplier'),
+      target: luminosityBox.querySelector('.terraforming-target')
+    };
   }
   
   function updateLuminosityBox() {
-    const luminosityBox = document.getElementById('luminosity-box');
-    if(terraforming.getLuminosityStatus()){
-      luminosityBox.style.borderColor = 'green';
-    } else {
-      luminosityBox.style.borderColor = 'red';
+    const els = terraformingUICache.luminosity;
+    const luminosityBox = els.box;
+    if (!luminosityBox) return;
+    luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
+
+    if (els.groundAlbedo) {
+      els.groundAlbedo.textContent = terraforming.luminosity.groundAlbedo.toFixed(2);
     }
 
-    const groundAlbEl = document.getElementById('ground-albedo');
-    if (groundAlbEl) {
-      groundAlbEl.textContent = terraforming.luminosity.groundAlbedo.toFixed(2);
-    }
-
-    const groundDeltaEl = document.getElementById('ground-albedo-delta');
-    if (groundDeltaEl) {
+    if (els.groundAlbedoDelta) {
       const d = terraforming.luminosity.groundAlbedo - terraforming.celestialParameters.albedo;
-      groundDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.groundAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
-    const groundTooltip = document.getElementById('ground-albedo-tooltip');
-    if (groundTooltip) {
+    if (els.groundAlbedoTooltip) {
       const base = terraforming.celestialParameters.albedo;
       const upgrades = (typeof resources !== 'undefined' && resources.special && resources.special.albedoUpgrades)
         ? resources.special.albedoUpgrades.value : 0;
       const area = terraforming.celestialParameters.surfaceArea || 1;
       const coverage = area > 0 ? Math.min(upgrades / area, 1) : 0;
       const dustAlbedo = 0.05;
-      groundTooltip.title = `Base: ${base.toFixed(2)}\nBlack dust albedo: ${dustAlbedo.toFixed(2)}\nBlack dust coverage: ${(coverage*100).toFixed(1)}%`;
+      els.groundAlbedoTooltip.title = `Base: ${base.toFixed(2)}\nBlack dust albedo: ${dustAlbedo.toFixed(2)}\nBlack dust coverage: ${(coverage*100).toFixed(1)}%`;
     }
 
-    const surfAlbEl = document.getElementById('surface-albedo');
-    if (surfAlbEl) {
-      surfAlbEl.textContent = terraforming.luminosity.surfaceAlbedo.toFixed(2);
+    if (els.surfaceAlbedo) {
+      els.surfaceAlbedo.textContent = terraforming.luminosity.surfaceAlbedo.toFixed(2);
     }
-
-    const surfDeltaEl = document.getElementById('surface-albedo-delta');
-    if (surfDeltaEl) {
+    if (els.surfaceAlbedoDelta) {
       const base = (terraforming.luminosity.initialSurfaceAlbedo !== undefined)
         ? terraforming.luminosity.initialSurfaceAlbedo
         : terraforming.luminosity.groundAlbedo;
       const d = terraforming.luminosity.surfaceAlbedo - base;
-      surfDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
-    const surfTooltip = document.getElementById('surface-albedo-tooltip');
-    if (surfTooltip) {
+    if (els.surfaceAlbedoTooltip) {
       const sections = [];
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
@@ -852,62 +889,48 @@ function updateLifeBox() {
         const pct = v => (v * 100).toFixed(1);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
         sections.push(
-          `${name}:
-  Rock: ${pct(rock)}%
-  Water: ${pct(fr.ocean)}%
-  Ice: ${pct(fr.ice)}%
-  Hydrocarbons: ${pct(fr.hydrocarbon)}%
-  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%
-  Dry Ice: ${pct(fr.co2_ice)}%
-  Biomass: ${pct(fr.biomass)}%`
+          `${name}:\n  Rock: ${pct(rock)}%\n  Water: ${pct(fr.ocean)}%\n  Ice: ${pct(fr.ice)}%\n  Hydrocarbons: ${pct(fr.hydrocarbon)}%\n  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%\n  Dry Ice: ${pct(fr.co2_ice)}%\n  Biomass: ${pct(fr.biomass)}%`
         );
       }
       const explanation =
         'Biomass claims its share first based on zonal biomass. ' +
         'Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.';
-      surfTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}\n\n${explanation}`;
+      els.surfaceAlbedoTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}\n\n${explanation}`;
     }
 
-    const actualTooltip = document.getElementById('actual-albedo-tooltip');
-    if (actualTooltip) {
-      actualTooltip.title = 'Actual albedo factors in how much haze and cloud cover reflect sunlight on top of the surface.';
+    if (els.actualAlbedoTooltip) {
+      els.actualAlbedoTooltip.title = 'Actual albedo factors in how much haze and cloud cover reflect sunlight on top of the surface.';
     }
 
-    const actualAlbEl = document.getElementById('actual-albedo');
-    if (actualAlbEl) {
-      actualAlbEl.textContent = terraforming.luminosity.actualAlbedo.toFixed(2);
+    if (els.actualAlbedo) {
+      els.actualAlbedo.textContent = terraforming.luminosity.actualAlbedo.toFixed(2);
     }
 
-    const actualDeltaEl = document.getElementById('actual-albedo-delta');
-    if (actualDeltaEl) {
+    if (els.actualAlbedoDelta) {
       const base = (terraforming.luminosity.initialActualAlbedo !== undefined)
         ? terraforming.luminosity.initialActualAlbedo
         : terraforming.luminosity.actualAlbedo;
       const d = terraforming.luminosity.actualAlbedo - base;
-      actualDeltaEl.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.actualAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
 
-    const modifiedSolarFlux = document.getElementById('modified-solar-flux');
-    if (modifiedSolarFlux) {
-      modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
+    if (els.modifiedSolarFlux) {
+      els.modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
     }
-
-    const solarFluxDeltaEl = document.getElementById('solar-flux-delta');
-    if (solarFluxDeltaEl) {
+    if (els.solarFluxDelta) {
       const baseFlux = (terraforming.luminosity.initialSolarFlux !== undefined)
         ? terraforming.luminosity.initialSolarFlux
         : terraforming.luminosity.solarFlux;
       const deltaF = terraforming.luminosity.modifiedSolarFlux - baseFlux;
-      solarFluxDeltaEl.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
+      els.solarFluxDelta.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 
-    const fluxTooltip = document.getElementById('solar-flux-breakdown');
-    if (fluxTooltip && terraforming.luminosity.zonalFluxes) {
+    if (els.solarFluxBreakdown && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
       const t = (z.tropical / 4).toFixed(1);
       const m = (z.temperate / 4).toFixed(1);
       const p = (z.polar / 4).toFixed(1);
-      fluxTooltip.title =
+      els.solarFluxBreakdown.title =
         `Average Solar Flux by zone\n` +
         `Tropical: ${t}\n` +
         `Temperate: ${m}\n` +
@@ -915,13 +938,13 @@ function updateLifeBox() {
         'Values are lower because of day/night and the angle of sunlight.';
     }
 
-    const mainTooltip = document.getElementById('luminosity-tooltip');
-    if (mainTooltip) {
-      setLuminosityTooltip(mainTooltip);
+    if (els.mainTooltip) {
+      setLuminosityTooltip(els.mainTooltip);
     }
 
-    const solarPanelMultiplier = document.getElementById('solar-panel-multiplier');
-    solarPanelMultiplier.textContent = `${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}`;
+    if (els.solarPanelMultiplier) {
+      els.solarPanelMultiplier.textContent = `${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}`;
+    }
   }
 
 // Function to create the "Complete Terraforming" button
