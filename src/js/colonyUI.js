@@ -131,10 +131,16 @@ function updateGrowthRateDisplay(){
 }
 
 // Create the colony-specific details display
+// Cache of colony need boxes by structure name -> needBox id -> element
+const colonyElements = {};
+
 function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
   colonyDetails.classList.add('colony-details');
   colonyDetails.style.display = 'flex';
+
+  // Initialize cache bucket for this structure
+  colonyElements[structure.name] = colonyElements[structure.name] || {};
 
   // Add comfort and happiness boxes
   const happinessBox = createNeedBox('Happiness', structure.happiness, `${structure.name}-happiness`, false, structure);
@@ -143,11 +149,16 @@ function createColonyDetails(structure) {
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
 
+  // Cache the created boxes
+  colonyElements[structure.name][happinessBox.id] = happinessBox;
+  colonyElements[structure.name][comfortBox.id] = comfortBox;
+
   // Add need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
     const isLuxury = luxuryResources[need];
     const needBox = createNeedBox(need, structure.filledNeeds[need], `${structure.name}-${need}`, isLuxury, structure);
     colonyDetails.appendChild(needBox);
+    colonyElements[structure.name][needBox.id] = needBox;
   }
 
   return colonyDetails;
@@ -158,13 +169,14 @@ function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
 
   // Update comfort and happiness boxes
-  updateNeedBox(structureRow.querySelector(`#${structure.name}-happiness`), 'Happiness', structure.happiness, false, structure);
-  updateNeedBox(structureRow.querySelector(`#${structure.name}-comfort`), 'Comfort', structure.baseComfort, false, structure);
+  const needsMap = colonyElements[structure.name] || {};
+  updateNeedBox(needsMap[`${structure.name}-happiness`], 'Happiness', structure.happiness, false, structure);
+  updateNeedBox(needsMap[`${structure.name}-comfort`], 'Comfort', structure.baseComfort, false, structure);
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
     const isLuxury = luxuryResources[need];
-    updateNeedBox(structureRow.querySelector(`#${structure.name}-${need}`), resources.colony[need].displayName, structure.filledNeeds[need], isLuxury, structure);
+    updateNeedBox(needsMap[`${structure.name}-${need}`], resources.colony[need].displayName, structure.filledNeeds[need], isLuxury, structure);
   }
 }
 
@@ -190,12 +202,16 @@ function createNeedBox(needName, value, id, isLuxury, structure) {
     checkboxContainer.appendChild(checkbox);
 
     needBox.appendChild(checkboxContainer);
+    // Cache reference on element for fast updates
+    needBox._checkboxEl = checkbox;
   }
 
   // Create the text container
   const textContainer = document.createElement('div');
   textContainer.classList.add('text-container');
   textContainer.innerHTML = `<span>${needName}: ${(value * 100).toFixed(0)}%</span>`;
+  // Cache text span reference
+  const textSpan = textContainer.querySelector('span');
 
   // Create the fill element
   const fillElement = document.createElement('div');
@@ -207,29 +223,38 @@ function createNeedBox(needName, value, id, isLuxury, structure) {
   needBox.appendChild(textContainer);
   needBox.appendChild(fillElement);
 
+  // Attach cached child refs directly on the element
+  needBox._fillEl = fillElement;
+  needBox._textEl = textSpan;
+
   return needBox;
 }
 
 // Helper function to update need boxes dynamically
 function updateNeedBox(needBox, needName, value, isLuxury, structure) {
-  if (needBox) {
-    // Update the text inside the box and the fill
-    const fillElement = needBox.querySelector('.need-fill');
-    const textContainer = needBox.querySelector('span');
-    fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    fillElement.style.backgroundColor = getNeedColor(value, isDarkMode);
-    textContainer.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
-    textContainer.style.color = isDarkMode ? 'white' : 'black';
+  if (!needBox) return;
+  // Use cached child references attached during creation
+  const fillElement = needBox._fillEl;
+  const textSpan = needBox._textEl;
+  if (!fillElement || !textSpan) return;
+  fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  fillElement.style.backgroundColor = getNeedColor(value, isDarkMode);
+  textSpan.innerText = `${needName}: ${(value * 100).toFixed(0)}%`;
+  textSpan.style.color = isDarkMode ? 'white' : 'black';
 
-    // Update the checkbox state for luxury resources
-    if (isLuxury) {
-      const checkbox = needBox.querySelector(`#${structure.name}-${needName}-checkbox`);
-      if (checkbox) {
-        checkbox.checked = structure.luxuryResourcesEnabled[needName];
-      }
+  // Update the checkbox state for luxury resources
+  if (isLuxury) {
+    const checkbox = needBox._checkboxEl;
+    if (checkbox) {
+      checkbox.checked = structure.luxuryResourcesEnabled[needName];
     }
   }
+}
+
+// Optional explicit invalidation if a colony's UI is rebuilt elsewhere
+function invalidateColonyNeedCache(structureName) {
+  delete colonyElements[structureName];
 }
 
 // Helper function to determine the color based on the value

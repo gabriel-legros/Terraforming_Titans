@@ -13,6 +13,8 @@ const buildingContainerIds = [
 ];
 
 const combinedBuildingRowCache = {};
+// Cache per-structure frequently accessed elements
+const structureUIElements = {};
 let structureUICacheInvalidated = true;
 
 function rebuildStructureUICache() {
@@ -27,6 +29,8 @@ function rebuildStructureUICache() {
 
 function invalidateStructureUICache() {
   structureUICacheInvalidated = true;
+  // Explicitly clear element caches when UI is rebuilt
+  for (const k in structureUIElements) delete structureUIElements[k];
 }
 
 // Create buttons for the buildings based on their categories
@@ -220,6 +224,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   costElement.classList.add('small-text'); // Add the 'small-text' class
   updateStructureCostDisplay(costElement, structure);
   structureRow.appendChild(costElement);
+  // Cache the cost element for faster updates
+  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+  structureUIElements[structure.name].costElement = costElement;
 
   const productionConsumptionDetails = document.createElement('div');
   productionConsumptionDetails.classList.add('building-production-consumption');
@@ -956,7 +963,7 @@ function updateDecreaseButtonText(button, buildCount) {
       }
 
       // Update the cost display
-      const costElement = structureRow.querySelector('.structure-cost');
+      const costElement = (structureUIElements[structureName] || {}).costElement;
       if (costElement) {
         updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structureName]);
       }
