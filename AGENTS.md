@@ -303,6 +303,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Temperature penalty for colonies now affects Ecumenopolis Districts.
 - Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
 - WGC logs now format artifact gains with two decimal places.
+- WGC team cards cache DOM nodes for buttons, inputs, selects, progress bars, logs and HP bars, rebuilding these caches when cards redraw or team counts change for faster updates.
 - Methane melting and freezing now respect methane ice coverage.
 - Planetary thrusters operate as a continuous project, drawing power from ongoing energy production instead of only stored energy.
 - Planetary thrusters appear in the Energy resource rate tooltip, listing their consumption.
