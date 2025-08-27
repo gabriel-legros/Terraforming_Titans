@@ -37,6 +37,70 @@ function getConvertedDisplay(attributeName, attribute) {
   return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
 }
 
+const lifeUICache = {
+  modifyButtons: [],
+  tempUnits: [],
+  cells: {
+    dayTemp: {},
+    nightTemp: {},
+    tempMultiplier: {},
+    moisture: {},
+    radiation: {},
+    toxicity: {},
+    maxDensity: {},
+    biomassAmount: {},
+    biomassDensity: {},
+    growthRate: {},
+    growthRateValue: {},
+    growthRateTooltip: {}
+  }
+};
+
+function cacheLifeModifyButtons() {
+  lifeUICache.modifyButtons = Array.from(document.querySelectorAll('.life-tentative-btn'));
+}
+
+function cacheLifeStatusTableElements() {
+  lifeUICache.tempUnits = Array.from(document.querySelectorAll('#life-status-table .temp-unit'));
+  const zones = ['global', 'tropical', 'temperate', 'polar'];
+  zones.forEach(zone => {
+    lifeUICache.cells.dayTemp[zone] = {
+      cell: document.getElementById(`day-temp-${zone}`),
+      value: document.querySelector(`#day-temp-${zone} .temp-value`),
+      status: document.querySelector(`#day-temp-${zone} .temp-status`)
+    };
+    lifeUICache.cells.nightTemp[zone] = {
+      cell: document.getElementById(`night-temp-${zone}`),
+      value: document.querySelector(`#night-temp-${zone} .temp-value`),
+      status: document.querySelector(`#night-temp-${zone} .temp-status`)
+    };
+    lifeUICache.cells.tempMultiplier[zone] = document.getElementById(`temp-multiplier-${zone}-status`);
+    lifeUICache.cells.moisture[zone] = document.getElementById(`moisture-${zone}-status`);
+    lifeUICache.cells.radiation[zone] = document.getElementById(`radiation-${zone}-status`);
+    lifeUICache.cells.toxicity[zone] = document.getElementById(`toxicity-${zone}-status`);
+    lifeUICache.cells.maxDensity[zone] = document.getElementById(`max-density-${zone}-status`);
+    lifeUICache.cells.biomassAmount[zone] = document.getElementById(`biomass-amount-${zone}-status`);
+    lifeUICache.cells.biomassDensity[zone] = document.getElementById(`biomass-density-${zone}-status`);
+    lifeUICache.cells.growthRate[zone] = {
+      cell: document.getElementById(`growth-rate-${zone}-status`),
+      value: document.getElementById(`growth-rate-${zone}-value`),
+      tooltip: document.getElementById(`growth-rate-${zone}-tooltip`)
+    };
+  });
+}
+
+function invalidateLifeDesignCaches() {
+  cacheLifeModifyButtons();
+}
+
+function invalidateLifeStatusTableCache() {
+  cacheLifeStatusTableElements();
+}
+
+document.addEventListener('lifeTentativeDesignCreated', invalidateLifeDesignCaches);
+document.addEventListener('lifeTentativeDesignDiscarded', invalidateLifeDesignCaches);
+document.addEventListener('lifeStatusTableRebuilt', invalidateLifeStatusTableCache);
+
 
 // Function to initialize the life terraforming designer UI
 function initializeLifeTerraformingDesignerUI() {
@@ -244,21 +308,18 @@ function initializeLifeTerraformingDesignerUI() {
     newDesignBtn.addEventListener('click', () => {
       lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
       lifeDesigner.tentativeDesign.copyFrom(lifeDesigner.currentDesign);
+      document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
       updateLifeUI();
     });
 
-    applyBtn.addEventListener('click', () => {
-        const duration = lifeDesigner.getTentativeDuration();
-        lifeDesigner.confirmDesign(duration);
-        updateLifeUI();
-      });
-  
     // Event listener for the "Apply" button
     applyBtn.addEventListener('click', () => {
-      lifeDesigner.confirmDesign();
+      const duration = lifeDesigner.getTentativeDuration();
+      lifeDesigner.confirmDesign(duration);
+      document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
       updateLifeUI();
     });
-  
+
     // Event listener for the "Revert"/"Cancel" button
     revertBtn.addEventListener('click', () => {
       if (lifeDesigner.isActive) {
@@ -266,6 +327,7 @@ function initializeLifeTerraformingDesignerUI() {
       } else {
         lifeDesigner.discardTentativeDesign();
       }
+      document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
       updateLifeUI();
     });
   
@@ -379,6 +441,8 @@ function initializeLifeTerraformingDesignerUI() {
   //   }
   // });
 
+  cacheLifeModifyButtons();
+  document.dispatchEvent(new Event('lifeStatusTableRebuilt'));
 }
 
 // Function to update the UI based on the tentative design state
@@ -414,7 +478,7 @@ function updateLifeUI() {
     const revertBtn = document.getElementById('life-revert-btn');
     const applyProgressContainer = document.getElementById('life-apply-progress-container');
     const applyProgressBar = document.getElementById('life-apply-progress');
-    const modifyButtons = document.querySelectorAll('.life-tentative-btn');
+    const modifyButtons = lifeUICache.modifyButtons;
 
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
@@ -558,22 +622,18 @@ function updateLifeUI() {
 // Function to update the new life status table
 function updateLifeStatusTable() {
     const designToCheck = lifeDesigner.tentativeDesign || lifeDesigner.currentDesign;
-    // Ensure designToCheck is valid before proceeding
     if (!designToCheck) {
         console.error("No life design available to check status.");
-        // Optionally clear the table or show a message
         return;
     }
-    
+
     const zones = ['global', 'tropical', 'temperate', 'polar'];
 
-    // Helper function to update a single status cell
-    const updateStatusCell = (elementId, result, isGlobalRadiation = false) => { // Added flag
-        const cell = document.getElementById(elementId);
+    const updateStatusCell = (cell, result, isGlobalRadiation = false) => {
         if (!cell) return;
-        
+
         if (typeof result !== 'object' || result === null || typeof result.pass === 'undefined') {
-            console.error(`Invalid result format for ${elementId}:`, result);
+            console.error('Invalid result format:', result);
             cell.innerHTML = '<span title="Error fetching status">?</span>';
             cell.title = 'Error fetching status';
             return;
@@ -584,11 +644,10 @@ function updateLifeStatusTable() {
             cell.title = '';
         } else {
             const reason = result.reason || 'Failed';
-            // Add reduction % for global radiation cell if applicable
             const reductionText = (isGlobalRadiation && result.reduction > 0)
-                                 ? ` (-${result.reduction.toFixed(0)}% Growth)`
-                                 : '';
-            cell.innerHTML = `<span title="${reason}">&#x274C;</span>${reductionText}`; // Display X with tooltip and reduction
+                ? ` (-${result.reduction.toFixed(0)}% Growth)`
+                : '';
+            cell.innerHTML = `<span title="${reason}">&#x274C;</span>${reductionText}`;
             cell.title = reason;
         }
     };
@@ -634,10 +693,7 @@ function updateLifeStatusTable() {
         polar: terraforming.temperature.zones.polar.night
     };
     const unit = getTemperatureUnit();
-    const tableEl = document.getElementById('life-status-table');
-    if (tableEl) {
-        tableEl.querySelectorAll('.temp-unit').forEach(el => el.textContent = unit);
-    }
+    lifeUICache.tempUnits.forEach(el => el.textContent = unit);
 
     const survivalRange = designToCheck.getTemperatureRanges().survival;
     const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + designToCheck.optimalGrowthTemperature.value;
@@ -651,8 +707,8 @@ function updateLifeStatusTable() {
     // Update table cells row by row
     zones.forEach(zone => {
         if (zone !== 'global') {
-            const dayCell = document.getElementById(`day-temp-${zone}`);
-            const nightCell = document.getElementById(`night-temp-${zone}`);
+            const dayCell = lifeUICache.cells.dayTemp[zone];
+            const nightCell = lifeUICache.cells.nightTemp[zone];
             const dayTemp = dayTemps[zone];
             const nightTemp = nightTemps[zone];
             const dayMult = growthTempResults[zone]?.multiplier ?? 0;
@@ -661,109 +717,98 @@ function updateLifeStatusTable() {
             let symbol = daySurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
             let title = daySurvivalStatus.reason || '';
 
-            // If it can survive the day, but can't grow, show a warning
             if (daySurvivalStatus.pass && dayMult === 0) {
                 symbol = '&#x26A0;';
                 title = 'Survives but cannot grow';
             }
 
-            if (dayCell) {
-                const valueSpan = dayCell.querySelector('.temp-value');
-                const statusSpan = dayCell.querySelector('.temp-status');
-                if (valueSpan) valueSpan.textContent = formatNumber(toDisplayTemperature(dayTemp), false, 2);
-                if (statusSpan && (statusSpan.innerHTML !== symbol || statusSpan.title !== title)) {
-                    statusSpan.innerHTML = symbol;
-                    statusSpan.title = title;
-                }
+            if (dayCell?.value) {
+                dayCell.value.textContent = formatNumber(toDisplayTemperature(dayTemp), false, 2);
+            }
+            if (dayCell?.status && (dayCell.status.innerHTML !== symbol || dayCell.status.title !== title)) {
+                dayCell.status.innerHTML = symbol;
+                dayCell.status.title = title;
             }
 
+            if (nightCell?.value) {
+                nightCell.value.textContent = formatNumber(toDisplayTemperature(nightTemp), false, 2);
+            }
             if (nightCell) {
-                const valueSpan = nightCell.querySelector('.temp-value');
-                const statusSpan = nightCell.querySelector('.temp-status');
-                if (valueSpan) valueSpan.textContent = formatNumber(toDisplayTemperature(nightTemp), false, 2);
-
                 const nightSurvivalStatus = designToCheck.nighttimeTemperatureSurvivalCheckZone(zone);
                 const nightSymbol = nightSurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
                 const nightTitle = nightSurvivalStatus.reason || '';
-
-                if (statusSpan && (statusSpan.innerHTML !== nightSymbol || statusSpan.title !== nightTitle)) {
-                    statusSpan.innerHTML = nightSymbol;
-                    statusSpan.title = nightTitle;
+                if (nightCell.status && (nightCell.status.innerHTML !== nightSymbol || nightCell.status.title !== nightTitle)) {
+                    nightCell.status.innerHTML = nightSymbol;
+                    nightCell.status.title = nightTitle;
                 }
             }
         }
         // --- Update Status Checks ---
-        const tempMultCell = document.getElementById(`temp-multiplier-${zone}-status`);
+        const tempMultCell = lifeUICache.cells.tempMultiplier[zone];
         if (tempMultCell && growthTempResults[zone]) {
             tempMultCell.textContent = formatNumber(growthTempResults[zone].multiplier, false, 2);
         }
-        // Moisture
-        updateStatusCell(`moisture-${zone}-status`, moistureResults[zone]);
-         // Radiation (Apply global result, pass flag for special text)
-         updateStatusCell(`radiation-${zone}-status`, radiationResult, zone === 'global');
-         // Toxicity (Apply global result to all zone cells for this row)
-         updateStatusCell(`toxicity-${zone}-status`, toxicityResult);
-         // Max Density (Display calculated value - same for all zones based on design)
-         const maxDensityCell = document.getElementById(`max-density-${zone}-status`);
-         if (maxDensityCell) {
-             maxDensityCell.textContent = formatNumber(maxDensity, false, 2); // Use 1 decimal place
-             maxDensityCell.title = ''; // No tooltip needed usually
-         }
 
-         // --- Update Biomass Amount and Density ---
-         const amountCell = document.getElementById(`biomass-amount-${zone}-status`);
-         const densityCell = document.getElementById(`biomass-density-${zone}-status`);
+        updateStatusCell(lifeUICache.cells.moisture[zone], moistureResults[zone]);
+        updateStatusCell(lifeUICache.cells.radiation[zone], radiationResult, zone === 'global');
+        updateStatusCell(lifeUICache.cells.toxicity[zone], toxicityResult);
+
+        const maxDensityCell = lifeUICache.cells.maxDensity[zone];
+        if (maxDensityCell) {
+            maxDensityCell.textContent = formatNumber(maxDensity, false, 2);
+            maxDensityCell.title = '';
+        }
+
+        const amountCell = lifeUICache.cells.biomassAmount[zone];
+        const densityCell = lifeUICache.cells.biomassDensity[zone];
 
         if (zone === 'global') {
-            if(amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
-            if(densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
+            if (amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
+            if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
             const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
             const zoneArea = totalSurfaceArea * getZonePercentage(zone);
             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
 
-            if(amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
-            if(densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
+            if (amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
+            if (densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
         }
 
-        const growthCell = document.getElementById(`growth-rate-${zone}-status`);
-        const valueSpan = document.getElementById(`growth-rate-${zone}-value`);
-        const tooltipSpan = document.getElementById(`growth-rate-${zone}-tooltip`);
+        const growthObj = lifeUICache.cells.growthRate[zone];
+        const growthCell = growthObj?.cell;
+        const valueSpan = growthObj?.value;
+        const tooltipSpan = growthObj?.tooltip;
         const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
         const zoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
         const maxBiomassForZone = zoneArea * maxDensity;
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
 
-        if(zone !== 'global' && growthCell){
+        if (zone !== 'global' && growthCell) {
             const baseRate = designToCheck.photosynthesisEfficiency.value * PHOTOSYNTHESIS_RATE_PER_POINT;
             const lumMult = zone === 'global'
                 ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
                 : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
             const tempMult = growthTempResults[zone]?.multiplier || 0;
-              const radMitigation = designToCheck.getRadiationMitigationRatio();
-              let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
-              if (radPenalty < 0.0001) {
-                  radPenalty = 0;
-              }
-              const radMult = 1 - radPenalty;
+            const radMitigation = designToCheck.getRadiationMitigationRatio();
+            let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+            if (radPenalty < 0.0001) radPenalty = 0;
+            const radMult = 1 - radPenalty;
             const waterMult = (terraforming.zonalWater[zone]?.liquid || 0) > 1e-9 ? 1 : 0;
             const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
-            if(valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
-            if(tooltipSpan) {
+            if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
+            if (tooltipSpan) {
                 tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nLiquid Water: x${formatNumber(waterMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
             }
         }
     });
 
-    const dayGlobalCell = document.getElementById('day-temp-global');
+    const dayGlobalCell = lifeUICache.cells.dayTemp.global?.cell;
     if (dayGlobalCell) {
         dayGlobalCell.innerHTML = survivalTempResults.global.pass ? '&#x2705;' : `<span title="${survivalTempResults.global.reason}">&#x274C;</span>`;
     }
-    const nightGlobalCell = document.getElementById('night-temp-global');
+    const nightGlobalCell = lifeUICache.cells.nightTemp.global?.cell;
     if (nightGlobalCell) {
-        // This logic is a bit simplified for the global night view.
-        // A true global check would see if *any* zone's night temp is survivable.
         const anyNightSurvivable = ['tropical', 'temperate', 'polar'].some(z => {
             const temp = nightTemps[z];
             return temp >= survivalRange.min && temp <= survivalRange.max;
