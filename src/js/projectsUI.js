@@ -404,7 +404,22 @@ function updateTotalCostDisplay(project) {
   let totalCost = 0;
 
   const elements = projectElements[project.name] || {};
-  const quantityInputs = elements.selectionInputs || [];
+  let quantityInputs = elements.selectionInputs || [];
+
+  if (!quantityInputs.length || quantityInputs.some((i) => !i.isConnected)) {
+    if (typeof invalidateCargoSelectionCache === 'function') {
+      invalidateCargoSelectionCache(project);
+      quantityInputs = elements.selectionInputs || [];
+    } else if (elements.resourceSelectionContainer) {
+      quantityInputs = Array.from(
+        elements.resourceSelectionContainer.querySelectorAll(
+          `.resource-selection-${project.name}`
+        )
+      );
+      elements.selectionInputs = quantityInputs;
+    }
+  }
+
   quantityInputs.forEach((input) => {
     const category = input?.dataset?.category;
     const resource = input?.dataset?.resource;

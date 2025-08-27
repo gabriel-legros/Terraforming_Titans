@@ -254,8 +254,12 @@ class CargoRocketProject extends Project {
     this.remainingTime = 20000;
 
     // Update the visible entered amount in the resource selection UI
+    const elements = projectElements[this.name];
+    const inputs = elements?.selectionInputs || [];
     this.pendingResourceGains.forEach(({ resource, quantity }) => {
-      const inputElement = document.querySelector(`.resource-selection-${this.name}[data-resource="${resource}"]`);
+      const inputElement = inputs.find(
+        (input) => input.dataset.resource === resource
+      );
       if (inputElement) {
         inputElement.value = quantity;
       }
