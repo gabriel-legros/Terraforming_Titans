@@ -1412,8 +1412,14 @@ class Terraforming extends EffectableEntity{
       const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
       const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
+      const mirrors = (typeof buildings !== 'undefined' && buildings['spaceMirror']) ? buildings['spaceMirror'].active : 0;
+      const reverse = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.spaceMirrorFacility)
+        ? projectManager.projects.spaceMirrorFacility.reverseEnabled
+        : false;
+      const mirrorContribution = mirrorFlux * mirrors * (reverse ? -1 : 1);
+      const total = baseFlux + mirrorContribution + lanternFlux;
 
-      return baseFlux + mirrorFlux*buildings['spaceMirror'].active + lanternFlux;
+      return Math.max(total, 6e-6);
     }
 
     calculateLanternFlux(){

@@ -754,12 +754,17 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     }
   }
 
-  const distributedMirrorFlux = totalSurfaceArea > 0 ? 4 * distributedMirrorPower / totalSurfaceArea : 0;
+  const reverse = !!(projectManager?.projects?.spaceMirrorFacility?.reverseEnabled);
+  const distributedMirrorFlux = totalSurfaceArea > 0 ? (reverse ? -4 * distributedMirrorPower / totalSurfaceArea : 4 * distributedMirrorPower / totalSurfaceArea) : 0;
   const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
+
+  if (focusedMirrorFlux && reverse) {
+    focusedMirrorFlux = -focusedMirrorFlux;
+  }
 
   const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
 
-  return totalFluxForZone;
+  return Math.max(totalFluxForZone, 6e-6);
 }
 
 class SpaceMirrorFacilityProject extends Project {
