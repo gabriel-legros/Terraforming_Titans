@@ -95,6 +95,7 @@ To ensure this works properly, every feature in the game that has an UI should h
 # Testing
 - Run `npm ci` to install dependencies before running tests.
 - Save test output to a file so you don't have to rerun it just to read the results.
+- Do not commit `test.log`; it is for local reference only and is ignored via `.gitignore`.
 - Run tests **once** in non-watch mode with `CI=true npm test` and report how many passed or failed. Pipe the command to `tee` (e.g., `CI=true npm test 2>&1 | tee test.log`) so the results are both displayed and stored.
 - Write tests for any new feature.
 - Avoid asserting on exact story text; check IDs or prerequisites instead.
