@@ -1010,8 +1010,14 @@ function updateDecreaseButtonText(button, buildCount) {
           }
           // Toggle visibility of the B side based on autoReverse or manual reverse state
           const showReverse = structure.reversalAvailable;
-          const spans = tempControl.querySelectorAll('span');
-          const betweenSpan = spans && spans.length >= 2 ? spans[1] : null;
+          let spans = [];
+          if (tempControl.querySelectorAll && typeof tempControl.querySelectorAll === 'function') {
+            const result = tempControl.querySelectorAll('span');
+            if (Array.isArray(result) || typeof result.length === 'number') {
+              spans = result;
+            }
+          }
+          const betweenSpan = spans.length >= 2 ? spans[1] : null;
           if (betweenSpan) {
             betweenSpan.style.display = showReverse ? 'inline' : 'none';
           }

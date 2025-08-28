@@ -362,3 +362,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Colony need boxes cache DOM references for faster updates and rebuild when colony needs or structures change.
 - Project resource-selection grids cache their input elements for quicker cost calculations and rebuild those caches when grids are reset.
 - Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.
+- Calcite aerosol decays with a 240 second half-life and its consumption appears in resource rates.
