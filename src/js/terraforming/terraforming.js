@@ -86,6 +86,9 @@ const METHANE_COMBUSTION_PARAMETER = 1e-15; // Rate coefficient for CH4/O2 combu
 const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure for combustion
 const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
 
+const CALCITE_HALF_LIFE_SECONDS = 240; // Calcite aerosol half-life
+const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
+
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
         globalThis.EQUILIBRIUM_CO2_PARAMETER = EQUILIBRIUM_CO2_PARAMETER;
@@ -171,6 +174,7 @@ class Terraforming extends EffectableEntity{
     this.totalOxygenCombustionRate = 0;
     this.totalCombustionWaterRate = 0;
     this.totalCombustionCo2Rate = 0;
+    this.totalCalciteDecayRate = 0;
 
     // Zonal Water Data - Replaces global this.water
     this.zonalWater = {};
@@ -467,6 +471,7 @@ class Terraforming extends EffectableEntity{
         this.update();
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
+        const realSeconds = deltaTime / 1000;
         if (durationSeconds <= 0) return;
 
 
@@ -896,6 +901,16 @@ class Terraforming extends EffectableEntity{
             totalOxygenChange -= combustionOxygenAmount;
         }
 
+        // --- 4.6. Calcite aerosol decay ---
+        let calciteDecayAmount = 0;
+        if (this.resources.atmospheric.calciteAerosol) {
+            const currentCalcite = this.resources.atmospheric.calciteAerosol.value || 0;
+            if (realSeconds > 0 && currentCalcite > 0) {
+                calciteDecayAmount = currentCalcite * (1 - Math.exp(-CALCITE_DECAY_CONSTANT * realSeconds));
+                this.resources.atmospheric.calciteAerosol.value = Math.max(0, currentCalcite - calciteDecayAmount);
+            }
+        }
+
         // --- 5. Apply net changes ---
         // Ensure aggregated changes are finite numbers before applying
         if(!Number.isFinite(totalAtmosphericWaterChange)) totalAtmosphericWaterChange = 0;
@@ -966,6 +981,7 @@ class Terraforming extends EffectableEntity{
         this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
         this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
         this.totalCombustionCo2Rate = combustionCO2Amount / durationSeconds * 86400;
+        this.totalCalciteDecayRate = calciteDecayAmount / realSeconds;
 
         // Keep local consts for modifyRate calls below if needed, or use this. properties directly
         const evaporationRate = this.totalEvaporationRate;
@@ -982,6 +998,7 @@ class Terraforming extends EffectableEntity{
         const combustionOxygenRate = this.totalOxygenCombustionRate;
         const combustionWaterRate = this.totalCombustionWaterRate;
         const combustionCo2Rate = this.totalCombustionCo2Rate;
+        const calciteDecayRate = this.totalCalciteDecayRate;
 
         // Calculate individual atmospheric process rates
         const atmosphericWaterProductionRate = (totalEvaporationAmount + totalWaterSublimationAmount) / durationSeconds * 86400;
@@ -1032,6 +1049,13 @@ class Terraforming extends EffectableEntity{
             this.resources.atmospheric.oxygen.modifyRate(
                 -combustionOxygenRate,
                 'Methane Combustion',
+                rateType
+            );
+        }
+        if (calciteDecayRate && this.resources.atmospheric.calciteAerosol) {
+            this.resources.atmospheric.calciteAerosol.modifyRate(
+                -calciteDecayRate,
+                'Calcite Decay',
                 rateType
             );
         }
