@@ -276,8 +276,10 @@ function createProjectItem(project) {
   };
   if (typeof project.renderAutomationUI === 'function') {
     project.renderAutomationUI(automationSettingsContainer);
-    invalidateAutomationSettingsCache(project.name);
   }
+  // Always cache automation items so projects without custom automation UI
+  // (e.g., simple one-off projects) still show their auto-start controls.
+  invalidateAutomationSettingsCache(project.name);
 
   const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
   categoryContainer.appendChild(projectCard);
@@ -666,7 +668,10 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      const items = elements.cachedAutomationItems || [];
+      // Use cached item list when available; otherwise fall back to live children
+      const items = elements.cachedAutomationItems && elements.cachedAutomationItems.length
+        ? elements.cachedAutomationItems
+        : Array.from(automationSettingsContainer.children || []);
       for (const child of items) {
         if (child && (child.nodeType === 1 || child instanceof Element) &&
             typeof getComputedStyle === 'function' &&
