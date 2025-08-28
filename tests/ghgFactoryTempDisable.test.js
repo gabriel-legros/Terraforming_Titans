@@ -2,7 +2,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
 
-global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 283.15, restartCap: 1, restartTimer: 0 };
+global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 283.15 };
 
 const researchedManagerStub = {
   getResearchById: () => ({ isResearched: true })
@@ -14,7 +14,7 @@ function createFactory() {
     category: 'terraforming',
     cost: {},
     consumption: {},
-    production: {},
+    production: { atmospheric: { greenhouseGas: 10 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
@@ -59,20 +59,36 @@ describe('GHG factory temperature disabling', () => {
     expect(fac.productivity).toBeGreaterThan(0);
   });
 
-  test('gradual reactivation after high temp shutdown', () => {
+  test('produces only the amount needed to reach target temperature', () => {
     const fac = createFactory();
     fac.active = 1;
     fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
     ghgFactorySettings.autoDisableAboveTemp = true;
-    ghgFactorySettings.disableTempThreshold = 280;
-    terraforming.temperature.value = 285;
+    ghgFactorySettings.disableTempThreshold = 5;
+    resources.atmospheric.greenhouseGas = { value: 0 };
+    terraforming.temperature.value = 0;
+    terraforming.updateSurfaceTemperature = () => {
+      terraforming.temperature.value = resources.atmospheric.greenhouseGas.value;
+    };
     fac.updateProductivity(global.resources, 1000);
-    expect(ghgFactorySettings.restartCap).toBe(0);
+    expect(fac.productivity).toBeCloseTo(0.5, 3);
+  });
 
-    terraforming.temperature.value = 275;
+  test('clamps productivity to minRatio', () => {
+    const fac = createFactory();
+    fac.requiresWorker = 100;
+    global.populationModule = { getWorkerAvailabilityRatio: () => 0.3 };
+    fac.active = 1;
+    fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
+    ghgFactorySettings.autoDisableAboveTemp = true;
+    ghgFactorySettings.disableTempThreshold = 5;
+    resources.atmospheric.greenhouseGas = { value: 0 };
+    terraforming.temperature.value = 0;
+    terraforming.updateSurfaceTemperature = () => {
+      terraforming.temperature.value = resources.atmospheric.greenhouseGas.value;
+    };
     fac.updateProductivity(global.resources, 1000);
-    expect(ghgFactorySettings.restartCap).toBeCloseTo(0.26, 2);
-    expect(fac.productivity).toBeGreaterThan(0);
+    expect(fac.productivity).toBeCloseTo(0.3, 3);
   });
 
   test('does not disable without research', () => {

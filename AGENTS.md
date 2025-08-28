@@ -282,6 +282,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.
 - Terraforming Bureau oversight adds an auto-disable option for oxygen factories when O2 pressure exceeds a configurable threshold (default 15 kPa).
 - Terraforming Bureau automation for GHG and oxygen factories now only operates once the Terraforming Bureau research is completed, preventing the checkboxes from functioning prematurely. Atmospheric Monitoring oversight for carbon and nitrogen space mining projects likewise requires its research before automation activates.
+- GHG factory automation now produces only the greenhouse gas required to reach the target temperature using Newton's method.
+- Oxygen factory automation now produces only the oxygen required to reach the target pressure using Newton's method.
 - Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.
 - Life UI requirement icons display tooltips explaining failure when hovered.

@@ -497,57 +497,99 @@ class Building extends EffectableEntity {
         typeof researchManager.getResearchById === 'function' &&
         researchManager.getResearchById('terraforming_bureau')?.isResearched;
 
-      // Automatically disable GHG factory if temperature exceeds threshold
-      if(
+      const computeMaxProduction = (category, resource) => {
+        const base = this.production[category]?.[resource] || 0;
+        const effectiveMultiplier =
+          this.getEffectiveProductionMultiplier() *
+          this.getEffectiveResourceProductionMultiplier(category, resource);
+        return this.active * base * effectiveMultiplier * (deltaTime / 1000);
+      };
+
+      const solveRequired = (f, maxProduction) => {
+        let x = 0;
+        let fx = f(x);
+        const tolerance = 0.001;
+        for (let i = 0; i < 10 && Math.abs(fx) > tolerance; i++) {
+          const h = Math.max(maxProduction * 0.01, 1e-6);
+          const derivative = (f(x + h) - f(x - h)) / (2 * h);
+          if (derivative === 0 || !isFinite(derivative)) break;
+          x = x - fx / derivative;
+          if (x < 0) x = 0;
+          fx = f(x);
+        }
+        return Math.min(Math.max(x, 0), maxProduction);
+      };
+
+      // Automatically adjust GHG factory output to hit target temperature
+      if (
         this.name === 'ghgFactory' &&
         hasAtmosphericOversight &&
         ghgFactorySettings.autoDisableAboveTemp &&
         terraforming && terraforming.temperature
-      ){
-        if(terraforming.temperature.value > ghgFactorySettings.disableTempThreshold){
-          targetProductivity = 0;
-          ghgFactorySettings.restartCap = 0;
-          ghgFactorySettings.restartTimer = 0;
-        } else {
-          if(ghgFactorySettings.restartCap < 1){
-            ghgFactorySettings.restartTimer += deltaTime;
-            const progress = Math.min(ghgFactorySettings.restartTimer, 5000);
-            ghgFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log10(2);
-          } else {
-            ghgFactorySettings.restartCap = 1;
-          }
-          targetProductivity *= ghgFactorySettings.restartCap;
+      ) {
+        const currentTemp = terraforming.temperature.value;
+        const targetTemp = ghgFactorySettings.disableTempThreshold;
+        if (currentTemp >= targetTemp) {
+          this.productivity = 0;
+          return;
         }
+
+        if (
+          typeof terraforming.updateSurfaceTemperature === 'function' &&
+          resources?.atmospheric?.greenhouseGas
+        ) {
+          const maxProduction = computeMaxProduction('atmospheric', 'greenhouseGas');
+          if (maxProduction > 0) {
+            const ghg = resources.atmospheric.greenhouseGas;
+            const originalAmount = ghg.value;
+            const required = solveRequired((added) => {
+              ghg.value = originalAmount + added;
+              terraforming.updateSurfaceTemperature();
+              const diff = terraforming.temperature.value - targetTemp;
+              ghg.value = originalAmount;
+              terraforming.updateSurfaceTemperature();
+              return diff;
+            }, maxProduction);
+            this.productivity = Math.min(targetProductivity, required / maxProduction);
+            return;
+          }
+        }
+        // If temperature is below threshold but we can't compute amount, fall through
       }
 
-      // Automatically disable Oxygen factory if O2 pressure exceeds threshold
-      if(
+      // Automatically adjust Oxygen factory output to hit target pressure
+      if (
         this.name === 'oxygenFactory' &&
         hasAtmosphericOversight &&
         oxygenFactorySettings.autoDisableAbovePressure &&
-        terraforming && resources.atmospheric?.oxygen
-      ){
-        const amount = resources.atmospheric.oxygen.value || 0;
-        const pressurePa = calculateAtmosphericPressure(
-          amount,
+        terraforming && resources.atmospheric?.oxygen &&
+        typeof calculateAtmosphericPressure === 'function'
+      ) {
+        const oxygen = resources.atmospheric.oxygen;
+        const targetPa = oxygenFactorySettings.disablePressureThreshold * 1000;
+        const currentPa = calculateAtmosphericPressure(
+          oxygen.value,
           terraforming.celestialParameters.gravity,
           terraforming.celestialParameters.radius
         );
-        const pressureKPa = pressurePa / 1000;
-        if(pressureKPa > oxygenFactorySettings.disablePressureThreshold){
-          targetProductivity = 0;
-          oxygenFactorySettings.restartCap = 0;
-          oxygenFactorySettings.restartTimer = 0;
-        } else {
-          if(oxygenFactorySettings.restartCap < 1){
-            oxygenFactorySettings.restartTimer += deltaTime;
-            const progress = Math.min(oxygenFactorySettings.restartTimer, 5000);
-            oxygenFactorySettings.restartCap = Math.log10(1+progress / 5000) / Math.log10(2);
-          } else {
-            oxygenFactorySettings.restartCap = 1;
-          }
-          targetProductivity *= oxygenFactorySettings.restartCap;
+        if (currentPa >= targetPa) {
+          this.productivity = 0;
+          return;
         }
+        const maxProduction = computeMaxProduction('atmospheric', 'oxygen');
+        if (maxProduction > 0) {
+          const originalAmount = oxygen.value;
+          const required = solveRequired((added) => {
+            return calculateAtmosphericPressure(
+              originalAmount + added,
+              terraforming.celestialParameters.gravity,
+              terraforming.celestialParameters.radius
+            ) - targetPa;
+          }, maxProduction);
+          this.productivity = Math.min(targetProductivity, required / maxProduction);
+          return;
+        }
+        // If pressure is below threshold but we can't compute amount, fall through
       }
 
       // Disable Biodome when designed life cannot survive anywhere

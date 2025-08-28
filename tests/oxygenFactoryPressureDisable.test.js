@@ -2,8 +2,8 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
 
-global.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15, restartCap: 1, restartTimer: 0 };
-global.calculateAtmosphericPressure = (amount) => amount; // simple stub returning Pa equal to amount
+global.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15 };
+global.calculateAtmosphericPressure = (amount) => amount * 1000; // 1 unit => 1 kPa
 
 const researchedManagerStub = {
   getResearchById: () => ({ isResearched: true })
@@ -15,7 +15,7 @@ function createFactory() {
     category: 'terraforming',
     cost: {},
     consumption: {},
-    production: {},
+    production: { atmospheric: { oxygen: 10 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
@@ -35,8 +35,6 @@ describe('Oxygen factory pressure disabling', () => {
     global.terraforming = { celestialParameters: { gravity: 1, radius: 1 } };
     oxygenFactorySettings.autoDisableAbovePressure = false;
     oxygenFactorySettings.disablePressureThreshold = 15;
-    oxygenFactorySettings.restartCap = 1;
-    oxygenFactorySettings.restartTimer = 0;
     global.researchManager = researchedManagerStub;
   });
 
@@ -45,7 +43,7 @@ describe('Oxygen factory pressure disabling', () => {
     fac.active = 1;
     fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
     oxygenFactorySettings.autoDisableAbovePressure = true;
-    resources.atmospheric.oxygen.value = 16000; // Pa
+    resources.atmospheric.oxygen.value = 16; // kPa
     fac.updateProductivity(global.resources, 1000);
     expect(fac.productivity).toBe(0);
   });
@@ -55,24 +53,33 @@ describe('Oxygen factory pressure disabling', () => {
     fac.active = 1;
     fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
     oxygenFactorySettings.autoDisableAbovePressure = true;
-    resources.atmospheric.oxygen.value = 14000; // Pa
+    resources.atmospheric.oxygen.value = 14; // kPa
     fac.updateProductivity(global.resources, 1000);
     expect(fac.productivity).toBeGreaterThan(0);
   });
 
-  test('gradual reactivation after high pressure shutdown', () => {
+  test('produces only the amount needed to reach target pressure', () => {
     const fac = createFactory();
     fac.active = 1;
     fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
     oxygenFactorySettings.autoDisableAbovePressure = true;
-    resources.atmospheric.oxygen.value = 16000;
+    oxygenFactorySettings.disablePressureThreshold = 5;
+    resources.atmospheric.oxygen.value = 0; // kPa
     fac.updateProductivity(global.resources, 1000);
-    expect(oxygenFactorySettings.restartCap).toBe(0);
+    expect(fac.productivity).toBeCloseTo(0.5, 3);
+  });
 
-    resources.atmospheric.oxygen.value = 14000;
+  test('clamps productivity to minRatio', () => {
+    const fac = createFactory();
+    fac.requiresWorker = 100;
+    global.populationModule = { getWorkerAvailabilityRatio: () => 0.2 };
+    fac.active = 1;
+    fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
+    oxygenFactorySettings.autoDisableAbovePressure = true;
+    oxygenFactorySettings.disablePressureThreshold = 5;
+    resources.atmospheric.oxygen.value = 0;
     fac.updateProductivity(global.resources, 1000);
-    expect(oxygenFactorySettings.restartCap).toBeCloseTo(0.26, 2);
-    expect(fac.productivity).toBeGreaterThan(0);
+    expect(fac.productivity).toBeCloseTo(0.2, 3);
   });
 
   test('does not disable without research', () => {
@@ -80,7 +87,7 @@ describe('Oxygen factory pressure disabling', () => {
     fac.active = 1;
     fac.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
     oxygenFactorySettings.autoDisableAbovePressure = true;
-    resources.atmospheric.oxygen.value = 16000;
+    resources.atmospheric.oxygen.value = 16; // kPa
     global.researchManager = { getResearchById: () => ({ isResearched: false }) };
     fac.updateProductivity(global.resources, 1000);
     expect(fac.productivity).toBeGreaterThan(0);
@@ -90,3 +97,4 @@ describe('Oxygen factory pressure disabling', () => {
     delete global.researchManager;
   });
 });
+
