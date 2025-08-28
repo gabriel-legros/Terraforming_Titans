@@ -214,6 +214,42 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
   hideButton.disabled = structure.active > 0;
   leftContainer.appendChild(hideButton);
+  
+  // Reverse button to the right of Hide
+  const reverseInlineBtn = document.createElement('button');
+  reverseInlineBtn.classList.add('reverse-button');
+  reverseInlineBtn.id = `${structure.name}-reverse-button`;
+  reverseInlineBtn.textContent = 'Reverse';
+  reverseInlineBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
+  reverseInlineBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // If the corresponding resource is 0, toggle the recipe instead
+    try {
+      const rec = structure.recipes && structure.currentRecipeKey ? structure.recipes[structure.currentRecipeKey] : null;
+      const target = rec && rec.reverseTarget ? rec.reverseTarget : null;
+      if (target && resources[target.category] && resources[target.category][target.resource]) {
+        const amt = resources[target.category][target.resource].value || 0;
+        if (amt === 0 && typeof structure._toggleRecipe === 'function') {
+          structure._toggleRecipe();
+          if (typeof updateBuildingDisplay === 'function') {
+            updateBuildingDisplay(buildings);
+          }
+          return;
+        }
+      }
+    } catch (err) { /* non-fatal */ }
+
+    // Otherwise, toggle reversal state
+    if (typeof structure.setReverseEnabled === 'function') {
+      structure.setReverseEnabled(!structure.reverseEnabled);
+    } else {
+      structure.reverseEnabled = !structure.reverseEnabled;
+    }
+    if (typeof updateBuildingDisplay === 'function') {
+      updateBuildingDisplay(buildings);
+    }
+  });
+  leftContainer.appendChild(reverseInlineBtn);
   buttonContainer.appendChild(leftContainer);
 
   //done with first row
@@ -424,6 +460,25 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
   setActiveContainer.appendChild(setActiveButton);
   autoBuildContainer.appendChild(setActiveContainer);
+
+  // Reversal toggle button (for buildings that support it)
+  const reverseControl = document.createElement('div');
+  reverseControl.classList.add('reverse-control');
+  const reverseButton = document.createElement('button');
+  reverseButton.id = `${structure.name}-reverse-button`;
+  const updateReverseButton = () => {
+    const on = !!structure.reverseEnabled;
+    reverseButton.textContent = on ? 'Reverse: On' : 'Reverse: Off';
+  };
+  reverseButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    structure.setReverseEnabled ? structure.setReverseEnabled(!structure.reverseEnabled) : (structure.reverseEnabled = !structure.reverseEnabled);
+    updateReverseButton();
+  });
+  updateReverseButton();
+  reverseControl.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
+  reverseControl.appendChild(reverseButton);
+  autoBuildContainer.appendChild(reverseControl);
 
   if(structure.name === 'ghgFactory') {
     const tempControl = document.createElement('div');
@@ -850,9 +905,16 @@ function updateDecreaseButtonText(button, buildCount) {
       const buttonContainer = structureRow.querySelector('.button-container');
       const hideButton = buttonContainer.querySelector('.hide-button');
 
-      if (hideButton) {
-        hideButton.style.display = 'inline-block';
-        hideButton.disabled = structure.active > 0;
+  if (hideButton) {
+    hideButton.style.display = 'inline-block';
+    hideButton.disabled = structure.active > 0;
+  }
+
+      // Update Reverse button visibility/text based on reversal availability and state
+      const reverseBtn = buttonContainer.querySelector(`#${structureName}-reverse-button`);
+      if (reverseBtn) {
+        reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
+        reverseBtn.textContent = 'Reverse';
       }
 
       const upgradeBtn = buttonContainer.querySelector(`#${structureName}-upgrade-button`);

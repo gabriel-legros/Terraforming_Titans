@@ -423,7 +423,22 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    // Reversal feature wiring (disabled by default; can be enabled by effects)
+    reversalAvailable: false,
+    defaultRecipe: 'black',
+    recipes: {
+      black: {
+        displayName: 'Black Dust Factory',
+        production: { special: { albedoUpgrades: 100 } },
+        reverseTarget: { category: 'special', resource: 'albedoUpgrades' }
+      },
+      white: {
+        displayName: 'White Dust Factory',
+        production: { special: { whiteDust: 100 } },
+        reverseTarget: { category: 'special', resource: 'whiteDust' }
+      }
+    }
   },
   spaceMirror: {
     name: 'Space Mirror',
@@ -470,7 +485,22 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 100,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    // Reversal feature wiring (disabled by default; can be enabled by effects)
+    reversalAvailable: false,
+    defaultRecipe: 'ghg',
+    recipes: {
+      ghg: {
+        displayName: 'Greenhouse Gas factory',
+        production: { atmospheric: { greenhouseGas: 5 } },
+        reverseTarget: { category: 'atmospheric', resource: 'greenhouseGas' }
+      },
+      calcite: {
+        displayName: 'Calcite Aerosol Factory',
+        production: { atmospheric: { calciteAerosol: 5 } },
+        reverseTarget: { category: 'atmospheric', resource: 'calciteAerosol' }
+      }
+    }
   },
   oxygenFactory: {
     name: 'Oxygen Factory',

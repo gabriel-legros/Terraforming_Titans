@@ -69,10 +69,12 @@ const defaultPlanetParameters = {
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
-      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
+      atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      calciteAerosol: { name: 'Calcite Aerosol', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
     special: {
-      albedoUpgrades: {name : 'Albedo upg.', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false}, // Default (Mars)
+      albedoUpgrades: {name : 'Black Dust', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false, hideWhenSmall: true}, // Default (Mars)
+      whiteDust: { name: 'White Dust', hasCap: true, baseCap: 144800000000000, initialValue: 0, unlocked: false, hideWhenSmall: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false }
     }

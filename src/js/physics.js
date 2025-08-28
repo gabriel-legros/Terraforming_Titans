@@ -251,13 +251,14 @@ function albedoAdditive({
 
 // ===== Updated: Calculate actual (Bond) albedo =======================
 // Signature unchanged to preserve game-wide calls
-function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface) {
-  // Build albedo via additive scheme (no explicit aerosols passed here yet)
+function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface, aerosolsSW = {}) {
+  // Build albedo via additive scheme (optionally with aerosols like calcite)
   const { albedo: A, diagnostics } = albedoAdditive({
     surfaceAlbedo,
     pressureBar,
     composition,
-    gSurface
+    gSurface,
+    aerosolsSW
   });
 
   // Back-compat diagnostics

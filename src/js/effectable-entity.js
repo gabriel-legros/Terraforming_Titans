@@ -140,6 +140,12 @@ class EffectableEntity {
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
+        case 'enableReversal':
+          // Enable reversal on effectable entities that support it (e.g., Building)
+          if (typeof this.enableReversal === 'function') {
+            this.enableReversal(effect);
+          }
+          break;
         case 'solisTabAlert':
           if (typeof this.setSolisTabAlert === 'function') {
             this.setSolisTabAlert(effect.value);

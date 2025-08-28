@@ -1189,14 +1189,27 @@ class Terraforming extends EffectableEntity{
 
     calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
-        const upgradeAlbedo = 0.05;
-        const surfaceArea = this.celestialParameters.surfaceArea;
+        const blackAlbedo = 0.05; // black dust
+        const whiteAlbedo = 0.8;  // white dust
+        const surfaceArea = this.celestialParameters.surfaceArea || 0;
 
-        const albedoUpgrades = this.resources.special.albedoUpgrades.value;
-        const upgradeRatio = surfaceArea > 0 ? Math.min(albedoUpgrades / surfaceArea, 1) : 0;
-        const untouchedRatio = Math.max(1 - upgradeRatio, 0);
+        const special = this.resources && this.resources.special ? this.resources.special : {};
+        const black = (special.albedoUpgrades && typeof special.albedoUpgrades.value === 'number') ? special.albedoUpgrades.value : 0;
+        const white = (special.whiteDust && typeof special.whiteDust.value === 'number') ? special.whiteDust.value : 0;
 
-        return upgradeAlbedo * upgradeRatio + untouchedRatio * baseAlbedo;
+        const bRatioRaw = surfaceArea > 0 ? Math.max(0, black / surfaceArea) : 0;
+        const wRatioRaw = surfaceArea > 0 ? Math.max(0, white / surfaceArea) : 0;
+        const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
+        let shareBlack = 0, shareWhite = 0;
+        if (totalApplied > 0) {
+            const sumRaw = bRatioRaw + wRatioRaw;
+            // Distribute the applied coverage proportionally between black and white dust
+            shareWhite = (wRatioRaw / sumRaw) * totalApplied;
+            shareBlack = totalApplied - shareWhite;
+        }
+        const untouched = Math.max(0, 1 - totalApplied);
+
+        return (blackAlbedo * shareBlack) + (whiteAlbedo * shareWhite) + (baseAlbedo * untouched);
     }
 
     calculateZonalSurfaceAlbedo(zone) {
@@ -1223,8 +1236,18 @@ class Terraforming extends EffectableEntity{
         const surf = this.calculateSurfaceAlbedo();
         const pressureBar = this.calculateTotalPressure() / 100;
         const gSurface = this.celestialParameters.gravity;
-        const { composition } = this.calculateAtmosphericComposition();
-        return calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface).albedo;
+        const { composition, totalMass } = this.calculateAtmosphericComposition();
+
+        // Build aerosols (shortwave) columns in kg/m^2
+        const aerosolsSW = {};
+        const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
+        if (this.resources?.atmospheric?.calciteAerosol) {
+            const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
+            const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0; // kg/m^2
+            aerosolsSW.calcite = column;
+        }
+
+        return calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW).albedo;
     }
 
     _updateZonalCoverageCache() {

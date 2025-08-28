@@ -25,6 +25,15 @@ class Building extends EffectableEntity {
     this.currentProduction = {};
     this.currentConsumption = {};
     this.currentMaintenance = {};
+
+    // Reversal system
+    this.reversalAvailable = !!config.reversalAvailable;
+    this.reverseEnabled = false;
+    this.recipes = config.recipes || null;
+    this.defaultRecipe = config.defaultRecipe || null;
+    this.currentRecipeKey = this.defaultRecipe || (this.recipes ? Object.keys(this.recipes)[0] : null);
+    this._baseConsumption = JSON.parse(JSON.stringify(this.consumption || {}));
+    this._applyRecipeMapping();
   }
 
     // Method to initialize configurable properties
@@ -71,6 +80,45 @@ class Building extends EffectableEntity {
 
       this.updateResourceStorage();
     }
+
+  // Internal: apply production/displayName for the active recipe (if configured)
+  _applyRecipeMapping() {
+    if (!this.recipes || !this.currentRecipeKey) return;
+    const recipe = this.recipes[this.currentRecipeKey] || {};
+    // Keep base energy/material consumption separate
+    this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
+    // Apply production from current recipe
+    if (recipe.production) {
+      this.production = JSON.parse(JSON.stringify(recipe.production));
+    }
+    if (recipe.displayName) {
+      this.displayName = recipe.displayName;
+    }
+  }
+
+  // External: enable reversal via effect
+  enableReversal() {
+    this.reversalAvailable = true;
+  }
+
+  // External: toggle reversal state (hooked by UI)
+  setReverseEnabled(value) {
+    this.reverseEnabled = !!value;
+  }
+
+  // Switch between paired recipes (e.g., black <-> white, ghg <-> calcite)
+  _toggleRecipe() {
+    if (!this.recipes || !this.currentRecipeKey) return;
+    const keys = Object.keys(this.recipes);
+    if (keys.length < 2) return;
+    const idx = keys.indexOf(this.currentRecipeKey);
+    const nextKey = keys[(idx + 1) % keys.length];
+    this.currentRecipeKey = nextKey;
+    // When changing recipe, automatically disable reversal so the building
+    // starts producing the newly selected recipe rather than consuming it.
+    this.reverseEnabled = false;
+    this._applyRecipeMapping();
+  }
 
   // Method to get the effective production multiplier
   getEffectiveProductionMultiplier() {
@@ -526,6 +574,10 @@ class Building extends EffectableEntity {
 
   // Updated produce function to track production rates
   produce(accumulatedChanges, deltaTime) {
+    // If reversal is enabled, this building should not produce its recipe output; it is consuming instead
+    if (this.reversalAvailable && this.reverseEnabled) {
+      return; // Skip normal production entirely while reversed
+    }
     const effectiveMultiplier = this.getEffectiveProductionMultiplier();
 
     // Calculate production using effectiveMultiplier and accumulate changes
@@ -556,9 +608,40 @@ class Building extends EffectableEntity {
 
   // Updated consume function to track consumption rates
   consume(accumulatedChanges, deltaTime) {
-    const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
+    const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier();
+    const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier();
 
     this.currentConsumption = {}; // Reset current consumption
+
+    // Reversal dynamic consumption: when reversed, consume the active recipe's produced resource
+    if (this.reversalAvailable && this.reverseEnabled && this.recipes && this.currentRecipeKey) {
+      const recipe = this.recipes[this.currentRecipeKey] || {};
+      const target = recipe.reverseTarget;
+      if (target && target.category && target.resource) {
+        // Determine per-second amount based on the recipe's production for this target
+        const prodPerSec = (recipe.production?.[target.category]?.[target.resource]) || 0;
+        if (!this.currentConsumption[target.category]) this.currentConsumption[target.category] = {};
+        // Use PRODUCTION multipliers for reversal (boosts that normally increase output should increase reverse consumption)
+        const baseConsumption = this.active * prodPerSec * this.getEffectiveResourceProductionMultiplier(target.category, target.resource);
+        const scaled = baseConsumption * this.productivity * (deltaTime / 1000) * effectiveProductionMultiplier;
+
+        // Track in currentConsumption and rates
+        this.currentConsumption[target.category][target.resource] = (this.currentConsumption[target.category][target.resource] || 0) + scaled;
+        accumulatedChanges[target.category][target.resource] = (accumulatedChanges[target.category][target.resource] || 0) - scaled;
+        resources[target.category][target.resource].modifyRate(
+          -scaled * (1000 / deltaTime),
+          this.displayName,
+          'building'
+        );
+
+        // Toggle recipe only when this tick crosses from >0 to <=0 to prevent flicker
+        const after = (resources[target.category][target.resource].value || 0) + (accumulatedChanges[target.category][target.resource] || 0);
+        const before = after + scaled; // state prior to applying this tick's consumption
+        if (before > 0 && after <= 0) {
+          this._toggleRecipe();
+        }
+      }
+    }
 
     // Calculate consumption and accumulate changes
     for (const category in this.consumption) {
@@ -568,7 +651,7 @@ class Building extends EffectableEntity {
 
       for (const resource in this.consumption[category]) {
         const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
-        const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const baseConsumption = this.active * amount * effectiveConsumptionMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const productFactor = ignoreProductivity ? 1 : this.productivity;
         const scaledConsumption = baseConsumption * productFactor * (deltaTime / 1000);
 

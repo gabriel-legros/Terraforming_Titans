@@ -951,6 +951,12 @@ const researchParameters = {
             resourceType: 'special',
             targetId : 'albedoUpgrades',
             type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId : 'whiteDust',
+            type: 'enable'
           }
         ],
       },
@@ -1104,6 +1110,12 @@ const researchParameters = {
             target: 'resource',
             resourceType: 'atmospheric',
             targetId : 'greenhouseGas',
+            type: 'enable'
+          },
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'calciteAerosol',
             type: 'enable'
           }
         ],

@@ -317,10 +317,12 @@ function createTemperatureBox(row) {
     row.appendChild(atmosphereBox);
     const gasElements = {};
     for (const gas in resources.atmospheric) {
+      const pressureEl = atmosphereBox.querySelector(`#${gas}-pressure`);
       gasElements[gas] = {
-        pressure: atmosphereBox.querySelector(`#${gas}-pressure`),
+        pressure: pressureEl,
         delta: atmosphereBox.querySelector(`#${gas}-delta`),
-        status: atmosphereBox.querySelector(`#${gas}-status`)
+        status: atmosphereBox.querySelector(`#${gas}-status`),
+        row: pressureEl ? pressureEl.closest('tr') : null
       };
     }
     terraformingUICache.atmosphere = {
@@ -379,6 +381,11 @@ function createTemperatureBox(row) {
         );
 
         const gasEls = els.gases[gas];
+        // Hide row if configured to hide when small and value is exactly zero
+        const hideSmall = !!resources.atmospheric[gas]?.hideWhenSmall;
+        if (gasEls && gasEls.row) {
+            gasEls.row.style.display = (hideSmall && currentAmount === 0) ? 'none' : '';
+        }
         if (gasEls && gasEls.pressure) {
             gasEls.pressure.textContent = formatNumber(currentGlobalPressurePa, false, 2);
         }
