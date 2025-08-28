@@ -350,23 +350,67 @@ function updateLogic(delta) {
 }
 
 function updateRender() {
-  updateDayNightDisplay();           // Update day/night display (handled in dayNightCycle)
-  updateResourceDisplay(resources);
-  updateBuildingDisplay(buildings);  // Render building information
-  updateColonyDisplay(colonies);     // Render colony information
-  if (typeof updateGrowthRateDisplay === 'function') {
-    updateGrowthRateDisplay();
+  // Always-on UI pieces
+  updateDayNightDisplay();           // Day/night display is global
+  updateResourceDisplay(resources);  // Resources are global
+  updateWarnings();                  // Global warnings
+
+  // Gate heavy per-tab UI updates behind tab visibility
+  if (typeof document !== 'undefined') {
+    const isActive = (id) => {
+      const el = document.getElementById(id);
+      return !!(el && el.classList.contains('active'));
+    };
+
+    if (isActive('buildings')) {
+      updateBuildingDisplay(buildings);
+    }
+
+    if (isActive('colonies')) {
+      updateColonyDisplay(colonies);
+      if (typeof updateGrowthRateDisplay === 'function') {
+        updateGrowthRateDisplay();
+      }
+    }
+
+    if (isActive('special-projects')) {
+      renderProjects();
+    }
+
+    if (isActive('research')) {
+      updateResearchUI();
+    }
+
+    if (isActive('terraforming')) {
+      updateTerraformingUI();
+    }
+
+    if (isActive('space') && typeof updateSpaceUI === 'function') {
+      updateSpaceUI();
+    }
+
+    if (isActive('hope')) {
+      updateHopeUI();
+    }
+
+    if (isActive('settings')) {
+      updateStatisticsDisplay();
+    }
+  } else {
+    // Non-DOM environment fallback (tests or headless): keep previous behavior
+    updateBuildingDisplay(buildings);
+    updateColonyDisplay(colonies);
+    if (typeof updateGrowthRateDisplay === 'function') updateGrowthRateDisplay();
+    renderProjects();
+    updateResearchUI();
+    updateTerraformingUI();
+    updateStatisticsDisplay();
+    updateHopeUI();
+    if (typeof updateSpaceUI === 'function') updateSpaceUI();
   }
-  renderProjects();                  // Render project information (handled in projects.js)
-  updateResearchUI();
-  updateTerraformingUI();
-  updateStatisticsDisplay();
-  updateWarnings();
+
+  // Milestones often affect multiple views; keep updated
   updateMilestonesUI();
-  updateHopeUI();
-  if (typeof updateSpaceUI === 'function') {
-    updateSpaceUI();
-  }
 }
 
 function update(time, delta) {
