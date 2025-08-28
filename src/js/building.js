@@ -535,12 +535,13 @@ class Building extends EffectableEntity {
         terraforming && terraforming.temperature
       ) {
         const A = ghgFactorySettings.disableTempThreshold;
-        const B = ghgFactorySettings.reverseTempThreshold ?? A;
+        const B = ghgFactorySettings.reverseTempThreshold ?? A + 5;
         const currentTemp = terraforming.temperature.value;
-        const recipeKey = this.currentRecipeKey || 'ghg';
-        const resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
+        let recipeKey = this.currentRecipeKey || 'ghg';
+        let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
 
-        if (!this.autoReverse) {
+        // If reversal is not available, use one-sided control to reach A (disable when above A)
+        if (!this.reversalAvailable) {
           const targetTemp = A;
           if (currentTemp >= targetTemp) {
             this.productivity = 0;
@@ -568,13 +569,31 @@ class Building extends EffectableEntity {
             }
           }
         } else {
+          // Automatic bidirectional control based on A/B thresholds
+          // Idle inside the band, heat/cool outside it by switching direction as needed
           if (currentTemp > A && currentTemp < B) {
             this.productivity = 0;
             return;
           }
-          const reverse =
+          let reverse =
             (recipeKey === 'ghg' && currentTemp >= B) ||
             (recipeKey === 'calcite' && currentTemp <= A);
+
+          // If reversing but there is nothing to remove, toggle recipe to affect temperature in the correct direction
+          if (reverse) {
+            const resObj = resources?.atmospheric?.[resourceName];
+            const available = resObj ? resObj.value || 0 : 0;
+            if (available <= 0 && typeof this._toggleRecipe === 'function') {
+              this._toggleRecipe();
+              recipeKey = this.currentRecipeKey || 'ghg';
+              resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
+              // Recompute reverse for the new recipe
+              reverse =
+                (recipeKey === 'ghg' && currentTemp >= B) ||
+                (recipeKey === 'calcite' && currentTemp <= A);
+            }
+          }
+
           const targetTemp = reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B);
           if (
             typeof terraforming.updateSurfaceTemperature === 'function' &&

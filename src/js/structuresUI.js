@@ -527,9 +527,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateGhgTempControl = () => {
       tempLabel.textContent = 'Disable if avg T > ';
       unitSpan.textContent = getTemperatureUnit();
+      // Update both inputs (A and B)
       tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
       tempInputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
-      const showReverse = !!structure.autoReverse;
+      // Show the B side when either automation reverse or manual reverse is enabled
+      const showReverse = !!(structure.reverseAvailable);
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
       tempInputB.style.display = showReverse ? 'inline' : 'none';
     };
@@ -998,9 +1000,23 @@ function updateDecreaseButtonText(button, buildCount) {
           if(tempCheckbox){
             tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
           }
-          const tempInput = tempControl.querySelector('.ghg-temp-input');
-          if(tempInput){
-            tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+          // Update both A and B inputs
+          const tempInputs = tempControl.querySelectorAll('.ghg-temp-input');
+          if (tempInputs[0]) {
+            tempInputs[0].value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+          }
+          if (tempInputs[1]) {
+            tempInputs[1].value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+          }
+          // Toggle visibility of the B side based on autoReverse or manual reverse state
+          const showReverse = structure.reversalAvailable;
+          const spans = tempControl.querySelectorAll('span');
+          const betweenSpan = spans && spans.length >= 2 ? spans[1] : null;
+          if (betweenSpan) {
+            betweenSpan.style.display = showReverse ? 'inline' : 'none';
+          }
+          if (tempInputs[1]) {
+            tempInputs[1].style.display = showReverse ? 'inline' : 'none';
           }
           const unitSpan = tempControl.querySelector('.ghg-temp-unit');
           if(unitSpan){
