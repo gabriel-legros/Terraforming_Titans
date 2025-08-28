@@ -465,21 +465,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const reverseControl = document.createElement('div');
   reverseControl.classList.add('reverse-control');
   let updateGhgTempControl;
-  const reverseButton = document.createElement('button');
-  reverseButton.id = `${structure.name}-reverse-button`;
-  const updateReverseButton = () => {
-    const on = !!structure.autoReverse;
-    reverseButton.textContent = on ? 'Reverse: On' : 'Reverse: Off';
-  };
-  reverseButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    structure.setAutoReverse ? structure.setAutoReverse(!structure.autoReverse) : (structure.autoReverse = !structure.autoReverse);
-    updateReverseButton();
-    if (typeof updateGhgTempControl === 'function') updateGhgTempControl();
-  });
-  updateReverseButton();
+
   reverseControl.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
-  reverseControl.appendChild(reverseButton);
   autoBuildContainer.appendChild(reverseControl);
 
   if(structure.name === 'ghgFactory') {
@@ -945,13 +932,6 @@ function updateDecreaseButtonText(button, buildCount) {
     hideButton.style.display = 'inline-block';
     hideButton.disabled = structure.active > 0;
   }
-
-      // Update Reverse button visibility/text based on reversal availability and state
-      const reverseBtn = buttonContainer.querySelector(`#${structureName}-reverse-button`);
-      if (reverseBtn) {
-        reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
-        reverseBtn.textContent = 'Reverse';
-      }
 
       const upgradeBtn = buttonContainer.querySelector(`#${structureName}-upgrade-button`);
       if (upgradeBtn) {
