@@ -1,4 +1,12 @@
 let projectElements = {};
+let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
+
+function getProjectSubtabContents() {
+  if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
+    cachedProjectSubtabContents = Array.from(document.querySelectorAll('.projects-subtab-content'));
+  }
+  return cachedProjectSubtabContents;
+}
 
 function invalidateAutomationSettingsCache(projectName) {
   const els = projectElements[projectName];
@@ -63,6 +71,8 @@ function initializeProjectsUI() {
     }
   });
   projectElements = {};
+  // containers themselves persist; refresh cached list
+  cachedProjectSubtabContents = Array.from(document.querySelectorAll('.projects-subtab-content'));
 }
 
 function createProjectItem(project) {
@@ -763,7 +773,7 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
 }
 
 function updateEmptyProjectMessages() {
-  document.querySelectorAll('.projects-subtab-content').forEach(container => {
+  getProjectSubtabContents().forEach(container => {
     const messageId = `${container.id}-empty-message`;
     let message = document.getElementById(messageId);
 
