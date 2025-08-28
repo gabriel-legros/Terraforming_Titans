@@ -42,7 +42,8 @@ class Colony extends Building {
     const colonistsCapacity = resources.colony.colonists.cap;
     const populationRatio = colonistsCapacity > 0 ? colonists / colonistsCapacity : 0;
 
-    return populationRatio;
+    // Prevent consumption from exceeding what active colonies can support
+    return Math.min(populationRatio, 1);
   }
 
   updateProductivity(resources, deltaTime) {

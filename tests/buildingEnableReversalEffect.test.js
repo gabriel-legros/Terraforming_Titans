@@ -1,3 +1,6 @@
+const EffectableEntity = require('../src/js/effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
+global.maintenanceFraction = 0;
 const { Building } = require('../src/js/building.js');
 
 describe('enableReversal method on Building', () => {
