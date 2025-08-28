@@ -477,12 +477,40 @@ function initializeMirrorOversightUI(container) {
   container.appendChild(div);
 
   updateZonalFluxTable();
+  // Build cache of frequently used nodes inside the oversight UI
+  rebuildMirrorOversightCache();
+}
+
+let mirrorOversightCache = null;
+
+function rebuildMirrorOversightCache() {
+  if (typeof document === 'undefined') return;
+  const container = document.getElementById('mirror-oversight-container');
+  if (!container) { mirrorOversightCache = null; return; }
+  mirrorOversightCache = {
+    container,
+    lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
+    lanternCells: Array.from(document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]')),
+    availableLanternCells: Array.from(document.querySelectorAll('.available-lantern-cell')),
+    autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-table .auto-assign')),
+    assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
+    focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
+    fluxTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(3)') || null,
+  };
+}
+
+function ensureMirrorOversightCache() {
+  const container = typeof document !== 'undefined' ? document.getElementById('mirror-oversight-container') : null;
+  if (!mirrorOversightCache || mirrorOversightCache.container !== container) {
+    rebuildMirrorOversightCache();
+  }
 }
 
 function updateMirrorOversightUI() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) return;
+  ensureMirrorOversightCache();
   let enabled = false;
   if (typeof projectManager !== 'undefined') {
     if (projectManager.isBooleanFlagSet &&
@@ -534,15 +562,10 @@ function updateMirrorOversightUI() {
   if (lanternDiv) {
     lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
   }
-  const lanternHeader = document.querySelector('#assignment-grid .grid-header:nth-child(3)');
-  if (lanternHeader) lanternHeader.style.display = lanternUnlocked ? '' : 'none';
-  document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]').forEach(cell => {
-    cell.style.display = lanternUnlocked ? 'flex' : 'none';
-  });
-
-  document.querySelectorAll('.available-lantern-cell').forEach(cell => {
-    cell.style.display = lanternUnlocked ? 'flex' : 'none';
-  });
+  const C = mirrorOversightCache || {};
+  if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
+  if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
+  if (C.availableLanternCells) C.availableLanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
 
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
@@ -556,20 +579,17 @@ function updateMirrorOversightUI() {
   });
   const useFinerEl = document.getElementById('mirror-use-finer');
   if (useFinerEl) useFinerEl.checked = useFiner;
-  document.querySelectorAll('#assignment-table .auto-assign').forEach(box => {
+  if (C.autoAssignBoxes) C.autoAssignBoxes.forEach(box => {
     const zone = box.dataset.zone;
     box.checked = !!mirrorOversightSettings.autoAssign[zone];
   });
-  const assignmentControls = document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)');
-  assignmentControls.forEach(el => { el.disabled = !useFiner; });
+  if (C.assignmentControls) C.assignmentControls.forEach(el => { el.disabled = !useFiner; });
   if (useFiner) {
     distributeAutoAssignments('mirrors');
     distributeAutoAssignments('lanterns');
     updateAssignmentDisplays();
   }
-  document.querySelectorAll('#assignment-grid > div[data-zone="focus"]').forEach(el => {
-    el.style.display = focusEnabled ? '' : 'none';
-  });
+  if (C.focusZoneCells) C.focusZoneCells.forEach(el => { el.style.display = focusEnabled ? '' : 'none'; });
   const focusCell = document.querySelector('.assign-cell[data-zone="focus"]');
   if (focusCell) focusCell.style.display = focusEnabled ? 'flex' : 'none';
 
@@ -582,7 +602,9 @@ function updateMirrorOversightUI() {
 function updateZonalFluxTable() {
   if (typeof document === 'undefined' || typeof terraforming === 'undefined') return;
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
-  const header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
+  ensureMirrorOversightCache();
+  const C = mirrorOversightCache || {};
+  const header = C.fluxTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
   if (header) header.textContent = `Temperature (${tempUnit})`;
     const zones = ['tropical', 'temperate', 'polar'];
     zones.forEach(zone => {
