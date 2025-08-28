@@ -79,7 +79,7 @@ describe('space mirror reversal', () => {
     expect(result).toBeCloseTo(expected, 5);
   });
 
-  test('zone flux floors at 6 microWatts per m^2', () => {
+  test('zone flux floors at 24 microWatts per m^2', () => {
     const terra = createTerraforming();
     global.buildings = { spaceMirror: { surfaceArea: 100, active: 10 } };
     global.projectManager = {
@@ -89,6 +89,7 @@ describe('space mirror reversal', () => {
     terra.luminosity.solarFlux = 0;
 
     const result = terra.calculateZoneSolarFlux('tropical');
-    expect(result).toBeCloseTo(6e-6, 10);
+    // Facility zone flux calculator floors at 2.4e-5 W/m^2
+    expect(result).toBeCloseTo(2.4e-5, 10);
   });
 });

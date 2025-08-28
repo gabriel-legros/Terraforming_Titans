@@ -906,7 +906,51 @@ function updateLifeBox() {
     }
 
     if (els.actualAlbedoTooltip) {
-      els.actualAlbedoTooltip.title = 'Actual albedo factors in how much haze and cloud cover reflect sunlight on top of the surface.';
+      try {
+        const surfAlb = terraforming.luminosity.surfaceAlbedo;
+        const pressureBar = (typeof terraforming.calculateTotalPressure === 'function') ? (terraforming.calculateTotalPressure() / 100) : 0;
+        const gSurface = terraforming.celestialParameters.gravity || 9.81;
+        const compInfo = (typeof terraforming.calculateAtmosphericComposition === 'function') ? terraforming.calculateAtmosphericComposition() : { composition: {} };
+        const composition = compInfo.composition || {};
+        // Build shortwave aerosol columns (kg/m^2)
+        const aerosolsSW = {};
+        const radius_km = terraforming.celestialParameters.radius || 0;
+        const area_m2 = 4 * Math.PI * Math.pow(radius_km * 1000, 2);
+        if (terraforming.resources && terraforming.resources.atmospheric && terraforming.resources.atmospheric.calciteAerosol) {
+          const mass_ton = terraforming.resources.atmospheric.calciteAerosol.value || 0;
+          const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+          aerosolsSW.calcite = column;
+        }
+
+        const result = calculateActualAlbedoPhysics(surfAlb, pressureBar, composition, gSurface, aerosolsSW) || {};
+        const comps = result.components || {};
+        const diags = result.diagnostics || {};
+        const maxCap = result.maxCap;
+
+        const A_surf = typeof comps.A_surf === 'number' ? comps.A_surf : surfAlb;
+        const dHaze = typeof comps.dA_ch4 === 'number' ? comps.dA_ch4 : 0;
+        const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
+        const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
+        const A_act = terraforming.luminosity.actualAlbedo;
+        const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(2)})` : '';
+
+        const tauH = diags.tau_ch4_sw ?? 0;
+        const tauC = diags.tau_calcite_sw ?? 0;
+
+        els.actualAlbedoTooltip.title =
+          `Actual albedo = Surface + Haze + Calcite + Clouds\n\n` +
+          `Surface (base): ${A_surf.toFixed(3)}\n` +
+          `Haze (CH4): +${dHaze.toFixed(3)}\n` +
+          `Calcite aerosol: +${dCalc.toFixed(3)}\n` +
+          `Clouds: +${dCloud.toFixed(3)}\n` +
+          `\nTotal: ${A_act.toFixed(3)}${cappedNote}\n` +
+          `\nShortwave optical depths (diagnostic)\n` +
+          `  CH4 haze τ: ${tauH.toFixed(3)}\n` +
+          `  Calcite τ: ${tauC.toFixed(3)}`;
+      } catch (e) {
+        // Fallback text if something goes wrong
+        els.actualAlbedoTooltip.title = 'Actual albedo includes surface reflectivity plus additive brightening from haze, calcite aerosols, and clouds.';
+      }
     }
 
     if (els.actualAlbedo) {

@@ -8,10 +8,12 @@
 const R_AIR = 287;
 
 // ===== Tunables (safe defaults) ======================================
+// Cap Bond albedo at a realistic maximum (prevents A -> 1)
+const MAX_BOND_ALBEDO = 0.9;
 const A_HAZE_CH4_MAX  = 0.24; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
 const K_CH4_ALB       = 4.5;     // how quickly CH4 haze brightening saturates
 
-const A_CALCITE_HEADROOM_MAX = 0.15; // calcite can add up to +0.15 in the limit
+const A_CALCITE_HEADROOM_MAX = 0.3; // calcite can add up to +0.3 in the limit
 const K_CALCITE_ALB  = 1.0;          // saturates near τ_eff ≈ 1
 const OPTICS = {
   calcite: { omega0: 0.98, g: 0.70 } // bright & moderately forward-scattering
@@ -241,7 +243,8 @@ function albedoAdditive({
   const dA_cloud = cfCloud * Math.max(0, aCloud - A_base);
   A_base += dA_cloud;
 
-  const A_final = Math.max(0, Math.min(1, A_base));
+  // Clamp to realistic bounds
+  const A_final = Math.max(0, Math.min(MAX_BOND_ALBEDO, A_base));
   return {
     albedo: A_final,
     components: { A_surf, dA_ch4, dA_calcite, dA_cloud },
@@ -253,7 +256,7 @@ function albedoAdditive({
 // Signature unchanged to preserve game-wide calls
 function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface, aerosolsSW = {}) {
   // Build albedo via additive scheme (optionally with aerosols like calcite)
-  const { albedo: A, diagnostics } = albedoAdditive({
+  const { albedo: A, diagnostics, components } = albedoAdditive({
     surfaceAlbedo,
     pressureBar,
     composition,
@@ -265,7 +268,7 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
   const { cfCloud } = cloudPropsOnly(pressureBar, composition);
   const cfHaze = hazeCoverageFromTau(diagnostics.tau_ch4_sw || 0);
 
-  return { albedo: A, cfCloud, cfHaze };
+  return { albedo: A, cfCloud, cfHaze, components, diagnostics, maxCap: MAX_BOND_ALBEDO };
 }
 
 
