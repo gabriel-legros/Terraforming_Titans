@@ -23,9 +23,7 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
         const excessMassKg = (excessPressure * zoneArea) / gravity;
         const baseRate = (excessMassKg / 1000) / 86400; // tons per second
         if (!isNaN(baseRate) && baseRate > 0) {
-          const diff = freezePoint - temp;
-          const intensityScale = temp < freezePoint ? Math.min(diff / maxDiff, 1.0) : 1.0;
-          let rate = baseRate * intensityScale;
+          let rate = baseRate;
           if (Number.isFinite(boilingPoint)) {
             const boilMix = Math.min(Math.max((temp - (boilingPoint - boilTransitionRange)) / (2 * boilTransitionRange), 0), 1);
             const boilingScale = 1 - boilMix;
