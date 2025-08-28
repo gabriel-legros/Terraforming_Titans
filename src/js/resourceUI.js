@@ -496,22 +496,27 @@ function unlockResource(resource) {
 
       // Ensure the category container is visible
       categoryContainer.style.display = 'block';
+
+      // Update cache for this resource and its category
+      resourceUICache.categories[resource.category] = resourceUICache.categories[resource.category] || { container: document.getElementById(containerId), header: document.getElementById(`${resource.category}-resources-header`) };
+      cacheSingleResource(resource.category, resource.name);
     }
   }
 }
 
 function updateResourceDisplay(resources) {
   for (const category in resources) {
-    const containerId = `${category}-resources-resources-container`;
-    const container = document.getElementById(containerId);
-    const header = document.getElementById(`${category}-resources-header`);
+    const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
+    const container = cat ? cat.container : null;
+    const header = cat ? cat.header : null;
 
     let hasUnlockedResources = false;
 
     for (const resourceName in resources[category]) {
       const resourceObj = resources[category][resourceName];
-      const resourceElement = document.getElementById(`${resourceName}-container`);
-      const resourceNameElement = document.getElementById(`${resourceName}-name`);
+      const entry = resourceUICache.resources[resourceName] || cacheSingleResource(category, resourceName);
+      const resourceElement = entry ? entry.container : null;
+      const resourceNameElement = entry ? entry.nameEl : null;
 
       const showResource = resourceObj.unlocked && (!resourceObj.hideWhenSmall || resourceObj.value >= 1e-4);
 
@@ -537,12 +542,12 @@ function updateResourceDisplay(resources) {
 
       if (resourceName === 'colonists') {
         // Update population as an integer
-        const resourceElement = document.getElementById(`${resourceName}-resources-container`);
-        if (resourceElement) {
-          resourceElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
+        const valEl = entry ? entry.valueEl : null;
+        if (valEl) {
+          valEl.textContent = formatNumber(Math.floor(resourceObj.value), true);
         }
 
-        const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
+        const capElement = entry ? entry.capEl : null;
         if (capElement) {
           capElement.textContent = formatNumber(Math.floor(resourceObj.cap), true);
         }
@@ -550,9 +555,9 @@ function updateResourceDisplay(resources) {
         updateResourceRateDisplay(resourceObj);
       } else if (category === 'underground' || resourceObj.name === 'land') {
         // Update underground resources
-        const availableElement = document.getElementById(`${resourceName}-available-resources-container`);
-        const totalElement = document.getElementById(`${resourceName}-total-resources-container`);
-        const scanningProgressElement = document.getElementById(`${resourceName}-scanning-progress-resources-container`);
+        const availableElement = entry ? entry.availableEl : null;
+        const totalElement = entry ? entry.totalEl : null;
+        const scanningProgressElement = entry ? entry.scanEl : null;
 
         if (availableElement) {
           availableElement.textContent = formatNumber(Math.floor(resourceObj.value - resourceObj.reserved), true);
@@ -591,12 +596,12 @@ function updateResourceDisplay(resources) {
         }
       } else {
         // Update other resources
-        const resourceElement = document.getElementById(`${resourceName}-resources-container`);
-        if (resourceElement) {
-          resourceElement.textContent = formatNumber(resourceObj.value);
+        const valEl = entry ? entry.valueEl : null;
+        if (valEl) {
+          valEl.textContent = formatNumber(resourceObj.value);
         }
       
-        const capElement = document.getElementById(`${resourceName}-cap-resources-container`);
+        const capElement = entry ? entry.capEl : null;
         if (capElement) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
@@ -617,7 +622,8 @@ function updateResourceDisplay(resources) {
 }
 
 function updateResourceRateDisplay(resource){
-  const ppsElement = document.getElementById(`${resource.name}-pps-resources-container`);
+  const entry = resourceUICache.resources[resource.name] || cacheSingleResource(resource.category, resource.name);
+  const ppsElement = entry ? entry.ppsEl : document.getElementById(`${resource.name}-pps-resources-container`);
   if (resource.hideRate) {
     if (ppsElement) {
       ppsElement.remove();
@@ -672,17 +678,17 @@ function updateResourceRateDisplay(resource){
     }
   }
 
-  const tooltipElement = document.getElementById(`${resource.name}-tooltip`);
+  const tooltipElement = entry?.tooltip?.root || document.getElementById(`${resource.name}-tooltip`);
   if (!tooltipElement) return;
 
-  const valueDiv = document.getElementById(`${resource.name}-tooltip-value`);
-  const timeDiv = document.getElementById(`${resource.name}-tooltip-time`);
-  const assignmentsDiv = document.getElementById(`${resource.name}-tooltip-assignments`);
-  const zonesDiv = document.getElementById(`${resource.name}-tooltip-zones`);
-  const productionDiv = document.getElementById(`${resource.name}-tooltip-production`);
-  const consumptionDiv = document.getElementById(`${resource.name}-tooltip-consumption`);
-  const overflowDiv = document.getElementById(`${resource.name}-tooltip-overflow`);
-  const autobuildDiv = document.getElementById(`${resource.name}-tooltip-autobuild`);
+  const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(`${resource.name}-tooltip-value`);
+  const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(`${resource.name}-tooltip-time`);
+  const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(`${resource.name}-tooltip-assignments`);
+  const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(`${resource.name}-tooltip-zones`);
+  const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(`${resource.name}-tooltip-production`);
+  const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(`${resource.name}-tooltip-consumption`);
+  const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(`${resource.name}-tooltip-overflow`);
+  const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(`${resource.name}-tooltip-autobuild`);
 
   const netRate = resource.productionRate - resource.consumptionRate;
 
@@ -853,8 +859,67 @@ function updateResourceUI(resources) {
 function createResourceDisplay(resources) {
   createResourceContainers(resources);
   populateResourceElements(resources);
+  // Build cache after first render for faster updates
+  cacheResourceElements(resources);
 }
 
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// -------------------- DOM cache for Resource UI -------------------- //
+
+const resourceUICache = {
+  categories: {}, // { [category]: { container, header } }
+  resources: {},  // { [resourceName]: { container, nameEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
+};
+
+function cacheResourceCategory(category) {
+  const containerId = `${category}-resources-resources-container`;
+  const container = document.getElementById(containerId);
+  const header = document.getElementById(`${category}-resources-header`);
+  resourceUICache.categories[category] = { container, header };
+  return resourceUICache.categories[category];
+}
+
+function cacheSingleResource(category, resourceName) {
+  const entry = {
+    container: document.getElementById(`${resourceName}-container`),
+    nameEl: document.getElementById(`${resourceName}-name`),
+    valueEl: document.getElementById(`${resourceName}-resources-container`),
+    capEl: document.getElementById(`${resourceName}-cap-resources-container`),
+    ppsEl: document.getElementById(`${resourceName}-pps-resources-container`),
+    availableEl: document.getElementById(`${resourceName}-available-resources-container`),
+    totalEl: document.getElementById(`${resourceName}-total-resources-container`),
+    scanEl: document.getElementById(`${resourceName}-scanning-progress-resources-container`),
+    tooltip: {
+      root: document.getElementById(`${resourceName}-tooltip`),
+      valueDiv: document.getElementById(`${resourceName}-tooltip-value`),
+      timeDiv: document.getElementById(`${resourceName}-tooltip-time`),
+      assignmentsDiv: document.getElementById(`${resourceName}-tooltip-assignments`),
+      zonesDiv: document.getElementById(`${resourceName}-tooltip-zones`),
+      productionDiv: document.getElementById(`${resourceName}-tooltip-production`),
+      consumptionDiv: document.getElementById(`${resourceName}-tooltip-consumption`),
+      overflowDiv: document.getElementById(`${resourceName}-tooltip-overflow`),
+      autobuildDiv: document.getElementById(`${resourceName}-tooltip-autobuild`),
+    }
+  };
+  resourceUICache.resources[resourceName] = entry;
+  return entry;
+}
+
+function cacheResourceElements(resources) {
+  if (typeof document === 'undefined') return;
+  for (const category in resources) {
+    cacheResourceCategory(category);
+    const items = resources[category];
+    for (const resourceName in items) {
+      cacheSingleResource(category, resourceName);
+    }
+  }
+}
+
+function invalidateResourceUICache() {
+  resourceUICache.categories = {};
+  resourceUICache.resources = {};
 }
