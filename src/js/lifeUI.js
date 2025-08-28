@@ -38,8 +38,12 @@ function getConvertedDisplay(attributeName, attribute) {
 }
 
 const lifeUICache = {
+  // Static caches for UI nodes; rebuilt when UI is rebuilt
   modifyButtons: [],
   tempUnits: [],
+  pointShopButtons: [],
+  tentativeCells: [],
+  attributeCells: {}, // { [attributeName]: { currentDiv, tentativeDiv, tentativeDisplay, tentativeCell } }
   cells: {
     dayTemp: {},
     nightTemp: {},
@@ -100,6 +104,52 @@ function invalidateLifeStatusTableCache() {
 document.addEventListener('lifeTentativeDesignCreated', invalidateLifeDesignCaches);
 document.addEventListener('lifeTentativeDesignDiscarded', invalidateLifeDesignCaches);
 document.addEventListener('lifeStatusTableRebuilt', invalidateLifeStatusTableCache);
+
+
+// Cache helpers for other high-frequency UI updates
+function cacheLifePointShopButtons() {
+  const container = document.getElementById('life-point-shop');
+  lifeUICache.pointShopButtons = container
+    ? Array.from(container.querySelectorAll('.life-point-shop-btn'))
+    : [];
+}
+
+function cacheLifeTentativeCells() {
+  lifeUICache.tentativeCells = Array.from(
+    document.querySelectorAll('.tentative-design-cell, .modify-buttons-cell')
+  );
+}
+
+function cacheLifeAttributeCells() {
+  const attributeOrder = [
+    'minTemperatureTolerance', 'maxTemperatureTolerance',
+    'optimalGrowthTemperature', 'growthTemperatureTolerance',
+    'photosynthesisEfficiency',
+    'radiationTolerance', 'toxicityTolerance',
+    'invasiveness', 'spaceEfficiency', 'geologicalBurial'
+  ];
+  lifeUICache.attributeCells = {};
+  attributeOrder.forEach(attributeName => {
+    const currentDiv = document.getElementById(`${attributeName}-current-value`);
+    const tentativeDiv = document.getElementById(`${attributeName}-tentative-value`);
+    const tentativeDisplay = tentativeDiv ? tentativeDiv.querySelector('.life-tentative-display') : null;
+    const tentativeCell = tentativeDiv ? tentativeDiv.closest('.tentative-design-cell') : null;
+    lifeUICache.attributeCells[attributeName] = {
+      currentDiv,
+      tentativeDiv,
+      tentativeDisplay,
+      tentativeCell,
+    };
+  });
+}
+
+function invalidateLifeUICache() {
+  lifeUICache.modifyButtons = [];
+  lifeUICache.tempUnits = [];
+  lifeUICache.pointShopButtons = [];
+  lifeUICache.tentativeCells = [];
+  lifeUICache.attributeCells = {};
+}
 
 
 // Function to initialize the life terraforming designer UI
@@ -336,8 +386,9 @@ function initializeLifeTerraformingDesignerUI() {
       if (event.target.classList.contains('life-tentative-btn') && ! lifeDesigner.isActive) {
           const attributeName = event.target.dataset.attribute;
           const changeAmount = parseInt(event.target.dataset.change, 10);
-          const tentativeValueDisplay = document.querySelector(`#${attributeName}-tentative-value .life-tentative-display`);
-          const currentTentativeValue = parseInt(tentativeValueDisplay.textContent, 10);
+          const ac = lifeUICache.attributeCells[attributeName] || {};
+          const tentativeValueDisplay = ac.tentativeDisplay || document.querySelector(`#${attributeName}-tentative-value .life-tentative-display`);
+          const currentTentativeValue = tentativeValueDisplay ? parseInt(tentativeValueDisplay.textContent, 10) : 0;
           const maxUpgrades = lifeDesigner.tentativeDesign[attributeName].maxUpgrades;
 
           const remainingPoints =
@@ -425,6 +476,8 @@ function initializeLifeTerraformingDesignerUI() {
               }
           }
       });
+      // Cache buttons after they are built
+      cacheLifePointShopButtons();
   } else {
       console.error("Could not find #life-point-shop element to populate.");
   }
@@ -441,7 +494,11 @@ function initializeLifeTerraformingDesignerUI() {
   //   }
   // });
 
+  // Cache frequently used node lists for hot paths
   cacheLifeModifyButtons();
+  cacheLifeTentativeCells();
+  cacheLifeAttributeCells();
+  cacheLifePointShopButtons();
   document.dispatchEvent(new Event('lifeStatusTableRebuilt'));
 }
 
@@ -530,8 +587,8 @@ function updateLifeUI() {
       hideTentativeDesignCells();
     }
 
-    // Update point shop button colors and costs
-    const pointShopButtons = document.querySelectorAll('.life-point-shop-btn');
+    // Update point shop button colors and costs (cached)
+    const pointShopButtons = lifeUICache.pointShopButtons;
     pointShopButtons.forEach(button => {
       const category = button.dataset.category;
       const cost = lifeDesigner.getPointCost(category);
@@ -544,15 +601,15 @@ function updateLifeUI() {
 
     // Function to show the tentative design and modify button cells
     function showTentativeDesignCells() {
-        document.querySelectorAll('.tentative-design-cell, .modify-buttons-cell').forEach((cell) => {
-        cell.style.display = 'table-cell';
+        lifeUICache.tentativeCells.forEach((cell) => {
+          cell.style.display = 'table-cell';
         });
     }
     
     // Function to hide the tentative design and modify button cells
     function hideTentativeDesignCells() {
-        document.querySelectorAll('.tentative-design-cell, .modify-buttons-cell').forEach((cell) => {
-        cell.style.display = 'none';
+        lifeUICache.tentativeCells.forEach((cell) => {
+          cell.style.display = 'none';
         });
     }
   
@@ -567,32 +624,30 @@ function updateLifeUI() {
         ];
 
       attributeOrder.forEach(attributeName => {
-        // Update Current Design Value
+        // Update Current Design Value (cached)
         const currentAttribute = lifeDesigner.currentDesign[attributeName];
-        // Use querySelector with data-attribute for reliability
-        const currentValueDiv = document.querySelector(`div[data-attribute="${attributeName}"][id$="-current-value"]`);
+        const ac = lifeUICache.attributeCells[attributeName] || {};
+        const currentValueDiv = ac.currentDiv || document.querySelector(`div[data-attribute="${attributeName}"][id$="-current-value"]`);
         if (currentValueDiv && currentAttribute) {
           currentValueDiv.textContent = `${currentAttribute.value} / ${getConvertedDisplay(attributeName, currentAttribute)}`;
         } else if (currentValueDiv) {
-            currentValueDiv.textContent = 'N/A'; // Handle case where attribute might not exist?
+          currentValueDiv.textContent = 'N/A';
         }
 
-        // Update Tentative Design Value (if applicable)
+        // Update Tentative Design Value (if applicable, cached)
         const tentativeAttribute = lifeDesigner.tentativeDesign ? lifeDesigner.tentativeDesign[attributeName] : null;
-         // Use querySelector with data-attribute for reliability
-        const tentativeValueDiv = document.querySelector(`div[data-attribute="${attributeName}"][id$="-tentative-value"]`);
-        const tentativeCell = tentativeValueDiv ? tentativeValueDiv.closest('.tentative-design-cell') : null;
-
-        if (tentativeCell) { // Check if the parent cell exists
-            if (lifeDesigner.tentativeDesign && tentativeAttribute && tentativeValueDiv) {
-                const tentativeValueDisplay = tentativeValueDiv.querySelector('.life-tentative-display');
-                if (tentativeValueDisplay) {
-                    tentativeValueDisplay.textContent = `${tentativeAttribute.value} / ${getConvertedDisplay(attributeName, tentativeAttribute)}`;
-                }
-                tentativeCell.style.display = 'table-cell'; // Show the cell
-            } else {
-                 tentativeCell.style.display = 'none'; // Hide the cell
+        const tentativeValueDiv = ac.tentativeDiv || document.getElementById(`${attributeName}-tentative-value`);
+        const tentativeCell = ac.tentativeCell || (tentativeValueDiv ? tentativeValueDiv.closest('.tentative-design-cell') : null);
+        if (tentativeCell) {
+          if (lifeDesigner.tentativeDesign && tentativeAttribute && tentativeValueDiv) {
+            const tentativeValueDisplay = ac.tentativeDisplay || (tentativeValueDiv ? tentativeValueDiv.querySelector('.life-tentative-display') : null);
+            if (tentativeValueDisplay) {
+              tentativeValueDisplay.textContent = `${tentativeAttribute.value} / ${getConvertedDisplay(attributeName, tentativeAttribute)}`;
             }
+            tentativeCell.style.display = 'table-cell';
+          } else {
+            tentativeCell.style.display = 'none';
+          }
         }
 
         // Removed logic for updating the non-existent max-density cell
