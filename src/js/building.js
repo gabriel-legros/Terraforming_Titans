@@ -29,6 +29,8 @@ class Building extends EffectableEntity {
     // Reversal system
     this.reversalAvailable = !!config.reversalAvailable;
     this.reverseEnabled = false;
+    // When true, automatically switch between forward and reverse
+    this.autoReverse = false;
     this.recipes = config.recipes || null;
     this.defaultRecipe = config.defaultRecipe || null;
     this.currentRecipeKey = this.defaultRecipe || (this.recipes ? Object.keys(this.recipes)[0] : null);
@@ -104,6 +106,11 @@ class Building extends EffectableEntity {
   // External: toggle reversal state (hooked by UI)
   setReverseEnabled(value) {
     this.reverseEnabled = !!value;
+  }
+
+  // External: toggle automatic reversal handling
+  setAutoReverse(value) {
+    this.autoReverse = !!value;
   }
 
   // Switch between paired recipes (e.g., black <-> white, ghg <-> calcite)
@@ -520,41 +527,78 @@ class Building extends EffectableEntity {
         return Math.min(Math.max(x, 0), maxProduction);
       };
 
-      // Automatically adjust GHG factory output to hit target temperature
+      // Automatically adjust GHG/Calcite factory output to hit target temperature
       if (
         this.name === 'ghgFactory' &&
         hasAtmosphericOversight &&
         ghgFactorySettings.autoDisableAboveTemp &&
         terraforming && terraforming.temperature
       ) {
+        const A = ghgFactorySettings.disableTempThreshold;
+        const B = ghgFactorySettings.reverseTempThreshold ?? A;
         const currentTemp = terraforming.temperature.value;
-        const targetTemp = ghgFactorySettings.disableTempThreshold;
-        if (currentTemp >= targetTemp) {
-          this.productivity = 0;
-          return;
-        }
+        const recipeKey = this.currentRecipeKey || 'ghg';
+        const resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
 
-        if (
-          typeof terraforming.updateSurfaceTemperature === 'function' &&
-          resources?.atmospheric?.greenhouseGas
-        ) {
-          const maxProduction = computeMaxProduction('atmospheric', 'greenhouseGas');
-          if (maxProduction > 0) {
-            const ghg = resources.atmospheric.greenhouseGas;
-            const originalAmount = ghg.value;
-            const required = solveRequired((added) => {
-              ghg.value = originalAmount + added;
-              terraforming.updateSurfaceTemperature();
-              const diff = terraforming.temperature.value - targetTemp;
-              ghg.value = originalAmount;
-              terraforming.updateSurfaceTemperature();
-              return diff;
-            }, maxProduction);
-            this.productivity = Math.min(targetProductivity, required / maxProduction);
+        if (!this.autoReverse) {
+          const targetTemp = A;
+          if (currentTemp >= targetTemp) {
+            this.productivity = 0;
             return;
           }
+          if (
+            typeof terraforming.updateSurfaceTemperature === 'function' &&
+            resources?.atmospheric?.[resourceName]
+          ) {
+            const maxProduction = computeMaxProduction('atmospheric', resourceName);
+            if (maxProduction > 0) {
+              const res = resources.atmospheric[resourceName];
+              const originalAmount = res.value;
+              const required = solveRequired((added) => {
+                res.value = originalAmount + added;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - targetTemp;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, maxProduction);
+              this.reverseEnabled = false;
+              this.productivity = Math.min(targetProductivity, required / maxProduction);
+              return;
+            }
+          }
+        } else {
+          if (currentTemp > A && currentTemp < B) {
+            this.productivity = 0;
+            return;
+          }
+          const reverse =
+            (recipeKey === 'ghg' && currentTemp >= B) ||
+            (recipeKey === 'calcite' && currentTemp <= A);
+          const targetTemp = reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B);
+          if (
+            typeof terraforming.updateSurfaceTemperature === 'function' &&
+            resources?.atmospheric?.[resourceName]
+          ) {
+            const maxProduction = computeMaxProduction('atmospheric', resourceName);
+            if (maxProduction > 0) {
+              const res = resources.atmospheric[resourceName];
+              const originalAmount = res.value;
+              const required = solveRequired((amt) => {
+                res.value = originalAmount + (reverse ? -amt : amt);
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - targetTemp;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, maxProduction);
+              this.reverseEnabled = reverse;
+              this.productivity = Math.min(targetProductivity, required / maxProduction);
+              return;
+            }
+          }
         }
-        // If temperature is below threshold but we can't compute amount, fall through
+        // If temperature is outside thresholds but we can't compute amount, fall through
       }
 
       // Automatically adjust Oxygen factory output to hit target pressure

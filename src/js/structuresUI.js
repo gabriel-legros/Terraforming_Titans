@@ -464,16 +464,18 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Reversal toggle button (for buildings that support it)
   const reverseControl = document.createElement('div');
   reverseControl.classList.add('reverse-control');
+  let updateGhgTempControl;
   const reverseButton = document.createElement('button');
   reverseButton.id = `${structure.name}-reverse-button`;
   const updateReverseButton = () => {
-    const on = !!structure.reverseEnabled;
+    const on = !!structure.autoReverse;
     reverseButton.textContent = on ? 'Reverse: On' : 'Reverse: Off';
   };
   reverseButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    structure.setReverseEnabled ? structure.setReverseEnabled(!structure.reverseEnabled) : (structure.reverseEnabled = !structure.reverseEnabled);
+    structure.setAutoReverse ? structure.setAutoReverse(!structure.autoReverse) : (structure.autoReverse = !structure.autoReverse);
     updateReverseButton();
+    if (typeof updateGhgTempControl === 'function') updateGhgTempControl();
   });
   updateReverseButton();
   reverseControl.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
@@ -496,24 +498,56 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     tempControl.appendChild(tempCheckbox);
 
     const tempLabel = document.createElement('span');
-    tempLabel.textContent = 'Disable if avg T > ';
     tempControl.appendChild(tempLabel);
 
     const tempInput = document.createElement('input');
     tempInput.type = 'number';
     tempInput.step = 1;
     tempInput.classList.add('ghg-temp-input');
-    tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
-    tempInput.addEventListener('input', () => {
-      const val = parseFloat(tempInput.value);
-      ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
-    });
     tempControl.appendChild(tempInput);
+
+    const betweenLabel = document.createElement('span');
+    betweenLabel.textContent = ' and avg T < ';
+    tempControl.appendChild(betweenLabel);
+
+    const tempInputB = document.createElement('input');
+    tempInputB.type = 'number';
+    tempInputB.step = 1;
+    tempInputB.classList.add('ghg-temp-input');
+    tempControl.appendChild(tempInputB);
 
     const unitSpan = document.createElement('span');
     unitSpan.classList.add('ghg-temp-unit');
-    unitSpan.textContent = getTemperatureUnit();
     tempControl.appendChild(unitSpan);
+
+    if(ghgFactorySettings.reverseTempThreshold === undefined){
+      ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
+    }
+
+    updateGhgTempControl = () => {
+      tempLabel.textContent = 'Disable if avg T > ';
+      unitSpan.textContent = getTemperatureUnit();
+      tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+      tempInputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+      const showReverse = !!structure.autoReverse;
+      betweenLabel.style.display = showReverse ? 'inline' : 'none';
+      tempInputB.style.display = showReverse ? 'inline' : 'none';
+    };
+    updateGhgTempControl();
+
+    tempInput.addEventListener('input', () => {
+      const val = parseFloat(tempInput.value);
+      ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+      if(!structure.autoReverse){
+        ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
+        updateGhgTempControl();
+      }
+    });
+
+    tempInputB.addEventListener('input', () => {
+      const val = parseFloat(tempInputB.value);
+      ghgFactorySettings.reverseTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+    });
 
     autoBuildContainer.appendChild(tempControl);
   }

@@ -53,6 +53,7 @@ let colonySliderSettings = {
 let ghgFactorySettings = {
   autoDisableAboveTemp: false,
   disableTempThreshold: 283.15, // Kelvin
+  reverseTempThreshold: 283.15
 };
 
 let oxygenFactorySettings = {
