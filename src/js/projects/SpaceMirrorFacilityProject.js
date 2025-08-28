@@ -763,6 +763,29 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 }
 
 class SpaceMirrorFacilityProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.reversalAvailable = false;
+    this.reverseEnabled = false;
+  }
+
+  enableReversal() {
+    this.reversalAvailable = true;
+    const elements = projectElements[this.name];
+    if (elements && elements.reflectMode) {
+      elements.reflectMode.container.style.display = '';
+      elements.reflectMode.update();
+    }
+  }
+
+  setReverseEnabled(value) {
+    this.reverseEnabled = !!value;
+    const elements = projectElements[this.name];
+    if (elements && elements.reflectMode) {
+      elements.reflectMode.update();
+    }
+  }
+
   update(deltaTime) {
     sanitizeMirrorDistribution();
     super.update(deltaTime);
@@ -801,6 +824,31 @@ class SpaceMirrorFacilityProject extends Project {
       </div>
     `;
     container.appendChild(mirrorDetails);
+
+    const modeContainer = document.createElement('div');
+    modeContainer.classList.add('mode-selection');
+    const modeLabel = document.createElement('span');
+    modeLabel.textContent = 'Reflect Mode:';
+    const towardButton = document.createElement('button');
+    towardButton.textContent = 'Toward World';
+    towardButton.classList.add('mode-button');
+    const awayButton = document.createElement('button');
+    awayButton.textContent = 'Away From World';
+    awayButton.classList.add('mode-button');
+    const updateModeButtons = () => {
+      if (this.reverseEnabled) {
+        awayButton.classList.add('selected');
+        towardButton.classList.remove('selected');
+      } else {
+        towardButton.classList.add('selected');
+        awayButton.classList.remove('selected');
+      }
+    };
+    towardButton.addEventListener('click', () => this.setReverseEnabled(false));
+    awayButton.addEventListener('click', () => this.setReverseEnabled(true));
+    modeContainer.append(modeLabel, towardButton, awayButton);
+    modeContainer.style.display = this.reversalAvailable ? '' : 'none';
+    mirrorDetails.querySelector('.card-body').appendChild(modeContainer);
 
     const lanternDetails = document.createElement('div');
     lanternDetails.classList.add('info-card', 'lantern-details-card');
@@ -856,6 +904,12 @@ class SpaceMirrorFacilityProject extends Project {
         totalPower: lanternDetails.querySelector('#total-lantern-power'),
         totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
       },
+      reflectMode: {
+        container: modeContainer,
+        towardButton,
+        awayButton,
+        update: updateModeButtons,
+      },
     };
   }
 
@@ -895,9 +949,26 @@ class SpaceMirrorFacilityProject extends Project {
       }
     }
 
+    if (elements.reflectMode) {
+      elements.reflectMode.container.style.display = this.reversalAvailable ? '' : 'none';
+      elements.reflectMode.update();
+    }
+
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();
     }
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      reverseEnabled: this.reverseEnabled,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.reverseEnabled = state.reverseEnabled || false;
   }
 }
 
