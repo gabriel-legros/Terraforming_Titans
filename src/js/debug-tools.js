@@ -14,25 +14,25 @@
       reconstructJournalState,
       calculateAtmosphericPressure;
   if (isNode) {
-    const utils = require('./terraforming-utils.js');
+    const utils = require('./terraforming/terraforming-utils.js');
     calculateEvaporationSublimationRates = utils.calculateEvaporationSublimationRates;
     calculatePrecipitationRateFactor = utils.calculatePrecipitationRateFactor;
     calculateZonalCoverage = utils.calculateZonalCoverage;
 
-    const dryIceCycle = require('./dry-ice-cycle.js');
+    const dryIceCycle = require('./terraforming/dry-ice-cycle.js');
     calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
     rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
 
-    const hydrocarbonCycle = require('./hydrocarbon-cycle.js');
+    const hydrocarbonCycle = require('./terraforming/hydrocarbon-cycle.js');
     calculateMethaneCondensationRateFactor = hydrocarbonCycle.calculateMethaneCondensationRateFactor;
     calculateMethaneEvaporationRate = hydrocarbonCycle.calculateMethaneEvaporationRate;
     calculateMethaneSublimationRate = hydrocarbonCycle.calculateMethaneSublimationRate;
     rapidSublimationRateMethane = hydrocarbonCycle.rapidSublimationRateMethane;
 
-    const physics = require('./physics.js');
+    const physics = require('./terraforming/physics.js');
     calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
 
-    const zonesMod = require('./zones.js');
+    const zonesMod = require('./terraforming/zones.js');
     getZonePercentage = zonesMod.getZonePercentage;
     getZoneRatio = zonesMod.getZoneRatio;
     globalThis.ZONES = zonesMod.ZONES;

@@ -12,7 +12,7 @@ describe('updatePlayTimeDisplay', () => {
     ctx.formatPlayTime = numbers.formatPlayTime;
     ctx.playTimeSeconds = 730;
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     ctx.updatePlayTimeDisplay();
     const text = dom.window.document.getElementById('play-time-display').textContent;
@@ -24,7 +24,7 @@ describe('updatePlayTimeDisplay', () => {
     const ctx = dom.getInternalVMContext();
     ctx.formatPlayTime = numbers.formatPlayTime;
     ctx.playTimeSeconds = 40;
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     ctx.updatePlayTimeDisplay();
     const text = dom.window.document.getElementById('play-time-display').textContent;

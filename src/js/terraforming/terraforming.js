@@ -64,7 +64,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 var getEcumenopolisLandFraction;
 if (typeof module !== 'undefined' && module.exports) {
-    ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+    ({ getEcumenopolisLandFraction } = require('../advanced-research/ecumenopolis.js'));
 } else {
     getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction;
 }

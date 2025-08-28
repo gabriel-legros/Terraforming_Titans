@@ -66,7 +66,7 @@ if (typeof globalThis.EffectableEntity === "undefined") {
 let dayNightTemperaturesModelFn = globalThis.dayNightTemperaturesModel;
 let calcAtmPressure = globalThis.calculateAtmosphericPressure;
 try {
-  const physics = require("./physics.js");
+  const physics = require("./terraforming/physics.js");
   dayNightTemperaturesModelFn = dayNightTemperaturesModelFn || physics.dayNightTemperaturesModel;
   calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
 } catch (_) {}

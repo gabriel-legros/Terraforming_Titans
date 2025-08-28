@@ -26,7 +26,7 @@ describe('life tooltip zone percentages', () => {
     };
     ctx.projectManager = { isBooleanFlagSet: () => false };
 
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
 
     const row = dom.window.document.querySelector('.row');

@@ -16,7 +16,7 @@
       // Zones helpers required by terraforming calculations
       if (typeof globalThis.getZonePercentage === 'undefined') {
         try {
-          const zones = require('./zones.js');
+          const zones = require('./terraforming/zones.js');
           globalThis.getZonePercentage = zones.getZonePercentage;
           if (typeof globalThis.getZoneRatio === 'undefined') globalThis.getZoneRatio = zones.getZoneRatio;
           if (typeof globalThis.ZONES === 'undefined') globalThis.ZONES = zones.ZONES;
@@ -24,7 +24,7 @@
       }
       // Physics helpers used by terraforming
       try {
-        const physics = require('./physics.js');
+        const physics = require('./terraforming/physics.js');
         if (typeof globalThis.calculateEmissivity === 'undefined') globalThis.calculateEmissivity = physics.calculateEmissivity;
         if (typeof globalThis.calculateAtmosphericPressure === 'undefined') globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
         if (typeof globalThis.dayNightTemperaturesModel === 'undefined') globalThis.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
@@ -40,13 +40,13 @@
 
       // Ensure dry-ice and water cycle globals are available
       try {
-        const dryIce = require('./dry-ice-cycle.js');
+        const dryIce = require('./terraforming/dry-ice-cycle.js');
         if (typeof globalThis.sublimationRateCO2 === 'undefined') globalThis.sublimationRateCO2 = dryIce.sublimationRateCO2 || globalThis.sublimationRateCO2;
         if (typeof globalThis.rapidSublimationRateCO2 === 'undefined') globalThis.rapidSublimationRateCO2 = dryIce.rapidSublimationRateCO2 || globalThis.rapidSublimationRateCO2;
         if (typeof globalThis.calculateCO2CondensationRateFactor === 'undefined') globalThis.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor || globalThis.calculateCO2CondensationRateFactor;
       } catch (_) {}
       try {
-        const water = require('./water-cycle.js');
+        const water = require('./terraforming/water-cycle.js');
         if (typeof globalThis.sublimationRateWater === 'undefined') globalThis.sublimationRateWater = water.sublimationRateWater || globalThis.sublimationRateWater;
         if (typeof globalThis.evaporationRateWater === 'undefined') globalThis.evaporationRateWater = water.evaporationRateWater || globalThis.evaporationRateWater;
         if (typeof globalThis.calculateEvaporationSublimationRates === 'undefined') globalThis.calculateEvaporationSublimationRates = water.calculateEvaporationSublimationRates || globalThis.calculateEvaporationSublimationRates;
@@ -54,12 +54,12 @@
       } catch (_) {}
       // Hydrology functions for surface flow
       try {
-        const hydrology = require('./hydrology.js');
+        const hydrology = require('./terraforming/hydrology.js');
         if (typeof globalThis.simulateSurfaceWaterFlow === 'undefined') globalThis.simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
         if (typeof globalThis.simulateSurfaceHydrocarbonFlow === 'undefined') globalThis.simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
       } catch (_) {}
       // Require Terraforming after priming globals
-      const TF = require('./terraforming.js');
+      const TF = require('./terraforming/terraforming.js');
       TerraformingCtor = TF && TF.default ? TF.default : TF;
     } catch (_) {}
     try {

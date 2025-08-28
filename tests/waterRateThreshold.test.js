@@ -25,7 +25,7 @@ describe('updateWaterBox thresholds', () => {
       celestialParameters: { surfaceArea: 1e6 }
     };
 
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
 
     const row = dom.window.document.querySelector('.row');

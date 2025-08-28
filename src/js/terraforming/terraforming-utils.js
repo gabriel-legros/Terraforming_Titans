@@ -22,6 +22,7 @@ if (isNode) {
   estimateCoverageFn = globalThis.estimateCoverage;
 }
 
+
 function getZones() {
   return isNode ? ZONES_NODE : globalThis.ZONES;
 }

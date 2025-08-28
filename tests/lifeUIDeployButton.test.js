@@ -35,7 +35,7 @@ describe('lifeUI deploy button', () => {
     };
 
     // Load dependencies
-    const zonesCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'zones.js'), 'utf8');
+    const zonesCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'zones.js'), 'utf8');
     vm.runInContext(zonesCode, ctx);
     const lifeCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'life.js'), 'utf8');
     vm.runInContext(lifeCode + '; this.LifeDesigner = LifeDesigner;', ctx);

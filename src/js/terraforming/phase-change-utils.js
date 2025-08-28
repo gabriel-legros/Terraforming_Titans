@@ -185,6 +185,7 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
         }
     });
 }
+
  
  if (isNodePCU) {
    module.exports = { psychrometricConstant, penmanRate, meltingFreezingRates, redistributePrecipitation };

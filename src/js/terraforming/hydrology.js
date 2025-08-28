@@ -11,6 +11,7 @@ if (isNodeHydro) {
 } else {
     estimateCoverageFn = globalThis.estimateCoverage;
 }
+
 meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezingRates;
 
 function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zoneElevationsInput, config) {

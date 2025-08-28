@@ -14,7 +14,8 @@
     "setupFiles": ["<rootDir>/tests/jestSetup.js"],
     "resolver": "<rootDir>/tests/jestResolver.js",
     "moduleNameMapper": {
-      "^.*[\\/]+lib[\\/]+node_modules[\\/]+jsdom$": "<rootDir>/node_modules/jsdom"
+      "^.*[\\/]+lib[\\/]+node_modules[\\/]+jsdom$": "<rootDir>/node_modules/jsdom",
+      "^\\.\\.\/src\/js\/(physics|phase-change-utils|hydrology|condensation-utils|water-cycle|dry-ice-cycle|hydrocarbon-cycle|zones|terraforming-utils|radiation-utils|terraforming)(?:\\.js)?$": "<rootDir>/src/js/terraforming/$1.js"
     }
   }
 }

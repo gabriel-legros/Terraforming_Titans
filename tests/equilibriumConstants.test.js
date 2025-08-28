@@ -26,9 +26,9 @@ global.penmanRate = phaseUtils.penmanRate;
 global.psychrometricConstant = phaseUtils.psychrometricConstant;
 // water-cycle functions
 const fs = require('fs');
-eval(fs.readFileSync(require.resolve('../src/js/water-cycle.js'), 'utf8'));
+eval(fs.readFileSync(require.resolve('../src/js/terraforming/water-cycle.js'), 'utf8'));
 global.saturationVaporPressureBuck = saturationVaporPressureBuck;
-eval(fs.readFileSync(require.resolve('../src/js/dry-ice-cycle.js'), 'utf8'));
+eval(fs.readFileSync(require.resolve('../src/js/terraforming/dry-ice-cycle.js'), 'utf8'));
 global.evaporationRateWater = evaporationRateWater;
 global.sublimationRateWater = sublimationRateWater;
 global.sublimationRateCO2 = sublimationRateCO2;

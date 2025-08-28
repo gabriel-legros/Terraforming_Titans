@@ -8,6 +8,7 @@ if (isNodeCondensation) {
   // for browser usage nothing to setup
 }
 
+
 function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10, boilingPoint = Infinity, boilTransitionRange = 2 }) {
   if (typeof saturationFn !== 'function') {
     throw new Error('condensationRateFactor requires saturationFn');

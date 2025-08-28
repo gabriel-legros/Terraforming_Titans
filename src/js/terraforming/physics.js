@@ -268,6 +268,7 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
   return { albedo: A, cfCloud, cfHaze };
 }
 
+
 function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
   if (!fractions) return rockAlb;
   const albs = { ...DEFAULT_SURFACE_ALBEDO };

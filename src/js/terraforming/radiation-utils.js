@@ -57,6 +57,7 @@ function estimateSurfaceDoseByColumn(column_gcm2,
            meta: { column_gcm2: col, beltAirlessAtDistance } };
 }
 
+
 // Support CommonJS environments (tests) while remaining browser friendly
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { estimateSurfaceDoseByColumn, radiationPenalty };

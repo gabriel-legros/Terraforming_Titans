@@ -116,6 +116,7 @@ function estimateCoverage(amount, zoneArea, scale = 0.0001) {
   return Math.max(0, Math.min(coverage, 1));
 }
 
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     ZONES,

@@ -22,7 +22,7 @@ describe('complete terraforming button error text', () => {
     global.updateSpaceUI = jest.fn();
 
     const ctx = vm.createContext(global);
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraformingUI.js'), 'utf8');
+    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
 
     const container = document.getElementById('terraforming-container');
