@@ -349,6 +349,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     // Additional logic for enabling/disabling auto-build can go here
   });
   autoBuildInputContainer.appendChild(autoBuildCheckbox);
+  // Cache reference
+  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+  structureUIElements[structure.name].autoBuildCheckbox = autoBuildCheckbox;
 
   const autoBuildLabel = document.createElement('span');
   autoBuildLabel.textContent = 'Auto-build % of ';
@@ -369,6 +372,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structure.autoBuildBasis = autoBuildBasisSelect.value;
   });
   autoBuildInputContainer.appendChild(autoBuildBasisSelect);
+  structureUIElements[structure.name].autoBuildBasisSelect = autoBuildBasisSelect;
   autoBuildInputContainer.appendChild(document.createTextNode(': '));
 
   const autoBuildInput = document.createElement('input');
@@ -408,6 +412,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
   autoBuildPriorityLabel.prepend(autoBuildPriority);
   autoBuildTargetContainer.appendChild(autoBuildPriorityLabel);
+  structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
 
   autoBuildContainer.appendChild(autoBuildTargetContainer);
 
@@ -428,6 +433,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structure.autoActiveEnabled = autoActiveCheckbox.checked;
   });
   autoActiveCheckbox.addEventListener('click', e => e.stopPropagation());
+  structureUIElements[structure.name].autoActiveCheckbox = autoActiveCheckbox;
+  structureUIElements[structure.name].setActiveButton = setActiveButton;
 
   setActiveButton.appendChild(autoActiveCheckbox);
   setActiveButton.appendChild(setActiveLabel);
@@ -501,8 +508,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       // Update both inputs (A and B)
       tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
       tempInputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
-      // Show the B side when either automation reverse or manual reverse is enabled
-      const showReverse = !!(structure.reverseAvailable);
+      // Show the B side whenever reversal is available
+      const showReverse = !!structure.reversalAvailable;
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
       tempInputB.style.display = showReverse ? 'inline' : 'none';
     };
@@ -511,7 +518,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
       ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
-      if(!structure.autoReverse){
+      // Keep B synced to A when reversal is not available
+      if(!structure.reversalAvailable){
         ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
         updateGhgTempControl();
       }
@@ -523,6 +531,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     });
 
     autoBuildContainer.appendChild(tempControl);
+    // Cache GHG control elements
+    structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+    structureUIElements[structure.name].ghg = {
+      container: tempControl,
+      checkbox: tempCheckbox,
+      inputA: tempInput,
+      inputB: tempInputB,
+      betweenLabel: betweenLabel,
+      unitSpan: unitSpan
+    };
   }
 
   if(structure.name === 'oxygenFactory') {
@@ -561,6 +579,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     pressureControl.appendChild(unitSpan);
 
     autoBuildContainer.appendChild(pressureControl);
+    // Cache O2 control elements
+    structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+    structureUIElements[structure.name].o2 = {
+      container: pressureControl,
+      checkbox: pressureCheckbox,
+      input: pressureInput
+    };
   }
 
   combinedStructureRow.append(autoBuildContainer);
@@ -569,11 +594,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 }
 
 function disableAutoActive(structure) {
-  const checkbox = document.querySelector(`#${structure.name}-set-active-button .auto-active-checkbox`);
-  if (checkbox && checkbox.checked) {
-    checkbox.checked = false;
-    structure.autoActiveEnabled = false;
+  const els = structureUIElements[structure.name] || {};
+  let checkbox = els.autoActiveCheckbox;
+  if (!checkbox) {
+    const btn = document.getElementById(`${structure.name}-set-active-button`);
+    if (btn && btn.getElementsByClassName) {
+      const list = btn.getElementsByClassName('auto-active-checkbox');
+      if (list && list.length) checkbox = list[0];
+    }
   }
+  if (checkbox) {
+    checkbox.checked = false;
+  }
+  structure.autoActiveEnabled = false;
 }
 
 // Create structure controls for buildings and colonies
@@ -939,14 +972,12 @@ function updateDecreaseButtonText(button, buildCount) {
         autoBuildContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
         
         // Set auto-build checkbox based on autoBuildEnabled
-        const autoBuildCheckbox = autoBuildContainer.querySelector('.auto-build-checkbox');
-        if (autoBuildCheckbox) {
-          autoBuildCheckbox.checked = structure.autoBuildEnabled;
+        const els = structureUIElements[structureName] || {};
+        if (els.autoBuildCheckbox) {
+          els.autoBuildCheckbox.checked = structure.autoBuildEnabled;
         }
-
-        const priorityCheckbox = autoBuildContainer.querySelector('.auto-build-priority');
-        if (priorityCheckbox) {
-          priorityCheckbox.checked = structure.autoBuildPriority;
+        if (els.autoBuildPriority) {
+          els.autoBuildPriority.checked = structure.autoBuildPriority;
         }
 
         const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
@@ -954,69 +985,32 @@ function updateDecreaseButtonText(button, buildCount) {
         const autoBuildTarget = document.getElementById(`${structure.name}-auto-build-target`);
         autoBuildTarget.textContent = `Target : ${formatBigInteger(targetCount)}`;
 
-        const basisSelect = autoBuildContainer.querySelector('.auto-build-basis');
-        if (basisSelect) {
-          basisSelect.value = structure.autoBuildBasis || 'population';
+        if (els.autoBuildBasisSelect) {
+          els.autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
+        }
+        if (els.autoActiveCheckbox) {
+          els.autoActiveCheckbox.checked = structure.autoActiveEnabled;
         }
 
-        const setActiveBtn = autoBuildContainer.querySelector(`#${structure.name}-set-active-button`);
-        if (setActiveBtn) {
-          const autoActive = setActiveBtn.querySelector('.auto-active-checkbox');
-          if (autoActive) {
-            autoActive.checked = structure.autoActiveEnabled;
-          }
-        }
-
-        const tempControl = autoBuildContainer.querySelector('.ghg-temp-control');
-        if(tempControl){
+        const ghgEls = els.ghg;
+        if (ghgEls && ghgEls.container) {
           const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
-          tempControl.style.display = enabled ? 'flex' : 'none';
-          const tempCheckbox = tempControl.querySelector('.ghg-temp-checkbox');
-          if(tempCheckbox){
-            tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
-          }
-          // Update both A and B inputs
-          const tempInputs = tempControl.querySelectorAll('.ghg-temp-input');
-          if (tempInputs[0]) {
-            tempInputs[0].value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
-          }
-          if (tempInputs[1]) {
-            tempInputs[1].value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
-          }
-          // Toggle visibility of the B side based on autoReverse or manual reverse state
-          const showReverse = structure.reversalAvailable;
-          let spans = [];
-          if (tempControl.querySelectorAll && typeof tempControl.querySelectorAll === 'function') {
-            const result = tempControl.querySelectorAll('span');
-            if (Array.isArray(result) || typeof result.length === 'number') {
-              spans = result;
-            }
-          }
-          const betweenSpan = spans.length >= 2 ? spans[1] : null;
-          if (betweenSpan) {
-            betweenSpan.style.display = showReverse ? 'inline' : 'none';
-          }
-          if (tempInputs[1]) {
-            tempInputs[1].style.display = showReverse ? 'inline' : 'none';
-          }
-          const unitSpan = tempControl.querySelector('.ghg-temp-unit');
-          if(unitSpan){
-            unitSpan.textContent = getTemperatureUnit();
-          }
+          ghgEls.container.style.display = enabled ? 'flex' : 'none';
+          if (ghgEls.checkbox) ghgEls.checkbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+          if (ghgEls.inputA) ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+          if (ghgEls.inputB) ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+          const showReverse = !!structure.reversalAvailable;
+          if (ghgEls.betweenLabel) ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
+          if (ghgEls.inputB) ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
+          if (ghgEls.unitSpan) ghgEls.unitSpan.textContent = getTemperatureUnit();
         }
 
-        const pressureControl = autoBuildContainer.querySelector('.o2-pressure-control');
-        if(pressureControl){
+        const o2Els = els.o2;
+        if (o2Els && o2Els.container) {
           const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
-          pressureControl.style.display = enabled ? 'flex' : 'none';
-          const pressureCheckbox = pressureControl.querySelector('.o2-pressure-checkbox');
-          if(pressureCheckbox){
-            pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
-          }
-          const pressureInput = pressureControl.querySelector('.o2-pressure-input');
-          if(pressureInput){
-            pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
-          }
+          o2Els.container.style.display = enabled ? 'flex' : 'none';
+          if (o2Els.checkbox) o2Els.checkbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+          if (o2Els.input) o2Els.input.value = oxygenFactorySettings.disablePressureThreshold;
         }
       }
   
