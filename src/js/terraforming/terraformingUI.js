@@ -926,6 +926,7 @@ function updateLifeBox() {
         const comps = result.components || {};
         const diags = result.diagnostics || {};
         const maxCap = result.maxCap;
+        const softCapThreshold = result.softCapThreshold;
 
         const A_surf = typeof comps.A_surf === 'number' ? comps.A_surf : surfAlb;
         const dHaze = typeof comps.dA_ch4 === 'number' ? comps.dA_ch4 : 0;
@@ -933,6 +934,7 @@ function updateLifeBox() {
         const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
         const A_act = terraforming.luminosity.actualAlbedo;
         const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(2)})` : '';
+        const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(2)})` : '';
 
         const tauH = diags.tau_ch4_sw ?? 0;
         const tauC = diags.tau_calcite_sw ?? 0;
@@ -943,7 +945,7 @@ function updateLifeBox() {
           `Haze (CH4): +${dHaze.toFixed(3)}\n` +
           `Calcite aerosol: +${dCalc.toFixed(3)}\n` +
           `Clouds: +${dCloud.toFixed(3)}\n` +
-          `\nTotal: ${A_act.toFixed(3)}${cappedNote}\n` +
+          `\nTotal: ${A_act.toFixed(3)}${cappedNote}${softCapNote}\n` +
           `\nShortwave optical depths (diagnostic)\n` +
           `  CH4 haze τ: ${tauH.toFixed(3)}\n` +
           `  Calcite τ: ${tauC.toFixed(3)}`;

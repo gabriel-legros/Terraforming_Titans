@@ -10,6 +10,10 @@ const R_AIR = 287;
 // ===== Tunables (safe defaults) ======================================
 // Cap Bond albedo at a realistic maximum (prevents A -> 1)
 const MAX_BOND_ALBEDO = 0.9;
+// Above this threshold, additional brightening has diminishing returns
+const ALBEDO_SOFTCAP_THRESHOLD = 0.8;
+// Higher K => stronger diminishing returns near the cap
+const ALBEDO_SOFTCAP_K = 2.0;
 const A_HAZE_CH4_MAX  = 0.24; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
 const K_CH4_ALB       = 4.5;     // how quickly CH4 haze brightening saturates
 
@@ -243,8 +247,17 @@ function albedoAdditive({
   const dA_cloud = cfCloud * Math.max(0, aCloud - A_base);
   A_base += dA_cloud;
 
-  // Clamp to realistic bounds
-  const A_final = Math.max(0, Math.min(MAX_BOND_ALBEDO, A_base));
+  // Apply soft cap above threshold to create an asymptotic approach to MAX_BOND_ALBEDO
+  let A_final = A_base;
+  if (A_final > ALBEDO_SOFTCAP_THRESHOLD) {
+    const span = Math.max(1e-9, (MAX_BOND_ALBEDO - ALBEDO_SOFTCAP_THRESHOLD));
+    const over = (A_final - ALBEDO_SOFTCAP_THRESHOLD) / span;
+    // Asymptotic mapping toward the cap with diminishing returns
+    const scaled = 1 - Math.exp(-ALBEDO_SOFTCAP_K * Math.max(0, over));
+    A_final = ALBEDO_SOFTCAP_THRESHOLD + span * Math.min(1, scaled);
+  }
+  // Final hard clamp to safe bounds
+  A_final = Math.max(0, Math.min(MAX_BOND_ALBEDO, A_final));
   return {
     albedo: A_final,
     components: { A_surf, dA_ch4, dA_calcite, dA_cloud },
@@ -268,7 +281,7 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
   const { cfCloud } = cloudPropsOnly(pressureBar, composition);
   const cfHaze = hazeCoverageFromTau(diagnostics.tau_ch4_sw || 0);
 
-  return { albedo: A, cfCloud, cfHaze, components, diagnostics, maxCap: MAX_BOND_ALBEDO };
+  return { albedo: A, cfCloud, cfHaze, components, diagnostics, maxCap: MAX_BOND_ALBEDO, softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD };
 }
 
 
