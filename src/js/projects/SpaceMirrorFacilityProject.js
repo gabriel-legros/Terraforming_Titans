@@ -764,7 +764,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
   const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
 
-  return Math.max(totalFluxForZone, 6e-6);
+  return Math.max(totalFluxForZone, 2.4e-5);
 }
 
 class SpaceMirrorFacilityProject extends Project {
