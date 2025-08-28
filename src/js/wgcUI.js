@@ -1,7 +1,5 @@
 let wgcTabVisible = false;
 let wgcUIInitialized = false;
-// Cache for frequently accessed WGC elements keyed by team index
-const wgcElementCache = {};
 if (typeof globalThis.formatNumber === 'undefined') {
   try {
     if (typeof require !== 'undefined') {
@@ -163,7 +161,8 @@ function invalidateWGCTeamCache() {
     }
     const slots = Array.from(card.querySelectorAll('.team-slot')).map(slot => ({
       slot,
-      bar: slot.querySelector('.team-hp-bar-fill')
+      bar: slot.querySelector('.team-hp-bar-fill'),
+      indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
     teamElements[tIdx] = {
       card,
@@ -624,40 +623,7 @@ function initializeWGCUI() {
   }
 }
 
-function cacheWGCTeamElements() {
-  // Build or refresh the cache for each team card present in DOM
-  const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
-  names.forEach((_, tIdx) => {
-    const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
-    if (!card) return;
-    const cache = wgcElementCache[tIdx] = {};
-    cache.card = card;
-    cache.startBtn = card.querySelector('.start-button');
-    cache.recallBtn = card.querySelector('.recall-button');
-    cache.diffInput = card.querySelector('.difficulty-input');
-    cache.stanceSelect = card.querySelector('.hbi-select');
-    cache.artSelect = card.querySelector('.artifact-select');
-    cache.progressContainer = card.querySelector('.operation-progress');
-    cache.progressBar = card.querySelector('.operation-progress-bar');
-    cache.summaryEl = card.querySelector('.operation-summary');
-    cache.lockOverlay = card.querySelector('.wgc-team-locked');
-    cache.logEl = document.querySelector(`.wgc-team-card[data-team="${tIdx}"] .team-log pre`);
-    // Cache per-slot elements
-    cache.slots = [];
-    const slotEls = card.querySelectorAll('.team-slot');
-    slotEls.forEach((slotEl, sIdx) => {
-      cache.slots[sIdx] = {
-        slotEl,
-        bar: slotEl.querySelector('.team-hp-bar-fill') || null,
-        indicator: slotEl.querySelector('.unspent-points-indicator') || null,
-      };
-    });
-  });
-}
-
-function invalidateWGCCache() {
-  for (const k in wgcElementCache) delete wgcElementCache[k];
-}
+// (Removed alternate cache; we rely on teamElements below.)
 
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
@@ -796,18 +762,18 @@ function updateWGCUI() {
           bar.classList.add('low-hp');
         }
       }
-      let indicator = slotCache.indicator;
+      let indicator = slots[sIdx].indicator;
       if (member.getPointsToAllocate() > 0) {
         if (!indicator) {
           const newIndicator = document.createElement('div');
           newIndicator.className = 'unspent-points-indicator';
           newIndicator.textContent = '!';
-          slotEl.appendChild(newIndicator);
-          wgcElementCache[tIdx].slots[sIdx].indicator = newIndicator;
+          slot.appendChild(newIndicator);
+          slots[sIdx].indicator = newIndicator;
         }
       } else if (indicator) {
         indicator.remove();
-        wgcElementCache[tIdx].slots[sIdx].indicator = null;
+        slots[sIdx].indicator = null;
       }
     });
   });
@@ -834,9 +800,8 @@ function redrawWGCTeamCards() {
     teamContainer.innerHTML = generateWGCTeamCards();
     invalidateWGCTeamCache();
   }
-  // Rebuild cache after DOM has been regenerated
-  invalidateWGCCache();
-  cacheWGCTeamElements();
+  // Rebuild team element cache after DOM has been regenerated
+  invalidateWGCTeamCache();
   updateWGCUI();
 }
 

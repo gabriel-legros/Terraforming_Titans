@@ -131,8 +131,6 @@ function updateGrowthRateDisplay(){
 }
 
 // Create the colony-specific details display
-// Cache of colony need boxes by structure name -> needBox id -> element
-const colonyElements = {};
 
 function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
@@ -148,17 +146,12 @@ function createColonyDetails(structure) {
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
 
-  // Cache the created boxes
-  colonyElements[structure.name][happinessBox.id] = happinessBox;
-  colonyElements[structure.name][comfortBox.id] = comfortBox;
-
   // Add need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
     const isLuxury = luxuryResources[need];
     const displayName = resources.colony[need].displayName;
     const needBox = createNeedBox(need, displayName, structure.filledNeeds[need], isLuxury, structure);
     colonyDetails.appendChild(needBox);
-    colonyElements[structure.name][needBox.id] = needBox;
   }
 
   return colonyDetails;
