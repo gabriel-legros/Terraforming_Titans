@@ -998,6 +998,74 @@ function updateLifeBox() {
     if (els.solarPanelMultiplier) {
       els.solarPanelMultiplier.textContent = `${(terraforming.calculateSolarPanelMultiplier()*100).toFixed(2)}`;
     }
+
+    // Rebuild Actual Albedo tooltip to omit zero-value lines
+    if (els && els.actualAlbedoTooltip) {
+      setActualAlbedoTooltipCompact();
+    }
+  }
+
+  // Build the Actual Albedo tooltip without any zero-value lines
+  function setActualAlbedoTooltipCompact() {
+    const els = terraformingUICache.luminosity || {};
+    const node = els.actualAlbedoTooltip;
+    if (!node) return;
+    try {
+      const surfAlb = terraforming.luminosity.surfaceAlbedo;
+      const pressureBar = (typeof terraforming.calculateTotalPressure === 'function') ? (terraforming.calculateTotalPressure() / 100) : 0;
+      const gSurface = terraforming.celestialParameters.gravity || 9.81;
+      const compInfo = (typeof terraforming.calculateAtmosphericComposition === 'function') ? terraforming.calculateAtmosphericComposition() : { composition: {} };
+      const composition = compInfo.composition || {};
+      // Build shortwave aerosol columns (kg/m^2)
+      const aerosolsSW = {};
+      const radius_km = terraforming.celestialParameters.radius || 0;
+      const area_m2 = 4 * Math.PI * Math.pow(radius_km * 1000, 2);
+      if (terraforming.resources && terraforming.resources.atmospheric && terraforming.resources.atmospheric.calciteAerosol) {
+        const mass_ton = terraforming.resources.atmospheric.calciteAerosol.value || 0;
+        const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+        aerosolsSW.calcite = column;
+      }
+
+      const result = calculateActualAlbedoPhysics(surfAlb, pressureBar, composition, gSurface, aerosolsSW) || {};
+      const comps = result.components || {};
+      const diags = result.diagnostics || {};
+      const maxCap = result.maxCap;
+      const softCapThreshold = result.softCapThreshold;
+
+      const A_surf = typeof comps.A_surf === 'number' ? comps.A_surf : surfAlb;
+      const dHaze = typeof comps.dA_ch4 === 'number' ? comps.dA_ch4 : 0;
+      const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
+      const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
+      const A_act = terraforming.luminosity.actualAlbedo;
+      const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(2)})` : '';
+      const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(2)})` : '';
+
+      const tauH = diags.tau_ch4_sw ?? 0;
+      const tauC = diags.tau_calcite_sw ?? 0;
+
+      const eps = 5e-4; // hide values that would display as 0.000
+      const parts = [];
+      parts.push('Actual albedo = Surface + Haze + Calcite + Clouds');
+      parts.push('');
+      parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
+      if (Math.abs(dHaze) >= eps) parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
+      if (Math.abs(dCalc) >= eps) parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
+      if (Math.abs(dCloud) >= eps) parts.push(`Clouds: +${dCloud.toFixed(3)}`);
+      parts.push('');
+      parts.push(`Total: ${A_act.toFixed(3)}${cappedNote}${softCapNote}`);
+
+      const diag = [];
+      if (Math.abs(tauH) >= eps) diag.push(`  CH4 haze tau: ${tauH.toFixed(3)}`);
+      if (Math.abs(tauC) >= eps) diag.push(`  Calcite tau: ${tauC.toFixed(3)}`);
+      if (diag.length > 0) {
+        parts.push('');
+        parts.push('Shortwave optical depths (diagnostic)');
+        parts.push(...diag);
+      }
+      node.title = parts.join('\n');
+    } catch (e) {
+      // Leave existing title untouched on failure
+    }
   }
 
 // Function to create the "Complete Terraforming" button
