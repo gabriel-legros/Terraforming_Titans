@@ -354,6 +354,11 @@ function updateRender() {
   updateDayNightDisplay();           // Day/night display is global
   updateResourceDisplay(resources);  // Resources are global
   updateWarnings();                  // Global warnings
+  // Always keep alert badges in sync regardless of active tab
+  if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
+  if (typeof updateProjectAlert === 'function') updateProjectAlert();
+  if (typeof updateResearchAlert === 'function') updateResearchAlert();
+  if (typeof updateHopeAlert === 'function') updateHopeAlert();
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
