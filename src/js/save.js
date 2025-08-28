@@ -167,6 +167,14 @@ function loadGame(slotOrCustomString) {
             Object.assign(building, buildingState);
             const newConfig = buildingsParameters[buildingName];
             building.initializeFromConfig(newConfig, buildingName);
+            // After re-initializing, refresh base consumption and reapply recipe mapping
+            // so displayName/production/consumption match the saved currentRecipeKey
+            try {
+              building._baseConsumption = JSON.parse(JSON.stringify(building.consumption || {}));
+              if (typeof building._applyRecipeMapping === 'function') {
+                building._applyRecipeMapping();
+              }
+            } catch (e) { /* non-fatal */ }
             // Reset effects applied from research
             building.activeEffects = [];
             if (building.booleanFlags && Array.isArray(building.booleanFlags)) {

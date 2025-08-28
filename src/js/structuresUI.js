@@ -223,23 +223,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   reverseInlineBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   reverseInlineBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    // If the corresponding resource is 0, toggle the recipe instead
-    try {
-      const rec = structure.recipes && structure.currentRecipeKey ? structure.recipes[structure.currentRecipeKey] : null;
-      const target = rec && rec.reverseTarget ? rec.reverseTarget : null;
-      if (target && resources[target.category] && resources[target.category][target.resource]) {
-        const amt = resources[target.category][target.resource].value || 0;
-        if (amt === 0 && typeof structure._toggleRecipe === 'function') {
-          structure._toggleRecipe();
-          if (typeof updateBuildingDisplay === 'function') {
-            updateBuildingDisplay(buildings);
-          }
-          return;
-        }
-      }
-    } catch (err) { /* non-fatal */ }
-
-    // Otherwise, toggle reversal state
+    // Toggle reversal state only; recipe toggling is handled by automation logic when needed
     if (typeof structure.setReverseEnabled === 'function') {
       structure.setReverseEnabled(!structure.reverseEnabled);
     } else {
@@ -664,15 +648,26 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateStructureButtonText(button, structure, buildCount = 1) {
     if (!button) return;
     const canAfford = structure.canAfford(buildCount);
-    const countSpan = button.querySelector('.build-button-count');
+    let countSpan = button.querySelector('.build-button-count');
     const newCount = formatNumber(buildCount, true);
-    if (countSpan && countSpan.textContent !== newCount) {
+    // Rebuild the button label structure if expected nodes are missing
+    if (!countSpan || !button.buttonNameNode) {
+      button.textContent = '';
+      button.append('Build ');
+      countSpan = document.createElement('span');
+      countSpan.classList.add('build-button-count');
+      button.appendChild(countSpan);
+      const nameNodeNew = document.createTextNode('');
+      button.appendChild(nameNodeNew);
+      button.buttonNameNode = nameNodeNew;
+    }
+    if (countSpan.textContent !== newCount) {
       countSpan.textContent = newCount;
     }
 
     const nameNode = button.buttonNameNode;
     const desiredName = ` ${structure.displayName}`;
-    if (nameNode && nameNode.textContent !== desiredName) {
+    if (nameNode.textContent !== desiredName) {
       nameNode.textContent = desiredName;
     }
 
