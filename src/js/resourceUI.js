@@ -103,6 +103,8 @@ function createTooltipElement(resourceName) {
   const prodTotalRight = document.createElement('div');
   prodTotalRight.style.display = 'table-cell';
   prodTotalRight.style.textAlign = 'right';
+  prodTotalRight.style.minWidth = '90px';
+  prodTotalRight.style.whiteSpace = 'nowrap';
   const prodTotalRightStrong = document.createElement('strong');
   prodTotalRight.appendChild(prodTotalRightStrong);
   prodTotalRow.appendChild(prodTotalLeft);
@@ -135,6 +137,8 @@ function createTooltipElement(resourceName) {
   const consTotalRight = document.createElement('div');
   consTotalRight.style.display = 'table-cell';
   consTotalRight.style.textAlign = 'right';
+  consTotalRight.style.minWidth = '90px';
+  consTotalRight.style.whiteSpace = 'nowrap';
   const consTotalRightStrong = document.createElement('strong');
   consTotalRight.appendChild(consTotalRightStrong);
   consTotalRow.appendChild(consTotalLeft);
@@ -167,6 +171,8 @@ function createTooltipElement(resourceName) {
   const overflowTotalRight = document.createElement('div');
   overflowTotalRight.style.display = 'table-cell';
   overflowTotalRight.style.textAlign = 'right';
+  overflowTotalRight.style.minWidth = '90px';
+  overflowTotalRight.style.whiteSpace = 'nowrap';
   const overflowTotalRightStrong = document.createElement('strong');
   overflowTotalRight.appendChild(overflowTotalRightStrong);
   overflowTotalRow.appendChild(overflowTotalLeft);
@@ -227,6 +233,8 @@ function updateRateTable(container, entries, formatter) {
       const right = document.createElement('div');
       right.style.display = 'table-cell';
       right.style.textAlign = 'right';
+      right.style.minWidth = '90px';
+      right.style.whiteSpace = 'nowrap';
       row.appendChild(left);
       row.appendChild(right);
       info.table.appendChild(row);
