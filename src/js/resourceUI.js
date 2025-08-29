@@ -424,7 +424,11 @@ function createResourceElement(category, resourceObj, resourceName) {
         ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
       </div>
     `;
-    resourceElement.appendChild(createTooltipElement(resourceName));
+    const tooltip = createTooltipElement(resourceName);
+    resourceElement.appendChild(tooltip);
+    if (typeof addTooltipHover === 'function') {
+      addTooltipHover(resourceElement, tooltip);
+    }
   } else if (category === 'underground' || resourceObj.name === 'land') {
     // Display for deposits
     resourceElement.innerHTML = `
@@ -439,7 +443,11 @@ function createResourceElement(category, resourceObj, resourceName) {
       </div>
     `;
     if (resourceObj.name === 'land') {
-      resourceElement.appendChild(createTooltipElement(resourceName));
+      const tooltip = createTooltipElement(resourceName);
+      resourceElement.appendChild(tooltip);
+      if (typeof addTooltipHover === 'function') {
+        addTooltipHover(resourceElement, tooltip);
+      }
     }
 
     // Add scanning progress below deposits
@@ -460,7 +468,11 @@ function createResourceElement(category, resourceObj, resourceName) {
         ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
       </div>
     `;
-    resourceElement.appendChild(createTooltipElement(resourceName));
+    const tooltip = createTooltipElement(resourceName);
+    resourceElement.appendChild(tooltip);
+    if (typeof addTooltipHover === 'function') {
+      addTooltipHover(resourceElement, tooltip);
+    }
   }
 
   return resourceElement;

@@ -334,6 +334,10 @@ function createTemperatureBox(row) {
       windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
       gases: gasElements
     };
+    const els = terraformingUICache.atmosphere;
+    if (typeof addTooltipHover === 'function') {
+      addTooltipHover(els.opticalDepthInfo, els.opticalDepthTooltip);
+    }
   }
 
   function updateAtmosphereBox() {
@@ -838,6 +842,7 @@ function updateLifeBox() {
       box: luminosityBox,
       groundAlbedo: luminosityBox.querySelector('#ground-albedo'),
       groundAlbedoDelta: luminosityBox.querySelector('#ground-albedo-delta'),
+      groundAlbedoInfo: luminosityBox.querySelector('#ground-albedo-info'),
       groundAlbedoTooltip: luminosityBox.querySelector('#ground-albedo-tooltip'),
       surfaceAlbedo: luminosityBox.querySelector('#surface-albedo'),
       surfaceAlbedoDelta: luminosityBox.querySelector('#surface-albedo-delta'),
@@ -855,6 +860,13 @@ function updateLifeBox() {
       solarPanelMultiplier: luminosityBox.querySelector('#solar-panel-multiplier'),
       target: luminosityBox.querySelector('.terraforming-target')
     };
+    const els = terraformingUICache.luminosity;
+    if (typeof addTooltipHover === 'function') {
+      addTooltipHover(els.groundAlbedoInfo, els.groundAlbedoTooltip);
+      addTooltipHover(els.surfaceAlbedoInfo, els.surfaceAlbedoTooltip);
+      addTooltipHover(els.actualAlbedoInfo, els.actualAlbedoTooltip);
+      addTooltipHover(els.solarFluxInfo, els.solarFluxTooltip);
+    }
   }
   
   function updateLuminosityBox() {
