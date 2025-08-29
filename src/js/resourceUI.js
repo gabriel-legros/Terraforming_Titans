@@ -80,6 +80,10 @@ function createTooltipElement(resourceName) {
   });
   tooltip.appendChild(zonesDiv);
 
+  const netDiv = document.createElement('div');
+  netDiv.id = `${resourceName}-tooltip-net`;
+  tooltip.appendChild(netDiv);
+
   const productionDiv = document.createElement('div');
   productionDiv.id = `${resourceName}-tooltip-production`;
   productionDiv.style.display = 'none';
@@ -705,6 +709,7 @@ function updateResourceRateDisplay(resource){
   const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(`${resource.name}-tooltip-time`);
   const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(`${resource.name}-tooltip-assignments`);
   const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(`${resource.name}-tooltip-zones`);
+  const netDiv = entry?.tooltip?.netDiv || document.getElementById(`${resource.name}-tooltip-net`);
   const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(`${resource.name}-tooltip-production`);
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(`${resource.name}-tooltip-consumption`);
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(`${resource.name}-tooltip-overflow`);
@@ -826,6 +831,14 @@ function updateResourceRateDisplay(resource){
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
+  const autobuildAvg = typeof autobuildCostTracker !== 'undefined'
+    ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
+    : 0;
+  if (netDiv) {
+    const netIncAuto = netRate - autobuildAvg;
+    const text = `Net Change (including autobuild): ${formatNumber(netIncAuto, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    if (netDiv.textContent !== text) netDiv.textContent = text;
+  }
 
   if (productionDiv) {
     const productionEntries = Object.entries(resource.productionRateBySource)
@@ -854,7 +867,7 @@ function updateResourceRateDisplay(resource){
 
   if (autobuildDiv) {
     if (typeof autobuildCostTracker !== 'undefined') {
-      const avgCost = autobuildCostTracker.getAverageCost(resource.category, resource.name);
+      const avgCost = autobuildAvg;
       if (avgCost > 0) {
         autobuildDiv.style.display = 'block';
         autobuildDiv._info.value.textContent = `${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
@@ -918,6 +931,7 @@ function cacheSingleResource(category, resourceName) {
       timeDiv: document.getElementById(`${resourceName}-tooltip-time`),
       assignmentsDiv: document.getElementById(`${resourceName}-tooltip-assignments`),
       zonesDiv: document.getElementById(`${resourceName}-tooltip-zones`),
+      netDiv: document.getElementById(`${resourceName}-tooltip-net`),
       productionDiv: document.getElementById(`${resourceName}-tooltip-production`),
       consumptionDiv: document.getElementById(`${resourceName}-tooltip-consumption`),
       overflowDiv: document.getElementById(`${resourceName}-tooltip-overflow`),

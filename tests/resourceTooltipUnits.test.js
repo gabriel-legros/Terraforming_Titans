@@ -105,6 +105,11 @@ describe('resource tooltip units', () => {
     const tooltip = dom.window.document.getElementById('metal-tooltip').innerHTML;
     expect(tooltip).toContain('Value');
     expect(tooltip).toContain('ton');
-    expect(tooltip).not.toContain(' ton/s');
+    const netText = dom.window.document.getElementById('metal-tooltip-net').textContent;
+    expect(netText).toContain(' ton/s');
+    const prodHtml = dom.window.document.getElementById('metal-tooltip-production').innerHTML;
+    expect(prodHtml).not.toContain(' ton/s');
+    const consHtml = dom.window.document.getElementById('metal-tooltip-consumption').innerHTML;
+    expect(consHtml).not.toContain(' ton/s');
   });
 });

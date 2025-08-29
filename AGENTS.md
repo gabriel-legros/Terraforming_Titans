@@ -369,3 +369,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Calcite aerosol decays with a 240 second half-life and its consumption appears in resource rates.
 - Surface, actual albedo, and solar flux tooltips now refresh in real time with breakdowns.
 - Ground albedo tooltip shows white dust albedo and coverage, hiding coverage lines when a dust type has 0%.
+- Resource tooltips show a Net Change (including autobuild) line before production, subtracting the last 10 seconds of autobuild cost from the net rate.
