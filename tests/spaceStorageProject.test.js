@@ -620,7 +620,7 @@ describe('Space Storage project', () => {
     expect(project.usedStorage).toBeCloseTo(200);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(800);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(9980);
-    expect(ctx.resources.colony.metal.consumptionRateByType.project['Space Storage'])
+    expect(ctx.resources.colony.metal.consumptionRateByType.project['Space storage transfer'])
       .toBeCloseTo(200);
 
     project.shipWithdrawMode = true;
@@ -629,7 +629,7 @@ describe('Space Storage project', () => {
     expect(project.usedStorage).toBeCloseTo(0);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(1000);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(9960);
-    expect(ctx.resources.colony.metal.productionRateByType.project['Space Storage'])
+    expect(ctx.resources.colony.metal.productionRateByType.project['Space storage transfer'])
       .toBeCloseTo(200);
   });
 

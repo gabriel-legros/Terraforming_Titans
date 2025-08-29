@@ -402,6 +402,20 @@ class Project extends EffectableEntity {
     }
   }
 
+  usesSpaceStorageForResource(category, resource, amount) {
+    if (!this.attributes.canUseSpaceStorage) return false;
+    const storageProj = projectManager?.projects?.spaceStorage;
+    if (!storageProj) return false;
+    const key = resource === 'water' ? 'liquidWater' : resource;
+    const stored = storageProj.resourceUsage[key] || 0;
+    if (storageProj.prioritizeMegaProjects) {
+      return stored >= amount;
+    }
+    const colonyAvailable = resources[category]?.[resource]?.value || 0;
+    if (colonyAvailable >= amount) return false;
+    return stored >= amount - colonyAvailable;
+  }
+
 
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
@@ -416,7 +430,8 @@ class Project extends EffectableEntity {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
-          if (applyRates && resources[category] && resources[category][resource]) {
+          const usingStorage = this.usesSpaceStorageForResource(category, resource, cost[category][resource]);
+          if (applyRates && resources[category] && resources[category][resource] && !usingStorage) {
             resources[category][resource].modifyRate(
               -rateValue,
               this.displayName,

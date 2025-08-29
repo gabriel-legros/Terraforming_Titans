@@ -218,7 +218,7 @@ class SpaceStorageProject extends SpaceshipProject {
         if (t.mode === 'store') {
           const res = resources[t.category][t.resource];
           const rate = -t.amount / durationSeconds;
-          res.modifyRate(rate, 'Space Storage', 'project');
+          res.modifyRate(rate, 'Space storage transfer', 'project');
         }
       });
     }
@@ -287,11 +287,11 @@ class SpaceStorageProject extends SpaceshipProject {
         this.usedStorage = Math.max(0, this.usedStorage - t.amount);
         const res = resources[t.category][t.resource];
         res.increase(t.amount);
-        res.modifyRate(rate, 'Space Storage', 'project');
+        res.modifyRate(rate, 'Space storage transfer', 'project');
       } else if (t.mode === 'store') {
         const res = resources[t.category][t.resource];
         res.decrease(t.amount);
-        res.modifyRate(-rate, 'Space Storage', 'project');
+        res.modifyRate(-rate, 'Space storage transfer', 'project');
         this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
         this.usedStorage += t.amount;
       }
@@ -309,7 +309,7 @@ class SpaceStorageProject extends SpaceshipProject {
         res.increase(t.amount);
         if (durationSeconds > 0) {
           const rate = t.amount / durationSeconds;
-          res.modifyRate(rate, 'Space Storage', 'project');
+          res.modifyRate(rate, 'Space storage transfer', 'project');
         }
       } else if (t.mode === 'store') {
         this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
@@ -317,6 +317,73 @@ class SpaceStorageProject extends SpaceshipProject {
       }
     });
     this.pendingTransfers = [];
+  }
+
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const totals = { cost: {}, gain: {} };
+    if (this.isActive) {
+      const duration = this.getEffectiveDuration();
+      const rate = 1000 / duration;
+      const fraction = deltaTime / duration;
+      const cost = this.getScaledCost();
+      for (const category in cost) {
+        if (!totals.cost[category]) totals.cost[category] = {};
+        for (const resource in cost[category]) {
+          const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+          const usingStorage = this.usesSpaceStorageForResource(category, resource, cost[category][resource]);
+          if (applyRates && resources[category] && resources[category][resource] && !usingStorage) {
+            resources[category][resource].modifyRate(
+              -rateValue,
+              'Space storage expansion',
+              'project'
+            );
+          }
+          totals.cost[category][resource] =
+            (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
+        }
+      }
+    }
+    if (this.shipOperationIsActive) {
+      if (this.isShipOperationContinuous()) {
+        const perSecondCost = this.calculateSpaceshipTotalCost(true);
+        for (const category in perSecondCost) {
+          if (!totals.cost[category]) totals.cost[category] = {};
+          for (const resource in perSecondCost[category]) {
+            const rateValue = perSecondCost[category][resource] * (applyRates ? productivity : 1);
+            if (applyRates) {
+              resources[category][resource].modifyRate(
+                -rateValue,
+                'Space storage transfer',
+                'project'
+              );
+            }
+            totals.cost[category][resource] =
+              (totals.cost[category][resource] || 0) + perSecondCost[category][resource] * deltaTime / 1000;
+          }
+        }
+      } else {
+        const duration = this.shipOperationStartingDuration || this.getShipOperationDuration();
+        const rate = 1000 / duration;
+        const fraction = deltaTime / duration;
+        const cost = this.calculateSpaceshipTotalCost();
+        for (const category in cost) {
+          if (!totals.cost[category]) totals.cost[category] = {};
+          for (const resource in cost[category]) {
+            const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+            if (applyRates) {
+              resources[category][resource].modifyRate(
+                -rateValue,
+                'Space storage transfer',
+                'project'
+              );
+            }
+            totals.cost[category][resource] =
+              (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
+          }
+        }
+      }
+    }
+    return totals;
   }
 
   createProjectDetailsGridUI(container) {
