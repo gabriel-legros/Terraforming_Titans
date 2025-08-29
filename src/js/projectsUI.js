@@ -52,7 +52,13 @@ function getSubtabElementById(id) {
     if (!projectsUICache.subtabById[id]) {
       // Fallback: scan subtabs for matching dataset
       const match = (projectsUICache.subtabs || []).find(t => t && t.dataset && t.dataset.subtab === id);
-      if (match) projectsUICache.subtabById[id] = match;
+      if (match) {
+        projectsUICache.subtabById[id] = match;
+      } else if (typeof document !== 'undefined') {
+        // Final fallback for minimal test DOMs without .projects-subtabs wrapper
+        const q = document.querySelector(`.projects-subtab[data-subtab="${id}"]`);
+        if (q) projectsUICache.subtabById[id] = q;
+      }
     }
   }
   return projectsUICache.subtabById[id] || null;
