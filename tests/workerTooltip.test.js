@@ -13,7 +13,7 @@ describe('worker resource tooltip', () => {
     ctx.formatDuration = numbers.formatDuration;
     ctx.oreScanner = { scanData: {} };
     ctx.populationModule = { getEffectiveWorkerRatio: () => 0.6 };
-    ctx.resources = { colony: { androids: { value: 5 } } };
+    ctx.resources = { colony: { androids: { value: 5 }, colonists: { value: 100 } } };
     ctx.buildings = {
       mine: { displayName: 'Mine', active: 2, getTotalWorkerNeed: () => 5, getEffectiveWorkerMultiplier: () => 1 },
       factory: { displayName: 'Factory', active: 1, getTotalWorkerNeed: () => 20, getEffectiveWorkerMultiplier: () => 1 }
@@ -44,6 +44,7 @@ describe('worker resource tooltip', () => {
     ctx.updateResourceRateDisplay(workers);
     const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
     expect(html).toContain('60%');
+    expect(html).toContain('60 from colonists');
     expect(html).toContain('5 from androids');
   });
 
@@ -70,6 +71,7 @@ describe('worker resource tooltip', () => {
     ctx.createResourceDisplay({ colony: { workers } });
     ctx.updateResourceRateDisplay(workers);
     const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    expect(html).toContain('60 from colonists');
     expect(html).toContain('3 from androids');
     expect(html).not.toContain('Deeper Mining');
   });
@@ -98,6 +100,7 @@ describe('worker resource tooltip', () => {
     ctx.createResourceDisplay({ colony: { workers } });
     ctx.updateResourceRateDisplay(workers);
     const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    expect(html).toContain('60 from colonists');
     expect(html).toContain('1 from androids');
     expect(html).not.toContain('5 from androids');
     expect(html).not.toContain('Deeper Mining');

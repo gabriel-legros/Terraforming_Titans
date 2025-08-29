@@ -425,6 +425,22 @@ function updateWorkerAssignments(assignmentsDiv) {
   if (ratioDiv.textContent !== ratioText) ratioDiv.textContent = ratioText;
 
   if (typeof resources !== 'undefined') {
+    let colonistDiv = assignmentsDiv._colonistDiv;
+    if (!colonistDiv) {
+      colonistDiv = document.createElement('div');
+      const existingAndroidDiv = assignmentsDiv._androidDiv;
+      if (existingAndroidDiv && existingAndroidDiv.parentNode === assignmentsDiv) {
+        assignmentsDiv.insertBefore(colonistDiv, existingAndroidDiv);
+      } else {
+        assignmentsDiv.appendChild(colonistDiv);
+      }
+      assignmentsDiv._colonistDiv = colonistDiv;
+    }
+    const colonists = resources.colony?.colonists?.value || 0;
+    const colonistWorkers = Math.floor(populationModule.getEffectiveWorkerRatio() * colonists);
+    const colonistText = `${formatNumber(colonistWorkers, true)} from colonists`;
+    if (colonistDiv.textContent !== colonistText) colonistDiv.textContent = colonistText;
+
     let androidDiv = assignmentsDiv._androidDiv;
     if (!androidDiv) {
       androidDiv = document.createElement('div');
