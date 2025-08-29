@@ -47,22 +47,19 @@ function createTooltipElement(resourceName) {
 
   const valueDiv = document.createElement('div');
   valueDiv.id = `${resourceName}-tooltip-value`;
-  tooltip.appendChild(valueDiv);
 
   const timeDiv = document.createElement('div');
   timeDiv.id = `${resourceName}-tooltip-time`;
-  tooltip.appendChild(timeDiv);
 
+  let noteDiv;
   if (resourceName === 'land') {
-    const noteDiv = document.createElement('div');
+    noteDiv = document.createElement('div');
     noteDiv.id = `${resourceName}-tooltip-note`;
     noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
-    tooltip.appendChild(noteDiv);
   }
 
   const assignmentsDiv = document.createElement('div');
   assignmentsDiv.id = `${resourceName}-tooltip-assignments`;
-  tooltip.appendChild(assignmentsDiv);
 
   const zonesDiv = document.createElement('div');
   zonesDiv.id = `${resourceName}-tooltip-zones`;
@@ -78,11 +75,17 @@ function createTooltipElement(resourceName) {
     zonesDiv.appendChild(line);
     zonesDiv._info.lines.set(zone, line);
   });
-  tooltip.appendChild(zonesDiv);
 
   const netDiv = document.createElement('div');
   netDiv.id = `${resourceName}-tooltip-net`;
-  tooltip.appendChild(netDiv);
+
+  const headerDiv = document.createElement('div');
+  headerDiv.appendChild(valueDiv);
+  headerDiv.appendChild(timeDiv);
+  if (noteDiv) headerDiv.appendChild(noteDiv);
+  headerDiv.appendChild(assignmentsDiv);
+  headerDiv.appendChild(zonesDiv);
+  headerDiv.appendChild(netDiv);
 
   const productionDiv = document.createElement('div');
   productionDiv.id = `${resourceName}-tooltip-production`;
@@ -115,7 +118,6 @@ function createTooltipElement(resourceName) {
   prodTotalRow.appendChild(prodTotalRight);
   prodTable.appendChild(prodTotalRow);
   productionDiv._info = { table: prodTable, rows: new Map(), totalRow: prodTotalRow, totalRight: prodTotalRightStrong };
-  tooltip.appendChild(productionDiv);
 
   const consumptionDiv = document.createElement('div');
   consumptionDiv.id = `${resourceName}-tooltip-consumption`;
@@ -149,7 +151,6 @@ function createTooltipElement(resourceName) {
   consTotalRow.appendChild(consTotalRight);
   consTable.appendChild(consTotalRow);
   consumptionDiv._info = { table: consTable, rows: new Map(), totalRow: consTotalRow, totalRight: consTotalRightStrong };
-  tooltip.appendChild(consumptionDiv);
 
   const overflowDiv = document.createElement('div');
   overflowDiv.id = `${resourceName}-tooltip-overflow`;
@@ -183,7 +184,6 @@ function createTooltipElement(resourceName) {
   overflowTotalRow.appendChild(overflowTotalRight);
   overflowTable.appendChild(overflowTotalRow);
   overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
-  tooltip.appendChild(overflowDiv);
 
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
@@ -200,7 +200,19 @@ function createTooltipElement(resourceName) {
   autoTable.style.width = '100%';
   autobuildDiv.appendChild(autoTable);
   autobuildDiv._info = { value: autoValue, table: autoTable, rows: new Map() };
-  tooltip.appendChild(autobuildDiv);
+
+  const col1 = document.createElement('div');
+  col1.appendChild(headerDiv);
+  col1.appendChild(productionDiv);
+  col1.appendChild(consumptionDiv);
+  col1.appendChild(overflowDiv);
+  col1.appendChild(autobuildDiv);
+  tooltip.appendChild(col1);
+
+  const col2 = document.createElement('div');
+  const col3 = document.createElement('div');
+  // Store references needed for dynamic column reflow
+  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv };
 
   return tooltip;
 }
@@ -225,6 +237,8 @@ function updateRateTable(container, entries, formatter) {
       info.totalRow.style.display = 'none';
     }
   }
+  // Sort descending and then render rows in that order; always re-append
+  // existing rows so DOM order matches sorted order.
   validEntries.sort((a, b) => b[1] - a[1]).forEach(([name, val]) => {
     let rowInfo = info.rows.get(name);
     if (!rowInfo) {
@@ -249,7 +263,8 @@ function updateRateTable(container, entries, formatter) {
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
     if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
     rowInfo.row.style.display = 'table-row';
-    if (!rowInfo.row.parentNode) info.table.appendChild(rowInfo.row);
+    // Always append to enforce the desired order
+    info.table.appendChild(rowInfo.row);
     used.add(name);
   });
   info.rows.forEach((rowInfo, name) => {
@@ -258,6 +273,93 @@ function updateRateTable(container, entries, formatter) {
       info.rows.delete(name);
     }
   });
+}
+
+function setResourceTooltipColumns(tooltip, cols) {
+  if (!tooltip || !tooltip._columnsInfo) return;
+  const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
+  col1.innerHTML = '';
+  if (cols === 3) {
+    col2.innerHTML = '';
+    col3.innerHTML = '';
+    // Move time and net panels into their columns
+    if (timeDiv.parentNode !== col2) {
+      if (timeDiv.parentNode) timeDiv.parentNode.removeChild(timeDiv);
+    }
+    if (netDiv.parentNode !== col3) {
+      if (netDiv.parentNode) netDiv.parentNode.removeChild(netDiv);
+    }
+    // Ensure header does not duplicate moved elements
+    // (if they were inside headerDiv previously, they were removed above)
+
+    col1.appendChild(headerDiv);
+    col1.appendChild(productionDiv);
+    // Time to full above consumption
+    // Remove any leading <br> so the header aligns cleanly at the top of its column
+    if (consumptionDiv.firstChild && consumptionDiv.firstChild.tagName === 'BR') {
+      consumptionDiv.removeChild(consumptionDiv.firstChild);
+    }
+    col2.appendChild(timeDiv);
+    col2.appendChild(consumptionDiv);
+    col2.appendChild(overflowDiv);
+    // Net rate above autobuild
+    // Remove any leading <br> so the header aligns cleanly at the top of its column
+    if (autobuildDiv.firstChild && autobuildDiv.firstChild.tagName === 'BR') {
+      autobuildDiv.removeChild(autobuildDiv.firstChild);
+    }
+    col3.appendChild(netDiv);
+    col3.appendChild(autobuildDiv);
+    if (!col2.parentNode) tooltip.appendChild(col2);
+    if (!col3.parentNode) tooltip.appendChild(col3);
+
+    // Align headers (Production / Consumption / Autobuild) on the same baseline
+    // by adding top margins so that each column's pre-header block height matches the max.
+    const headerHeight = headerDiv.getBoundingClientRect().height || 0;
+    const timeHeight = timeDiv ? (timeDiv.getBoundingClientRect().height || 0) : 0;
+    const netHeight = netDiv ? (netDiv.getBoundingClientRect().height || 0) : 0;
+    const maxPreHeader = Math.max(headerHeight, timeHeight, netHeight);
+    const prodMargin = Math.max(maxPreHeader - headerHeight, 0);
+    const consMargin = Math.max(maxPreHeader - timeHeight, 0);
+    const autoMargin = Math.max(maxPreHeader - netHeight, 0);
+    productionDiv.style.marginTop = prodMargin ? prodMargin + 'px' : '0px';
+    consumptionDiv.style.marginTop = consMargin ? consMargin + 'px' : '0px';
+    autobuildDiv.style.marginTop = autoMargin ? autoMargin + 'px' : '0px';
+  } else {
+    // Restore time and net into the header for single-column layout
+    if (timeDiv.parentNode && timeDiv.parentNode !== headerDiv) timeDiv.parentNode.removeChild(timeDiv);
+    if (netDiv.parentNode && netDiv.parentNode !== headerDiv) netDiv.parentNode.removeChild(netDiv);
+    // Rebuild header content order: value, time, note/assignments/zones (already in header), net last
+    // Ensure timeDiv appears right after the value line
+    if (headerDiv.firstChild) {
+      // Insert after first child (valueDiv)
+      headerDiv.insertBefore(timeDiv, headerDiv.children[1] || null);
+    } else {
+      headerDiv.appendChild(timeDiv);
+    }
+    // Ensure netDiv is at the end
+    headerDiv.appendChild(netDiv);
+
+    col1.appendChild(headerDiv);
+    col1.appendChild(productionDiv);
+    // Ensure the original spacing <br> is restored when returning to one column
+    if (!consumptionDiv.firstChild || consumptionDiv.firstChild.tagName !== 'BR') {
+      consumptionDiv.insertBefore(document.createElement('br'), consumptionDiv.firstChild || null);
+    }
+    if (!autobuildDiv.firstChild || autobuildDiv.firstChild.tagName !== 'BR') {
+      autobuildDiv.insertBefore(document.createElement('br'), autobuildDiv.firstChild || null);
+    }
+    // Reset margins that were applied for alignment in 3-column mode
+    productionDiv.style.marginTop = '';
+    consumptionDiv.style.marginTop = '';
+    autobuildDiv.style.marginTop = '';
+
+    col1.appendChild(consumptionDiv);
+    col1.appendChild(overflowDiv);
+    col1.appendChild(autobuildDiv);
+    if (col2.parentNode) tooltip.removeChild(col2);
+    if (col3.parentNode) tooltip.removeChild(col3);
+  }
+  if (!col1.parentNode) tooltip.appendChild(col1);
 }
 
 function updateAssignmentTable(container, assignments) {
