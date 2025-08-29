@@ -873,16 +873,36 @@ function updateLifeBox() {
     }
     if (els.groundAlbedoTooltip) {
       const base = terraforming.celestialParameters.albedo;
-      const upgrades = (typeof resources !== 'undefined' && resources.special && resources.special.albedoUpgrades)
-        ? resources.special.albedoUpgrades.value : 0;
       const area = terraforming.celestialParameters.surfaceArea || 1;
-      const coverage = area > 0 ? Math.min(upgrades / area, 1) : 0;
-      const dustAlbedo = 0.05;
+      const special = (typeof resources !== 'undefined' && resources.special) ? resources.special : {};
+      const black = (special.albedoUpgrades && typeof special.albedoUpgrades.value === 'number')
+        ? special.albedoUpgrades.value : 0;
+      const white = (special.whiteDust && typeof special.whiteDust.value === 'number')
+        ? special.whiteDust.value : 0;
+
+      const bRatioRaw = area > 0 ? Math.max(0, black / area) : 0;
+      const wRatioRaw = area > 0 ? Math.max(0, white / area) : 0;
+      const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
+      let shareBlack = 0, shareWhite = 0;
+      if (totalApplied > 0) {
+        const sumRaw = bRatioRaw + wRatioRaw;
+        shareWhite = (wRatioRaw / sumRaw) * totalApplied;
+        shareBlack = totalApplied - shareWhite;
+      }
+
+      const blackAlbedo = 0.05;
+      const whiteAlbedo = 0.8;
       const lines = [
         `Base: ${base.toFixed(2)}`,
-        `Black dust albedo: ${dustAlbedo.toFixed(2)}`,
-        `Black dust coverage: ${(coverage * 100).toFixed(1)}%`
+        `Black dust albedo: ${blackAlbedo.toFixed(2)}`,
       ];
+      if (shareBlack > 0) {
+        lines.push(`Black dust coverage: ${(shareBlack * 100).toFixed(1)}%`);
+      }
+      lines.push(`White dust albedo: ${whiteAlbedo.toFixed(2)}`);
+      if (shareWhite > 0) {
+        lines.push(`White dust coverage: ${(shareWhite * 100).toFixed(1)}%`);
+      }
       els.groundAlbedoTooltip.innerHTML = lines.join('<br>');
     }
 
