@@ -805,18 +805,18 @@ function updateLifeBox() {
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Surface Albedo <span id="surface-albedo-tooltip" class="info-tooltip-icon" title="Breakdown of surface types by zone. Darker materials lower albedo and warm the climate.">&#9432;</span></td>
+            <td>Surface Albedo <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;<span id="surface-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Actual Albedo <span id="actual-albedo-tooltip" class="info-tooltip-icon" title="Actual albedo factors in cloud cover and hazy skies, blending their reflectivity with the surface.">&#9432;</span></td>
+            <td>Actual Albedo <span id="actual-albedo-info" class="info-tooltip-icon">&#9432;<span id="actual-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(2)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
           <tr>
             <td>Solar Flux (W/m²)</td>
-            <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-breakdown" class="info-tooltip-icon" title="">&#9432;</span></td>
+            <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
         </tbody>
@@ -841,13 +841,16 @@ function updateLifeBox() {
       groundAlbedoTooltip: luminosityBox.querySelector('#ground-albedo-tooltip'),
       surfaceAlbedo: luminosityBox.querySelector('#surface-albedo'),
       surfaceAlbedoDelta: luminosityBox.querySelector('#surface-albedo-delta'),
+      surfaceAlbedoInfo: luminosityBox.querySelector('#surface-albedo-info'),
       surfaceAlbedoTooltip: luminosityBox.querySelector('#surface-albedo-tooltip'),
       actualAlbedo: luminosityBox.querySelector('#actual-albedo'),
       actualAlbedoDelta: luminosityBox.querySelector('#actual-albedo-delta'),
+      actualAlbedoInfo: luminosityBox.querySelector('#actual-albedo-info'),
       actualAlbedoTooltip: luminosityBox.querySelector('#actual-albedo-tooltip'),
       modifiedSolarFlux: luminosityBox.querySelector('#modified-solar-flux'),
       solarFluxDelta: luminosityBox.querySelector('#solar-flux-delta'),
-      solarFluxBreakdown: luminosityBox.querySelector('#solar-flux-breakdown'),
+      solarFluxInfo: luminosityBox.querySelector('#solar-flux-info'),
+      solarFluxTooltip: luminosityBox.querySelector('#solar-flux-tooltip'),
       mainTooltip: luminosityBox.querySelector('#luminosity-tooltip'),
       solarPanelMultiplier: luminosityBox.querySelector('#solar-panel-multiplier'),
       target: luminosityBox.querySelector('.terraforming-target')
@@ -889,20 +892,25 @@ function updateLifeBox() {
       els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
     }
     if (els.surfaceAlbedoTooltip) {
-      const sections = [];
+      const lines = ['Surface composition by zone'];
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
         const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.biomass), 0);
         const pct = v => (v * 100).toFixed(1);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
-        sections.push(
-          `${name}:\n  Rock: ${pct(rock)}%\n  Water: ${pct(fr.ocean)}%\n  Ice: ${pct(fr.ice)}%\n  Hydrocarbons: ${pct(fr.hydrocarbon)}%\n  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%\n  Dry Ice: ${pct(fr.co2_ice)}%\n  Biomass: ${pct(fr.biomass)}%`
-        );
+        lines.push(`${name}:`);
+        lines.push(`  Rock: ${pct(rock)}%`);
+        lines.push(`  Water: ${pct(fr.ocean)}%`);
+        lines.push(`  Ice: ${pct(fr.ice)}%`);
+        lines.push(`  Hydrocarbons: ${pct(fr.hydrocarbon)}%`);
+        lines.push(`  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%`);
+        lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
+        lines.push(`  Biomass: ${pct(fr.biomass)}%`);
+        lines.push('');
       }
-      const explanation =
-        'Biomass claims its share first based on zonal biomass. ' +
-        'Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.';
-      els.surfaceAlbedoTooltip.title = `Surface composition by zone:\n\n${sections.join('\n\n')}\n\n${explanation}`;
+      lines.push('Biomass claims its share first based on zonal biomass.');
+      lines.push('Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.');
+      els.surfaceAlbedoTooltip.innerHTML = lines.join('<br>');
     }
 
     if (els.actualAlbedoTooltip) {
@@ -939,19 +947,24 @@ function updateLifeBox() {
         const tauH = diags.tau_ch4_sw ?? 0;
         const tauC = diags.tau_calcite_sw ?? 0;
 
-        els.actualAlbedoTooltip.title =
-          `Actual albedo = Surface + Haze + Calcite + Clouds\n\n` +
-          `Surface (base): ${A_surf.toFixed(3)}\n` +
-          `Haze (CH4): +${dHaze.toFixed(3)}\n` +
-          `Calcite aerosol: +${dCalc.toFixed(3)}\n` +
-          `Clouds: +${dCloud.toFixed(3)}\n` +
-          `\nTotal: ${A_act.toFixed(3)}${cappedNote}${softCapNote}\n` +
-          `\nShortwave optical depths (diagnostic)\n` +
-          `  CH4 haze τ: ${tauH.toFixed(3)}\n` +
-          `  Calcite τ: ${tauC.toFixed(3)}`;
+        const parts = [];
+        parts.push('Actual albedo = Surface + Haze + Calcite + Clouds', '');
+        parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
+        parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
+        parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
+        parts.push(`Clouds: +${dCloud.toFixed(3)}`);
+        parts.push('');
+        parts.push(`Total: ${A_act.toFixed(3)}${cappedNote}${softCapNote}`);
+        const diag = [];
+        if (Math.abs(tauH) > 0) diag.push(`  CH4 haze τ: ${tauH.toFixed(3)}`);
+        if (Math.abs(tauC) > 0) diag.push(`  Calcite τ: ${tauC.toFixed(3)}`);
+        if (diag.length > 0) {
+          parts.push('', 'Shortwave optical depths (diagnostic)', ...diag);
+        }
+        els.actualAlbedoTooltip.innerHTML = parts.join('<br>');
       } catch (e) {
         // Fallback text if something goes wrong
-        els.actualAlbedoTooltip.title = 'Actual albedo includes surface reflectivity plus additive brightening from haze, calcite aerosols, and clouds.';
+        els.actualAlbedoTooltip.innerHTML = 'Actual albedo includes surface reflectivity plus additive brightening from haze, calcite aerosols, and clouds.';
       }
     }
 
@@ -978,17 +991,20 @@ function updateLifeBox() {
       els.solarFluxDelta.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 
-    if (els.solarFluxBreakdown && terraforming.luminosity.zonalFluxes) {
+    if (els.solarFluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
       const t = (z.tropical / 4).toFixed(1);
       const m = (z.temperate / 4).toFixed(1);
       const p = (z.polar / 4).toFixed(1);
-      els.solarFluxBreakdown.title =
-        `Average Solar Flux by zone\n` +
-        `Tropical: ${t}\n` +
-        `Temperate: ${m}\n` +
-        `Polar: ${p}\n\n` +
-        'Values are lower because of day/night and the angle of sunlight.';
+      const lines = [
+        'Average Solar Flux by zone',
+        `Tropical: ${t}`,
+        `Temperate: ${m}`,
+        `Polar: ${p}`,
+        '',
+        'Values are lower because of day/night and the angle of sunlight.'
+      ];
+      els.solarFluxTooltip.innerHTML = lines.join('<br>');
     }
 
     if (els.mainTooltip) {
@@ -1062,9 +1078,9 @@ function updateLifeBox() {
         parts.push('Shortwave optical depths (diagnostic)');
         parts.push(...diag);
       }
-      node.title = parts.join('\n');
+      node.innerHTML = parts.join('<br>');
     } catch (e) {
-      // Leave existing title untouched on failure
+      // Leave existing tooltip untouched on failure
     }
   }
 

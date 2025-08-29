@@ -45,7 +45,7 @@ describe('surface albedo tooltip', () => {
     ctx.createLuminosityBox(row);
     ctx.updateLuminosityBox();
 
-    const tooltip = dom.window.document.getElementById('surface-albedo-tooltip').getAttribute('title');
+    const tooltip = dom.window.document.getElementById('surface-albedo-tooltip').textContent;
     expect(tooltip).toContain('Biomass claims its share first');
     expect(tooltip).toContain('Ice and liquid water then split the remaining area');
   });
