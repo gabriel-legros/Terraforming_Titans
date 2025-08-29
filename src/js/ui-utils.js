@@ -15,6 +15,21 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
   }
 }
 
+function addTooltipHover(anchor, tooltip) {
+  if (!anchor || !tooltip) return;
+  anchor.addEventListener('mouseenter', () => {
+    const bottom = tooltip.getBoundingClientRect().bottom;
+    if (bottom > window.innerHeight) {
+      tooltip.classList.add('above');
+    } else {
+      tooltip.classList.remove('above');
+    }
+  });
+  anchor.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('above');
+  });
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { activateSubtab };
+  module.exports = { activateSubtab, addTooltipHover };
 }
