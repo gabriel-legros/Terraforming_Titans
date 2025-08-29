@@ -1,11 +1,70 @@
 let projectElements = {};
+
+// Centralized, browser-friendly caches for Projects UI
+const projectsUICache = {
+  subtabsContainer: null,
+  subtabs: null,               // Array of subtab elements
+  subtabById: {},              // id -> subtab element
+  contentWrapper: null,
+  contentById: {},             // id -> content element ("*-projects")
+  listByCategory: {},          // category -> list element ("*-projects-list")
+  activeSubtabId: null
+};
+
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 
 function getProjectSubtabContents() {
   if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
-    cachedProjectSubtabContents = Array.from(document.querySelectorAll('.projects-subtab-content'));
+    // Use getElementsByClassName to avoid repeated querySelectorAll allocations
+    cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
   }
   return cachedProjectSubtabContents;
+}
+
+function getProjectsSubtabs() {
+  if (!projectsUICache.subtabs) {
+    projectsUICache.subtabsContainer = projectsUICache.subtabsContainer || document.getElementsByClassName('projects-subtabs')[0] || null;
+    const list = projectsUICache.subtabsContainer
+      ? Array.from(projectsUICache.subtabsContainer.getElementsByClassName('projects-subtab'))
+      : [];
+    projectsUICache.subtabs = list;
+    // Seed subtab id -> element map
+    projectsUICache.subtabs.forEach(tab => {
+      const id = tab && tab.dataset ? tab.dataset.subtab : undefined;
+      if (id) projectsUICache.subtabById[id] = tab;
+    });
+  }
+  return projectsUICache.subtabs;
+}
+
+function getContentWrapper() {
+  if (!projectsUICache.contentWrapper) {
+    projectsUICache.contentWrapper = document.getElementsByClassName('projects-subtab-content-wrapper')[0] || null;
+  }
+  return projectsUICache.contentWrapper;
+}
+
+function getSubtabElementById(id) {
+  if (!id) return null;
+  if (!projectsUICache.subtabById[id]) {
+    // Ensure subtabs cache exists and try to resolve
+    getProjectsSubtabs();
+    if (!projectsUICache.subtabById[id]) {
+      // Fallback: scan subtabs for matching dataset
+      const match = (projectsUICache.subtabs || []).find(t => t && t.dataset && t.dataset.subtab === id);
+      if (match) projectsUICache.subtabById[id] = match;
+    }
+  }
+  return projectsUICache.subtabById[id] || null;
+}
+
+function getContentById(id) {
+  if (!id) return null;
+  if (!projectsUICache.contentById[id]) {
+    // Use getElementById once and cache
+    projectsUICache.contentById[id] = document.getElementById(id) || null;
+  }
+  return projectsUICache.contentById[id];
 }
 
 function invalidateAutomationSettingsCache(projectName) {
@@ -16,30 +75,37 @@ function invalidateAutomationSettingsCache(projectName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Subtab functionality to show/hide project categories
-  document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(tab => {
+  // Subtab functionality to show/hide project categories (cached references)
+  const tabs = getProjectsSubtabs();
+  tabs.forEach(tab => {
     tab.addEventListener('click', function () {
-        // Remove the 'active' class from all project subtabs
-        document.querySelectorAll('.projects-subtabs .projects-subtab').forEach(t => t.classList.remove('active'));
+      // Remove 'active' from all cached subtabs
+      tabs.forEach(t => t.classList.remove('active'));
 
-        // Add the 'active' class to the clicked subtab
-        this.classList.add('active');
+      // Add 'active' to clicked subtab
+      this.classList.add('active');
 
-        // Get the corresponding content element ID from the data attribute
-        const category = this.dataset.subtab;
+      // Determine corresponding content id from data attribute
+      const category = this && this.dataset ? this.dataset.subtab : null;
+      projectsUICache.activeSubtabId = category || null;
 
-        // Hide all project subtab contents
-        document.querySelectorAll('.projects-subtab-content-wrapper .projects-subtab-content').forEach(content => {
-            content.classList.remove('active');
-        });
+      // Hide all subtab contents (cached list)
+      getProjectSubtabContents().forEach(content => content.classList.remove('active'));
 
-        // Show the content of the selected subtab
-        document.getElementById(category).classList.add('active');
-        if (typeof markProjectSubtabViewed === 'function') {
-          markProjectSubtabViewed(category);
-        }
+      // Show selected subtab content (cached by id)
+      const content = getContentById(category);
+      if (content) content.classList.add('active');
+
+      if (typeof markProjectSubtabViewed === 'function' && category) {
+        markProjectSubtabViewed(category);
+      }
     });
   });
+
+  // Initialize active subtab id without querying
+  const initialActive = tabs.find(t => t.classList.contains('active'));
+  projectsUICache.activeSubtabId = initialActive && initialActive.dataset ? initialActive.dataset.subtab : null;
+
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
 });
@@ -65,14 +131,18 @@ function renderProjects() {
 }
 
 function initializeProjectsUI() {
-  document.querySelectorAll('.projects-list').forEach(container => {
+  // Clear only the project lists, not the subtab containers
+  const lists = Array.from(document.getElementsByClassName('projects-list'));
+  lists.forEach(container => {
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
   });
   projectElements = {};
-  // containers themselves persist; refresh cached list
-  cachedProjectSubtabContents = Array.from(document.querySelectorAll('.projects-subtab-content'));
+  // Reset list cache; wrapper and content caches persist
+  projectsUICache.listByCategory = {};
+  // Refresh cached list of content containers
+  cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
 }
 
 function createProjectItem(project) {
@@ -265,6 +335,7 @@ function createProjectItem(project) {
     ...projectElements[project.name],
     projectItem: projectCard,
     cardBody: cardBody,
+    collapseArrow: arrow,
     progressButton: progressButton,
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
@@ -281,25 +352,41 @@ function createProjectItem(project) {
   // (e.g., simple one-off projects) still show their auto-start controls.
   invalidateAutomationSettingsCache(project.name);
 
-  const categoryContainer = getOrCreateCategoryContainer(project.category || 'general');
+  const categoryContainer = getOrCreateCategoryContainer(project.category || 'resources');
   categoryContainer.appendChild(projectCard);
 }
 
 function getOrCreateCategoryContainer(category) {
-  let categoryContainer = document.getElementById(`${category}-projects-list`);
-  if (!categoryContainer) {
-    const categorySection = document.createElement('div');
-    categorySection.classList.add('projects-subtab-content');
-    categorySection.id = `${category}-projects-list`;
+  // Return the inner list element for the given category
+  let list = projectsUICache.listByCategory[category];
+  if (list && list.isConnected) return list;
 
-    const categoryHeader = document.createElement('h3');
-    categoryHeader.textContent = `${capitalizeFirstLetter(category)} Projects`;
-    categorySection.appendChild(categoryHeader);
-
-    document.querySelector('.projects-subtab-content-wrapper').appendChild(categorySection);
-    categoryContainer = categorySection;
+  // Prefer existing list in markup
+  list = document.getElementById(`${category}-projects-list`);
+  if (list) {
+    projectsUICache.listByCategory[category] = list;
+    return list;
   }
-  return categoryContainer;
+
+  // If missing (e.g., dynamic category), create list inside its content panel
+  const content = getContentById(`${category}-projects`);
+  if (content) {
+    const newList = document.createElement('div');
+    newList.classList.add('projects-list');
+    newList.id = `${category}-projects-list`;
+    content.appendChild(newList);
+    projectsUICache.listByCategory[category] = newList;
+    return newList;
+  }
+
+  // Fallback: attach to the first content container to avoid losing UI (should not happen)
+  const anyContent = getProjectSubtabContents()[0] || document.body;
+  const fallback = document.createElement('div');
+  fallback.classList.add('projects-list');
+  fallback.id = `${category}-projects-list`;
+  anyContent.appendChild(fallback);
+  projectsUICache.listByCategory[category] = fallback;
+  return fallback;
 }
 
 function moveProject(projectName, direction, shiftKey = false) {
@@ -342,7 +429,9 @@ function moveProject(projectName, direction, shiftKey = false) {
     const projectElement = projectElements[projectName].projectItem;
 
     if (toIndexFull === 0) {
-        container.insertBefore(projectElement, container.querySelector('.project-card'));
+        // Insert before first card (avoid querySelector)
+        const firstCard = container.firstElementChild;
+        container.insertBefore(projectElement, firstCard);
     } else if (toIndexFull === categoryProjects.length - 1) {
         container.appendChild(projectElement);
     } else {
@@ -801,8 +890,8 @@ function updateEmptyProjectMessages() {
 
 
 function updateStoryProjectsVisibility() {
-  const subtab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');
-  const content = document.getElementById('story-projects');
+  const subtab = getSubtabElementById('story-projects');
+  const content = getContentById('story-projects');
   if (!subtab || !content) return;
 
   let visible = false;
@@ -829,8 +918,8 @@ function updateStoryProjectsVisibility() {
 }
 
 function updateMegaProjectsVisibility() {
-  const subtab = document.querySelector('.projects-subtab[data-subtab="mega-projects"]');
-  const content = document.getElementById('mega-projects');
+  const subtab = getSubtabElementById('mega-projects');
+  const content = getContentById('mega-projects');
   if (!subtab || !content) return;
 
   let visible = false;
@@ -890,9 +979,16 @@ function updateProjectAlert() {
 }
 
 function markProjectsViewed() {
-  const active = document.querySelector('.projects-subtab.active');
-  if (active && typeof markProjectSubtabViewed === 'function') {
-    markProjectSubtabViewed(active.dataset.subtab);
+  // Prefer cached active id; if missing, infer from cached subtabs
+  let activeId = projectsUICache.activeSubtabId;
+  if (!activeId) {
+    const tabs = getProjectsSubtabs();
+    const activeTab = tabs.find(t => t.classList.contains('active'));
+    activeId = activeTab && activeTab.dataset ? activeTab.dataset.subtab : null;
+    projectsUICache.activeSubtabId = activeId;
+  }
+  if (activeId && typeof markProjectSubtabViewed === 'function') {
+    markProjectSubtabViewed(activeId);
   }
   projectTabAlertNeeded = false;
   updateProjectAlert();
@@ -935,7 +1031,9 @@ if (typeof module !== 'undefined' && module.exports) {
 
 function toggleProjectCollapse(projectCard) {
   projectCard.classList.toggle('collapsed');
-  const arrow = projectCard.querySelector('.collapse-arrow');
+  // Use cached arrow element via projectElements to avoid querying
+  const name = projectCard && projectCard.dataset ? projectCard.dataset.projectName : null;
+  const arrow = name && projectElements[name] ? projectElements[name].collapseArrow : null;
   if (arrow) {
     arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   }
