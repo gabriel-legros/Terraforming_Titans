@@ -54,4 +54,57 @@ describe('Mega project space storage integration', () => {
     expect(ctx.projectManager.projects.spaceStorage.usedStorage).toBe(0);
     expect(ctx.resources.colony.metal.value).toBe(40);
   });
+
+  test('Space storage expansion uses expansion label', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: { colony: { metal: { value: 100, modifyRate: jest.fn() } }, special: { spaceships: { value: 0 } } },
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      projectManager: { projects: { spaceStorage: { resourceUsage: {}, prioritizeMegaProjects: false } } }
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const ssCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceStorageProject.js'), 'utf8');
+    vm.runInContext(ssCode + '; this.SpaceStorageProject = SpaceStorageProject;', ctx);
+    const params = {
+      name: 'spaceStorage',
+      category: 'mega',
+      cost: { colony: { metal: 50 } },
+      duration: 1000,
+      description: '',
+      unlocked: true,
+      attributes: { costPerShip: { colony: { metal: 1 } }, transportPerShip: 1, canUseSpaceStorage: true }
+    };
+    const project = new ctx.SpaceStorageProject(params, 'spaceStorage');
+    project.isActive = true;
+    project.shipOperationIsActive = false;
+    project.estimateCostAndGain(1000, true);
+    expect(ctx.resources.colony.metal.modifyRate).toHaveBeenCalledWith(expect.any(Number), 'Space storage expansion', 'project');
+  });
+
+  test('Rate not modified when using space storage resources', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: { colony: { metal: { value: 20, modifyRate: jest.fn() } } },
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      projectManager: { projects: { spaceStorage: { resourceUsage: { metal: 50 }, prioritizeMegaProjects: false } } }
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const params = { name: 'testProj', category: 'mega', cost: { colony: { metal: 60 } }, duration: 1000, description: '', unlocked: true, attributes: { canUseSpaceStorage: true } };
+    const project = new ctx.Project(params, 'testProj');
+    project.isActive = true;
+    project.estimateProjectCostAndGain(1000, true);
+    expect(ctx.resources.colony.metal.modifyRate).not.toHaveBeenCalled();
+  });
 });

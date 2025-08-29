@@ -370,4 +370,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Surface, actual albedo, and solar flux tooltips now refresh in real time with breakdowns.
 - Ground albedo tooltip shows white dust albedo and coverage, hiding coverage lines when a dust type has 0%.
 - Resource tooltips show a Net Change (including autobuild) line before production, subtracting the last 10 seconds of autobuild cost from the net rate.
+- Space storage tooltips separate transfer and expansion costs, and resource tooltips ignore consumption when costs are paid from space storage.
 - Resource tooltips split into three columns when too tall to fit above or below the viewport, prioritizing below placement.
