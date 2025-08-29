@@ -32,7 +32,7 @@ describe('ground albedo tooltip', () => {
     ctx.createLuminosityBox(row);
     ctx.updateLuminosityBox();
 
-    const tooltip = dom.window.document.getElementById('ground-albedo-tooltip').getAttribute('title');
+    const tooltip = dom.window.document.getElementById('ground-albedo-tooltip').textContent;
     expect(tooltip).toContain('Black dust albedo: 0.05');
     expect(tooltip).toContain('Black dust coverage: 30.0%');
   });
