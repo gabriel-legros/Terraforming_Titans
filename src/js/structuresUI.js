@@ -123,6 +123,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.appendChild(nameNode);
   button.buttonNameNode = nameNode;
 
+  // Initialize and seed per-structure UI cache
+  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+  const cached = structureUIElements[structure.name];
+  cached.combinedRow = combinedStructureRow;
+  cached.row = structureRow;
+  cached.buildButton = button;
+  cached.buttonContainer = buttonContainer;
+
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
   // Set initial button text and color based on affordability
@@ -152,6 +160,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   buildCountDisplay.id = `${structure.name}-build-count`;
   buildCountDisplay.textContent = formatNumber(selectedBuildCount, true);
   buildCountButtons.appendChild(buildCountDisplay);
+  cached.buildCountDisplay = buildCountDisplay;
 
   const multiplyButton = document.createElement('button');
   multiplyButton.textContent = 'x10';
@@ -203,6 +212,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       }
     });
     leftContainer.appendChild(upgradeButton);
+    cached.upgradeButton = upgradeButton;
   }
 
   const hideButton = document.createElement('button');
@@ -214,6 +224,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
   hideButton.disabled = structure.active > 0;
   leftContainer.appendChild(hideButton);
+  cached.hideButton = hideButton;
   
   // Reverse button to the right of Hide
   const reverseInlineBtn = document.createElement('button');
@@ -303,6 +314,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
   constructedCountContainer.appendChild(structureControls);
+  cached.increaseButton = increaseButton;
+  cached.decreaseButton = decreaseButton;
 
   const toggleLabel = document.createElement('span');
   toggleLabel.textContent = 'Toggle: ';
@@ -399,6 +412,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildTarget.id = `${structure.name}-auto-build-target`;
   autoBuildTarget.textContent = 'Target : 0';
   autoBuildTargetContainer.appendChild(autoBuildTarget);
+  cached.autoBuildTarget = autoBuildTarget;
 
   const autoBuildPriorityLabel = document.createElement('label');
   autoBuildPriorityLabel.textContent = 'Prioritize';
@@ -451,6 +465,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
   setActiveContainer.appendChild(setActiveButton);
   autoBuildContainer.appendChild(setActiveContainer);
+  cached.autoBuildContainer = autoBuildContainer;
 
   // Reversal toggle button (for buildings that support it)
   const reverseControl = document.createElement('div');
@@ -920,11 +935,18 @@ function updateDecreaseButtonText(button, buildCount) {
     const workerCap = resources.colony.workers?.cap || 0;
     for (const structureName in structures) {
       const structure = structures[structureName];
-      const combinedStructureRow = document.getElementById(`build-${structureName}`).closest('.combined-building-row');
-      const structureRow = document.getElementById(`build-${structureName}`).closest('.building-row');
+      const els = structureUIElements[structureName] || {};
+      const combinedStructureRow = els.combinedRow || (function(){
+        const btn = document.getElementById(`build-${structureName}`);
+        return btn ? btn.closest('.combined-building-row') : null;
+      })();
+      const structureRow = els.row || (function(){
+        const btn = document.getElementById(`build-${structureName}`);
+        return btn ? btn.closest('.building-row') : null;
+      })();
       const countElement = document.getElementById(`${structureName}-count`);
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
-      const buildDisplay = document.getElementById(`${structureName}-build-count`);
+      const buildDisplay = els.buildCountDisplay || document.getElementById(`${structureName}-build-count`);
   
       // Update visibility based on unlocked state
       if (structure.unlocked && structureRow && !structure.isHidden) {
@@ -943,31 +965,31 @@ function updateDecreaseButtonText(button, buildCount) {
         buildDisplay.textContent = formatNumber(selectedBuildCounts[structureName], true);
       }
 
-      const incBtn = document.getElementById(`${structureName}-increase-button`);
+      const incBtn = els.increaseButton || document.getElementById(`${structureName}-increase-button`);
       if (incBtn) {
         updateIncreaseButtonText(incBtn, selectedBuildCounts[structureName]);
       }
-      const decBtn = document.getElementById(`${structureName}-decrease-button`);
+      const decBtn = els.decreaseButton || document.getElementById(`${structureName}-decrease-button`);
       if (decBtn) {
         updateDecreaseButtonText(decBtn, selectedBuildCounts[structureName]);
       }
 
       // Toggle visibility of the "Hide" button based on conditions
-      const buttonContainer = structureRow.querySelector('.button-container');
-      const hideButton = buttonContainer.querySelector('.hide-button');
+      const buttonContainer = els.buttonContainer || (structureRow ? structureRow.getElementsByClassName('button-container')[0] : null);
+      const hideButton = els.hideButton || (buttonContainer ? buttonContainer.getElementsByClassName('hide-button')[0] : null);
 
   if (hideButton) {
     hideButton.style.display = 'inline-block';
     hideButton.disabled = structure.active > 0;
   }
 
-      const upgradeBtn = buttonContainer.querySelector(`#${structureName}-upgrade-button`);
+      const upgradeBtn = els.upgradeButton || (buttonContainer ? buttonContainer.querySelector(`#${structureName}-upgrade-button`) : null);
       if (upgradeBtn) {
         updateUpgradeButton(upgradeBtn, structure);
       }
 
       // Toggle visibility of autoBuildContainer based on globalEffects
-      const autoBuildContainer = document.getElementById(`${structure.name}-auto-build-container`);
+      const autoBuildContainer = els.autoBuildContainer || document.getElementById(`${structure.name}-auto-build-container`);
       if (autoBuildContainer) {
         autoBuildContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
         
@@ -982,8 +1004,8 @@ function updateDecreaseButtonText(button, buildCount) {
 
         const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
         const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
-        const autoBuildTarget = document.getElementById(`${structure.name}-auto-build-target`);
-        autoBuildTarget.textContent = `Target : ${formatBigInteger(targetCount)}`;
+        const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
+        if (targetEl) targetEl.textContent = `Target : ${formatBigInteger(targetCount)}`;
 
         if (els.autoBuildBasisSelect) {
           els.autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
@@ -1038,7 +1060,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }
       }
   
-      const button = document.getElementById(`build-${structureName}`);
+      const button = (structureUIElements[structureName] || {}).buildButton || document.getElementById(`build-${structureName}`);
       if (button) {
         updateStructureButtonText(button, structure, selectedBuildCounts[structureName]);
       }
