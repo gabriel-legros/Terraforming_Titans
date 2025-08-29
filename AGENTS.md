@@ -367,3 +367,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Project resource-selection grids cache their input elements for quicker cost calculations and rebuild those caches when grids are reset.
 - Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.
 - Calcite aerosol decays with a 240 second half-life and its consumption appears in resource rates.
+- Surface, actual albedo, and solar flux tooltips now refresh in real time with breakdowns.

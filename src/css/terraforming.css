@@ -66,14 +66,14 @@
     color: red;
   }
 
-  #optical-depth-info {
+  .info-tooltip-icon {
     position: relative;
   }
 
-  #optical-depth-info .resource-tooltip {
+  .info-tooltip-icon .resource-tooltip {
     text-align: left;
   }
 
-  #optical-depth-info:hover .resource-tooltip {
+  .info-tooltip-icon:hover .resource-tooltip {
     display: block;
   }
