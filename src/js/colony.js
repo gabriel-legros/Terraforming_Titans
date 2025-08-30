@@ -139,10 +139,10 @@ class Colony extends Building {
     }
   }
   
-  // Override canAfford if colonies have unique costs or conditions
-  canAfford(resources) {
-    // Add unique colony-specific conditions
-    return super.canAfford(resources);
+  // Override canAfford to allow colony-specific checks while preserving strategic reserve support
+  canAfford(buildCount = 1, reservePercent = 0) {
+    // Add unique colony-specific conditions in future if needed
+    return super.canAfford(buildCount, reservePercent);
   }
 
   adjustNeedRatio(resource, ratio, deltaTime) {
