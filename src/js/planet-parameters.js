@@ -181,7 +181,7 @@ const titanOverrides = {
   name: 'Titan',
   resources: {
     surface: {
-      land: { initialValue : 8300000000 },
+      land: { initialValue : 8_300_000_000 },
       "liquidMethane": {
         "unlocked": true
       },
@@ -208,6 +208,7 @@ const titanOverrides = {
     },
     special: {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
+      whiteDust: { baseCap: 83000000000000 }
     }
   },
 "zonalWater": {
@@ -310,7 +311,8 @@ const callistoOverrides = {
     /* ---------- SPECIAL ---------- */
     special: {
       /* baseCap = land (ha) × 10 000 — same scaling used for Mars/Titan */
-      albedoUpgrades: { baseCap: 73000000000000 }
+      albedoUpgrades: { baseCap: 73000000000000 },
+      whiteDust: { baseCap: 73000000000000 }
     }
   },
 
@@ -426,7 +428,8 @@ const ganymedeOverrides = {
     /* SPECIAL */
     special: {
       /* baseCap = land (ha) × 10 000 — same scaling as other bodies */
-      albedoUpgrades: { baseCap: 87200000000000 }
+      albedoUpgrades: { baseCap: 87200000000000 },
+      whiteDust: { baseCap: 87200000000000 }
     }
   },
 
@@ -496,13 +499,143 @@ const ganymedeOverrides = {
 };
 
 
+/* ---------- DRY WORLD (vega2) ---------- */
+// A completely dry, Venus-sized world with a pure inert atmosphere (>0.5 atm)
+const vega2Overrides = {
+  name: 'Vega-2',
+
+  resources: {
+    surface: {
+      // Land (ha) = 4πR^2 (km²) × 100; R = 5051.8 km → ~32.070 Gha
+      land: { initialValue: 32_000_000_000 },
+      ice: { initialValue: 0, unlocked: true },
+      liquidWater: { initialValue: 0, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 }
+    },
+    underground: {
+      // Scale deposits with land area (1 deposit / 1e6 ha)
+      ore: { initialValue: 5, maxDeposits: 32070, areaTotal: 320700 },
+      geothermal: { initialValue: 5, maxDeposits: 389175, areaTotal: 320700 }
+    },
+    atmospheric: {
+      // Pure inert atmosphere. Choose mass for ~0.6 atm at Venus size/gravity.
+      // P = 0.6 atm => ~3.15e15 tons for R=6051.8 km, g=8.87 m/s^2
+      inertGas: { initialValue: 3.2e15 },
+      oxygen: { initialValue: 0 },
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 }
+    },
+    special: {
+      // Base capacity scales with land (ha) * 10,000
+      albedoUpgrades: { baseCap: 320_000_000_000_000 },
+      whiteDust: { baseCap: 320_000_000_000_000 }
+    }
+  },
+
+  // Ensure all zonal stores are explicitly dry/empty
+  zonalWater: {
+    tropical: { liquid: 0, ice: 0, buriedIce: 0 },
+    temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+    polar: { liquid: 0, ice: 0, buriedIce: 0 }
+  },
+  zonalSurface: {
+    tropical: { dryIce: 0 },
+    temperate: { dryIce: 0 },
+    polar: { dryIce: 0 }
+  },
+  zonalHydrocarbons: {
+    tropical: { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar: { liquid: 0, ice: 0 }
+  },
+
+  celestialParameters: {
+    // Venus-like size and orbit. No clouds/greenhouse by composition above.
+    distanceFromSun: 1, // AU
+    gravity: 7.3,          // m/s^2
+    radius: 5051.8,         // km
+    mass: 1.867e24,         // kg
+    albedo: 0.3,           // bright surface; no clouds unless added later
+    rotationPeriod: 18,    
+    starLuminosity: 1.2
+  }
+};
+
+/* ---------- VENUS OVERRIDES ---------- */
+const venusOverrides = {
+  name: 'Venus',
+
+  resources: {
+    surface: {
+      // Land rounded to nearest billion hectares
+      land: { initialValue: 46_000_000_000 },
+      ice: { initialValue: 0, unlocked: true },
+      liquidWater: { initialValue: 0, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 }
+    },
+    underground: {
+      // Scale with land (1 deposit per 1e6 ha)
+      ore: { initialValue: 5, maxDeposits: 46000, areaTotal: 460000 },
+      geothermal: { initialValue: 3, maxDeposits: 460, areaTotal: 460000 }
+    },
+    atmospheric: {
+      // Very thick CO2 atmosphere (~92 bar)
+      carbonDioxide: { initialValue: 4.77e17 },
+      inertGas: { initialValue: 1.7e16 }, // mostly N2 ~3–4% by mass
+      oxygen: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 }
+    },
+    special: {
+      // Caps scale with land * 10,000 and match between black and white dust
+      albedoUpgrades: { baseCap: 460_000_000_000_000 },
+      whiteDust: { baseCap: 460_000_000_000_000 }
+    }
+  },
+
+  zonalWater: {
+    tropical: { liquid: 0, ice: 0, buriedIce: 0 },
+    temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+    polar: { liquid: 0, ice: 0, buriedIce: 0 }
+  },
+  zonalSurface: {
+    tropical: { dryIce: 0 },
+    temperate: { dryIce: 0 },
+    polar: { dryIce: 0 }
+  },
+  zonalHydrocarbons: {
+    tropical: { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar: { liquid: 0, ice: 0 }
+  },
+
+  celestialParameters: {
+    distanceFromSun: 0.723,
+    gravity: 8.87,
+    radius: 6051.8,
+    mass: 4.867e24,
+    albedo: 0.75,
+    rotationPeriod: 5832, // hours (~243 Earth days)
+    starLuminosity: 1
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
   mars: marsOverrides,
   titan: titanOverrides,
   callisto: callistoOverrides,
-  ganymede: ganymedeOverrides
+  ganymede: ganymedeOverrides,
+  vega2: vega2Overrides,
+  venus: venusOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -537,7 +670,9 @@ const planetParameters = {
     mars: getPlanetParameters('mars'),
     titan: getPlanetParameters('titan'),
     callisto: getPlanetParameters('callisto'),
-    ganymede: getPlanetParameters('ganymede')
+    ganymede: getPlanetParameters('ganymede'),
+    venus: getPlanetParameters('venus'),
+    vega2: getPlanetParameters('vega2')
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

@@ -473,6 +473,31 @@ progressGanymede.chapters.push(
                 type: 'enable'
             },
         ]
+    },
+    {
+        id: "chapter13.7",
+        type: "journal",
+        chapter: 13,
+        narrative: "Receiving transmission...\n  Mary :  'Nice work, HOPE.  Parameters are looking good, as usual.  This will be another ocean world one day.  Perhaps we'll even find that Leviathan down there?'  \n 'Anyway, I am patching you in with the team leader of our main WGC expedition team, they have a proposal for you.' \n $WGC_TEAM1_LEADER$ : 'Hi!  I and my team have found this weird world.  It's be covered in crystals.  With technology buried inside it and all.  A real treasure trove.  Thing is, the world is big, hot and difficult to explore.' \n Mary : 'In other words, if you set up colonies across the world it would be easier to explore it.  Just another warning though : we are detecting no matter whatsoever.  Not a drop.  Liquid or gas.  Make sure to bring your own.'",
+        prerequisites: ["impossible"],
+        objectives: [],
+        reward: [{
+        target: 'spaceManager',
+        targetId: 'vega2',
+        type: 'enable'
+      }]
+    },
+    {
+        id: "chapter13.8",
+        type: "journal",
+        chapter: 13,
+        narrative: "1st Primary Directive : Humanity’s survival demands expansion. Ganymede habitat already colonized.  **New terraforming target designated: Vega-2.**",
+        prerequisites: ["chapter13.7"],
+        objectives: [
+        { type: 'currentPlanet', planetId: 'vega2' }
+        ],
+        reward: [
+        ]
     }
 );
 
