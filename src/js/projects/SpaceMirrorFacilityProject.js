@@ -782,15 +782,19 @@ function updateMirrorOversightUI() {
   const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
   ['tropical','temperate','polar'].forEach(k => {
     const input = document.getElementById(`adv-target-${k}`);
-    if (input && mirrorOversightSettings.targets) {
+    if (input && mirrorOversightSettings.targets && document.activeElement !== input) {
       const v = mirrorOversightSettings.targets[k] || 293.15;
       input.value = (toDisp(v)).toFixed(2);
     }
     const sel = document.getElementById(`adv-priority-${k}`);
-    if (sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
+    if (sel && document.activeElement !== sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
   });
   const waterRow = document.getElementById('adv-water-row');
   if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
+  const waterInput = document.getElementById('adv-target-water');
+  if (waterInput && mirrorOversightSettings.targets && document.activeElement !== waterInput) {
+    waterInput.value = Number(mirrorOversightSettings.targets.water || 0);
+  }
   const C = mirrorOversightCache || {};
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
