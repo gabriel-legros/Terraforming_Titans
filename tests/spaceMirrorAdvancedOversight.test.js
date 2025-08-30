@@ -3,6 +3,9 @@ global.projectElements = {};
 global.terraforming = { calculateMirrorEffect: () => ({ interceptedPower: 0, powerPerUnitArea: 0 }) };
 const originalFormatNumber = global.formatNumber;
 global.formatNumber = () => '';
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM('<!doctype html><html><body></body></html>');
+global.document = dom.window.document;
 
 const {
   setMirrorDistribution,
@@ -10,6 +13,7 @@ const {
   mirrorOversightSettings,
   toggleAdvancedOversight,
   resetMirrorOversightSettings,
+  initializeMirrorOversightUI,
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 
 // cleanup globals injected by module
@@ -46,5 +50,13 @@ describe('advanced mirror oversight', () => {
     toggleAdvancedOversight(true);
     distributeAssignmentsFromSliders('mirrors');
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(0);
+  });
+
+  test('advanced oversight tooltip clarifies priority order', () => {
+    const container = document.createElement('div');
+    initializeMirrorOversightUI(container);
+    const tooltip = container.querySelector('#mirror-advanced-oversight-div .info-tooltip-icon');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip.getAttribute('title')).toMatch(/lower numbers are assigned first/i);
   });
 });
