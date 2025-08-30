@@ -14,6 +14,8 @@ describe('project sustain cost rates', () => {
       colony: {
         energy: {
           value: 100,
+          productionRate: 0,
+          consumptionRate: 0,
           decrease(v){ this.value -= v; },
           updateStorageCap: () => {},
           modifyRate: jest.fn()

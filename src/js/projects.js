@@ -212,11 +212,16 @@ class Project extends EffectableEntity {
 
   hasSustainResources(deltaTime = 1000) {
     if (!this.sustainCost) return true;
-    const seconds = 1;
+    const seconds = deltaTime / 1000;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
-        const required = this.sustainCost[category][resource] * seconds;
-        if (resources[category][resource].value < required) {
+        const costRate = this.sustainCost[category][resource];
+        const res = resources[category][resource];
+        const prod = res.productionRate || 0;
+        const cons = res.consumptionRate || 0;
+        const available = res.value + prod * seconds;
+        const required = (cons + costRate) * seconds;
+        if (available < required) {
           return false;
         }
       }
@@ -226,13 +231,19 @@ class Project extends EffectableEntity {
 
   deductSustainResources(deltaTime) {
     if (!this.sustainCost) return;
+    const seconds = deltaTime / 1000;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
-        const amount = this.sustainCost[category][resource] * deltaTime / 1000;
         const rate = this.sustainCost[category][resource];
-        resources[category][resource].decrease(amount);
-        if (resources[category][resource].modifyRate) {
-          resources[category][resource].modifyRate(-rate, this.displayName, 'project');
+        const res = resources[category][resource];
+        const netProduction = Math.max(res.productionRate - res.consumptionRate, 0);
+        const fromProduction = Math.min(netProduction, rate);
+        const fromStorage = (rate - fromProduction) * seconds;
+        if (fromStorage > 0) {
+          res.decrease(fromStorage);
+        }
+        if (res.modifyRate) {
+          res.modifyRate(-rate, this.displayName, 'project');
         }
       }
     }
