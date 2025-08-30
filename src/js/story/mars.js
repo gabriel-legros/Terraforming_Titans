@@ -59,6 +59,12 @@ var progressMars = {
               resourceType: 'colony',
               targetId: 'electronics',
               type: 'enable'
+            },
+            {
+              target: 'resource',
+              resourceType: 'colony',
+              targetId: 'glass',
+              type: 'enable'
             }
           ],
         rewardDelay: 500  // Delay between rewards in milliseconds
@@ -289,13 +295,7 @@ var progressMars = {
             target: 'building',
             targetId: 'glassSmelter',
             type: 'enable'
-        }            
-        ,{
-              target: 'resource',
-              resourceType: 'colony',
-              targetId: 'glass',
-              type: 'enable'
-            }]
+        }            ]
       },
       {
         id: "chapter1.16",
