@@ -35,14 +35,12 @@ describe('solisUpgrade1 shop options', () => {
     ctx.resources = { colony: { research: { value: 0, hasCap: false, increase(v){ this.value += v; } } } };
     ctx.solisManager = new ctx.SolisManager();
     ctx.initializeSolisUI();
-    const researchItem = dom.window.document.querySelector('#solis-shop-research-button').parentElement.parentElement;
-    const advItem = dom.window.document.querySelector('#solis-shop-advancedOversight-button').parentElement.parentElement;
-    expect(researchItem.classList.contains('hidden')).toBe(true);
-    expect(advItem.classList.contains('hidden')).toBe(true);
+    expect(dom.window.document.querySelector('#solis-shop-research-button')).toBeNull();
+    expect(dom.window.document.querySelector('#solis-shop-advancedOversight-button')).toBeNull();
     ctx.solisManager.booleanFlags.add('solisUpgrade1');
     ctx.updateSolisUI();
-    expect(researchItem.classList.contains('hidden')).toBe(false);
-    expect(advItem.classList.contains('hidden')).toBe(false);
+    expect(dom.window.document.querySelector('#solis-shop-research-button')).not.toBeNull();
+    expect(dom.window.document.querySelector('#solis-shop-advancedOversight-button')).not.toBeNull();
   });
 
   test('purchase research adds points', () => {
