@@ -369,7 +369,7 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">Advanced Oversight</label>
-    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled.">&#9432;</span>
+    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -385,7 +385,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">Targets & Priority</span>
-      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order.">&#9432;</span>
+      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
