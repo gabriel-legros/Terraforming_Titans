@@ -74,6 +74,8 @@
     text-align: left;
     /* Ensure albedo/info tooltips render above subtabs and neighboring UI */
     z-index: 2500;
+    /* Let the cursor leave the icon without staying hovered on the tooltip */
+    pointer-events: none;
   }
 
   .info-tooltip-icon:hover .resource-tooltip {
