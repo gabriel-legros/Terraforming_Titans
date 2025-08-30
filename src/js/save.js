@@ -372,6 +372,7 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.ghgFactorySettings){
       Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
+      enforceGhgFactoryTempGap();
     }
 
     if(gameState.oxygenFactorySettings){

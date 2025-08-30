@@ -516,6 +516,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     if(ghgFactorySettings.reverseTempThreshold === undefined){
       ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
     }
+    enforceGhgFactoryTempGap();
 
     updateGhgTempControl = () => {
       tempLabel.textContent = 'Disable if avg T > ';
@@ -533,16 +534,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
       ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
-      // Keep B synced to A when reversal is not available
       if(!structure.reversalAvailable){
         ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
-        updateGhgTempControl();
+      } else {
+        enforceGhgFactoryTempGap('A');
       }
+      updateGhgTempControl();
     });
 
     tempInputB.addEventListener('input', () => {
       const val = parseFloat(tempInputB.value);
       ghgFactorySettings.reverseTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+      enforceGhgFactoryTempGap('B');
+      updateGhgTempControl();
     });
 
     autoBuildContainer.appendChild(tempControl);

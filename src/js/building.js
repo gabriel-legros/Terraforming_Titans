@@ -535,7 +535,11 @@ class Building extends EffectableEntity {
         terraforming && terraforming.temperature
       ) {
         const A = ghgFactorySettings.disableTempThreshold;
-        const B = ghgFactorySettings.reverseTempThreshold ?? A + 5;
+        let B = ghgFactorySettings.reverseTempThreshold ?? A + 5;
+        if (B - A < 1) {
+          B = A + 1;
+          ghgFactorySettings.reverseTempThreshold = B;
+        }
         const currentTemp = terraforming.temperature.value;
         let recipeKey = this.currentRecipeKey || 'ghg';
         let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
