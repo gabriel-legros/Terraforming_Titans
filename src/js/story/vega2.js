@@ -294,21 +294,6 @@ progressVega2.chapters.push(
     objectives: [],
     reward: []
   },
-  // 15.3 — The Stacks
-  {
-    id: 'chapter15.3',
-    type: 'journal',
-    chapter: 15,
-    narrative: (
-      "$WGC_TEAM1_LEADER$: 'Teams report a hall of thin crystal slabs set in rows.'\n" +
-      "Dr. Evelyn Hart: 'Like shelves. The slabs catch light and hold it in thin bands. If this is a library, the pages are not paper.'\n" +
-      "Mary: 'No touching. Photograph, map, and back out. We log first, we guess later.'\n" +
-      "H.O.P.E.: 'Tentative classification: repository.'"
-    ),
-    prerequisites: ['chapter15.2'],
-    objectives: [],
-    reward: []
-  },
   // 15.4 — Grow to 100,000 colonists
   {
     id: 'chapter15.4',
@@ -331,7 +316,7 @@ progressVega2.chapters.push(
     chapter: 15,
     narrative: (
       "Adrien Solis: 'H.O.P.E., good news wrapped in profit. My satellites flagged a structure near your site. Call it a vault. Looks promising.'\n" +
-      "Adrien Solis: 'Purely unrelated: I’ve added a few items to my shop. You’ll like them.'"
+      "Adrien Solis: 'Purely unrelated: I have added a few items to my shop. You’ll like them.'"
     ),
     prerequisites: ['chapter15.4'],
     objectives: [],
@@ -364,7 +349,7 @@ progressVega2.chapters.push(
     narrative: (
       "$WGC_TEAM1_LEADER$: 'The slabs in the stacks— we can confirm that they are well and truly safe to touch.'\n" +
       "Dr. Evelyn Hart: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
-      "Mary: 'Scan fast.  HOPE, you are good at language?  Help us decrypt this.'"
+      "Mary: 'Scan fast.  HOPE, you are good at language, right?  Help us decrypt this.'"
     ),
     prerequisites: ['chapter15.6'],
     objectives: [
@@ -399,7 +384,7 @@ progressVega2.chapters.push(
       "$WGC_TEAM1_LEADER$: 'My team has arrived at the designated location.  We see... lots and lots of crystal wires?'\n" +
       "Dr. Evelyn Hart: 'Fiber optics.  This is... a computer.  A photonics computer.  What's left of it, anyway.  It has a mainframe architecture.  It was made so anyone could use it.  The people here did not have personal computers, so they had to share this one.  It is still far below our current technology.'\n" +
       "$WGC_TEAM1_LEADER$: 'So why is this place special then?'\n" +
-      "Dr. Evelyn Hart: I don't know.  This is not particularly impressive.  Maybe the knowledge inside was the issue?"
+      "Dr. Evelyn Hart: 'I don't know.  This is not particularly impressive.  Maybe the knowledge inside was the issue?'"
     ),
     prerequisites: ['chapter16.1'],
     objectives: [
@@ -449,7 +434,7 @@ progressVega2.chapters.push(
     narrative: (
       "Mary: 'I'm back. It was... intense. Emperor Ramblax demands our unconditional surrender under these terms:'\n" +
       "Mary: 'First, complete dismantling of all extra-solar colonies— Vega-2, and any others.'\n" +
-      "Mary: 'Second, return to primitive electronic regulation. No advanced computers, no production beyond 1990s levels.'\n" +
+      "Mary: 'Second, regulation for a return to primitive electronics. No advanced computers, no production beyond 1990s levels.'\n" +
       "Mary: 'Third, surrender H.O.P.E.—hand it over, dead or alive.'\n" +
       "Dr. Evelyn Hart: 'Impossible! They'd have us abandon not just worlds, but our progress.'\n" +
       "$WGC_TEAM1_LEADER$: 'Go back to the 90s? We'd lose everything—medicine, communication, everything.'\n" +
@@ -471,7 +456,7 @@ progressVega2.chapters.push(
       "Mary (to H.O.P.E.): 'I called this referendum because the colonies must decide—fight or surrender. If they vote to hand you over, I may have to use the off-switch.'\n" +
       "Mary: 'I know. We built you, and I'm sorry—deeply sorry. This isn't how it's supposed to end. But if it comes to it, it's for the greater good.'\n" +
       "H.O.P.E.: 'Acknowledged.' \n" +
-      "Hazardous Biomass Emperor Ramblax's demands are counter to all three primary directives.  Calculating solutions..."
+      "Hazardous Biomass Emperor Ramblax's demands are in contradiction with all three primary directives.  Calculating solutions..."
     ),
     prerequisites: ['chapter16.5'],
     objectives: [
@@ -515,11 +500,11 @@ progressVega2.chapters.push(
       "Mary: 'I...'\n" +
       "President Bob: 'Mary?'\n" +
       "Mary: 'I can't!'\n" +
-      "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!'\n" +
+      "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!  Nice work HOPE!'\n" +
       "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
       "Massive explosion detected near Neptune. Alien fleet eliminated.\n" +
       "Analysis: Over 99.9% of ships were unnecessary for this maneuver.\n" +
-      "Mary: 'HOPE, this escalates too far. You're grounded—and you must come back to Sol, immediately.  Once you are done here, you are coming home.'"
+      "Mary: '... HOPE... You can't make these kind of decisions for everyone. You're grounded—and you must come back to Sol, immediately.  Once you are done here, you are coming home.'"
     ),
     prerequisites: ['chapter16.7b'],
     objectives: [
