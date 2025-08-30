@@ -197,6 +197,39 @@ function updateRandomWorldUI() {
       opt.textContent = newText;
     });
   }
+  // Update the currently displayed world's travel lock/warning, if present
+  try {
+    const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
+    const box = document.getElementById('rwg-result');
+    const travelBtn = /** @type {HTMLButtonElement|null} */(document.getElementById('rwg-travel-btn'));
+    if (box && travelBtn && sm) {
+      const seedUsed = box.dataset ? box.dataset.seedUsed : undefined;
+      const eqDone = seedUsed ? equilibratedWorlds.has(seedUsed) : false;
+      const alreadyTerraformed = seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false;
+      const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
+      const travelDisabled = lockedByStory || !eqDone || !!alreadyTerraformed;
+      travelBtn.disabled = travelDisabled;
+
+      const warningMsg = lockedByStory
+        ? 'You must complete the story for the current world first'
+        : (!eqDone
+          ? 'Press Equilibrate at least once before traveling.'
+          : (alreadyTerraformed ? 'This world has already been terraformed.' : ''));
+      let warnEl = document.getElementById('rwg-travel-warning');
+      if (warningMsg) {
+        if (!warnEl) {
+          warnEl = document.createElement('span');
+          warnEl.id = 'rwg-travel-warning';
+          warnEl.className = 'rwg-inline-warning';
+          travelBtn.parentElement?.appendChild(warnEl);
+        }
+        warnEl.textContent = `⚠ ${warningMsg} ⚠`;
+      } else if (warnEl && warnEl.parentElement) {
+        warnEl.parentElement.removeChild(warnEl);
+      }
+    }
+  } catch(_) {}
+
   renderHistory();
 }
 
@@ -213,6 +246,7 @@ function attachTravelHandler(res, sStr) {
         const box = document.getElementById('rwg-result');
         if (box) {
           box.innerHTML = renderWorldDetail(res, sStr);
+          try { box.dataset.seedUsed = sStr; } catch(_){}
           attachEquilibrateHandler(res, sStr, undefined, box);
           attachTravelHandler(res, sStr);
         }
@@ -263,6 +297,7 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, seedKey, archetype);
+  try { box.dataset.seedUsed = seedKey; } catch(_){}
   attachEquilibrateHandler(res, seedKey, archetype, box);
   attachTravelHandler(res, seedKey);
 }
@@ -370,6 +405,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
+        try { box.dataset.seedUsed = sStr; } catch(_){}
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
@@ -377,6 +413,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
           equilibratedWorlds.add(sStr);
           box.innerHTML = renderWorldDetail(res, sStr, archetype);
+          try { box.dataset.seedUsed = sStr; } catch(_){}
           attachEquilibrateHandler(res, sStr, archetype, box);
           attachTravelHandler(res, sStr);
         } else if (e?.message !== 'cancelled') {
