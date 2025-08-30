@@ -50,7 +50,7 @@ describe('project sustain cost pause', () => {
     expect(project.isActive).toBe(false);
   });
 
-  test('uses production to cover sustain cost', () => {
+  test('uses production to cover sustain cost without consuming storage', () => {
     const config = {
       name: 'Test',
       category: 'story',
@@ -67,6 +67,29 @@ describe('project sustain cost pause', () => {
     ctx.resources.colony.energy.productionRate = 10;
     ctx.resources.colony.energy.consumptionRate = 0;
     project.update(1000);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(0);
+    expect(project.isPaused).toBe(false);
+    expect(project.isActive).toBe(true);
+  });
+
+  test('draws remaining sustain cost from storage', () => {
+    const config = {
+      name: 'Test',
+      category: 'story',
+      cost: { colony: { energy: 0 } },
+      sustainCost: { colony: { energy: 10 } },
+      duration: 200000,
+      description: '',
+      repeatable: false,
+      unlocked: true
+    };
+    const project = new ctx.Project(config, 'test');
+    project.start(ctx.resources);
+    ctx.resources.colony.energy.value = 20;
+    ctx.resources.colony.energy.productionRate = 6;
+    ctx.resources.colony.energy.consumptionRate = 0;
+    project.update(1000);
+    expect(ctx.resources.colony.energy.value).toBeCloseTo(16);
     expect(project.isPaused).toBe(false);
     expect(project.isActive).toBe(true);
   });
