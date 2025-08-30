@@ -53,6 +53,6 @@ describe('SpaceStorageProject continuous total cost UI', () => {
     ctx.updateProjectUI('spaceStorage');
 
     const text = ctx.projectElements.spaceStorage.totalCostElement.textContent;
-    expect(text).toBe('Total Cost: Energy: 1010/s');
+    expect(text).toBe('Total Cost: Energy: 10.1/s');
   });
 });

@@ -4,6 +4,9 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   applyToLantern: false,
   useFinerControls: false,
   assignmentStep: 1,
+  advancedOversight: false,
+  targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
+  priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
   autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
   assignments: {
     mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
@@ -73,6 +76,9 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.applyToLantern = false;
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.assignmentStep = 1;
+  mirrorOversightSettings.advancedOversight = false;
+  mirrorOversightSettings.targets = { tropical: 0, temperate: 0, polar: 0, water: 0 };
+  mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
@@ -87,8 +93,10 @@ function distributeAssignmentsFromSliders(type) {
     : (buildings.hyperionLantern?.active || 0);
   const zones = ['tropical', 'temperate', 'polar', 'focus'];
   const raw = zones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
-  const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
-  raw.push({ zone: 'any', value: total * globalPerc });
+  if (!mirrorOversightSettings.advancedOversight) {
+    const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
+    raw.push({ zone: 'any', value: total * globalPerc });
+  }
   const assignments = {};
   let used = 0;
   raw.forEach(r => {
@@ -102,13 +110,15 @@ function distributeAssignmentsFromSliders(type) {
     assignments[r.zone] += 1;
     remaining--;
   }
+  if (mirrorOversightSettings.advancedOversight) assignments.any = 0;
   mirrorOversightSettings.assignments[type] = assignments;
   distributeAutoAssignments(type);
 }
 
 function distributeAutoAssignments(type) {
   if (typeof buildings === 'undefined') return;
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'any'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  if (!mirrorOversightSettings.advancedOversight) zones.push('any');
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
@@ -120,7 +130,7 @@ function distributeAutoAssignments(type) {
   let remaining = Math.max(0, total - used);
   const activeZones = zones.filter(z => mirrorOversightSettings.autoAssign[z]);
   if (activeZones.length && remaining > 0) {
-    if (mirrorOversightSettings.autoAssign.any) {
+    if (!mirrorOversightSettings.advancedOversight && mirrorOversightSettings.autoAssign.any) {
       const dist = mirrorOversightSettings.distribution || {};
       const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
       if (activeZones.length === 1) {
@@ -211,7 +221,8 @@ function sanitizeMirrorDistribution() {
 
 function updateAssignmentDisplays() {
   const types = ['mirrors', 'lanterns'];
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'any'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  if (!mirrorOversightSettings.advancedOversight) zones.push('any');
   types.forEach(type => {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);
@@ -240,6 +251,16 @@ function updateAssignmentDisplays() {
       if (minusBtn) minusBtn.textContent = `-${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
     });
   });
+}
+
+function toggleAdvancedOversight(enable) {
+  mirrorOversightSettings.advancedOversight = !!enable;
+  if (enable) {
+    mirrorOversightSettings.autoAssign.any = false;
+    mirrorOversightSettings.assignments.mirrors.any = 0;
+    mirrorOversightSettings.assignments.lanterns.any = 0;
+  }
+  updateMirrorOversightUI();
 }
 
 function initializeMirrorOversightUI(container) {
@@ -990,6 +1011,7 @@ if (typeof globalThis !== 'undefined') {
   globalThis.calculateZoneSolarFluxWithFacility = calculateZoneSolarFluxWithFacility;
   globalThis.toggleFinerControls = toggleFinerControls;
   globalThis.updateAssignmentDisplays = updateAssignmentDisplays;
+  globalThis.toggleAdvancedOversight = toggleAdvancedOversight;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -1007,5 +1029,6 @@ if (typeof module !== 'undefined' && module.exports) {
     distributeAutoAssignments,
     toggleFinerControls,
     updateAssignmentDisplays,
+    toggleAdvancedOversight,
   };
 }

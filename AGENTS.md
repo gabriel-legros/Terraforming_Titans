@@ -354,6 +354,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Max export capacity tooltip is generated once and no longer updates each tick, making it readable.
 - Max export capacity tooltip now displays an info icon so the explanation is visible.
 - Space mirror finer controls show counts of unassigned mirrors and lanterns available for manual assignment.
+- Space mirror facility supports an advanced oversight mode that removes the Any Zone assignment and prepares temperature and water targets.
 - Space storage water withdrawals can target colony water or surface via a withdraw-mode dropdown.
 - Manual building toggle buttons now uncheck the Set active to target option when clicked.
 - Colony and nanocolony sliders now share styling, differing only in width.
