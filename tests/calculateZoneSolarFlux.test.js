@@ -60,7 +60,7 @@ describe('calculateZoneSolarFlux', () => {
     const totalArea = terra.celestialParameters.surfaceArea;
     const distributedMirror = (4 * mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / totalArea;
     const focusedMirror = (4 * mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / (totalArea * zonePerc);
-    const expected = (baseSolar + distributedMirror + focusedMirror) * ratio;
+    const expected = (baseSolar + distributedMirror) * ratio + focusedMirror;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
@@ -130,7 +130,7 @@ describe('calculateZoneSolarFlux', () => {
     const focusedMirror = (4 * mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / (totalArea * zonePerc);
     const distributedLantern = 4 * lanternFlux * areaFactor * 0.5;
     const focusedLantern = 4 * lanternFlux * areaFactor * 0.5 / zonePerc;
-    const expected = (baseSolar + distributedMirror + focusedMirror + distributedLantern + focusedLantern) * ratio;
+    const expected = (baseSolar + distributedMirror + distributedLantern) * ratio + focusedMirror + focusedLantern;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
