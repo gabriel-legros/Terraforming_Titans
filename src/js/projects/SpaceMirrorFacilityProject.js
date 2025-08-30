@@ -685,6 +685,8 @@ function rebuildMirrorOversightCache() {
     lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
     lanternCells: Array.from(document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]')),
     availableLanternCells: Array.from(document.querySelectorAll('.available-lantern-cell')),
+    reversalHeader: document.querySelector('#assignment-grid .grid-header:nth-child(4)') || null,
+    reversalCells: Array.from(document.querySelectorAll('#assignment-grid .grid-reversal-cell')),
     autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-table .auto-assign')),
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
@@ -761,6 +763,11 @@ function updateMirrorOversightUI() {
       lanternDiv.style.flexWrap = 'wrap';
     }
   }
+
+  const smfProject = (typeof projectManager !== 'undefined' && projectManager.projects)
+    ? projectManager.projects.spaceMirrorFacility
+    : null;
+  const reversalAvailable = !!(smfProject && smfProject.reversalAvailable);
   // Advanced oversight unlock check (boolean flag name: advancedOversight)
   let advancedUnlocked = false;
   if (typeof projectManager !== 'undefined') {
@@ -795,10 +802,20 @@ function updateMirrorOversightUI() {
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
   if (C.availableLanternCells) C.availableLanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
+  if (C.reversalHeader) C.reversalHeader.style.display = reversalAvailable ? '' : 'none';
+  if (C.reversalCells) C.reversalCells.forEach(cell => { cell.style.display = reversalAvailable ? 'flex' : 'none'; });
 
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
-    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 80px 50px' : '100px 1fr 80px 50px';
+    if (lanternUnlocked && reversalAvailable) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 80px 50px';
+    } else if (lanternUnlocked) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 50px';
+    } else if (reversalAvailable) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 80px 50px';
+    } else {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 50px';
+    }
   }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
@@ -1154,6 +1171,9 @@ class SpaceMirrorFacilityProject extends Project {
     if (elements && elements.reflectMode) {
       elements.reflectMode.container.style.display = '';
       elements.reflectMode.update();
+    }
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
     }
   }
 
