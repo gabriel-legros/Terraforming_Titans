@@ -225,7 +225,7 @@ function updateSpaceUI() {
         ui.container.style.display = isEnabled ? 'block' : 'none';
 
         const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
-        ui.nameHeading.textContent = data.name + (isTerraformed ? ' (Terraformed)' : '');
+        ui.nameHeading.textContent = data.name;
         ui.nameHeading.style.color = isTerraformed ? '#4CAF50' : '';
         ui.statusSpan.textContent = isTerraformed ? 'Terraforming Complete' : 'Terraforming pending';
         ui.statusSpan.style.color = isTerraformed ? '#4CAF50' : '';
