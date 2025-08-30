@@ -44,6 +44,8 @@ describe('resource tooltip zonal values', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ surface: { liquidWater: resource } });
+    const tooltip = dom.window.document.getElementById('liquidWater-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('liquidWater-tooltip').innerHTML;
     expect(html).toContain('Tropical: ' + numbers.formatNumber(10, false, 3));
@@ -60,6 +62,8 @@ describe('resource tooltip zonal values', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ surface: { ice: resource } });
+    const tooltip = dom.window.document.getElementById('ice-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('ice-tooltip').innerHTML;
     const tropTotal = numbers.formatNumber(5, false, 3);
@@ -82,6 +86,8 @@ describe('resource tooltip zonal values', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ surface: { dryIce: resource } });
+    const tooltip = dom.window.document.getElementById('dryIce-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('dryIce-tooltip').innerHTML;
     expect(html).toContain('Tropical: ' + numbers.formatNumber(1, false, 3));
@@ -98,6 +104,8 @@ describe('resource tooltip zonal values', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ surface: { hydrocarbonIce: resource } });
+    const tooltip = dom.window.document.getElementById('hydrocarbonIce-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
     const html = dom.window.document.getElementById('hydrocarbonIce-tooltip').innerHTML;
     const tTotal = numbers.formatNumber(2, false, 3);

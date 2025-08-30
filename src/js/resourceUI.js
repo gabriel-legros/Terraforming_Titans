@@ -821,7 +821,7 @@ function updateResourceRateDisplay(resource){
   }
 
   const tooltipElement = entry?.tooltip?.root || document.getElementById(`${resource.name}-tooltip`);
-  if (!tooltipElement) return;
+  if (!tooltipElement || !tooltipElement._isActive) return;
 
   const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(`${resource.name}-tooltip-value`);
   const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(`${resource.name}-tooltip-time`);

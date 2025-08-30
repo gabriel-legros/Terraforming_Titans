@@ -26,8 +26,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { metal: resource } });
+    const tooltip = dom.window.document.getElementById('metal-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('metal-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to full');
     const expected = numbers.formatDuration((100 - 50) / 2);
     expect(html).toContain(expected);
@@ -42,8 +44,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: resource } });
+    const tooltip = dom.window.document.getElementById('water-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('water-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to empty');
     const expected = numbers.formatDuration(40 / 4);
     expect(html).toContain(expected);
@@ -58,8 +62,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
     };
     ctx.createResourceDisplay({ colony: { oxygen: resource } });
+    const tooltip = dom.window.document.getElementById('oxygen-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('oxygen-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to full');
     expect(html).toContain('0s');
   });
@@ -73,8 +79,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
     };
     ctx.createResourceDisplay({ colony: { fuel: resource } });
+    const tooltip = dom.window.document.getElementById('fuel-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('fuel-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to empty');
     expect(html).toContain('0s');
   });
@@ -89,8 +97,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
     };
     ctx.createResourceDisplay({ colony: { hydrogen: resource } });
+    const tooltip = dom.window.document.getElementById('hydrogen-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('hydrogen-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to full');
     expect(html).toContain('2 years');
   });
@@ -105,8 +115,10 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
     };
     ctx.createResourceDisplay({ colony: { nitrogen: resource } });
+    const tooltip = dom.window.document.getElementById('nitrogen-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
-    const html = dom.window.document.getElementById('nitrogen-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('Time to empty');
     expect(html).toContain('2 years');
   });
@@ -120,6 +132,8 @@ describe('resource tooltip time remaining', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: 'kg'
     };
     ctx.createResourceDisplay({ colony: { silicon: resource } });
+    const tooltip = dom.window.document.getElementById('silicon-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
     const timeDiv = dom.window.document.getElementById('silicon-tooltip-time');
     expect(timeDiv.innerHTML).toBe('&nbsp;');

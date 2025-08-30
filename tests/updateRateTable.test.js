@@ -34,6 +34,8 @@ describe('updateRateTable', () => {
     };
 
     ctx.createResourceDisplay({ colony: { metal: resource } });
+    const tooltip = dom.window.document.getElementById('metal-tooltip');
+    tooltip._isActive = true;
 
     // Initial update adds a row
     ctx.updateResourceRateDisplay(resource);

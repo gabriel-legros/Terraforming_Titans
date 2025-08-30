@@ -41,8 +41,10 @@ describe('worker resource tooltip', () => {
       unit: null
     };
     ctx.createResourceDisplay({ colony: { workers } });
+    const tooltip = dom.window.document.getElementById('workers-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(workers);
-    const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('60%');
     expect(html).toContain('60 from colonists');
     expect(html).toContain('5 from androids');
@@ -69,8 +71,10 @@ describe('worker resource tooltip', () => {
       unit: null
     };
     ctx.createResourceDisplay({ colony: { workers } });
+    const tooltip = dom.window.document.getElementById('workers-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(workers);
-    const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('60 from colonists');
     expect(html).toContain('3 from androids');
     expect(html).not.toContain('Deeper Mining');
@@ -98,8 +102,10 @@ describe('worker resource tooltip', () => {
       unit: null,
     };
     ctx.createResourceDisplay({ colony: { workers } });
+    const tooltip = dom.window.document.getElementById('workers-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(workers);
-    const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     expect(html).toContain('60 from colonists');
     expect(html).toContain('1 from androids');
     expect(html).not.toContain('5 from androids');
@@ -115,8 +121,10 @@ describe('worker resource tooltip', () => {
       productionRateBySource: {}, consumptionRateBySource: {}, unit: null
     };
     ctx.createResourceDisplay({ colony: { workers } });
+    const tooltip = dom.window.document.getElementById('workers-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(workers);
-    const html = dom.window.document.getElementById('workers-tooltip').innerHTML;
+    const html = tooltip.innerHTML;
     const firstIndex = html.indexOf('Factory');
     const secondIndex = html.indexOf('Mine');
     expect(firstIndex).toBeLessThan(secondIndex);

@@ -34,6 +34,8 @@ describe('resource tooltip totals', () => {
     };
 
     ctx.createResourceDisplay({ colony: { metal: resource } });
+    const tooltip = dom.window.document.getElementById('metal-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
 
     const doc = dom.window.document;

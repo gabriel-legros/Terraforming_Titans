@@ -20,6 +20,8 @@ describe('android resource tooltip', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resourceUI.js'), 'utf8');
     vm.runInContext(code, ctx);
     ctx.createResourceDisplay(ctx.resources);
+    const tooltip = dom.window.document.getElementById('androids-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(ctx.resources.colony.androids);
     const text = dom.window.document.getElementById('androids-tooltip-assignments').textContent;
     expect(text).toContain('Workers');

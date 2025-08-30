@@ -38,7 +38,8 @@ describe('resource tooltip net change including autobuild', () => {
     ctx.createResourceDisplay({ colony: { metal: resource } });
     ctx.autobuildCostTracker.recordCost('Habitat', { colony: { metal: 3 } });
     ctx.autobuildCostTracker.update(1000);
-
+    const tooltip = dom.window.document.getElementById('metal-tooltip');
+    tooltip._isActive = true;
     ctx.updateResourceRateDisplay(resource);
 
     const netEl = dom.window.document.getElementById('metal-tooltip-net');

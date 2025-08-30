@@ -18,6 +18,7 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
 function addTooltipHover(anchor, tooltip) {
   if (!anchor || !tooltip) return;
   anchor.addEventListener('mouseenter', () => {
+    tooltip._isActive = true;
     const isResource = !!tooltip._columnsInfo || !!tooltip.closest('.resource-item');
     const isInfo = !!tooltip.closest('.info-tooltip-icon');
     tooltip.classList.remove('above', 'three-column');
@@ -94,6 +95,7 @@ function addTooltipHover(anchor, tooltip) {
     }
   });
   anchor.addEventListener('mouseleave', () => {
+    tooltip._isActive = false;
     tooltip.classList.remove('above', 'three-column');
     if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
     tooltip.style.top = '';

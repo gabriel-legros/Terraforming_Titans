@@ -40,6 +40,8 @@ describe('overflow rate appears in tooltip', () => {
       unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: colonyWater }, surface: { liquidWater: liquid } });
+    dom.window.document.getElementById('water-tooltip')._isActive = true;
+    dom.window.document.getElementById('liquidWater-tooltip')._isActive = true;
     ctx.updateResourceRateDisplay(colonyWater);
     ctx.updateResourceRateDisplay(liquid);
     const cwCons = dom.window.document.getElementById('water-tooltip-consumption').textContent;
@@ -77,6 +79,8 @@ describe('overflow rate appears in tooltip', () => {
       unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: colonyWater }, surface: { ice: ice } });
+    dom.window.document.getElementById('water-tooltip')._isActive = true;
+    dom.window.document.getElementById('ice-tooltip')._isActive = true;
     ctx.updateResourceRateDisplay(colonyWater);
     ctx.updateResourceRateDisplay(ice);
     const cwCons = dom.window.document.getElementById('water-tooltip-consumption').textContent;
@@ -104,6 +108,7 @@ describe('overflow rate appears in tooltip', () => {
       unit: 'ton'
     };
     ctx.createResourceDisplay({ colony: { water: colonyWater } });
+    dom.window.document.getElementById('water-tooltip')._isActive = true;
     ctx.updateResourceRateDisplay(colonyWater);
     const overflow = dom.window.document.getElementById('water-tooltip-overflow');
     expect(overflow.style.display).toBe('none');

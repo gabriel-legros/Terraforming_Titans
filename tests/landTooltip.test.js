@@ -41,8 +41,9 @@ describe('land resource tooltip', () => {
       unit: null
     };
     ctx.createResourceDisplay({ surface: { land } });
-    ctx.updateResourceRateDisplay(land);
     const tooltip = dom.window.document.getElementById('land-tooltip');
+    tooltip._isActive = true;
+    ctx.updateResourceRateDisplay(land);
     const html = tooltip.innerHTML;
     expect(tooltip.textContent).toContain('Land can be recovered by turning off the corresponding building');
     expect(html).toContain('Outpost');

@@ -34,9 +34,11 @@ describe('resource tooltip units', () => {
     };
 
     ctx.createResourceDisplay({ colony: { metal: resource } });
+    const tooltipEl = dom.window.document.getElementById('metal-tooltip');
+    tooltipEl._isActive = true;
     ctx.updateResourceRateDisplay(resource);
 
-    const tooltip = dom.window.document.getElementById('metal-tooltip').innerHTML;
+    const tooltip = tooltipEl.innerHTML;
     expect(tooltip).toContain('ton');
   });
 
@@ -67,9 +69,11 @@ describe('resource tooltip units', () => {
     };
 
     ctx.createResourceDisplay({ colony: { colonists: resource } });
+    const tooltipEl = dom.window.document.getElementById('colonists-tooltip');
+    tooltipEl._isActive = true;
     ctx.updateResourceRateDisplay(resource);
 
-    const tooltip = dom.window.document.getElementById('colonists-tooltip').innerHTML;
+    const tooltip = tooltipEl.innerHTML;
     expect(tooltip).not.toContain('ton');
   });
 
@@ -100,9 +104,11 @@ describe('resource tooltip units', () => {
     };
 
     ctx.createResourceDisplay({ colony: { metal: resource } });
+    const tooltipEl = dom.window.document.getElementById('metal-tooltip');
+    tooltipEl._isActive = true;
     ctx.updateResourceRateDisplay(resource);
 
-    const tooltip = dom.window.document.getElementById('metal-tooltip').innerHTML;
+    const tooltip = tooltipEl.innerHTML;
     expect(tooltip).toContain('Value');
     expect(tooltip).toContain('ton');
     const netText = dom.window.document.getElementById('metal-tooltip-net').textContent;
