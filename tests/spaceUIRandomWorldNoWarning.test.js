@@ -33,7 +33,7 @@ describe('space UI warning on random world', () => {
 
     ctx.spaceManager = new ctx.SpaceManager(planetParameters);
     ctx.initializeSpaceUI(ctx.spaceManager);
-
+    ctx.spaceManager.setRwgLock('mars', true);
     ctx.spaceManager.travelToRandomWorld({ merged: { name: 'Alpha' } }, '1');
     ctx.updateSpaceUI();
 

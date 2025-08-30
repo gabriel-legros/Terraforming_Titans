@@ -51,6 +51,7 @@ class SpaceManager extends EffectableEntity {
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
+                rwgLock: false,
                 // Add other statuses later if needed
             };
         });
@@ -61,6 +62,29 @@ class SpaceManager extends EffectableEntity {
                 this.planetStatuses[p].enabled = true;
             }
         });
+    }
+
+    setRwgLock(planetKey, value = true) {
+        if (this.planetStatuses[planetKey]) {
+            this.planetStatuses[planetKey].rwgLock = value;
+            const progVar = globalThis['progress' + planetKey.charAt(0).toUpperCase() + planetKey.slice(1)];
+            if (progVar) {
+                progVar.rwgLock = value;
+            }
+        }
+    }
+
+    isRandomTravelLocked() {
+        if (this.currentRandomSeed !== null) return false;
+        return !this.planetStatuses[this.currentPlanetKey]?.rwgLock;
+    }
+
+    applyEffect(effect) {
+        if (effect.type === 'setRwgLock') {
+            this.setRwgLock(effect.targetId, effect.value !== false);
+        } else {
+            super.applyEffect(effect);
+        }
     }
 
     // --- Getters (Keep existing getters) ---
@@ -420,6 +444,10 @@ class SpaceManager extends EffectableEntity {
     }
 
     travelToRandomWorld(res, seed) {
+        if (this.isRandomTravelLocked()) {
+            console.warn('SpaceManager: Random world travel is locked for the current world.');
+            return false;
+        }
         // Prefer canonical seedString from RWG result so it encodes target/type/orbit
         const s = String(res && typeof res.seedString === 'string' ? res.seedString : seed);
         if (this.isSeedTerraformed(s)) {
@@ -549,6 +577,9 @@ class SpaceManager extends EffectableEntity {
                     }
                     if (typeof saved.ecumenopolisPercent === 'number') {
                         this.planetStatuses[planetKey].ecumenopolisPercent = saved.ecumenopolisPercent;
+                    }
+                    if (typeof saved.rwgLock === 'boolean') {
+                        this.planetStatuses[planetKey].rwgLock = saved.rwgLock;
                     }
                 }
             });

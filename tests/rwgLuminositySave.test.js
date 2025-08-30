@@ -59,6 +59,7 @@ describe('RWG solar luminosity persistence', () => {
 
     const sm = new sandbox.SpaceManager({ mars: { name: 'Mars' } });
     sandbox.spaceManager = sm;
+    sm.setRwgLock('mars', true);
     sm.travelToRandomWorld({ merged: { name: 'Alpha', celestialParameters: { starLuminosity: 2 } }, star: { luminositySolar: 2 } }, '42');
     expect(sandbox.getStarLuminosity()).toBe(2);
 

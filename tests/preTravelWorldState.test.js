@@ -6,6 +6,7 @@ describe('pre-travel save preserves current world', () => {
   test('traveling to a random world saves the original world', () => {
     global.resources = { colony: { colonists: { value: 5 } } };
     const sm = new SpaceManager({ mars: { name: 'Mars' } });
+    sm.setRwgLock('mars', true);
 
     let saved = null;
     global.saveGameToSlot = (slot) => {

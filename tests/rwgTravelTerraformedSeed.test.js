@@ -20,6 +20,7 @@ describe('RWG prevents travel to terraformed seeds', () => {
     global.deepMerge = (a,b) => ({ ...a, ...b });
     global.defaultPlanetParameters = {};
     global.spaceManager = new SpaceManager({ mars: {} });
+    global.spaceManager.setRwgLock('mars', true);
   });
 
   test('travel button disabled when seed already terraformed', async () => {

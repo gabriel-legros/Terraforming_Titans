@@ -1,4 +1,4 @@
-var progressGanymede = { chapters: [], storyProjects: {} };
+var progressGanymede = { rwgLock: false, chapters: [], storyProjects: {} };
 
 /* -------------------------------------------------
  *  GANYMEDE STORY‑ARC  (Chapters 10 - 13)
@@ -455,6 +455,7 @@ progressGanymede.chapters.push(
             { type: 'terraforming', terraformingParameter: 'complete' }
         ],
         reward: [
+            { target: 'spaceManager', type: 'setRwgLock', targetId: 'ganymede', value: true },
             { target: 'spaceManager', type: 'enable', targetId: 'space-random' },
             // Ensure the main Space tab is brought to the front when unlocking Random
             { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false },
