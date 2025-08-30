@@ -1071,7 +1071,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
           return zoneOrder.indexOf(a) - zoneOrder.indexOf(b);
         });
 
-      const tol = 0.05; // Kelvin tolerance
+      const tol = 0.001; // Kelvin tolerance
 
       for (const zone of zones) {
         if (mirrorsLeft <= 0 && lanternsLeft <= 0) break;
