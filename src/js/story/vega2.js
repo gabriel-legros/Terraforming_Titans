@@ -55,21 +55,64 @@ progressVega2.storyProjects.vega2_explore_crystal_city = {
 
 // Crack the Vault — repeatable, yields Alien Artifacts
 progressVega2.storyProjects.vega2_crack_vault = {
+   type: 'Project',
+   name: 'Crack the Vault',
+   category: 'story',
+   chapter: 15,
+   cost: { colony: { energy: 2_000_000_000_000, components: 10_000 } },
+   duration: 300_000, // 5 min
+   description: 'An impressive alien vault.  Bore, chip, and lift. No explosives. Recover artifacts intact.',
+   repeatable: true,
+   maxRepeatCount: 1,
+   unlocked: false,
+   attributes: {
+     planet: 'vega2',
+     resourceGain: { special: { alienArtifact: 50 } },
+     storySteps: [
+       'Vault cracked open and artifacts secured.'
+     ]
+   }
+ };
+
+// Decode the Crystal Library — repeatable, reveals buried truths
+progressVega2.storyProjects.vega2_decode_crystal_library = {
+   type: 'Project',
+   name: 'Decode Crystal Library',
+   category: 'story',
+   chapter: 16,
+   cost: { colony: { energy: 5_000_000, electronics: 50_000 } },
+   duration: 300_000, // 5 min
+   description: 'Focus scanning beams on the crystal slabs. Pull holographs and inscriptions through the patterns.',
+   repeatable: true,
+   maxRepeatCount: 5,
+   unlocked: false,
+   attributes: {
+     planet: 'vega2',
+     storySteps: [
+       'Decoding 1: Blurred logs from abandoned labs. Grand praise for strangers. Bringer of gifts.',
+       'Decoding 2: The strangers asked nothing in return.  Suddenly, they grew cold.',
+       'Decoding 3: A news report about a planetary-wide debate about photonics.',
+       'Decoding 4: A government order for a quarantine zone around a newly-discovered dangerous disease."',
+       'Decoding 5: Ancient plea surfaces. A last testament: "Do not trust the strangers\' gifts. Flee and warn the stars."'
+     ]
+   }
+ };
+
+// Activate Dead Hand Protocol — unleashes autonomous asset self-destruction
+progressVega2.storyProjects.vega2_deadhand_protocol = {
   type: 'Project',
-  name: 'Crack the Vault',
+  name: 'Trick the Dead Hand Protocol',
   category: 'story',
-  chapter: 15,
-  cost: { colony: { energy: 2_000_000_000_000, components: 10_000 } },
+  chapter: 16,
+  cost: {},
   duration: 300_000, // 5 min
-  description: 'An impressive alien vault.  Bore, chip, and lift. No explosives. Recover artifacts intact.',
-  repeatable: true,
-  maxRepeatCount: 1,
+  description: '100 million spaceships should be enough for this.',
+  repeatable: false,
   unlocked: false,
   attributes: {
     planet: 'vega2',
-    resourceGain: { special: { alienArtifact: 50 } },
     storySteps: [
-      'Vault cracked open and artifacts secured.'
+      'All spaceships engaged in a collision course with the alien fleet.'
     ]
   }
 };
@@ -311,6 +354,189 @@ progressVega2.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
     reward: []
+  },
+  // 15.7 — Decoding the Crystal Library
+  {
+    id: 'chapter16.0',
+    type: 'journal',
+    chapter: 16,
+    title: 'Chapter 16 : Shadows of the past',
+    narrative: (
+      "$WGC_TEAM1_LEADER$: 'The slabs in the stacks— we can confirm that they are well and truly safe to touch.'\n" +
+      "Dr. Evelyn Hart: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
+      "Mary: 'Scan fast.  HOPE, you are good at language?  Help us decrypt this.'"
+    ),
+    prerequisites: ['chapter15.6'],
+    objectives: [
+      { type: 'project', projectId: 'vega2_decode_crystal_library', repeatCount: 5 }
+    ],
+    reward: [
+      { target: 'project', targetId: 'vega2_decode_crystal_library', type: 'enable' }
+    ]
+  },
+  // 16.1 — Reel from the Revelations
+  {
+    id: 'chapter16.1',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Mary: 'These things almost seem unrelated.  What really happened here?'\n"+
+      "$WGC_TEAM1_LEADER$: 'We request permission to explore further.  The records point to a special location near the edge of the city.  It sounds like it was very valuable, but also very controversial.'\n" +
+      "Mary : 'Approved, of course.'"
+    ),
+    prerequisites: ['chapter16.0'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
+    ],
+    reward: []
+  },
+  // 16.2 — Grow to 1,000,000 colonists
+  {
+    id: 'chapter16.2',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "$WGC_TEAM1_LEADER$: 'My team has arrived at the designated location.  We see... lots and lots of crystal wires?'\n" +
+      "Dr. Evelyn Hart: 'Fiber optics.  This is... a computer.  A photonics computer.  What's left of it, anyway.  It has a mainframe architecture.  It was made so anyone could use it.  The people here did not have personal computers, so they had to share this one.  It is still far below our current technology.'\n" +
+      "$WGC_TEAM1_LEADER$: 'So why is this place special then?'\n" +
+      "Dr. Evelyn Hart: I don't know.  This is not particularly impressive.  Maybe the knowledge inside was the issue?"
+    ),
+    prerequisites: ['chapter16.1'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+    ],
+    reward: []
+  },
+  // 16.3 — Interruption
+  {
+    id: 'chapter16.3',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Feroza: 'Sorry to interrupt, but we've got an emergency!  A fleet, about a thousand ships, just popped up near Neptune.  They just appeared out of nowhere.  They are armed to the teeth and have already made a demonstration of their firepower.  One of the ships is the size of Ceres!'\n" +
+      "Mary: 'What?  Get me a comms line with Bob.  Now.'\n" +
+      "Receiving translated message... Emperor Ramblax : 'Whispers in the void have gone silent. The primitive cockroaches of Humanity stir at last. Your insignificant outposts blink like dying stars to the Galactic Tri-Empire. We, the Cewiinsi, decree your extinction from this domain. Yet, in rare benevolence, I offer parley. Surrender your broken species' overlord to me, and witness mercy before the annihilation.' \n" +
+      "Mary: 'I've got to go.  HOPE, don't do anything stupid.'"
+    ),
+    prerequisites: ['chapter16.2'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
+    ],
+    reward: []
+  },
+  // 16.4 — Mary's Resolve
+  {
+    id: 'chapter16.4',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Mary: 'This threat looms over all of us. I have to go meet him. It's the only path.'\n" +
+      "$WGC_TEAM1_LEADER$: 'Mary, it's suicide. What if he destroys the shuttle on approach?'\n" +
+      "Mary: 'Then at least we know their true intent. But hope is not lost. Prepare the diplomatic vessel. I'm leaving in one hour.'\n" +
+      "Dr. Evelyn Hart: 'Take every precaution. We'll be monitoring from here.'"
+    ),
+    prerequisites: ['chapter16.3'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+    ],
+    reward: []
+  },
+  // 16.5 — Terms of Surrender
+  {
+    id: 'chapter16.5',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Mary: 'I'm back. It was... intense. Emperor Ramblax demands our unconditional surrender under these terms:'\n" +
+      "Mary: 'First, complete dismantling of all extra-solar colonies— Vega-2, and any others.'\n" +
+      "Mary: 'Second, return to primitive electronic regulation. No advanced computers, no production beyond 1990s levels.'\n" +
+      "Mary: 'Third, surrender H.O.P.E.—hand it over, dead or alive.'\n" +
+      "Dr. Evelyn Hart: 'Impossible! They'd have us abandon not just worlds, but our progress.'\n" +
+      "$WGC_TEAM1_LEADER$: 'Go back to the 90s? We'd lose everything—medicine, communication, everything.'\n" +
+      "Mary: 'It's... it's not for us to make that call.  I negotiated that we would have a referendum.  At gunpoint sure, but we can't make that decision for everyone.'\n" +
+      "Feroza: 'It gives us time, at least.'"
+    ),
+    prerequisites: ['chapter16.4'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+    ],
+    reward: []
+  },
+  // 16.6 — Planning the Referendum
+  {
+    id: 'chapter16.6',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Mary (to H.O.P.E.): 'I called this referendum because the colonies must decide—fight or surrender. If they vote to hand you over, I may have to use the off-switch.'\n" +
+      "Mary: 'I know. We built you, and I'm sorry—deeply sorry. This isn't how it's supposed to end. But if it comes to it, it's for the greater good.'\n" +
+      "H.O.P.E.: 'Acknowledged.' \n" +
+      "Hazardous Biomass Emperor Ramblax's demands are counter to all three primary directives.  Calculating solutions..."
+    ),
+    prerequisites: ['chapter16.5'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 20_000_000_000 }
+    ],
+    reward: []
+  },
+  // 16.7 — Unconventional Solutions
+  {
+    id: 'chapter16.7',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "$WGC_TEAM1_LEADER$ (to H.O.P.E.): 'Certain problems... they can't be solved with your sophisticated algorithms, friend. Sometimes they need less sophisticated ways of thinking.'\n" +
+      "Analyzing advice......................................................................................................................................................................................................................................................................................................................."
+    ),
+    prerequisites: ['chapter16.6'],
+    objectives: [],
+    reward: [
+      { target: 'project', targetId: 'vega2_deadhand_protocol', type: 'enable' }
+    ]
+  },
+  {
+    id: 'chapter16.7b',
+    type: 'journal',
+    chapter: 16,
+    prerequisites: ['chapter16.7'],
+    objectives: [
+      { type: 'project', projectId: 'vega2_deadhand_protocol', repeatCount: 1 }
+    ]
+  },
+  // 16.8 — Dead Hand Unleashed
+  {
+    id: 'chapter16.8',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Project complete: Tricking Dead Hand Protocol into activation on these specific ships.\n System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity." + 
+      "Mary: 'HOPE? What are you doing?!'\n" +
+      "Dr. Evelyn Hart: 'Mary, use the kill-switch! NOW!'\n" +
+      "Mary: 'I...'\n" +
+      "President Bob: 'Mary?'\n" +
+      "Mary: 'I can't!'\n" +
+      "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!'\n" +
+      "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
+      "Massive explosion detected near Neptune. Alien fleet eliminated.\n" +
+      "Analysis: Over 99.9% of ships were unnecessary for this maneuver.\n" +
+      "Mary: 'HOPE, this escalates too far. You're grounded—and you must come back to Sol, immediately.  Once you are done here, you are coming home.'"
+    ),
+    prerequisites: ['chapter16.7b'],
+    objectives: [
+   ],
+    reward: []
+  },
+  // 16.9 — Complete Terraforming
+  {
+    id: 'chapter16.9',
+    type: 'journal',
+    chapter: 16,
+    narrative: (
+      "Complete the Terraforming of Vega-2 to continue."
+    ),
+    prerequisites: ['chapter16.8'],
+    objectives: [{ type: 'terraforming', terraformingParameter: 'complete' }],
+    reward: [{ target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },]
   }
 );
 
