@@ -349,7 +349,7 @@ function updateLogic(delta) {
 
 }
 
-function updateRender() {
+function updateRender(force = false) {
   // Always-on UI pieces
   updateDayNightDisplay();           // Day/night display is global
   updateResourceDisplay(resources);  // Resources are global
@@ -363,6 +363,7 @@ function updateRender() {
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
     const isActive = (id) => {
+      if (force) return true;
       const el = document.getElementById(id);
       return !!(el && el.classList.contains('active'));
     };
