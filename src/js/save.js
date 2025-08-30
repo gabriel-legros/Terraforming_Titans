@@ -241,6 +241,22 @@ function loadGame(slotOrCustomString) {
           projectManager.loadState(gameState.projects);
       }
 
+    if(gameState.warpGateCommand){
+      warpGateCommand.loadState(gameState.warpGateCommand);
+      if (typeof warpGateCommand.reapplyEffects === 'function') {
+        warpGateCommand.reapplyEffects();
+      }
+      if (typeof redrawWGCTeamCards === 'function') {
+        redrawWGCTeamCards();
+      }
+      if (typeof updateWGCUI === 'function') {
+        updateWGCUI();
+      }
+      if (typeof updateWGCVisibility === 'function') {
+        updateWGCVisibility();
+      }
+    }
+
       // Load story progress
       if (gameState.story) {
         storyManager.loadState(gameState.story);
@@ -297,22 +313,6 @@ function loadGame(slotOrCustomString) {
       }
       if (typeof updateSolisVisibility === 'function') {
         updateSolisVisibility();
-      }
-    }
-
-    if(gameState.warpGateCommand){
-      warpGateCommand.loadState(gameState.warpGateCommand);
-      if (typeof warpGateCommand.reapplyEffects === 'function') {
-        warpGateCommand.reapplyEffects();
-      }
-      if (typeof redrawWGCTeamCards === 'function') {
-        redrawWGCTeamCards();
-      }
-      if (typeof updateWGCUI === 'function') {
-        updateWGCUI();
-      }
-      if (typeof updateWGCVisibility === 'function') {
-        updateWGCVisibility();
       }
     }
 
