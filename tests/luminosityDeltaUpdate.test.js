@@ -41,13 +41,13 @@ describe('updateLuminosityBox', () => {
     ctx.updateLuminosityBox();
 
     const albedoDelta = dom.window.document.getElementById('surface-albedo-delta').textContent;
-    expect(albedoDelta).toBe('+0.05');
+    expect(albedoDelta).toBe('+0.050');
 
     const fluxDelta = dom.window.document.getElementById('solar-flux-delta').textContent;
     expect(fluxDelta).toBe('+100.00');
 
     const actualDelta = dom.window.document.getElementById('actual-albedo-delta').textContent;
-    expect(actualDelta).toBe('+0.02');
+    expect(actualDelta).toBe('+0.020');
   });
 
   test('uses ground albedo when initial value missing', () => {
@@ -79,7 +79,7 @@ describe('updateLuminosityBox', () => {
     ctx.updateLuminosityBox();
 
     const delta = dom.window.document.getElementById('surface-albedo-delta').textContent;
-    expect(delta).toBe('+0.03');
+    expect(delta).toBe('+0.030');
 
     const adelta = dom.window.document.getElementById('actual-albedo-delta').textContent;
     expect(adelta).toBe('+0');
