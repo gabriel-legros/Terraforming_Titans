@@ -445,7 +445,10 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const alreadyTerraformed = seedUsed && typeof globalThis.spaceManager?.isSeedTerraformed === 'function'
     ? globalThis.spaceManager.isSeedTerraformed(seedUsed)
     : false;
-  const travelDisabled = !eqDone || alreadyTerraformed;
+  const lockedByStory = typeof globalThis.spaceManager?.isRandomTravelLocked === 'function'
+    ? globalThis.spaceManager.isRandomTravelLocked()
+    : false;
+  const travelDisabled = lockedByStory || !eqDone || alreadyTerraformed;
   const showTemps = !seedUsed || eqDone;
   const meanTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}`
@@ -456,9 +459,11 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const nightTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}`
     : '—';
-  const warningMsg = !eqDone
-    ? 'Press Equilibrate at least once before traveling.'
-    : (alreadyTerraformed ? 'This world has already been terraformed.' : '');
+  const warningMsg = lockedByStory
+    ? 'You must complete the story for the current world first'
+    : (!eqDone
+      ? 'Press Equilibrate at least once before traveling.'
+      : (alreadyTerraformed ? 'This world has already been terraformed.' : ''));
   const gWarn = c.gravity > 10
     ? '<span class="info-tooltip-icon" title="Humans and their bodies are very sensitive to high gravity.  Every value of gravity above 10 reduces happiness by 5% of its value, for a maximum of a 100% reduction">⚠</span>'
     : '';

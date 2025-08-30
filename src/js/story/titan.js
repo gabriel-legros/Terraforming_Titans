@@ -1,4 +1,4 @@
-var progressTitan = { chapters: [], storyProjects: {} };
+var progressTitan = { rwgLock: false, chapters: [], storyProjects: {} };
 
 progressTitan.storyProjects.earthProbe = {
   type: 'Project',

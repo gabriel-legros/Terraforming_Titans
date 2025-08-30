@@ -19,6 +19,7 @@ describe('Random world travel preparation', () => {
 
   test('calls nanotech and project travel preparation', () => {
     const sm = new SpaceManager({ mars: { name: 'Mars' } });
+    sm.setRwgLock('mars', true);
     sm.travelToRandomWorld({ merged: { name: 'Alpha' } }, '1');
     expect(global.nanotechManager.prepareForTravel).toHaveBeenCalled();
     expect(global.projectManager.projects.spaceStorage.saveTravelState).toHaveBeenCalled();

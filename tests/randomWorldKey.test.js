@@ -35,6 +35,7 @@ describe('SpaceManager random world key', () => {
 
   test('current planet key tracks story and random worlds', () => {
     const sm = new SpaceManager({ mars: { name: 'Mars' }, titan: { name: 'Titan' } });
+    sm.setRwgLock('mars', true);
     expect(sm.getCurrentPlanetKey()).toBe('mars');
     const result = { merged: { name: 'Randomia' } };
     const seed = 42;

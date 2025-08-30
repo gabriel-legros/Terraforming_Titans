@@ -1,4 +1,4 @@
-var progressCallisto = { chapters: [], storyProjects: {} };
+var progressCallisto = { rwgLock: false, chapters: [], storyProjects: {} };
 /* -------------------------------------------------
  *  CALLISTO STORY‑ARC  (Chapters 7 – 11)
  *  – Arrival on Callisto → Operation Sidestep →

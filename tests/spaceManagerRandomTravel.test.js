@@ -21,6 +21,7 @@ describe('SpaceManager random world travel population tracking', () => {
 
   test('records departure time and ecumenopolis coverage', () => {
     const sm = new SpaceManager({ mars: { name: 'Mars' } });
+    sm.setRwgLock('mars', true);
     resources.colony.colonists.value = 100;
     colonies.t7_colony.active = 5;
     jest.spyOn(Date, 'now').mockReturnValue(1000);

@@ -1,4 +1,5 @@
 var progressMars = {
+    rwgLock: false,
     "chapters": [
       {
         id: "chapter0.1",

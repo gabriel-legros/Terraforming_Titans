@@ -25,6 +25,7 @@ describe('random world travel skill points', () => {
 
   test('awards a skill point when leaving a terraformed world for a random world', () => {
     const sm = new SpaceManager({ mars: { name: 'Mars' } });
+    sm.setRwgLock('mars', true);
     sm.updateCurrentPlanetTerraformedStatus(true);
 
     sm.travelToRandomWorld({ merged: { name: 'Alpha' } }, '1');
