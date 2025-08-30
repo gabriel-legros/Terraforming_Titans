@@ -32,7 +32,7 @@ class SpaceshipProject extends Project {
         this.isActive = false;
         this.isCompleted = false;
         this.isPaused = false;
-        const duration = this.getEffectiveDuration();
+        const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
         this.startingDuration = duration;
         this.remainingTime = duration;
         this.pendingGain = null;
@@ -351,7 +351,7 @@ class SpaceshipProject extends Project {
     const totalResourceGain = {};
     const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
     const multiplier = perSecond
-      ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+      ? this.assignedSpaceships * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() :  this.getEffectiveDuration()))
       : 1;
     for (const category in gainPerShip) {
       totalResourceGain[category] = {};
@@ -519,7 +519,7 @@ class SpaceshipProject extends Project {
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
     if (this.isActive) {
-      const duration = this.getEffectiveDuration();
+      const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
 
       if (this.isContinuous()) {
         const factor = 1000 / duration;
@@ -679,7 +679,7 @@ class SpaceshipProject extends Project {
       this.lastActiveTime = 0;
       return;
     }
-    const duration = this.getEffectiveDuration();
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const fraction = activeTime / duration;
     if (fraction <= 0) {
       this.lastActiveTime = 0;
