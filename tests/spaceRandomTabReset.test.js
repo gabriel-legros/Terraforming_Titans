@@ -58,7 +58,8 @@ describe('space random tab visibility reset on load', () => {
     ctx.selectedBuildCounts = {};
     ctx.gameSettings = {};
     ctx.colonySliderSettings = {};
-    ctx.ghgFactorySettings = {};
+    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
+    vm.runInContext(factorySettings, ctx);
     ctx.mirrorOversightSettings = {};
     ctx.playTimeSeconds = 0;
 

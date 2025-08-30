@@ -44,7 +44,8 @@ describe('research alerts persist after loading', () => {
     ctx.spaceManager = { saveState: () => ({}), loadState: () => {}, getCurrentPlanetKey: () => 'mars' };
     ctx.selectedBuildCounts = {};
     ctx.colonySliderSettings = {};
-    ctx.ghgFactorySettings = {};
+    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
+    vm.runInContext(factorySettings, ctx);
     ctx.mirrorOversightSettings = {};
     ctx.playTimeSeconds = 0;
     ctx.planetParameters = { mars: { resources: {} } };

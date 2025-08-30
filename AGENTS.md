@@ -376,3 +376,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource tooltips split into three columns when too tall to fit above or below the viewport, prioritizing below placement.
 - Workers tooltip lists how many workers come from colonists above the android count.
 - Resource tooltips only update while hovered, reducing unnecessary DOM work.
+- GHG and oxygen factory settings now export from src/js/ghg-automation.js.

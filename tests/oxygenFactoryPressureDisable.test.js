@@ -1,8 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
+const { oxygenFactorySettings } = require('../src/js/ghg-automation.js');
 const { Building } = require('../src/js/building.js');
-
-global.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15 };
 global.calculateAtmosphericPressure = (amount) => amount * 1000; // 1 unit => 1 kPa
 
 const researchedManagerStub = {

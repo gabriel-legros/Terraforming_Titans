@@ -22,7 +22,10 @@ describe('Set active to target button', () => {
     ctx.formatResourceDetails = () => '';
     ctx.formatStorageDetails = () => '';
     ctx.updateColonyDetailsDisplay = () => {};
-    ctx.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 0 };
+    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
+    vm.runInContext(factorySettings, ctx);
+    ctx.ghgFactorySettings.autoDisableAboveTemp = false;
+    ctx.ghgFactorySettings.disableTempThreshold = 0;
     ctx.Colony = class {};
     ctx.updateEmptyBuildingMessages = () => {};
     ctx.updateBuildingDisplay = () => {};
