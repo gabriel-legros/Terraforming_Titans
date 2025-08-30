@@ -122,10 +122,10 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 22601922041451.004
+        "initialValue": 22319318076118.363
       },
       "atmosphericWater": {
-        "initialValue": 29496896.29291866
+        "initialValue": 722426.8679575237
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -135,17 +135,17 @@ const marsOverrides = {
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 14626895.601930868,
+      "ice": 367216.7323466248,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 23187070.1077653,
+      "ice": 582758.0109170746,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007932695413.5,
+      "ice": 4500007998326138.5,
       "buriedIce": 700000000000000
     }
   },
@@ -157,7 +157,7 @@ const marsOverrides = {
       "dryIce": 0
     },
     "polar": {
-      "dryIce": 1396888521336.329
+      "dryIce": 1679492486598.075
     }
   },
   "zonalHydrocarbons": {
@@ -413,10 +413,10 @@ const ganymedeOverrides = {
       inertGas:          { initialValue: 1e5 },        // trace Ar, Na, etc.
       oxygen:            { initialValue: 1.0e4 },      // molecular O₂ from radiolysis
       "carbonDioxide": {
-        "initialValue": 19581.082138345577
+        "initialValue": 19581.08213812905
       },
       "atmosphericWater": {
-        "initialValue": 1449808.3984938771
+        "initialValue": 1449492.6262308592
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -431,32 +431,32 @@ const ganymedeOverrides = {
   },
 
   /* ---------- PER-LATITUDE WATER PARTITION ---------- */
-"zonalWater": {
+  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 12060677183.489607,
+      "ice": 12055915491.1659,
       "buriedIce": 5000000000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 231139054089932.4,
+      "ice": 231131980763568.94,
       "buriedIce": 7000000000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 66844272381537.48,
+      "ice": 66851350469975.29,
       "buriedIce": 2000000000000000000
     }
   },
   "zonalSurface": {
     "tropical": {
-      "dryIce": 11290.626327030594
+      "dryIce": 11290.626326998059
     },
     "temperate": {
-      "dryIce": 19713.53127523749
+      "dryIce": 19713.531275243768
     },
     "polar": {
-      "dryIce": 8514.760259471892
+      "dryIce": 8514.76025965708
     }
   },
   "zonalHydrocarbons": {
