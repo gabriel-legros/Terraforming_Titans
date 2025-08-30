@@ -64,4 +64,51 @@ describe('Random World Generator travel lock', () => {
     expect(travelBtn.disabled).toBe(false);
     expect(warning).toBeNull();
   });
+
+  test('updates UI to show travel lock after traveling', async () => {
+    let locked = false;
+    global.spaceManager = {
+      isSeedTerraformed: () => false,
+      isRandomTravelLocked: () => locked,
+      travelToRandomWorld: jest.fn(() => { locked = true; return true; })
+    };
+    const { renderWorldDetail, attachEquilibrateHandler, attachTravelHandler } = require('../src/js/rwgUI.js');
+    const res = {
+      star: { name: 'Sun', spectralType: 'G', luminositySolar: 1, massSolar: 1, temperatureK: 5800, habitableZone: { inner: 0.5, outer: 1.5 } },
+      merged: {
+        celestialParameters: { distanceFromSun: 1, radius: 6000, gravity: 9.8, albedo: 0.3, rotationPeriod: 24 },
+        resources: {
+          atmospheric: {
+            carbonDioxide: { initialValue: 1 },
+            inertGas: { initialValue: 1 },
+            oxygen: { initialValue: 0 },
+            atmosphericWater: { initialValue: 0 },
+            atmosphericMethane: { initialValue: 0 }
+          },
+          surface: {}
+        },
+        classification: { archetype: 'mars-like' }
+      },
+      override: { resources: { atmospheric: {} } }
+    };
+    const box = document.getElementById('rwg-result');
+    box.innerHTML = renderWorldDetail(res, 'seed', 'mars-like');
+    attachEquilibrateHandler(res, 'seed', 'mars-like', box);
+    attachTravelHandler(res, 'seed');
+
+    document.getElementById('rwg-equilibrate-btn').click();
+    await new Promise(setImmediate);
+    await new Promise(setImmediate);
+
+    let travelBtn = document.getElementById('rwg-travel-btn');
+    expect(travelBtn.disabled).toBe(false);
+
+    travelBtn.click();
+
+    travelBtn = document.getElementById('rwg-travel-btn');
+    const warning = document.getElementById('rwg-travel-warning');
+    expect(travelBtn.disabled).toBe(true);
+    expect(warning.textContent).toContain('You must complete the story for the current world first');
+    expect(global.spaceManager.travelToRandomWorld).toHaveBeenCalled();
+  });
 });

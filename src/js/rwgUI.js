@@ -208,7 +208,16 @@ function attachTravelHandler(res, sStr) {
     if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
     if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
     if (spaceManager?.travelToRandomWorld) {
-      spaceManager.travelToRandomWorld(res, sStr);
+      const travelled = spaceManager.travelToRandomWorld(res, sStr);
+      if (travelled) {
+        const box = document.getElementById('rwg-result');
+        if (box) {
+          box.innerHTML = renderWorldDetail(res, sStr);
+          attachEquilibrateHandler(res, sStr, undefined, box);
+          attachTravelHandler(res, sStr);
+        }
+        updateRandomWorldUI();
+      }
     }
   };
 }
@@ -441,9 +450,10 @@ function renderWorldDetail(res, seedUsed, forcedType) {
       </div>
     </div>` : '';
 
+  const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   const eqDone = seedUsed && equilibratedWorlds.has(seedUsed);
-  const alreadyTerraformed = seedUsed && spaceManager.isSeedTerraformed(seedUsed);
-  const lockedByStory = spaceManager.isRandomTravelLocked();
+  const alreadyTerraformed = seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false;
+  const lockedByStory = sm?.isRandomTravelLocked ? sm.isRandomTravelLocked() : false;
   const travelDisabled = lockedByStory || !eqDone || alreadyTerraformed;
   const showTemps = !seedUsed || eqDone;
   const meanTVal = (showTemps && temps)
