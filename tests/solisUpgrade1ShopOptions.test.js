@@ -39,8 +39,12 @@ describe('solisUpgrade1 shop options', () => {
     expect(dom.window.document.querySelector('#solis-shop-advancedOversight-button')).toBeNull();
     ctx.solisManager.booleanFlags.add('solisUpgrade1');
     ctx.updateSolisUI();
-    expect(dom.window.document.querySelector('#solis-shop-research-button')).not.toBeNull();
-    expect(dom.window.document.querySelector('#solis-shop-advancedOversight-button')).not.toBeNull();
+    const researchButton = dom.window.document.querySelector('#solis-shop-research-button');
+    const advButton = dom.window.document.querySelector('#solis-shop-advancedOversight-button');
+    expect(researchButton).not.toBeNull();
+    expect(advButton).not.toBeNull();
+    expect(dom.window.document.getElementById('solis-research-shop-items').contains(advButton)).toBe(true);
+    expect(dom.window.document.getElementById('solis-shop-items').contains(advButton)).toBe(false);
   });
 
   test('purchase research adds points', () => {
