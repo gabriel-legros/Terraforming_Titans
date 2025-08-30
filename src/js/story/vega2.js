@@ -503,7 +503,7 @@ progressVega2.chapters.push(
       "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!  Nice work HOPE!'\n" +
       "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
       "Massive explosion detected near Neptune. Alien fleet eliminated.\n" +
-      "Analysis: Over 99.9% of ships were unnecessary for this maneuver.\n" +
+      "Analysis: Over 99.9% of cargo ships used were unnecessary for this maneuver.\n" +
       "Mary: '... HOPE... You can't make these kind of decisions for everyone. You're grounded—and you must come back to Sol, immediately.  Once you are done here, you are coming home.'"
     ),
     prerequisites: ['chapter16.7b'],
