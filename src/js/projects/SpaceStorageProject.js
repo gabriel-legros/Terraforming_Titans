@@ -400,6 +400,10 @@ class SpaceStorageProject extends SpaceshipProject {
 
   updateCostAndGains(elements) {
     super.updateCostAndGains(elements);
+    if (elements.totalCostElement && this.isShipOperationContinuous()) {
+      const perSecondCost = this.calculateSpaceshipTotalCost(true);
+      elements.totalCostElement.innerHTML = formatTotalCostDisplay(perSecondCost, this, true);
+    }
     if (elements.transferRateElement) {
       const amount = this.calculateTransferAmount();
       const seconds = this.getShipOperationDuration() / 1000;

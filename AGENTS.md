@@ -379,4 +379,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - GHG and oxygen factory settings now export from src/js/ghg-automation.js.
 - Random World Generator history lists visited worlds with names, types, seeds, states and departure times.
 - Random world departures now log timestamp and Ecumenopolis land coverage.
+- Space storage total cost display now shows cost per second in continuous mode.
 - Random World Generator re-renders after travel to respect new travel locks.
