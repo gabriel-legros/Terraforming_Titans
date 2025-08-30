@@ -6,6 +6,7 @@ const RESOURCE_UPGRADE_AMOUNTS = {
   glass: 100,
   water: 1000000,
   androids: 100,
+  research: 100,
 };
 
 const RESEARCH_UPGRADE_ORDER = [
@@ -50,6 +51,8 @@ class SolisManager extends EffectableEntity {
       water: { baseCost: 1, purchases: 0 },
       androids: { baseCost: 10, purchases: 0 },
       colonistRocket: { baseCost: 1, purchases: 0 },
+      research: { baseCost: 10, purchases: 0 },
+      advancedOversight: { baseCost: 1000, purchases: 0 },
       researchUpgrade: { baseCost: 100, purchases: 0 }
     };
   }
@@ -160,6 +163,9 @@ class SolisManager extends EffectableEntity {
     if (key === 'researchUpgrade' && up.purchases >= RESEARCH_UPGRADE_ORDER.length) {
       return false;
     }
+    if (key === 'advancedOversight' && up.purchases >= 1) {
+      return false;
+    }
     const cost = this.getUpgradeCost(key);
     if (this.solisPoints < cost) return false;
     this.solisPoints -= cost;
@@ -185,6 +191,16 @@ class SolisManager extends EffectableEntity {
       });
     } else if (key === 'researchUpgrade') {
       this.applyResearchUpgrade();
+    } else if (key === 'advancedOversight' && typeof addEffect === 'function') {
+      addEffect({
+        target: 'project',
+        targetId: 'spaceMirrorFacility',
+        type: 'booleanFlag',
+        flagId: 'advancedOversight',
+        value: true,
+        effectId: 'solisAdvancedOversight',
+        sourceId: 'solisShop'
+      });
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
@@ -199,6 +215,9 @@ class SolisManager extends EffectableEntity {
           effectId: `solisStorage-${key}`,
           sourceId: 'solisShop'
         });
+      }
+      if (key === 'research') {
+        res.increase(amount);
       }
     }
     return true;
@@ -248,6 +267,19 @@ class SolisManager extends EffectableEntity {
         resourceId: 'colonists',
         value: rocketUpgrade.purchases,
         effectId: 'solisColonistRocket',
+        sourceId: 'solisShop'
+      });
+    }
+
+    const adv = this.shopUpgrades.advancedOversight;
+    if (adv && adv.purchases > 0 && typeof addEffect === 'function') {
+      addEffect({
+        target: 'project',
+        targetId: 'spaceMirrorFacility',
+        type: 'booleanFlag',
+        flagId: 'advancedOversight',
+        value: true,
+        effectId: 'solisAdvancedOversight',
         sourceId: 'solisShop'
       });
     }

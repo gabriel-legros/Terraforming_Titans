@@ -1,0 +1,76 @@
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const { JSDOM } = require('jsdom');
+
+const solisCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/solis.js'), 'utf8');
+const solisUICode = fs.readFileSync(path.join(__dirname, '..', 'src/js/solisUI.js'), 'utf8');
+const EffectableEntity = require('../src/js/effectable-entity.js');
+
+global.EffectableEntity = EffectableEntity;
+
+describe('solisUpgrade1 shop options', () => {
+  test('options hidden until flag set', () => {
+    const dom = new JSDOM(`<!DOCTYPE html>
+      <div id="solis-shop-items"></div>
+      <div id="solis-donation-items"></div>
+      <div id="solis-research-shop-items"></div>
+      <div id="solis-quest-text"></div>
+      <div id="solis-cooldown"></div>
+      <div id="solis-donation-section"></div>
+      <div id="solis-research-shop"></div>
+      <button id="solis-refresh-button"></button>
+      <button id="solis-complete-button"></button>
+      <span id="solis-points-value"></span>
+      <span id="solis-reward"></span>
+      <span id="solis-cooldown-text"></span>
+      <div id="solis-cooldown-bar"></div>
+      <span id="solis-donation-count"></span>
+      <input id="solis-donation-input" />
+      <button id="solis-donation-button"></button>
+    `, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
+    vm.runInContext(`${solisCode}\n${solisUICode}; this.SolisManager = SolisManager;`, ctx);
+    ctx.resources = { colony: { research: { value: 0, hasCap: false, increase(v){ this.value += v; } } } };
+    ctx.solisManager = new ctx.SolisManager();
+    ctx.initializeSolisUI();
+    const researchItem = dom.window.document.querySelector('#solis-shop-research-button').parentElement.parentElement;
+    const advItem = dom.window.document.querySelector('#solis-shop-advancedOversight-button').parentElement.parentElement;
+    expect(researchItem.classList.contains('hidden')).toBe(true);
+    expect(advItem.classList.contains('hidden')).toBe(true);
+    ctx.solisManager.booleanFlags.add('solisUpgrade1');
+    ctx.updateSolisUI();
+    expect(researchItem.classList.contains('hidden')).toBe(false);
+    expect(advItem.classList.contains('hidden')).toBe(false);
+  });
+
+  test('purchase research adds points', () => {
+    const { SolisManager } = require('../src/js/solis.js');
+    const manager = new SolisManager();
+    global.resources = { colony: { research: { value: 0, hasCap: false, increase(v){ this.value += v; } } } };
+    manager.solisPoints = 10;
+    expect(manager.purchaseUpgrade('research')).toBe(true);
+    expect(manager.solisPoints).toBe(0);
+    expect(global.resources.colony.research.value).toBe(100);
+  });
+
+  test('purchase advanced oversight sets flag', () => {
+    const { SolisManager } = require('../src/js/solis.js');
+    const manager = new SolisManager();
+    global.addEffect = jest.fn();
+    manager.solisPoints = 1000;
+    expect(manager.purchaseUpgrade('advancedOversight')).toBe(true);
+    expect(global.addEffect).toHaveBeenCalledWith({
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'booleanFlag',
+      flagId: 'advancedOversight',
+      value: true,
+      effectId: 'solisAdvancedOversight',
+      sourceId: 'solisShop'
+    });
+    manager.solisPoints = 2000;
+    expect(manager.purchaseUpgrade('advancedOversight')).toBe(false);
+  });
+});

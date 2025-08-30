@@ -11,6 +11,8 @@ const shopDescriptions = {
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
+  research: 'Increase starting research points by 100',
+  advancedOversight: 'Enable advanced oversight for the space mirror facility',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
 };
 
@@ -85,7 +87,7 @@ function createShopItem(key) {
 
   const costSpan = label.querySelector(`#solis-shop-${key}-cost`);
   const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
-  const elementRecord = { button, cost: costSpan, count: countSpan };
+  const elementRecord = { button, cost: costSpan, count: countSpan, item };
 
   if (key === 'researchUpgrade') {
     const list = document.createElement('ul');
@@ -165,8 +167,14 @@ function initializeSolisUI() {
     title.textContent = 'Solis Shop';
     shopContainer.insertBefore(title, container);
     
-    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket'].forEach(key => {
-      container.appendChild(createShopItem(key));
+    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket', 'research', 'advancedOversight'].forEach(key => {
+      const item = createShopItem(key);
+      container.appendChild(item);
+    });
+    const flag = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
+    ['research', 'advancedOversight'].forEach(key => {
+      const el = shopElements[key]?.item;
+      if (el) el.classList.toggle('hidden', !flag);
     });
   }
 
@@ -290,6 +298,12 @@ function updateSolisUI() {
   if (donationSection) donationSection.classList.toggle('hidden', !flag);
   if (researchShop) researchShop.classList.toggle('hidden', !flag);
 
+  const solis1 = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
+  ['research', 'advancedOversight'].forEach(k => {
+    const item = shopElements[k]?.item;
+    if (item) item.classList.toggle('hidden', !solis1);
+  });
+
   if (pointsSpan) {
     const format = typeof formatNumber === 'function'
       ? formatNumber
@@ -371,7 +385,12 @@ function updateSolisUI() {
     if (!el) continue;
     if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
     if (el.count) el.count.textContent = solisManager.shopUpgrades[key].purchases;
-    if (el.button) el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
+    if (el.button) {
+      el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
+      if (key === 'advancedOversight' && solisManager.shopUpgrades.advancedOversight.purchases >= 1) {
+        el.button.disabled = true;
+      }
+    }
     if (key === 'researchUpgrade' && el.listItems) {
       const purchases = solisManager.shopUpgrades.researchUpgrade.purchases;
       el.listItems.forEach((li, idx) => {
