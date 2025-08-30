@@ -949,12 +949,17 @@ function updateResourceRateDisplay(resource){
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
-  const autobuildAvg = typeof autobuildCostTracker !== 'undefined'
+  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && resource.category === 'colony')
     ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
     : 0;
   if (netDiv) {
-    const netIncAuto = netRate - autobuildAvg;
-    const text = `Net Change (including autobuild): ${formatNumber(netIncAuto, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    let text;
+    if (resource.category === 'colony') {
+      const netIncAuto = netRate - autobuildAvg;
+      text = `Net Change (including autobuild): ${formatNumber(netIncAuto, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    } else {
+      text = `Net Change: ${formatNumber(netRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    }
     if (netDiv.textContent !== text) netDiv.textContent = text;
   }
 
@@ -984,7 +989,7 @@ function updateResourceRateDisplay(resource){
   }
 
   if (autobuildDiv) {
-    if (typeof autobuildCostTracker !== 'undefined') {
+    if (typeof autobuildCostTracker !== 'undefined' && resource.category === 'colony') {
       const avgCost = autobuildAvg;
       if (avgCost > 0) {
         autobuildDiv.style.display = 'block';
