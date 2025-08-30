@@ -517,7 +517,7 @@ const vega2Overrides = {
     underground: {
       // Scale deposits with land area (1 deposit / 1e6 ha)
       ore: { initialValue: 5, maxDeposits: 32070, areaTotal: 320700 },
-      geothermal: { initialValue: 5, maxDeposits: 389175, areaTotal: 320700 }
+      geothermal: { initialValue: 5, maxDeposits: 3891, areaTotal: 320700 }
     },
     atmospheric: {
       // Pure inert atmosphere. Choose mass for ~0.6 atm at Venus size/gravity.
