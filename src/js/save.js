@@ -1,3 +1,12 @@
+var ghgFactorySettingsRef = ghgFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').ghgFactorySettings
+    : globalThis.ghgFactorySettings);
+var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').oxygenFactorySettings
+    : globalThis.oxygenFactorySettings);
+
 globalGameIsLoadingFromSave = false;
 
 function recalculateLandUsage() {
@@ -46,8 +55,8 @@ function getGameState() {
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
-    ghgFactorySettings: typeof ghgFactorySettings !== 'undefined' ? ghgFactorySettings : undefined,
-    oxygenFactorySettings: typeof oxygenFactorySettings !== 'undefined' ? oxygenFactorySettings : undefined,
+    ghgFactorySettings: typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined,
+    oxygenFactorySettings: typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined,
     mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
@@ -371,12 +380,12 @@ function loadGame(slotOrCustomString) {
     }
 
     if(gameState.ghgFactorySettings){
-      Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
+      Object.assign(ghgFactorySettingsRef, gameState.ghgFactorySettings);
       enforceGhgFactoryTempGap();
     }
 
     if(gameState.oxygenFactorySettings){
-      Object.assign(oxygenFactorySettings, gameState.oxygenFactorySettings);
+      Object.assign(oxygenFactorySettingsRef, gameState.oxygenFactorySettings);
     }
 
     if(gameState.mirrorOversightSettings){

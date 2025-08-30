@@ -20,7 +20,12 @@ describe('category unhide button', () => {
     ctx.divideByTen = n => Math.max(1, Math.floor(n / 10));
     ctx.resources = { colony: { colonists: { value: 0 }, workers: { value: 0 } } };
     ctx.globalEffects = { isBooleanFlagSet: () => false };
-    ctx.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 0, restartCap: 1, restartTimer: 0 };
+    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
+    vm.runInContext(factorySettings, ctx);
+    ctx.ghgFactorySettings.autoDisableAboveTemp = false;
+    ctx.ghgFactorySettings.disableTempThreshold = 0;
+    ctx.ghgFactorySettings.restartCap = 1;
+    ctx.ghgFactorySettings.restartTimer = 0;
     ctx.dayNightCycle = { isNight: () => false };
     ctx.toDisplayTemperature = () => 0;
     ctx.getTemperatureUnit = () => 'K';

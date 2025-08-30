@@ -1,8 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
-global.planetParameters = { mars: { buildingParameters: { maintenanceFraction: 0 } } };
-require('../src/js/globals.js');
-require('../src/js/ghg-automation.js');
+const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
+const { enforceGhgFactoryTempGap } = require('../src/js/ghg-automation.js');
 
 describe('GHG automation threshold gap enforcement', () => {
   beforeEach(() => {

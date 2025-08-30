@@ -50,18 +50,6 @@ let colonySliderSettings = {
   oreMineWorkers: 0
 };
 
-let ghgFactorySettings = {
-  autoDisableAboveTemp: false,
-  disableTempThreshold: 283.15, // Kelvin
-  reverseTempThreshold: 283.15
-};
-globalThis.ghgFactorySettings = ghgFactorySettings;
-
-let oxygenFactorySettings = {
-  autoDisableAbovePressure: false,
-  disablePressureThreshold: 15 // kPa
-};
-
 
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;

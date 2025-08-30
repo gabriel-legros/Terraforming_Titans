@@ -1,8 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
+const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
 const { Building } = require('../src/js/building.js');
-
-global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 0, reverseTempThreshold: 0 };
 
 function createFactory(){
   const config = {

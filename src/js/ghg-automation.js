@@ -1,4 +1,15 @@
-function enforceGhgFactoryTempGap(changed){
+const ghgFactorySettings = {
+  autoDisableAboveTemp: false,
+  disableTempThreshold: 283.15, // Kelvin
+  reverseTempThreshold: 283.15,
+};
+
+const oxygenFactorySettings = {
+  autoDisableAbovePressure: false,
+  disablePressureThreshold: 15, // kPa
+};
+
+function enforceGhgFactoryTempGap(changed) {
   const minGap = 1;
   const A = ghgFactorySettings.disableTempThreshold;
   let B = ghgFactorySettings.reverseTempThreshold;
@@ -15,4 +26,14 @@ function enforceGhgFactoryTempGap(changed){
   ghgFactorySettings.reverseTempThreshold = B;
 }
 
-globalThis.enforceGhgFactoryTempGap = enforceGhgFactoryTempGap;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    ghgFactorySettings,
+    oxygenFactorySettings,
+    enforceGhgFactoryTempGap,
+  };
+} else {
+  globalThis.ghgFactorySettings = ghgFactorySettings;
+  globalThis.oxygenFactorySettings = oxygenFactorySettings;
+  globalThis.enforceGhgFactoryTempGap = enforceGhgFactoryTempGap;
+}

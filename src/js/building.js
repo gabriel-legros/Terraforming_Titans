@@ -1,3 +1,12 @@
+var ghgFactorySettingsRef = ghgFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').ghgFactorySettings
+    : globalThis.ghgFactorySettings);
+var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').oxygenFactorySettings
+    : globalThis.oxygenFactorySettings);
+
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
   constructor(config, buildingName) {
@@ -531,14 +540,14 @@ class Building extends EffectableEntity {
       if (
         this.name === 'ghgFactory' &&
         hasAtmosphericOversight &&
-        ghgFactorySettings.autoDisableAboveTemp &&
+        ghgFactorySettingsRef.autoDisableAboveTemp &&
         terraforming && terraforming.temperature
       ) {
-        const A = ghgFactorySettings.disableTempThreshold;
-        let B = ghgFactorySettings.reverseTempThreshold ?? A + 5;
+        const A = ghgFactorySettingsRef.disableTempThreshold;
+        let B = ghgFactorySettingsRef.reverseTempThreshold ?? A + 5;
         if (B - A < 1) {
           B = A + 1;
-          ghgFactorySettings.reverseTempThreshold = B;
+          ghgFactorySettingsRef.reverseTempThreshold = B;
         }
         const currentTemp = terraforming.temperature.value;
         let recipeKey = this.currentRecipeKey || 'ghg';
@@ -628,12 +637,12 @@ class Building extends EffectableEntity {
       if (
         this.name === 'oxygenFactory' &&
         hasAtmosphericOversight &&
-        oxygenFactorySettings.autoDisableAbovePressure &&
+        oxygenFactorySettingsRef.autoDisableAbovePressure &&
         terraforming && resources.atmospheric?.oxygen &&
         typeof calculateAtmosphericPressure === 'function'
       ) {
         const oxygen = resources.atmospheric.oxygen;
-        const targetPa = oxygenFactorySettings.disablePressureThreshold * 1000;
+        const targetPa = oxygenFactorySettingsRef.disablePressureThreshold * 1000;
         const currentPa = calculateAtmosphericPressure(
           oxygen.value,
           terraforming.celestialParameters.gravity,

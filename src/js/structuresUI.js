@@ -1,3 +1,12 @@
+var ghgFactorySettingsRef = ghgFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').ghgFactorySettings
+    : globalThis.ghgFactorySettings);
+var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
+  (typeof require !== 'undefined'
+    ? require('./ghg-automation.js').oxygenFactorySettings
+    : globalThis.oxygenFactorySettings);
+
 // structures-ui.js
 
 // Create an object to store the selected build count for each structure
@@ -484,9 +493,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const tempCheckbox = document.createElement('input');
     tempCheckbox.type = 'checkbox';
     tempCheckbox.classList.add('ghg-temp-checkbox');
-    tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+    tempCheckbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
     tempCheckbox.addEventListener('change', () => {
-      ghgFactorySettings.autoDisableAboveTemp = tempCheckbox.checked;
+      ghgFactorySettingsRef.autoDisableAboveTemp = tempCheckbox.checked;
     });
     tempControl.appendChild(tempCheckbox);
 
@@ -513,8 +522,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     unitSpan.classList.add('ghg-temp-unit');
     tempControl.appendChild(unitSpan);
 
-    if(ghgFactorySettings.reverseTempThreshold === undefined){
-      ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
+    if(ghgFactorySettingsRef.reverseTempThreshold === undefined){
+      ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
     }
     enforceGhgFactoryTempGap();
 
@@ -522,8 +531,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       tempLabel.textContent = 'Disable if avg T > ';
       unitSpan.textContent = getTemperatureUnit();
       // Update both inputs (A and B)
-      tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
-      tempInputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+      tempInput.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+      tempInputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
       // Show the B side whenever reversal is available
       const showReverse = !!structure.reversalAvailable;
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
@@ -533,9 +542,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
-      ghgFactorySettings.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+      ghgFactorySettingsRef.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
       if(!structure.reversalAvailable){
-        ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
+        ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
       } else {
         enforceGhgFactoryTempGap('A');
       }
@@ -544,7 +553,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     tempInputB.addEventListener('input', () => {
       const val = parseFloat(tempInputB.value);
-      ghgFactorySettings.reverseTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
+      ghgFactorySettingsRef.reverseTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
       enforceGhgFactoryTempGap('B');
       updateGhgTempControl();
     });
@@ -571,9 +580,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const pressureCheckbox = document.createElement('input');
     pressureCheckbox.type = 'checkbox';
     pressureCheckbox.classList.add('o2-pressure-checkbox');
-    pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+    pressureCheckbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
     pressureCheckbox.addEventListener('change', () => {
-      oxygenFactorySettings.autoDisableAbovePressure = pressureCheckbox.checked;
+      oxygenFactorySettingsRef.autoDisableAbovePressure = pressureCheckbox.checked;
     });
     pressureControl.appendChild(pressureCheckbox);
 
@@ -585,10 +594,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     pressureInput.type = 'number';
     pressureInput.step = 1;
     pressureInput.classList.add('o2-pressure-input');
-    pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
+    pressureInput.value = oxygenFactorySettingsRef.disablePressureThreshold;
     pressureInput.addEventListener('input', () => {
       const val = parseFloat(pressureInput.value);
-      oxygenFactorySettings.disablePressureThreshold = val;
+      oxygenFactorySettingsRef.disablePressureThreshold = val;
     });
     pressureControl.appendChild(pressureInput);
 
@@ -1022,9 +1031,9 @@ function updateDecreaseButtonText(button, buildCount) {
         if (ghgEls && ghgEls.container) {
           const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
           ghgEls.container.style.display = enabled ? 'flex' : 'none';
-          if (ghgEls.checkbox) ghgEls.checkbox.checked = ghgFactorySettings.autoDisableAboveTemp;
-          if (ghgEls.inputA) ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
-          if (ghgEls.inputB) ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+          if (ghgEls.checkbox) ghgEls.checkbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
+          if (ghgEls.inputA) ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+          if (ghgEls.inputB) ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
           const showReverse = !!structure.reversalAvailable;
           if (ghgEls.betweenLabel) ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
           if (ghgEls.inputB) ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
@@ -1035,8 +1044,8 @@ function updateDecreaseButtonText(button, buildCount) {
         if (o2Els && o2Els.container) {
           const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
           o2Els.container.style.display = enabled ? 'flex' : 'none';
-          if (o2Els.checkbox) o2Els.checkbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
-          if (o2Els.input) o2Els.input.value = oxygenFactorySettings.disablePressureThreshold;
+          if (o2Els.checkbox) o2Els.checkbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
+          if (o2Els.input) o2Els.input.value = oxygenFactorySettingsRef.disablePressureThreshold;
         }
       }
   

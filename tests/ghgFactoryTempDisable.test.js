@@ -1,8 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
+const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
 const { Building } = require('../src/js/building.js');
-
-global.ghgFactorySettings = { autoDisableAboveTemp: false, disableTempThreshold: 283.15 };
 
 const researchedManagerStub = {
   getResearchById: () => ({ isResearched: true })
