@@ -286,6 +286,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Terraforming Bureau automation for GHG and oxygen factories now only operates once the Terraforming Bureau research is completed, preventing the checkboxes from functioning prematurely. Atmospheric Monitoring oversight for carbon and nitrogen space mining projects likewise requires its research before automation activates.
 - GHG factory automation now produces only the greenhouse gas required to reach the target temperature using Newton's method.
 - GHG factory automation supports automatic reversal: when reverse is enabled, it disables between two thresholds and removes greenhouse gases or calcite above the upper limit.
+- GHG automation temperature thresholds maintain at least a 1 °C gap, adjusting the other threshold when one changes.
 - Oxygen factory automation now produces only the oxygen required to reach the target pressure using Newton's method.
 - Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
 - Production, consumption, and maintenance displays scale with selected build count.

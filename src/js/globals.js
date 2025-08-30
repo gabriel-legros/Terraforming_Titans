@@ -55,6 +55,7 @@ let ghgFactorySettings = {
   disableTempThreshold: 283.15, // Kelvin
   reverseTempThreshold: 283.15
 };
+globalThis.ghgFactorySettings = ghgFactorySettings;
 
 let oxygenFactorySettings = {
   autoDisableAbovePressure: false,
