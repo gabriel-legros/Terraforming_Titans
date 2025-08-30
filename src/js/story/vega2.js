@@ -42,7 +42,7 @@ progressVega2.storyProjects.vega2_explore_crystal_city = {
   unlocked: false,
   attributes: {
     planet: 'vega2',
-    resourceGain: { atmospheric: { water: 5_000 } },
+    resourceGain: { atmospheric: { atmosphericWater: 5_000 } },
     storySteps: [
       'Step 1 — Streets: Broad avenues between crystal walls. No doors. No signs.',
       'Step 2 — Rooms: Clear chambers with soft angles. No tools. No beds.',
