@@ -1,4 +1,4 @@
-// Mirror oversight controls
+﻿// Mirror oversight controls
 var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
   applyToLantern: false,
@@ -10,9 +10,13 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
   assignments: {
     mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
-    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 }
+    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
+    reversalMode: { tropical: false, temperate: false, polar: false, focus: false }
   }
 };
+
+var advancedAssignmentInProgress = false;
+
 
 function setMirrorDistribution(zone, value) {
   const zones = ['tropical', 'temperate', 'polar', 'focus'];
@@ -82,6 +86,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
+  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
   updateMirrorOversightUI();
 }
 
@@ -250,17 +255,38 @@ function updateAssignmentDisplays() {
       const minusBtn = document.querySelector(`.assign-minus[data-type="${type}"][data-zone="${zone}"]`);
       if (minusBtn) minusBtn.textContent = `-${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
     });
+    const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
+    if (checkbox) {
+      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+      checkbox.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
+    }
   });
 }
 
+
+// Toggle Advanced Oversight mode: uses assignments, hides 'any', and seeds default targets
 function toggleAdvancedOversight(enable) {
   mirrorOversightSettings.advancedOversight = !!enable;
+  mirrorOversightSettings.useFinerControls = !!enable;
   if (enable) {
     mirrorOversightSettings.autoAssign.any = false;
-    mirrorOversightSettings.assignments.mirrors.any = 0;
-    mirrorOversightSettings.assignments.lanterns.any = 0;
+    mirrorOversightSettings.autoAssign.tropical = false;
+    mirrorOversightSettings.autoAssign.temperate = false;
+    mirrorOversightSettings.autoAssign.polar = false;
+    mirrorOversightSettings.autoAssign.focus = false;
+    if (mirrorOversightSettings.assignments?.mirrors) mirrorOversightSettings.assignments.mirrors.any = 0;
+    if (mirrorOversightSettings.assignments?.lanterns) mirrorOversightSettings.assignments.lanterns.any = 0;
+    const defK = 293.15;
+    if (!mirrorOversightSettings.targets || typeof mirrorOversightSettings.targets !== 'object') {
+      mirrorOversightSettings.targets = { tropical: defK, temperate: defK, polar: defK, water: 0 };
+    } else {
+      if (!mirrorOversightSettings.targets.tropical) mirrorOversightSettings.targets.tropical = defK;
+      if (!mirrorOversightSettings.targets.temperate) mirrorOversightSettings.targets.temperate = defK;
+      if (!mirrorOversightSettings.targets.polar) mirrorOversightSettings.targets.polar = defK;
+      if (!mirrorOversightSettings.targets.water) mirrorOversightSettings.targets.water = 0;
+    }
   }
-  updateMirrorOversightUI();
+  if (typeof updateMirrorOversightUI === 'function') updateMirrorOversightUI();
 }
 
 function initializeMirrorOversightUI(container) {
@@ -276,6 +302,7 @@ function initializeMirrorOversightUI(container) {
       <span class="info-tooltip-icon" title="Distribute mirror focus among zones."></span>
     </div>
     <div class="card-body">
+      <div id="mirror-oversight-sliders">
       <div class="control-group">
         <label for="mirror-oversight-tropical">Tropical:</label>
         <input type="range" id="mirror-oversight-tropical" min="0" max="100" step="1" value="0">
@@ -300,6 +327,7 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-any">Any Zone:</label>
         <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100">
         <span id="mirror-oversight-any-value" class="slider-value">100%</span>
+      </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
@@ -332,13 +360,125 @@ function initializeMirrorOversightUI(container) {
     updateMirrorOversightUI();
   });
 
+  // Advanced Oversight checkbox and controls (same line as lantern checkbox)
+  const lanternDivInit = div.querySelector('#mirror-oversight-lantern-div');
+  const advDiv = document.createElement('div');
+  advDiv.id = 'mirror-advanced-oversight-div';
+  advDiv.className = 'control-group';
+  advDiv.style.display = 'none';
+  advDiv.innerHTML = `
+    <input type="checkbox" id="mirror-advanced-oversight">
+    <label for="mirror-advanced-oversight">Advanced Oversight</label>
+    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled.">&#9432;</span>
+  `;
+  if (lanternDivInit) {
+    lanternDivInit.style.display = 'flex';
+    lanternDivInit.style.alignItems = 'center';
+    lanternDivInit.style.gap = '12px';
+    lanternDivInit.style.flexWrap = 'wrap';
+    lanternDivInit.insertAdjacentElement('beforeend', advDiv);
+  }
+
+  const advancedControls = document.createElement('div');
+  advancedControls.id = 'advanced-oversight-controls';
+  advancedControls.style.display = 'none';
+  advancedControls.innerHTML = `
+    <div class="control-group">
+      <span class="control-label" style="font-weight:600;">Targets & Priority</span>
+      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order.">&#9432;</span>
+    </div>
+    <div class="stats-grid three-col" style="row-gap:8px;">
+      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+        <label class="stat-label" for="adv-target-tropical">Tropical target</label>
+        <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0">
+        <select id="adv-priority-tropical" class="stat-value">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+        <label class="stat-label" for="adv-target-temperate">Temperate target</label>
+        <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0">
+        <select id="adv-priority-temperate" class="stat-value">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+        <label class="stat-label" for="adv-target-polar">Polar target</label>
+        <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0">
+        <select id="adv-priority-polar" class="stat-value">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+      <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
+        <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
+        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0">
+        <select id="adv-priority-focus" class="stat-value">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+    </div>
+  `;
+  if (advDiv && advDiv.parentElement) {
+    advDiv.insertAdjacentElement('afterend', advancedControls);
+  }
+
+  // Wire up advanced controls inputs
+  const advCheckboxInit = div.querySelector('#mirror-advanced-oversight');
+  if (advCheckboxInit) {
+    advCheckboxInit.checked = !!mirrorOversightSettings.advancedOversight;
+    advCheckboxInit.addEventListener('change', () => {
+      toggleAdvancedOversight(advCheckboxInit.checked);
+    });
+  }
+  const advInputs = {
+    tropical: div.querySelector('#adv-target-tropical'),
+    temperate: div.querySelector('#adv-target-temperate'),
+    polar: div.querySelector('#adv-target-polar'),
+    water: div.querySelector('#adv-target-water'),
+  };
+  const advPriority = {
+    tropical: div.querySelector('#adv-priority-tropical'),
+    temperate: div.querySelector('#adv-priority-temperate'),
+    polar: div.querySelector('#adv-priority-polar'),
+    focus: div.querySelector('#adv-priority-focus'),
+  };
+  Object.keys(advInputs).forEach(k => {
+    const el = advInputs[k];
+    if (!el) return;
+    const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
+    if (k === 'water') {
+      el.value = Number(mirrorOversightSettings.targets[k] || 0);
+    } else {
+      const base = (mirrorOversightSettings.targets[k] || 293.15);
+      el.value = toDisp(base).toFixed(2);
+    }
+    el.addEventListener('change', () => {
+      let raw = Number(el.value);
+      if (k !== 'water') {
+        const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
+        if (useC) raw = raw + 273.15; // convert back to Kelvin
+      }
+      mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
+    });
+  });
+  Object.keys(advPriority).forEach(k => {
+    const el = advPriority[k];
+    if (!el) return;
+    const cur = mirrorOversightSettings.priority[k] || 1;
+    el.value = String(cur);
+    el.addEventListener('change', () => {
+      const v = Math.max(1, Math.min(5, parseInt(el.value, 10) || 1));
+      mirrorOversightSettings.priority[k] = v;
+    });
+  });
+
   // Table showing zonal average solar flux and temperature
   const fluxTable = document.createElement('table');
   fluxTable.id = 'mirror-flux-table';
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Average Solar Flux (W/m²)</th><th>Temperature (${tempUnit})</th></tr>
+      <tr><th>Zone</th><th>Average Solar Flux (W/m^²)</th><th>Temperature (${tempUnit})</th></tr>
     </thead>
     <tbody>
       <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td></tr>
@@ -347,12 +487,19 @@ function initializeMirrorOversightUI(container) {
     </tbody>
   `;
   div.appendChild(fluxTable);
+  // Fix mis-encoded units in header
+  try {
+    const fluxHeader = fluxTable.querySelector('thead tr th:nth-child(2)');
+    if (fluxHeader) fluxHeader.textContent = 'Average Solar Flux (W/m2)';
+  } catch (e) {}
 
   const finerToggle = document.createElement('div');
   finerToggle.id = 'mirror-finer-toggle';
   finerToggle.classList.add('collapse-toggle');
-  finerToggle.innerHTML = '<span id="mirror-finer-icon">▶</span> Finer Controls';
+  finerToggle.innerHTML = '<span id="mirror-finer-icon">–¶</span> Finer Controls';
   finerToggle.style.cursor = 'pointer';
+  // Override icon text with safe ASCII to avoid encoding glitches
+  try { finerToggle.innerHTML = '<span id="mirror-finer-icon">[+]</span> Finer Controls'; } catch(e) {}
   const finerContent = document.createElement('div');
   finerContent.id = 'mirror-finer-content';
   finerContent.style.display = 'none';
@@ -372,6 +519,7 @@ function initializeMirrorOversightUI(container) {
       <div class="grid-header">Zone</div>
       <div class="grid-header">Mirrors</div>
       <div class="grid-header">Lanterns</div>
+      <div class="grid-header">Reversal</div>
       <div class="grid-header">Auto</div>
 
       <div class="grid-zone-label">Available</div>
@@ -389,6 +537,7 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-plus" style="visibility: hidden;">+1</button>
         <button class="assign-max" style="visibility: hidden;">Max</button>
       </div>
+      <div class="grid-reversal-cell"></div>
       <div class="grid-auto-cell"></div>
 
       ${['tropical', 'temperate', 'polar', 'any'].map(zone => `
@@ -406,6 +555,9 @@ function initializeMirrorOversightUI(container) {
           <span id="lanterns-assign-${zone}">0</span>
           <button class="assign-plus" data-type="lanterns" data-zone="${zone}">+1</button>
           <button class="assign-max" data-type="lanterns" data-zone="${zone}">Max</button>
+        </div>
+        <div class="grid-${zone === 'any' ? 'reversal-cell' : 'reversal-cell reversal-cell-with-checkbox'}">
+          ${zone === 'any' ? '' : `<input type="checkbox" class="reversal-checkbox" data-zone="${zone}">`}
         </div>
         <div class="grid-auto-cell">
           <input type="checkbox" class="auto-assign" data-zone="${zone}">
@@ -426,6 +578,9 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
         <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
       </div>
+      <div class="grid-reversal-cell" data-zone="focus" style="display:none;">
+        <input type="checkbox" class="reversal-checkbox" data-zone="focus">
+      </div>
       <div class="grid-auto-cell" data-zone="focus" style="display:none;">
         <input type="checkbox" class="auto-assign" data-zone="focus">
       </div>
@@ -438,7 +593,14 @@ function initializeMirrorOversightUI(container) {
     const open = finerContent.style.display !== 'none';
     finerContent.style.display = open ? 'none' : 'block';
     const icon = document.getElementById('mirror-finer-icon');
-    if (icon) icon.textContent = open ? '▶' : '▼';
+    if (icon) icon.textContent = open ? '–¶' : '–¼';
+  });
+
+  // Ensure ASCII icon updates without encoding issues
+  finerToggle.addEventListener('click', () => {
+    const open = finerContent.style.display !== 'none';
+    const icon = document.getElementById('mirror-finer-icon');
+    if (icon) icon.textContent = open ? '[-]' : '[+]';
   });
 
   const useFiner = finerContent.querySelector('#mirror-use-finer');
@@ -449,9 +611,19 @@ function initializeMirrorOversightUI(container) {
     box.addEventListener('change', () => {
       const zone = box.dataset.zone;
       mirrorOversightSettings.autoAssign[zone] = box.checked;
-      distributeAutoAssignments('mirrors');
-      distributeAutoAssignments('lanterns');
+      if (!mirrorOversightSettings.advancedOversight) {
+        distributeAutoAssignments('mirrors');
+        distributeAutoAssignments('lanterns');
+      }
       updateAssignmentDisplays();
+      updateZonalFluxTable();
+    });
+  });
+  finerContent.querySelectorAll('.reversal-checkbox').forEach(box => {
+    box.addEventListener('change', () => {
+      const zone = box.dataset.zone;
+      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+      mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
       updateZonalFluxTable();
     });
   });
@@ -582,7 +754,43 @@ function updateMirrorOversightUI() {
   const lanternUnlocked = typeof buildings !== 'undefined' && buildings.hyperionLantern && buildings.hyperionLantern.unlocked;
   if (lanternDiv) {
     lanternDiv.style.display = lanternUnlocked ? 'flex' : 'none';
+    if (lanternUnlocked) {
+      lanternDiv.style.display = 'flex';
+      lanternDiv.style.alignItems = 'center';
+      lanternDiv.style.gap = '12px';
+      lanternDiv.style.flexWrap = 'wrap';
+    }
   }
+  // Advanced oversight unlock check (boolean flag name: advancedOversight)
+  let advancedUnlocked = false;
+  if (typeof projectManager !== 'undefined') {
+    if (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('advancedOversight')) {
+      advancedUnlocked = true;
+    } else if (projectManager.projects &&
+               projectManager.projects.spaceMirrorFacility &&
+               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
+               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('advancedOversight')) {
+      advancedUnlocked = true;
+    }
+  }
+  const advDiv = document.getElementById('mirror-advanced-oversight-div');
+  const advCheckbox = document.getElementById('mirror-advanced-oversight');
+  if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
+  if (advCheckbox) advCheckbox.checked = !!mirrorOversightSettings.advancedOversight;
+  const advControls = document.getElementById('advanced-oversight-controls');
+  // Show temperature targets in current unit and hide water row without focusing
+  const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
+  ['tropical','temperate','polar'].forEach(k => {
+    const input = document.getElementById(`adv-target-${k}`);
+    if (input && mirrorOversightSettings.targets) {
+      const v = mirrorOversightSettings.targets[k] || 293.15;
+      input.value = (toDisp(v)).toFixed(2);
+    }
+    const sel = document.getElementById(`adv-priority-${k}`);
+    if (sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
+  });
+  const waterRow = document.getElementById('adv-water-row');
+  if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
   const C = mirrorOversightCache || {};
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
@@ -590,7 +798,7 @@ function updateMirrorOversightUI() {
 
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
-    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 50px' : '100px 1fr 50px';
+    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 80px 50px' : '100px 1fr 80px 50px';
   }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
@@ -604,8 +812,34 @@ function updateMirrorOversightUI() {
     const zone = box.dataset.zone;
     box.checked = !!mirrorOversightSettings.autoAssign[zone];
   });
-  if (C.assignmentControls) C.assignmentControls.forEach(el => { el.disabled = !useFiner; });
-  if (useFiner) {
+  // In advanced oversight mode, show assignments but do not allow manual control
+  const slidersWrapper = document.getElementById('mirror-oversight-sliders');
+  const anySliderEl = document.getElementById('mirror-oversight-any');
+  const anyWrapper = anySliderEl ? anySliderEl.parentElement : null;
+  const advancedOn = !!mirrorOversightSettings.advancedOversight && (document.getElementById('mirror-advanced-oversight-div')?.style.display !== 'none');
+  if (slidersWrapper) slidersWrapper.style.display = advancedOn ? 'none' : '';
+  if (anyWrapper) anyWrapper.style.display = advancedOn ? 'none' : 'flex';
+  if (advControls) advControls.style.display = advancedOn ? '' : 'none';
+
+  const finerContent = document.getElementById('mirror-finer-content');
+  const finerToggle = document.getElementById('mirror-finer-toggle');
+  if (advancedOn) {
+    if (finerContent) finerContent.style.display = 'block';
+    if (finerToggle) finerToggle.style.display = 'none';
+    const header = document.querySelector('#mirror-finer-content .finer-controls-header');
+    if (header) header.style.display = 'none';
+  } else {
+    if (finerToggle) finerToggle.style.display = '';
+    const header = document.querySelector('#mirror-finer-content .finer-controls-header');
+    if (header) header.style.display = '';
+  }
+
+  // Keep assignment numbers updated in advanced mode
+  if (advancedOn && typeof updateAssignmentDisplays === 'function') {
+    updateAssignmentDisplays();
+  }
+  if (C.assignmentControls) C.assignmentControls.forEach(el => { el.disabled = advancedOn || !useFiner; });
+  if (useFiner && !mirrorOversightSettings.advancedOversight) {
     distributeAutoAssignments('mirrors');
     distributeAutoAssignments('lanterns');
     updateAssignmentDisplays();
@@ -659,7 +893,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
         projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing')))) {
     let focusPower = 0;
-    if (mirrorOversightSettings.useFinerControls) {
+    if (mirrorOversightSettings.useFinerControls || mirrorOversightSettings.advancedOversight) {
       distributeAutoAssignments('mirrors');
       distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
@@ -724,7 +958,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
 function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = false) {
   const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
   const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-  const baseSolar = terraforming.luminosity.solarFlux; // W/m²
+  const baseSolar = terraforming.luminosity.solarFlux; // W/m^²
 
   const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
   const lantern = typeof buildings !== 'undefined' ? buildings.hyperionLantern : null;
@@ -745,7 +979,16 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight') &&
     typeof mirrorOversightSettings !== 'undefined'
   ) {
-    if (mirrorOversightSettings.useFinerControls) {
+    if (mirrorOversightSettings.advancedOversight) {
+      // Advanced mode: use explicit assignments only (no auto distribution)
+      const assignM = mirrorOversightSettings.assignments.mirrors || {};
+      const assignL = mirrorOversightSettings.assignments.lanterns || {};
+      distributedMirrorPower = 0;
+      distributedLanternPower = 0;
+      focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
+      focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
+    } else if (mirrorOversightSettings.useFinerControls) {
+      // Finer controls (legacy): use current assignment with optional auto-assign
       distributeAutoAssignments('mirrors');
       distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
@@ -755,6 +998,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
       focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
     } else {
+      // Slider distribution
       const dist = mirrorOversightSettings.distribution || {};
       const zonePerc = Math.max(0, dist[zone] || 0);
       const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
@@ -775,7 +1019,10 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     }
   }
 
-  const reverse = !!(projectManager?.projects?.spaceMirrorFacility?.reverseEnabled);
+  let reverse = false;
+  if (mirrorOversightSettings.advancedOversight) {
+    reverse = mirrorOversightSettings.assignments.reversalMode[zone];
+  }
   const distributedMirrorFlux = totalSurfaceArea > 0 ? (reverse ? -4 * distributedMirrorPower / totalSurfaceArea : 4 * distributedMirrorPower / totalSurfaceArea) : 0;
   const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
 
@@ -783,9 +1030,192 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     focusedMirrorFlux = -focusedMirrorFlux;
   }
 
-  const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux + focusedMirrorFlux + focusedLanternFlux) * ratio;
+  const totalFluxForZone = (baseSolar + distributedMirrorFlux + distributedLanternFlux) * ratio + focusedMirrorFlux + focusedLanternFlux;
 
   return Math.max(totalFluxForZone, 2.4e-5);
+}
+
+  // Advanced oversight auto-assignment using simple Newton step on flux
+  function runAdvancedOversightAssignments(project) {
+    if (!mirrorOversightSettings.advancedOversight) return;
+    if (advancedAssignmentInProgress) return;
+    advancedAssignmentInProgress = true;
+    try {
+  if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
+
+  const zones = ['tropical','temperate','polar'];
+  const assignM = mirrorOversightSettings.assignments.mirrors;
+  const assignL = mirrorOversightSettings.assignments.lanterns;
+  const tol = 0.05; // K tolerance
+
+  // Determine available units
+  let mirrorsAvail = Math.max(0, buildings.spaceMirror?.active || 0);
+  let lanternsAvail = Math.max(0, buildings.hyperionLantern?.active || 0);
+  const lantern = buildings.hyperionLantern;
+  const lanternUnlocked = !!(lantern && lantern.unlocked);
+  const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
+  const productivity = lanternUnlocked ? (typeof lantern.productivity === 'number' ? lantern.productivity : 1) : 0;
+  const lanternPowerPer = lanternUnlocked ? (lantern.powerPerBuilding || 0) * productivity : 0;
+
+  // Per-unit flux change for focused assignment (in W/m^2)
+  const getDeltaFluxPer = (type, zone) => {
+    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
+    const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+    if (zoneArea <= 0) return 0;
+    if (type === 'mirrors') return 4*mirrorPowerPer / zoneArea;
+    return 4*lanternPowerPer / zoneArea;
+  };
+
+  // Compute flux required to hit target using dayNightTemperaturesModel
+  function computeFluxForTarget(zone, targetK) {
+    if (typeof dayNightTemperaturesModel !== 'function') return terraforming.calculateZoneSolarFlux(zone);
+    const rotationPeriod = terraforming.celestialParameters.rotationPeriod || 24;
+    const gSurface = terraforming.celestialParameters.gravity;
+    const groundAlbedo = terraforming.luminosity?.groundAlbedo ?? (typeof terraforming.calculateGroundAlbedo === 'function' ? terraforming.calculateGroundAlbedo() : 0);
+    const { composition, totalMass } = typeof terraforming.calculateAtmosphericComposition === 'function' ? terraforming.calculateAtmosphericComposition() : { composition: {}, totalMass: 0 };
+    const surfacePressurePa = typeof calculateAtmosphericPressure === 'function' ? calculateAtmosphericPressure(totalMass / 1000, gSurface, terraforming.celestialParameters.radius) : 0;
+    const surfacePressureBar = surfacePressurePa / 100000;
+    const fractions = (typeof calculateZonalSurfaceFractions === 'function') ? calculateZonalSurfaceFractions(terraforming, zone) : null;
+    const baseParams = { groundAlbedo, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, gSurface };
+    const Ttarget = targetK;
+    // Bracket and bisection
+    let Flo = Math.max(2.4e-5, 0.1);
+    let Fhi = Math.max(F[zone] || terraforming.calculateZoneSolarFlux(zone, false, true), 1);
+    const evalT = Fv => dayNightTemperaturesModel({ ...baseParams, flux: Fv, surfaceFractions: fractions }).mean;
+    const Tlo = () => evalT(Flo);
+    let Thi = evalT(Fhi);
+    // Expand high bound until above target or until reasonable cap
+    let attempts = 0;
+    while (Thi < Ttarget && attempts < 20) { Fhi *= 1.5; Thi = evalT(Fhi); attempts++; }
+    // If target below low bound, move low down
+    attempts = 0;
+    while (Tlo() > Ttarget && attempts < 20) { Flo *= 0.5; attempts++; }
+    // Bisection
+    for (let i = 0; i < 18; i++) {
+      const mid = 0.5 * (Flo + Fhi);
+      const Tmid = evalT(mid);
+      if (Tmid < Ttarget) Flo = mid; else Fhi = mid;
+    }
+    return 0.5 * (Flo + Fhi);
+  }
+
+  // Current temps and targets
+  const T = {};
+  const F = {};
+  const target = mirrorOversightSettings.targets || { tropical: 293.15, temperate: 293.15, polar: 293.15 };
+  zones.forEach(z => {
+    T[z] = terraforming?.temperature?.zones?.[z]?.value || 0;
+    F[z] = terraforming.calculateZoneSolarFlux(z, false, true);
+  });
+
+
+  // Focus water melt allocation first
+  const focusUnlocked = (projectManager?.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
+                        (projectManager?.projects?.spaceMirrorFacility?.isBooleanFlagSet && projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing'));
+  const waterTarget = Math.max(0, target.water || 0);
+  if (focusUnlocked && waterTarget > 0) {
+    const C_P_ICE = 2100; // J/kg*K
+    const L_F_WATER = 334000; // J/kg
+    const deltaToZero = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
+    const energyPerKg = C_P_ICE * deltaToZero + L_F_WATER;
+    const requiredPower = waterTarget * 1000 * energyPerKg; // W
+    let remainingPower = requiredPower;
+    // Prefer lanterns for melt if available
+    if (lanternUnlocked && lanternPowerPer > 0 && lanternsAvail > 0) {
+      const needL = Math.min(lanternsAvail, Math.ceil(remainingPower / lanternPowerPer));
+      if (needL > 0) { assignL.focus += needL; lanternsAvail -= needL; remainingPower -= needL * lanternPowerPer; }
+    }
+    if (remainingPower > 0 && mirrorPowerPer > 0 && mirrorsAvail > 0) {
+      const needM = Math.min(mirrorsAvail, Math.ceil(remainingPower / mirrorPowerPer));
+      if (needM > 0) { assignM.focus += needM; mirrorsAvail -= needM; remainingPower -= needM * mirrorPowerPer; }
+    }
+  }
+
+  // Build priority groups
+  const pr = mirrorOversightSettings.priority || { tropical: 1, temperate: 1, polar: 1 };
+  const groups = [1,2,3,4,5].map(p => ({ p, zones: zones.filter(z => (pr[z]||1) === p) }));
+
+  const evenAllocate = (demands, available, type) => {
+    if (available <= 0 || !demands.length) return 0;
+    const caps = new Map(demands.map(d => [d.zone, Math.max(0, Math.ceil(d.units || 0))]));
+    let remaining = available;
+    const list = demands.map(d => d.zone);
+    // Base share
+    const n = list.length;
+    const base = Math.floor(remaining / n);
+    list.forEach(z => {
+      const want = caps.get(z) || 0;
+      const give = Math.min(base, want);
+      if (give > 0) {
+        if (type === 'mirrors') { assignM[z] += give; } else { assignL[z] += give; }
+        caps.set(z, want - give);
+        remaining -= give;
+      }
+    });
+    // Remainder round-robin
+    let idx = 0;
+    while (remaining > 0) {
+      const z = list[idx % n];
+      const want = caps.get(z) || 0;
+      if (want > 0) {
+        if (type === 'mirrors') { assignM[z] += 1; } else { assignL[z] += 1; }
+        caps.set(z, want - 1);
+        remaining -= 1;
+      }
+      idx++;
+      // Stop if no more demand
+      if (list.every(k => (caps.get(k) || 0) <= 0)) break;
+    }
+    return available - remaining;
+  };
+
+  // Process groups high -> low
+  for (const g of groups) {
+    if (!g.zones.length) continue;
+    // For each zone in group, compute required flux and translate to units (mirrors first).
+    // Apply a half-step towards the target each tick to reduce flicker.
+    for (const z of g.zones) {
+      const Tt = target[z] || 293.15;
+      const Tc = T[z];
+      const Fc = F[z];
+      if (!isFinite(Tt) || !isFinite(Tc)) continue;
+      if (Math.abs(Tt - Tc) <= tol) continue;
+      const Freq = computeFluxForTarget(z, Tt);
+      let dF = Freq - Fc;
+      const perM = getDeltaFluxPer('mirrors', z);
+      const perL = getDeltaFluxPer('lanterns', z);
+      if (dF < 0) {
+        // Cooling: mirrors only with reversal
+        if (typeof project?.setReverseEnabled === 'function') project.setReverseEnabled(true);
+        const required = Math.abs(dF) / perM - assignM[z];
+        const useM = Math.min(mirrorsAvail, Math.max(1, Math.round(required / 2)));
+        assignM[z] = Math.max(0, assignM[z] + useM); 
+        mirrorsAvail -= useM; 
+      } else {
+        // Heating: mirrors first, then lanterns
+        if (mirrorsAvail > 0 && dF > 0) {
+          const required = dF / perM - assignM[z];
+          const useM = Math.min(mirrorsAvail, Math.max(1, Math.round(required / 2)));
+          assignM[z] = Math.max(0, assignM[z] + useM); 
+          mirrorsAvail -= useM; dF -= useM * perM; 
+         }
+         if (dF > 0 && lanternUnlocked && lanternsAvail > 0) {
+          const required = dF / perL - assignL[z];
+          const useL = Math.min(lanternsAvail, Math.max(1, Math.round(required / 2)));
+          assignL[z] += Math.max(0, assignL[z] + useL); 
+          lanternsAvail -= useL;
+        }
+      }
+      mirrorOversightSettings.assignments.reversalMode[z] = (dF < 0);
+    }
+  }
+
+  // Commit assignments
+  mirrorOversightSettings.assignments.mirrors = assignM;
+  mirrorOversightSettings.assignments.lanterns = assignL;
+  } finally {
+    advancedAssignmentInProgress = false;
+  }
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -814,6 +1244,11 @@ class SpaceMirrorFacilityProject extends Project {
 
   update(deltaTime) {
     sanitizeMirrorDistribution();
+    try {
+      if (mirrorOversightSettings.advancedOversight) {
+        runAdvancedOversightAssignments(this);
+      }
+    } catch (e) { /* swallow to avoid breaking tick */ }
     super.update(deltaTime);
   }
 
@@ -948,6 +1383,13 @@ class SpaceMirrorFacilityProject extends Project {
     const powerPerMirrorArea = mirrorEffect.powerPerUnitArea;
     const totalPower = powerPerMirror * numMirrors;
     const totalPowerArea = powerPerMirrorArea * numMirrors;
+    // Ensure unit text uses ASCII-safe format
+    if (elements.mirrorDetails.powerPerMirrorArea) {
+      elements.mirrorDetails.powerPerMirrorArea.textContent = `${formatNumber(powerPerMirrorArea, false, 2)} W/m²`;
+    }
+    if (elements.mirrorDetails.totalPowerArea) {
+      elements.mirrorDetails.totalPowerArea.textContent = `${formatNumber(totalPowerArea, false, 2)} W/m²`;
+    }
 
     elements.mirrorDetails.numMirrors.textContent = formatNumber(numMirrors, false, 2);
     elements.mirrorDetails.powerPerMirror.textContent = formatNumber(powerPerMirror, false, 2);
@@ -967,6 +1409,13 @@ class SpaceMirrorFacilityProject extends Project {
         const powerPerLanternArea = area > 0 ? powerPerLantern / area : 0;
         const totalLanternPower = powerPerLantern * numLanterns * productivity;
         const totalLanternArea = powerPerLanternArea * numLanterns * productivity;
+        // Ensure unit text uses ASCII-safe format
+        if (elements.lanternDetails.powerPerLanternArea) {
+          elements.lanternDetails.powerPerLanternArea.textContent = `${formatNumber(powerPerLanternArea, false, 2)} W/²`;
+        }
+        if (elements.lanternDetails.totalPowerArea) {
+          elements.lanternDetails.totalPowerArea.textContent = `${formatNumber(totalLanternArea, false, 2)} W/²`;
+        }
         elements.lanternDetails.numLanterns.textContent = formatNumber(numLanterns, false, 2);
         elements.lanternDetails.powerPerLantern.textContent = formatNumber(powerPerLantern, false, 2);
         elements.lanternDetails.powerPerLanternArea.textContent = `${formatNumber(powerPerLanternArea, false, 2)} W/m²`;
@@ -1032,3 +1481,10 @@ if (typeof module !== 'undefined' && module.exports) {
     toggleAdvancedOversight,
   };
 }
+
+
+
+
+
+
+

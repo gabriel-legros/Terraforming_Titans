@@ -1433,8 +1433,8 @@ class Terraforming extends EffectableEntity{
       return 0;
     }
 
-    calculateZoneSolarFlux(zone, angleAdjusted = false) {
-      if (typeof globalThis.calculateZoneSolarFluxWithFacility === 'function') {
+    calculateZoneSolarFlux(zone, angleAdjusted = false, byPassFacility = false) {
+      if (typeof globalThis.calculateZoneSolarFluxWithFacility === 'function' && !byPassFacility) {
         return globalThis.calculateZoneSolarFluxWithFacility(this, zone, angleAdjusted);
       }
       const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
