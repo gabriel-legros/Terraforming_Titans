@@ -72,6 +72,8 @@
 
   .info-tooltip-icon .resource-tooltip {
     text-align: left;
+    /* Ensure albedo/info tooltips render above subtabs and neighboring UI */
+    z-index: 2500;
   }
 
   .info-tooltip-icon:hover .resource-tooltip {

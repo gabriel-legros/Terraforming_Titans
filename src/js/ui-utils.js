@@ -18,89 +18,84 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
 function addTooltipHover(anchor, tooltip) {
   if (!anchor || !tooltip) return;
   anchor.addEventListener('mouseenter', () => {
-    // Ensure consistent initial structure
-    if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
+    const isResource = !!tooltip._columnsInfo || !!tooltip.closest('.resource-item');
+    const isInfo = !!tooltip.closest('.info-tooltip-icon');
     tooltip.classList.remove('above', 'three-column');
 
-    // Temporarily show invisibly to measure correctly
-    const prevDisplay = tooltip.style.display;
-    const prevVisibility = tooltip.style.visibility;
-    // Show for measurement; use block initially for single-column
-    tooltip.style.display = 'block';
-    tooltip.style.visibility = 'hidden';
+    if (isResource) {
+      if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
 
-    // Compute base anchor rect
-    const aRect = anchor.getBoundingClientRect();
+      // Show invisibly to measure
+      const prevDisplay = tooltip.style.display;
+      const prevVisibility = tooltip.style.visibility;
+      tooltip.style.display = 'block';
+      tooltip.style.visibility = 'hidden';
 
-    const centerHorizontally = () => {
-      tooltip.style.left = `${aRect.left + aRect.width / 2}px`;
-      tooltip.style.transform = 'translateX(-50%)';
-    };
-
-    const clampHorizontally = () => {
-      // Clamp to viewport edges with 4px margin
-      const rect = tooltip.getBoundingClientRect();
-      const margin = 4;
-      if (rect.left < margin) {
-        tooltip.style.left = `${margin}px`;
-        tooltip.style.transform = 'none';
-      } else if (rect.right > window.innerWidth - margin) {
-        tooltip.style.left = `${Math.max(window.innerWidth - margin - rect.width, margin)}px`;
-        tooltip.style.transform = 'none';
-      }
-    };
-
-    const place = (mode /* 'below'|'above' */) => {
-      centerHorizontally();
-      if (mode === 'below') {
-        tooltip.classList.remove('above');
-        tooltip.style.top = `${aRect.bottom + 4}px`;
-      } else {
-        const tRect = tooltip.getBoundingClientRect();
-        tooltip.classList.add('above');
-        tooltip.style.top = `${aRect.top - tRect.height - 4}px`;
-      }
-      clampHorizontally();
-    };
-
-    // 1) Try below with single column
-    place('below');
-    let rect = tooltip.getBoundingClientRect();
-    let placed = rect.bottom <= window.innerHeight;
-
-    // 2) Try above with single column
-    if (!placed) {
-      place('above');
-      rect = tooltip.getBoundingClientRect();
-      placed = rect.top >= 0;
-    }
-
-    // 3) Switch to three columns and retry
-    if (!placed) {
-      if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 3);
-      tooltip.classList.add('three-column');
-      // Measure with flex layout to get correct height
-      tooltip.style.display = 'flex';
-
-      // 3a) Try below with three columns
+      const aRect = anchor.getBoundingClientRect();
+      const centerHorizontally = () => {
+        tooltip.style.left = `${aRect.left + aRect.width / 2}px`;
+        tooltip.style.transform = 'translateX(-50%)';
+      };
+      const clampHorizontally = () => {
+        const rect = tooltip.getBoundingClientRect();
+        const margin = 4;
+        if (rect.left < margin) {
+          tooltip.style.left = `${margin}px`;
+          tooltip.style.transform = 'none';
+        } else if (rect.right > window.innerWidth - margin) {
+          tooltip.style.left = `${Math.max(window.innerWidth - margin - rect.width, margin)}px`;
+          tooltip.style.transform = 'none';
+        }
+      };
+      const place = (mode) => {
+        centerHorizontally();
+        if (mode === 'below') {
+          tooltip.classList.remove('above');
+          tooltip.style.top = `${aRect.bottom + 4}px`;
+        } else {
+          const tRect = tooltip.getBoundingClientRect();
+          tooltip.classList.add('above');
+          tooltip.style.top = `${aRect.top - tRect.height - 4}px`;
+        }
+        clampHorizontally();
+      };
+      // below -> above
       place('below');
-      rect = tooltip.getBoundingClientRect();
-      placed = rect.bottom <= window.innerHeight;
-
-      // 3b) Fallback above with three columns
+      let rect = tooltip.getBoundingClientRect();
+      let placed = rect.bottom <= window.innerHeight;
       if (!placed) {
         place('above');
+        rect = tooltip.getBoundingClientRect();
+        placed = rect.top >= 0;
       }
+      // three-column fallback
+      if (!placed) {
+        if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 3);
+        tooltip.classList.add('three-column');
+        tooltip.style.display = 'flex';
+        place('below');
+        rect = tooltip.getBoundingClientRect();
+        placed = rect.bottom <= window.innerHeight;
+        if (!placed) place('above');
+      }
+      tooltip.style.visibility = 'visible';
+      tooltip.style.display = prevDisplay || '';
+    } else {
+      // Use CSS positioning; just choose above if no space below
+      const prevDisplay = tooltip.style.display;
+      const prevVisibility = tooltip.style.visibility;
+      tooltip.style.display = 'block';
+      tooltip.style.visibility = 'hidden';
+      const rect = tooltip.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight) tooltip.classList.add('above');
+      else tooltip.classList.remove('above');
+      tooltip.style.visibility = 'visible';
+      tooltip.style.display = prevDisplay || '';
     }
-
-    // Reveal; hand control of display back to CSS hover rules
-    tooltip.style.visibility = 'visible';
-    tooltip.style.display = '';
   });
   anchor.addEventListener('mouseleave', () => {
     tooltip.classList.remove('above', 'three-column');
     if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
-    // Clear inline positioning so next hover recalculates cleanly
     tooltip.style.top = '';
     tooltip.style.left = '';
     tooltip.style.transform = '';

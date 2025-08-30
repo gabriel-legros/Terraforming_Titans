@@ -52,16 +52,18 @@
   }
   
   .resource-tooltip {
-    position: fixed; /* Prevent layout/scrollbar changes in resource list */
+    position: absolute; /* Default: anchored to its parent (info tooltips) */
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
     border-radius: 5px;
     font-size: 12px;
-    z-index: 2000; /* Above other UI */
+    z-index: 1;
     width: 220px;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
     display: none;
-    pointer-events: none; /* Let mouse pass through so hovering another resource hides this */
   }
   
   .resource-item:hover .resource-tooltip {
@@ -73,7 +75,8 @@
     display: flex;
   }
 
-  .resource-tooltip.above { /* Positioning handled in JS */ }
+  /* Above styling for resource list is handled via JS placement.
+     For info tooltips (e.g., terraforming), their stylesheet defines .resource-tooltip.above. */
 
   .resource-tooltip.three-column {
     width: auto;
@@ -88,6 +91,13 @@
 
   .resource-tooltip.three-column > div:last-child {
     margin-right: 0;
+  }
+
+  /* Resource list overlay-specific behavior */
+  .resource-item .resource-tooltip {
+    position: fixed; /* Prevent layout/scrollbar changes in resource list */
+    z-index: 2000; /* Above other UI */
+    pointer-events: none; /* Let mouse pass through so hovering another resource hides this */
   }
 
   .resource-festival {
