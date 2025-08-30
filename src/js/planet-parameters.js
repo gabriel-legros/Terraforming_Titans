@@ -555,13 +555,13 @@ const vega2Overrides = {
 
   celestialParameters: {
     // Venus-like size and orbit. No clouds/greenhouse by composition above.
-    distanceFromSun: 1, // AU
+    distanceFromSun: 4, // AU
     gravity: 7.3,          // m/s^2
     radius: 5051.8,         // km
     mass: 1.867e24,         // kg
     albedo: 0.3,           // bright surface; no clouds unless added later
     rotationPeriod: 18,    
-    starLuminosity: 1.2
+    starLuminosity: 40
   }
 };
 
