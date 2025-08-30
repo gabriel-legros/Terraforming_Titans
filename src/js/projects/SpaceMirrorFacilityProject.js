@@ -1035,13 +1035,13 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   return Math.max(totalFluxForZone, 2.4e-5);
 }
 
-  // Advanced oversight auto-assignment using simple Newton step on flux
+  // Advanced oversight auto-assignment using bisection on zone temperature
   function runAdvancedOversightAssignments(project) {
     if (!mirrorOversightSettings.advancedOversight) return;
     if (advancedAssignmentInProgress) return;
     advancedAssignmentInProgress = true;
     try {
-  if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
+      if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
 
       const assignM = mirrorOversightSettings.assignments.mirrors;
       const assignL = mirrorOversightSettings.assignments.lanterns;
@@ -1384,6 +1384,7 @@ if (typeof globalThis !== 'undefined') {
   globalThis.toggleFinerControls = toggleFinerControls;
   globalThis.updateAssignmentDisplays = updateAssignmentDisplays;
   globalThis.toggleAdvancedOversight = toggleAdvancedOversight;
+  globalThis.runAdvancedOversightAssignments = runAdvancedOversightAssignments;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -1402,6 +1403,7 @@ if (typeof module !== 'undefined' && module.exports) {
     toggleFinerControls,
     updateAssignmentDisplays,
     toggleAdvancedOversight,
+    runAdvancedOversightAssignments,
   };
 }
 
