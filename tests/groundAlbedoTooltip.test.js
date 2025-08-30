@@ -33,9 +33,9 @@ describe('ground albedo tooltip', () => {
     ctx.createLuminosityBox(row);
     ctx.updateLuminosityBox();
     const tooltip = dom.window.document.getElementById('ground-albedo-tooltip').textContent;
-    expect(tooltip).toContain('Black dust albedo: 0.05');
+    expect(tooltip).toContain('Black dust albedo: 0.050');
     expect(tooltip).toContain('Black dust coverage: 30.0%');
-    expect(tooltip).toContain('White dust albedo: 0.80');
+    expect(tooltip).toContain('White dust albedo: 0.800');
     expect(tooltip).toContain('White dust coverage: 20.0%');
   });
 

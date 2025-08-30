@@ -763,15 +763,15 @@ function updateLifeBox() {
     };
     return [
       ['Surface', 'Albedo'],
-      ['Base rock', baseAlb.toFixed(2)],
-      ['Black dust', '0.05'],
-      ['Ocean', defaults.ocean.toFixed(2)],
-      ['Ice', defaults.ice.toFixed(2)],
-      ['Snow', defaults.snow.toFixed(2)],
-      ['Dry Ice', defaults.co2_ice.toFixed(2)],
-      ['Hydrocarbon', defaults.hydrocarbon.toFixed(2)],
-      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(2)],
-      ['Biomass', defaults.biomass.toFixed(2)]
+      ['Base rock', baseAlb.toFixed(3)],
+      ['Black dust', '0.050'],
+      ['Ocean', defaults.ocean.toFixed(3)],
+      ['Ice', defaults.ice.toFixed(3)],
+      ['Snow', defaults.snow.toFixed(3)],
+      ['Dry Ice', defaults.co2_ice.toFixed(3)],
+      ['Hydrocarbon', defaults.hydrocarbon.toFixed(3)],
+      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(3)],
+      ['Biomass', defaults.biomass.toFixed(3)]
     ];
   }
 
@@ -805,17 +805,17 @@ function updateLifeBox() {
         <tbody>
           <tr>
             <td>Ground Albedo <span id="ground-albedo-info" class="info-tooltip-icon">&#9432;<span id="ground-albedo-tooltip" class="resource-tooltip"></span></span></td>
-            <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="ground-albedo">${(terraforming.luminosity.groundAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
             <td>Surface Albedo <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;<span id="surface-albedo-tooltip" class="resource-tooltip"></span></span></td>
-            <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
             <td>Actual Albedo <span id="actual-albedo-info" class="info-tooltip-icon">&#9432;<span id="actual-albedo-tooltip" class="resource-tooltip"></span></span></td>
-            <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(2)}</span></td>
+            <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
           <tr>
@@ -876,12 +876,12 @@ function updateLifeBox() {
     luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
 
     if (els.groundAlbedo) {
-      els.groundAlbedo.textContent = terraforming.luminosity.groundAlbedo.toFixed(2);
+      els.groundAlbedo.textContent = terraforming.luminosity.groundAlbedo.toFixed(3);
     }
 
     if (els.groundAlbedoDelta) {
       const d = terraforming.luminosity.groundAlbedo - terraforming.celestialParameters.albedo;
-      els.groundAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.groundAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
     if (els.groundAlbedoTooltip) {
       const base = terraforming.celestialParameters.albedo;
@@ -905,13 +905,13 @@ function updateLifeBox() {
       const blackAlbedo = 0.05;
       const whiteAlbedo = 0.8;
       const lines = [
-        `Base: ${base.toFixed(2)}`,
-        `Black dust albedo: ${blackAlbedo.toFixed(2)}`,
+        `Base: ${base.toFixed(3)}`,
+        `Black dust albedo: ${blackAlbedo.toFixed(3)}`,
       ];
       if (shareBlack > 0) {
         lines.push(`Black dust coverage: ${(shareBlack * 100).toFixed(1)}%`);
       }
-      lines.push(`White dust albedo: ${whiteAlbedo.toFixed(2)}`);
+      lines.push(`White dust albedo: ${whiteAlbedo.toFixed(3)}`);
       if (shareWhite > 0) {
         lines.push(`White dust coverage: ${(shareWhite * 100).toFixed(1)}%`);
       }
@@ -919,14 +919,14 @@ function updateLifeBox() {
     }
 
     if (els.surfaceAlbedo) {
-      els.surfaceAlbedo.textContent = terraforming.luminosity.surfaceAlbedo.toFixed(2);
+      els.surfaceAlbedo.textContent = terraforming.luminosity.surfaceAlbedo.toFixed(3);
     }
     if (els.surfaceAlbedoDelta) {
       const base = (terraforming.luminosity.initialSurfaceAlbedo !== undefined)
         ? terraforming.luminosity.initialSurfaceAlbedo
         : terraforming.luminosity.groundAlbedo;
       const d = terraforming.luminosity.surfaceAlbedo - base;
-      els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
     if (els.surfaceAlbedoTooltip) {
       const lines = ['Surface composition by zone'];
@@ -961,7 +961,7 @@ function updateLifeBox() {
             ? terraforming.calculateZonalSurfaceAlbedo(z)
             : terraforming.luminosity.surfaceAlbedo;
           const name = z.charAt(0).toUpperCase() + z.slice(1);
-          zoneAlbLines.push(`${name}: ${zSurf.toFixed(2)}`);
+          zoneAlbLines.push(`${name}: ${zSurf.toFixed(3)}`);
         } catch (_) {
           // Skip zone if calculation fails
         }
@@ -1002,8 +1002,8 @@ function updateLifeBox() {
         const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
         const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
         const A_act = terraforming.luminosity.actualAlbedo;
-        const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(2)})` : '';
-        const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(2)})` : '';
+        const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(3)})` : '';
+        const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(3)})` : '';
 
         const tauH = diags.tau_ch4_sw ?? 0;
         const tauC = diags.tau_calcite_sw ?? 0;
@@ -1054,7 +1054,7 @@ function updateLifeBox() {
     }
 
     if (els.actualAlbedo) {
-      els.actualAlbedo.textContent = terraforming.luminosity.actualAlbedo.toFixed(2);
+      els.actualAlbedo.textContent = terraforming.luminosity.actualAlbedo.toFixed(3);
     }
 
     if (els.actualAlbedoDelta) {
@@ -1062,7 +1062,7 @@ function updateLifeBox() {
         ? terraforming.luminosity.initialActualAlbedo
         : terraforming.luminosity.actualAlbedo;
       const d = terraforming.luminosity.actualAlbedo - base;
-      els.actualAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 2)}`;
+      els.actualAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
 
     if (els.modifiedSolarFlux) {
@@ -1138,8 +1138,8 @@ function updateLifeBox() {
       const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
       const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
       const A_act = terraforming.luminosity.actualAlbedo;
-      const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(2)})` : '';
-      const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(2)})` : '';
+      const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(3)})` : '';
+      const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(3)})` : '';
 
       const tauH = diags.tau_ch4_sw ?? 0;
       const tauC = diags.tau_calcite_sw ?? 0;
