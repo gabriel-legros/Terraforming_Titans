@@ -442,12 +442,8 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     </div>` : '';
 
   const eqDone = seedUsed && equilibratedWorlds.has(seedUsed);
-  const alreadyTerraformed = seedUsed && typeof globalThis.spaceManager?.isSeedTerraformed === 'function'
-    ? globalThis.spaceManager.isSeedTerraformed(seedUsed)
-    : false;
-  const lockedByStory = typeof globalThis.spaceManager?.isRandomTravelLocked === 'function'
-    ? globalThis.spaceManager.isRandomTravelLocked()
-    : false;
+  const alreadyTerraformed = seedUsed && spaceManager.isSeedTerraformed(seedUsed);
+  const lockedByStory = spaceManager.isRandomTravelLocked();
   const travelDisabled = lockedByStory || !eqDone || alreadyTerraformed;
   const showTemps = !seedUsed || eqDone;
   const meanTVal = (showTemps && temps)
