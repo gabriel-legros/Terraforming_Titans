@@ -167,14 +167,12 @@ function initializeSolisUI() {
     title.textContent = 'Solis Shop';
     shopContainer.insertBefore(title, container);
     
-    ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket', 'research', 'advancedOversight'].forEach(key => {
+    const solis1 = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
+    const baseKeys = ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket'];
+    const keys = solis1 ? baseKeys.concat(['research', 'advancedOversight']) : baseKeys;
+    keys.forEach(key => {
       const item = createShopItem(key);
       container.appendChild(item);
-    });
-    const flag = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
-    ['research', 'advancedOversight'].forEach(key => {
-      const el = shopElements[key]?.item;
-      if (el) el.classList.toggle('hidden', !flag);
     });
   }
 
@@ -300,8 +298,19 @@ function updateSolisUI() {
 
   const solis1 = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
   ['research', 'advancedOversight'].forEach(k => {
-    const item = shopElements[k]?.item;
-    if (item) item.classList.toggle('hidden', !solis1);
+    const record = shopElements[k];
+    if (solis1) {
+      if (!record) {
+        const container = document.getElementById('solis-shop-items');
+        if (container) {
+          const item = createShopItem(k);
+          container.appendChild(item);
+        }
+      }
+    } else if (record) {
+      record.item.remove();
+      delete shopElements[k];
+    }
   });
 
   if (pointsSpan) {
