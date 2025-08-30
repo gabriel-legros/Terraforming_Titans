@@ -384,3 +384,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Random World Generator re-renders after travel to respect new travel locks.
 - Space mirror facility advanced oversight now allocates mirrors and lanterns via bisection on zone temperature using `updateSurfaceTemperature`.
 - Solis shop offers research points and an advanced oversight upgrade once `solisUpgrade1` is set.
+- Space mirror reversal column hides until reversal is unlocked, removing its checkboxes when unavailable.

@@ -369,7 +369,7 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">Advanced Oversight</label>
-    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled.">&#9432;</span>
+    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -385,7 +385,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">Targets & Priority</span>
-      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order.">&#9432;</span>
+      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
@@ -685,6 +685,8 @@ function rebuildMirrorOversightCache() {
     lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
     lanternCells: Array.from(document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]')),
     availableLanternCells: Array.from(document.querySelectorAll('.available-lantern-cell')),
+    reversalHeader: document.querySelector('#assignment-grid .grid-header:nth-child(4)') || null,
+    reversalCells: Array.from(document.querySelectorAll('#assignment-grid .grid-reversal-cell')),
     autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-table .auto-assign')),
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
@@ -761,6 +763,11 @@ function updateMirrorOversightUI() {
       lanternDiv.style.flexWrap = 'wrap';
     }
   }
+
+  const smfProject = (typeof projectManager !== 'undefined' && projectManager.projects)
+    ? projectManager.projects.spaceMirrorFacility
+    : null;
+  const reversalAvailable = !!(smfProject && smfProject.reversalAvailable);
   // Advanced oversight unlock check (boolean flag name: advancedOversight)
   let advancedUnlocked = false;
   if (typeof projectManager !== 'undefined') {
@@ -782,23 +789,37 @@ function updateMirrorOversightUI() {
   const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
   ['tropical','temperate','polar'].forEach(k => {
     const input = document.getElementById(`adv-target-${k}`);
-    if (input && mirrorOversightSettings.targets) {
+    if (input && mirrorOversightSettings.targets && document.activeElement !== input) {
       const v = mirrorOversightSettings.targets[k] || 293.15;
       input.value = (toDisp(v)).toFixed(2);
     }
     const sel = document.getElementById(`adv-priority-${k}`);
-    if (sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
+    if (sel && document.activeElement !== sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
   });
   const waterRow = document.getElementById('adv-water-row');
   if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
+  const waterInput = document.getElementById('adv-target-water');
+  if (waterInput && mirrorOversightSettings.targets && document.activeElement !== waterInput) {
+    waterInput.value = Number(mirrorOversightSettings.targets.water || 0);
+  }
   const C = mirrorOversightCache || {};
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
   if (C.availableLanternCells) C.availableLanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
+  if (C.reversalHeader) C.reversalHeader.style.display = reversalAvailable ? '' : 'none';
+  if (C.reversalCells) C.reversalCells.forEach(cell => { cell.style.display = reversalAvailable ? 'flex' : 'none'; });
 
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
-    assignmentGrid.style.gridTemplateColumns = lanternUnlocked ? '100px 1fr 1fr 80px 50px' : '100px 1fr 80px 50px';
+    if (lanternUnlocked && reversalAvailable) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 80px 50px';
+    } else if (lanternUnlocked) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 50px';
+    } else if (reversalAvailable) {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 80px 50px';
+    } else {
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 50px';
+    }
   }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
@@ -1154,6 +1175,9 @@ class SpaceMirrorFacilityProject extends Project {
     if (elements && elements.reflectMode) {
       elements.reflectMode.container.style.display = '';
       elements.reflectMode.update();
+    }
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
     }
   }
 
