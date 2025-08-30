@@ -83,7 +83,7 @@ describe('Space Mirror finer controls', () => {
     const mirror = terra.calculateMirrorEffect();
     const totalArea = terra.celestialParameters.surfaceArea;
     const focusedMirror = (4 * mirror.interceptedPower * 10) / (totalArea * zonePerc);
-    const expected = (baseSolar + focusedMirror) * ratioT;
+    const expected = baseSolar * ratioT + focusedMirror;
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
 

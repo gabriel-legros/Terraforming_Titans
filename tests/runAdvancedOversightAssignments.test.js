@@ -1,3 +1,5 @@
+global.Project = class {};
+global.projectElements = {};
 const { runAdvancedOversightAssignments, mirrorOversightSettings } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 
 describe('runAdvancedOversightAssignments', () => {
@@ -52,5 +54,9 @@ describe('runAdvancedOversightAssignments', () => {
 
     expect(mirrorOversightSettings.assignments.mirrors.tropical).toBe(1);
     expect(mirrorOversightSettings.assignments.lanterns.tropical).toBe(1);
+  });
+  afterAll(() => {
+    delete global.Project;
+    delete global.projectElements;
   });
 });

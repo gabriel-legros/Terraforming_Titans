@@ -24,7 +24,7 @@ describe('space mirror average flux display', () => {
     updateZonalFluxTable();
 
     const header = dom.window.document.querySelector('#mirror-flux-table thead tr th:nth-child(2)').textContent;
-    expect(header).toBe('Average Solar Flux (W/m²)');
+    expect(header).toBe('Average Solar Flux (W/m2)');
     expect(dom.window.document.getElementById('mirror-flux-tropical').textContent).toBe('250.00');
     expect(dom.window.document.getElementById('mirror-flux-temperate').textContent).toBe('200.00');
     expect(dom.window.document.getElementById('mirror-flux-polar').textContent).toBe('100.00');
