@@ -388,3 +388,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror reversal column hides until reversal is unlocked, removing its checkboxes when unavailable.
 - Optical depth display now shows three decimal places.
 - Added a `force` argument to `updateRender` to bypass tab visibility checks for a one-time UI update when pausing via Save & Settings.
+- Journal reconstruction now resolves `$WGC_TEAM_LEADER$` placeholders using current team leader names when loading saves.
