@@ -204,8 +204,9 @@ function attachTravelHandler(res, sStr) {
   const travelBtn = document.getElementById('rwg-travel-btn');
   if (!travelBtn) return;
   travelBtn.onclick = () => {
-    if (!equilibratedWorlds.has(sStr)) return;
-    if (spaceManager?.isSeedTerraformed && spaceManager.isSeedTerraformed(sStr)) return;
+    const canonical = res?.seedString || sStr;
+    if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
+    if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
     if (spaceManager?.travelToRandomWorld) {
       spaceManager.travelToRandomWorld(res, sStr);
     }
@@ -357,12 +358,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           if (info?.label === 'Additional fast-forward (Game is paused)') endBtn.style.display = '';
         });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+        try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
         if (e?.message === 'timeout') {
+          try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
           equilibratedWorlds.add(sStr);
           box.innerHTML = renderWorldDetail(res, sStr, archetype);
           attachEquilibrateHandler(res, sStr, archetype, box);
@@ -571,6 +574,7 @@ function renderAtmoTable(res) {
 function renderHistory() {
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   if (!sm || !historyListEl) return;
+  const currentSeed = String(sm.currentRandomSeed ?? '');
   const entries = Object.entries(sm.randomWorldStatuses || {})
     .filter(([, st]) => st?.visited)
     .map(([seed, st]) => ({
@@ -587,7 +591,13 @@ function renderHistory() {
         : (st.terraformed ? 'Terraformed' : 'Abandoned'),
       departedAt: st.departedAt || 0
     }))
-    .sort((a, b) => b.departedAt - a.departedAt);
+    .sort((a, b) => {
+      const aCur = a.seed === currentSeed;
+      const bCur = b.seed === currentSeed;
+      if (aCur && !bCur) return -1;
+      if (bCur && !aCur) return 1;
+      return b.departedAt - a.departedAt;
+    });
   historyData = entries;
   // Hide the entire history container if no visited worlds
   if (historyContainerEl) {
@@ -602,7 +612,7 @@ function renderHistoryPage() {
   const start = historyPage * 10;
   const slice = historyData.slice(start, start + 10);
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const header = `<div class="rwg-history-row rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
+  const header = `<div class="rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
   const rows = slice.map(r => {
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
