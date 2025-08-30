@@ -763,15 +763,15 @@ function updateLifeBox() {
     };
     return [
       ['Surface', 'Albedo'],
-      ['Base rock', baseAlb.toFixed(3)],
-      ['Black dust', '0.050'],
-      ['Ocean', defaults.ocean.toFixed(3)],
-      ['Ice', defaults.ice.toFixed(3)],
-      ['Snow', defaults.snow.toFixed(3)],
-      ['Dry Ice', defaults.co2_ice.toFixed(3)],
-      ['Hydrocarbon', defaults.hydrocarbon.toFixed(3)],
-      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(3)],
-      ['Biomass', defaults.biomass.toFixed(3)]
+      ['Base rock', baseAlb.toFixed(2)],
+      ['Black dust', '0.05'],
+      ['Ocean', defaults.ocean.toFixed(2)],
+      ['Ice', defaults.ice.toFixed(2)],
+      ['Snow', defaults.snow.toFixed(2)],
+      ['Dry Ice', defaults.co2_ice.toFixed(2)],
+      ['Hydrocarbon', defaults.hydrocarbon.toFixed(2)],
+      ['Hydrocarbon Ice', defaults.hydrocarbonIce.toFixed(2)],
+      ['Biomass', defaults.biomass.toFixed(2)]
     ];
   }
 
