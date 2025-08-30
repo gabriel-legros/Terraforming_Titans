@@ -3,6 +3,12 @@
 // Guard flags
 let rwgUIInitialized = false;
 const equilibratedWorlds = new Set();
+let historyListEl;
+let historyPageEl;
+let historyPrevBtn;
+let historyNextBtn;
+let historyData = [];
+let historyPage = 0;
 
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
@@ -73,6 +79,38 @@ function initializeRandomWorldUI() {
   result.className = 'rwg-result';
   container.appendChild(result);
 
+  const history = document.createElement('div');
+  history.id = 'rwg-history';
+  history.className = 'rwg-history';
+  history.innerHTML = `
+    <h3>Visited Worlds</h3>
+    <div id="rwg-history-list"></div>
+    <div class="rwg-history-controls">
+      <button id="rwg-history-prev" class="rwg-btn">Prev</button>
+      <span id="rwg-history-page"></span>
+      <button id="rwg-history-next" class="rwg-btn">Next</button>
+    </div>`;
+  container.appendChild(history);
+
+  historyListEl = history.querySelector('#rwg-history-list');
+  historyPageEl = history.querySelector('#rwg-history-page');
+  historyPrevBtn = history.querySelector('#rwg-history-prev');
+  historyNextBtn = history.querySelector('#rwg-history-next');
+
+  historyPrevBtn.addEventListener('click', () => {
+    if (historyPage > 0) {
+      historyPage--;
+      renderHistoryPage();
+    }
+  });
+  historyNextBtn.addEventListener('click', () => {
+    const maxPage = Math.ceil(historyData.length / 10) - 1;
+    if (historyPage < maxPage) {
+      historyPage++;
+      renderHistoryPage();
+    }
+  });
+
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
   btnPlanet.addEventListener('click', () => {
@@ -93,6 +131,8 @@ function initializeRandomWorldUI() {
       drawSingle(undefined, { target, orbitPreset: orbit, type });
     }
   });
+
+  renderHistory();
 }
 
 function ensureRandomWorldUI() {
@@ -135,6 +175,7 @@ function updateRandomWorldUI() {
       opt.textContent = newText;
     });
   }
+  renderHistory();
 }
 
 function attachTravelHandler(res, sStr) {
@@ -503,6 +544,39 @@ function renderAtmoTable(res) {
   // Header row
   const header = `<div class="rwg-row"><span><strong>Gas</strong></span><span><strong>Amount</strong></span><span><strong>Pressure</strong></span></div>`;
   return `<div class="rwg-atmo-table">${header}${cells}</div>`;
+}
+
+function renderHistory() {
+  const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
+  if (!sm || !historyListEl) return;
+  const entries = Object.entries(sm.randomWorldStatuses || {})
+    .filter(([, st]) => st?.visited)
+    .map(([seed, st]) => ({
+      name: st.name || `Seed ${seed}`,
+      type: st.original?.classification?.archetype || '—',
+      seed,
+      state: st.terraformed ? 'Terraformed' : 'Abandoned',
+      departedAt: st.departedAt || 0
+    }))
+    .sort((a, b) => b.departedAt - a.departedAt);
+  historyData = entries;
+  historyPage = Math.min(historyPage, Math.max(Math.ceil(historyData.length / 10) - 1, 0));
+  renderHistoryPage();
+}
+
+function renderHistoryPage() {
+  if (!historyListEl) return;
+  const start = historyPage * 10;
+  const slice = historyData.slice(start, start + 10);
+  const rows = slice.map(r => {
+    const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
+    return `<div class="rwg-history-row"><span>${r.name}</span><span>${r.type}</span><span>${r.seed}</span><span>${r.state}</span><span>${d}</span></div>`;
+  }).join('');
+  historyListEl.innerHTML = rows;
+  const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);
+  historyPageEl.textContent = `${historyData.length ? historyPage + 1 : 0}/${totalPages}`;
+  historyPrevBtn.disabled = historyPage === 0;
+  historyNextBtn.disabled = historyPage >= totalPages - 1;
 }
 
 // Hook into Space UI whenever Random subtab is shown
