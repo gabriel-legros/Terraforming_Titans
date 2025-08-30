@@ -22,7 +22,10 @@ function getWGCTeamLeaderName(index) {
 }
 
 function resolveStoryPlaceholders(text) {
-    return text.replace(/\$WGC_TEAM1_LEADER\$/g, getWGCTeamLeaderName(0));
+    const leaderName = getWGCTeamLeaderName(0);
+    return text
+        .replace(/\$WGC_TEAM1_LEADER\$/g, leaderName)
+        .replace(/\$WGC_TEAM_LEADER\$/g, leaderName);
 }
 
 function compareValues(current, target, comparison = 'gte') {

@@ -36,4 +36,14 @@ describe('WGC team leader placeholder', () => {
     event.trigger();
     expect(ctx.addJournalEntry).toHaveBeenCalledWith('Team Leader 1', 'd', { type: 'chapter', id: 'd' });
   });
+
+  test('replaces generic placeholder with leader name', () => {
+    const ctx = createContext({ teams: [[{ firstName: 'Eve', lastName: 'Doe' }]] });
+    const progressData = { chapters: [{ id: 'e', type: 'journal', narrative: 'Leader: $WGC_TEAM_LEADER$.' }] };
+    const manager = new ctx.StoryManager(progressData);
+    ctx.window.storyManager = manager;
+    const event = manager.findEventById('e');
+    event.trigger();
+    expect(ctx.addJournalEntry).toHaveBeenCalledWith('Leader: Eve Doe.', 'e', { type: 'chapter', id: 'e' });
+  });
 });

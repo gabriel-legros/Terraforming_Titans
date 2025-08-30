@@ -9,6 +9,10 @@
     const historySources = [];
     if (!sm || !data) return { entries, sources, historyEntries, historySources };
 
+    const resolve = typeof resolveStoryPlaceholders === 'function'
+      ? resolveStoryPlaceholders
+      : (t => t);
+
     const completed = new Set([
       ...(sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || []),
       ...(sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [])
@@ -27,7 +31,8 @@
           sources.length = 0;
         }
         const lines = ch.narrativeLines || [ch.narrative];
-        const text = ch.title ? joinLines([`${ch.title}:`, ...lines]) : joinLines(lines);
+        const textRaw = ch.title ? joinLines([`${ch.title}:`, ...lines]) : joinLines(lines);
+        const text = textRaw != null ? resolve(textRaw) : textRaw;
         if (text != null) {
           entries.push(text);
           sources.push({ type: 'chapter', id: ch.id });
@@ -51,6 +56,7 @@
                   if (projName) {
                     textStr = `${projName} ${i + 1}/${total}: ${textStr}`;
                   }
+                  textStr = resolve(textStr);
                   entries.push(textStr);
                   sources.push({ type: 'project', id: obj.projectId, step: i });
                   historyEntries.push(textStr);
