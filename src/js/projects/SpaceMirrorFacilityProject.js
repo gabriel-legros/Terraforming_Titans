@@ -1043,180 +1043,103 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     try {
   if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
 
-  const zones = ['tropical','temperate','polar'];
-  const assignM = mirrorOversightSettings.assignments.mirrors;
-  const assignL = mirrorOversightSettings.assignments.lanterns;
-  const tol = 0.05; // K tolerance
+      const assignM = mirrorOversightSettings.assignments.mirrors;
+      const assignL = mirrorOversightSettings.assignments.lanterns;
+      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false });
 
-  // Determine available units
-  let mirrorsAvail = Math.max(0, buildings.spaceMirror?.active || 0);
-  let lanternsAvail = Math.max(0, buildings.hyperionLantern?.active || 0);
-  const lantern = buildings.hyperionLantern;
-  const lanternUnlocked = !!(lantern && lantern.unlocked);
-  const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
-  const productivity = lanternUnlocked ? (typeof lantern.productivity === 'number' ? lantern.productivity : 1) : 0;
-  const lanternPowerPer = lanternUnlocked ? (lantern.powerPerBuilding || 0) * productivity : 0;
-
-  // Per-unit flux change for focused assignment (in W/m^2)
-  const getDeltaFluxPer = (type, zone) => {
-    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-    const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-    if (zoneArea <= 0) return 0;
-    if (type === 'mirrors') return 4*mirrorPowerPer / zoneArea;
-    return 4*lanternPowerPer / zoneArea;
-  };
-
-  // Compute flux required to hit target using dayNightTemperaturesModel
-  function computeFluxForTarget(zone, targetK) {
-    if (typeof dayNightTemperaturesModel !== 'function') return terraforming.calculateZoneSolarFlux(zone);
-    const rotationPeriod = terraforming.celestialParameters.rotationPeriod || 24;
-    const gSurface = terraforming.celestialParameters.gravity;
-    const groundAlbedo = terraforming.luminosity?.groundAlbedo ?? (typeof terraforming.calculateGroundAlbedo === 'function' ? terraforming.calculateGroundAlbedo() : 0);
-    const { composition, totalMass } = typeof terraforming.calculateAtmosphericComposition === 'function' ? terraforming.calculateAtmosphericComposition() : { composition: {}, totalMass: 0 };
-    const surfacePressurePa = typeof calculateAtmosphericPressure === 'function' ? calculateAtmosphericPressure(totalMass / 1000, gSurface, terraforming.celestialParameters.radius) : 0;
-    const surfacePressureBar = surfacePressurePa / 100000;
-    const fractions = (typeof calculateZonalSurfaceFractions === 'function') ? calculateZonalSurfaceFractions(terraforming, zone) : null;
-    const baseParams = { groundAlbedo, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, gSurface };
-    const Ttarget = targetK;
-    // Bracket and bisection
-    let Flo = Math.max(2.4e-5, 0.1);
-    let Fhi = Math.max(F[zone] || terraforming.calculateZoneSolarFlux(zone, false, true), 1);
-    const evalT = Fv => dayNightTemperaturesModel({ ...baseParams, flux: Fv, surfaceFractions: fractions }).mean;
-    const Tlo = () => evalT(Flo);
-    let Thi = evalT(Fhi);
-    // Expand high bound until above target or until reasonable cap
-    let attempts = 0;
-    while (Thi < Ttarget && attempts < 20) { Fhi *= 1.5; Thi = evalT(Fhi); attempts++; }
-    // If target below low bound, move low down
-    attempts = 0;
-    while (Tlo() > Ttarget && attempts < 20) { Flo *= 0.5; attempts++; }
-    // Bisection
-    for (let i = 0; i < 18; i++) {
-      const mid = 0.5 * (Flo + Fhi);
-      const Tmid = evalT(mid);
-      if (Tmid < Ttarget) Flo = mid; else Fhi = mid;
-    }
-    return 0.5 * (Flo + Fhi);
-  }
-
-  // Current temps and targets
-  const T = {};
-  const F = {};
-  const target = mirrorOversightSettings.targets || { tropical: 293.15, temperate: 293.15, polar: 293.15 };
-  zones.forEach(z => {
-    T[z] = terraforming?.temperature?.zones?.[z]?.value || 0;
-    F[z] = terraforming.calculateZoneSolarFlux(z, false, true);
-  });
-
-
-  // Focus water melt allocation first
-  const focusUnlocked = (projectManager?.isBooleanFlagSet && projectManager.isBooleanFlagSet('spaceMirrorFocusing')) ||
-                        (projectManager?.projects?.spaceMirrorFacility?.isBooleanFlagSet && projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing'));
-  const waterTarget = Math.max(0, target.water || 0);
-  if (focusUnlocked && waterTarget > 0) {
-    const C_P_ICE = 2100; // J/kg*K
-    const L_F_WATER = 334000; // J/kg
-    const deltaToZero = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
-    const energyPerKg = C_P_ICE * deltaToZero + L_F_WATER;
-    const requiredPower = waterTarget * 1000 * energyPerKg; // W
-    let remainingPower = requiredPower;
-    // Prefer lanterns for melt if available
-    if (lanternUnlocked && lanternPowerPer > 0 && lanternsAvail > 0) {
-      const needL = Math.min(lanternsAvail, Math.ceil(remainingPower / lanternPowerPer));
-      if (needL > 0) { assignL.focus += needL; lanternsAvail -= needL; remainingPower -= needL * lanternPowerPer; }
-    }
-    if (remainingPower > 0 && mirrorPowerPer > 0 && mirrorsAvail > 0) {
-      const needM = Math.min(mirrorsAvail, Math.ceil(remainingPower / mirrorPowerPer));
-      if (needM > 0) { assignM.focus += needM; mirrorsAvail -= needM; remainingPower -= needM * mirrorPowerPer; }
-    }
-  }
-
-  // Build priority groups
-  const pr = mirrorOversightSettings.priority || { tropical: 1, temperate: 1, polar: 1 };
-  const groups = [1,2,3,4,5].map(p => ({ p, zones: zones.filter(z => (pr[z]||1) === p) }));
-
-  const evenAllocate = (demands, available, type) => {
-    if (available <= 0 || !demands.length) return 0;
-    const caps = new Map(demands.map(d => [d.zone, Math.max(0, Math.ceil(d.units || 0))]));
-    let remaining = available;
-    const list = demands.map(d => d.zone);
-    // Base share
-    const n = list.length;
-    const base = Math.floor(remaining / n);
-    list.forEach(z => {
-      const want = caps.get(z) || 0;
-      const give = Math.min(base, want);
-      if (give > 0) {
-        if (type === 'mirrors') { assignM[z] += give; } else { assignL[z] += give; }
-        caps.set(z, want - give);
-        remaining -= give;
+      // Reset all assignments and compute baseline temperature
+      ['tropical', 'temperate', 'polar', 'focus'].forEach(z => {
+        assignM[z] = 0;
+        assignL[z] = 0;
+        reverse[z] = false;
+      });
+      if (typeof terraforming.updateSurfaceTemperature === 'function') {
+        terraforming.updateSurfaceTemperature();
       }
-    });
-    // Remainder round-robin
-    let idx = 0;
-    while (remaining > 0) {
-      const z = list[idx % n];
-      const want = caps.get(z) || 0;
-      if (want > 0) {
-        if (type === 'mirrors') { assignM[z] += 1; } else { assignL[z] += 1; }
-        caps.set(z, want - 1);
-        remaining -= 1;
-      }
-      idx++;
-      // Stop if no more demand
-      if (list.every(k => (caps.get(k) || 0) <= 0)) break;
-    }
-    return available - remaining;
-  };
 
-  // Process groups high -> low
-  for (const g of groups) {
-    if (!g.zones.length) continue;
-    // For each zone in group, compute required flux and translate to units (mirrors first).
-    // Apply a half-step towards the target each tick to reduce flicker.
-    for (const z of g.zones) {
-      const Tt = target[z] || 293.15;
-      const Tc = T[z];
-      const Fc = F[z];
-      if (!isFinite(Tt) || !isFinite(Tc)) continue;
-      if (Math.abs(Tt - Tc) <= tol) continue;
-      const Freq = computeFluxForTarget(z, Tt);
-      let dF = Freq - Fc;
-      const perM = getDeltaFluxPer('mirrors', z);
-      const perL = getDeltaFluxPer('lanterns', z);
-      if (dF < 0) {
-        // Cooling: mirrors only with reversal
-        if (typeof project?.setReverseEnabled === 'function') project.setReverseEnabled(true);
-        const required = Math.abs(dF) / perM - assignM[z];
-        const useM = Math.min(mirrorsAvail, Math.max(1, Math.round(required / 2)));
-        assignM[z] = Math.max(0, assignM[z] + useM); 
-        mirrorsAvail -= useM; 
-      } else {
-        // Heating: mirrors first, then lanterns
-        if (mirrorsAvail > 0 && dF > 0) {
-          const required = dF / perM - assignM[z];
-          const useM = Math.min(mirrorsAvail, Math.max(1, Math.round(required / 2)));
-          assignM[z] = Math.max(0, assignM[z] + useM); 
-          mirrorsAvail -= useM; dF -= useM * perM; 
-         }
-         if (dF > 0 && lanternUnlocked && lanternsAvail > 0) {
-          const required = dF / perL - assignL[z];
-          const useL = Math.min(lanternsAvail, Math.max(1, Math.round(required / 2)));
-          assignL[z] += Math.max(0, assignL[z] + useL); 
-          lanternsAvail -= useL;
+      let mirrorsLeft = Math.max(0, buildings.spaceMirror?.active || 0);
+      let lanternsLeft = mirrorOversightSettings.applyToLantern ? Math.max(0, buildings.hyperionLantern?.active || 0) : 0;
+
+      const priority = mirrorOversightSettings.priority || {};
+      const zoneOrder = ['tropical', 'temperate', 'polar', 'focus'];
+      const zones = zoneOrder
+        .filter(z => typeof mirrorOversightSettings.targets?.[z] === 'number')
+        .sort((a, b) => {
+          const pa = priority[a] ?? 1;
+          const pb = priority[b] ?? 1;
+          if (pa !== pb) return pa - pb;
+          return zoneOrder.indexOf(a) - zoneOrder.indexOf(b);
+        });
+
+      const tol = 0.05; // Kelvin tolerance
+
+      for (const zone of zones) {
+        if (mirrorsLeft <= 0 && lanternsLeft <= 0) break;
+
+        const target = mirrorOversightSettings.targets[zone];
+        if (!isFinite(target)) continue;
+
+        if (typeof terraforming.updateSurfaceTemperature === 'function') {
+          terraforming.updateSurfaceTemperature();
+        }
+        const current = terraforming?.temperature?.zones?.[zone]?.value;
+        if (!isFinite(current)) continue;
+
+        const needCooling = current > target;
+        reverse[zone] = needCooling;
+
+        // Bisection for mirrors
+        let low = 0;
+        let high = mirrorsLeft;
+        assignL[zone] = 0;
+        while (low < high) {
+          const mid = Math.floor((low + high) / 2);
+          assignM[zone] = mid;
+          if (typeof terraforming.updateSurfaceTemperature === 'function') {
+            terraforming.updateSurfaceTemperature();
+          }
+          const temp = terraforming.temperature.zones[zone].value;
+          if (!needCooling) {
+            if (temp < target - tol) low = mid + 1; else high = mid;
+          } else {
+            if (temp > target + tol) low = mid + 1; else high = mid;
+          }
+        }
+        assignM[zone] = Math.min(low, mirrorsLeft);
+        if (typeof terraforming.updateSurfaceTemperature === 'function') {
+          terraforming.updateSurfaceTemperature();
+        }
+        const afterMirrors = terraforming.temperature.zones[zone].value;
+        mirrorsLeft -= assignM[zone];
+
+        // If still short on heating, assign lanterns last
+        if (!needCooling && afterMirrors < target - tol && lanternsLeft > 0) {
+          let lLow = 0;
+          let lHigh = lanternsLeft;
+          while (lLow < lHigh) {
+            const mid = Math.floor((lLow + lHigh) / 2);
+            assignL[zone] = mid;
+            if (typeof terraforming.updateSurfaceTemperature === 'function') {
+              terraforming.updateSurfaceTemperature();
+            }
+            const temp = terraforming.temperature.zones[zone].value;
+            if (temp < target - tol) lLow = mid + 1; else lHigh = mid;
+          }
+          assignL[zone] = Math.min(lLow, lanternsLeft);
+          if (typeof terraforming.updateSurfaceTemperature === 'function') {
+            terraforming.updateSurfaceTemperature();
+          }
+          lanternsLeft -= assignL[zone];
         }
       }
-      mirrorOversightSettings.assignments.reversalMode[z] = (dF < 0);
+
+      mirrorOversightSettings.assignments.mirrors = assignM;
+      mirrorOversightSettings.assignments.lanterns = assignL;
+      mirrorOversightSettings.assignments.reversalMode = reverse;
+    } finally {
+      advancedAssignmentInProgress = false;
     }
   }
-
-  // Commit assignments
-  mirrorOversightSettings.assignments.mirrors = assignM;
-  mirrorOversightSettings.assignments.lanterns = assignL;
-  } finally {
-    advancedAssignmentInProgress = false;
-  }
-}
 
 class SpaceMirrorFacilityProject extends Project {
   constructor(config, name) {
