@@ -61,7 +61,7 @@ const buildingsParameters = {
     unlocked: false
   },
   atmosphericWaterCollector: {
-    name: 'Atmospheric Water Collector',
+    name: 'Vapor Collector',
     category: 'resource',
     description: 'Condenses atmospheric moisture when little surface water remains.',
     cost: { colony: { components: 10, electronics: 1 } },

@@ -13,7 +13,7 @@ progressVega2.storyProjects.vega2_crystal_survey = {
   category: 'story',
   chapter: 14,
   cost: { colony: { energy: 1_000_000 } },
-  duration: 180_000, // 3 min
+  duration: 600_000, // 10 min
   description: 'Walk and scan the crystal fields; mark safe routes and noisy areas.',
   repeatable: true,
   maxRepeatCount: 3,
