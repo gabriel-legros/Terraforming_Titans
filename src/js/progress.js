@@ -9,6 +9,22 @@ function joinLines(text) {
     return Array.isArray(text) ? text.join('\n') : text;
 }
 
+function getWGCTeamLeaderName(index) {
+    try {
+        const leader = warpGateCommand.teams[index][0];
+        const first = leader.firstName;
+        const last = leader.lastName ? ` ${leader.lastName}` : '';
+        const name = first ? first + last : '';
+        return name || `Team Leader ${index + 1}`;
+    } catch {
+        return `Team Leader ${index + 1}`;
+    }
+}
+
+function resolveStoryPlaceholders(text) {
+    return text.replace(/\$WGC_TEAM1_LEADER\$/g, getWGCTeamLeaderName(0));
+}
+
 function compareValues(current, target, comparison = 'gte') {
     switch (comparison) {
         case 'gt':
@@ -746,7 +762,8 @@ class StoryEvent {
                      break;
                  }
 
-                 const text = joinLines(this.narrative);
+                 const raw = joinLines(this.narrative);
+                 const text = resolveStoryPlaceholders(raw);
                  if (this.title) {
                     addJournalEntry([`${this.title}`, text], this.id, { type: 'chapter', id: this.id });
                  } else {
