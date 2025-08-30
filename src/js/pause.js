@@ -15,6 +15,9 @@
       }
       if(btn){ btn.textContent = 'Resume'; }
       if(alertBox){ alertBox.innerHTML = '<div class="pause-message">PAUSED</div>'; }
+      if (typeof updateRender === 'function') {
+        updateRender(true);
+      }
     } else {
       if(globalThis.game && game.scene){
         game.scene.resume('mainScene');
