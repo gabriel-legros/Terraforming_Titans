@@ -538,7 +538,7 @@ function initializeMirrorOversightUI(container) {
   const finerToggle = document.createElement('div');
   finerToggle.id = 'mirror-finer-toggle';
   finerToggle.classList.add('collapse-toggle');
-  finerToggle.innerHTML = '<span id="mirror-finer-icon">–¶</span> Finer Controls';
+  finerToggle.innerHTML = '<span id="mirror-finer-icon">▶</span> Finer Controls';
   finerToggle.style.cursor = 'pointer';
   // Override icon text with safe ASCII to avoid encoding glitches
   try { finerToggle.innerHTML = '<span id="mirror-finer-icon">[+]</span> Finer Controls'; } catch(e) {}
