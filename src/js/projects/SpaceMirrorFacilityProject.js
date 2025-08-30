@@ -6,6 +6,7 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   assignmentStep: 1,
   advancedOversight: false,
   targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
+  tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
   priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
   autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
   assignments: {
@@ -82,6 +83,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.assignmentStep = 1;
   mirrorOversightSettings.advancedOversight = false;
   mirrorOversightSettings.targets = { tropical: 0, temperate: 0, polar: 0, water: 0 };
+  mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
   mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
@@ -285,6 +287,13 @@ function toggleAdvancedOversight(enable) {
       if (!mirrorOversightSettings.targets.polar) mirrorOversightSettings.targets.polar = defK;
       if (!mirrorOversightSettings.targets.water) mirrorOversightSettings.targets.water = 0;
     }
+    if (!mirrorOversightSettings.tempMode || typeof mirrorOversightSettings.tempMode !== 'object') {
+      mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
+    } else {
+      if (!mirrorOversightSettings.tempMode.tropical) mirrorOversightSettings.tempMode.tropical = 'average';
+      if (!mirrorOversightSettings.tempMode.temperate) mirrorOversightSettings.tempMode.temperate = 'average';
+      if (!mirrorOversightSettings.tempMode.polar) mirrorOversightSettings.tempMode.polar = 'average';
+    }
   }
   if (typeof updateMirrorOversightUI === 'function') updateMirrorOversightUI();
 }
@@ -391,6 +400,11 @@ function initializeMirrorOversightUI(container) {
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-tropical">Tropical target</label>
         <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0">
+        <select id="adv-timing-tropical" class="stat-value">
+          <option value="average">Average</option>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+        </select>
         <select id="adv-priority-tropical" class="stat-value">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
@@ -398,6 +412,11 @@ function initializeMirrorOversightUI(container) {
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-temperate">Temperate target</label>
         <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0">
+        <select id="adv-timing-temperate" class="stat-value">
+          <option value="average">Average</option>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+        </select>
         <select id="adv-priority-temperate" class="stat-value">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
@@ -405,6 +424,11 @@ function initializeMirrorOversightUI(container) {
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-polar">Polar target</label>
         <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0">
+        <select id="adv-timing-polar" class="stat-value">
+          <option value="average">Average</option>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+        </select>
         <select id="adv-priority-polar" class="stat-value">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
@@ -442,6 +466,11 @@ function initializeMirrorOversightUI(container) {
     polar: div.querySelector('#adv-priority-polar'),
     focus: div.querySelector('#adv-priority-focus'),
   };
+  const advTiming = {
+    tropical: div.querySelector('#adv-timing-tropical'),
+    temperate: div.querySelector('#adv-timing-temperate'),
+    polar: div.querySelector('#adv-timing-polar'),
+  };
   Object.keys(advInputs).forEach(k => {
     const el = advInputs[k];
     if (!el) return;
@@ -469,6 +498,17 @@ function initializeMirrorOversightUI(container) {
     el.addEventListener('change', () => {
       const v = Math.max(1, Math.min(5, parseInt(el.value, 10) || 1));
       mirrorOversightSettings.priority[k] = v;
+    });
+  });
+  Object.keys(advTiming).forEach(k => {
+    const el = advTiming[k];
+    if (!el) return;
+    const cur = mirrorOversightSettings.tempMode?.[k] || 'average';
+    el.value = cur;
+    el.addEventListener('change', () => {
+      const val = el.value === 'day' ? 'day' : (el.value === 'night' ? 'night' : 'average');
+      if (!mirrorOversightSettings.tempMode) mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
+      mirrorOversightSettings.tempMode[k] = val;
     });
   });
 
@@ -795,6 +835,8 @@ function updateMirrorOversightUI() {
     }
     const sel = document.getElementById(`adv-priority-${k}`);
     if (sel && document.activeElement !== sel) sel.value = String(mirrorOversightSettings.priority[k] || 1);
+    const timing = document.getElementById(`adv-timing-${k}`);
+    if (timing && document.activeElement !== timing) timing.value = mirrorOversightSettings.tempMode?.[k] || 'average';
   });
   const waterRow = document.getElementById('adv-water-row');
   if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
@@ -1064,6 +1106,15 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     try {
       if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
 
+      const getZoneTemp = z => {
+        const mode = mirrorOversightSettings.tempMode?.[z] || 'average';
+        const data = terraforming?.temperature?.zones?.[z];
+        if (!data) return NaN;
+        if (mode === 'day') return data.day;
+        if (mode === 'night') return data.night;
+        return data.value;
+      };
+
       const assignM = mirrorOversightSettings.assignments.mirrors;
       const assignL = mirrorOversightSettings.assignments.lanterns;
       const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false });
@@ -1103,7 +1154,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
         if (typeof terraforming.updateSurfaceTemperature === 'function') {
           terraforming.updateSurfaceTemperature();
         }
-        const current = terraforming?.temperature?.zones?.[zone]?.value;
+        const current = getZoneTemp(zone);
         if (!isFinite(current)) continue;
 
         const needCooling = current > target;
@@ -1119,7 +1170,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
           if (typeof terraforming.updateSurfaceTemperature === 'function') {
             terraforming.updateSurfaceTemperature();
           }
-          const temp = terraforming.temperature.zones[zone].value;
+          const temp = getZoneTemp(zone);
           if (!needCooling) {
             if (temp < target - tol) low = mid + 1; else high = mid;
           } else {
@@ -1130,7 +1181,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
         if (typeof terraforming.updateSurfaceTemperature === 'function') {
           terraforming.updateSurfaceTemperature();
         }
-        const afterMirrors = terraforming.temperature.zones[zone].value;
+        const afterMirrors = getZoneTemp(zone);
         mirrorsLeft -= assignM[zone];
 
         // If still short on heating, assign lanterns last
@@ -1143,7 +1194,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
             if (typeof terraforming.updateSurfaceTemperature === 'function') {
               terraforming.updateSurfaceTemperature();
             }
-            const temp = terraforming.temperature.zones[zone].value;
+            const temp = getZoneTemp(zone);
             if (temp < target - tol) lLow = mid + 1; else lHigh = mid;
           }
           assignL[zone] = Math.min(lLow, lanternsLeft);

@@ -11,6 +11,7 @@ describe('advanced oversight target inputs', () => {
         <div id="mirror-advanced-oversight-div"></div>
         <div id="advanced-oversight-controls">
           <input id="adv-target-tropical" />
+          <select id="adv-timing-tropical"><option value="average">Average</option><option value="day">Day</option><option value="night">Night</option></select>
           <select id="adv-priority-tropical"></select>
           <div id="adv-water-row"></div>
           <input id="adv-target-water" />
@@ -46,5 +47,12 @@ describe('advanced oversight target inputs', () => {
     input.value = '310.00';
     ctx.updateMirrorOversightUI();
     expect(input.value).toBe('310.00');
+
+    const timing = dom.window.document.getElementById('adv-timing-tropical');
+    expect(timing.value).toBe('average');
+    timing.focus();
+    timing.value = 'night';
+    ctx.updateMirrorOversightUI();
+    expect(timing.value).toBe('night');
   });
 });
