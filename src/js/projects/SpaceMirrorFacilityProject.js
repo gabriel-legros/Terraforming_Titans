@@ -369,6 +369,9 @@ function initializeMirrorOversightUI(container) {
     updateMirrorOversightUI();
   });
 
+  // Get the card body element
+  const cardBody = div.querySelector('.card-body');
+
   // Advanced Oversight checkbox and controls (same line as lantern checkbox)
   const lanternDivInit = div.querySelector('#mirror-oversight-lantern-div');
   const advDiv = document.createElement('div');
@@ -399,52 +402,51 @@ function initializeMirrorOversightUI(container) {
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-tropical">Tropical target</label>
-        <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0">
-        <select id="adv-timing-tropical" class="stat-value">
+        <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
+        <select id="adv-timing-tropical" class="stat-value" style="font-size:12px; width:80px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
         </select>
-        <select id="adv-priority-tropical" class="stat-value">
+        <select id="adv-priority-tropical" class="stat-value" style="font-size:12px; width:40px;">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-temperate">Temperate target</label>
-        <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0">
-        <select id="adv-timing-temperate" class="stat-value">
+        <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
+        <select id="adv-timing-temperate" class="stat-value" style="font-size:12px; width:80px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
         </select>
-        <select id="adv-priority-temperate" class="stat-value">
+        <select id="adv-priority-temperate" class="stat-value" style="font-size:12px; width:40px;">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-polar">Polar target</label>
-        <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0">
-        <select id="adv-timing-polar" class="stat-value">
+        <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
+        <select id="adv-timing-polar" class="stat-value" style="font-size:12px; width:80px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
         </select>
-        <select id="adv-priority-polar" class="stat-value">
+        <select id="adv-priority-polar" class="stat-value" style="font-size:12px; width:40px;">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
-        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0">
-        <select id="adv-priority-focus" class="stat-value">
+        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0" style="font-size:12px; width:50px;">
+        <select id="adv-priority-focus" class="stat-value" style="font-size:12px; width:40px;">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
     </div>
   `;
-  if (advDiv && advDiv.parentElement) {
-    advDiv.insertAdjacentElement('afterend', advancedControls);
-  }
+  // Append Targets & Priority below the checkboxes (after lantern-div)
+  cardBody.appendChild(advancedControls);
 
   // Wire up advanced controls inputs
   const advCheckboxInit = div.querySelector('#mirror-advanced-oversight');
