@@ -332,6 +332,7 @@ class SpaceManager extends EffectableEntity {
         }
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         this.recordCurrentWorldPopulation(pop);
+        this._markDepartureNow();
         return this._setCurrentPlanetKey(key);
     }
 
@@ -373,6 +374,35 @@ class SpaceManager extends EffectableEntity {
         return storageState;
     }
 
+    /**
+     * Mark the current world's departure time for history sorting.
+     * Ensures visited/name fields exist for random seeds.
+     */
+    _markDepartureNow() {
+        const now = Date.now();
+        if (this.currentRandomSeed !== null) {
+            const seed = String(this.currentRandomSeed);
+            if (!this.randomWorldStatuses[seed]) {
+                this.randomWorldStatuses[seed] = {
+                    name: this.currentRandomName || `Seed ${seed}`,
+                    terraformed: false,
+                    colonists: 0,
+                    original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
+                    visited: true,
+                    orbitalRing: false
+                };
+            }
+            this.randomWorldStatuses[seed].visited = true;
+            this.randomWorldStatuses[seed].departedAt = now;
+            if (!this.randomWorldStatuses[seed].name) {
+                this.randomWorldStatuses[seed].name = this.currentRandomName || `Seed ${seed}`;
+            }
+        } else if (this.planetStatuses[this.currentPlanetKey]) {
+            this.planetStatuses[this.currentPlanetKey].departedAt = now;
+            this.planetStatuses[this.currentPlanetKey].visited = true;
+        }
+    }
+
     recordCurrentWorldPopulation(pop) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
@@ -403,6 +433,7 @@ class SpaceManager extends EffectableEntity {
 
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         this.recordCurrentWorldPopulation(pop);
+        this._markDepartureNow();
 
         const departingTerraformed = this.currentRandomSeed !== null
             ? this.isSeedTerraformed(String(this.currentRandomSeed))

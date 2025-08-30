@@ -3,10 +3,12 @@
 // Guard flags
 let rwgUIInitialized = false;
 const equilibratedWorlds = new Set();
+let historyContainerEl;
 let historyListEl;
 let historyPageEl;
 let historyPrevBtn;
 let historyNextBtn;
+let historyCollapsed = false;
 let historyData = [];
 let historyPage = 0;
 
@@ -92,10 +94,30 @@ function initializeRandomWorldUI() {
     </div>`;
   container.appendChild(history);
 
+  historyContainerEl = history;
   historyListEl = history.querySelector('#rwg-history-list');
   historyPageEl = history.querySelector('#rwg-history-page');
   historyPrevBtn = history.querySelector('#rwg-history-prev');
   historyNextBtn = history.querySelector('#rwg-history-next');
+  // Make header collapsible without changing markup structure
+  const historyHeader = history.querySelector('h3');
+  if (historyHeader) {
+    historyHeader.classList.add('rwg-history-title');
+    historyHeader.innerHTML = '<span id="rwg-history-arrow" class="summary-arrow">▼</span> Visited Worlds';
+    const arrowEl = historyHeader.querySelector('#rwg-history-arrow');
+    historyHeader.addEventListener('click', () => {
+      historyCollapsed = !historyCollapsed;
+      if (historyCollapsed) {
+        if (historyListEl) historyListEl.style.display = 'none';
+        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = 'none';
+        if (arrowEl) arrowEl.textContent = '▶';
+      } else {
+        if (historyListEl) historyListEl.style.display = '';
+        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = '';
+        if (arrowEl) arrowEl.textContent = '▼';
+      }
+    });
+  }
 
   historyPrevBtn.addEventListener('click', () => {
     if (historyPage > 0) {
@@ -553,13 +575,24 @@ function renderHistory() {
     .filter(([, st]) => st?.visited)
     .map(([seed, st]) => ({
       name: st.name || `Seed ${seed}`,
-      type: st.original?.classification?.archetype || '—',
+      // Prefer top-level archetype from RWG result; fall back to any embedded classification
+      type: (st.original?.archetype
+            || st.original?.classification?.archetype
+            || st.original?.merged?.classification?.archetype
+           ) || '—',
       seed,
-      state: st.terraformed ? 'Terraformed' : 'Abandoned',
+      colonists: typeof st.colonists === 'number' ? st.colonists : 0,
+      state: (String(sm.currentRandomSeed ?? '') === String(seed))
+        ? 'Current'
+        : (st.terraformed ? 'Terraformed' : 'Abandoned'),
       departedAt: st.departedAt || 0
     }))
     .sort((a, b) => b.departedAt - a.departedAt);
   historyData = entries;
+  // Hide the entire history container if no visited worlds
+  if (historyContainerEl) {
+    historyContainerEl.style.display = entries.length ? '' : 'none';
+  }
   historyPage = Math.min(historyPage, Math.max(Math.ceil(historyData.length / 10) - 1, 0));
   renderHistoryPage();
 }
@@ -568,11 +601,15 @@ function renderHistoryPage() {
   if (!historyListEl) return;
   const start = historyPage * 10;
   const slice = historyData.slice(start, start + 10);
+  const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
+  const header = `<div class="rwg-history-row rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
   const rows = slice.map(r => {
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
-    return `<div class="rwg-history-row"><span>${r.name}</span><span>${r.type}</span><span>${r.seed}</span><span>${r.state}</span><span>${d}</span></div>`;
+    const pop = fmt(r.colonists || 0);
+    const stateCls = r.state === 'Current' ? 'state-current' : '';
+    return `<div class="rwg-history-row"><span class="name" title="${r.name}">${r.name}</span><span>${r.type}</span><span class="seed" title="${r.seed}">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
   }).join('');
-  historyListEl.innerHTML = rows;
+  historyListEl.innerHTML = header + rows;
   const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);
   historyPageEl.textContent = `${historyData.length ? historyPage + 1 : 0}/${totalPages}`;
   historyPrevBtn.disabled = historyPage === 0;
