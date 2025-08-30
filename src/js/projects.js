@@ -212,11 +212,16 @@ class Project extends EffectableEntity {
 
   hasSustainResources(deltaTime = 1000) {
     if (!this.sustainCost) return true;
-    const seconds = 1;
+    const seconds = deltaTime / 1000;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
-        const required = this.sustainCost[category][resource] * seconds;
-        if (resources[category][resource].value < required) {
+        const costRate = this.sustainCost[category][resource];
+        const res = resources[category][resource];
+        const prod = res.productionRate || 0;
+        const cons = res.consumptionRate || 0;
+        const available = res.value + prod * seconds;
+        const required = (cons + costRate) * seconds;
+        if (available < required) {
           return false;
         }
       }

@@ -312,6 +312,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - WGC team cards cache DOM nodes for buttons, inputs, selects, progress bars, logs and HP bars, rebuilding these caches when cards redraw or team counts change for faster updates.
 - Methane melting and freezing now respect methane ice coverage.
 - Planetary thrusters operate as a continuous project, drawing power from ongoing energy production instead of only stored energy.
+- Projects with sustain costs draw from current production as well as stored resources so they can run continuously.
 - Planetary thrusters appear in the Energy resource rate tooltip, listing their consumption.
 - Freezing processes scale with liquid surface area and accept liquid coverage functions.
 - Added decillion, undecillion, and duodecillion number units.
