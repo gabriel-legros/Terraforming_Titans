@@ -10,6 +10,11 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
+if (typeof module !== 'undefined' && module.exports) {
+    ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+}
+
 class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
         super({ description: 'Manages planetary travel' });
@@ -44,6 +49,8 @@ class SpaceManager extends EffectableEntity {
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
                 orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0,
                 // Add other statuses later if needed
             };
         });
@@ -404,6 +411,8 @@ class SpaceManager extends EffectableEntity {
     }
 
     recordCurrentWorldPopulation(pop) {
+        const departedAt = Date.now();
+        const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
@@ -413,14 +422,20 @@ class SpaceManager extends EffectableEntity {
                     colonists: 0,
                     original: this.getCurrentWorldOriginal(),
                     visited: true,
-                    orbitalRing: false
+                    orbitalRing: false,
+                    departedAt: null,
+                    ecumenopolisPercent: 0
                 };
             } else {
                 this.randomWorldStatuses[seed].visited = true;
             }
             this.randomWorldStatuses[seed].colonists = pop;
+            this.randomWorldStatuses[seed].departedAt = departedAt;
+            this.randomWorldStatuses[seed].ecumenopolisPercent = ecoPercent;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             this.planetStatuses[this.currentPlanetKey].colonists = pop;
+            this.planetStatuses[this.currentPlanetKey].departedAt = departedAt;
+            this.planetStatuses[this.currentPlanetKey].ecumenopolisPercent = ecoPercent;
         }
     }
 
@@ -455,7 +470,9 @@ class SpaceManager extends EffectableEntity {
                 colonists: 0,
                 original: res,
                 visited: true,
-                orbitalRing: false
+                orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0
             };
         } else {
             existing.original = existing.original || res;
@@ -548,6 +565,12 @@ class SpaceManager extends EffectableEntity {
                     }
                     if (typeof saved.orbitalRing === 'boolean') {
                         this.planetStatuses[planetKey].orbitalRing = saved.orbitalRing;
+                    }
+                    if (typeof saved.departedAt === 'number') {
+                        this.planetStatuses[planetKey].departedAt = saved.departedAt;
+                    }
+                    if (typeof saved.ecumenopolisPercent === 'number') {
+                        this.planetStatuses[planetKey].ecumenopolisPercent = saved.ecumenopolisPercent;
                     }
                 }
             });
