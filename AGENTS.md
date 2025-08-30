@@ -382,3 +382,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Random world departures now log timestamp and Ecumenopolis land coverage.
 - Space storage total cost display now shows cost per second in continuous mode.
 - Random World Generator re-renders after travel to respect new travel locks.
+- Space mirror facility advanced oversight now allocates mirrors and lanterns via bisection on zone temperature using `updateSurfaceTemperature`.
