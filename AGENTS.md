@@ -386,3 +386,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror facility advanced oversight now allocates mirrors and lanterns via bisection on zone temperature using `updateSurfaceTemperature`.
 - Solis shop offers research points, and the advanced oversight upgrade now appears under Research Upgrades beneath the research auto-complete upgrade once `solisUpgrade1` is set.
 - Space mirror reversal column hides until reversal is unlocked, removing its checkboxes when unavailable.
+- Optical depth display now shows three decimal places.

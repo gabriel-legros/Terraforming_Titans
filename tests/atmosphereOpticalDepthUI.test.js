@@ -70,8 +70,8 @@ describe('atmosphere UI optical depth', () => {
     expect(info.getAttribute('title')).toBeNull();
     const tooltip = pEls[1].querySelector('#optical-depth-tooltip');
     expect(tooltip).not.toBeNull();
-    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.30');
-    expect(tooltip.textContent).toContain('Water Vap.: 0.20');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.300');
+    expect(tooltip.textContent).toContain('Water Vap.: 0.200');
     expect(box.querySelector('#emissivity')).toBeNull();
     expect(pEls[2].querySelector('#wind-turbine-multiplier')).not.toBeNull();
     expect(pEls[1].classList.contains('no-margin')).toBe(true);
@@ -134,10 +134,10 @@ describe('atmosphere UI optical depth', () => {
     ctx.updateAtmosphereBox();
 
     const tooltip = dom.window.document.getElementById('optical-depth-tooltip');
-    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.30');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.300');
     ctx.terraforming.temperature.opticalDepthContributions = { co2: 0.1, h2o: 0.4 };
     ctx.updateAtmosphereBox();
-    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.10');
-    expect(tooltip.textContent).toContain('Water Vap.: 0.40');
+    expect(tooltip.textContent).toContain('Carbon Dioxide: 0.100');
+    expect(tooltip.textContent).toContain('Water Vap.: 0.400');
   });
 });

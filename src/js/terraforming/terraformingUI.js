@@ -349,7 +349,7 @@ function createTemperatureBox(row) {
     els.current.textContent = terraforming.calculateTotalPressure().toFixed(2);
 
     if (els.opticalDepth) {
-      els.opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(2);
+      els.opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(3);
     }
     if (els.opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
@@ -365,7 +365,7 @@ function createTemperatureBox(row) {
           const displayName = resourceKey && resources.atmospheric[resourceKey]
             ? resources.atmospheric[resourceKey].displayName
             : gas.toUpperCase();
-          return `${displayName}: ${val.toFixed(2)}`;
+          return `${displayName}: ${val.toFixed(3)}`;
         });
       if (els.opticalDepthTooltip) {
         els.opticalDepthTooltip.innerHTML = lines.join('<br>');
