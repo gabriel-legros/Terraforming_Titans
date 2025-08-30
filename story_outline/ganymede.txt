@@ -1,0 +1,29 @@
+Ganymede Story Outline (Chapters 10–14)
+
+Overview
+- Pursuit of Elias Kane’s Cult of Three Wounds to Ganymede’s sub‑glacial ocean leads to a deep‑ice campaign, first contact with a “Leviathan,” discovery of a silent underwater outpost, and the founding of Warp Gate Command (WGC).
+
+Story Projects (unlocks across chapters)
+- Deep‑Drill: 3‑stage bore through ~150 km ice to breach the ocean.
+- Build Submarines: Fabricate minisubs for reconnaissance.
+- Ocean Recon: Repeatable sonar patrols; fifth pass detects a massive metallic echo.
+- Deploy Leviathan Countermeasure: 20 Hz sonic wall enabling safe passage.
+- Facility Tug: Relocate the discovered structure ~500 km to a secure site.
+- Facility Expedition: Breach, sweep, and power up an alien outpost; reveal a Warp Gate chamber.
+- Draft WGC Charter: Establish governance to secure and study the Gate.
+
+Chapter Beats
+- 10.0 Icebound Landing: Touchdown in extreme radiation; Feroza leads ground ops. Unlocks Deep‑Drill and Planetary Thruster project access.
+- 10.0a Dead Hand: Autonomous assets self‑destruct on unauthorized transit (security backdrop).
+- 10.0b Cult taunt: Kane broadcasts from beneath the ice; radiation masks him.
+- 10.1–10.2 Drill objectives: Complete Deep‑Drill (3 stages); ocean breach and initial acoustic anomaly logged.
+- 11.0–11.1 Minisubs & Recon: Build subs; run multiple recon passes. On pass five, a massive metallic echo is detected.
+- 11.2–11.4 Leviathan thread: Sub loss escalates threat; parity attempt fails; deploy sonic countermeasure and tug the facility to safety.
+- 12.0–12.2 Facility Expedition: Breach, sweep, power‑up. Non‑euclidean energy signature; ring glyphs ignite. Warp Gate chamber discovered; a hostile drone incursion follows.
+- 13.0–13.2 Defense & Debrief: Repel drones, debrief under black‑ops posture; prepare governance.
+- 14.0–14.2 Warp Gate Command: Charter drafted; Mars (strategy), Titan (logistics), Callisto/Ganymede (ops). Vigil Protocol stands up a permanent guard. Epilogue: “Defend first, discover second.”
+
+Notes
+- Tone: H.O.P.E. literal/deadpan; Mary pragmatic mentor; Dr. Hart scientific awe; Feroza soldierly dry wit; Kane theatrical.
+- Mechanics: Repeatable story projects, chapter‑gated unlocks, persistent WGC systems after discovery.
+
