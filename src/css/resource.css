@@ -50,48 +50,9 @@
   .resource-item {
     position: relative;
   }
-  
-  .resource-tooltip {
-    position: absolute; /* Default: anchored to its parent (info tooltips) */
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 5px;
-    font-size: 12px;
-    z-index: 1;
-    width: 220px;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    display: none;
-  }
-  
-  .resource-item:hover .resource-tooltip {
-    display: block;
-  }
 
-  /* Ensure three-column layout wins over the generic hover rule */
-  .resource-item:hover .resource-tooltip.three-column {
-    display: flex;
-  }
-
-  /* Above styling for resource list is handled via JS placement.
-     For info tooltips (e.g., terraforming), their stylesheet defines .resource-tooltip.above. */
-
-  .resource-tooltip.three-column {
-    width: auto;
-    display: flex;
-    text-align: left;
-  }
-
-  .resource-tooltip.three-column > div {
-    width: 220px;
-    margin-right: 10px;
-  }
-
-  .resource-tooltip.three-column > div:last-child {
-    margin-right: 0;
-  }
+  /* Tooltip width retained here for test compatibility; other tooltip rules live in tooltips.css */
+  .resource-tooltip { width: 220px; }
 
   /* Resource list overlay-specific behavior */
   .resource-item .resource-tooltip {

@@ -66,24 +66,5 @@
     color: red;
   }
 
-  .info-tooltip-icon {
-    position: relative;
-  }
+  /* Tooltip rules moved to src/css/tooltips.css */
 
-  .info-tooltip-icon .resource-tooltip {
-    text-align: left;
-    /* Ensure albedo/info tooltips render above subtabs and neighboring UI */
-    z-index: 2500;
-    /* Let the cursor leave the icon without staying hovered on the tooltip */
-    pointer-events: none;
-  }
-
-  .info-tooltip-icon:hover .resource-tooltip {
-    display: block;
-  }
-
-  .resource-tooltip.above {
-    bottom: 100%;
-    top: auto;
-    transform: translateX(-50%) translateY(-4px);
-  }

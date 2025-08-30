@@ -158,10 +158,6 @@ body.dark-mode {
     background-color: #1e1e1e;
 }
 
-.dark-mode .resource-tooltip {
-    background-color: rgba(255, 255, 255, 0.8);
-    color: #121212;
-}
 
 .dark-mode .scanning-progress {
     color: #aaa;
