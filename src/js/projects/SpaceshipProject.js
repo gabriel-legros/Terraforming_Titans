@@ -336,7 +336,7 @@ class SpaceshipProject extends Project {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
     const multiplier = perSecond
-      ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
+      ? this.assignedSpaceships * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
       : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
