@@ -534,7 +534,6 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
-  special.seed = { name: "Generator Seed", hasCap: false, initialValue: seed, unlocked: false };
 
   // Optional parent body for moons
   let parentBody = undefined; if (isMoon) { const gg = (function makeGasGiant(r) { const Mj = 1.898e27; return { mass: randRange(r, 0.3, 3.0) * Mj, radius_km: randRange(r, 30000, 80000), orbitRadius_km: Math.floor(randRange(r, 600000, 2500000)) }; })(mulberry32(seed ^ 0xFACE)); parentBody = { name: "Gas Giant", mass: gg.mass, radius: gg.radius_km, orbitRadius: gg.orbitRadius_km }; }
@@ -552,6 +551,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     populationParameters: { workerRatio: 0.5 },
     celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: star.luminositySolar, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
+    rwgMeta: { generatorSeedInt: seed }
   };
   return overrides;
 }

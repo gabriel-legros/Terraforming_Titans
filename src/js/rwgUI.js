@@ -3,6 +3,14 @@
 // Guard flags
 let rwgUIInitialized = false;
 const equilibratedWorlds = new Set();
+let historyContainerEl;
+let historyListEl;
+let historyPageEl;
+let historyPrevBtn;
+let historyNextBtn;
+let historyCollapsed = false;
+let historyData = [];
+let historyPage = 0;
 
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
@@ -73,6 +81,58 @@ function initializeRandomWorldUI() {
   result.className = 'rwg-result';
   container.appendChild(result);
 
+  const history = document.createElement('div');
+  history.id = 'rwg-history';
+  history.className = 'rwg-history';
+  history.innerHTML = `
+    <h3>Visited Worlds</h3>
+    <div id="rwg-history-list"></div>
+    <div class="rwg-history-controls">
+      <button id="rwg-history-prev" class="rwg-btn">Prev</button>
+      <span id="rwg-history-page"></span>
+      <button id="rwg-history-next" class="rwg-btn">Next</button>
+    </div>`;
+  container.appendChild(history);
+
+  historyContainerEl = history;
+  historyListEl = history.querySelector('#rwg-history-list');
+  historyPageEl = history.querySelector('#rwg-history-page');
+  historyPrevBtn = history.querySelector('#rwg-history-prev');
+  historyNextBtn = history.querySelector('#rwg-history-next');
+  // Make header collapsible without changing markup structure
+  const historyHeader = history.querySelector('h3');
+  if (historyHeader) {
+    historyHeader.classList.add('rwg-history-title');
+    historyHeader.innerHTML = '<span id="rwg-history-arrow" class="summary-arrow">▼</span> Visited Worlds';
+    const arrowEl = historyHeader.querySelector('#rwg-history-arrow');
+    historyHeader.addEventListener('click', () => {
+      historyCollapsed = !historyCollapsed;
+      if (historyCollapsed) {
+        if (historyListEl) historyListEl.style.display = 'none';
+        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = 'none';
+        if (arrowEl) arrowEl.textContent = '▶';
+      } else {
+        if (historyListEl) historyListEl.style.display = '';
+        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = '';
+        if (arrowEl) arrowEl.textContent = '▼';
+      }
+    });
+  }
+
+  historyPrevBtn.addEventListener('click', () => {
+    if (historyPage > 0) {
+      historyPage--;
+      renderHistoryPage();
+    }
+  });
+  historyNextBtn.addEventListener('click', () => {
+    const maxPage = Math.ceil(historyData.length / 10) - 1;
+    if (historyPage < maxPage) {
+      historyPage++;
+      renderHistoryPage();
+    }
+  });
+
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
   btnPlanet.addEventListener('click', () => {
@@ -93,6 +153,8 @@ function initializeRandomWorldUI() {
       drawSingle(undefined, { target, orbitPreset: orbit, type });
     }
   });
+
+  renderHistory();
 }
 
 function ensureRandomWorldUI() {
@@ -135,14 +197,16 @@ function updateRandomWorldUI() {
       opt.textContent = newText;
     });
   }
+  renderHistory();
 }
 
 function attachTravelHandler(res, sStr) {
   const travelBtn = document.getElementById('rwg-travel-btn');
   if (!travelBtn) return;
   travelBtn.onclick = () => {
-    if (!equilibratedWorlds.has(sStr)) return;
-    if (spaceManager?.isSeedTerraformed && spaceManager.isSeedTerraformed(sStr)) return;
+    const canonical = res?.seedString || sStr;
+    if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
+    if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
     if (spaceManager?.travelToRandomWorld) {
       spaceManager.travelToRandomWorld(res, sStr);
     }
@@ -294,12 +358,14 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           if (info?.label === 'Additional fast-forward (Game is paused)') endBtn.style.display = '';
         });
         const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+        try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
         if (e?.message === 'timeout') {
+          try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
           equilibratedWorlds.add(sStr);
           box.innerHTML = renderWorldDetail(res, sStr, archetype);
           attachEquilibrateHandler(res, sStr, archetype, box);
@@ -503,6 +569,61 @@ function renderAtmoTable(res) {
   // Header row
   const header = `<div class="rwg-row"><span><strong>Gas</strong></span><span><strong>Amount</strong></span><span><strong>Pressure</strong></span></div>`;
   return `<div class="rwg-atmo-table">${header}${cells}</div>`;
+}
+
+function renderHistory() {
+  const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
+  if (!sm || !historyListEl) return;
+  const currentSeed = String(sm.currentRandomSeed ?? '');
+  const entries = Object.entries(sm.randomWorldStatuses || {})
+    .filter(([, st]) => st?.visited)
+    .map(([seed, st]) => ({
+      name: st.name || `Seed ${seed}`,
+      // Prefer top-level archetype from RWG result; fall back to any embedded classification
+      type: (st.original?.archetype
+            || st.original?.classification?.archetype
+            || st.original?.merged?.classification?.archetype
+           ) || '—',
+      seed,
+      colonists: typeof st.colonists === 'number' ? st.colonists : 0,
+      state: (String(sm.currentRandomSeed ?? '') === String(seed))
+        ? 'Current'
+        : (st.terraformed ? 'Terraformed' : 'Abandoned'),
+      departedAt: st.departedAt || 0
+    }))
+    .sort((a, b) => {
+      const aCur = a.seed === currentSeed;
+      const bCur = b.seed === currentSeed;
+      if (aCur && !bCur) return -1;
+      if (bCur && !aCur) return 1;
+      return b.departedAt - a.departedAt;
+    });
+  historyData = entries;
+  // Hide the entire history container if no visited worlds
+  if (historyContainerEl) {
+    historyContainerEl.style.display = entries.length ? '' : 'none';
+  }
+  historyPage = Math.min(historyPage, Math.max(Math.ceil(historyData.length / 10) - 1, 0));
+  renderHistoryPage();
+}
+
+function renderHistoryPage() {
+  if (!historyListEl) return;
+  const start = historyPage * 10;
+  const slice = historyData.slice(start, start + 10);
+  const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
+  const header = `<div class="rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
+  const rows = slice.map(r => {
+    const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
+    const pop = fmt(r.colonists || 0);
+    const stateCls = r.state === 'Current' ? 'state-current' : '';
+    return `<div class="rwg-history-row"><span class="name" title="${r.name}">${r.name}</span><span>${r.type}</span><span class="seed" title="${r.seed}">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
+  }).join('');
+  historyListEl.innerHTML = header + rows;
+  const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);
+  historyPageEl.textContent = `${historyData.length ? historyPage + 1 : 0}/${totalPages}`;
+  historyPrevBtn.disabled = historyPage === 0;
+  historyNextBtn.disabled = historyPage >= totalPages - 1;
 }
 
 // Hook into Space UI whenever Random subtab is shown

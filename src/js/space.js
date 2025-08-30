@@ -10,6 +10,11 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
+if (typeof module !== 'undefined' && module.exports) {
+    ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+}
+
 class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
         super({ description: 'Manages planetary travel' });
@@ -44,6 +49,8 @@ class SpaceManager extends EffectableEntity {
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
                 orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0,
                 // Add other statuses later if needed
             };
         });
@@ -330,8 +337,7 @@ class SpaceManager extends EffectableEntity {
             console.warn(`SpaceManager: Planet ${key} already terraformed.`);
             return false;
         }
-        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
-        this.recordCurrentWorldPopulation(pop);
+        this.recordDepartureSnapshot();
         return this._setCurrentPlanetKey(key);
     }
 
@@ -373,36 +379,53 @@ class SpaceManager extends EffectableEntity {
         return storageState;
     }
 
-    recordCurrentWorldPopulation(pop) {
+    /**
+     * Capture a single, consistent departure snapshot after pre-travel save:
+     * - marks visited
+     * - records population and ecumenopolis percent
+     * - stamps departure time
+     * Works for both story planets and random worlds.
+     */
+    recordDepartureSnapshot() {
+        const now = Date.now();
+        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
+        const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
                 this.randomWorldStatuses[seed] = {
-                    name: this.currentRandomName,
+                    name: this.currentRandomName || `Seed ${seed}`,
                     terraformed: false,
                     colonists: 0,
-                    original: this.getCurrentWorldOriginal(),
+                    original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
-                    orbitalRing: false
+                    orbitalRing: false,
+                    departedAt: null,
+                    ecumenopolisPercent: 0
                 };
-            } else {
-                this.randomWorldStatuses[seed].visited = true;
             }
-            this.randomWorldStatuses[seed].colonists = pop;
+            const st = this.randomWorldStatuses[seed];
+            st.visited = true;
+            st.colonists = pop;
+            st.departedAt = now;
+            st.ecumenopolisPercent = ecoPercent;
+            if (!st.name) st.name = this.currentRandomName || `Seed ${seed}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
-            this.planetStatuses[this.currentPlanetKey].colonists = pop;
+            const ps = this.planetStatuses[this.currentPlanetKey];
+            ps.visited = true;
+            ps.colonists = pop;
+            ps.departedAt = now;
+            ps.ecumenopolisPercent = ecoPercent;
         }
     }
 
     travelToRandomWorld(res, seed) {
-        const s = String(seed);
+        // Prefer canonical seedString from RWG result so it encodes target/type/orbit
+        const s = String(res && typeof res.seedString === 'string' ? res.seedString : seed);
         if (this.isSeedTerraformed(s)) {
             console.warn(`SpaceManager: Seed ${s} already terraformed.`);
             return false;
         }
-
-        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
-        this.recordCurrentWorldPopulation(pop);
 
         const departingTerraformed = this.currentRandomSeed !== null
             ? this.isSeedTerraformed(String(this.currentRandomSeed))
@@ -413,6 +436,7 @@ class SpaceManager extends EffectableEntity {
         const destinationTerraformed = existing?.terraformed || false;
 
         const storageState = this.prepareForTravel();
+        this.recordDepartureSnapshot();
 
         this.currentRandomSeed = s;
         this.currentPlanetKey = s;
@@ -424,7 +448,9 @@ class SpaceManager extends EffectableEntity {
                 colonists: 0,
                 original: res,
                 visited: true,
-                orbitalRing: false
+                orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0
             };
         } else {
             existing.original = existing.original || res;
@@ -517,6 +543,12 @@ class SpaceManager extends EffectableEntity {
                     }
                     if (typeof saved.orbitalRing === 'boolean') {
                         this.planetStatuses[planetKey].orbitalRing = saved.orbitalRing;
+                    }
+                    if (typeof saved.departedAt === 'number') {
+                        this.planetStatuses[planetKey].departedAt = saved.departedAt;
+                    }
+                    if (typeof saved.ecumenopolisPercent === 'number') {
+                        this.planetStatuses[planetKey].ecumenopolisPercent = saved.ecumenopolisPercent;
                     }
                 }
             });
