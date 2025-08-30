@@ -5,19 +5,20 @@ const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
 describe('actual albedo tooltip', () => {
-  test('breaks down albedo components', () => {
+  test('lists component contributions before zonal breakdown', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="row"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     const numbers = require('../src/js/numbers.js');
     ctx.formatNumber = numbers.formatNumber;
-    ctx.ZONES = ['tropical'];
+    ctx.ZONES = ['tropical', 'temperate'];
     ctx.calculateZonalSurfaceFractions = () => ({ ocean:0, ice:0, hydrocarbon:0, hydrocarbonIce:0, co2_ice:0, biomass:0 });
     ctx.projectManager = { isBooleanFlagSet: () => false };
     ctx.resources = { atmospheric: {}, special: { albedoUpgrades: { value: 0 } } };
     ctx.currentPlanetParameters = { resources: { atmospheric: {} } };
     ctx.terraformingGasTargets = { o2: { min: 0, max: 100 } };
-    ctx.calculateActualAlbedoPhysics = () => ({
-      components: { A_surf: 0.3, dA_ch4: 0.01, dA_calcite: 0.02, dA_cloud: 0.03 },
+    ctx.calculateActualAlbedoPhysics = surfAlb => ({
+      albedo: surfAlb + 0.06,
+      components: { A_surf: surfAlb, dA_ch4: 0.01, dA_calcite: 0.02, dA_cloud: 0.03 },
       diagnostics: { tau_ch4_sw: 0.1, tau_calcite_sw: 0.2 }
     });
     ctx.terraforming = {
@@ -50,8 +51,9 @@ describe('actual albedo tooltip', () => {
       totalSnowfallRate: 0,
       totalMeltRate: 0,
       totalFreezeRate: 0,
-      zonalSurface: { tropical: { biomass: 0 } },
-      zonalWater: { tropical: {} },
+      zonalSurface: { tropical: { biomass: 0 }, temperate: { biomass: 0 } },
+      zonalWater: { tropical: {}, temperate: {} },
+      calculateZonalSurfaceAlbedo: z => (z === 'temperate' ? 0.35 : 0.3),
       calculateTotalPressure: () => 100,
       calculateAtmosphericComposition: () => ({ composition: {} }),
       resources: { atmospheric: { calciteAerosol: { value: 0 } } }
@@ -65,9 +67,22 @@ describe('actual albedo tooltip', () => {
 
     const tooltip = dom.window.document.getElementById('actual-albedo-tooltip').textContent;
     expect(tooltip).toContain('Actual albedo = Surface + Haze + Calcite + Clouds');
-    expect(tooltip).toContain('Surface (base): 0.300');
-    expect(tooltip).toContain('Haze (CH4): +0.010');
-    expect(tooltip).toContain('Calcite aerosol: +0.020');
-    expect(tooltip).toContain('Total: 0.360');
+    expect(tooltip).not.toContain('Total:');
+
+    const surfaceIdx = tooltip.indexOf('Surface (base): 0.300');
+    const hazeIdx = tooltip.indexOf('Haze (CH4): +0.010');
+    const calciteIdx = tooltip.indexOf('Calcite aerosol: +0.020');
+    const cloudsIdx = tooltip.indexOf('Clouds: +0.030');
+    const byZoneIdx = tooltip.indexOf('By zone:');
+    const tropicalIdx = tooltip.indexOf('Tropical: 0.360');
+    const temperateIdx = tooltip.indexOf('Temperate: 0.410');
+
+    expect(surfaceIdx).toBeGreaterThan(-1);
+    expect(hazeIdx).toBeGreaterThan(surfaceIdx);
+    expect(calciteIdx).toBeGreaterThan(hazeIdx);
+    expect(cloudsIdx).toBeGreaterThan(calciteIdx);
+    expect(byZoneIdx).toBeGreaterThan(cloudsIdx);
+    expect(tropicalIdx).toBeGreaterThan(byZoneIdx);
+    expect(temperateIdx).toBeGreaterThan(tropicalIdx);
   });
 });

@@ -930,23 +930,47 @@ function updateLifeBox() {
     }
     if (els.surfaceAlbedoTooltip) {
       const lines = ['Surface composition by zone'];
+      const pct = v => (v * 100).toFixed(1);
+      const isZeroPct = v => Math.abs(v * 100) < 0.05; // hide values that would display as 0.0%
+
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
         const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.biomass), 0);
-        const pct = v => (v * 100).toFixed(1);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
         lines.push(`${name}:`);
-        lines.push(`  Rock: ${pct(rock)}%`);
-        lines.push(`  Water: ${pct(fr.ocean)}%`);
-        lines.push(`  Ice: ${pct(fr.ice)}%`);
-        lines.push(`  Hydrocarbons: ${pct(fr.hydrocarbon)}%`);
-        lines.push(`  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%`);
-        lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
-        lines.push(`  Biomass: ${pct(fr.biomass)}%`);
+
+        if (!isZeroPct(rock)) lines.push(`  Rock: ${pct(rock)}%`);
+        if (!isZeroPct(fr.ocean)) lines.push(`  Water: ${pct(fr.ocean)}%`);
+        if (!isZeroPct(fr.ice)) lines.push(`  Ice: ${pct(fr.ice)}%`);
+        if (!isZeroPct(fr.hydrocarbon)) lines.push(`  Hydrocarbons: ${pct(fr.hydrocarbon)}%`);
+        if (!isZeroPct(fr.hydrocarbonIce)) lines.push(`  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%`);
+        if (!isZeroPct(fr.co2_ice)) lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
+        if (!isZeroPct(fr.biomass)) lines.push(`  Biomass: ${pct(fr.biomass)}%`);
         lines.push('');
       }
+
+      // Guidance text
       lines.push('Biomass claims its share first based on zonal biomass.');
       lines.push('Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.');
+
+      // Append resulting surface albedo per zone
+      const zoneAlbLines = [];
+      for (const z of ZONES) {
+        try {
+          const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
+            ? terraforming.calculateZonalSurfaceAlbedo(z)
+            : terraforming.luminosity.surfaceAlbedo;
+          const name = z.charAt(0).toUpperCase() + z.slice(1);
+          zoneAlbLines.push(`${name}: ${zSurf.toFixed(2)}`);
+        } catch (_) {
+          // Skip zone if calculation fails
+        }
+      }
+      if (zoneAlbLines.length > 0) {
+        lines.push('', 'Zonal surface albedo:');
+        lines.push(...zoneAlbLines);
+      }
+
       els.surfaceAlbedoTooltip.innerHTML = lines.join('<br>');
     }
 
@@ -984,14 +1008,38 @@ function updateLifeBox() {
         const tauH = diags.tau_ch4_sw ?? 0;
         const tauC = diags.tau_calcite_sw ?? 0;
 
+        const notes = [];
+        if (cappedNote) notes.push(cappedNote.slice(1));
+        if (softCapNote) notes.push(softCapNote.slice(1));
+
         const parts = [];
         parts.push('Actual albedo = Surface + Haze + Calcite + Clouds', '');
         parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
         parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
         parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
         parts.push(`Clouds: +${dCloud.toFixed(3)}`);
-        parts.push('');
-        parts.push(`Total: ${A_act.toFixed(3)}${cappedNote}${softCapNote}`);
+        if (notes.length > 0) {
+          parts.push('', ...notes);
+        }
+
+        const zoneLines = [];
+        for (const z of ZONES) {
+          try {
+            const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
+              ? terraforming.calculateZonalSurfaceAlbedo(z)
+              : surfAlb;
+            const zRes = calculateActualAlbedoPhysics(zSurf, pressureBar, composition, gSurface, aerosolsSW) || {};
+            const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (zSurf + dHaze + dCalc + dCloud);
+            const name = z.charAt(0).toUpperCase() + z.slice(1);
+            zoneLines.push(`${name}: ${zAlb.toFixed(3)}`);
+          } catch (err) {
+            // Skip zone if calculation fails
+          }
+        }
+        if (zoneLines.length > 0) {
+          parts.push('', 'By zone:', ...zoneLines);
+        }
+
         const diag = [];
         if (Math.abs(tauH) > 0) diag.push(`  CH4 haze τ: ${tauH.toFixed(3)}`);
         if (Math.abs(tauC) > 0) diag.push(`  Calcite τ: ${tauC.toFixed(3)}`);
@@ -1097,6 +1145,10 @@ function updateLifeBox() {
       const tauC = diags.tau_calcite_sw ?? 0;
 
       const eps = 5e-4; // hide values that would display as 0.000
+      const notes = [];
+      if (cappedNote) notes.push(cappedNote.slice(1));
+      if (softCapNote) notes.push(softCapNote.slice(1));
+
       const parts = [];
       parts.push('Actual albedo = Surface + Haze + Calcite + Clouds');
       parts.push('');
@@ -1104,15 +1156,34 @@ function updateLifeBox() {
       if (Math.abs(dHaze) >= eps) parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
       if (Math.abs(dCalc) >= eps) parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
       if (Math.abs(dCloud) >= eps) parts.push(`Clouds: +${dCloud.toFixed(3)}`);
-      parts.push('');
-      parts.push(`Total: ${A_act.toFixed(3)}${cappedNote}${softCapNote}`);
+      if (notes.length > 0) {
+        parts.push('', ...notes);
+      }
+
+      const zoneLines = [];
+      for (const z of ZONES) {
+        try {
+          const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
+            ? terraforming.calculateZonalSurfaceAlbedo(z)
+            : surfAlb;
+          const zRes = calculateActualAlbedoPhysics(zSurf, pressureBar, composition, gSurface, aerosolsSW) || {};
+          const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (zSurf + dHaze + dCalc + dCloud);
+          const name = z.charAt(0).toUpperCase() + z.slice(1);
+          zoneLines.push(`${name}: ${zAlb.toFixed(3)}`);
+        } catch (err) {
+          // Skip zone if calculation fails
+        }
+      }
+      if (zoneLines.length > 0) {
+        parts.push('', 'By zone:');
+        parts.push(...zoneLines);
+      }
 
       const diag = [];
       if (Math.abs(tauH) >= eps) diag.push(`  CH4 haze tau: ${tauH.toFixed(3)}`);
       if (Math.abs(tauC) >= eps) diag.push(`  Calcite tau: ${tauC.toFixed(3)}`);
       if (diag.length > 0) {
-        parts.push('');
-        parts.push('Shortwave optical depths (diagnostic)');
+        parts.push('', 'Shortwave optical depths (diagnostic)');
         parts.push(...diag);
       }
       node.innerHTML = parts.join('<br>');
