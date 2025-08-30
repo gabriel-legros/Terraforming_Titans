@@ -349,8 +349,12 @@ var progressMars = {
         prerequisites: ["chapter1.17"],
         objectives: [
         ],
-        reward: [{
-        }]
+        reward: [        {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'ice',
+            type: 'enable'
+          }]
       },
       {
         id: "chapter1.18b",
@@ -371,12 +375,6 @@ var progressMars = {
           targetId: 'land',
           type: 'enable'
         },
-        {
-            target: 'resource',
-            resourceType: 'surface',
-            targetId: 'ice',
-            type: 'enable'
-          },
         ]
       },
       {
