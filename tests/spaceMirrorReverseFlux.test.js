@@ -27,6 +27,7 @@ afterEach(() => {
   mirrorOversightSettings.distribution.polar = 0;
   mirrorOversightSettings.distribution.focus = 0;
   mirrorOversightSettings.applyToLantern = false;
+  mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.advancedOversight = false;
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
@@ -49,6 +50,60 @@ afterAll(() => {
 });
 
 describe('space mirror reversal', () => {
+  test('slider mode reversal subtracts flux', () => {
+    const terra = createTerraforming();
+    global.buildings = {
+      spaceMirror: { surfaceArea: 1, active: 1 }
+    };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight', reverseEnabled: true } },
+      isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
+    };
+    mirrorOversightSettings.distribution.tropical = 1;
+
+    terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+
+    const ratio = getZoneRatio('tropical') / 0.25;
+    const zonePerc = getZonePercentage('tropical');
+    const baseSolar = terra.luminosity.solarFlux;
+    const mirror = terra.calculateMirrorEffect();
+    const totalMirrorPower = mirror.interceptedPower * buildings.spaceMirror.active;
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const zoneArea = totalArea * zonePerc;
+
+    const focusedMirrorFlux = -4 * totalMirrorPower / zoneArea;
+    const expected = baseSolar * ratio + focusedMirrorFlux;
+    const result = terra.calculateZoneSolarFlux('tropical');
+    expect(result).toBeCloseTo(expected, 5);
+  });
+
+  test('finer control checkbox subtracts flux', () => {
+    const terra = createTerraforming();
+    global.buildings = { spaceMirror: { surfaceArea: 1, active: 1 } };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
+    };
+    mirrorOversightSettings.useFinerControls = true;
+    mirrorOversightSettings.assignments.mirrors.tropical = 1;
+    mirrorOversightSettings.assignments.reversalMode.tropical = true;
+
+    terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+
+    const ratio = getZoneRatio('tropical') / 0.25;
+    const zonePerc = getZonePercentage('tropical');
+    const baseSolar = terra.luminosity.solarFlux;
+    const mirror = terra.calculateMirrorEffect();
+    const totalMirrorPower = mirror.interceptedPower * buildings.spaceMirror.active;
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const zoneArea = totalArea * zonePerc;
+
+    const focusedMirrorFlux = -4 * totalMirrorPower / zoneArea;
+    const expected = baseSolar * ratio + focusedMirrorFlux;
+    const result = terra.calculateZoneSolarFlux('tropical');
+    expect(result).toBeCloseTo(expected, 5);
+  });
+
   test('reversal subtracts mirror flux but leaves lantern flux', () => {
     const terra = createTerraforming();
     global.buildings = {

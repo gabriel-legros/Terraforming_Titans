@@ -1075,14 +1075,20 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     }
   }
 
-  let reverse = false;
-  if (mirrorOversightSettings.advancedOversight) {
-    reverse = mirrorOversightSettings.assignments.reversalMode[zone];
+  const project = projectManager?.projects?.spaceMirrorFacility;
+  const globalReverse = !!project?.reverseEnabled;
+
+  let zoneReverse = globalReverse;
+  if (mirrorOversightSettings.useFinerControls || mirrorOversightSettings.advancedOversight) {
+    zoneReverse = !!mirrorOversightSettings.assignments.reversalMode?.[zone];
   }
-  const distributedMirrorFlux = totalSurfaceArea > 0 ? (reverse ? -4 * distributedMirrorPower / totalSurfaceArea : 4 * distributedMirrorPower / totalSurfaceArea) : 0;
+
+  const distributedMirrorFlux = totalSurfaceArea > 0
+    ? (globalReverse ? -4 * distributedMirrorPower / totalSurfaceArea : 4 * distributedMirrorPower / totalSurfaceArea)
+    : 0;
   const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
 
-  if (focusedMirrorFlux && reverse) {
+  if (focusedMirrorFlux && zoneReverse) {
     focusedMirrorFlux = -focusedMirrorFlux;
   }
 
