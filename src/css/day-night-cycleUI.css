@@ -15,7 +15,7 @@
     position: absolute; /* Ensures it grows within the container */
     top: 0;
     left: 0;
-    transition: width 0.5s ease, background-color 2s ease; /* Smooth color transition */
+    transition: background-color 2s ease; /* Smooth color transition */
 }
 
 /* Text inside the progress bar container */
