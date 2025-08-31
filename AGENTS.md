@@ -393,3 +393,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Reversal buttons now appear immediately when unlocked by story effects, without requiring a reload.
 - Productivity calculation now accounts for resource production gained from maintenance conversions.
 - Finer controls collapse toggle now uses triangle icons instead of a plus, matching resource lists.
+- dayNightTemperaturesModel now forwards aerosol column mass to albedo calculations.

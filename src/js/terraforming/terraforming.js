@@ -1140,13 +1140,23 @@ class Terraforming extends EffectableEntity{
       this.temperature.opticalDepth = tau;
       this.temperature.opticalDepthContributions = contributions;
 
+      // Build aerosols (shortwave) columns in kg/m^2
+      const aerosolsSW = {};
+      const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
+      if (this.resources?.atmospheric?.calciteAerosol) {
+        const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
+        const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0; // kg/m^2
+        aerosolsSW.calcite = column;
+      }
+
       const baseParams = {
         groundAlbedo: groundAlbedo,
         flux: modifiedSolarFlux,
         rotationPeriodH: rotationPeriod,
         surfacePressureBar: surfacePressureBar,
         composition: composition,
-        gSurface: gSurface
+        gSurface: gSurface,
+        aerosolsSW
       };
 
       this.luminosity.zonalFluxes = {};
