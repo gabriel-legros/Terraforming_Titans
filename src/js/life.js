@@ -636,10 +636,12 @@ class LifeManager extends EffectableEntity {
         const biomassRatio = 1.66612;
         const oxygenRatio = 1.77388;
 
-        const secondsMultiplier = deltaTime / 1000;
+          const secondsMultiplier = deltaTime / 1000;
+          terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
 
-        for (const zoneName of ['tropical', 'temperate', 'polar']) {
+          for (const zoneName of ['tropical', 'temperate', 'polar']) {
             let usedLiquidWater = false;
+            terraforming.biomassDyingZones[zoneName] = false;
             const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
             if (zonalBiomass <= 0) continue;
 
@@ -726,6 +728,9 @@ class LifeManager extends EffectableEntity {
             }
 
             const biomassChange = growthBiomass + decayBiomass;
+            if (biomassChange < -1e-9) {
+                terraforming.biomassDyingZones[zoneName] = true;
+            }
             const co2Change = growthCO2 + decayCO2;
             const oxygenChange = growthOxygen + decayOxygen;
 
