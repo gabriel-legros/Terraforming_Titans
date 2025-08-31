@@ -540,8 +540,6 @@ function initializeMirrorOversightUI(container) {
   finerToggle.classList.add('collapse-toggle');
   finerToggle.innerHTML = '<span id="mirror-finer-icon">▶</span> Finer Controls';
   finerToggle.style.cursor = 'pointer';
-  // Override icon text with safe ASCII to avoid encoding glitches
-  try { finerToggle.innerHTML = '<span id="mirror-finer-icon">[+]</span> Finer Controls'; } catch(e) {}
   const finerContent = document.createElement('div');
   finerContent.id = 'mirror-finer-content';
   finerContent.style.display = 'none';
@@ -631,18 +629,11 @@ function initializeMirrorOversightUI(container) {
   div.appendChild(finerToggle);
   div.appendChild(finerContent);
 
+  const finerIcon = finerToggle.querySelector('#mirror-finer-icon');
   finerToggle.addEventListener('click', () => {
     const open = finerContent.style.display !== 'none';
     finerContent.style.display = open ? 'none' : 'block';
-    const icon = document.getElementById('mirror-finer-icon');
-    if (icon) icon.textContent = open ? '–¶' : '–¼';
-  });
-
-  // Ensure ASCII icon updates without encoding issues
-  finerToggle.addEventListener('click', () => {
-    const open = finerContent.style.display !== 'none';
-    const icon = document.getElementById('mirror-finer-icon');
-    if (icon) icon.textContent = open ? '▶' : '▼';
+    if (finerIcon) finerIcon.textContent = open ? '▶' : '▼';
   });
 
   const useFiner = finerContent.querySelector('#mirror-use-finer');

@@ -282,7 +282,7 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active * building.productivity;
+      const base = maintenanceCost[resource] * building.active;
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
