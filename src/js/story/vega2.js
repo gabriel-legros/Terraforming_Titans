@@ -45,7 +45,7 @@ progressVega2.storyProjects.vega2_explore_crystal_city = {
     resourceGain: { atmospheric: { atmosphericWater: 5_000 } },
     storySteps: [
       'Step 1 — Streets: Broad avenues between crystal walls. No doors. No signs.',
-      'Step 2 — Rooms: Clear chambers with soft angles. No tools. No beds.',
+      'Step 2 — Rooms: Clear chambers with soft angles. No tools. No beds. No corners.',
       'Step 3 — Halls: Patterns repeat, then shift. Footsteps echo for a long time.',
       'Step 4 — Inlays: Thin veins catch light and throw shapes on the floor.',
       'Step 5 — Stacks: A quiet hall of thin slabs set in rows. It feels like a library.'
