@@ -6,7 +6,7 @@ const numbers = require('../src/js/numbers.js');
 const physics = require('../src/js/physics.js');
 
 describe('temperature-based decay interpolation', () => {
-  test('decay rate scales within one degree of survival limit', () => {
+  test('decay rate scales within ±0.5 K of survival limit', () => {
     const ctx = { console };
     vm.createContext(ctx);
     ctx.EffectableEntity = EffectableEntity;
@@ -22,9 +22,9 @@ describe('temperature-based decay interpolation', () => {
         polar: { liquidWater: 0.1, ice: 0 }
       },
       temperature: { zones: {
-        tropical: { day: 272.65, night: 272.65 },
-        temperate: { day: 272.65, night: 272.65 },
-        polar: { day: 272.65, night: 272.65 }
+        tropical: { day: 273.15, night: 273.15 },
+        temperate: { day: 273.15, night: 273.15 },
+        polar: { day: 273.15, night: 273.15 }
       } },
       zonalSurface: {
         tropical: { biomass: 100 },

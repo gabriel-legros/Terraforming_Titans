@@ -166,7 +166,7 @@ class LifeDesign {
 
   // Checks survival temperature for a specific zone and returns details
   temperatureSurvivalCheckZone(zoneName) {
-      const temperatureRanges = this.getTemperatureRanges().survival;
+      const ranges = this.getTemperatureRanges().survival;
       const zoneData = terraforming.temperature.zones[zoneName];
       let reason = null;
 
@@ -177,20 +177,29 @@ class LifeDesign {
         1
       );
 
-      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
-      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
-      else if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
-      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
+      if (zoneData.day < ranges.min - 0.5) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(ranges.min - 0.5)}${unit})`;
+      else if (zoneData.day > ranges.max + 0.5) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(ranges.max + 0.5)}${unit})`;
+      else if (zoneData.night < ranges.min - 0.5) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(ranges.min - 0.5)}${unit})`;
+      else if (zoneData.night > ranges.max + 0.5) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(ranges.max + 0.5)}${unit})`;
 
-      return { pass: reason === null, reason: reason };
+      if (reason) {
+          return { pass: false, reason };
+      }
+
+      const dayPen = this.temperaturePenalty(zoneData.day, ranges);
+      const nightPen = this.temperaturePenalty(zoneData.night, ranges);
+      const penalty = Math.max(dayPen, nightPen);
+      if (penalty > 0) {
+          const growthPercent = Math.round((1 - penalty) * 100);
+          return { pass: true, warning: true, reason: `Growth scaled to ${growthPercent}%` };
+      }
+      return { pass: true, warning: false, reason: null };
   }
  
   // Checks only daytime survival temperature for a specific zone
   daytimeTemperatureSurvivalCheckZone(zoneName) {
-      const temperatureRanges = this.getTemperatureRanges().survival;
-      const zoneData = terraforming.temperature.zones[zoneName];
-      let reason = null;
-
+      const ranges = this.getTemperatureRanges().survival;
+      const temp = terraforming.temperature.zones[zoneName].day;
       const unit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
       const fmt = v => formatNumber(
         typeof toDisplayTemperature === 'function' ? toDisplayTemperature(v) : v,
@@ -198,18 +207,23 @@ class LifeDesign {
         1
       );
 
-      if (zoneData.day < temperatureRanges.min) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
-      else if (zoneData.day > temperatureRanges.max) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
- 
-      return { pass: reason === null, reason: reason };
+      const penalty = this.temperaturePenalty(temp, ranges);
+      if (penalty === 1) {
+          const limit = temp < ranges.min ? ranges.min - 0.5 : ranges.max + 0.5;
+          const comparison = temp < ranges.min ? '<' : '>';
+          const text = temp < ranges.min ? 'cold' : 'hot';
+          return { pass: false, reason: `Day too ${text} (${fmt(temp)}${unit} ${comparison} ${fmt(limit)}${unit})` };
+      }
+      if (penalty > 0) {
+          return { pass: true, warning: true, reason: `Growth scaled to ${Math.round((1 - penalty) * 100)}%` };
+      }
+      return { pass: true, warning: false, reason: null };
   }
  
   // Checks only nighttime survival temperature for a specific zone
   nighttimeTemperatureSurvivalCheckZone(zoneName) {
-      const temperatureRanges = this.getTemperatureRanges().survival;
-      const zoneData = terraforming.temperature.zones[zoneName];
-      let reason = null;
-
+      const ranges = this.getTemperatureRanges().survival;
+      const temp = terraforming.temperature.zones[zoneName].night;
       const unit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
       const fmt = v => formatNumber(
         typeof toDisplayTemperature === 'function' ? toDisplayTemperature(v) : v,
@@ -217,35 +231,57 @@ class LifeDesign {
         1
       );
 
-      if (zoneData.night < temperatureRanges.min) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(temperatureRanges.min)}${unit})`;
-      else if (zoneData.night > temperatureRanges.max) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(temperatureRanges.max)}${unit})`;
- 
-      return { pass: reason === null, reason: reason };
+      const penalty = this.temperaturePenalty(temp, ranges);
+      if (penalty === 1) {
+          const limit = temp < ranges.min ? ranges.min - 0.5 : ranges.max + 0.5;
+          const comparison = temp < ranges.min ? '<' : '>';
+          const text = temp < ranges.min ? 'cold' : 'hot';
+          return { pass: false, reason: `Night too ${text} (${fmt(temp)}${unit} ${comparison} ${fmt(limit)}${unit})` };
+      }
+      if (penalty > 0) {
+          return { pass: true, warning: true, reason: `Growth scaled to ${Math.round((1 - penalty) * 100)}%` };
+      }
+      return { pass: true, warning: false, reason: null };
   }
  
    // Returns an object indicating survival status for all zones
   temperatureSurvivalCheck() {
       const results = {};
-      // Global pass requires ANY zone to pass
       let globalPass = false;
+      let anySafe = false;
+      let anyWarning = false;
       for (const zoneName of ['tropical', 'temperate', 'polar']) {
-          results[zoneName] = this.temperatureSurvivalCheckZone(zoneName);
-          if (results[zoneName].pass) globalPass = true; // If any zone passes, global passes
+          const res = this.temperatureSurvivalCheckZone(zoneName);
+          results[zoneName] = res;
+          if (res.pass) {
+              globalPass = true;
+              if (res.warning) anyWarning = true; else anySafe = true;
+          }
       }
-      results.global = { pass: globalPass, reason: globalPass ? null : "Fails in all zones" };
+      const globalWarning = !anySafe && anyWarning;
+      results.global = {
+          pass: globalPass,
+          warning: globalWarning,
+          reason: globalPass ? (globalWarning ? 'Growth reduced in all zones' : null) : 'Fails in all zones'
+      };
       return results;
   }
 
-  // Returns how far (in K) the zone's temperature is outside the survivable range
+  // Computes temperature penalty for interpolation around survival limits
+  temperaturePenalty(temp, ranges) {
+      if (temp < ranges.min - 0.5 || temp > ranges.max + 0.5) return 1;
+      if (temp < ranges.min + 0.5) return 1 - (temp - (ranges.min - 0.5));
+      if (temp > ranges.max - 0.5) return 1 - ((ranges.max + 0.5) - temp);
+      return 0;
+  }
+
+  // Returns a penalty fraction [0,1] based on how close zone temps are to survival range
   temperatureSurvivalPenalty(zoneName) {
       const ranges = this.getTemperatureRanges().survival;
       const zoneData = terraforming.temperature.zones[zoneName];
-      let deviation = 0;
-      if (zoneData.day < ranges.min) deviation = ranges.min - zoneData.day;
-      else if (zoneData.day > ranges.max) deviation = zoneData.day - ranges.max;
-      if (zoneData.night < ranges.min) deviation = Math.max(deviation, ranges.min - zoneData.night);
-      else if (zoneData.night > ranges.max) deviation = Math.max(deviation, zoneData.night - ranges.max);
-      return deviation;
+      const dayPen = this.temperaturePenalty(zoneData.day, ranges);
+      const nightPen = this.temperaturePenalty(zoneData.night, ranges);
+      return Math.max(dayPen, nightPen);
   }
 
   // Checks toxicity tolerance (currently a simple global check)
@@ -607,8 +643,7 @@ class LifeManager extends EffectableEntity {
             const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
             if (zonalBiomass <= 0) continue;
 
-            const tempDeviation = design.temperatureSurvivalPenalty(zoneName);
-            const penaltyFraction = Math.min(tempDeviation, 1);
+            const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
             const growthFactor = 1 - penaltyFraction;
             const moisturePass = design.moistureCheckZone(zoneName).pass;
 
