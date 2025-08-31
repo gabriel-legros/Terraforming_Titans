@@ -235,7 +235,12 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.liquidMethane.initialValue = totalLiquidMethane;
         merged.resources.surface.hydrocarbonIce.initialValue = totalHydrocarbonIce;
 
-        return { merged, override, star: SOL_STAR };
+        let star = override?.star || base?.star || SOL_STAR;
+        star = JSON.parse(JSON.stringify(star));
+        if (merged.celestialParameters?.starLuminosity != null && star.luminositySolar == null) {
+            star.luminositySolar = merged.celestialParameters.starLuminosity;
+        }
+        return { merged, override, star };
     }
 
     getCurrentRandomSeed() {
