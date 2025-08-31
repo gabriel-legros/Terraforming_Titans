@@ -553,6 +553,15 @@ const vega2Overrides = {
     polar: { liquid: 0, ice: 0 }
   },
 
+  star: {
+    name: 'Vega',
+    spectralType: 'A0V',
+    luminositySolar: 40,
+    massSolar: 2.135,
+    temperatureK: 9602,
+    habitableZone: { inner: 6, outer: 9 }
+  },
+
   celestialParameters: {
     // Venus-like size and orbit. No clouds/greenhouse by composition above.
     distanceFromSun: 4, // AU
