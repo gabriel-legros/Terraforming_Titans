@@ -244,7 +244,7 @@ progressVega2.chapters.push(
       "Mary: 'Keep your teams close. No hero runs. Start a slow, careful survey.'"
     ),
     prerequisites: ['chapter14.5'],
-    objectives: [],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 20_000 }],
     reward: [
       { target: 'project', targetId: 'vega2_explore_crystal_city', type: 'enable' }
     ]
@@ -260,22 +260,7 @@ progressVega2.chapters.push(
       "Mary: 'I don't know if I should be happy or sad about that.'"
     ),
     prerequisites: ['chapter15.0'],
-    objectives: [],
-    reward: []
-  },
-  // 15.2 — Explore the Crystal City (5 passes)
-  {
-    id: 'chapter15.2',
-    type: 'journal',
-    chapter: 15,
-    narrative: (
-      "$WGC_TEAM1_LEADER$: 'Objective set: explore the city. Five passes. No shortcuts.'\n" +
-      "Dr. Evelyn Hart: 'We’ll log the plan, the paths, and the light. We won’t draw any big lines yet.'"
-    ),
-    prerequisites: ['chapter15.1'],
-    objectives: [
-      { type: 'project', projectId: 'vega2_explore_crystal_city', repeatCount: 5 }
-    ],
+    objectives: [      { type: 'project', projectId: 'vega2_explore_crystal_city', repeatCount: 5 }],
     reward: []
   },
   // 15.3 — The Stacks
@@ -289,7 +274,7 @@ progressVega2.chapters.push(
       "Mary: 'No touching. Photograph, map, and back out. This is valuable, let's not destroy it.'\n" +
       "H.O.P.E.: 'Tentative classification: repository.'"
     ),
-    prerequisites: ['chapter15.2'],
+    prerequisites: ['chapter15.1'],
     objectives: [],
     reward: []
   },
