@@ -110,6 +110,9 @@ class Building extends EffectableEntity {
   // External: enable reversal via effect
   enableReversal() {
     this.reversalAvailable = true;
+    if (typeof updateBuildingDisplay === 'function' && typeof buildings !== 'undefined') {
+      updateBuildingDisplay(buildings);
+    }
   }
 
   // External: toggle reversal state (hooked by UI)
