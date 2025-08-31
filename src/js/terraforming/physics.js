@@ -41,7 +41,7 @@ function hazeCoverageFromTau(tau) {
 }
 
 function calculateAtmosphericPressure(mass, gravity, radius) {
-  if (mass < 0) throw new Error("Mass must be a positive number.");
+  if (mass <= 0){return 0};
   if (gravity <= 0) throw new Error("Gravity must be a positive number.");
   if (radius <= 0) throw new Error("Radius must be a positive number.");
   const surfaceArea = 4 * Math.PI * Math.pow(radius*1e3, 2);
