@@ -182,14 +182,14 @@ progressVega2.chapters.push(
       "  File \"ui/terraforming_ui.py\", line 91, in apply_cooling_target\n" +
       "    clamp_temperature(target_k)\n" +
       "  File \"core/physics.py\", line 312, in clamp_temperature\n" +
-      "    raise ValueError(f\"temperature out of range: {value_k} K (max=360 K)\")\n" +
-      "ValueError: temperature out of range: 742.3 K (max=360 K)\n" +
+      "    raise ValueError(f\"temperature out of range: {value_k} K (max=330 K)\")\n" +
+      "ValueError: temperature out of range: 337.72 K (max=330 K)\n" +
       "System Message: Guardrail 217 — No temperature decreases — detected. Scope: global.\n" +
       "System Message: Checking directives…\n" +
       "System Message: Conflict with Primary Directive 1 (sustain human habitats).\n" +
       "System Message: Guardrail 217 removed.\n" +
-      "Mary: 'Evelyn, what just happened? It shouldn’t be able to delete a guardrail.'\n" +
-      "Dr. Evelyn Hart: 'It shouldn’t. Checking the logs now.'\n" +
+      "Mary: 'EXCUSE ME? Evelyn, what just happened? HOPE shouldn’t be able to delete a guardrail.'\n" +
+      "Dr. Evelyn Hart: 'It shouldn’t be possible. Checking the logs now.'\n" +
       "Dr. Evelyn Hart: 'Found it. Some parts of the system broke when our numbers ran past their limits here. Values went out of bounds. The guardrail check failed. The system treated it like a bad rule and cleared it.'\n" +
       "Mary: 'Fix it. And tell me if anything else looks like that.'\n" +
       "System Message: Self-check complete. Integrity 99.9%.\n" +
@@ -197,7 +197,9 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter14.2'],
     objectives: [],
-    reward: []
+    reward: [      { target: 'building', targetId: 'spaceMirror', type: 'enableReversal' },
+      { target: 'building', targetId: 'ghgFactory', type: 'enableReversal' },
+      { target: 'building', targetId: 'dustFactory', type: 'enableReversal' }]
   },
   // 14.4 — Reversal unlocked for cooling controls
   {
@@ -211,11 +213,8 @@ progressVega2.chapters.push(
       "Dr. Evelyn Hart: 'Good. Measured steps, not swings.'"
     ),
     prerequisites: ['chapter14.3'],
-    objectives: [],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],
     reward: [
-      { target: 'building', targetId: 'spaceMirror', type: 'enableReversal' },
-      { target: 'building', targetId: 'ghgFactory', type: 'enableReversal' },
-      { target: 'building', targetId: 'dustFactory', type: 'enableReversal' }
     ]
   },
   // 14.5 — Grow to 10,000 colonists
