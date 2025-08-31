@@ -642,7 +642,7 @@ function initializeMirrorOversightUI(container) {
   finerToggle.addEventListener('click', () => {
     const open = finerContent.style.display !== 'none';
     const icon = document.getElementById('mirror-finer-icon');
-    if (icon) icon.textContent = open ? '[-]' : '[+]';
+    if (icon) icon.textContent = open ? '▶' : '▼';
   });
 
   const useFiner = finerContent.querySelector('#mirror-use-finer');
