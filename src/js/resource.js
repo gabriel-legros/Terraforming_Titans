@@ -276,6 +276,23 @@ function calculateProductionRates(deltaTime, buildings) {
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
       }
     }
+
+    // Include production from maintenance conversions but ignore maintenance costs
+    const maintenanceCost = typeof building.calculateMaintenanceCost === 'function' ? building.calculateMaintenanceCost() : {};
+    for (const resource in maintenanceCost) {
+      const sourceData = resources.colony[resource];
+      if (!sourceData || !sourceData.maintenanceConversion) continue;
+      const base = maintenanceCost[resource] * building.active;
+      const conversionValue = sourceData.conversionValue || 1;
+      for (const targetCategory in sourceData.maintenanceConversion) {
+        const targetResource = sourceData.maintenanceConversion[targetCategory];
+        resources[targetCategory][targetResource].modifyRate(
+          base * conversionValue,
+          building.displayName,
+          'building'
+        );
+      }
+    }
   }
 
   if (projectManager) {
