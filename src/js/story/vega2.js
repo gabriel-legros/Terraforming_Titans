@@ -337,10 +337,21 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter15.6'],
     objectives: [
-      { type: 'project', projectId: 'vega2_decode_crystal_library', repeatCount: 5 }
     ],
     reward: [
       { target: 'project', targetId: 'vega2_decode_crystal_library', type: 'enable' }
+    ]
+  },
+  {
+    id: 'chapter16.0b',
+    type: 'journal',
+    chapter: 16,
+    narrative: "",
+    prerequisites: ['chapter16.0'],
+    objectives: [
+      { type: 'project', projectId: 'vega2_decode_crystal_library', repeatCount: 5 }
+    ],
+    reward: [
     ]
   },
   // 16.1 — Reel from the Revelations
@@ -353,7 +364,7 @@ progressVega2.chapters.push(
       "$WGC_TEAM1_LEADER$: 'We request permission to explore further.  The records point to a special location near the edge of the city.  It sounds like it was very valuable, but also very controversial.'\n" +
       "Mary : 'Approved, of course.'"
     ),
-    prerequisites: ['chapter16.0'],
+    prerequisites: ['chapter16.0b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
