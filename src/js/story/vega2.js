@@ -466,7 +466,7 @@ progressVega2.chapters.push(
     chapter: 16,
     narrative: (
       "$WGC_TEAM1_LEADER$ (to H.O.P.E.): 'Certain problems... they can't be solved with your sophisticated algorithms, friend. Sometimes they need less sophisticated ways of thinking.'\n" +
-      "Analyzing advice......................................................................................................................................................................................................................................................................................................................."
+      "Analyzing advice..."
     ),
     prerequisites: ['chapter16.6'],
     objectives: [],
