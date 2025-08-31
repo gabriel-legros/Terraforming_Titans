@@ -85,9 +85,10 @@ function createShopItem(key) {
 
   item.appendChild(actions);
 
-  const costSpan = label.querySelector(`#solis-shop-${key}-cost`);
+  const costWrapper = label.querySelector('.solis-shop-item-cost');
+  const costSpan = costWrapper.querySelector(`#solis-shop-${key}-cost`);
   const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
-  const elementRecord = { button, cost: costSpan, count: countSpan, item };
+  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, item };
 
   if (key === 'researchUpgrade') {
     const list = document.createElement('ul');
@@ -405,12 +406,19 @@ function updateSolisUI() {
   for (const key in shopElements) {
     const el = shopElements[key];
     if (!el) continue;
-    if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
-    if (el.count) el.count.textContent = solisManager.shopUpgrades[key].purchases;
-    if (el.button) {
-      el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
-      if (key === 'advancedOversight' && solisManager.shopUpgrades.advancedOversight.purchases >= 1) {
-        el.button.disabled = true;
+    const up = solisManager.shopUpgrades[key];
+    if (!up) continue;
+    if (el.count) el.count.textContent = up.purchases;
+    const atMax = typeof up.max === 'number' && up.purchases >= up.max;
+    if (atMax) {
+      if (el.button) el.button.classList.add('hidden');
+      if (el.costWrapper) el.costWrapper.classList.add('hidden');
+    } else {
+      if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
+      if (el.costWrapper) el.costWrapper.classList.remove('hidden');
+      if (el.button) {
+        el.button.classList.remove('hidden');
+        el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
       }
     }
     if (key === 'researchUpgrade' && el.listItems) {
