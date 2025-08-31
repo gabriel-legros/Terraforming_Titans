@@ -1,3 +1,8 @@
+let dayNightContainer = null;
+let dayNightProgressBar = null;
+let dayNightProgressText = null;
+let dayNightSun = null; // NEW
+
 class DayNightCycle {
     constructor(dayDuration) {
       this.dayDuration = dayDuration;
@@ -50,14 +55,23 @@ function rotationPeriodToDuration(rotationHours) {
   return (rotationHours / 24) * 30000;
 }
 
-let dayNightContainer = null;
-let dayNightProgressBar = null;
-let dayNightProgressText = null;
-
 function resetDayNightContainerCache() {
   dayNightContainer = null;
   dayNightProgressBar = null;
   dayNightProgressText = null;
+  dayNightSun = null; // NEW
+}
+
+function ensureSun(container) {
+  if (!dayNightSun) {
+    dayNightSun = document.getElementById('day-night-sun');
+    if (!dayNightSun) {
+      dayNightSun = document.createElement('div');
+      dayNightSun.id = 'day-night-sun';
+      dayNightSun.className = 'day-night-sun';
+      container.appendChild(dayNightSun);
+    }
+  }
 }
 
 function updateDayNightDisplay() {
@@ -65,35 +79,67 @@ function updateDayNightDisplay() {
     dayNightContainer = document.querySelector('.day-night-progress-bar-container');
   }
   const container = dayNightContainer;
+
   if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
     if (container) container.style.display = 'none';
     return;
   }
   if (container) container.style.display = 'block';
 
-  const dayNightStatus = dayNightCycle.isDay() ? 'Day' : 'Night';
-  const dayProgress = dayNightCycle.getDayProgress() * 100;
+  const dayProgress = Math.max(0, Math.min(1, dayNightCycle.getDayProgress()));
+  const dayProgressPercent = dayProgress * 100;
 
   if (!dayNightProgressBar) dayNightProgressBar = document.getElementById('day-night-progress-bar');
   if (!dayNightProgressText) dayNightProgressText = document.getElementById('progress-text');
 
-  if (dayNightProgressBar) dayNightProgressBar.style.width = dayProgress + '%';
+  // Background gradient motion (leave as you had it)
+  if (dayNightProgressBar) {
+    dayNightProgressBar.style.backgroundPosition = `${dayProgressPercent}% 50%`;
+  }
 
-  // Update text, optionally round to 2 decimal places for display
-  if (dayNightProgressText) dayNightProgressText.textContent = `Day Cycle: ${dayProgress.toFixed(1)}%`;
+  // ----- SUN LOGIC -----
+  if (container) ensureSun(container);
 
-  // Change color gradually between yellow (day) and dark blue (night)
-  if (dayNightStatus === 'Day') {
-    // Transition from yellow (255, 255, 0) to orange (255, 165, 0)
-    if (dayNightProgressBar) {
-      dayNightProgressBar.style.backgroundColor = `rgb(255, ${255 - dayProgress * 0.9}, 0)`; // Transitions from yellow to orange
-      dayNightProgressBar.classList.remove('night');
+  if (dayNightSun && container) {
+    // Measure container and sun
+    const barWidth = container.clientWidth;
+    const sunWidth = dayNightSun.offsetWidth || 24; // fallback if not yet rendered
+
+    // Move left -> right.
+    // Use left edge positioning so we can push the Sun fully off-screen.
+    // At 0%: left = -sunWidth (fully off screen)
+    // At 50%: centered in the bar
+    // At 100%: left = barWidth (fully off screen on right)
+    const startX = -sunWidth;
+    const endX   = barWidth;
+    const x = startX + (endX - startX) * dayProgress;
+    dayNightSun.style.left = `${x}px`;
+
+    // Fade rules:
+    // Invisible at 0% (exactly none), fully visible by 2%.
+    // Start fading at 97%, fully invisible by 99% (your requirement).
+    const FADE_IN_END     = 0.02;  // 2%
+    const FADE_OUT_START  = 0.97;  // 97%
+    const FADE_OUT_END    = 0.99;  // 99%
+
+    let alpha = 1;
+    if (dayProgress <= 0) {
+      alpha = 0;
+    } else if (dayProgress < FADE_IN_END) {
+      alpha = dayProgress / FADE_IN_END; // 0 → 1
+    } else if (dayProgress < FADE_OUT_START) {
+      alpha = 1;
+    } else if (dayProgress < FADE_OUT_END) {
+      alpha = 1 - ((dayProgress - FADE_OUT_START) / (FADE_OUT_END - FADE_OUT_START)); // 1 → 0
+    } else {
+      alpha = 0; // 99%+
     }
-  } else {
-    if (dayNightProgressBar) {
-      dayNightProgressBar.style.backgroundColor = `rgb(0, 0, ${dayProgress * 2.55})`; // Transitions from dark blue to lighter blue as night progresses
-      dayNightProgressBar.classList.add('night');
-    }
+    dayNightSun.style.opacity = alpha.toFixed(3);
+  }
+
+  // Progress text
+  if (dayNightProgressText) {
+    dayNightProgressText.textContent = `Day Cycle: ${dayProgressPercent.toFixed(1)}%`;
   }
 }
 

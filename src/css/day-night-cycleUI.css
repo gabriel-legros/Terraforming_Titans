@@ -2,35 +2,51 @@
 .day-night-progress-bar-container {
     width: 100%;
     height: 20px;
-    background-color: #ddd;
-    position: relative; /* Allows the growing bar and text to be layered correctly */
-    margin-bottom: 10px; /* Optional: Adds space around the bar if needed */
+    background-color: #000033; /* Dark Blue */
+    position: relative;
+    margin-bottom: 10px;
+    overflow: hidden;            /* NEW: ensure the Sun can move off-screen cleanly */
+    --sun-size: 22px;            /* NEW: tweak Sun size here */
 }
 
 /* The actual growing progress bar */
 .day-night-progress-bar {
-    width: 0;
+    width: 100%;
     height: 100%;
-    background-color: yellow; /* Starting color for day */
-    position: absolute; /* Ensures it grows within the container */
+    background: none;
+    position: absolute;
     top: 0;
     left: 0;
-    transition: background-color 2s ease; /* Smooth color transition */
 }
 
 /* Text inside the progress bar container */
 .progress-text {
     position: relative;
-    z-index: 1; /* Ensures the text appears above the growing bar */
+    z-index: 1;
     color: white;
     font-weight: bold;
     text-align: center;
     width: 100%;
-    display: block; /* Centers the text horizontally inside the container */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* To make the text stand out */
+    display: block;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Color for night */
-.day-night-progress-bar.night {
-    background-color: darkblue; /* Transition to dark blue for night */
+/* NEW: the Sun */
+.day-night-sun {
+    position: absolute;
+    top: 50%;
+    left: -100px;                /* will be overridden by JS each frame */
+    transform: translateY(-50%); /* vertical centering without affecting X math */
+    width: var(--sun-size);
+    height: var(--sun-size);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+
+    /* A simple "sun" look with a subtle glow */
+    background: linear-gradient(to right, #000033 0%, #ffd700 50%, #000033 100%);
+    box-shadow: none;
+    width: 10%;
+    height: 100%;
+    border-radius: 0;
 }
