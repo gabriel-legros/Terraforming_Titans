@@ -6,6 +6,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveOxygenPressure = false;
     this.disableOxygenPressureThreshold = 0;
     this.hasOxygenPressureControl = false;
+    this.pressureUnit = 'kPa';
+    this.oxygenPressureUnit = 'kPa';
     const maxPressure = config.attributes?.maxPressure;
     if (typeof maxPressure === 'number') {
       this.disablePressureThreshold = maxPressure;
@@ -71,19 +73,36 @@ class SpaceMiningProject extends SpaceshipProject {
     input.classList.add(`${key}-input`);
     input.value = this[thresholdProp];
     input.addEventListener('input', () => {
-      this[thresholdProp] = parseFloat(input.value) || 0;
+      const val = parseFloat(input.value);
+      const unitProp = `${key}Unit`;
+      this[thresholdProp] = this[unitProp] === 'Pa' ? (val / 1000) : val;
     });
     control.appendChild(input);
 
-    const unit = document.createElement('span');
-    unit.textContent = 'kPa';
-    control.appendChild(unit);
+    const unitSelect = document.createElement('select');
+    unitSelect.classList.add(`${key}-unit`);
+    ['kPa', 'Pa'].forEach(u => {
+      const option = document.createElement('option');
+      option.value = u;
+      option.textContent = u;
+      unitSelect.appendChild(option);
+    });
+    const unitProp = `${key}Unit`;
+    unitSelect.value = this[unitProp];
+    unitSelect.addEventListener('change', () => {
+      this[unitProp] = unitSelect.value;
+      input.value = this[unitProp] === 'Pa'
+        ? this[thresholdProp] * 1000
+        : this[thresholdProp];
+    });
+    control.appendChild(unitSelect);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       [`${key}Control`]: control,
       [`${key}Checkbox`]: checkbox,
       [`${key}Input`]: input,
+      [`${key}UnitSelect`]: unitSelect,
     };
 
     return control;
@@ -118,8 +137,13 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableAbovePressure;
     }
+    if (elements.pressureUnitSelect) {
+      elements.pressureUnitSelect.value = this.pressureUnit;
+    }
     if (elements.pressureInput && document.activeElement !== elements.pressureInput) {
-      elements.pressureInput.value = this.disablePressureThreshold;
+      elements.pressureInput.value = this.pressureUnit === 'Pa'
+        ? this.disablePressureThreshold * 1000
+        : this.disablePressureThreshold;
     }
     if (elements.oxygenPressureControl) {
       elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -127,8 +151,13 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.oxygenPressureCheckbox) {
       elements.oxygenPressureCheckbox.checked = this.disableAboveOxygenPressure;
     }
+    if (elements.oxygenPressureUnitSelect) {
+      elements.oxygenPressureUnitSelect.value = this.oxygenPressureUnit;
+    }
     if (elements.oxygenPressureInput && document.activeElement !== elements.oxygenPressureInput) {
-      elements.oxygenPressureInput.value = this.disableOxygenPressureThreshold;
+      elements.oxygenPressureInput.value = this.oxygenPressureUnit === 'Pa'
+        ? this.disableOxygenPressureThreshold * 1000
+        : this.disableOxygenPressureThreshold;
     }
   }
 
@@ -216,6 +245,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disablePressureThreshold: this.disablePressureThreshold,
       disableAboveOxygenPressure: this.disableAboveOxygenPressure,
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
+      pressureUnit: this.pressureUnit,
+      oxygenPressureUnit: this.oxygenPressureUnit,
     };
   }
 
@@ -225,6 +256,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disablePressureThreshold = state.disablePressureThreshold || 0;
     this.disableAboveOxygenPressure = state.disableAboveOxygenPressure || false;
     this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold || 0;
+    this.pressureUnit = state.pressureUnit || 'kPa';
+    this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
   }
 
   calculateSpaceshipGainPerShip() {

@@ -535,6 +535,10 @@
     width: 60px;
 }
 
+.pressure-control .pressure-unit {
+    width: 60px;
+}
+
 .temperature-control {
     display: flex;
     align-items: center;
