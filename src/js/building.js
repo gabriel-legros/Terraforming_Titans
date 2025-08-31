@@ -537,7 +537,12 @@ class Building extends EffectableEntity {
         const tolerance = 0.001;
         for (let i = 0; i < 10 && Math.abs(fx) > tolerance; i++) {
           const h = Math.max(maxProduction * 0.01, 1e-6);
-          const derivative = (f(x + h) - f(x - h)) / (2 * h);
+          let derivative;
+          if (x - h >= 0) {
+            derivative = (f(x + h) - f(x - h)) / (2 * h);
+          } else {
+            derivative = (f(x + h) - fx) / h;
+          }
           if (derivative === 0 || !isFinite(derivative)) break;
           x = x - fx / derivative;
           if (x < 0) x = 0;
