@@ -438,7 +438,7 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter16.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000_000, checkCap: true }
     ],
     reward: []
   },
@@ -455,7 +455,7 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter16.5'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 20_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 20_000_000_000, checkCap: true }
     ],
     reward: []
   },
