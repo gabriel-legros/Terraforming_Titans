@@ -345,6 +345,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Satellites project now features an Auto Max option that raises build count to the current colonist cap.
 - Space mirror oversight sliders now clamp values so none go negative and their total always sums to 100.
 - Space disposal projects can auto-disable gas exports when atmospheric pressure falls below a configurable kPa threshold.
+- Pressure automation controls on space mining and disposal projects now include a unit dropdown for kPa or Pa, defaulting to kPa.
 - The Any Zone slider in the space mirror facility can be increased, taking percentage from the largest other sliders so the total remains 100%.
 - Land usage recalculates on save load, and inactive structure construction checks land without reserving it.
 - Space mirror facility now verifies slider percentages each tick, clamping out-of-range values and ensuring they total 100%.
