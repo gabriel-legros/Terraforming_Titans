@@ -251,7 +251,7 @@ progressVega2.chapters.push(
   },
   // 15.1 — Hypothetical: Dead Hand Protocol
   {
-    id: 'chapter15.1',
+    id: 'chapter15.2',
     type: 'journal',
     chapter: 15,
     narrative: (
@@ -274,7 +274,7 @@ progressVega2.chapters.push(
       "Mary: 'No touching. Photograph, map, and back out. This is valuable, let's not destroy it.'\n" +
       "H.O.P.E.: 'Tentative classification: repository.'"
     ),
-    prerequisites: ['chapter15.1'],
+    prerequisites: ['chapter15.2'],
     objectives: [],
     reward: []
   },
