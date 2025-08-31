@@ -316,7 +316,8 @@ function dayNightTemperaturesModel({
   slabHeatCapacity = null,
   surfaceFractions = null,
   surfaceAlbedos = null,
-  gSurface = 9.81
+  gSurface = 9.81,
+  aerosolsSW = {}
 }) {
   if (slabHeatCapacity === null) {
     slabHeatCapacity = autoSlabHeatCapacity(
@@ -329,7 +330,8 @@ function dayNightTemperaturesModel({
     surfaceAlbedo: aSurf,
     pressureBar: surfacePressureBar,
     composition,
-    gSurface
+    gSurface,
+    aerosolsSW
   });
 
   // IR greenhouse as before
