@@ -234,7 +234,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.disabled = structure.active > 0;
   leftContainer.appendChild(hideButton);
   cached.hideButton = hideButton;
-  
+
   // Reverse button to the right of Hide
   const reverseInlineBtn = document.createElement('button');
   reverseInlineBtn.classList.add('reverse-button');
@@ -254,6 +254,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
   leftContainer.appendChild(reverseInlineBtn);
+  cached.reverseButton = reverseInlineBtn;
   buttonContainer.appendChild(leftContainer);
 
   //done with first row
@@ -991,10 +992,15 @@ function updateDecreaseButtonText(button, buildCount) {
       const buttonContainer = els.buttonContainer || (structureRow ? structureRow.getElementsByClassName('button-container')[0] : null);
       const hideButton = els.hideButton || (buttonContainer ? buttonContainer.getElementsByClassName('hide-button')[0] : null);
 
-  if (hideButton) {
-    hideButton.style.display = 'inline-block';
-    hideButton.disabled = structure.active > 0;
-  }
+      if (hideButton) {
+        hideButton.style.display = 'inline-block';
+        hideButton.disabled = structure.active > 0;
+      }
+
+      const reverseBtn = els.reverseButton || (buttonContainer ? buttonContainer.getElementsByClassName('reverse-button')[0] : null);
+      if (reverseBtn) {
+        reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
+      }
 
       const upgradeBtn = els.upgradeButton || (buttonContainer ? buttonContainer.querySelector(`#${structureName}-upgrade-button`) : null);
       if (upgradeBtn) {

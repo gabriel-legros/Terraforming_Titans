@@ -4,7 +4,7 @@ global.maintenanceFraction = 0;
 const { Building } = require('../src/js/building.js');
 
 describe('enableReversal method on Building', () => {
-  test('enableReversal flips reversalAvailable flag', () => {
+  test('enableReversal flips reversalAvailable flag and refreshes UI', () => {
     const cfg = {
       name: 'Black Dust Factory',
       category: 'terraforming',
@@ -35,9 +35,13 @@ describe('enableReversal method on Building', () => {
       }
     };
     const b = new Building(cfg, 'dustFactory');
+    global.buildings = { dustFactory: b };
+    const calls = [];
+    global.updateBuildingDisplay = () => { calls.push('update'); };
     expect(b.reversalAvailable).toBe(false);
     b.enableReversal();
     expect(b.reversalAvailable).toBe(true);
+    expect(calls).toEqual(['update']);
   });
 });
 
