@@ -356,9 +356,10 @@ class StoryManager {
             case 'collection': {
                 const resCat = resources[objective.resourceType] || {};
                 const resObj = resCat[objective.resource] || {};
-                const current = resObj.value || 0;
+                const current = objective.checkCap ? (resObj.cap || 0) : (resObj.value || 0);
                 const name = resObj.displayName || objective.resource;
-                return `${name}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`;
+                const label = objective.checkCap ? `${name} Cap` : name;
+                return `${label}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`;
             }
             case 'building': {
                 const b = buildings[objective.buildingName];
