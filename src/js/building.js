@@ -114,6 +114,13 @@ class Building extends EffectableEntity {
 
   // External: toggle reversal state (hooked by UI)
   setReverseEnabled(value) {
+    // If no structures have been built yet, use the reverse button to
+    // swap the active recipe instead so players can pre-select the desired
+    // direction before construction (e.g. dust and GHG factories).
+    if (this.count === 0 && typeof this._toggleRecipe === 'function') {
+      this._toggleRecipe();
+      return;
+    }
     this.reverseEnabled = !!value;
   }
 
