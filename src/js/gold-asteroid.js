@@ -95,7 +95,12 @@ class GoldenAsteroid {
           this.element = document.createElement('img');
           this.element.className = 'golden-asteroid';
           this.element.src = 'assets/images/asteroid.png';
-          this.element.addEventListener('click', this.onClick.bind(this));
+          this.element.draggable = false;
+
+          const clickHandler = this.onClick.bind(this);
+          this.element.addEventListener('mousedown', clickHandler);
+          this.element.addEventListener('touchstart', clickHandler);
+          this.element.addEventListener('dragstart', clickHandler);
 
           const gameContainer = document.getElementById('game-container');
 
@@ -112,10 +117,13 @@ class GoldenAsteroid {
           };
 
           gameContainer.appendChild(this.element);
-        }
-      }
-  
-    onClick() {
+    }
+  }
+
+    onClick(event) {
+    if (event) {
+        event.preventDefault();
+    }
     if (this.active) {
         console.log('Clicked golden asteroid!');
         this.addEffects();
