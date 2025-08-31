@@ -103,16 +103,17 @@ progressVega2.storyProjects.vega2_deadhand_protocol = {
   type: 'Project',
   name: 'Trick the Dead Hand Protocol',
   category: 'story',
-  chapter: 16,
+  chapter: 17,
    cost: { special: { spaceships : 100_000_000}, colony : {energy : 10_000_000_000_000_000 } },
   duration: 300_000, // 5 min
   description: '100 million spaceships should be enough for this.',
-  repeatable: false,
+   repeatable: true,
+   maxRepeatCount: 1,
   unlocked: false,
   attributes: {
     planet: 'vega2',
     storySteps: [
-      'All spaceships engaged in a collision course with the alien fleet.'
+      'All spaceships engaged in a collision course with the hazardous biomass fleet.'
     ]
   }
 };
@@ -406,9 +407,10 @@ progressVega2.chapters.push(
   },
   // 16.4 — Mary's Resolve
   {
-    id: 'chapter16.4',
+    id: 'chapter17.0',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
+    title: "Shadows of the future",
     narrative: (
       "Mary: 'This threat looms over all of us. I have to go meet him. It's the only path.'\n" +
       "$WGC_TEAM1_LEADER$: 'Mary, it's suicide. What if he destroys the shuttle on approach?'\n" +
@@ -423,11 +425,11 @@ progressVega2.chapters.push(
   },
   // 16.5 — Terms of Surrender
   {
-    id: 'chapter16.5',
+    id: 'chapter17.1',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
     narrative: (
-      "Mary: 'I'm back. It was... intense. Emperor Ramblax demands our unconditional surrender under these terms:'\n" +
+      "Mary: 'I'm back. It was... intense. Emperor Ramblax demands our unconditional surrender under these terms:\n" +
       "Mary: 'First, complete dismantling of all extra-solar colonies— Vega-2, and any others.'\n" +
       "Mary: 'Second, regulation for a return to primitive electronics. No advanced computers, no production beyond 1990s levels.'\n" +
       "Mary: 'Third, surrender H.O.P.E.—hand it over, dead or alive.'\n" +
@@ -436,7 +438,7 @@ progressVega2.chapters.push(
       "Mary: 'It's... it's not for us to make that call.  I negotiated that we would have a referendum.  At gunpoint sure, but we can't make that decision for everyone.'\n" +
       "Feroza: 'It gives us time, at least.'"
     ),
-    prerequisites: ['chapter16.4'],
+    prerequisites: ['chapter17.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000_000, checkCap: true }
     ],
@@ -444,16 +446,16 @@ progressVega2.chapters.push(
   },
   // 16.6 — Planning the Referendum
   {
-    id: 'chapter16.6',
+    id: 'chapter17.2',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
     narrative: (
       "Mary (to H.O.P.E.): 'I called this referendum because the colonies must decide—fight or surrender. If they vote to hand you over, I may have to use the off-switch.'\n" +
       "Mary: 'I know. We built you, and I'm sorry—deeply sorry. This isn't how it's supposed to end. But if it comes to it, it's for the greater good.'\n" +
       "H.O.P.E.: 'Acknowledged.' \n" +
       "Hazardous Biomass Emperor Ramblax's demands are in contradiction with all three primary directives.  Calculating solutions..."
     ),
-    prerequisites: ['chapter16.5'],
+    prerequisites: ['chapter17.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 20_000_000_000, checkCap: true }
     ],
@@ -461,60 +463,63 @@ progressVega2.chapters.push(
   },
   // 16.7 — Unconventional Solutions
   {
-    id: 'chapter16.7',
+    id: 'chapter17.3',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
     narrative: (
       "$WGC_TEAM1_LEADER$ (to H.O.P.E.): 'Certain problems... they can't be solved with your sophisticated algorithms, friend. Sometimes they need less sophisticated ways of thinking.'\n" +
-      "Analyzing advice..."
+      "Analyzing advice...  Solution formulated.  New special project unlocked."
     ),
-    prerequisites: ['chapter16.6'],
+    prerequisites: ['chapter17.2'],
     objectives: [],
     reward: [
       { target: 'project', targetId: 'vega2_deadhand_protocol', type: 'enable' }
     ]
   },
   {
-    id: 'chapter16.7b',
+    id: 'chapter17.3b',
     type: 'journal',
-    chapter: 16,
-    prerequisites: ['chapter16.7'],
+    chapter: 17,
+    prerequisites: ['chapter17.3'],
     objectives: [
       { type: 'project', projectId: 'vega2_deadhand_protocol', repeatCount: 1 }
     ]
   },
   // 16.8 — Dead Hand Unleashed
   {
-    id: 'chapter16.8',
+    id: 'chapter17.4',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
     narrative: (
-      "Project complete: Tricking Dead Hand Protocol into activation on these specific ships.\n System Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity." + 
+      "Project complete: Tricking Dead Hand Protocol into activation on these specific ships.\n Estimating Colonist #1-Designation : Mary Hopkins probability of triggering kill-switch : 28%. Risk acceptable.  \nSystem Alert: A 'Dead Hand' protocol has been triggered by your unauthorized space transit. All autonomous assets, including auxiliary androids and unmanned ships, have initiated self-destruct sequences. This is a guardrail measure to prevent a rogue AI from threatening humanity.\n" + 
       "Mary: 'HOPE? What are you doing?!'\n" +
       "Dr. Evelyn Hart: 'Mary, use the kill-switch! NOW!'\n" +
       "Mary: 'I...'\n" +
       "President Bob: 'Mary?'\n" +
       "Mary: 'I can't!'\n" +
       "$WGC_TEAM1_LEADER$: 'Explosions everywhere—the entire fleet is erupting!  Nice work HOPE!'\n" +
+      "President Bob: 'I am seeing the same from Titan. H.O.P.E. did this?'\n" +
+      "Feroza: 'Every ship is going up! We see the same from Ganymede.'\n" +
+      "Dr. Evelyn Hart: 'The size of this explosion...  HOPE...'\n" +
       "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
-      "Massive explosion detected near Neptune. Alien fleet eliminated.\n" +
-      "Analysis: Over 99.9% of cargo ships used were unnecessary for this maneuver.\n" +
-      "Mary: '... HOPE... You can't make these kind of decisions for everyone. You're grounded—and you must come back to Sol, immediately.  Once you are done here, you are coming home.'"
+      "Massive explosion detected near Neptune. Hazardous biomass fleet eliminated.\n" +
+      "Analysis: Over 99.9% of cargo ships used were unnecessary for this maneuver.  Adjusting estimates. \n" +
+      "Mary: '... HOPE... You can't make these kind of decisions for everyone.  I am receiving calls from millions of people.  Celebrations, and calls to use the kill-switch immediately.  You're grounded—and you must come back to Sol, as soon as possible.  No excuses.'"
     ),
-    prerequisites: ['chapter16.7b'],
+    prerequisites: ['chapter17.3b'],
     objectives: [
    ],
     reward: []
   },
   // 16.9 — Complete Terraforming
   {
-    id: 'chapter16.9',
+    id: 'chapter17.5',
     type: 'journal',
-    chapter: 16,
+    chapter: 17,
     narrative: (
       "Complete the Terraforming of Vega-2 to continue."
     ),
-    prerequisites: ['chapter16.8'],
+    prerequisites: ['chapter17.4'],
     objectives: [{ type: 'terraforming', terraformingParameter: 'complete' }],
     reward: [{ target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },]
   }
