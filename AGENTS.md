@@ -394,3 +394,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Productivity calculation now accounts for resource production gained from maintenance conversions.
 - Finer controls collapse toggle now uses triangle icons instead of a plus, matching resource lists.
 - dayNightTemperaturesModel now forwards aerosol column mass to albedo calculations.
+- Solis shop upgrades respect max purchase limits, hiding cost and buy buttons once the limit is reached.

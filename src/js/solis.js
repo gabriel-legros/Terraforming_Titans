@@ -52,8 +52,8 @@ class SolisManager extends EffectableEntity {
       androids: { baseCost: 10, purchases: 0 },
       colonistRocket: { baseCost: 1, purchases: 0 },
       research: { baseCost: 10, purchases: 0 },
-      advancedOversight: { baseCost: 1000, purchases: 0 },
-      researchUpgrade: { baseCost: 100, purchases: 0 }
+      advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
+      researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length }
     };
   }
 
@@ -154,16 +154,15 @@ class SolisManager extends EffectableEntity {
 
   getUpgradeCost(key) {
     const up = this.shopUpgrades[key];
-    return up ? up.baseCost * (up.purchases + 1) : 0;
+    if (!up) return 0;
+    if (typeof up.max === 'number' && up.purchases >= up.max) return 0;
+    return up.baseCost * (up.purchases + 1);
   }
 
   purchaseUpgrade(key) {
     const up = this.shopUpgrades[key];
     if (!up) return false;
-    if (key === 'researchUpgrade' && up.purchases >= RESEARCH_UPGRADE_ORDER.length) {
-      return false;
-    }
-    if (key === 'advancedOversight' && up.purchases >= 1) {
+    if (typeof up.max === 'number' && up.purchases >= up.max) {
       return false;
     }
     const cost = this.getUpgradeCost(key);
