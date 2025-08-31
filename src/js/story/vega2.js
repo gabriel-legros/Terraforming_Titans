@@ -92,7 +92,7 @@ progressVega2.storyProjects.vega2_decode_crystal_library = {
        'Decoding 1: Blurred logs from abandoned labs. Grand praise for strangers. Bringer of gifts.',
        'Decoding 2: The strangers asked nothing in return.  Suddenly, they grew cold.',
        'Decoding 3: A news report about a planetary-wide debate about photonics.',
-       'Decoding 4: A government order for a quarantine zone around a newly-discovered dangerous disease."',
+       'Decoding 4: A government order for a quarantine zone around a newly-discovered dangerous disease.',
        'Decoding 5: Ancient plea surfaces. A last testament: "Do not trust the strangers\' gifts. Flee and warn the stars."'
      ]
    }
