@@ -274,7 +274,10 @@ class StoryManager {
                     console.error(`Resource check failed: ${objective.resourceType}.${objective.resource} not found.`);
                     return false;
                 }
-                return compareValues(resourceCategory[objective.resource].value, objective.quantity, objective.comparison);
+                // Allow objectives to compare against a resource's cap instead of its value
+                const resourceObj = resourceCategory[objective.resource];
+                const targetValue = objective.checkCap ? resourceObj.cap : resourceObj.value;
+                return compareValues(targetValue, objective.quantity, objective.comparison);
             case 'building':
                 const building = buildings[objective.buildingName];
                 return building ? building.count >= objective.quantity : false;
