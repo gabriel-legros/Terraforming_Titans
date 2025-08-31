@@ -197,7 +197,7 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter14.2'],
     objectives: [],
-    reward: [      { target: 'building', targetId: 'spaceMirror', type: 'enableReversal' },
+    reward: [ { target: 'project', targetId: 'spaceMirrorFacility', type: 'enableReversal' },
       { target: 'building', targetId: 'ghgFactory', type: 'enableReversal' },
       { target: 'building', targetId: 'dustFactory', type: 'enableReversal' }]
   },
