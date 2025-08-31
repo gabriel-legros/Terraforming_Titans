@@ -391,3 +391,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added a `force` argument to `updateRender` to bypass tab visibility checks for a one-time UI update when pausing via Save & Settings.
 - Journal reconstruction now resolves `$WGC_TEAM_LEADER$` placeholders using current team leader names when loading saves.
 - Reversal buttons now appear immediately when unlocked by story effects, without requiring a reload.
+- Productivity calculation now accounts for resource production gained from maintenance conversions.
