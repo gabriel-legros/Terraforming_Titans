@@ -104,7 +104,7 @@ progressVega2.storyProjects.vega2_deadhand_protocol = {
   name: 'Trick the Dead Hand Protocol',
   category: 'story',
   chapter: 16,
-   cost: { special: { spaceships : 100_000_000, energy : 10_000_000_000_000_000 } },
+   cost: { special: { spaceships : 100_000_000}, colony : {energy : 10_000_000_000_000_000 } },
   duration: 300_000, // 5 min
   description: '100 million spaceships should be enough for this.',
   repeatable: false,
