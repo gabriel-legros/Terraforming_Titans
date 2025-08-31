@@ -545,7 +545,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${resourceName === 'biomass' ? ' <span class="resource-warning" id="biomass-warning"></span>' : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -589,7 +589,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${resourceName === 'biomass' ? ' <span class="resource-warning" id="biomass-warning"></span>' : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -680,6 +680,13 @@ function updateResourceDisplay(resources) {
         resourceNameElement.classList.add('sparkling-gold');
       } else if (resourceNameElement) {
         resourceNameElement.classList.remove('sparkling-gold');
+      }
+
+      if (resourceName === 'biomass' && entry.warningEl) {
+        const zones = terraforming?.biomassDyingZones || {};
+        const count = ['tropical', 'temperate', 'polar'].reduce((n, z) => n + (zones[z] ? 1 : 0), 0);
+        const text = '!'.repeat(count);
+        if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
       }
 
       if (resourceName === 'colonists') {
@@ -1027,7 +1034,7 @@ function capitalizeFirstLetter(string) {
 
 const resourceUICache = {
   categories: {}, // { [category]: { container, header } }
-  resources: {},  // { [resourceName]: { container, nameEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
+  resources: {},  // { [resourceName]: { container, nameEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
 };
 
 function cacheResourceCategory(category) {
@@ -1042,6 +1049,7 @@ function cacheSingleResource(category, resourceName) {
   const entry = {
     container: document.getElementById(`${resourceName}-container`),
     nameEl: document.getElementById(`${resourceName}-name`),
+    warningEl: document.getElementById(`${resourceName}-warning`),
     valueEl: document.getElementById(`${resourceName}-resources-container`),
     capEl: document.getElementById(`${resourceName}-cap-resources-container`),
     ppsEl: document.getElementById(`${resourceName}-pps-resources-container`),

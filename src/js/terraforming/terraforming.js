@@ -263,12 +263,14 @@ class Terraforming extends EffectableEntity{
     };
     // Zonal Surface Data (Life, Dry Ice) - Replaces global this.life coverages
     this.zonalSurface = {};
-     ['tropical', 'temperate', 'polar'].forEach(zone => {
+    this.biomassDyingZones = {};
+    ['tropical', 'temperate', 'polar'].forEach(zone => {
         this.zonalSurface[zone] = {
             dryIce: 0,  // Represents amount/mass in the zone
             biomass: 0 // Represents amount/mass in the zone
             // Zonal coverage values can be calculated from these amounts when needed
         };
+        this.biomassDyingZones[zone] = false;
     });
     // Global life properties (name, target, unlock status)
     this.life = {
