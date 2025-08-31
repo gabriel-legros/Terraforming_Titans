@@ -694,7 +694,11 @@ function updateLifeStatusTable() {
             return;
         }
 
-        if (result.pass) {
+        if (result.warning) {
+            const reason = result.reason || '';
+            cell.innerHTML = `<span title="${reason}">&#x26A0;</span>`;
+            cell.title = reason;
+        } else if (result.pass) {
             cell.innerHTML = '&#x2705;';
             cell.title = '';
         } else {
@@ -769,12 +773,23 @@ function updateLifeStatusTable() {
             const dayMult = growthTempResults[zone]?.multiplier ?? 0;
 
             const daySurvivalStatus = designToCheck.daytimeTemperatureSurvivalCheckZone(zone);
-            let symbol = daySurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
+            let symbol;
             let title = daySurvivalStatus.reason || '';
 
-            if (daySurvivalStatus.pass && dayMult === 0) {
+            if (!daySurvivalStatus.pass) {
+                symbol = '&#x274C;';
+            } else if (daySurvivalStatus.warning || dayMult === 0) {
                 symbol = '&#x26A0;';
-                title = 'Survives but cannot grow';
+                if (daySurvivalStatus.warning && dayMult === 0 && title) {
+                    title += '; cannot grow';
+                } else if (daySurvivalStatus.warning) {
+                    title = daySurvivalStatus.reason || '';
+                } else {
+                    title = 'Survives but cannot grow';
+                }
+            } else {
+                symbol = '&#x2705;';
+                title = '';
             }
 
             if (dayCell?.value) {
@@ -790,8 +805,16 @@ function updateLifeStatusTable() {
             }
             if (nightCell) {
                 const nightSurvivalStatus = designToCheck.nighttimeTemperatureSurvivalCheckZone(zone);
-                const nightSymbol = nightSurvivalStatus.pass ? '&#x2705;' : '&#x274C;';
-                const nightTitle = nightSurvivalStatus.reason || '';
+                let nightSymbol;
+                let nightTitle = nightSurvivalStatus.reason || '';
+                if (!nightSurvivalStatus.pass) {
+                    nightSymbol = '&#x274C;';
+                } else if (nightSurvivalStatus.warning) {
+                    nightSymbol = '&#x26A0;';
+                } else {
+                    nightSymbol = '&#x2705;';
+                    nightTitle = '';
+                }
                 if (nightCell.status && (nightCell.status.innerHTML !== nightSymbol || nightCell.status.title !== nightTitle)) {
                     nightCell.status.innerHTML = nightSymbol;
                     nightCell.status.title = nightTitle;
@@ -860,15 +883,35 @@ function updateLifeStatusTable() {
 
     const dayGlobalCell = lifeUICache.cells.dayTemp.global?.cell;
     if (dayGlobalCell) {
-        dayGlobalCell.innerHTML = survivalTempResults.global.pass ? '&#x2705;' : `<span title="${survivalTempResults.global.reason}">&#x274C;</span>`;
+        const global = survivalTempResults.global;
+        if (global.warning) {
+            dayGlobalCell.innerHTML = `<span title="${global.reason}">&#x26A0;</span>`;
+        } else if (global.pass) {
+            dayGlobalCell.innerHTML = '&#x2705;';
+        } else {
+            dayGlobalCell.innerHTML = `<span title="${global.reason}">&#x274C;</span>`;
+        }
     }
     const nightGlobalCell = lifeUICache.cells.nightTemp.global?.cell;
     if (nightGlobalCell) {
-        const anyNightSurvivable = ['tropical', 'temperate', 'polar'].some(z => {
-            const temp = nightTemps[z];
-            return temp >= survivalRange.min && temp <= survivalRange.max;
+        let pass = false;
+        let anySafe = false;
+        let anyWarning = false;
+        let failReason = null;
+        ['tropical', 'temperate', 'polar'].forEach(z => {
+            const status = designToCheck.nighttimeTemperatureSurvivalCheckZone(z);
+            if (status.pass) {
+                pass = true;
+                if (status.warning) anyWarning = true; else anySafe = true;
+            } else if (!failReason) failReason = status.reason;
         });
-        nightGlobalCell.innerHTML = anyNightSurvivable ? '&#x2705;' : '<span title="Fails in all zones">&#x274C;</span>';
+        if (!pass) {
+            nightGlobalCell.innerHTML = `<span title="${failReason || 'Fails in all zones'}">&#x274C;</span>`;
+        } else if (!anySafe && anyWarning) {
+            nightGlobalCell.innerHTML = '<span title="Growth reduced in all zones">&#x26A0;</span>';
+        } else {
+            nightGlobalCell.innerHTML = '&#x2705;';
+        }
     }
 }
 

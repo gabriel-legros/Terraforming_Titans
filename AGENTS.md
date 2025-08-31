@@ -396,3 +396,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Finer controls collapse toggle now uses triangle icons instead of a plus, matching resource lists.
 - dayNightTemperaturesModel now forwards aerosol column mass to albedo calculations.
 - Solis shop upgrades respect max purchase limits, hiding cost and buy buttons once the limit is reached.
+- Life growth and decay now interpolate across a ±0.5 K band around survivable temperature limits, showing a warning icon when growth is reduced.
