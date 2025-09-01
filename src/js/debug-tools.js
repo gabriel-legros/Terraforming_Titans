@@ -14,9 +14,10 @@
       reconstructJournalState,
       calculateAtmosphericPressure;
   if (isNode) {
+    const waterCycle = require('./terraforming/water-cycle.js');
+    calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
+    calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
     const utils = require('./terraforming/terraforming-utils.js');
-    calculateEvaporationSublimationRates = utils.calculateEvaporationSublimationRates;
-    calculatePrecipitationRateFactor = utils.calculatePrecipitationRateFactor;
     calculateZonalCoverage = utils.calculateZonalCoverage;
 
     const dryIceCycle = require('./terraforming/dry-ice-cycle.js');

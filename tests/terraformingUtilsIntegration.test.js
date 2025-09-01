@@ -4,7 +4,8 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
-const { calculateAverageCoverage, calculateZonalCoverage, calculateEvaporationSublimationRates } = require('../src/js/terraforming-utils.js');
+const { calculateAverageCoverage, calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
+const { calculateEvaporationSublimationRates } = require('../src/js/terraforming/water-cycle.js');
 
 // globals expected by terraforming.js
 global.getZoneRatio = getZoneRatio;
@@ -92,16 +93,19 @@ describe('terraforming-utils integration', () => {
 
     terra._updateZonalCoverageCache();
 
-    const rates = calculateEvaporationSublimationRates(
-      terra,
-      'polar',
-      260,
-      250,
-      0,
-      0,
-      600,
-      1000
-    );
+    const cache = terra.zonalCoverageCache.polar;
+    const rates = calculateEvaporationSublimationRates({
+      zoneArea: cache.zoneArea,
+      liquidWaterCoverage: cache.liquidWater,
+      iceCoverage: cache.ice,
+      dryIceCoverage: cache.dryIce,
+      dayTemperature: 260,
+      nightTemperature: 250,
+      waterVaporPressure: 0,
+      co2VaporPressure: 0,
+      avgAtmPressure: 600,
+      zonalSolarFlux: 1000
+    });
     expect(rates.waterSublimationRate).toBe(0);
   });
 });
