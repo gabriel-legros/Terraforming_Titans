@@ -706,11 +706,13 @@
     color: #ffc107;
     cursor: help;
     margin-left: 4px;
+    font-size: 14px;
 }
 .storage-full-icon {
     color: #ffc107;
     cursor: help;
     margin-left: 4px;
+    font-size: 14px;
 }
 /* Finer Controls Grid */
 #assignment-grid {

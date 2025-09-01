@@ -126,6 +126,7 @@ describe('Space Storage project', () => {
     const label = items[0].children[1];
     const fullIcon = label.querySelector('.storage-full-icon');
     expect(fullIcon).toBeDefined();
+    expect(fullIcon.style.fontSize).toBe('14px');
     visibleCheckboxes[0].checked = true;
     visibleCheckboxes[0].dispatchEvent(new dom.window.Event('change'));
     expect(project.selectedResources).toContainEqual({ category: 'colony', resource: 'metal' });
