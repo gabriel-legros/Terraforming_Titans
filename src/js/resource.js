@@ -282,7 +282,7 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active * building.productivity;
+      const base = maintenanceCost[resource] * building.active;
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
@@ -524,27 +524,32 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
   const totalNet = {};
   const production = {};
   for (const name in projectData) {
-    if(!(typeof projectData[name].project.isContinuous === 'function') || !projectData[name].project.isContinuous()){
+    const project = projectData[name].project;
+    if (project && typeof project.isContinuous === 'function' && !project.isContinuous()) {
       continue;
     }
     const { cost = {}, gain = {} } = projectData[name];
+    let hasCost = false;
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource] || 0;
         const produced = gain[category]?.[resource] || 0;
         const net = Math.max(required - produced, 0);
         if (net > 0) {
+          hasCost = true;
           if (!totalNet[category]) totalNet[category] = {};
           totalNet[category][resource] = (totalNet[category][resource] || 0) + net;
         }
       }
     }
-    for(const category in gain){
-      for(const resource in gain[category]){
-        const produced = gain[category]?.[resource] || 0;
-        if(produced > 0){
-          if(!production[category]) production[category] = {};
-          production[category][resource] = (production[category][resource] || 0) + produced;
+    if (hasCost) {
+      for (const category in gain) {
+        for (const resource in gain[category]) {
+          const produced = gain[category]?.[resource] || 0;
+          if (produced > 0) {
+            if (!production[category]) production[category] = {};
+            production[category][resource] = (production[category][resource] || 0) + produced;
+          }
         }
       }
     }
@@ -566,7 +571,10 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
 
   const productivityMap = {};
   for (const name in projectData) {
-    const { cost = {}, gain = {} } = projectData[name];
+    const { cost = {}, gain = {}, project } = projectData[name];
+    if (project && typeof project.isContinuous === 'function' && !project.isContinuous()) {
+      continue;
+    }
     let productivity = 1;
     for (const category in cost) {
       for (const resource in cost[category]) {

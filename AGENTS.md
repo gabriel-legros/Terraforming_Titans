@@ -396,6 +396,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Journal reconstruction now resolves `$WGC_TEAM_LEADER$` placeholders using current team leader names when loading saves.
 - Reversal buttons now appear immediately when unlocked by story effects, without requiring a reload.
 - Productivity calculation now accounts for resource production gained from maintenance conversions.
+- Project productivity now only considers continuous projects and ignores cost-free producers when determining available resources.
 - Finer controls collapse toggle now uses triangle icons instead of a plus, matching resource lists.
 - dayNightTemperaturesModel now forwards aerosol column mass to albedo calculations.
 - Solis shop upgrades respect max purchase limits, hiding cost and buy buttons once the limit is reached.
