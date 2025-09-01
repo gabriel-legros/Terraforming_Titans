@@ -201,7 +201,7 @@ class NanotechManager extends EffectableEntity {
           <div class="control-group">
             <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute (MW): Fixed energy limit in megawatts the swarm may consume per second.">&#9432;</span></label>
             <div style="display: flex; gap: 4px;">
-              <input type="number" id="nanotech-energy-limit" min="0" max="100" step="any" value="${this.maxEnergyPercent}" style="flex:1;">
+              <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}" style="flex:1;">
               <select id="nanotech-energy-limit-mode" style="flex:1;">
                 <option value="percent" selected>percentage of power</option>
                 <option value="absolute">absolute (MW)</option>
@@ -265,11 +265,14 @@ class NanotechManager extends EffectableEntity {
       document
         .getElementById('nanotech-energy-limit')
         .addEventListener('input', (e) => {
-          const val = parseFloat(e.target.value) || 0;
+          const val = parseFloat(e.target.value);
           if (this.energyLimitMode === 'absolute') {
-            this.maxEnergyAbsolute = val * 1e6;
+            this.maxEnergyAbsolute = isNaN(val) ? 0 : val * 1e6;
+            e.target.value = isNaN(val) ? '' : val.toString();
           } else {
-            this.maxEnergyPercent = val;
+            const pct = isNaN(val) ? 0 : Math.max(0, Math.min(100, val));
+            this.maxEnergyPercent = pct;
+            e.target.value = isNaN(val) ? '' : pct.toString();
           }
           this.updateUI();
         });
@@ -317,10 +320,12 @@ class NanotechManager extends EffectableEntity {
     if (C.eMode) C.eMode.value = this.energyLimitMode;
     if (C.eLimit && document.activeElement !== C.eLimit) {
       if (this.energyLimitMode === 'absolute') {
-        C.eLimit.value = this.maxEnergyAbsolute / 1e6;
+        C.eLimit.value = (this.maxEnergyAbsolute / 1e6).toString();
         C.eLimit.removeAttribute('max');
       } else {
-        C.eLimit.value = this.maxEnergyPercent;
+        const pct = Math.max(0, Math.min(100, this.maxEnergyPercent));
+        this.maxEnergyPercent = pct;
+        C.eLimit.value = pct.toString();
         C.eLimit.max = 100;
       }
     }
