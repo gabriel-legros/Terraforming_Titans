@@ -6,17 +6,14 @@ const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
 var condensationRateFactorUtil = globalThis.condensationRateFactor;
-var ResourceCycle = globalThis.ResourceCycle;
 if (isNodeHydrocarbon) {
   try {
     ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
     condensationRateFactorUtil = require('./condensation-utils.js').condensationRateFactor;
-    ResourceCycle = require('./resource-cycle.js');
   } catch (e) {
     // fall back to globals if require fails
   }
 }
-ResourceCycle = ResourceCycle || class {};
 
 // Function to calculate saturation vapor pressure of methane using the Wagner equation
 function calculateSaturationPressureMethane(temperature) {
@@ -91,35 +88,8 @@ function boilingPointMethane(atmPressure) {
   return B / (A - Math.log(atmPressure));
 }
 
-class MethaneCycle extends ResourceCycle {
-  constructor() {
-    super({
-      latentHeatVaporization: L_V_METHANE,
-      latentHeatSublimation: L_S_METHANE,
-      saturationVaporPressureFn: calculateSaturationPressureMethane,
-      slopeSaturationVaporPressureFn: slopeSVPMethane,
-      freezePoint: 90.7,
-      sublimationPoint: 90.7,
-      rapidSublimationMultiplier: 0.000001,
-      evaporationAlbedo: 0.1,
-      sublimationAlbedo: 0.6,
-    });
-  }
-}
-
-const methaneCycle = new MethaneCycle();
-
 // Function to calculate evaporation rate for methane using the modified Penman equation
 function evaporationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    if (typeof methaneCycle.evaporationRate === 'function') {
-        return methaneCycle.evaporationRate({
-            T,
-            solarFlux,
-            atmPressure,
-            vaporPressure: e_a,
-            r_a,
-        });
-    }
     const Delta_s = slopeSVPMethane(T);
     const e_s = calculateSaturationPressureMethane(T);
     return penmanRate({
@@ -142,15 +112,6 @@ function psychrometricConstantMethaneSublimation(atmPressure) {
 
 // Function to calculate sublimation rate for methane using the modified Penman equation
 function sublimationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    if (typeof methaneCycle.sublimationRate === 'function') {
-        return methaneCycle.sublimationRate({
-            T,
-            solarFlux,
-            atmPressure,
-            vaporPressure: e_a,
-            r_a,
-        });
-    }
     const Delta_s = slopeSVPMethane(T);
     const e_s = calculateSaturationPressureMethane(T);
     return penmanRate({
@@ -167,9 +128,6 @@ function sublimationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
 }
 
 function rapidSublimationRateMethane(temperature, availableMethaneIce) {
-    if (typeof methaneCycle.rapidSublimationRate === 'function') {
-        return methaneCycle.rapidSublimationRate(temperature, availableMethaneIce);
-    }
     const sublimationPoint = 90.7; // K
     const sublimationRateMultiplier = 0.000001; // per K per second
 
@@ -253,23 +211,6 @@ function calculateMethaneCondensationRateFactor({
     atmPressure
 }) {
     const boilingPoint = boilingPointMethane(atmPressure);
-    if (typeof methaneCycle.condensationRateFactor === 'function') {
-        const res = methaneCycle.condensationRateFactor({
-            zoneArea,
-            vaporPressure: methaneVaporPressure,
-            gravity: 1,
-            dayTemp: dayTemperature,
-            nightTemp: nightTemperature,
-            transitionRange: 2,
-            maxDiff: 10,
-            boilingPoint,
-            boilTransitionRange: 5,
-        });
-        return {
-            liquidRateFactor: res.liquidRate,
-            iceRateFactor: res.iceRate,
-        };
-    }
     const res = condensationRateFactorUtil({
         zoneArea,
         vaporPressure: methaneVaporPressure,
@@ -281,11 +222,11 @@ function calculateMethaneCondensationRateFactor({
         transitionRange: 2,
         maxDiff: 10,
         boilingPoint,
-        boilTransitionRange: 5,
+        boilTransitionRange: 5
     });
     return {
         liquidRateFactor: res.liquidRate,
-        iceRateFactor: res.iceRate,
+        iceRateFactor: res.iceRate
     };
 }
 
@@ -301,9 +242,7 @@ if (typeof module !== 'undefined' && module.exports) {
         sublimationRateMethane,
         rapidSublimationRateMethane,
         calculateMethaneSublimationRate,
-        boilingPointMethane,
-        MethaneCycle,
-        methaneCycle,
+        boilingPointMethane
     };
 } else {
     // Expose functions globally for browser usage
@@ -317,6 +256,4 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.rapidSublimationRateMethane = rapidSublimationRateMethane;
     globalThis.calculateMethaneSublimationRate = calculateMethaneSublimationRate;
     globalThis.boilingPointMethane = boilingPointMethane;
-    globalThis.MethaneCycle = MethaneCycle;
-    globalThis.methaneCycle = methaneCycle;
 }
