@@ -31,6 +31,28 @@ describe('water cycle processZone', () => {
     const total = changes.atmosphere.water + changes.water.liquid + changes.water.ice + changes.water.buriedIce;
     expect(total).toBeCloseTo(0, 6);
   });
+
+  test('records precipitation potential without altering water stores', () => {
+    const changes = waterCycle.processZone({
+      zoneArea: 1,
+      liquidWaterCoverage: 0,
+      iceCoverage: 0,
+      dayTemperature: 260,
+      nightTemperature: 250,
+      zoneTemperature: 255,
+      atmPressure: 100000,
+      vaporPressure: 1000,
+      availableLiquid: 0,
+      availableIce: 0,
+      availableBuriedIce: 0,
+      zonalSolarFlux: 0,
+      durationSeconds: 1,
+      gravity: 3.7,
+    });
+    expect(changes.precipitation.potentialSnow).toBeGreaterThan(0);
+    expect(changes.water.liquid).toBeCloseTo(0, 6);
+    expect(changes.water.ice).toBeCloseTo(0, 6);
+  });
 });
 
 describe('methane cycle processZone', () => {

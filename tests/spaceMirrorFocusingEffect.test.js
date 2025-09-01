@@ -129,6 +129,9 @@ describe('focused mirror melt', () => {
 
     terra.temperature.value = 263;
 
+    terra.synchronizeGlobalResources();
+    const initialIce = res.surface.ice.value;
+
     const deltaT = 273.15 - terra.temperature.value;
     const energyPerKg = 2100 * deltaT + 334000;
     const desiredMelt = 5; // attempt
@@ -140,7 +143,7 @@ describe('focused mirror melt', () => {
     terra.updateResources(1000);
 
     expect(res.surface.liquidWater.value).toBeCloseTo(0, 5);
-    expect(res.surface.ice.value).toBeCloseTo(0, 5);
+    expect(res.surface.ice.value).toBeCloseTo(initialIce, 5);
   });
 
 });

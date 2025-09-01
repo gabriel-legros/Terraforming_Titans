@@ -223,8 +223,6 @@ class WaterCycle extends ResourceCycleClass {
     changes.precipitation.potentialRain = potentialRain;
     changes.precipitation.potentialSnow = potentialSnow;
     changes.atmosphere.water -= potentialRain + potentialSnow;
-    changes.water.liquid += potentialRain;
-    changes.water.ice += potentialSnow;
 
     // --- Melting/Freezing ---
     const meltFreezeRates = this.meltingFreezingRates({
@@ -259,7 +257,13 @@ class WaterCycle extends ResourceCycleClass {
       changes.atmosphere.water += rapidAmount;
     }
 
-    return changes;
+    return {
+      ...changes,
+      evaporationAmount,
+      sublimationAmount: sublimationAmount + rapidAmount,
+      meltAmount,
+      freezeAmount,
+    };
   }
 }
 

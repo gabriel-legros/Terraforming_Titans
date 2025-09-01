@@ -19,9 +19,15 @@ jest.mock('../src/js/terraforming-utils.js', () => ({
 
 jest.mock('../src/js/terraforming/water-cycle.js', () => ({
   waterCycle: {
-    condensationRateFactor: jest.fn(() => ({ liquidRate: 0, iceRate: 0 })),
-    evaporationRate: jest.fn(() => 0),
-    sublimationRate: jest.fn(() => 0),
+    processZone: jest.fn(() => ({
+      atmosphere: { water: 0 },
+      water: { liquid: 0, ice: 0, buriedIce: 0 },
+      precipitation: { potentialRain: 0, potentialSnow: 0 },
+      evaporationAmount: 0,
+      sublimationAmount: 0,
+      meltAmount: 0,
+      freezeAmount: 0,
+    })),
   },
   boilingPointWater: jest.fn(() => 373.15)
 }));
