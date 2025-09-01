@@ -7,17 +7,20 @@ const physics = require('../src/js/physics.js');
 jest.mock('../src/js/hydrology.js', () => ({
   simulateSurfaceWaterFlow: jest.fn(() => ({ totalMelt: 0, changes: { tropical: {}, temperate: {}, polar: {} } })),
   simulateSurfaceHydrocarbonFlow: jest.fn(() => ({ totalMelt: 0, changes: { tropical: {}, temperate: {}, polar: {} } })),
-  calculateMethaneMeltingFreezingRates: jest.fn(() => ({ meltingRate: 0, freezingRate: 0 }))
+  calculateMethaneMeltingFreezingRates: jest.fn(() => ({ meltingRate: 0, freezingRate: 0 })),
+  calculateMeltingFreezingRates: jest.fn(() => ({ meltingRate: 0, freezingRate: 0 }))
 }));
 
 jest.mock('../src/js/terraforming-utils.js', () => ({
   calculateAverageCoverage: jest.fn(() => 0),
   calculateZonalCoverage: jest.fn(() => ({})),
   calculateSurfaceFractions: jest.fn(() => ({})),
-  calculateZonalSurfaceFractions: jest.fn(() => ({})),
-  calculateEvaporationSublimationRates: jest.fn(() => ({ evaporationRate: 0, sublimationRate: 0 })),
-  calculatePrecipitationRateFactor: jest.fn(() => 0),
-  calculateMeltingFreezingRates: jest.fn(() => ({ meltingRate: 0, freezingRate: 0 })),
+  calculateZonalSurfaceFractions: jest.fn(() => ({}))
+}));
+
+jest.mock('../src/js/terraforming/water-cycle.js', () => ({
+  calculateEvaporationSublimationRates: jest.fn(() => ({ evaporationRate: 0, waterSublimationRate: 0, co2SublimationRate: 0 })),
+  calculatePrecipitationRateFactor: jest.fn(() => ({ rainfallRateFactor: 0, snowfallRateFactor: 0 }))
 }));
 
 jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
