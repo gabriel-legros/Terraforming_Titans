@@ -1,6 +1,7 @@
 const { generateRandomPlanet } = require('../src/js/rwg.js');
 const { dayNightTemperaturesModel, calculateAtmosphericPressure } = require('../src/js/physics.js');
-const { calculateSurfaceFractions, calculateAverageCoverage, calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
+const { calculateSurfaceFractions, calculateAverageCoverage } = require('../src/js/terraforming-utils.js');
+const { getZonePercentage, estimateCoverage } = require('../src/js/zones.js');
 
 test('random world generator uses physics model and precomputes zonal coverage', () => {
   const result = generateRandomPlanet(12345, { archetype: 'mars-like', orbitPreset: 'hz-mid' });
@@ -14,7 +15,8 @@ test('random world generator uses physics model and precomputes zonal coverage',
     zonalSurface: override.zonalSurface,
     celestialParameters: { surfaceArea: cp.surfaceArea }
   };
-  const expectedCoverage = calculateZonalCoverage(terraObj, 'tropical', 'liquidWater');
+  const zoneArea = terraObj.celestialParameters.surfaceArea * getZonePercentage('tropical');
+  const expectedCoverage = estimateCoverage(terraObj.zonalWater.tropical.liquid, zoneArea);
   expect(override.zonalCoverageCache.tropical.liquidWater).toBeCloseTo(expectedCoverage);
 
   terraObj.zonalCoverageCache = override.zonalCoverageCache;

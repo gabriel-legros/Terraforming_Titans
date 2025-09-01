@@ -14,14 +14,6 @@ describe('life coverage table', () => {
     ctx.ZONES = ['tropical', 'temperate', 'polar'];
     ctx.getZonePercentage = require('../src/js/zones.js').getZonePercentage;
     ctx.calculateAverageCoverage = () => 0.25;
-    ctx.calculateZonalCoverage = (tf, zone) => {
-      switch(zone){
-        case 'polar': return 0.1;
-        case 'temperate': return 0.2;
-        case 'tropical': return 0.3;
-        default: return 0;
-      }
-    };
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       zonalCoverageCache: {

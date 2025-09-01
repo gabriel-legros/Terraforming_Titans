@@ -1,5 +1,4 @@
 const { calculateMeltingFreezingRates, simulateSurfaceWaterFlow, simulateSurfaceHydrocarbonFlow } = require('../src/js/hydrology.js');
-const { calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
 const { getZonePercentage, estimateCoverage } = require('../src/js/zones.js');
 
 global.getZonePercentage = getZonePercentage;
