@@ -71,4 +71,30 @@ describe('nanotech energy usage limit', () => {
     nm.updateUI();
     expect(input.value).toBe('5');
   });
+
+  test('absolute energy limit accepts scientific notation', () => {
+    const { JSDOM } = require('jsdom');
+    const dom = new JSDOM('<!DOCTYPE html><div id="colony-structures-section"><div id="colony-buildings-buttons"></div></div><div id="colony-controls-section"></div>');
+    global.document = dom.window.document;
+    global.window = dom.window;
+    global.Event = dom.window.Event;
+    const energy = new Resource({ name: 'energy', category: 'colony', initialValue: 0 });
+    global.resources = { colony: { energy }, surface: { land: new Resource({ name: 'land', category: 'surface', initialValue: 1, hasCap: true, baseCap: 1 }) } };
+    global.structures = {};
+    global.colonies = {};
+    global.buildings = {};
+    global.addEffect = jest.fn();
+    global.removeEffect = jest.fn();
+    global.formatNumber = (n) => n;
+    const nm = new NanotechManager();
+    nm.enable();
+    nm.energyLimitMode = 'absolute';
+    nm.updateUI();
+    const input = document.getElementById('nanotech-energy-limit');
+    input.value = '1e3';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(nm.maxEnergyAbsolute).toBeCloseTo(1e9);
+    nm.updateUI();
+    expect(input.value).toBe('1000');
+  });
 });

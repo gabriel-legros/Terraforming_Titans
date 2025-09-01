@@ -77,13 +77,13 @@ if (typeof SpaceStorageProject !== 'undefined') {
     label.htmlFor = `${this.name}-strategic-reserve`;
     label.textContent = 'Strategic reserve';
     const input = document.createElement('input');
-    input.type = 'number';
-    input.min = '0';
+    input.type = 'text';
     input.id = `${this.name}-strategic-reserve`;
     input.value = this.strategicReserve;
     input.addEventListener('change', (e) => {
       const val = parseFloat(e.target.value);
       this.strategicReserve = isNaN(val) ? 0 : Math.max(0, val);
+      e.target.value = isNaN(val) ? '' : this.strategicReserve.toString();
     });
     container.append(label, input);
     projectElements[this.name] = {
