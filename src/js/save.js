@@ -417,6 +417,9 @@ function loadGame(slotOrCustomString) {
     }
 
     globalGameIsLoadingFromSave = false;
+    if (typeof updateRender === 'function') {
+      updateRender(true);
+    }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } else {

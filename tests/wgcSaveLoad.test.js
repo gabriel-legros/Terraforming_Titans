@@ -90,7 +90,7 @@ describe('warpGateCommand save/load', () => {
     vm.runInContext("warpGateCommand.recruitMember(0,0, WGCTeamMember.create('Bob','', 'Soldier', {}));", ctx);
     vm.runInContext('var saved = JSON.stringify(getGameState());', ctx);
     vm.runInContext('warpGateCommand.dismissMember(0,0); warpGateCommand.enabled=false;', ctx);
-    vm.runInContext('loadGame(saved);', ctx);
+    vm.runInContext('updateRender = () => {}; loadGame(saved);', ctx);
     const name = vm.runInContext("warpGateCommand.teams[0][0] && warpGateCommand.teams[0][0].firstName", ctx);
     const enabled = vm.runInContext('warpGateCommand.enabled', ctx);
 
