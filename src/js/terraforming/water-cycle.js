@@ -2,16 +2,126 @@ const L_S_WATER = 2.83e6; // Latent heat of sublimation for water (J/kg)
 const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
-var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
-var condensationRateFactorUtil = globalThis.condensationRateFactor;
+let ResourceCycleClass = globalThis.ResourceCycle;
+if (!ResourceCycleClass && typeof require === 'function') {
+  try {
+    ResourceCycleClass = require('./resource-cycle.js');
+  } catch (e) {
+    try {
+      ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
+    } catch (e2) {
+      // ignore
+    }
+  }
+}
 if (isNodeWaterCycle) {
   try {
-    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
-    condensationRateFactorUtil = require('./condensation-utils.js').condensationRateFactor;
+    psychrometricConstant = require('./phase-change-utils.js').psychrometricConstant;
   } catch (e) {
     // fall back to globals if require fails
   }
+}
+
+if (!ResourceCycleClass) {
+  let penmanRate = globalThis.penmanRate;
+  let condensationRateFactor = globalThis.condensationRateFactor;
+  let meltingFreezingRates = globalThis.meltingFreezingRates;
+  if (typeof require === 'function') {
+    try {
+      const phaseUtils = require('./phase-change-utils.js');
+      penmanRate = phaseUtils.penmanRate;
+      meltingFreezingRates = phaseUtils.meltingFreezingRates;
+      condensationRateFactor = require('./condensation-utils.js').condensationRateFactor;
+    } catch (e) {
+      // ignore
+    }
+  }
+  class ResourceCycle {
+    constructor({
+      latentHeatVaporization,
+      latentHeatSublimation,
+      saturationVaporPressureFn,
+      slopeSaturationVaporPressureFn,
+      freezePoint,
+      sublimationPoint,
+      rapidSublimationMultiplier = 0,
+      evaporationAlbedo = 0.6,
+      sublimationAlbedo = 0.6,
+    } = {}) {
+      this.latentHeatVaporization = latentHeatVaporization;
+      this.latentHeatSublimation = latentHeatSublimation;
+      this.saturationVaporPressureFn = saturationVaporPressureFn;
+      this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
+      this.freezePoint = freezePoint;
+      this.sublimationPoint = sublimationPoint;
+      this.rapidSublimationMultiplier = rapidSublimationMultiplier;
+      this.evaporationAlbedo = evaporationAlbedo;
+      this.sublimationAlbedo = sublimationAlbedo;
+    }
+
+    evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
+      const Delta_s = this.slopeSaturationVaporPressureFn(T);
+      const e_s = this.saturationVaporPressureFn(T);
+      return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: this.latentHeatVaporization,
+        albedo,
+        r_a,
+        Delta_s,
+        e_s,
+      });
+    }
+
+    condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, transitionRange, maxDiff, boilingPoint, boilTransitionRange }) {
+      return condensationRateFactor({
+        zoneArea,
+        vaporPressure,
+        gravity,
+        dayTemp,
+        nightTemp,
+        saturationFn: this.saturationVaporPressureFn,
+        freezePoint: this.freezePoint,
+        transitionRange,
+        maxDiff,
+        boilingPoint,
+        boilTransitionRange,
+      });
+    }
+
+    meltingFreezingRates(args) {
+      return meltingFreezingRates({ ...args, freezingPoint: this.freezePoint });
+    }
+
+    sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.sublimationAlbedo }) {
+      const Delta_s = this.slopeSaturationVaporPressureFn(T);
+      const e_s = this.saturationVaporPressureFn(T);
+      return penmanRate({
+        T,
+        solarFlux,
+        atmPressure,
+        e_a,
+        latentHeat: this.latentHeatSublimation,
+        albedo,
+        r_a,
+        Delta_s,
+        e_s,
+      });
+    }
+
+    rapidSublimationRate(temperature, availableIce) {
+      if (temperature > this.sublimationPoint && availableIce > 0) {
+        const diff = temperature - this.sublimationPoint;
+        return availableIce * this.rapidSublimationMultiplier * diff;
+      }
+      return 0;
+    }
+  }
+  ResourceCycleClass = ResourceCycle;
+  globalThis.ResourceCycle = ResourceCycle;
 }
 
 
@@ -97,7 +207,22 @@ function derivativeSaturationVaporPressureBuck(T) {
         return des_dT;
     }
 }
-  
+
+class WaterCycle extends ResourceCycleClass {
+  constructor() {
+    super({
+      latentHeatVaporization: L_V_WATER,
+      latentHeatSublimation: L_S_WATER,
+      saturationVaporPressureFn: saturationVaporPressureBuck,
+      slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureBuck,
+      freezePoint: 273.15,
+      sublimationPoint: 273.15,
+    });
+  }
+}
+
+const waterCycle = new WaterCycle();
+
 // Function to calculate the slope of the saturation vapor pressure curve (Delta_s)
 function slopeSaturationVaporPressureWater(T) {
     // T: Temperature in Kelvin (K)
@@ -124,48 +249,12 @@ function boilingPointWater(atmPressure) {
   
 // Function to calculate sublimation rate for water ice using the modified Penman equation
 function sublimationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    // T: Temperature in Kelvin (K)
-    // solarFlux: Incoming solar radiation (W/m²)
-    // atmPressure: Atmospheric pressure (Pa)
-    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
-    // r_a: Aerodynamic resistance (s/m), default is 100 s/m
-  
-    const Delta_s = slopeSaturationVaporPressureWater(T); // Pa/K
-    const e_s = saturationVaporPressureBuck(T); // Pa
-    return penmanRate({
-        T,
-        solarFlux,
-        atmPressure,
-        e_a,
-        latentHeat: L_S_WATER,
-        albedo: 0.6,
-        r_a,
-        Delta_s,
-        e_s,
-    });
+    return waterCycle.sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a });
 }
 
 // Function to calculate evaporation rate for water using the modified Penman equation
 function evaporationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    // T: Temperature in Kelvin (K)
-    // solarFlux: Incoming solar radiation (W/m²)
-    // atmPressure: Atmospheric pressure (Pa)
-    // e_a: Actual vapor pressure of water in the atmosphere (Pa)
-    // r_a: Aerodynamic resistance (s/m), default is 100 s/m
-  
-    const Delta_s = slopeSaturationVaporPressureWater(T); // Pa/K
-    const e_s = saturationVaporPressureBuck(T); // Pa
-    return penmanRate({
-        T,
-        solarFlux,
-        atmPressure,
-        e_a,
-        latentHeat: L_V_WATER,
-        albedo: 0.3,
-        r_a,
-        Delta_s,
-        e_s,
-    });
+    return waterCycle.evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a, albedo: 0.3 });
 }
 
 // Calculate average evaporation and sublimation rates for a surface zone
@@ -243,14 +332,12 @@ function calculatePrecipitationRateFactor({
     atmPressure
 }) {
     const boilingPoint = boilingPointWater(atmPressure);
-    const res = condensationRateFactorUtil({
+    const res = waterCycle.condensationRateFactor({
         zoneArea,
         vaporPressure: waterVaporPressure,
         gravity,
         dayTemp: dayTemperature,
         nightTemp: nightTemperature,
-        saturationFn: saturationVaporPressureBuck,
-        freezePoint: 273.15,
         transitionRange: 2,
         maxDiff: 10,
         boilingPoint,
@@ -261,6 +348,8 @@ function calculatePrecipitationRateFactor({
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        WaterCycle,
+        waterCycle,
         saturationVaporPressureBuck,
         derivativeSaturationVaporPressureBuck,
         slopeSaturationVaporPressureWater,
@@ -273,6 +362,8 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 } else {
     // Expose functions globally for browser usage
+    globalThis.WaterCycle = WaterCycle;
+    globalThis.waterCycle = waterCycle;
     globalThis.saturationVaporPressureBuck = saturationVaporPressureBuck;
     globalThis.derivativeSaturationVaporPressureBuck = derivativeSaturationVaporPressureBuck;
     globalThis.slopeSaturationVaporPressureWater = slopeSaturationVaporPressureWater;
