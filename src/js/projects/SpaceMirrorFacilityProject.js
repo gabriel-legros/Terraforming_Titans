@@ -389,6 +389,8 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-unassigned">Unassigned:</label>
         <input type="range" id="mirror-oversight-unassigned" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-unassigned-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-unassigned-reverse" class="slider-reversal-checkbox" data-zone="unassigned" style="display:none; visibility:hidden;">
+        <label for="mirror-oversight-unassigned-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
       </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
@@ -949,7 +951,7 @@ function updateMirrorOversightUI() {
   }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
-  ['tropical','temperate','polar','focus','any'].forEach(zone => {
+  ['tropical','temperate','polar','focus','any','unassigned'].forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
     if (slider) slider.disabled = useFiner;
   });
