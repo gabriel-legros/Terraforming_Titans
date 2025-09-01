@@ -18,18 +18,26 @@ const shopDescriptions = {
 
 function showSolisTab() {
   solisTabVisible = true;
-  const tab = document.querySelector('.hope-subtab[data-subtab="solis-hope"]');
-  const content = document.getElementById('solis-hope');
-  if (tab) tab.classList.remove('hidden');
-  if (content) content.classList.remove('hidden');
+  if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
+    hopeSubtabManager.show('solis-hope');
+  } else {
+    const tab = document.querySelector('.hope-subtab[data-subtab="solis-hope"]');
+    const content = document.getElementById('solis-hope');
+    if (tab) tab.classList.remove('hidden');
+    if (content) content.classList.remove('hidden');
+  }
 }
 
 function hideSolisTab() {
   solisTabVisible = false;
-  const tab = document.querySelector('.hope-subtab[data-subtab="solis-hope"]');
-  const content = document.getElementById('solis-hope');
-  if (tab) tab.classList.add('hidden');
-  if (content) content.classList.add('hidden');
+  if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
+    hopeSubtabManager.hide('solis-hope');
+  } else {
+    const tab = document.querySelector('.hope-subtab[data-subtab="solis-hope"]');
+    const content = document.getElementById('solis-hope');
+    if (tab) tab.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+  }
 }
 
 function updateSolisVisibility() {

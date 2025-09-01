@@ -1,40 +1,27 @@
+if (typeof SubtabManager === 'undefined') {
+  if (typeof require === 'function') {
+    SubtabManager = require('./subtab-manager.js');
+  } else if (typeof window !== 'undefined') {
+    SubtabManager = window.SubtabManager;
+  }
+}
 let projectElements = {};
 
 // Centralized, browser-friendly caches for Projects UI
 const projectsUICache = {
-  subtabsContainer: null,
-  subtabs: null,               // Array of subtab elements
-  subtabById: {},              // id -> subtab element
   contentWrapper: null,
   contentById: {},             // id -> content element ("*-projects")
   listByCategory: {},          // category -> list element ("*-projects-list")
-  activeSubtabId: null
 };
 
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
+let projectsSubtabManager = null;
 
 function getProjectSubtabContents() {
   if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
-    // Use getElementsByClassName to avoid repeated querySelectorAll allocations
     cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
   }
   return cachedProjectSubtabContents;
-}
-
-function getProjectsSubtabs() {
-  if (!projectsUICache.subtabs) {
-    projectsUICache.subtabsContainer = projectsUICache.subtabsContainer || document.getElementsByClassName('projects-subtabs')[0] || null;
-    const list = projectsUICache.subtabsContainer
-      ? Array.from(projectsUICache.subtabsContainer.getElementsByClassName('projects-subtab'))
-      : [];
-    projectsUICache.subtabs = list;
-    // Seed subtab id -> element map
-    projectsUICache.subtabs.forEach(tab => {
-      const id = tab && tab.dataset ? tab.dataset.subtab : undefined;
-      if (id) projectsUICache.subtabById[id] = tab;
-    });
-  }
-  return projectsUICache.subtabs;
 }
 
 function getContentWrapper() {
@@ -42,26 +29,6 @@ function getContentWrapper() {
     projectsUICache.contentWrapper = document.getElementsByClassName('projects-subtab-content-wrapper')[0] || null;
   }
   return projectsUICache.contentWrapper;
-}
-
-function getSubtabElementById(id) {
-  if (!id) return null;
-  if (!projectsUICache.subtabById[id]) {
-    // Ensure subtabs cache exists and try to resolve
-    getProjectsSubtabs();
-    if (!projectsUICache.subtabById[id]) {
-      // Fallback: scan subtabs for matching dataset
-      const match = (projectsUICache.subtabs || []).find(t => t && t.dataset && t.dataset.subtab === id);
-      if (match) {
-        projectsUICache.subtabById[id] = match;
-      } else if (typeof document !== 'undefined') {
-        // Final fallback for minimal test DOMs without .projects-subtabs wrapper
-        const q = document.querySelector(`.projects-subtab[data-subtab="${id}"]`);
-        if (q) projectsUICache.subtabById[id] = q;
-      }
-    }
-  }
-  return projectsUICache.subtabById[id] || null;
 }
 
 function getContentById(id) {
@@ -80,49 +47,21 @@ function invalidateAutomationSettingsCache(projectName) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Subtab functionality to show/hide project categories (cached references)
-  const tabs = getProjectsSubtabs();
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function () {
-      // Save scroll position of previously active subtab
-      const prevId = projectsUICache.activeSubtabId;
-      if (prevId) {
-        const prevContent = getContentById(prevId);
-        const prevContainer = prevContent ? prevContent.closest('.tab-content') : null;
-        if (prevContainer) subtabScrollPositions[prevId] = prevContainer.scrollTop;
-      }
 
-      // Remove 'active' from all cached subtabs and contents
-      tabs.forEach(t => t.classList.remove('active'));
-      getProjectSubtabContents().forEach(content => content.classList.remove('active'));
-
-      // Determine corresponding content id from data attribute
-      const category = this && this.dataset ? this.dataset.subtab : null;
-      projectsUICache.activeSubtabId = category || null;
-
-      // Activate clicked subtab and restore scroll position
-      this.classList.add('active');
-      const content = getContentById(category);
-      if (content) {
-        content.classList.add('active');
-        const container = content.closest('.tab-content');
-        if (container) container.scrollTop = subtabScrollPositions[category] || 0;
-      }
-
-      if (typeof markProjectSubtabViewed === 'function' && category) {
-        markProjectSubtabViewed(category);
+function initializeProjectTabs() {
+  if (typeof SubtabManager !== 'function') return;
+  if (projectsSubtabManager) {
+    projectsSubtabManager.reset();
+  } else {
+    projectsSubtabManager = new SubtabManager('.projects-subtab', '.projects-subtab-content', true);
+    projectsSubtabManager.onActivate(id => {
+      if (typeof markProjectSubtabViewed === 'function') {
+        markProjectSubtabViewed(id);
       }
     });
-  });
-
-  // Initialize active subtab id without querying
-  const initialActive = tabs.find(t => t.classList.contains('active'));
-  projectsUICache.activeSubtabId = initialActive && initialActive.dataset ? initialActive.dataset.subtab : null;
-
-  updateStoryProjectsVisibility();
-  updateMegaProjectsVisibility();
-});
+  }
+  cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
+}
 
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
@@ -145,6 +84,7 @@ function renderProjects() {
 }
 
 function initializeProjectsUI() {
+  initializeProjectTabs();
   // Clear only the project lists, not the subtab containers
   const lists = Array.from(document.getElementsByClassName('projects-list'));
   lists.forEach(container => {
@@ -157,6 +97,8 @@ function initializeProjectsUI() {
   projectsUICache.listByCategory = {};
   // Refresh cached list of content containers
   cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
+  updateStoryProjectsVisibility();
+  updateMegaProjectsVisibility();
 }
 
 function createProjectItem(project) {
@@ -904,12 +846,8 @@ function updateEmptyProjectMessages() {
 
 
 function updateStoryProjectsVisibility() {
-  const subtab = getSubtabElementById('story-projects');
-  const content = getContentById('story-projects');
-  if (!subtab || !content) return;
-
   let visible = false;
-  if (projectManager && projectManager.projects) {
+  if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
@@ -921,23 +859,29 @@ function updateStoryProjectsVisibility() {
       );
     });
   }
-
-  if (visible) {
-    subtab.classList.remove('hidden');
-    content.classList.remove('hidden');
+  if (projectsSubtabManager) {
+    if (visible) {
+      projectsSubtabManager.show('story-projects');
+    } else {
+      projectsSubtabManager.hide('story-projects');
+    }
   } else {
-    subtab.classList.add('hidden');
-    content.classList.add('hidden');
+    const tab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');
+    const content = document.getElementById('story-projects');
+    if (!tab || !content) return;
+    if (visible) {
+      tab.classList.remove('hidden');
+      content.classList.remove('hidden');
+    } else {
+      tab.classList.add('hidden');
+      content.classList.add('hidden');
+    }
   }
 }
 
 function updateMegaProjectsVisibility() {
-  const subtab = getSubtabElementById('mega-projects');
-  const content = getContentById('mega-projects');
-  if (!subtab || !content) return;
-
   let visible = false;
-  if (projectManager && projectManager.projects) {
+  if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
       const planetOk = !p.attributes.planet ||
         (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
@@ -949,20 +893,33 @@ function updateMegaProjectsVisibility() {
       );
     });
   }
-
-  if (visible) {
-    subtab.classList.remove('hidden');
-    content.classList.remove('hidden');
+  if (projectsSubtabManager) {
+    if (visible) {
+      projectsSubtabManager.show('mega-projects');
+    } else {
+      projectsSubtabManager.hide('mega-projects');
+    }
   } else {
-    subtab.classList.add('hidden');
-    content.classList.add('hidden');
+    const tab = document.querySelector('.projects-subtab[data-subtab="mega-projects"]');
+    const content = document.getElementById('mega-projects');
+    if (!tab || !content) return;
+    if (visible) {
+      tab.classList.remove('hidden');
+      content.classList.remove('hidden');
+    } else {
+      tab.classList.add('hidden');
+      content.classList.add('hidden');
+    }
   }
 }
 
 function activateProjectSubtab(subtabId) {
   if (!subtabId) return;
-  activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
-  projectsUICache.activeSubtabId = subtabId;
+  if (projectsSubtabManager) {
+    projectsSubtabManager.activate(subtabId);
+  } else {
+    activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
+  }
   if (typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(subtabId);
   }
@@ -980,6 +937,13 @@ function registerProjectUnlockAlert(subtabId) {
   projectTabAlertNeeded = true;
   projectSubtabAlerts[subtabId] = true;
   updateProjectAlert();
+  const activeTab = document.getElementById('special-projects-tab');
+  const activeId = projectsSubtabManager
+    ? projectsSubtabManager.activeId
+    : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
+  if (activeTab && activeTab.classList.contains('active') && activeId === subtabId) {
+    markProjectSubtabViewed(subtabId);
+  }
 }
 
 function updateProjectAlert() {
@@ -998,14 +962,9 @@ function updateProjectAlert() {
 }
 
 function markProjectsViewed() {
-  // Prefer cached active id; if missing, infer from cached subtabs
-  let activeId = projectsUICache.activeSubtabId;
-  if (!activeId) {
-    const tabs = getProjectsSubtabs();
-    const activeTab = tabs.find(t => t.classList.contains('active'));
-    activeId = activeTab && activeTab.dataset ? activeTab.dataset.subtab : null;
-    projectsUICache.activeSubtabId = activeId;
-  }
+  const activeId = projectsSubtabManager
+    ? projectsSubtabManager.activeId
+    : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
   if (activeId && typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(activeId);
   }
@@ -1044,7 +1003,16 @@ function initializeProjectAlerts() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { registerProjectUnlockAlert, updateProjectAlert, initializeProjectAlerts, markProjectSubtabViewed, markProjectsViewed };
+  module.exports = {
+    registerProjectUnlockAlert,
+    updateProjectAlert,
+    initializeProjectAlerts,
+    markProjectSubtabViewed,
+    markProjectsViewed,
+    initializeProjectsUI,
+    activateProjectSubtab,
+    projectsSubtabManager: () => projectsSubtabManager
+  };
 }
 
 

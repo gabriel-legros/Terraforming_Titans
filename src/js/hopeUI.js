@@ -1,20 +1,26 @@
+if (typeof SubtabManager === 'undefined') {
+    if (typeof require === 'function') {
+        SubtabManager = require('./subtab-manager.js');
+    } else if (typeof window !== 'undefined') {
+        SubtabManager = window.SubtabManager;
+    }
+}
+let hopeSubtabManager = null;
+
 function initializeHopeTabs() {
-    document.querySelectorAll('.hope-subtab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.hope-subtab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.hope-subtab-content').forEach(c => c.classList.remove('active'));
-            tab.classList.add('active');
-            const id = tab.dataset.subtab;
-            document.getElementById(id).classList.add('active');
-            if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
-                solisManager.setSolisTabAlert(false);
-            }
-        });
+    if (typeof SubtabManager !== 'function') return;
+    hopeSubtabManager = new SubtabManager('.hope-subtab', '.hope-subtab-content', true);
+    hopeSubtabManager.onActivate(id => {
+        if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
+            solisManager.setSolisTabAlert(false);
+        }
     });
 }
 
 function activateHopeSubtab(subtabId) {
-    activateSubtab('hope-subtab', 'hope-subtab-content', subtabId, true);
+    if (hopeSubtabManager) {
+        hopeSubtabManager.activate(subtabId);
+    }
 }
 
 function initializeHopeUI() {

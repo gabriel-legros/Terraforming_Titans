@@ -57,18 +57,26 @@ let activeDialog = null;
 
 function showWGCTab() {
   wgcTabVisible = true;
-  const tab = document.querySelector('.hope-subtab[data-subtab="wgc-hope"]');
-  const content = document.getElementById('wgc-hope');
-  if (tab) tab.classList.remove('hidden');
-  if (content) content.classList.remove('hidden');
+  if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
+    hopeSubtabManager.show('wgc-hope');
+  } else {
+    const tab = document.querySelector('.hope-subtab[data-subtab="wgc-hope"]');
+    const content = document.getElementById('wgc-hope');
+    if (tab) tab.classList.remove('hidden');
+    if (content) content.classList.remove('hidden');
+  }
 }
 
 function hideWGCTab() {
   wgcTabVisible = false;
-  const tab = document.querySelector('.hope-subtab[data-subtab="wgc-hope"]');
-  const content = document.getElementById('wgc-hope');
-  if (tab) tab.classList.add('hidden');
-  if (content) content.classList.add('hidden');
+  if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
+    hopeSubtabManager.hide('wgc-hope');
+  } else {
+    const tab = document.querySelector('.hope-subtab[data-subtab="wgc-hope"]');
+    const content = document.getElementById('wgc-hope');
+    if (tab) tab.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+  }
 }
 
 function updateWGCVisibility() {

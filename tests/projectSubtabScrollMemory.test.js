@@ -25,21 +25,18 @@ describe('project subtab scroll restoration', () => {
     ctx.markProjectSubtabViewed = () => {};
 
     const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ui-utils.js'), 'utf8');
-    vm.runInContext(uiUtilsCode, ctx);
+    const subtabCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'subtab-manager.js'), 'utf8');
+    vm.runInContext(uiUtilsCode + subtabCode, ctx);
     const projectsUICode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
     vm.runInContext(projectsUICode, ctx);
 
-    // Trigger DOMContentLoaded to set up listeners
-    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    ctx.initializeProjectsUI();
 
     const container = dom.window.document.getElementById('special-projects');
-    const infraTab = dom.window.document.getElementById('infrastructure-projects-tab');
-    const resTab = dom.window.document.getElementById('resources-projects-tab');
-
     container.scrollTop = 42;
-    infraTab.dispatchEvent(new dom.window.Event('click'));
+    ctx.activateProjectSubtab('infrastructure-projects');
     container.scrollTop = 17;
-    resTab.dispatchEvent(new dom.window.Event('click'));
+    ctx.activateProjectSubtab('resources-projects');
     expect(container.scrollTop).toBe(42);
   });
 });

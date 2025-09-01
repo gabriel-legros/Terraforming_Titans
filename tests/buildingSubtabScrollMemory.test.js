@@ -20,13 +20,15 @@ describe('building subtab scroll restoration', () => {
     ctx.markBuildingSubtabViewed = () => {};
     ctx.buildings = {};
     const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ui-utils.js'), 'utf8');
-    vm.runInContext(uiUtilsCode, ctx);
+    const subtabCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'subtab-manager.js'), 'utf8');
+    vm.runInContext(uiUtilsCode + subtabCode, ctx);
     const buildingUICode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildingUI.js'), 'utf8');
     vm.runInContext(buildingUICode, ctx);
 
     const resContent = dom.window.document.getElementById('resource-buildings');
     const storageContent = dom.window.document.getElementById('storage-buildings');
 
+    ctx.initializeBuildingTabs();
     resContent.scrollTop = 42;
     ctx.activateBuildingSubtab('storage-buildings');
     storageContent.scrollTop = 17;

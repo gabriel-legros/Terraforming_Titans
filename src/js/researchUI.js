@@ -1,7 +1,13 @@
 let completedResearchHidden =
     (typeof gameSettings !== 'undefined' && gameSettings.hideCompletedResearch) ||
     false; // Initialize the toggle state
-
+if (typeof SubtabManager === 'undefined') {
+    if (typeof require === 'function') {
+        SubtabManager = require('./subtab-manager.js');
+    } else if (typeof window !== 'undefined') {
+        SubtabManager = window.SubtabManager;
+    }
+}
 let researchTabAlertNeeded = false;
 const researchSubtabAlerts = {
     'energy-research': false,
@@ -10,13 +16,12 @@ const researchSubtabAlerts = {
     'terraforming-research': false,
     'advanced-research': false,
 };
+let researchSubtabManager = null;
 
 // Cached DOM nodes keyed by research id
 const researchElementCache = new Map();
 // Cached toggle completed buttons
 let cachedToggleButtons = [];
-// Cached advanced research tab elements
-const advancedResearchElements = { subtab: null, content: null };
 // Flag to rebuild caches when invalidated
 let researchUICacheInvalidated = true;
 
@@ -94,12 +99,11 @@ function registerResearchUnlockAlert(subtabId) {
     researchSubtabAlerts[subtabId] = true;
     updateResearchAlert();
     const activeTab = document.getElementById('research');
-    const activeSubtab = document.querySelector('.research-subtab.active');
+    const activeId = researchSubtabManager ? researchSubtabManager.activeId : null;
     if (
         activeTab &&
         activeTab.classList.contains('active') &&
-        activeSubtab &&
-        activeSubtab.dataset.subtab === subtabId &&
+        activeId === subtabId &&
         typeof markResearchSubtabViewed === 'function'
     ) {
         markResearchSubtabViewed(subtabId);
@@ -122,9 +126,9 @@ function updateResearchAlert() {
 }
 
 function markResearchViewed() {
-    const active = document.querySelector('.research-subtab.active');
+    const active = researchSubtabManager ? researchSubtabManager.activeId : null;
     if (active && typeof markResearchSubtabViewed === 'function') {
-        markResearchSubtabViewed(active.dataset.subtab);
+        markResearchSubtabViewed(active);
     }
     researchTabAlertNeeded = false;
     updateResearchAlert();
@@ -166,15 +170,12 @@ function initializeResearchTabs() {
     if (typeof gameSettings !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
     }
-    // Set up event listeners for research sub-tabs
-    document.querySelectorAll('.research-subtab').forEach(subtab => {
-        subtab.onclick = () => {
-            const subtabContentId = subtab.dataset.subtab;
-            activateResearchSubtab(subtabContentId);
-            if (typeof markResearchSubtabViewed === 'function') {
-                markResearchSubtabViewed(subtabContentId);
-            }
-        };
+    if (typeof SubtabManager !== 'function') return;
+    researchSubtabManager = new SubtabManager('.research-subtab', '.research-subtab-content');
+    researchSubtabManager.onActivate(id => {
+        if (typeof markResearchSubtabViewed === 'function') {
+            markResearchSubtabViewed(id);
+        }
     });
 
     cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
@@ -187,12 +188,13 @@ function initializeResearchTabs() {
     updateCompletedResearchVisibility();
     updateAdvancedResearchVisibility();
 
-    // Activate the 'energy' category
-    activateResearchSubtab('energy-research');
+    researchSubtabManager.activate('energy-research');
 }
 
 function activateResearchSubtab(subtabId) {
-    activateSubtab('research-subtab', 'research-subtab-content', subtabId);
+    if (researchSubtabManager) {
+        researchSubtabManager.activate(subtabId);
+    }
 }
 
 function loadResearchCategory(category) {
@@ -312,18 +314,18 @@ function updateCompletedResearchVisibility() {
 
 function updateAdvancedResearchVisibility() {
     const visible = researchManager && researchManager.isBooleanFlagSet('advancedResearchUnlocked');
-    if (!advancedResearchElements.subtab || !advancedResearchElements.content) {
-        advancedResearchElements.subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
-        advancedResearchElements.content = document.getElementById('advanced-research');
-    }
-    const { subtab, content } = advancedResearchElements;
-    if (subtab && content) {
+    if (researchSubtabManager) {
         if (visible) {
-            subtab.classList.remove('hidden');
-            content.classList.remove('hidden');
+            researchSubtabManager.show('advanced-research');
         } else {
-            subtab.classList.add('hidden');
-            content.classList.add('hidden');
+            researchSubtabManager.hide('advanced-research');
+        }
+    } else {
+        const subtab = document.querySelector('[data-subtab="advanced-research"]');
+        const content = document.getElementById('advanced-research');
+        if (subtab && content) {
+            subtab.classList.toggle('hidden', !visible);
+            content.classList.toggle('hidden', !visible);
         }
     }
 }
@@ -336,8 +338,6 @@ function rebuildResearchCaches() {
         if (container) loadResearchCategory(category);
     });
     cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
-    advancedResearchElements.subtab = document.querySelector('.research-subtab[data-subtab="advanced-research"]');
-    advancedResearchElements.content = document.getElementById('advanced-research');
     researchUICacheInvalidated = false;
 }
 
@@ -356,5 +356,22 @@ function updateResearchUI() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { registerResearchUnlockAlert, updateResearchAlert, initializeResearchAlerts, markResearchSubtabViewed, markResearchViewed, invalidateResearchUICache, rebuildResearchCaches, loadResearchCategory, updateAllResearchButtons, toggleCompletedResearch, updateCompletedResearchVisibility, updateAdvancedResearchVisibility, updateResearchUI };
+    module.exports = {
+        registerResearchUnlockAlert,
+        updateResearchAlert,
+        initializeResearchAlerts,
+        markResearchSubtabViewed,
+        markResearchViewed,
+        invalidateResearchUICache,
+        rebuildResearchCaches,
+        loadResearchCategory,
+        updateAllResearchButtons,
+        toggleCompletedResearch,
+        updateCompletedResearchVisibility,
+        updateAdvancedResearchVisibility,
+        updateResearchUI,
+        initializeResearchTabs,
+        activateResearchSubtab,
+        researchSubtabManager: () => researchSubtabManager
+    };
 }
