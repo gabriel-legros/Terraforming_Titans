@@ -12,7 +12,6 @@ const AU_METER = 149597870700;
 
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
-var boilingPointWater, boilingPointMethane;
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
@@ -20,11 +19,9 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
-    boilingPointWater = waterCycleMod.boilingPointWater;
 
     const hydrocarbonCycleMod = require('./hydrocarbon-cycle.js');
     methaneCycleInstance = hydrocarbonCycleMod.methaneCycle;
-    boilingPointMethane = hydrocarbonCycleMod.boilingPointMethane;
 
     const dryIceCycleMod = require('./dry-ice-cycle.js');
     co2CycleInstance = dryIceCycleMod.co2Cycle;
@@ -65,8 +62,6 @@ if (typeof module !== 'undefined' && module.exports) {
     waterCycleInstance = globalThis.waterCycle;
     methaneCycleInstance = globalThis.methaneCycle;
     co2CycleInstance = globalThis.co2Cycle;
-    boilingPointWater = globalThis.boilingPointWater;
-    boilingPointMethane = globalThis.boilingPointMethane;
 }
 
 var getEcumenopolisLandFraction;
@@ -654,10 +649,6 @@ class Terraforming extends EffectableEntity{
                 durationSeconds,
                 gravity,
                 condensationParameter: methaneCondensationParameter,
-                transitionRange: 2,
-                maxDiff: 10,
-                boilingPoint: boilingPointMethane(globalTotalPressurePa),
-                boilTransitionRange: 5,
             });
 
             zonalChanges[zone].atmosphere.methane += methaneResult.atmosphere.methane;
