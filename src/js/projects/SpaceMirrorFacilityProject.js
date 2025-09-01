@@ -12,7 +12,7 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   assignments: {
     mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
     lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
-    reversalMode: { tropical: false, temperate: false, polar: false, focus: false }
+    reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
   }
 };
 
@@ -88,7 +88,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
-  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   updateMirrorOversightUI();
 }
 
@@ -259,7 +259,7 @@ function updateAssignmentDisplays() {
     });
     const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
     if (checkbox) {
-      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
       checkbox.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
     }
   });
@@ -316,26 +316,36 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-tropical">Tropical:</label>
         <input type="range" id="mirror-oversight-tropical" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-tropical-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-tropical-reverse" class="slider-reversal-checkbox" data-zone="tropical" style="display:none;">
+        <label for="mirror-oversight-tropical-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-temperate">Temperate:</label>
         <input type="range" id="mirror-oversight-temperate" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-temperate-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-temperate-reverse" class="slider-reversal-checkbox" data-zone="temperate" style="display:none;">
+        <label for="mirror-oversight-temperate-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-polar">Polar:</label>
         <input type="range" id="mirror-oversight-polar" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-polar-reverse" class="slider-reversal-checkbox" data-zone="polar" style="display:none;">
+        <label for="mirror-oversight-polar-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
         <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none;">
+        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
         <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100">
         <span id="mirror-oversight-any-value" class="slider-value">100%</span>
+        <input type="checkbox" id="mirror-oversight-any-reverse" class="slider-reversal-checkbox" data-zone="any" style="display:none;">
+        <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
@@ -359,6 +369,26 @@ function initializeMirrorOversightUI(container) {
       val < 0 ? 0 : val;
       val > 1 ? 1 : val;
       setMirrorDistribution(zone, val);
+    });
+  });
+
+  const sliderReverse = {
+    tropical: div.querySelector('#mirror-oversight-tropical-reverse'),
+    temperate: div.querySelector('#mirror-oversight-temperate-reverse'),
+    polar: div.querySelector('#mirror-oversight-polar-reverse'),
+    focus: div.querySelector('#mirror-oversight-focus-reverse'),
+    any: div.querySelector('#mirror-oversight-any-reverse'),
+  };
+  Object.keys(sliderReverse).forEach(zone => {
+    const box = sliderReverse[zone];
+    if (!box) return;
+    if (!mirrorOversightSettings.assignments.reversalMode) {
+      mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+    }
+    box.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
+    box.addEventListener('change', () => {
+      mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
+      updateZonalFluxTable();
     });
   });
 
@@ -655,7 +685,7 @@ function initializeMirrorOversightUI(container) {
   finerContent.querySelectorAll('.reversal-checkbox').forEach(box => {
     box.addEventListener('change', () => {
       const zone = box.dataset.zone;
-      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
       mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
       updateZonalFluxTable();
     });
@@ -724,6 +754,8 @@ function rebuildMirrorOversightCache() {
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
     fluxTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(3)') || null,
+    sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
+    sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
   };
 }
 
@@ -801,6 +833,19 @@ function updateMirrorOversightUI() {
     ? projectManager.projects.spaceMirrorFacility
     : null;
   const reversalAvailable = !!(smfProject && smfProject.reversalAvailable);
+  const C = mirrorOversightCache || {};
+  if (C.sliderReverseBoxes) {
+    C.sliderReverseBoxes.forEach(box => {
+      const zone = box.dataset.zone;
+      box.checked = !!mirrorOversightSettings.assignments.reversalMode?.[zone];
+      box.style.display = reversalAvailable ? '' : 'none';
+    });
+  }
+  if (C.sliderReverseLabels) {
+    C.sliderReverseLabels.forEach(label => {
+      label.style.display = reversalAvailable ? '' : 'none';
+    });
+  }
   // Advanced oversight unlock check (boolean flag name: advancedOversight)
   let advancedUnlocked = false;
   if (typeof projectManager !== 'undefined') {
@@ -837,7 +882,6 @@ function updateMirrorOversightUI() {
   if (waterInput && mirrorOversightSettings.targets && document.activeElement !== waterInput) {
     waterInput.value = Number(mirrorOversightSettings.targets.water || 0);
   }
-  const C = mirrorOversightCache || {};
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
   if (C.availableLanternCells) C.availableLanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
@@ -1075,16 +1119,11 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     }
   }
 
-  const project = projectManager?.projects?.spaceMirrorFacility;
-  const globalReverse = !!project?.reverseEnabled;
-
-  let zoneReverse = globalReverse;
-  if (mirrorOversightSettings.useFinerControls || mirrorOversightSettings.advancedOversight) {
-    zoneReverse = !!mirrorOversightSettings.assignments.reversalMode?.[zone];
-  }
+  const anyReverse = !!mirrorOversightSettings.assignments.reversalMode?.any;
+  const zoneReverse = !!mirrorOversightSettings.assignments.reversalMode?.[zone];
 
   const distributedMirrorFlux = totalSurfaceArea > 0
-    ? (globalReverse ? -4 * distributedMirrorPower / totalSurfaceArea : 4 * distributedMirrorPower / totalSurfaceArea)
+    ? ((anyReverse ? -4 : 4) * distributedMirrorPower / totalSurfaceArea)
     : 0;
   const distributedLanternFlux = totalSurfaceArea > 0 ? 4 * distributedLanternPower / totalSurfaceArea : 0;
 
@@ -1116,7 +1155,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
       const assignM = mirrorOversightSettings.assignments.mirrors;
       const assignL = mirrorOversightSettings.assignments.lanterns;
-      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false });
+      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false, any: false });
 
       // Reset all assignments and compute baseline temperature
       ['tropical', 'temperate', 'polar', 'focus'].forEach(z => {
@@ -1216,26 +1255,12 @@ class SpaceMirrorFacilityProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.reversalAvailable = false;
-    this.reverseEnabled = false;
   }
 
   enableReversal() {
     this.reversalAvailable = true;
-    const elements = projectElements[this.name];
-    if (elements && elements.reflectMode) {
-      elements.reflectMode.container.style.display = '';
-      elements.reflectMode.update();
-    }
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();
-    }
-  }
-
-  setReverseEnabled(value) {
-    this.reverseEnabled = !!value;
-    const elements = projectElements[this.name];
-    if (elements && elements.reflectMode) {
-      elements.reflectMode.update();
     }
   }
 
@@ -1282,31 +1307,6 @@ class SpaceMirrorFacilityProject extends Project {
       </div>
     `;
     container.appendChild(mirrorDetails);
-
-    const modeContainer = document.createElement('div');
-    modeContainer.classList.add('mode-selection');
-    const modeLabel = document.createElement('span');
-    modeLabel.textContent = 'Reflect Mode:';
-    const towardButton = document.createElement('button');
-    towardButton.textContent = 'Toward World';
-    towardButton.classList.add('mode-button');
-    const awayButton = document.createElement('button');
-    awayButton.textContent = 'Away From World';
-    awayButton.classList.add('mode-button');
-    const updateModeButtons = () => {
-      if (this.reverseEnabled) {
-        awayButton.classList.add('selected');
-        towardButton.classList.remove('selected');
-      } else {
-        towardButton.classList.add('selected');
-        awayButton.classList.remove('selected');
-      }
-    };
-    towardButton.addEventListener('click', () => this.setReverseEnabled(false));
-    awayButton.addEventListener('click', () => this.setReverseEnabled(true));
-    modeContainer.append(modeLabel, towardButton, awayButton);
-    modeContainer.style.display = this.reversalAvailable ? '' : 'none';
-    mirrorDetails.querySelector('.card-body').appendChild(modeContainer);
 
     const lanternDetails = document.createElement('div');
     lanternDetails.classList.add('info-card', 'lantern-details-card');
@@ -1362,12 +1362,6 @@ class SpaceMirrorFacilityProject extends Project {
         totalPower: lanternDetails.querySelector('#total-lantern-power'),
         totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
       },
-      reflectMode: {
-        container: modeContainer,
-        towardButton,
-        awayButton,
-        update: updateModeButtons,
-      },
     };
   }
 
@@ -1421,11 +1415,6 @@ class SpaceMirrorFacilityProject extends Project {
       }
     }
 
-    if (elements.reflectMode) {
-      elements.reflectMode.container.style.display = this.reversalAvailable ? '' : 'none';
-      elements.reflectMode.update();
-    }
-
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();
     }
@@ -1434,13 +1423,11 @@ class SpaceMirrorFacilityProject extends Project {
   saveState() {
     return {
       ...super.saveState(),
-      reverseEnabled: this.reverseEnabled,
     };
   }
 
   loadState(state) {
     super.loadState(state);
-    this.reverseEnabled = state.reverseEnabled || false;
   }
 }
 
