@@ -238,9 +238,9 @@ function loadGame(slotOrCustomString) {
       // Restore projects
       if (gameState.projects) {
           if (gameState.mirrorOversightSettings &&
-              gameState.projects.spaceMirrorFacility &&
-              !gameState.projects.spaceMirrorFacility.mirrorOversightSettings) {
-            gameState.projects.spaceMirrorFacility.mirrorOversightSettings = gameState.mirrorOversightSettings;
+              gameState.projects.projects.spaceMirrorFacility &&
+              !gameState.projects.projects.spaceMirrorFacility.mirrorOversightSettings) {
+            gameState.projects.projects.spaceMirrorFacility.mirrorOversightSettings = gameState.mirrorOversightSettings;
           }
           projectManager.loadState(gameState.projects);
       }
