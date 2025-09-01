@@ -75,6 +75,7 @@ describe('Space Storage UI', () => {
     const label = firstItem.children[1];
     const fullIcon = label.querySelector('.storage-full-icon');
     expect(fullIcon).toBeDefined();
+    expect(fullIcon.style.fontSize).toBe('14px');
     expect(fullIcon.style.display).toBe('none');
     expect(firstItem.children[2].textContent).toBe(String(numbers.formatNumber(0, false, 2)));
     expect(els.shipProgressButton).toBeDefined();
@@ -140,6 +141,7 @@ describe('Space Storage UI', () => {
     const els = ctx.projectElements[project.name];
     const icon = els.resourceGrid.querySelector('.storage-resource-item .storage-full-icon');
     expect(icon.style.display).toBe('none');
+    expect(icon.style.fontSize).toBe('14px');
 
     project.shipWithdrawMode = true;
     ctx.updateSpaceStorageUI(project);

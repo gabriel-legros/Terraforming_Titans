@@ -150,6 +150,7 @@ function renderSpaceStorageUI(project, container) {
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
     fullIcon.title = 'Colony storage full';
     fullIcon.style.display = 'none';
+    fullIcon.style.fontSize = '14px';
 
     const usage = document.createElement('span');
     usage.id = `${project.name}-usage-${opt.resource}`;
