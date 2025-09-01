@@ -75,7 +75,13 @@ if (typeof SpaceStorageProject !== 'undefined') {
     container.classList.add('checkbox-container');
     const label = document.createElement('label');
     label.htmlFor = `${this.name}-strategic-reserve`;
-    label.textContent = 'Strategic reserve';
+    label.textContent = 'Strategic reserve ';
+    const info = document.createElement('span');
+    info.classList.add('info-tooltip-icon');
+    info.innerHTML = '&#9432;';
+    info.title =
+      'Minimum space storage kept in reserve for mega projects; transfers ignore this reserve. Accepts scientific notation (e.g., 1e3 for 1000).';
+    label.appendChild(info);
     const input = document.createElement('input');
     input.type = 'text';
     input.id = `${this.name}-strategic-reserve`;

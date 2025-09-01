@@ -54,13 +54,13 @@ describe('Space Storage automation settings', () => {
     ctx.createProjectItem(project);
     ctx.updateProjectUI('spaceStorage');
     const els = ctx.projectElements[project.name];
-    const labels = Array.from(els.automationSettingsContainer.querySelectorAll('label')).map(l => l.textContent);
-    expect(labels).toEqual([
-      'Auto Start Expansion',
-      'Auto Start Ships',
-      'Prioritize space resources for mega projects',
-      'Strategic reserve'
-    ]);
+    const labels = Array.from(
+      els.automationSettingsContainer.querySelectorAll('label')
+    ).map(l => l.textContent);
+    expect(labels[0]).toBe('Auto Start Expansion');
+    expect(labels[1]).toBe('Auto Start Ships');
+    expect(labels[2]).toBe('Prioritize space resources for mega projects');
+    expect(labels[3].startsWith('Strategic reserve')).toBe(true);
 
     els.shipAutoStartCheckbox.checked = true;
     els.shipAutoStartCheckbox.dispatchEvent(new dom.window.Event('change'));
