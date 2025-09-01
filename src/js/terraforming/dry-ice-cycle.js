@@ -1,19 +1,19 @@
+// Constants
+const STEFAN_BOLTZMANN = 5.67e-8; // W/m²·K⁴
 const L_S_CO2 = 574000; // J/kg (latent heat of sublimation for CO2)
 const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
+
 
 const isNodeDryIce = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
-var ResourceCycle = globalThis.ResourceCycle;
 if (isNodeDryIce) {
   try {
     ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
-    ResourceCycle = require('./resource-cycle.js');
   } catch (e) {
     // fall back to globals if require fails
   }
 }
-ResourceCycle = ResourceCycle || class {};
 
 
 function calculateSaturationPressureCO2(temperature) {
@@ -87,34 +87,8 @@ function psychrometricConstantCO2(atmPressure) {
   return psychrometricConstant(atmPressure, L_S_CO2); // Pa/K
 }
 
-class CO2Cycle extends ResourceCycle {
-  constructor() {
-    super({
-      latentHeatVaporization: L_S_CO2,
-      latentHeatSublimation: L_S_CO2,
-      saturationVaporPressureFn: calculateSaturationPressureCO2,
-      slopeSaturationVaporPressureFn: slopeSVPCO2,
-      freezePoint: 195,
-      sublimationPoint: 195,
-      rapidSublimationMultiplier: 0.00000001,
-      sublimationAlbedo: 0.6,
-    });
-  }
-}
-
-const co2Cycle = new CO2Cycle();
-
 // Function to calculate sublimation rate (E_sub) using the modified Penman equation
 function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
-  if (typeof co2Cycle.sublimationRate === 'function') {
-    return co2Cycle.sublimationRate({
-      T,
-      solarFlux,
-      atmPressure,
-      vaporPressure: e_a,
-      r_a,
-    });
-  }
   const Delta_s = slopeSVPCO2(T); // Pa/K
   const e_s = calculateSaturationPressureCO2(T); // Pa
   return penmanRate({
@@ -134,9 +108,6 @@ function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
 // rises well above the sublimation point. Modeled similar to water melting in
 // hydrology.js using a simple linear multiplier.
 function rapidSublimationRateCO2(temperature, availableDryIce) {
-    if (typeof co2Cycle.rapidSublimationRate === 'function') {
-        return co2Cycle.rapidSublimationRate(temperature, availableDryIce);
-    }
     const sublimationPoint = 195; // K
     const sublimationRateMultiplier = 0.00000001; // per K per second
 
@@ -154,20 +125,8 @@ function calculateCO2CondensationRateFactor({
     zoneArea,
     co2VaporPressure,
     dayTemperature,
-    nightTemperature,
+    nightTemperature
 }) {
-    if (typeof co2Cycle.condensationRateFactor === 'function') {
-        const res = co2Cycle.condensationRateFactor({
-            zoneArea,
-            vaporPressure: co2VaporPressure,
-            gravity: 1,
-            dayTemp: dayTemperature,
-            nightTemp: nightTemperature,
-            transitionRange: 2,
-            maxDiff: 10,
-        });
-        return res.iceRate;
-    }
     const condensationTemperatureCO2 = 195; // K
 
     const calculatePotential = (temp) => {
@@ -210,9 +169,7 @@ if (typeof module !== 'undefined' && module.exports) {
         psychrometricConstantCO2,
         sublimationRateCO2,
         rapidSublimationRateCO2,
-        calculateCO2CondensationRateFactor,
-        CO2Cycle,
-        co2Cycle,
+        calculateCO2CondensationRateFactor
     };
 } else {
     // Expose functions globally for browser usage
@@ -222,6 +179,4 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.sublimationRateCO2 = sublimationRateCO2;
     globalThis.rapidSublimationRateCO2 = rapidSublimationRateCO2;
     globalThis.calculateCO2CondensationRateFactor = calculateCO2CondensationRateFactor;
-    globalThis.CO2Cycle = CO2Cycle;
-    globalThis.co2Cycle = co2Cycle;
 }
