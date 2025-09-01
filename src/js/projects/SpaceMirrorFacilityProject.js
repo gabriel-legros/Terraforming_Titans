@@ -1,6 +1,6 @@
 ﻿// Mirror oversight controls
 var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
-  distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0 },
+  distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
   applyToLantern: false,
   useFinerControls: false,
   assignmentStep: 1,
@@ -10,8 +10,8 @@ var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
   priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
   autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
   assignments: {
-    mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
-    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 },
+    mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
+    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
     reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
   }
 };
@@ -20,12 +20,12 @@ var advancedAssignmentInProgress = false;
 
 
 function setMirrorDistribution(zone, value) {
-  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
   const dist = mirrorOversightSettings.distribution;
   const v = Math.max(0, Math.min(100, Math.round(value))) / 100;
 
   if (zone === 'any') {
-    const currentAny = 1 - (dist.tropical + dist.temperate + dist.polar + dist.focus);
+    const currentAny = 1 - (dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned);
     let delta = v - currentAny;
     if (delta > 0) {
       const sorted = zones.map(z => ({ zone: z, val: dist[z] }))
@@ -47,9 +47,24 @@ function setMirrorDistribution(zone, value) {
         remaining -= add;
       }
     }
+  } else if (zone === 'unassigned') {
+    dist.unassigned = v;
+    let total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
+    if (total > 1) {
+      let excess = total - 1;
+      ['tropical', 'temperate', 'polar', 'focus']
+        .sort((a, b) => dist[b] - dist[a])
+        .forEach(z => {
+          if (excess > 0) {
+            const reduce = Math.min(dist[z], excess);
+            dist[z] = Math.max(0, dist[z] - reduce);
+            excess -= reduce;
+          }
+        });
+    }
   } else if (zones.includes(zone)) {
     dist[zone] = v;
-    let total = dist.tropical + dist.temperate + dist.polar + dist.focus;
+    let total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
     if (total > 1) {
       let excess = total - 1;
       zones.filter(z => z !== zone)
@@ -78,6 +93,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.distribution.temperate = 0;
   mirrorOversightSettings.distribution.polar = 0;
   mirrorOversightSettings.distribution.focus = 0;
+  mirrorOversightSettings.distribution.unassigned = 0;
   mirrorOversightSettings.applyToLantern = false;
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.assignmentStep = 1;
@@ -86,8 +102,8 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
   mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
-  mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
-  mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
+  mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
+  mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   updateMirrorOversightUI();
 }
@@ -98,10 +114,11 @@ function distributeAssignmentsFromSliders(type) {
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
-  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
   const raw = zones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
   if (!mirrorOversightSettings.advancedOversight) {
-    const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
+    const usedPerc = zones.reduce((s, z) => s + (dist[z] || 0), 0);
+    const globalPerc = Math.max(0, 1 - usedPerc);
     raw.push({ zone: 'any', value: total * globalPerc });
   }
   const assignments = {};
@@ -134,6 +151,7 @@ function distributeAutoAssignments(type) {
     if (mirrorOversightSettings.autoAssign[z]) assignments[z] = 0;
   });
   let used = zones.reduce((s, z) => s + Math.max(0, assignments[z] || 0), 0);
+  used += Math.max(0, assignments.unassigned || 0);
   let remaining = Math.max(0, total - used);
   const activeZones = zones.filter(z => mirrorOversightSettings.autoAssign[z]);
   if (activeZones.length && remaining > 0) {
@@ -177,7 +195,7 @@ function toggleFinerControls(enabled) {
 
 function sanitizeMirrorDistribution() {
   const dist = mirrorOversightSettings.distribution;
-  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
   let total = 0;
   let changed = false;
 
@@ -347,6 +365,11 @@ function initializeMirrorOversightUI(container) {
         <input type="checkbox" id="mirror-oversight-any-reverse" class="slider-reversal-checkbox" data-zone="any" style="display:none;">
         <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
+      <div class="control-group">
+        <label for="mirror-oversight-unassigned">Unassigned:</label>
+        <input type="range" id="mirror-oversight-unassigned" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-unassigned-value" class="slider-value">0%</span>
+      </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
@@ -361,6 +384,7 @@ function initializeMirrorOversightUI(container) {
     polar: div.querySelector('#mirror-oversight-polar'),
     focus: div.querySelector('#mirror-oversight-focus'),
     any: div.querySelector('#mirror-oversight-any'),
+    unassigned: div.querySelector('#mirror-oversight-unassigned'),
   };
   Object.keys(sliders).forEach(zone => {
     sliders[zone].addEventListener('input', () => {
@@ -784,14 +808,15 @@ function updateMirrorOversightUI() {
     }
   }
   container.style.display = enabled ? 'block' : 'none';
-  const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0 };
+  const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 };
   const vals = {
     tropical: Math.max(0, Math.round((dist.tropical || 0) * 100)),
     temperate: Math.max(0, Math.round((dist.temperate || 0) * 100)),
     polar: Math.max(0, Math.round((dist.polar || 0) * 100)),
-    focus: Math.max(0, Math.round((dist.focus || 0) * 100))
+    focus: Math.max(0, Math.round((dist.focus || 0) * 100)),
+    unassigned: Math.max(0, Math.round((dist.unassigned || 0) * 100))
   };
-  const anyVal = Math.max(0, 100 - vals.tropical - vals.temperate - vals.polar - vals.focus);
+  const anyVal = Math.max(0, 100 - vals.tropical - vals.temperate - vals.polar - vals.focus - vals.unassigned);
 
   const focusGroup = document.getElementById('mirror-oversight-focus-group');
   let focusEnabled = false;
@@ -807,7 +832,7 @@ function updateMirrorOversightUI() {
   }
   if (focusGroup) focusGroup.style.display = focusEnabled ? 'flex' : 'none';
 
-  ['tropical','temperate','polar','focus','any'].forEach(zone => {
+  ['tropical','temperate','polar','focus','unassigned','any'].forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
     const span = document.getElementById(`mirror-oversight-${zone}-value`);
     const val = zone === 'any' ? anyVal : vals[zone];
