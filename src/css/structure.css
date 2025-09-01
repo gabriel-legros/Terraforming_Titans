@@ -17,6 +17,11 @@
     gap: 10px; /* Adds space between the buttons */
   }
 
+.collapse-arrow {
+    cursor: pointer;
+    user-select: none;
+  }
+
 .building-button {
     max-width: 200px; /* Set a maximum width for the buttons */
     width: 200px; /* Make the button take up the available width within the container */
