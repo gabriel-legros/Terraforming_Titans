@@ -107,4 +107,28 @@ describe('Mega project space storage integration', () => {
     project.estimateProjectCostAndGain(1000, true);
     expect(ctx.resources.colony.metal.modifyRate).not.toHaveBeenCalled();
   });
+
+  test('Space storage strategic reserve limits mega project consumption', () => {
+    const ctx = {
+      console,
+      EffectableEntity: require('../src/js/effectable-entity.js'),
+      resources: { colony: { metal: { value: 0, decrease(v){ this.value -= v; } } } },
+      projectElements: {},
+      addEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      projectManager: { projects: { spaceStorage: { resourceUsage: { metal: 100 }, usedStorage: 100, prioritizeMegaProjects: false, strategicReserve: 80 } } }
+    };
+    vm.createContext(ctx);
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const params = { name: 'testProj', category: 'mega', cost: { colony: { metal: 30 } }, duration: 1000, description: '', unlocked: true, attributes: { canUseSpaceStorage: true } };
+    const project = new ctx.Project(params, 'testProj');
+    let started = project.start(ctx.resources);
+    expect(started).toBe(false);
+    ctx.resources.colony.metal.value = 15;
+    started = project.start(ctx.resources);
+    expect(started).toBe(true);
+    expect(ctx.projectManager.projects.spaceStorage.resourceUsage.metal).toBe(85);
+    expect(ctx.projectManager.projects.spaceStorage.usedStorage).toBe(85);
+  });
 });
