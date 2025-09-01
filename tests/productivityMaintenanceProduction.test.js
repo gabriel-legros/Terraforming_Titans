@@ -3,7 +3,7 @@ global.EffectableEntity = EffectableEntity;
 const { Resource, produceResources } = require('../src/js/resource.js');
 const { Building } = require('../src/js/building.js');
 
-describe('productivity includes maintenance production', () => {
+describe('productivity excludes maintenance production', () => {
   beforeEach(() => {
     global.resources = {
       colony: {
@@ -31,7 +31,7 @@ describe('productivity includes maintenance production', () => {
     global.maintenanceFraction = 0.1;
   });
 
-  test('maintenance conversion contributes to productivity', () => {
+  test('maintenance conversion does not contribute to productivity', () => {
     const maintProducer = new Building({
       name: 'MaintProd',
       category: 'test',
@@ -70,6 +70,6 @@ describe('productivity includes maintenance production', () => {
 
     const buildings = { maintProducer, consumer };
     produceResources(1000, buildings);
-    expect(consumer.productivity).toBeCloseTo(0.1);
+    expect(consumer.productivity).toBe(0);
   });
 });
