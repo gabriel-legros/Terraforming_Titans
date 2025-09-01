@@ -443,7 +443,7 @@ const buildingsParameters = {
   spaceMirror: {
     name: 'Space Mirror',
     category: 'terraforming',
-    description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass after the space elevator is built.  May need billions to have any meaningful effect.',
+    description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
     cost: { colony: { metal: 10, glass:10, energy:500000 } },
     consumption : {},
     production: {},
