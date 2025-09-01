@@ -400,3 +400,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Solis shop upgrades respect max purchase limits, hiding cost and buy buttons once the limit is reached.
 - Life growth and decay now interpolate across a ±0.5 K band around survivable temperature limits, showing a warning icon when growth is reduced.
 - Biomass resource display shows red exclamation marks for zones with net decay.
+- Zonal resource changes now use nested maps grouped by resource, simplifying atmospheric and precipitation handling.
