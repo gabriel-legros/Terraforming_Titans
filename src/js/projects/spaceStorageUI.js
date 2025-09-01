@@ -205,6 +205,7 @@ function renderSpaceStorageUI(project, container) {
     if (opt.resource === 'liquidWater') {
       waterSelect = document.createElement('select');
       waterSelect.id = `${project.name}-water-destination`;
+      waterSelect.style.fontSize = '12px';
       const colonyOpt = document.createElement('option');
       colonyOpt.value = 'colony';
       colonyOpt.textContent = 'Colony';
