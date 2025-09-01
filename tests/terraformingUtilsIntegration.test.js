@@ -25,7 +25,7 @@ global.EPSILON = 0.622;
 global.R_AIR = 287;
 global.airDensity = physics.airDensity;
 global.sublimationRateCO2 = dryIce.sublimationRateCO2;
-global.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor;
+global.co2Cycle = dryIce.co2Cycle;
 
 const Terraforming = require('../src/js/terraforming.js');
 

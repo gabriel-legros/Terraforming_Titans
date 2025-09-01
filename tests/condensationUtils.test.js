@@ -59,9 +59,19 @@ describe('cycle wrappers match helper output', () => {
       boilingPoint: water.boilingPointWater(params.atmPressure),
       boilTransitionRange: 5
     });
-    const res = water.calculatePrecipitationRateFactor(params);
-    expect(res.rainfallRateFactor).toBeCloseTo(expected.liquidRate);
-    expect(res.snowfallRateFactor).toBeCloseTo(expected.iceRate);
+    const res = water.waterCycle.condensationRateFactor({
+      zoneArea: params.zoneArea,
+      vaporPressure: params.waterVaporPressure,
+      gravity: params.gravity,
+      dayTemp: params.dayTemperature,
+      nightTemp: params.nightTemperature,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: water.boilingPointWater(params.atmPressure),
+      boilTransitionRange: 5
+    });
+    expect(res.liquidRate).toBeCloseTo(expected.liquidRate);
+    expect(res.iceRate).toBeCloseTo(expected.iceRate);
   });
 
   test('methane wrapper delegates correctly', () => {
@@ -83,8 +93,18 @@ describe('cycle wrappers match helper output', () => {
       boilingPoint: hydrocarbon.boilingPointMethane(params.atmPressure),
       boilTransitionRange: 5
     });
-    const res = hydrocarbon.calculateMethaneCondensationRateFactor(params);
-    expect(res.liquidRateFactor).toBeCloseTo(expected.liquidRate);
-    expect(res.iceRateFactor).toBeCloseTo(expected.iceRate);
+    const res = hydrocarbon.methaneCycle.condensationRateFactor({
+      zoneArea: params.zoneArea,
+      vaporPressure: params.methaneVaporPressure,
+      gravity: 1,
+      dayTemp: params.dayTemperature,
+      nightTemp: params.nightTemperature,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: hydrocarbon.boilingPointMethane(params.atmPressure),
+      boilTransitionRange: 5
+    });
+    expect(res.liquidRate).toBeCloseTo(expected.liquidRate);
+    expect(res.iceRate).toBeCloseTo(expected.iceRate);
   });
 });

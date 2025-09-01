@@ -11,7 +11,8 @@ const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
 // Load utility functions when running under Node for tests
-var getZonePercentage, estimateCoverage;
+var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
+var boilingPointWater, boilingPointMethane;
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
@@ -19,21 +20,23 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateMethaneMeltingFreezingRates = hydrology.calculateMethaneMeltingFreezingRates;
     var calculateMeltingFreezingRates = hydrology.calculateMeltingFreezingRates;
 
-    const waterCycle = require('./water-cycle.js');
-    var calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
-    var calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
+    const waterCycleMod = require('./water-cycle.js');
+    waterCycleInstance = waterCycleMod.waterCycle;
+    var calculateEvaporationSublimationRates = waterCycleMod.calculateEvaporationSublimationRates;
+    boilingPointWater = waterCycleMod.boilingPointWater;
 
-    const hydrocarbonCycle = require('./hydrocarbon-cycle.js');
-    var evaporationRateMethane = hydrocarbonCycle.evaporationRateMethane;
-    var calculateMethaneCondensationRateFactor = hydrocarbonCycle.calculateMethaneCondensationRateFactor;
-    var calculateMethaneEvaporationRate = hydrocarbonCycle.calculateMethaneEvaporationRate;
-    var sublimationRateMethane = hydrocarbonCycle.sublimationRateMethane;
-    var rapidSublimationRateMethane = hydrocarbonCycle.rapidSublimationRateMethane;
-    var calculateMethaneSublimationRate = hydrocarbonCycle.calculateMethaneSublimationRate;
+    const hydrocarbonCycleMod = require('./hydrocarbon-cycle.js');
+    methaneCycleInstance = hydrocarbonCycleMod.methaneCycle;
+    var evaporationRateMethane = hydrocarbonCycleMod.evaporationRateMethane;
+    var calculateMethaneEvaporationRate = hydrocarbonCycleMod.calculateMethaneEvaporationRate;
+    var sublimationRateMethane = hydrocarbonCycleMod.sublimationRateMethane;
+    var rapidSublimationRateMethane = hydrocarbonCycleMod.rapidSublimationRateMethane;
+    var calculateMethaneSublimationRate = hydrocarbonCycleMod.calculateMethaneSublimationRate;
+    boilingPointMethane = hydrocarbonCycleMod.boilingPointMethane;
 
-    const dryIceCycle = require('./dry-ice-cycle.js');
-    var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
-    var rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
+    const dryIceCycleMod = require('./dry-ice-cycle.js');
+    co2CycleInstance = dryIceCycleMod.co2Cycle;
+    var rapidSublimationRateCO2 = dryIceCycleMod.rapidSublimationRateCO2;
     const zones = require('./zones.js');
     ZONES = zones.ZONES;
     getZonePercentage = zones.getZonePercentage;
@@ -68,6 +71,11 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     getZonePercentage = globalThis.getZonePercentage;
     estimateCoverage = globalThis.estimateCoverage;
+    waterCycleInstance = globalThis.waterCycle;
+    methaneCycleInstance = globalThis.methaneCycle;
+    co2CycleInstance = globalThis.co2Cycle;
+    boilingPointWater = globalThis.boilingPointWater;
+    boilingPointMethane = globalThis.boilingPointMethane;
 }
 
 var getEcumenopolisLandFraction;
@@ -612,19 +620,23 @@ class Terraforming extends EffectableEntity{
             totalCo2SublimationAmount += co2SublimationAmount;
 
             // --- Downward Flux (Atmosphere -> Surface) ---
-            const precipRateFactors = calculatePrecipitationRateFactor({
+            const waterBoil = boilingPointWater(globalTotalPressurePa);
+            const { liquidRate: rainfallRateFactor, iceRate: snowfallRateFactor } = waterCycleInstance.condensationRateFactor({
                 zoneArea,
-                waterVaporPressure: globalWaterPressurePa,
+                vaporPressure: globalWaterPressurePa,
                 gravity,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                atmPressure: globalTotalPressurePa
+                dayTemp,
+                nightTemp,
+                transitionRange: 2,
+                maxDiff: 10,
+                boilingPoint: waterBoil,
+                boilTransitionRange: 5
             });
             // Calculate potential amounts based on zonal conditions (before global limits)
-            zonalChanges[zone].precipitation.potentialRain = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
-            zonalChanges[zone].precipitation.potentialSnow = precipRateFactors.snowfallRateFactor * precipitationMultiplier * durationSeconds;
+            zonalChanges[zone].precipitation.potentialRain = rainfallRateFactor * precipitationMultiplier * durationSeconds;
+            zonalChanges[zone].precipitation.potentialSnow = snowfallRateFactor * precipitationMultiplier * durationSeconds;
 
-            const co2CondRateFactor = calculateCO2CondensationRateFactor({
+            const { iceRate: co2CondRateFactor } = co2CycleInstance.condensationRateFactor({
                 zoneArea,
                 co2VaporPressure: globalCo2PressurePa,
                 dayTemperature: dayTemp,
@@ -699,16 +711,20 @@ class Terraforming extends EffectableEntity{
             totalMethaneEvaporationAmount += methaneEvaporationAmount;
 
             // Methane Condensation
-            const methaneCondRateFactors = calculateMethaneCondensationRateFactor({
+            const methaneBoil = boilingPointMethane(globalTotalPressurePa);
+            const { liquidRate: methaneLiquidRate, iceRate: methaneIceRate } = methaneCycleInstance.condensationRateFactor({
                 zoneArea,
-                methaneVaporPressure: globalMethanePressurePa,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                atmPressure: globalTotalPressurePa
+                vaporPressure: globalMethanePressurePa,
+                gravity: 1,
+                dayTemp,
+                nightTemp,
+                transitionRange: 2,
+                maxDiff: 10,
+                boilingPoint: methaneBoil,
+                boilTransitionRange: 5
             });
-            // Methane Condensation
-            const methaneCondensationAmount = methaneCondRateFactors.liquidRateFactor * methaneCondensationParameter * durationSeconds;
-            const methaneIceCondensationAmount = methaneCondRateFactors.iceRateFactor * methaneCondensationParameter * durationSeconds;
+            const methaneCondensationAmount = methaneLiquidRate * methaneCondensationParameter * durationSeconds;
+            const methaneIceCondensationAmount = methaneIceRate * methaneCondensationParameter * durationSeconds;
             zonalChanges[zone].precipitation.potentialMethaneRain = methaneCondensationAmount;
             zonalChanges[zone].precipitation.potentialMethaneSnow = methaneIceCondensationAmount;
             zonalChanges[zone].atmosphere.methane -= (methaneCondensationAmount + methaneIceCondensationAmount);

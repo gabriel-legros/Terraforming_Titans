@@ -28,19 +28,14 @@ test('CO2 cycle instance matches helper sublimation', () => {
   expect(rateFunc).toBeCloseTo(rateObj);
 });
 
-test('CO2 cycle instance matches helper condensation factor', () => {
-  const factorObj = dryIce.co2Cycle.condensationRateFactor({
+test('CO2 cycle condensation factor provides ice rate', () => {
+  const res = dryIce.co2Cycle.condensationRateFactor({
     zoneArea: 10,
     co2VaporPressure: 5,
     dayTemperature: 180,
     nightTemperature: 170,
   });
-  const factorFunc = dryIce.calculateCO2CondensationRateFactor({
-    zoneArea: 10,
-    co2VaporPressure: 5,
-    dayTemperature: 180,
-    nightTemperature: 170,
-  });
-  expect(factorFunc).toBeCloseTo(factorObj);
+  expect(res).toHaveProperty('iceRate');
+  expect(typeof res.iceRate).toBe('number');
 });
 

@@ -43,14 +43,20 @@
         const dryIce = require('./terraforming/dry-ice-cycle.js');
         if (typeof globalThis.sublimationRateCO2 === 'undefined') globalThis.sublimationRateCO2 = dryIce.sublimationRateCO2 || globalThis.sublimationRateCO2;
         if (typeof globalThis.rapidSublimationRateCO2 === 'undefined') globalThis.rapidSublimationRateCO2 = dryIce.rapidSublimationRateCO2 || globalThis.rapidSublimationRateCO2;
-        if (typeof globalThis.calculateCO2CondensationRateFactor === 'undefined') globalThis.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor || globalThis.calculateCO2CondensationRateFactor;
+        if (typeof globalThis.co2Cycle === 'undefined') globalThis.co2Cycle = dryIce.co2Cycle || globalThis.co2Cycle;
       } catch (_) {}
       try {
         const water = require('./terraforming/water-cycle.js');
         if (typeof globalThis.sublimationRateWater === 'undefined') globalThis.sublimationRateWater = water.sublimationRateWater || globalThis.sublimationRateWater;
         if (typeof globalThis.evaporationRateWater === 'undefined') globalThis.evaporationRateWater = water.evaporationRateWater || globalThis.evaporationRateWater;
         if (typeof globalThis.calculateEvaporationSublimationRates === 'undefined') globalThis.calculateEvaporationSublimationRates = water.calculateEvaporationSublimationRates || globalThis.calculateEvaporationSublimationRates;
-        if (typeof globalThis.calculatePrecipitationRateFactor === 'undefined') globalThis.calculatePrecipitationRateFactor = water.calculatePrecipitationRateFactor || globalThis.calculatePrecipitationRateFactor;
+        if (typeof globalThis.waterCycle === 'undefined') globalThis.waterCycle = water.waterCycle || globalThis.waterCycle;
+        if (typeof globalThis.boilingPointWater === 'undefined') globalThis.boilingPointWater = water.boilingPointWater || globalThis.boilingPointWater;
+      } catch (_) {}
+      try {
+        const hydro = require('./terraforming/hydrocarbon-cycle.js');
+        if (typeof globalThis.methaneCycle === 'undefined') globalThis.methaneCycle = hydro.methaneCycle || globalThis.methaneCycle;
+        if (typeof globalThis.boilingPointMethane === 'undefined') globalThis.boilingPointMethane = hydro.boilingPointMethane || globalThis.boilingPointMethane;
       } catch (_) {}
       // Hydrology functions for surface flow
       try {
