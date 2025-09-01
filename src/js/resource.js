@@ -522,7 +522,11 @@ function produceResources(deltaTime, buildings) {
 
 function calculateProjectProductivities(resources, accumulatedChanges, projectData = {}) {
   const totalNet = {};
+  const production = {};
   for (const name in projectData) {
+    if(!(typeof projectData[name].project.isContinuous === 'function') || !projectData[name].project.isContinuous()){
+      continue;
+    }
     const { cost = {}, gain = {} } = projectData[name];
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -535,6 +539,15 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
         }
       }
     }
+    for(const category in gain){
+      for(const resource in gain[category]){
+        const produced = gain[category]?.[resource] || 0;
+        if(produced > 0){
+          if(!production[category]) production[category] = {};
+          production[category][resource] = (production[category][resource] || 0) + produced;
+        }
+      }
+    }
   }
 
   const ratios = {};
@@ -542,7 +555,7 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
     for (const resource in totalNet[category]) {
       const available =
         (resources[category]?.[resource]?.value || 0) +
-        (totalNet[category]?.[resource] || 0) +
+        (production[category]?.[resource] || 0) +
         (accumulatedChanges[category]?.[resource] || 0);
       const net = totalNet[category][resource];
       const ratio = net > 0 ? Math.min(available / net, 1) : 1;
