@@ -18,8 +18,11 @@ jest.mock('../src/js/terraforming-utils.js', () => ({
 }));
 
 jest.mock('../src/js/terraforming/water-cycle.js', () => ({
-  calculateEvaporationSublimationRates: jest.fn(() => ({ evaporationRate: 0, waterSublimationRate: 0, co2SublimationRate: 0 })),
-  waterCycle: { condensationRateFactor: jest.fn(() => ({ liquidRate: 0, iceRate: 0 })) },
+  waterCycle: {
+    condensationRateFactor: jest.fn(() => ({ liquidRate: 0, iceRate: 0 })),
+    evaporationRate: jest.fn(() => 0),
+    sublimationRate: jest.fn(() => 0),
+  },
   boilingPointWater: jest.fn(() => 373.15)
 }));
 
@@ -34,7 +37,10 @@ jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
 }));
 
 jest.mock('../src/js/dry-ice-cycle.js', () => ({
-  co2Cycle: { condensationRateFactor: jest.fn(() => ({ iceRate: 0 })) },
+  co2Cycle: {
+    condensationRateFactor: jest.fn(() => ({ iceRate: 0 })),
+    sublimationRate: jest.fn(() => 0),
+  },
   rapidSublimationRateCO2: jest.fn(() => 0)
 }));
 

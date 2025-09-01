@@ -49,7 +49,6 @@
         const water = require('./terraforming/water-cycle.js');
         if (typeof globalThis.sublimationRateWater === 'undefined') globalThis.sublimationRateWater = water.sublimationRateWater || globalThis.sublimationRateWater;
         if (typeof globalThis.evaporationRateWater === 'undefined') globalThis.evaporationRateWater = water.evaporationRateWater || globalThis.evaporationRateWater;
-        if (typeof globalThis.calculateEvaporationSublimationRates === 'undefined') globalThis.calculateEvaporationSublimationRates = water.calculateEvaporationSublimationRates || globalThis.calculateEvaporationSublimationRates;
         if (typeof globalThis.waterCycle === 'undefined') globalThis.waterCycle = water.waterCycle || globalThis.waterCycle;
         if (typeof globalThis.boilingPointWater === 'undefined') globalThis.boilingPointWater = water.boilingPointWater || globalThis.boilingPointWater;
       } catch (_) {}
