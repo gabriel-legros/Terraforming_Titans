@@ -179,9 +179,19 @@ function initializeGameState(options = {}) {
         if (!resources[category][resourceName]) {
           // If the resource doesn't exist in the new defaults, add it directly from the save.
           resources[category][resourceName] = savedResource;
-          }
         }
       }
+    }
+  }
+
+  // Restore default display values for all resources
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const res = resources[category][resourceName];
+      if (res && typeof res.reinitializeDisplayElements === 'function') {
+        res.reinitializeDisplayElements();
+      }
+    }
   }
   if (savedAdvancedResearch) {
     resources.colony.advancedResearch.value = savedAdvancedResearch.value;
