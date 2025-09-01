@@ -415,3 +415,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource panel margins are now configurable; default planet parameters add 5px spacing after workers, glass and food, and before androids.
 - Subtabs now remember and restore their vertical scroll position when revisited.
 - Space mirror facility adds an Unassigned slider leaving a portion of mirrors and lanterns idle.
+- Reducing a space mirror oversight slider now transfers the removed percentage to Unassigned.

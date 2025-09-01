@@ -63,7 +63,12 @@ function setMirrorDistribution(zone, value) {
         });
     }
   } else if (zones.includes(zone)) {
+    const prev = dist[zone];
     dist[zone] = v;
+    if (v < prev) {
+      const add = Math.min(prev - v, 1 - dist.unassigned);
+      dist.unassigned += add;
+    }
     let total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
     if (total > 1) {
       let excess = total - 1;
