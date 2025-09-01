@@ -18,7 +18,6 @@ if (typeof module !== 'undefined' && module.exports) {
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
     var simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
     var calculateMethaneMeltingFreezingRates = hydrology.calculateMethaneMeltingFreezingRates;
-    var calculateMeltingFreezingRates = hydrology.calculateMeltingFreezingRates;
 
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
@@ -593,115 +592,71 @@ class Terraforming extends EffectableEntity{
             const daySolarFlux = 2 * zonalSolarFlux;
             const nightSolarFlux = 0;
 
-            let dayEvaporationRate = 0, nightEvaporationRate = 0;
-            let dayWaterSublimationRate = 0, nightWaterSublimationRate = 0;
-            let dayCo2SublimationRate = 0, nightCo2SublimationRate = 0;
-
-            const liquidWaterCoveredArea = zoneArea * liquidWaterCoverage;
-            const iceCoveredArea = zoneArea * iceCoverage;
             const dryIceCoveredArea = zoneArea * dryIceCoverage;
 
-            if (liquidWaterCoveredArea > 0 && typeof dayTemp === 'number') {
-                const rate = waterCycleInstance.evaporationRate({
-                    T: dayTemp,
-                    solarFlux: daySolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalWaterPressurePa,
-                    r_a: 100,
-                    albedo: 0.3,
-                });
-                dayEvaporationRate = rate * liquidWaterCoveredArea / 1000;
-            }
-            if (iceCoveredArea > 0 && typeof dayTemp === 'number') {
-                const rate = waterCycleInstance.sublimationRate({
-                    T: dayTemp,
-                    solarFlux: daySolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalWaterPressurePa,
-                    r_a: 100,
-                });
-                dayWaterSublimationRate = rate * iceCoveredArea / 1000;
-            }
-            if (dryIceCoveredArea > 0 && typeof dayTemp === 'number') {
-                const rate = co2CycleInstance.sublimationRate({
-                    T: dayTemp,
-                    solarFlux: daySolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalCo2PressurePa,
-                    r_a: 100,
-                });
-                dayCo2SublimationRate = rate * dryIceCoveredArea / 1000;
-            }
-
-            if (liquidWaterCoveredArea > 0 && typeof nightTemp === 'number') {
-                const rate = waterCycleInstance.evaporationRate({
-                    T: nightTemp,
-                    solarFlux: nightSolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalWaterPressurePa,
-                    r_a: 100,
-                    albedo: 0.3,
-                });
-                nightEvaporationRate = rate * liquidWaterCoveredArea / 1000;
-            }
-            if (iceCoveredArea > 0 && typeof nightTemp === 'number') {
-                const rate = waterCycleInstance.sublimationRate({
-                    T: nightTemp,
-                    solarFlux: nightSolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalWaterPressurePa,
-                    r_a: 100,
-                });
-                nightWaterSublimationRate = rate * iceCoveredArea / 1000;
-            }
-            if (dryIceCoveredArea > 0 && typeof nightTemp === 'number') {
-                const rate = co2CycleInstance.sublimationRate({
-                    T: nightTemp,
-                    solarFlux: nightSolarFlux,
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalCo2PressurePa,
-                    r_a: 100,
-                });
-                nightCo2SublimationRate = rate * dryIceCoveredArea / 1000;
-            }
-
-            const evaporationRate = (dayEvaporationRate + nightEvaporationRate) / 2;
-            const waterSublimationRate = (dayWaterSublimationRate + nightWaterSublimationRate) / 2;
-            const co2SublimationRate = (dayCo2SublimationRate + nightCo2SublimationRate) / 2;
-
-            const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
-            const waterSublimationAmount = Math.min(waterSublimationRate * durationSeconds, availableIce);
-            const co2SublimationAmount = Math.min(co2SublimationRate * durationSeconds, availableDryIce);
-
-            // Add potential atmospheric contribution from this zone
-            zonalChanges[zone].atmosphere.water += evaporationAmount + waterSublimationAmount;
-            zonalChanges[zone].atmosphere.co2 += co2SublimationAmount;
-            // Store initial surface loss
-            zonalChanges[zone].water.liquid -= evaporationAmount;
-            zonalChanges[zone].water.ice -= waterSublimationAmount;
-            zonalChanges[zone].water.dryIce -= co2SublimationAmount;
-            // Accumulate totals for UI
-            totalEvaporationAmount += evaporationAmount;
-            totalWaterSublimationAmount += waterSublimationAmount;
-            totalCo2SublimationAmount += co2SublimationAmount;
-
-            // --- Downward Flux (Atmosphere -> Surface) ---
-            const waterBoil = boilingPointWater(globalTotalPressurePa);
-            const { liquidRate: rainfallRateFactor, iceRate: snowfallRateFactor } = waterCycleInstance.condensationRateFactor({
+            // --- Water Cycle ---
+            const waterResult = waterCycleInstance.processZone({
                 zoneArea,
+                liquidWaterCoverage,
+                iceCoverage,
+                dayTemperature: dayTemp,
+                nightTemperature: nightTemp,
+                zoneTemperature: zoneTemp,
+                atmPressure: globalTotalPressurePa,
                 vaporPressure: globalWaterPressurePa,
+                availableLiquid,
+                availableIce,
+                availableBuriedIce,
+                zonalSolarFlux,
+                durationSeconds,
                 gravity,
-                dayTemp,
-                nightTemp,
-                transitionRange: 2,
-                maxDiff: 10,
-                boilingPoint: waterBoil,
-                boilTransitionRange: 5
+                precipitationMultiplier,
             });
-            // Calculate potential amounts based on zonal conditions (before global limits)
-            zonalChanges[zone].precipitation.potentialRain = rainfallRateFactor * precipitationMultiplier * durationSeconds;
-            zonalChanges[zone].precipitation.potentialSnow = snowfallRateFactor * precipitationMultiplier * durationSeconds;
 
+            zonalChanges[zone].atmosphere.water += waterResult.atmosphere.water;
+            zonalChanges[zone].water.liquid += waterResult.water.liquid;
+            zonalChanges[zone].water.ice += waterResult.water.ice;
+            zonalChanges[zone].water.buriedIce += waterResult.water.buriedIce;
+            zonalChanges[zone].precipitation.potentialRain = waterResult.precipitation.potentialRain;
+            zonalChanges[zone].precipitation.potentialSnow = waterResult.precipitation.potentialSnow;
+            totalEvaporationAmount += waterResult.evaporationAmount;
+            totalWaterSublimationAmount += waterResult.sublimationAmount;
+            totalMeltAmount += waterResult.meltAmount;
+            totalFreezeAmount += waterResult.freezeAmount;
+
+            // --- CO2 Sublimation ---
+            let co2SublimationAmount = 0;
+            if (dryIceCoveredArea > 0) {
+                let dayCo2SublimationRate = 0;
+                let nightCo2SublimationRate = 0;
+                if (typeof dayTemp === 'number') {
+                    const rate = co2CycleInstance.sublimationRate({
+                        T: dayTemp,
+                        solarFlux: daySolarFlux,
+                        atmPressure: globalTotalPressurePa,
+                        vaporPressure: globalCo2PressurePa,
+                        r_a: 100,
+                    });
+                    dayCo2SublimationRate = rate * dryIceCoveredArea / 1000;
+                }
+                if (typeof nightTemp === 'number') {
+                    const rate = co2CycleInstance.sublimationRate({
+                        T: nightTemp,
+                        solarFlux: nightSolarFlux,
+                        atmPressure: globalTotalPressurePa,
+                        vaporPressure: globalCo2PressurePa,
+                        r_a: 100,
+                    });
+                    nightCo2SublimationRate = rate * dryIceCoveredArea / 1000;
+                }
+                const co2SublimationRate = (dayCo2SublimationRate + nightCo2SublimationRate) / 2;
+                co2SublimationAmount = Math.min(co2SublimationRate * durationSeconds, availableDryIce);
+                zonalChanges[zone].atmosphere.co2 += co2SublimationAmount;
+                zonalChanges[zone].water.dryIce -= co2SublimationAmount;
+                totalCo2SublimationAmount += co2SublimationAmount;
+            }
+
+            // --- CO2 Condensation ---
             const { iceRate: co2CondRateFactor } = co2CycleInstance.condensationRateFactor({
                 zoneArea,
                 co2VaporPressure: globalCo2PressurePa,
@@ -709,45 +664,9 @@ class Terraforming extends EffectableEntity{
                 nightTemperature: nightTemp
             });
             zonalChanges[zone].potentialCO2Condensation = co2CondRateFactor * condensationParameter * durationSeconds;
-
-
-            // Store potential atmospheric loss from this zone
-            zonalChanges[zone].atmosphere.water -= (zonalChanges[zone].precipitation.potentialRain + zonalChanges[zone].precipitation.potentialSnow);
             zonalChanges[zone].atmosphere.co2 -= zonalChanges[zone].potentialCO2Condensation;
 
-            // --- Phase Changes (Surface Only) ---
-            const meltFreezeRates = calculateMeltingFreezingRates(
-                zoneTemp,
-                availableIce,
-                availableLiquid,
-                availableBuriedIce,
-                zoneArea,
-                iceCoverage,
-                liquidWaterCoverage
-            );
-            // Calculate melt/freeze based on amounts *after* sublimation/evaporation but *before* potential precipitation
-            const availableForMelt = availableIce + availableBuriedIce + zonalChanges[zone].water.ice + zonalChanges[zone].water.buriedIce;
-            const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt); // Limit by ice available after sublimation
-            const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].water.liquid); // Limit by liquid available after evap
-
-            // Apply melt/freeze changes to surface stores (adjusting the net change)
-            zonalChanges[zone].water.liquid += meltAmount - freezeAmount;
-            const currentSurfaceIce = availableIce + zonalChanges[zone].water.ice;
-            const currentBuriedIce = availableBuriedIce + zonalChanges[zone].water.buriedIce;
-            const totalZoneIce = currentSurfaceIce + currentBuriedIce;
-            let meltFromIce = 0;
-            let meltFromBuried = 0;
-            if (totalZoneIce > 0) {
-                meltFromIce = Math.min(meltAmount, currentSurfaceIce);
-                meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuriedIce);
-            }
-            zonalChanges[zone].water.ice += freezeAmount - meltFromIce;
-            zonalChanges[zone].water.buriedIce -= meltFromBuried;
-            // Accumulate totals for UI
-            totalMeltAmount += meltAmount;
-            totalFreezeAmount += freezeAmount;
-
-            // --- Rapid CO2 sublimation when temperatures are high ---
+            // --- Rapid CO2 Sublimation when temperatures are high ---
             const remainingDryIce = Math.max(0, availableDryIce + zonalChanges[zone].water.dryIce);
             const rapidRate = rapidSublimationRateCO2(zoneTemp, remainingDryIce);
             const rapidAmount = Math.min(rapidRate * durationSeconds, remainingDryIce);
