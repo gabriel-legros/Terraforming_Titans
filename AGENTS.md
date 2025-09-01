@@ -408,3 +408,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Split water evaporation and sublimation calculations into separate `waterCycle.evaporationRate` and `waterCycle.sublimationRate` methods.
 - Water, methane, and CO₂ cycle modules now import the shared `ResourceCycle` base class instead of defining it inline.
 - index.html loads `resource-cycle.js` before cycle modules so subclasses can extend the base class in browser environments.
+- Added `processZone` methods to water, methane, and CO₂ cycles, composing base helpers to generate zonal change objects.

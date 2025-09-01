@@ -144,6 +144,84 @@ class CO2Cycle extends ResourceCycleClass {
     const rate = (nightPotential + dayPotential) / 2;
     return { iceRate: rate };
   }
+
+  /**
+   * Process a zone of CO₂ ice, returning zonal change objects.
+   */
+  processZone({
+    zoneArea,
+    dryIceCoverage = 0,
+    dayTemperature,
+    nightTemperature,
+    zoneTemperature,
+    atmPressure,
+    vaporPressure,
+    availableDryIce = 0,
+    zonalSolarFlux = 0,
+    durationSeconds = 1,
+    condensationParameter = 1,
+  }) {
+    const changes = {
+      atmosphere: { co2: 0 },
+      water: { dryIce: 0 },
+      precipitation: {},
+      potentialCO2Condensation: 0,
+    };
+
+    const daySolarFlux = 2 * zonalSolarFlux;
+    const nightSolarFlux = 0;
+    const iceArea = zoneArea * dryIceCoverage;
+
+    // Sublimation
+    let daySubRate = 0, nightSubRate = 0;
+    if (iceArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        daySubRate = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSubRate = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+    }
+    const sublimationRate = (daySubRate + nightSubRate) / 2;
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableDryIce);
+    changes.atmosphere.co2 += sublimationAmount;
+    changes.water.dryIce -= sublimationAmount;
+
+    // Condensation
+    const { iceRate } = this.condensationRateFactor({
+      zoneArea,
+      co2VaporPressure: vaporPressure,
+      dayTemperature,
+      nightTemperature,
+    });
+    const potentialCond = iceRate * condensationParameter * durationSeconds;
+    changes.atmosphere.co2 -= potentialCond;
+    changes.water.dryIce += potentialCond;
+    changes.potentialCO2Condensation = potentialCond;
+
+    // Rapid sublimation
+    const currentIce = availableDryIce + changes.water.dryIce;
+    const rapidRate = this.rapidSublimationRate(zoneTemperature, currentIce);
+    const rapidAmount = Math.min(rapidRate * durationSeconds, currentIce);
+    if (rapidAmount > 0) {
+      changes.water.dryIce -= rapidAmount;
+      changes.atmosphere.co2 += rapidAmount;
+    }
+
+    return changes;
+  }
 }
 
 const co2Cycle = new CO2Cycle();

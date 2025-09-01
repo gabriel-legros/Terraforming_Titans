@@ -97,6 +97,141 @@ class MethaneCycle extends ResourceCycleClass {
       sublimationAlbedo: 0.6,
     });
   }
+
+  /**
+   * Compute methane-cycle changes for a zone over a time step.
+   * Returns an object compatible with terraforming.updateResources zonal changes.
+   */
+  processZone({
+    zoneArea,
+    liquidMethaneCoverage = 0,
+    hydrocarbonIceCoverage = 0,
+    dayTemperature,
+    nightTemperature,
+    zoneTemperature,
+    atmPressure,
+    vaporPressure,
+    availableLiquid = 0,
+    availableIce = 0,
+    availableBuriedIce = 0,
+    zonalSolarFlux = 0,
+    durationSeconds = 1,
+    gravity = 1,
+    condensationParameter = 1,
+  }) {
+    const changes = {
+      atmosphere: { methane: 0 },
+      methane: { liquid: 0, ice: 0, buriedIce: 0 },
+      precipitation: { potentialMethaneRain: 0, potentialMethaneSnow: 0 },
+    };
+
+    const daySolarFlux = 2 * zonalSolarFlux;
+    const nightSolarFlux = 0;
+
+    const liquidArea = zoneArea * liquidMethaneCoverage;
+    const iceArea = zoneArea * hydrocarbonIceCoverage;
+
+    // --- Evaporation/Sublimation ---
+    let dayEvapRate = 0, nightEvapRate = 0, daySubRate = 0, nightSubRate = 0;
+    if (liquidArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        dayEvapRate = this.evaporationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * liquidArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightEvapRate = this.evaporationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * liquidArea / 1000;
+      }
+    }
+    if (iceArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        daySubRate = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSubRate = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+    }
+
+    const evaporationRate = (dayEvapRate + nightEvapRate) / 2;
+    const sublimationRate = (daySubRate + nightSubRate) / 2;
+    const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
+    changes.atmosphere.methane += evaporationAmount + sublimationAmount;
+    changes.methane.liquid -= evaporationAmount;
+    changes.methane.ice -= sublimationAmount;
+
+    // --- Condensation ---
+    const { liquidRate, iceRate } = this.condensationRateFactor({
+      zoneArea,
+      vaporPressure,
+      gravity,
+      dayTemp: dayTemperature,
+      nightTemp: nightTemperature,
+    });
+    const potentialRain = liquidRate * condensationParameter * durationSeconds;
+    const potentialSnow = iceRate * condensationParameter * durationSeconds;
+    changes.precipitation.potentialMethaneRain = potentialRain;
+    changes.precipitation.potentialMethaneSnow = potentialSnow;
+    changes.atmosphere.methane -= potentialRain + potentialSnow;
+    changes.methane.liquid += potentialRain;
+    changes.methane.ice += potentialSnow;
+
+    // --- Melting/Freezing ---
+    const meltFreezeRates = this.meltingFreezingRates({
+      temperature: zoneTemperature,
+      availableIce,
+      availableLiquid,
+      availableBuriedIce,
+      zoneArea,
+      iceCoverage: hydrocarbonIceCoverage,
+      liquidCoverage: liquidMethaneCoverage,
+    });
+    const currentLiquid = availableLiquid + changes.methane.liquid;
+    const currentIce = availableIce + changes.methane.ice;
+    const currentBuried = availableBuriedIce + changes.methane.buriedIce;
+    const availableForMelt = currentIce + currentBuried;
+    const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt);
+    const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, currentLiquid);
+    let meltFromIce = Math.min(meltAmount, currentIce);
+    let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
+
+    changes.methane.liquid += meltAmount - freezeAmount;
+    changes.methane.ice += freezeAmount - meltFromIce;
+    changes.methane.buriedIce -= meltFromBuried;
+
+    // --- Rapid Sublimation ---
+    const remainingIce = currentIce - meltFromIce;
+    const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
+    const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
+    if (rapidAmount > 0) {
+      changes.methane.ice -= rapidAmount;
+      changes.atmosphere.methane += rapidAmount;
+    }
+
+    return changes;
+  }
 }
 
 const methaneCycle = new MethaneCycle();
