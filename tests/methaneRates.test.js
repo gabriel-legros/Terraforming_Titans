@@ -8,14 +8,9 @@ const hydrocarbon = require('../src/js/hydrocarbon-cycle.js');
 
 jest.mock('../src/js/hydrology.js', () => {
   const original = jest.requireActual('../src/js/hydrology.js');
-  const mockMethaneRates = jest.fn((...args) => {
-    mockMethaneRates.coverageIceValue = args[5];
-    mockMethaneRates.coverageLiquidValue = args[6];
-    return { meltingRate: 0, freezingRate: 0 };
-  });
   return {
     ...original,
-    calculateMethaneMeltingFreezingRates: mockMethaneRates
+    calculateMethaneMeltingFreezingRates: jest.fn(() => ({ meltingRate: 0, freezingRate: 0 })),
   };
 });
 const hydrology = require('../src/js/hydrology.js');
@@ -104,10 +99,13 @@ describe('methane melting/freezing coverage', () => {
       }
     };
 
+    const spy = jest.spyOn(hydrocarbon.methaneCycle, 'processZone');
+
     terra.calculateInitialValues(params);
     terra.updateResources(1000);
 
-    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageIceValue).toBeCloseTo(0.25);
-    expect(hydrology.calculateMethaneMeltingFreezingRates.coverageLiquidValue).toBeCloseTo(0.5);
+    const args = spy.mock.calls[0][0];
+    expect(args.hydrocarbonIceCoverage).toBeCloseTo(0.25);
+    expect(args.liquidMethaneCoverage).toBeCloseTo(0.5);
   });
 });

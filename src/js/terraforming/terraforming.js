@@ -17,7 +17,6 @@ if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
     var simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
-    var calculateMethaneMeltingFreezingRates = hydrology.calculateMethaneMeltingFreezingRates;
 
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
@@ -25,11 +24,6 @@ if (typeof module !== 'undefined' && module.exports) {
 
     const hydrocarbonCycleMod = require('./hydrocarbon-cycle.js');
     methaneCycleInstance = hydrocarbonCycleMod.methaneCycle;
-    var evaporationRateMethane = hydrocarbonCycleMod.evaporationRateMethane;
-    var calculateMethaneEvaporationRate = hydrocarbonCycleMod.calculateMethaneEvaporationRate;
-    var sublimationRateMethane = hydrocarbonCycleMod.sublimationRateMethane;
-    var rapidSublimationRateMethane = hydrocarbonCycleMod.rapidSublimationRateMethane;
-    var calculateMethaneSublimationRate = hydrocarbonCycleMod.calculateMethaneSublimationRate;
     boilingPointMethane = hydrocarbonCycleMod.boilingPointMethane;
 
     const dryIceCycleMod = require('./dry-ice-cycle.js');
@@ -678,96 +672,42 @@ class Terraforming extends EffectableEntity{
             const availableLiquidMethane = this.zonalHydrocarbons[zone].liquid || 0;
             const availableHydrocarbonIce = this.zonalHydrocarbons[zone].ice || 0;
             const availableBuriedHydrocarbonIce = this.zonalHydrocarbons[zone].buriedIce || 0;
-
-            // Methane Evaporation
             const liquidMethaneCoverage = this.zonalCoverageCache[zone]?.liquidMethane ?? 0;
-            const methaneEvaporationRate = calculateMethaneEvaporationRate({
+            const hydrocarbonIceCoverage = this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0;
+
+            const methaneResult = methaneCycleInstance.processZone({
                 zoneArea,
                 liquidMethaneCoverage,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                methaneVaporPressure: globalMethanePressurePa,
-                avgAtmPressure: globalTotalPressurePa,
-                zonalSolarFlux
-            });
-            const methaneEvaporationAmount = Math.min(methaneEvaporationRate * durationSeconds, availableLiquidMethane);
-            zonalChanges[zone].atmosphere.methane += methaneEvaporationAmount;
-            zonalChanges[zone].methane.liquid -= methaneEvaporationAmount;
-            totalMethaneEvaporationAmount += methaneEvaporationAmount;
-
-            // Methane Condensation
-            const methaneBoil = boilingPointMethane(globalTotalPressurePa);
-            const { liquidRate: methaneLiquidRate, iceRate: methaneIceRate } = methaneCycleInstance.condensationRateFactor({
-                zoneArea,
-                vaporPressure: globalMethanePressurePa,
-                gravity: 1,
-                dayTemp,
-                nightTemp,
-                transitionRange: 2,
-                maxDiff: 10,
-                boilingPoint: methaneBoil,
-                boilTransitionRange: 5
-            });
-            const methaneCondensationAmount = methaneLiquidRate * methaneCondensationParameter * durationSeconds;
-            const methaneIceCondensationAmount = methaneIceRate * methaneCondensationParameter * durationSeconds;
-            zonalChanges[zone].precipitation.potentialMethaneRain = methaneCondensationAmount;
-            zonalChanges[zone].precipitation.potentialMethaneSnow = methaneIceCondensationAmount;
-            zonalChanges[zone].atmosphere.methane -= (methaneCondensationAmount + methaneIceCondensationAmount);
-
-            // Methane Melting/Freezing
-            const methaneMeltFreezeRates = calculateMethaneMeltingFreezingRates(
-                zoneTemp,
-                availableHydrocarbonIce,
-                availableLiquidMethane,
-                availableBuriedHydrocarbonIce,
-                zoneArea,
-                this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0,
-                this.zonalCoverageCache[zone]?.liquidMethane ?? 0
-            );
-            const availableForMethaneMelt = availableHydrocarbonIce + availableBuriedHydrocarbonIce + (zonalChanges[zone].methane.ice || 0);
-            const methaneMeltAmount = Math.min(methaneMeltFreezeRates.meltingRate * durationSeconds, availableForMethaneMelt);
-            const methaneFreezeAmount = Math.min(methaneMeltFreezeRates.freezingRate * durationSeconds, availableLiquidMethane + (zonalChanges[zone].methane.liquid || 0));
-
-            zonalChanges[zone].methane.liquid += methaneMeltAmount - methaneFreezeAmount;
-
-            const currentSurfaceMethaneIce = availableHydrocarbonIce + (zonalChanges[zone].methane.ice || 0);
-            const currentBuriedMethaneIce = availableBuriedHydrocarbonIce + (zonalChanges[zone].methane.buriedIce || 0);
-            let meltFromMethaneIce = 0;
-            let meltFromBuriedMethaneIce = 0;
-            if ((currentSurfaceMethaneIce + currentBuriedMethaneIce) > 0) {
-                meltFromMethaneIce = Math.min(methaneMeltAmount, currentSurfaceMethaneIce);
-                meltFromBuriedMethaneIce = Math.min(methaneMeltAmount - meltFromMethaneIce, currentBuriedMethaneIce);
-            }
-
-            zonalChanges[zone].methane.ice += methaneFreezeAmount - meltFromMethaneIce;
-            zonalChanges[zone].methane.buriedIce -= meltFromBuriedMethaneIce;
-
-            totalMethaneMeltAmount += methaneMeltAmount;
-            totalMethaneFreezeAmount += methaneFreezeAmount;
-        
-            // Methane Sublimation
-            const hydrocarbonIceCoverage = this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0;
-            const methaneSublimationRate = calculateMethaneSublimationRate({
-                zoneArea,
                 hydrocarbonIceCoverage,
                 dayTemperature: dayTemp,
                 nightTemperature: nightTemp,
-                methaneVaporPressure: globalMethanePressurePa,
-                avgAtmPressure: globalTotalPressurePa,
-                zonalSolarFlux
+                zoneTemperature: zoneTemp,
+                atmPressure: globalTotalPressurePa,
+                vaporPressure: globalMethanePressurePa,
+                availableLiquid: availableLiquidMethane,
+                availableIce: availableHydrocarbonIce,
+                availableBuriedIce: availableBuriedHydrocarbonIce,
+                zonalSolarFlux,
+                durationSeconds,
+                gravity,
+                condensationParameter: methaneCondensationParameter,
+                transitionRange: 2,
+                maxDiff: 10,
+                boilingPoint: boilingPointMethane(globalTotalPressurePa),
+                boilTransitionRange: 5,
             });
-            const methaneSublimationAmount = Math.min(methaneSublimationRate * durationSeconds, availableHydrocarbonIce);
-            zonalChanges[zone].atmosphere.methane += methaneSublimationAmount;
-            zonalChanges[zone].methane.ice -= methaneSublimationAmount;
-            totalMethaneSublimationAmount += methaneSublimationAmount;
-        
-            // Rapid Methane Sublimation
-            const remainingMethaneIce = Math.max(0, availableHydrocarbonIce + zonalChanges[zone].methane.ice);
-            const rapidMethaneRate = rapidSublimationRateMethane(zoneTemp, remainingMethaneIce);
-            const rapidMethaneAmount = Math.min(rapidMethaneRate * durationSeconds, remainingMethaneIce);
-            zonalChanges[zone].methane.ice -= rapidMethaneAmount;
-            zonalChanges[zone].atmosphere.methane += rapidMethaneAmount;
-            totalMethaneSublimationAmount += rapidMethaneAmount;
+
+            zonalChanges[zone].atmosphere.methane += methaneResult.atmosphere.methane;
+            zonalChanges[zone].methane.liquid += methaneResult.methane.liquid;
+            zonalChanges[zone].methane.ice += methaneResult.methane.ice;
+            zonalChanges[zone].methane.buriedIce += methaneResult.methane.buriedIce;
+            zonalChanges[zone].precipitation.potentialMethaneRain = methaneResult.precipitation.potentialMethaneRain;
+            zonalChanges[zone].precipitation.potentialMethaneSnow = methaneResult.precipitation.potentialMethaneSnow;
+
+            totalMethaneEvaporationAmount += methaneResult.evaporationAmount;
+            totalMethaneSublimationAmount += methaneResult.sublimationAmount;
+            totalMethaneMeltAmount += methaneResult.meltAmount;
+            totalMethaneFreezeAmount += methaneResult.freezeAmount;
         }
 
         // Include melt from zonal water flow

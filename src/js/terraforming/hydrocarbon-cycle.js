@@ -118,6 +118,10 @@ class MethaneCycle extends ResourceCycleClass {
     durationSeconds = 1,
     gravity = 1,
     condensationParameter = 1,
+    transitionRange,
+    maxDiff,
+    boilingPoint,
+    boilTransitionRange,
   }) {
     const changes = {
       atmosphere: { methane: 0 },
@@ -132,7 +136,8 @@ class MethaneCycle extends ResourceCycleClass {
     const iceArea = zoneArea * hydrocarbonIceCoverage;
 
     // --- Evaporation/Sublimation ---
-    let dayEvapRate = 0, nightEvapRate = 0, daySubRate = 0, nightSubRate = 0;
+    let dayEvapRate = 0;
+    let nightEvapRate = 0;
     if (liquidArea > 0) {
       if (typeof dayTemperature === 'number') {
         dayEvapRate = this.evaporationRate({
@@ -153,34 +158,11 @@ class MethaneCycle extends ResourceCycleClass {
         }) * liquidArea / 1000;
       }
     }
-    if (iceArea > 0) {
-      if (typeof dayTemperature === 'number') {
-        daySubRate = this.sublimationRate({
-          T: dayTemperature,
-          solarFlux: daySolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-      if (typeof nightTemperature === 'number') {
-        nightSubRate = this.sublimationRate({
-          T: nightTemperature,
-          solarFlux: nightSolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-    }
 
     const evaporationRate = (dayEvapRate + nightEvapRate) / 2;
-    const sublimationRate = (daySubRate + nightSubRate) / 2;
     const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
-    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
-    changes.atmosphere.methane += evaporationAmount + sublimationAmount;
+    changes.atmosphere.methane += evaporationAmount;
     changes.methane.liquid -= evaporationAmount;
-    changes.methane.ice -= sublimationAmount;
 
     // --- Condensation ---
     const { liquidRate, iceRate } = this.condensationRateFactor({
@@ -189,14 +171,16 @@ class MethaneCycle extends ResourceCycleClass {
       gravity,
       dayTemp: dayTemperature,
       nightTemp: nightTemperature,
+      transitionRange,
+      maxDiff,
+      boilingPoint,
+      boilTransitionRange,
     });
     const potentialRain = liquidRate * condensationParameter * durationSeconds;
     const potentialSnow = iceRate * condensationParameter * durationSeconds;
     changes.precipitation.potentialMethaneRain = potentialRain;
     changes.precipitation.potentialMethaneSnow = potentialSnow;
     changes.atmosphere.methane -= potentialRain + potentialSnow;
-    changes.methane.liquid += potentialRain;
-    changes.methane.ice += potentialSnow;
 
     // --- Melting/Freezing ---
     const meltFreezeRates = this.meltingFreezingRates({
@@ -221,8 +205,37 @@ class MethaneCycle extends ResourceCycleClass {
     changes.methane.ice += freezeAmount - meltFromIce;
     changes.methane.buriedIce -= meltFromBuried;
 
+    // --- Sublimation ---
+    let daySubRate = 0;
+    let nightSubRate = 0;
+    if (iceArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        daySubRate = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSubRate = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+    }
+
+    const sublimationRate = (daySubRate + nightSubRate) / 2;
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
+    changes.atmosphere.methane += sublimationAmount;
+    changes.methane.ice -= sublimationAmount;
+
     // --- Rapid Sublimation ---
-    const remainingIce = currentIce - meltFromIce;
+    const remainingIce = Math.max(0, availableIce + changes.methane.ice);
     const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
     const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
     if (rapidAmount > 0) {
@@ -230,7 +243,13 @@ class MethaneCycle extends ResourceCycleClass {
       changes.atmosphere.methane += rapidAmount;
     }
 
-    return changes;
+    return {
+      ...changes,
+      evaporationAmount,
+      sublimationAmount: sublimationAmount + rapidAmount,
+      meltAmount,
+      freezeAmount,
+    };
   }
 }
 

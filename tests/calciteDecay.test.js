@@ -33,12 +33,17 @@ jest.mock('../src/js/terraforming/water-cycle.js', () => ({
 }));
 
 jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
-  evaporationRateMethane: jest.fn(() => 0),
-  methaneCycle: { condensationRateFactor: jest.fn(() => ({ liquidRate: 0, iceRate: 0 })) },
-  calculateMethaneEvaporationRate: jest.fn(() => 0),
-  sublimationRateMethane: jest.fn(() => 0),
-  rapidSublimationRateMethane: jest.fn(() => 0),
-  calculateMethaneSublimationRate: jest.fn(() => 0),
+  methaneCycle: {
+    processZone: jest.fn(() => ({
+      atmosphere: { methane: 0 },
+      methane: { liquid: 0, ice: 0, buriedIce: 0 },
+      precipitation: { potentialMethaneRain: 0, potentialMethaneSnow: 0 },
+      evaporationAmount: 0,
+      sublimationAmount: 0,
+      meltAmount: 0,
+      freezeAmount: 0,
+    })),
+  },
   boilingPointMethane: jest.fn(() => 112)
 }));
 

@@ -6,7 +6,7 @@ const hydro = require('../src/js/terraforming/hydrocarbon-cycle.js');
 const dryIce = require('../src/js/terraforming/dry-ice-cycle.js');
 
 const { waterCycle } = water;
-const { methaneCycle } = hydro;
+const { methaneCycle, boilingPointMethane } = hydro;
 const { co2Cycle } = dryIce;
 
 describe('water cycle processZone', () => {
@@ -76,6 +76,57 @@ describe('methane cycle processZone', () => {
     expect(changes.atmosphere.methane).toBeGreaterThan(0);
     const total = changes.atmosphere.methane + changes.methane.liquid + changes.methane.ice + changes.methane.buriedIce;
     expect(total).toBeCloseTo(0, 6);
+  });
+
+  test('returns process amounts', () => {
+    const changes = methaneCycle.processZone({
+      zoneArea: 1,
+      liquidMethaneCoverage: 0.5,
+      hydrocarbonIceCoverage: 0.5,
+      dayTemperature: 110,
+      nightTemperature: 90,
+      zoneTemperature: 100,
+      atmPressure: 100000,
+      vaporPressure: 1000,
+      availableLiquid: 5,
+      availableIce: 5,
+      availableBuriedIce: 0,
+      zonalSolarFlux: 200,
+      durationSeconds: 1,
+      gravity: 1,
+    });
+    expect(changes).toHaveProperty('evaporationAmount');
+    expect(changes).toHaveProperty('sublimationAmount');
+    expect(changes).toHaveProperty('meltAmount');
+    expect(changes).toHaveProperty('freezeAmount');
+  });
+
+  test('records condensation potential without altering methane stores', () => {
+    const changes = methaneCycle.processZone({
+      zoneArea: 1,
+      liquidMethaneCoverage: 0,
+      hydrocarbonIceCoverage: 0,
+      dayTemperature: 80,
+      nightTemperature: 70,
+      zoneTemperature: 75,
+      atmPressure: 100000,
+      vaporPressure: 100000,
+      availableLiquid: 0,
+      availableIce: 0,
+      availableBuriedIce: 0,
+      zonalSolarFlux: 0,
+      durationSeconds: 1,
+      gravity: 1,
+      condensationParameter: 1,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointMethane(100000),
+      boilTransitionRange: 5,
+    });
+    const potential = changes.precipitation.potentialMethaneRain + changes.precipitation.potentialMethaneSnow;
+    expect(potential).toBeGreaterThan(0);
+    expect(changes.methane.liquid).toBeCloseTo(0, 6);
+    expect(changes.methane.ice).toBeCloseTo(0, 6);
   });
 });
 
