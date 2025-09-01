@@ -577,18 +577,18 @@ function initializeMirrorOversightUI(container) {
     });
   });
 
-  // Table showing zonal average solar flux and temperature
+  // Table showing zonal average solar flux and temperatures
   const fluxTable = document.createElement('table');
   fluxTable.id = 'mirror-flux-table';
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Average Solar Flux (W/m^²)</th><th>Temperature (${tempUnit})</th></tr>
+      <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit})</th><th>Day Temperature (${tempUnit})</th></tr>
     </thead>
     <tbody>
-      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td></tr>
-      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0</td></tr>
-      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0</td></tr>
+      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td><td id="mirror-day-temp-tropical">0</td></tr>
+      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0</td><td id="mirror-day-temp-temperate">0</td></tr>
+      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0</td><td id="mirror-day-temp-polar">0</td></tr>
     </tbody>
   `;
   div.appendChild(fluxTable);
@@ -787,6 +787,7 @@ function rebuildMirrorOversightCache() {
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
     fluxTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(3)') || null,
+    dayTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(4)') || null,
     sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
     sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
   };
@@ -995,15 +996,18 @@ function updateZonalFluxTable() {
   const C = mirrorOversightCache || {};
   const header = C.fluxTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
   if (header) header.textContent = `Temperature (${tempUnit})`;
-    const zones = ['tropical', 'temperate', 'polar'];
-    zones.forEach(zone => {
-      const fluxCell = document.getElementById(`mirror-flux-${zone}`);
-      const tempCell = document.getElementById(`mirror-temp-${zone}`);
-      let flux = 0;
-      if (typeof terraforming.calculateZoneSolarFlux === 'function') {
-        flux = terraforming.calculateZoneSolarFlux(zone) / 4;
-      }
-      if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
+  const dayHeader = C.dayTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(4)');
+  if (dayHeader) dayHeader.textContent = `Day Temperature (${tempUnit})`;
+  const zones = ['tropical', 'temperate', 'polar'];
+  zones.forEach(zone => {
+    const fluxCell = document.getElementById(`mirror-flux-${zone}`);
+    const tempCell = document.getElementById(`mirror-temp-${zone}`);
+    const dayTempCell = document.getElementById(`mirror-day-temp-${zone}`);
+    let flux = 0;
+    if (typeof terraforming.calculateZoneSolarFlux === 'function') {
+      flux = terraforming.calculateZoneSolarFlux(zone) / 4;
+    }
+    if (fluxCell) fluxCell.textContent = formatNumber(flux, false, 2);
 
     if (tempCell) {
       let temp = 0;
@@ -1014,6 +1018,18 @@ function updateZonalFluxTable() {
         temp = toDisplayTemperature(temp);
       }
       tempCell.textContent = formatNumber(temp, false, 2);
+    }
+
+    if (dayTempCell) {
+      let dayTemp = 0;
+      if (terraforming.temperature && terraforming.temperature.zones && terraforming.temperature.zones[zone]) {
+        const d = terraforming.temperature.zones[zone].day;
+        dayTemp = typeof d === 'number' ? d : 0;
+      }
+      if (typeof toDisplayTemperature === 'function') {
+        dayTemp = toDisplayTemperature(dayTemp);
+      }
+      dayTempCell.textContent = formatNumber(dayTemp, false, 2);
     }
   });
 }
