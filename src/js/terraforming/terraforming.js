@@ -1351,13 +1351,24 @@ class Terraforming extends EffectableEntity{
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){
       const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
-      const mirrorFlux = this.calculateMirrorEffect().powerPerUnitArea;
+      const mirrorEffect = this.calculateMirrorEffect();
+      const mirrorFlux = mirrorEffect.powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
       const mirrors = (typeof buildings !== 'undefined' && buildings['spaceMirror']) ? buildings['spaceMirror'].active : 0;
-      const reverse = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.spaceMirrorFacility)
-        ? projectManager.projects.spaceMirrorFacility.reverseEnabled
-        : false;
-      const mirrorContribution = mirrorFlux * mirrors * (reverse ? -1 : 1);
+      let reverseFactor = 1;
+      if (typeof mirrorOversightSettings !== 'undefined') {
+        const dist = mirrorOversightSettings.distribution || {};
+        const rev = mirrorOversightSettings.assignments?.reversalMode || {};
+        const anyPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
+        const reversedPerc =
+          (rev.tropical ? dist.tropical || 0 : 0) +
+          (rev.temperate ? dist.temperate || 0 : 0) +
+          (rev.polar ? dist.polar || 0 : 0) +
+          (rev.focus ? dist.focus || 0 : 0) +
+          (rev.any ? anyPerc : 0);
+        reverseFactor = 1 - 2 * reversedPerc;
+      }
+      const mirrorContribution = mirrorFlux * mirrors * reverseFactor;
       const total = baseFlux + mirrorContribution + lanternFlux;
 
       return Math.max(total, 6e-6);

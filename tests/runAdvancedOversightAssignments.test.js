@@ -11,7 +11,7 @@ describe('runAdvancedOversightAssignments', () => {
     mirrorOversightSettings.priority = { tropical: 1, temperate: 2, polar: 3, focus: 4 };
     mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
     mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
-    mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+    mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
     mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
 
     global.buildings = {

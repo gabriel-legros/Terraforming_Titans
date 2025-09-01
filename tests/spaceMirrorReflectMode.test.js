@@ -3,7 +3,7 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 
 describe('space mirror reflect mode', () => {
-  test('enableReversal shows reflect mode and saves selection', () => {
+  test('enableReversal shows slider reversal checkboxes', () => {
     const originalDocument = global.document;
     const originalProject = global.Project;
     const originalFormat = global.formatNumber;
@@ -24,28 +24,23 @@ describe('space mirror reflect mode', () => {
     };
     global.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { unlocked: false } };
     global.projectElements = {};
+    global.updateZonalFluxTable = () => {};
 
     const { SpaceMirrorFacilityProject } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
     const config = { name: 'Space Mirror Facility', cost: {}, duration: 0 };
     const project = new SpaceMirrorFacilityProject(config, 'spaceMirrorFacility');
+    global.projectManager = { projects: { spaceMirrorFacility: project }, isBooleanFlagSet: () => false };
     project.enableReversal();
 
     const container = document.getElementById('root');
     project.renderUI(container);
     project.updateUI();
 
-    const modeContainer = dom.window.document.querySelector('.mirror-details-card .mode-selection');
-    expect(modeContainer).not.toBeNull();
-    const buttons = modeContainer.querySelectorAll('button');
-    expect(buttons[0].textContent).toBe('Toward World');
-    expect(buttons[1].textContent).toBe('Away From World');
-
-    buttons[1].click();
-    expect(project.reverseEnabled).toBe(true);
-    const saved = project.saveState();
-    const loaded = new SpaceMirrorFacilityProject(config, 'spaceMirrorFacility');
-    loaded.loadState(saved);
-    expect(loaded.reverseEnabled).toBe(true);
+    const checkbox = dom.window.document.getElementById('mirror-oversight-tropical-reverse');
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.style.display).not.toBe('none');
+    checkbox.click();
+    expect(global.mirrorOversightSettings.assignments.reversalMode.tropical).toBe(true);
 
     global.document = originalDocument;
     global.Project = originalProject;
@@ -53,6 +48,7 @@ describe('space mirror reflect mode', () => {
     global.terraforming = originalTerraforming;
     global.buildings = originalBuildings;
     global.projectElements = originalProjectElements || {};
+    delete global.projectManager;
     delete global.mirrorOversightSettings;
     delete global.setMirrorDistribution;
     delete global.resetMirrorOversightSettings;

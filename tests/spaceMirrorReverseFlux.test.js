@@ -31,7 +31,7 @@ afterEach(() => {
   mirrorOversightSettings.advancedOversight = false;
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
-  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false };
+  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   delete global.buildings;
   delete global.projectManager;
 });
@@ -56,10 +56,11 @@ describe('space mirror reversal', () => {
       spaceMirror: { surfaceArea: 1, active: 1 }
     };
     global.projectManager = {
-      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight', reverseEnabled: true } },
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.distribution.tropical = 1;
+    mirrorOversightSettings.assignments.reversalMode.tropical = true;
 
     terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
 
@@ -111,7 +112,7 @@ describe('space mirror reversal', () => {
       hyperionLantern: { active: 1, powerPerBuilding: 100 }
     };
     global.projectManager = {
-      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight', reverseEnabled: true } },
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.advancedOversight = true;
@@ -144,7 +145,7 @@ describe('space mirror reversal', () => {
     const terra = createTerraforming();
     global.buildings = { spaceMirror: { surfaceArea: 100, active: 10 } };
     global.projectManager = {
-      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight', reverseEnabled: true } },
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' } },
       isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight'
     };
     mirrorOversightSettings.advancedOversight = true;
