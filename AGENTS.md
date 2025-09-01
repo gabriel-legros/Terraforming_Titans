@@ -414,4 +414,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - MethaneCycle constructor now accepts transitionRange, maxDiff, boilingPointFn, and boilTransitionRange options used during zonal processing.
 - Resource panel margins are now configurable; default planet parameters add 5px spacing after workers, glass and food, and before androids.
 - Subtabs now remember and restore their vertical scroll position when revisited.
+- Special project subtabs also retain their individual scroll positions when switching categories.
 - Space mirror facility adds an Unassigned slider leaving a portion of mirrors and lanterns idle.
