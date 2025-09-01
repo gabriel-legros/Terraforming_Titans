@@ -1,4 +1,15 @@
-﻿// Mirror oversight controls
+﻿if (typeof makeCollapsibleCard === 'undefined') {
+  var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
+    ? globalThis.makeCollapsibleCard
+    : null;
+  try {
+    if (!makeCollapsibleCard && typeof require === 'function') {
+      ({ makeCollapsibleCard } = require('../ui-utils.js'));
+    }
+  } catch (e) {}
+}
+
+// Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
     distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
@@ -386,6 +397,7 @@ function initializeMirrorOversightUI(container) {
       </div>
     </div>
   `;
+  if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(div);
 
   const sliders = {
     tropical: div.querySelector('#mirror-oversight-tropical'),
@@ -1358,6 +1370,7 @@ class SpaceMirrorFacilityProject extends Project {
         </div>
       </div>
     `;
+    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(mirrorDetails);
     container.appendChild(mirrorDetails);
 
     const lanternDetails = document.createElement('div');
@@ -1392,6 +1405,7 @@ class SpaceMirrorFacilityProject extends Project {
         </div>
       </div>
     `;
+    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
     if (typeof initializeMirrorOversightUI === 'function') {

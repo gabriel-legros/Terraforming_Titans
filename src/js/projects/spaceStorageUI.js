@@ -1,3 +1,14 @@
+if (typeof makeCollapsibleCard === 'undefined') {
+  var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
+    ? globalThis.makeCollapsibleCard
+    : null;
+  try {
+    if (!makeCollapsibleCard && typeof require === 'function') {
+      ({ makeCollapsibleCard } = require('../ui-utils.js'));
+    }
+  } catch (e) {}
+}
+
 const storageResourceOptions = [
   { label: 'Metal', category: 'colony', resource: 'metal' },
   { label: 'Glass', category: 'colony', resource: 'glass' },
@@ -95,6 +106,7 @@ function renderSpaceStorageUI(project, container) {
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
+  if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   const cardBody = card.querySelector('.card-body');
 
   const topSection = document.createElement('div');

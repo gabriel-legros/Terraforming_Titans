@@ -29,7 +29,10 @@
 }
 
 .project-card.collapsed .card-body,
-.project-card.collapsed .progress-button-container {
+.project-card.collapsed .progress-button-container,
+.info-card.collapsed .card-body,
+.mirror-oversight-card.collapsed .card-body,
+.dyson-swarm-card.collapsed .card-body {
     display: none;
 }
 
