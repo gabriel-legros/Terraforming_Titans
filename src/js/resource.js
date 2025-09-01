@@ -439,18 +439,17 @@ function produceResources(deltaTime, buildings) {
       const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
       projectData[name] = { project, cost, gain };
     }
-    const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
     for (const name of names) {
       const data = projectData[name];
       if (!data || data.project.treatAsBuilding) continue;
       const { project } = data;
       const productivity = productivityMap[name] ?? 1;
       if (project.autoStart === false) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+        project.applyCostAndGain(deltaTime, accumulatedChanges);
         continue;
       }
-      project.estimateCostAndGain(deltaTime, true, productivity);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      project.estimateCostAndGain(deltaTime, true);
+      project.applyCostAndGain(deltaTime, accumulatedChanges);
     }
   }
 

@@ -523,7 +523,7 @@ class SpaceshipProject extends Project {
 
       if (this.isContinuous()) {
         const factor = 1000 / duration;
-        const fraction = (this.lastActiveTime || 0) / duration;
+        const fraction = deltaTime / duration;
         if (fraction > 0) {
           const costPerShip = this.calculateSpaceshipCost();
           for (const category in costPerShip) {
@@ -561,6 +561,8 @@ class SpaceshipProject extends Project {
               (totals.cost[category][resource] || 0) + capacity * this.assignedSpaceships * fraction;
             if (this.attributes.fundingGainAmount && resources.colony?.funding) {
               const fundingRate = capacity * this.assignedSpaceships * factor * this.attributes.fundingGainAmount * (applyRates ? productivity : 1);
+              console.log(productivity);
+              console.log(fundingRate);
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
