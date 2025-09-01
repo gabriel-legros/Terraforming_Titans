@@ -314,7 +314,7 @@ function renderSpaceStorageUI(project, container) {
 
   updateModeButtons();
 
-  card.appendChild(shipFooter);
+  cardBody.appendChild(shipFooter);
   container.appendChild(card);
   projectElements[project.name] = {
     ...projectElements[project.name],

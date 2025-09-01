@@ -603,7 +603,7 @@ function initializeMirrorOversightUI(container) {
       <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0</td><td id="mirror-day-temp-polar">0</td></tr>
     </tbody>
   `;
-  div.appendChild(fluxTable);
+  cardBody.appendChild(fluxTable);
   // Fix mis-encoded units in header
   try {
     const fluxHeader = fluxTable.querySelector('thead tr th:nth-child(2)');
@@ -701,8 +701,8 @@ function initializeMirrorOversightUI(container) {
       </div>
     </div>
   `;
-  div.appendChild(finerToggle);
-  div.appendChild(finerContent);
+  cardBody.appendChild(finerToggle);
+  cardBody.appendChild(finerContent);
 
   const finerIcon = finerToggle.querySelector('#mirror-finer-icon');
   finerToggle.addEventListener('click', () => {
