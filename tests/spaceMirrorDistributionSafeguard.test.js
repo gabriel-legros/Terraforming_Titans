@@ -17,10 +17,10 @@ afterAll(() => {
 describe('Space mirror distribution safeguard', () => {
   test('clamps invalid slider values each tick', () => {
     const project = new SpaceMirrorFacilityProject({ name: 'Space Mirror Facility', cost: {}, duration: 0 }, 'spaceMirrorFacility');
-    mirrorOversightSettings.distribution = { tropical: 1.2, temperate: -0.1, polar: 0.3, focus: 0.3 };
+    mirrorOversightSettings.distribution = { tropical: 1.2, temperate: -0.1, polar: 0.3, focus: 0.3, unassigned: 0.4 };
     project.update(1000);
     const dist = mirrorOversightSettings.distribution;
-    const total = dist.tropical + dist.temperate + dist.polar + dist.focus;
+    const total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
     Object.values(dist).forEach(v => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThanOrEqual(1);

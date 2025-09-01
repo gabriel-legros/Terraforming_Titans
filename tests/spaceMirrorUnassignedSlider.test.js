@@ -7,8 +7,8 @@ const numbers = require('../src/js/numbers.js');
 
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
-describe('space mirror slider safeguards', () => {
-  test('sliders stay non-negative and sum to 100', () => {
+describe('space mirror unassigned slider', () => {
+  test('unassigned percentage leaves mirrors idle', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -17,7 +17,7 @@ describe('space mirror slider safeguards', () => {
     ctx.toDisplayTemperature = numbers.toDisplayTemperature;
     ctx.getTemperatureUnit = numbers.getTemperatureUnit;
     ctx.projectElements = {};
-    ctx.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { active: 0, unlocked: false } };
+    ctx.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 0, unlocked: false } };
     ctx.terraforming = {
       calculateMirrorEffect: () => ({ interceptedPower: 0, powerPerUnitArea: 0 }),
       calculateZoneSolarFlux: () => 0,
@@ -31,8 +31,7 @@ describe('space mirror slider safeguards', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const mirrorCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'SpaceMirrorFacilityProject.js'), 'utf8');
-    vm.runInContext(mirrorCode + '; this.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject; this.setMirrorDistribution = setMirrorDistribution;', ctx);
-
+    vm.runInContext(mirrorCode + '; this.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject; this.setMirrorDistribution = setMirrorDistribution; this.distributeAssignmentsFromSliders = distributeAssignmentsFromSliders;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -43,15 +42,14 @@ describe('space mirror slider safeguards', () => {
     ctx.projectElements = vm.runInContext('projectElements', ctx);
     project.updateUI();
 
-    ctx.setMirrorDistribution('tropical', 70);
-    ctx.setMirrorDistribution('temperate', 40);
-    ctx.setMirrorDistribution('tropical', -10);
-    ctx.setMirrorDistribution('temperate', 200);
+    ctx.setMirrorDistribution('tropical', 50);
+    ctx.setMirrorDistribution('unassigned', 30);
+    ctx.distributeAssignmentsFromSliders('mirrors');
 
-    const zones = ['tropical', 'temperate', 'polar', 'focus', 'any', 'unassigned'];
-    const values = zones.map(z => Number(dom.window.document.getElementById(`mirror-oversight-${z}`).value));
-    const total = values.reduce((a, b) => a + b, 0);
-    values.forEach(v => expect(v).toBeGreaterThanOrEqual(0));
+    const getVal = z => Number(dom.window.document.getElementById(`mirror-oversight-${z}`).value);
+    expect(getVal('unassigned')).toBe(30);
+    const total = ['tropical', 'temperate', 'polar', 'focus', 'any', 'unassigned'].reduce((s, z) => s + getVal(z), 0);
     expect(total).toBe(100);
+    expect(ctx.mirrorOversightSettings.assignments.mirrors.unassigned).toBe(3);
   });
 });

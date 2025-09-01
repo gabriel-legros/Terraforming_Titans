@@ -21,8 +21,8 @@ describe('space mirror available counts', () => {
     const container = document.getElementById('container');
     global.buildings = { spaceMirror: { active: 10 }, hyperionLantern: { active: 5 } };
     initializeMirrorOversightUI(container);
-    mirrorOversightSettings.assignments.mirrors = { tropical: 3, temperate: 0, polar: 0, focus: 0, any: 0 };
-    mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 2, focus: 0, any: 0 };
+    mirrorOversightSettings.assignments.mirrors = { tropical: 3, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
+    mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 2, focus: 0, unassigned: 0, any: 0 };
     updateAssignmentDisplays();
     expect(document.getElementById('available-mirrors').textContent).toBe('7');
     expect(document.getElementById('available-lanterns').textContent).toBe('3');
