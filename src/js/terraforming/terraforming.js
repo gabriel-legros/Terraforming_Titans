@@ -514,25 +514,20 @@ class Terraforming extends EffectableEntity{
         let zonalChanges = {}; // Store calculated zonal change *amounts* for the tick
         zones.forEach(zone => {
             zonalChanges[zone] = {
-                liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, // Net surface changes
-                // Store potential atmospheric changes originating/terminating in this zone
-                potentialAtmosphericWaterChange: 0,
-                potentialAtmosphericCO2Change: 0,
-                potentialAtmosphericMethaneChange: 0,
-                liquidMethane: 0,
-                hydrocarbonIce: 0,
-                buriedHydrocarbonIce: 0,
-                // Store potential downward flux amounts for scaling
-                potentialRainfall: 0,
-                potentialSnowfall: 0,
-                potentialCO2Condensation: 0,
-                potentialMethaneCondensation: 0,
-                potentialMethaneIceCondensation: 0,
-                // Track realized precipitation before redistribution
-                actualRainfall: 0,
-                actualSnowfall: 0,
-                actualMethaneCondensation: 0,
-                actualMethaneIceCondensation: 0
+                water: { liquid: 0, ice: 0, buriedIce: 0, dryIce: 0 },
+                methane: { liquid: 0, ice: 0, buriedIce: 0 },
+                atmosphere: { water: 0, co2: 0, methane: 0, oxygen: 0 },
+                precipitation: {
+                    rain: 0,
+                    snow: 0,
+                    methaneRain: 0,
+                    methaneSnow: 0,
+                    potentialRain: 0,
+                    potentialSnow: 0,
+                    potentialMethaneRain: 0,
+                    potentialMethaneSnow: 0
+                },
+                potentialCO2Condensation: 0
             };
         });
 
@@ -551,13 +546,14 @@ class Terraforming extends EffectableEntity{
 
         for (const zone of zones) {
             if (waterFlowResult.changes[zone]) {
-                zonalChanges[zone].liquidWater += waterFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].ice += waterFlowResult.changes[zone].ice || 0;
-                zonalChanges[zone].buriedIce += waterFlowResult.changes[zone].buriedIce || 0;
+                zonalChanges[zone].water.liquid += waterFlowResult.changes[zone].liquid || 0;
+                zonalChanges[zone].water.ice += waterFlowResult.changes[zone].ice || 0;
+                zonalChanges[zone].water.buriedIce += waterFlowResult.changes[zone].buriedIce || 0;
             }
             if (hydrocarbonFlowResult.changes[zone]) {
-                zonalChanges[zone].liquidMethane += hydrocarbonFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].hydrocarbonIce += hydrocarbonFlowResult.changes[zone].ice || 0;
+                zonalChanges[zone].methane.liquid += hydrocarbonFlowResult.changes[zone].liquid || 0;
+                zonalChanges[zone].methane.ice += hydrocarbonFlowResult.changes[zone].ice || 0;
+                zonalChanges[zone].methane.buriedIce += hydrocarbonFlowResult.changes[zone].buriedIce || 0;
             }
         }
 
@@ -604,12 +600,12 @@ class Terraforming extends EffectableEntity{
             const co2SublimationAmount = Math.min(evapSublRates.co2SublimationRate * durationSeconds, availableDryIce);
 
             // Add potential atmospheric contribution from this zone
-            zonalChanges[zone].potentialAtmosphericWaterChange += evaporationAmount + waterSublimationAmount;
-            zonalChanges[zone].potentialAtmosphericCO2Change += co2SublimationAmount;
+            zonalChanges[zone].atmosphere.water += evaporationAmount + waterSublimationAmount;
+            zonalChanges[zone].atmosphere.co2 += co2SublimationAmount;
             // Store initial surface loss
-            zonalChanges[zone].liquidWater -= evaporationAmount;
-            zonalChanges[zone].ice -= waterSublimationAmount;
-            zonalChanges[zone].dryIce -= co2SublimationAmount;
+            zonalChanges[zone].water.liquid -= evaporationAmount;
+            zonalChanges[zone].water.ice -= waterSublimationAmount;
+            zonalChanges[zone].water.dryIce -= co2SublimationAmount;
             // Accumulate totals for UI
             totalEvaporationAmount += evaporationAmount;
             totalWaterSublimationAmount += waterSublimationAmount;
@@ -625,8 +621,8 @@ class Terraforming extends EffectableEntity{
                 atmPressure: globalTotalPressurePa
             });
             // Calculate potential amounts based on zonal conditions (before global limits)
-            zonalChanges[zone].potentialRainfall = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
-            zonalChanges[zone].potentialSnowfall = precipRateFactors.snowfallRateFactor * precipitationMultiplier * durationSeconds;
+            zonalChanges[zone].precipitation.potentialRain = precipRateFactors.rainfallRateFactor * precipitationMultiplier * durationSeconds;
+            zonalChanges[zone].precipitation.potentialSnow = precipRateFactors.snowfallRateFactor * precipitationMultiplier * durationSeconds;
 
             const co2CondRateFactor = calculateCO2CondensationRateFactor({
                 zoneArea,
@@ -638,8 +634,8 @@ class Terraforming extends EffectableEntity{
 
 
             // Store potential atmospheric loss from this zone
-            zonalChanges[zone].potentialAtmosphericWaterChange -= (zonalChanges[zone].potentialRainfall + zonalChanges[zone].potentialSnowfall);
-            zonalChanges[zone].potentialAtmosphericCO2Change -= zonalChanges[zone].potentialCO2Condensation;
+            zonalChanges[zone].atmosphere.water -= (zonalChanges[zone].precipitation.potentialRain + zonalChanges[zone].precipitation.potentialSnow);
+            zonalChanges[zone].atmosphere.co2 -= zonalChanges[zone].potentialCO2Condensation;
 
             // --- Phase Changes (Surface Only) ---
             const meltFreezeRates = calculateMeltingFreezingRates(
@@ -652,14 +648,14 @@ class Terraforming extends EffectableEntity{
                 liquidWaterCoverage
             );
             // Calculate melt/freeze based on amounts *after* sublimation/evaporation but *before* potential precipitation
-            const availableForMelt = availableIce + availableBuriedIce + zonalChanges[zone].ice + zonalChanges[zone].buriedIce;
+            const availableForMelt = availableIce + availableBuriedIce + zonalChanges[zone].water.ice + zonalChanges[zone].water.buriedIce;
             const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt); // Limit by ice available after sublimation
-            const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].liquidWater); // Limit by liquid available after evap
+            const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, availableLiquid + zonalChanges[zone].water.liquid); // Limit by liquid available after evap
 
             // Apply melt/freeze changes to surface stores (adjusting the net change)
-            zonalChanges[zone].liquidWater += meltAmount - freezeAmount;
-            const currentSurfaceIce = availableIce + zonalChanges[zone].ice;
-            const currentBuriedIce = availableBuriedIce + zonalChanges[zone].buriedIce;
+            zonalChanges[zone].water.liquid += meltAmount - freezeAmount;
+            const currentSurfaceIce = availableIce + zonalChanges[zone].water.ice;
+            const currentBuriedIce = availableBuriedIce + zonalChanges[zone].water.buriedIce;
             const totalZoneIce = currentSurfaceIce + currentBuriedIce;
             let meltFromIce = 0;
             let meltFromBuried = 0;
@@ -667,18 +663,18 @@ class Terraforming extends EffectableEntity{
                 meltFromIce = Math.min(meltAmount, currentSurfaceIce);
                 meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuriedIce);
             }
-            zonalChanges[zone].ice += freezeAmount - meltFromIce;
-            zonalChanges[zone].buriedIce -= meltFromBuried;
+            zonalChanges[zone].water.ice += freezeAmount - meltFromIce;
+            zonalChanges[zone].water.buriedIce -= meltFromBuried;
             // Accumulate totals for UI
             totalMeltAmount += meltAmount;
             totalFreezeAmount += freezeAmount;
 
             // --- Rapid CO2 sublimation when temperatures are high ---
-            const remainingDryIce = Math.max(0, availableDryIce + zonalChanges[zone].dryIce);
+            const remainingDryIce = Math.max(0, availableDryIce + zonalChanges[zone].water.dryIce);
             const rapidRate = rapidSublimationRateCO2(zoneTemp, remainingDryIce);
             const rapidAmount = Math.min(rapidRate * durationSeconds, remainingDryIce);
-            zonalChanges[zone].dryIce -= rapidAmount;
-            zonalChanges[zone].potentialAtmosphericCO2Change += rapidAmount;
+            zonalChanges[zone].water.dryIce -= rapidAmount;
+            zonalChanges[zone].atmosphere.co2 += rapidAmount;
             totalCo2SublimationAmount += rapidAmount;
 
             // --- Methane Cycle ---
@@ -698,8 +694,8 @@ class Terraforming extends EffectableEntity{
                 zonalSolarFlux
             });
             const methaneEvaporationAmount = Math.min(methaneEvaporationRate * durationSeconds, availableLiquidMethane);
-            zonalChanges[zone].potentialAtmosphericMethaneChange += methaneEvaporationAmount;
-            zonalChanges[zone].liquidMethane -= methaneEvaporationAmount;
+            zonalChanges[zone].atmosphere.methane += methaneEvaporationAmount;
+            zonalChanges[zone].methane.liquid -= methaneEvaporationAmount;
             totalMethaneEvaporationAmount += methaneEvaporationAmount;
 
             // Methane Condensation
@@ -713,9 +709,9 @@ class Terraforming extends EffectableEntity{
             // Methane Condensation
             const methaneCondensationAmount = methaneCondRateFactors.liquidRateFactor * methaneCondensationParameter * durationSeconds;
             const methaneIceCondensationAmount = methaneCondRateFactors.iceRateFactor * methaneCondensationParameter * durationSeconds;
-            zonalChanges[zone].potentialMethaneCondensation = methaneCondensationAmount;
-            zonalChanges[zone].potentialMethaneIceCondensation = methaneIceCondensationAmount;
-            zonalChanges[zone].potentialAtmosphericMethaneChange -= (methaneCondensationAmount + methaneIceCondensationAmount);
+            zonalChanges[zone].precipitation.potentialMethaneRain = methaneCondensationAmount;
+            zonalChanges[zone].precipitation.potentialMethaneSnow = methaneIceCondensationAmount;
+            zonalChanges[zone].atmosphere.methane -= (methaneCondensationAmount + methaneIceCondensationAmount);
 
             // Methane Melting/Freezing
             const methaneMeltFreezeRates = calculateMethaneMeltingFreezingRates(
@@ -727,14 +723,14 @@ class Terraforming extends EffectableEntity{
                 this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0,
                 this.zonalCoverageCache[zone]?.liquidMethane ?? 0
             );
-            const availableForMethaneMelt = availableHydrocarbonIce + availableBuriedHydrocarbonIce + (zonalChanges[zone].hydrocarbonIce || 0);
+            const availableForMethaneMelt = availableHydrocarbonIce + availableBuriedHydrocarbonIce + (zonalChanges[zone].methane.ice || 0);
             const methaneMeltAmount = Math.min(methaneMeltFreezeRates.meltingRate * durationSeconds, availableForMethaneMelt);
-            const methaneFreezeAmount = Math.min(methaneMeltFreezeRates.freezingRate * durationSeconds, availableLiquidMethane + (zonalChanges[zone].liquidMethane || 0));
+            const methaneFreezeAmount = Math.min(methaneMeltFreezeRates.freezingRate * durationSeconds, availableLiquidMethane + (zonalChanges[zone].methane.liquid || 0));
 
-            zonalChanges[zone].liquidMethane += methaneMeltAmount - methaneFreezeAmount;
+            zonalChanges[zone].methane.liquid += methaneMeltAmount - methaneFreezeAmount;
 
-            const currentSurfaceMethaneIce = availableHydrocarbonIce + (zonalChanges[zone].hydrocarbonIce || 0);
-            const currentBuriedMethaneIce = availableBuriedHydrocarbonIce + (zonalChanges[zone].buriedHydrocarbonIce || 0);
+            const currentSurfaceMethaneIce = availableHydrocarbonIce + (zonalChanges[zone].methane.ice || 0);
+            const currentBuriedMethaneIce = availableBuriedHydrocarbonIce + (zonalChanges[zone].methane.buriedIce || 0);
             let meltFromMethaneIce = 0;
             let meltFromBuriedMethaneIce = 0;
             if ((currentSurfaceMethaneIce + currentBuriedMethaneIce) > 0) {
@@ -742,8 +738,8 @@ class Terraforming extends EffectableEntity{
                 meltFromBuriedMethaneIce = Math.min(methaneMeltAmount - meltFromMethaneIce, currentBuriedMethaneIce);
             }
 
-            zonalChanges[zone].hydrocarbonIce += methaneFreezeAmount - meltFromMethaneIce;
-            zonalChanges[zone].buriedHydrocarbonIce -= meltFromBuriedMethaneIce;
+            zonalChanges[zone].methane.ice += methaneFreezeAmount - meltFromMethaneIce;
+            zonalChanges[zone].methane.buriedIce -= meltFromBuriedMethaneIce;
 
             totalMethaneMeltAmount += methaneMeltAmount;
             totalMethaneFreezeAmount += methaneFreezeAmount;
@@ -760,16 +756,16 @@ class Terraforming extends EffectableEntity{
                 zonalSolarFlux
             });
             const methaneSublimationAmount = Math.min(methaneSublimationRate * durationSeconds, availableHydrocarbonIce);
-            zonalChanges[zone].potentialAtmosphericMethaneChange += methaneSublimationAmount;
-            zonalChanges[zone].hydrocarbonIce -= methaneSublimationAmount;
+            zonalChanges[zone].atmosphere.methane += methaneSublimationAmount;
+            zonalChanges[zone].methane.ice -= methaneSublimationAmount;
             totalMethaneSublimationAmount += methaneSublimationAmount;
         
             // Rapid Methane Sublimation
-            const remainingMethaneIce = Math.max(0, availableHydrocarbonIce + zonalChanges[zone].hydrocarbonIce);
+            const remainingMethaneIce = Math.max(0, availableHydrocarbonIce + zonalChanges[zone].methane.ice);
             const rapidMethaneRate = rapidSublimationRateMethane(zoneTemp, remainingMethaneIce);
             const rapidMethaneAmount = Math.min(rapidMethaneRate * durationSeconds, remainingMethaneIce);
-            zonalChanges[zone].hydrocarbonIce -= rapidMethaneAmount;
-            zonalChanges[zone].potentialAtmosphericMethaneChange += rapidMethaneAmount;
+            zonalChanges[zone].methane.ice -= rapidMethaneAmount;
+            zonalChanges[zone].atmosphere.methane += rapidMethaneAmount;
             totalMethaneSublimationAmount += rapidMethaneAmount;
         }
 
@@ -790,19 +786,19 @@ class Terraforming extends EffectableEntity{
         let totalPotentialAtmosphericMethaneLoss = 0;
         zones.forEach(zone => {
             // Sum potential losses (negative changes)
-            if (zonalChanges[zone].potentialAtmosphericWaterChange < 0) {
-                totalPotentialAtmosphericWaterLoss -= zonalChanges[zone].potentialAtmosphericWaterChange; // Sum positive loss amounts
+            if (zonalChanges[zone].atmosphere.water < 0) {
+                totalPotentialAtmosphericWaterLoss -= zonalChanges[zone].atmosphere.water; // Sum positive loss amounts
             }
-            if (zonalChanges[zone].potentialAtmosphericCO2Change < 0) {
-               totalPotentialAtmosphericCO2Loss -= zonalChanges[zone].potentialAtmosphericCO2Change; // Sum positive loss amounts
+            if (zonalChanges[zone].atmosphere.co2 < 0) {
+               totalPotentialAtmosphericCO2Loss -= zonalChanges[zone].atmosphere.co2; // Sum positive loss amounts
            }
-           if (zonalChanges[zone].potentialAtmosphericMethaneChange < 0) {
-               totalPotentialAtmosphericMethaneLoss -= zonalChanges[zone].potentialAtmosphericMethaneChange;
+           if (zonalChanges[zone].atmosphere.methane < 0) {
+               totalPotentialAtmosphericMethaneLoss -= zonalChanges[zone].atmosphere.methane;
            }
            // Sum gains (positive changes) into the global total
-           totalAtmosphericWaterChange += Math.max(0, zonalChanges[zone].potentialAtmosphericWaterChange);
-           totalAtmosphericCO2Change += Math.max(0, zonalChanges[zone].potentialAtmosphericCO2Change);
-           totalAtmosphericMethaneChange += Math.max(0, zonalChanges[zone].potentialAtmosphericMethaneChange);
+           totalAtmosphericWaterChange += Math.max(0, zonalChanges[zone].atmosphere.water);
+           totalAtmosphericCO2Change += Math.max(0, zonalChanges[zone].atmosphere.co2);
+           totalAtmosphericMethaneChange += Math.max(0, zonalChanges[zone].atmosphere.methane);
        });
 
         // Calculate scaling factor if potential loss exceeds available amount
@@ -816,69 +812,66 @@ class Terraforming extends EffectableEntity{
         // Apply scaled losses to global totals and calculate actual surface gains
         zones.forEach(zone => {
             // Adjust Water Loss/Gain
-            if (zonalChanges[zone].potentialAtmosphericWaterChange < 0) {
-                const scaledLoss = zonalChanges[zone].potentialAtmosphericWaterChange * waterLossScale;
+            if (zonalChanges[zone].atmosphere.water < 0) {
+                const scaledLoss = zonalChanges[zone].atmosphere.water * waterLossScale;
                 totalAtmosphericWaterChange += scaledLoss; // Add scaled negative change to global total
 
                 // Calculate actual surface gain based on scaled loss
-                const actualRainfall = zonalChanges[zone].potentialRainfall * waterLossScale;
-                const actualSnowfall = zonalChanges[zone].potentialSnowfall * waterLossScale;
-                zonalChanges[zone].liquidWater += actualRainfall; // Add actual rain gain
-                zonalChanges[zone].ice += actualSnowfall; // Add actual snow gain
-                // Accumulate actual totals for UI
+                const actualRainfall = zonalChanges[zone].precipitation.potentialRain * waterLossScale;
+                const actualSnowfall = zonalChanges[zone].precipitation.potentialSnow * waterLossScale;
+                zonalChanges[zone].water.liquid += actualRainfall; // Add actual rain gain
+                zonalChanges[zone].water.ice += actualSnowfall; // Add actual snow gain
                 // Store for redistribution
-                zonalChanges[zone].actualRainfall = actualRainfall;
-                zonalChanges[zone].actualSnowfall = actualSnowfall;
+                zonalChanges[zone].precipitation.rain = actualRainfall;
+                zonalChanges[zone].precipitation.snow = actualSnowfall;
             } else {
                 // If it was a net gain zone, add potential precipitation anyway (it wasn't limited)
-                // These amounts were stored as potential gains initially, add them now.
-                const actualRainfall = zonalChanges[zone].potentialRainfall; // Not scaled
-                const actualSnowfall = zonalChanges[zone].potentialSnowfall; // Not scaled
-                zonalChanges[zone].liquidWater += actualRainfall;
-                zonalChanges[zone].ice += actualSnowfall;
-                // Accumulate actual totals for UI
+                const actualRainfall = zonalChanges[zone].precipitation.potentialRain; // Not scaled
+                const actualSnowfall = zonalChanges[zone].precipitation.potentialSnow; // Not scaled
+                zonalChanges[zone].water.liquid += actualRainfall;
+                zonalChanges[zone].water.ice += actualSnowfall;
                 // Store for redistribution
-                zonalChanges[zone].actualRainfall = actualRainfall;
-                zonalChanges[zone].actualSnowfall = actualSnowfall;
+                zonalChanges[zone].precipitation.rain = actualRainfall;
+                zonalChanges[zone].precipitation.snow = actualSnowfall;
             }
 
             // Adjust CO2 Loss/Gain
-             if (zonalChanges[zone].potentialAtmosphericCO2Change < 0) {
-                const scaledLoss = zonalChanges[zone].potentialAtmosphericCO2Change * co2LossScale;
+             if (zonalChanges[zone].atmosphere.co2 < 0) {
+                const scaledLoss = zonalChanges[zone].atmosphere.co2 * co2LossScale;
                 totalAtmosphericCO2Change += scaledLoss; // Add scaled negative change to global total
 
                 // Calculate actual surface gain
                 const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation * co2LossScale;
-                zonalChanges[zone].dryIce += actualCO2Condensation; // Add actual dry ice gain
+                zonalChanges[zone].water.dryIce += actualCO2Condensation; // Add actual dry ice gain
                 totalCo2CondensationAmount += actualCO2Condensation;
             } else {
                  // If it was a net gain zone, add potential condensation anyway
                  const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation; // Not scaled
-                 zonalChanges[zone].dryIce += actualCO2Condensation;
+                 zonalChanges[zone].water.dryIce += actualCO2Condensation;
                  totalCo2CondensationAmount += actualCO2Condensation;
             }
 
             // Adjust Methane Loss/Gain
-            if (zonalChanges[zone].potentialAtmosphericMethaneChange < 0) {
-                const scaledLoss = zonalChanges[zone].potentialAtmosphericMethaneChange * methaneLossScale;
+            if (zonalChanges[zone].atmosphere.methane < 0) {
+                const scaledLoss = zonalChanges[zone].atmosphere.methane * methaneLossScale;
                 totalAtmosphericMethaneChange += scaledLoss;
-                const actualMethaneCondensation = (zonalChanges[zone].potentialMethaneCondensation || 0) * methaneLossScale;
-                const actualMethaneIceCondensation = (zonalChanges[zone].potentialMethaneIceCondensation || 0) * methaneLossScale;
-                zonalChanges[zone].liquidMethane += actualMethaneCondensation;
-                zonalChanges[zone].hydrocarbonIce += actualMethaneIceCondensation;
+                const actualMethaneCondensation = (zonalChanges[zone].precipitation.potentialMethaneRain || 0) * methaneLossScale;
+                const actualMethaneIceCondensation = (zonalChanges[zone].precipitation.potentialMethaneSnow || 0) * methaneLossScale;
+                zonalChanges[zone].methane.liquid += actualMethaneCondensation;
+                zonalChanges[zone].methane.ice += actualMethaneIceCondensation;
 
                 // Store for redistribution
-                zonalChanges[zone].actualMethaneCondensation = actualMethaneCondensation;
-                zonalChanges[zone].actualMethaneIceCondensation = actualMethaneIceCondensation;
+                zonalChanges[zone].precipitation.methaneRain = actualMethaneCondensation;
+                zonalChanges[zone].precipitation.methaneSnow = actualMethaneIceCondensation;
             } else {
-                const actualMethaneCondensation = zonalChanges[zone].potentialMethaneCondensation || 0;
-                const actualMethaneIceCondensation = zonalChanges[zone].potentialMethaneIceCondensation || 0;
-                zonalChanges[zone].liquidMethane += actualMethaneCondensation;
-                zonalChanges[zone].hydrocarbonIce += actualMethaneIceCondensation;
+                const actualMethaneCondensation = zonalChanges[zone].precipitation.potentialMethaneRain || 0;
+                const actualMethaneIceCondensation = zonalChanges[zone].precipitation.potentialMethaneSnow || 0;
+                zonalChanges[zone].methane.liquid += actualMethaneCondensation;
+                zonalChanges[zone].methane.ice += actualMethaneIceCondensation;
 
                 // Store for redistribution
-                zonalChanges[zone].actualMethaneCondensation = actualMethaneCondensation;
-                zonalChanges[zone].actualMethaneIceCondensation = actualMethaneIceCondensation;
+                zonalChanges[zone].precipitation.methaneRain = actualMethaneCondensation;
+                zonalChanges[zone].precipitation.methaneSnow = actualMethaneIceCondensation;
             }
         });
 
@@ -893,10 +886,10 @@ class Terraforming extends EffectableEntity{
         totalMethaneCondensationAmount = 0;
         totalMethaneIceCondensationAmount = 0;
         zones.forEach(zone => {
-            totalRainfallAmount += zonalChanges[zone].actualRainfall || 0;
-            totalSnowfallAmount += zonalChanges[zone].actualSnowfall || 0;
-            totalMethaneCondensationAmount += zonalChanges[zone].actualMethaneCondensation || 0;
-            totalMethaneIceCondensationAmount += zonalChanges[zone].actualMethaneIceCondensation || 0;
+            totalRainfallAmount += zonalChanges[zone].precipitation.rain || 0;
+            totalSnowfallAmount += zonalChanges[zone].precipitation.snow || 0;
+            totalMethaneCondensationAmount += zonalChanges[zone].precipitation.methaneRain || 0;
+            totalMethaneIceCondensationAmount += zonalChanges[zone].precipitation.methaneSnow || 0;
         });
 
         // --- 4.5. Spontaneous methane/oxygen combustion ---
@@ -941,45 +934,47 @@ class Terraforming extends EffectableEntity{
         if(!Number.isFinite(totalOxygenChange)) totalOxygenChange = 0;
 
         // Apply directly to Global Resources (Atmosphere)
-        if (this.resources.atmospheric['atmosphericWater']) {
-            this.resources.atmospheric['atmosphericWater'].value += totalAtmosphericWaterChange;
-            this.resources.atmospheric['atmosphericWater'].value = Math.max(0, this.resources.atmospheric['atmosphericWater'].value);
-        }
-        if (this.resources.atmospheric['carbonDioxide']) {
-            this.resources.atmospheric['carbonDioxide'].value += totalAtmosphericCO2Change;
-            this.resources.atmospheric['carbonDioxide'].value = Math.max(0, this.resources.atmospheric['carbonDioxide'].value);
-        }
-        if (this.resources.atmospheric['atmosphericMethane']) {
-            this.resources.atmospheric['atmosphericMethane'].value += totalAtmosphericMethaneChange;
-            this.resources.atmospheric['atmosphericMethane'].value = Math.max(0, this.resources.atmospheric['atmosphericMethane'].value);
-        }
-        if (this.resources.atmospheric['oxygen']) {
-            this.resources.atmospheric['oxygen'].value += totalOxygenChange;
-            this.resources.atmospheric['oxygen'].value = Math.max(0, this.resources.atmospheric['oxygen'].value);
+        const atmMap = {
+            water: 'atmosphericWater',
+            co2: 'carbonDioxide',
+            methane: 'atmosphericMethane',
+            oxygen: 'oxygen'
+        };
+        const atmTotals = {
+            water: totalAtmosphericWaterChange,
+            co2: totalAtmosphericCO2Change,
+            methane: totalAtmosphericMethaneChange,
+            oxygen: totalOxygenChange
+        };
+        for (const [key, delta] of Object.entries(atmTotals)) {
+            const resKey = atmMap[key];
+            if (this.resources.atmospheric[resKey]) {
+                this.resources.atmospheric[resKey].value += delta;
+                this.resources.atmospheric[resKey].value = Math.max(0, this.resources.atmospheric[resKey].value);
+            }
         }
 
         // Apply to Zonal Surface Stores
         for (const zone of zones) {
-            // Net changes already calculated and stored in zonalChanges[zone].liquidWater, .ice, .buriedIce, .dryIce
-            this.zonalWater[zone].liquid += zonalChanges[zone].liquidWater;
-            this.zonalWater[zone].ice += zonalChanges[zone].ice;
-            this.zonalWater[zone].buriedIce += zonalChanges[zone].buriedIce;
-            if (!this.zonalSurface[zone].dryIce) this.zonalSurface[zone].dryIce = 0;
-            this.zonalSurface[zone].dryIce += zonalChanges[zone].dryIce;
+            const change = zonalChanges[zone];
+            // Water resources
+            for (const [state, amount] of Object.entries(change.water)) {
+                if (state === 'dryIce') {
+                    if (!this.zonalSurface[zone].dryIce) this.zonalSurface[zone].dryIce = 0;
+                    this.zonalSurface[zone].dryIce += amount;
+                    this.zonalSurface[zone].dryIce = Math.max(0, this.zonalSurface[zone].dryIce);
+                } else {
+                    this.zonalWater[zone][state] += amount;
+                    this.zonalWater[zone][state] = Math.max(0, this.zonalWater[zone][state]);
+                }
+            }
 
-            this.zonalHydrocarbons[zone].liquid += zonalChanges[zone].liquidMethane;
-            this.zonalHydrocarbons[zone].ice += zonalChanges[zone].hydrocarbonIce;
-            if (!this.zonalHydrocarbons[zone].buriedIce) this.zonalHydrocarbons[zone].buriedIce = 0;
-            this.zonalHydrocarbons[zone].buriedIce += zonalChanges[zone].buriedHydrocarbonIce || 0;
-
-            // Ensure non-negative
-            this.zonalWater[zone].liquid = Math.max(0, this.zonalWater[zone].liquid);
-            this.zonalWater[zone].ice = Math.max(0, this.zonalWater[zone].ice);
-            this.zonalWater[zone].buriedIce = Math.max(0, this.zonalWater[zone].buriedIce);
-            this.zonalSurface[zone].dryIce = Math.max(0, this.zonalSurface[zone].dryIce);
-            this.zonalHydrocarbons[zone].liquid = Math.max(0, this.zonalHydrocarbons[zone].liquid);
-            this.zonalHydrocarbons[zone].ice = Math.max(0, this.zonalHydrocarbons[zone].ice);
-            this.zonalHydrocarbons[zone].buriedIce = Math.max(0, this.zonalHydrocarbons[zone].buriedIce);
+            // Methane resources
+            for (const [state, amount] of Object.entries(change.methane)) {
+                if (!this.zonalHydrocarbons[zone][state]) this.zonalHydrocarbons[zone][state] = 0;
+                this.zonalHydrocarbons[zone][state] += amount;
+                this.zonalHydrocarbons[zone][state] = Math.max(0, this.zonalHydrocarbons[zone][state]);
+            }
         }
 
         // --- 5. Update Global Rates for UI ---
