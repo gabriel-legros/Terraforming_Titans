@@ -117,7 +117,7 @@ body:not(.dark-mode) .planet-stats p > strong {
 .rwg-history-row:nth-child(odd):not(.rwg-history-head) { background: var(--rwg-muted); }
 .rwg-history-controls { display:flex; gap:8px; align-items:center; margin-top:8px; }
 #rwg-history-page { color: var(--rwg-fg); font-weight: 600; }
-.rwg-history-row .seed { font-family: monospace; color: var(--rwg-fg-dim); white-space:normal; word-break:break-all; overflow:visible; }
+.rwg-history-row .seed { font-family: monospace; color: var(--rwg-fg-dim); white-space:normal; word-break:break-all; overflow:visible; user-select:text; cursor:text; }
 .rwg-history-row .pop { text-align:right; }
 .rwg-history-row .name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; color: var(--rwg-fg); }
 .rwg-history-row .state-current, .state-current { color:#9bd36a; font-weight:600; }
