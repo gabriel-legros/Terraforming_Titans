@@ -444,7 +444,8 @@ function produceResources(deltaTime, buildings) {
       const data = projectData[name];
       if (!data || data.project.treatAsBuilding) continue;
       const { project } = data;
-      const productivity = productivityMap[name] ?? 1;
+//      const productivity = productivityMap[name] ?? 1;
+      const productivity = 1;
       if (project.autoStart === false) {
         project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
         continue;
