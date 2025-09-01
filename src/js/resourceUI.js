@@ -605,6 +605,9 @@ function createResourceElement(category, resourceObj, resourceName) {
     }
   }
 
+  if (resourceObj.marginTop) resourceElement.style.marginTop = resourceObj.marginTop + 'px';
+  if (resourceObj.marginBottom) resourceElement.style.marginBottom = resourceObj.marginBottom + 'px';
+
   return resourceElement;
 }
 
