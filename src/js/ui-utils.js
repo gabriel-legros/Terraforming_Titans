@@ -4,7 +4,10 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
   const activeContent = document.querySelector(`.${contentClass}.active`);
   if (activeContent) {
     const id = activeContent.getAttribute && activeContent.getAttribute('id');
-    if (typeof id === 'string') subtabScrollPositions[id] = activeContent.scrollTop;
+    const container = activeContent.closest('.tab-content');
+    if (typeof id === 'string' && container) {
+      subtabScrollPositions[id] = container.scrollTop;
+    }
   }
 
   document.querySelectorAll(`.${subtabClass}`).forEach(t => t.classList.remove('active'));
@@ -20,7 +23,8 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
     }
     subtab.classList.add('active');
     content.classList.add('active');
-    content.scrollTop = subtabScrollPositions[subtabId] || 0;
+    const container = content.closest('.tab-content');
+    if (container) container.scrollTop = subtabScrollPositions[subtabId] || 0;
   }
 }
 
