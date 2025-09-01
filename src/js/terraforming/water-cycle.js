@@ -257,71 +257,6 @@ function evaporationRateWater(T, solarFlux, atmPressure, e_a, r_a = 100) {
     return waterCycle.evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a, albedo: 0.3 });
 }
 
-// Calculate average evaporation and sublimation rates for a surface zone
-function calculateEvaporationSublimationRates({
-    zoneArea,
-    liquidWaterCoverage,
-    iceCoverage,
-    dryIceCoverage,
-    dayTemperature,
-    nightTemperature,
-    waterVaporPressure,
-    co2VaporPressure,
-    avgAtmPressure,
-    zonalSolarFlux
-}) {
-    if (zoneArea <= 0) {
-        return { evaporationRate: 0, waterSublimationRate: 0, co2SublimationRate: 0 };
-    }
-
-    let dayEvaporationRate = 0, nightEvaporationRate = 0;
-    let dayWaterSublimationRate = 0, nightWaterSublimationRate = 0;
-    let dayCo2SublimationRate = 0, nightCo2SublimationRate = 0;
-
-    const liquidWaterCoveredArea = zoneArea * liquidWaterCoverage;
-    const iceCoveredArea = zoneArea * iceCoverage;
-    const dryIceCoveredArea = zoneArea * dryIceCoverage;
-
-    const daySolarFlux = 2 * zonalSolarFlux;
-    const nightSolarFlux = 0;
-
-    if (liquidWaterCoveredArea > 0 && typeof dayTemperature === 'number') {
-        const rate = evaporationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
-        dayEvaporationRate = rate * liquidWaterCoveredArea / 1000;
-    }
-    if (iceCoveredArea > 0 && typeof dayTemperature === 'number') {
-        const rate = sublimationRateWater(dayTemperature, daySolarFlux, avgAtmPressure, waterVaporPressure, 100);
-        dayWaterSublimationRate = rate * iceCoveredArea / 1000;
-    }
-    if (dryIceCoveredArea > 0 && typeof dayTemperature === 'number') {
-        const rate = sublimationRateCO2(dayTemperature, daySolarFlux, avgAtmPressure, co2VaporPressure, 100);
-        dayCo2SublimationRate = rate * dryIceCoveredArea / 1000;
-    }
-
-    if (liquidWaterCoveredArea > 0 && typeof nightTemperature === 'number') {
-        const rate = evaporationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
-        nightEvaporationRate = rate * liquidWaterCoveredArea / 1000;
-    }
-    if (iceCoveredArea > 0 && typeof nightTemperature === 'number') {
-        const rate = sublimationRateWater(nightTemperature, nightSolarFlux, avgAtmPressure, waterVaporPressure, 100);
-        nightWaterSublimationRate = rate * iceCoveredArea / 1000;
-    }
-    if (dryIceCoveredArea > 0 && typeof nightTemperature === 'number') {
-        const rate = sublimationRateCO2(nightTemperature, nightSolarFlux, avgAtmPressure, co2VaporPressure, 100);
-        nightCo2SublimationRate = rate * dryIceCoveredArea / 1000;
-    }
-
-    const avgEvap = (dayEvaporationRate + nightEvaporationRate) / 2;
-    const avgWaterSubl = (dayWaterSublimationRate + nightWaterSublimationRate) / 2;
-    const avgCo2Subl = (dayCo2SublimationRate + nightCo2SublimationRate) / 2;
-
-    return {
-        evaporationRate: avgEvap,
-        waterSublimationRate: avgWaterSubl,
-        co2SublimationRate: avgCo2Subl
-    };
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         WaterCycle,
@@ -332,7 +267,6 @@ if (typeof module !== 'undefined' && module.exports) {
         psychrometricConstantWater,
         sublimationRateWater,
         evaporationRateWater,
-        calculateEvaporationSublimationRates,
         boilingPointWater
     };
 } else {
@@ -345,6 +279,5 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.psychrometricConstantWater = psychrometricConstantWater;
     globalThis.sublimationRateWater = sublimationRateWater;
     globalThis.evaporationRateWater = evaporationRateWater;
-    globalThis.calculateEvaporationSublimationRates = calculateEvaporationSublimationRates;
     globalThis.boilingPointWater = boilingPointWater;
 }

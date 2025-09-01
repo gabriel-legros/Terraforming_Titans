@@ -5,7 +5,7 @@ const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
 const { calculateAverageCoverage } = require('../src/js/terraforming-utils.js');
-const { calculateEvaporationSublimationRates } = require('../src/js/terraforming/water-cycle.js');
+const water = require('../src/js/terraforming/water-cycle.js');
 
 // globals expected by terraforming.js
 global.getZoneRatio = getZoneRatio;
@@ -85,18 +85,25 @@ describe('terraforming-utils integration', () => {
     terra._updateZonalCoverageCache();
 
     const cache = terra.zonalCoverageCache.polar;
-    const rates = calculateEvaporationSublimationRates({
-      zoneArea: cache.zoneArea,
-      liquidWaterCoverage: cache.liquidWater,
-      iceCoverage: cache.ice,
-      dryIceCoverage: cache.dryIce,
-      dayTemperature: 260,
-      nightTemperature: 250,
-      waterVaporPressure: 0,
-      co2VaporPressure: 0,
-      avgAtmPressure: 600,
-      zonalSolarFlux: 1000
-    });
-    expect(rates.waterSublimationRate).toBe(0);
+    const iceArea = cache.zoneArea * cache.ice;
+    let waterSublRate = 0;
+    if (iceArea > 0) {
+      const day = water.waterCycle.sublimationRate({
+        T: 260,
+        solarFlux: 2000,
+        atmPressure: 600,
+        vaporPressure: 0,
+        r_a: 100,
+      }) * iceArea / 1000;
+      const night = water.waterCycle.sublimationRate({
+        T: 250,
+        solarFlux: 0,
+        atmPressure: 600,
+        vaporPressure: 0,
+        r_a: 100,
+      }) * iceArea / 1000;
+      waterSublRate = (day + night) / 2;
+    }
+    expect(waterSublRate).toBe(0);
   });
 });
