@@ -363,7 +363,7 @@ class Terraforming extends EffectableEntity{
 
   getLifeStatus() {
      // Compare average biomass coverage to the global target
-    return (calculateAverageCoverage(this, 'biomass') > getEffectiveLifeFraction(this));
+    return (calculateAverageCoverage(this, 'biomass') >= getEffectiveLifeFraction(this));
   }
 
   getTerraformingStatus() {

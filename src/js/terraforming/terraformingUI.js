@@ -602,7 +602,7 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Life coverage above 50%.";
+    targetSpan.textContent = "Target : Life coverage at least 50%.";
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     lifeBox.appendChild(targetSpan);
