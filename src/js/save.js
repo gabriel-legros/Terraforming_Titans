@@ -95,10 +95,6 @@ function loadGame(slotOrCustomString) {
             const existingResources = currentPlanetParameters.resources;
             currentPlanetParameters = worldOriginal.merged;
 
-            // Ensure generated parameters use consistent display names
-            if (typeof normalizeResourceDisplayNames === 'function') {
-              normalizeResourceDisplayNames(currentPlanetParameters);
-            }
             const newResources = currentPlanetParameters.resources;
             if (existingResources) {
               for (const category in existingResources) {
@@ -119,9 +115,6 @@ function loadGame(slotOrCustomString) {
           if (planetParameters[key]) {
             defaultPlanet = key; // keep global consistent
             currentPlanetParameters = planetParameters[key];
-            if (typeof normalizeResourceDisplayNames === 'function') {
-              normalizeResourceDisplayNames(currentPlanetParameters);
-            }
           }
         }
         // Clear previously applied story effects so they don't carry over
@@ -160,6 +153,9 @@ function loadGame(slotOrCustomString) {
                 }
                 resources[category][resourceName].activeEffects = [];
                 resources[category][resourceName].booleanFlags = new Set();
+                if (typeof resources[category][resourceName].reinitializeDisplayElements === 'function') {
+                  resources[category][resourceName].reinitializeDisplayElements();
+                }
               }
             }
           }
@@ -545,37 +541,6 @@ function loadSaveSlotDates() {
     } else {
       preRow.classList.add('hidden');
     }
-  }
-}
-
-// Normalize resource display names across different parameter sources
-// Uses defaultPlanetParameters as the canonical set of display names
-function normalizeResourceDisplayNames(pp) {
-  try {
-    if (typeof defaultPlanetParameters === 'undefined') return;
-    const def = defaultPlanetParameters;
-    if (!def || !def.resources || !pp || !pp.resources) return;
-    const target = pp.resources;
-    const source = def.resources;
-    for (const category in source) {
-      const defCat = source[category];
-      const tgtCat = target[category];
-      if (!defCat || !tgtCat) continue;
-      for (const resName in defCat) {
-        const defRes = defCat[resName];
-        const tgtRes = tgtCat[resName];
-        if (tgtRes && defRes) {
-          const canonical = (typeof defRes.displayName === 'string' && defRes.displayName)
-            ? defRes.displayName
-            : (typeof defRes.name === 'string' ? defRes.name : undefined);
-          if (canonical) {
-            tgtRes.displayName = canonical;
-          }
-        }
-      }
-    }
-  } catch (e) {
-    // Non-fatal: leave names as-is on any error
   }
 }
 
