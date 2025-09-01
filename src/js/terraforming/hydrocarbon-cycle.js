@@ -3,12 +3,11 @@ const L_V_METHANE = 5.1e5; // Latent heat of vaporization for methane (J/kg)
 const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
-var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
 var ResourceCycleClass = globalThis.ResourceCycle;
 if (isNodeHydrocarbon) {
   try {
-    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
   } catch (e) {
     // fall back to globals if require fails

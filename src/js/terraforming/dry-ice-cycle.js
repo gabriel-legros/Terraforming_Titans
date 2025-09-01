@@ -3,27 +3,24 @@ const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
 
 const isNodeDryIce = (typeof module !== 'undefined' && module.exports);
-var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
-if (typeof ResourceCycleClass === 'undefined') {
-  var ResourceCycleClass = globalThis.ResourceCycle;
-  if (isNodeDryIce) {
-    try {
-      ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
-      ResourceCycleClass = require('./resource-cycle.js');
-    } catch (e) {
-      // fall back to globals if require fails
-    }
+var ResourceCycleClass = globalThis.ResourceCycle;
+if (isNodeDryIce) {
+  try {
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
+    ResourceCycleClass = require('./resource-cycle.js');
+  } catch (e) {
+    // fall back to globals if require fails
   }
-  if (!ResourceCycleClass && typeof require === 'function') {
+}
+if (!ResourceCycleClass && typeof require === 'function') {
+  try {
+    ResourceCycleClass = require('./resource-cycle.js');
+  } catch (e) {
     try {
-      ResourceCycleClass = require('./resource-cycle.js');
-    } catch (e) {
-      try {
-        ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
-      } catch (e2) {
-        // ignore
-      }
+      ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
+    } catch (e2) {
+      // ignore
     }
   }
 }

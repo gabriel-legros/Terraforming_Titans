@@ -406,3 +406,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added MethaneCycle and CO2Cycle subclasses extending ResourceCycle for hydrocarbon and dry ice modeling.
 - Deprecated standalone condensation helpers in favor of using each cycle instance's `condensationRateFactor` method directly.
 - Split water evaporation and sublimation calculations into separate `waterCycle.evaporationRate` and `waterCycle.sublimationRate` methods.
+- Water, methane, and CO₂ cycle modules now import the shared `ResourceCycle` base class instead of defining it inline.
+- index.html loads `resource-cycle.js` before cycle modules so subclasses can extend the base class in browser environments.

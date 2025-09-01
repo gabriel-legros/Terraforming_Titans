@@ -1,14 +1,14 @@
 // Base class for resource cycle phase-change calculations
 const isNodeResourceCycle = (typeof module !== 'undefined' && module.exports);
-let penmanRate = globalThis.penmanRate;
-let condensationRateFactor = globalThis.condensationRateFactor;
-let meltingFreezingRatesUtil = globalThis.meltingFreezingRates;
+let penmanRateFn = globalThis.penmanRate;
+let condensationRateFactorFn = globalThis.condensationRateFactor;
+let meltingFreezingRatesFn = globalThis.meltingFreezingRates;
 if (isNodeResourceCycle) {
   try {
     const phaseUtils = require('./phase-change-utils.js');
-    penmanRate = phaseUtils.penmanRate;
-    meltingFreezingRatesUtil = phaseUtils.meltingFreezingRates;
-    condensationRateFactor = require('./condensation-utils.js').condensationRateFactor;
+    penmanRateFn = phaseUtils.penmanRate;
+    meltingFreezingRatesFn = phaseUtils.meltingFreezingRates;
+    condensationRateFactorFn = require('./condensation-utils.js').condensationRateFactor;
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -40,7 +40,7 @@ class ResourceCycle {
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
     const Delta_s = this.slopeSaturationVaporPressureFn(T);
     const e_s = this.saturationVaporPressureFn(T);
-    return penmanRate({
+    return penmanRateFn({
       T,
       solarFlux,
       atmPressure,
@@ -54,7 +54,7 @@ class ResourceCycle {
   }
 
   condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, transitionRange, maxDiff, boilingPoint, boilTransitionRange }) {
-    return condensationRateFactor({
+    return condensationRateFactorFn({
       zoneArea,
       vaporPressure,
       gravity,
@@ -70,13 +70,13 @@ class ResourceCycle {
   }
 
   meltingFreezingRates(args) {
-    return meltingFreezingRatesUtil({ ...args, freezingPoint: this.freezePoint });
+    return meltingFreezingRatesFn({ ...args, freezingPoint: this.freezePoint });
   }
 
   sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.sublimationAlbedo }) {
     const Delta_s = this.slopeSaturationVaporPressureFn(T);
     const e_s = this.saturationVaporPressureFn(T);
-    return penmanRate({
+    return penmanRateFn({
       T,
       solarFlux,
       atmPressure,

@@ -27,6 +27,7 @@ global.psychrometricConstant = phaseUtils.psychrometricConstant;
 global.condensationRateFactor = require('../src/js/condensation-utils.js').condensationRateFactor;
 // water-cycle functions
 const fs = require('fs');
+global.ResourceCycle = require('../src/js/terraforming/resource-cycle.js');
 eval(fs.readFileSync(require.resolve('../src/js/terraforming/water-cycle.js'), 'utf8'));
 global.saturationVaporPressureBuck = saturationVaporPressureBuck;
 eval(fs.readFileSync(require.resolve('../src/js/terraforming/dry-ice-cycle.js'), 'utf8'));
