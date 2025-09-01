@@ -84,7 +84,12 @@ function slopeSVPMethane(temperature) {
 }
 
 class MethaneCycle extends ResourceCycleClass {
-  constructor() {
+  constructor({
+    transitionRange = 2,
+    maxDiff = 10,
+    boilingPointFn = boilingPointMethane,
+    boilTransitionRange = 5,
+  } = {}) {
     super({
       latentHeatVaporization: L_V_METHANE,
       latentHeatSublimation: L_S_METHANE,
@@ -96,6 +101,10 @@ class MethaneCycle extends ResourceCycleClass {
       evaporationAlbedo: 0.1,
       sublimationAlbedo: 0.6,
     });
+    this.transitionRange = transitionRange;
+    this.maxDiff = maxDiff;
+    this.boilingPointFn = boilingPointFn;
+    this.boilTransitionRange = boilTransitionRange;
   }
 
   /**
@@ -118,10 +127,6 @@ class MethaneCycle extends ResourceCycleClass {
     durationSeconds = 1,
     gravity = 1,
     condensationParameter = 1,
-    transitionRange,
-    maxDiff,
-    boilingPoint,
-    boilTransitionRange,
   }) {
     const changes = {
       atmosphere: { methane: 0 },
@@ -171,10 +176,10 @@ class MethaneCycle extends ResourceCycleClass {
       gravity,
       dayTemp: dayTemperature,
       nightTemp: nightTemperature,
-      transitionRange,
-      maxDiff,
-      boilingPoint,
-      boilTransitionRange,
+      transitionRange: this.transitionRange,
+      maxDiff: this.maxDiff,
+      boilingPoint: this.boilingPointFn(atmPressure),
+      boilTransitionRange: this.boilTransitionRange,
     });
     const potentialRain = liquidRate * condensationParameter * durationSeconds;
     const potentialSnow = iceRate * condensationParameter * durationSeconds;

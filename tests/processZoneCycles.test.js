@@ -6,7 +6,7 @@ const hydro = require('../src/js/terraforming/hydrocarbon-cycle.js');
 const dryIce = require('../src/js/terraforming/dry-ice-cycle.js');
 
 const { waterCycle } = water;
-const { methaneCycle, boilingPointMethane } = hydro;
+const { methaneCycle } = hydro;
 const { co2Cycle } = dryIce;
 
 describe('water cycle processZone', () => {
@@ -118,10 +118,6 @@ describe('methane cycle processZone', () => {
       durationSeconds: 1,
       gravity: 1,
       condensationParameter: 1,
-      transitionRange: 2,
-      maxDiff: 10,
-      boilingPoint: boilingPointMethane(100000),
-      boilTransitionRange: 5,
     });
     const potential = changes.precipitation.potentialMethaneRain + changes.precipitation.potentialMethaneSnow;
     expect(potential).toBeGreaterThan(0);
