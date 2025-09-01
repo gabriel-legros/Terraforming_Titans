@@ -42,6 +42,27 @@ function invalidateStructureUICache() {
   for (const k in structureUIElements) delete structureUIElements[k];
 }
 
+function applyCollapseState(structureName) {
+  const els = structureUIElements[structureName];
+  if (!els) return;
+  const collapsed = !!els.collapsed;
+  if (els.costElement) els.costElement.style.display = collapsed ? 'none' : '';
+  if (els.productionDetails) els.productionDetails.style.display = collapsed ? 'none' : '';
+  if (els.descriptionElement) els.descriptionElement.style.display = collapsed ? 'none' : '';
+  const autoContainer = els.autoBuildContainer;
+  const inputContainer = els.autoBuildInputContainer;
+  if (autoContainer) {
+    Array.from(autoContainer.children).forEach(child => {
+      if (child !== inputContainer) {
+        child.style.display = collapsed ? 'none' : '';
+      }
+    });
+  }
+  if (els.collapseArrow) {
+    els.collapseArrow.textContent = collapsed ? '▶' : '▼';
+  }
+}
+
 // Create buttons for the buildings based on their categories
 function createBuildingButtons() {
   const categorizedBuildings = {
@@ -118,6 +139,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const leftContainer = document.createElement('div');
   leftContainer.classList.add('left-button-container');
 
+  const collapseArrow = document.createElement('span');
+  collapseArrow.classList.add('collapse-arrow');
+  collapseArrow.textContent = '▼';
+  leftContainer.appendChild(collapseArrow);
+
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
   button.classList.add('building-button');
@@ -139,6 +165,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   cached.row = structureRow;
   cached.buildButton = button;
   cached.buttonContainer = buttonContainer;
+  cached.collapsed = false;
+  cached.collapseArrow = collapseArrow;
 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
@@ -268,6 +296,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Cache the cost element for faster updates
   structureUIElements[structure.name] = structureUIElements[structure.name] || {};
   structureUIElements[structure.name].costElement = costElement;
+  cached.costElement = costElement;
 
   const productionConsumptionDetails = document.createElement('div');
   productionConsumptionDetails.classList.add('building-production-consumption');
@@ -275,6 +304,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   productionConsumptionDetails.id = `${structure.name}-production-consumption`;
   updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
   structureRow.appendChild(productionConsumptionDetails);
+  cached.productionDetails = productionConsumptionDetails;
 
   const constructedCountContainer = document.createElement('div');
   constructedCountContainer.classList.add('constructed-count-container');
@@ -338,6 +368,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   description.classList.add('building-description');
   description.textContent = structure.description;
   structureRow.appendChild(description);
+  cached.descriptionElement = description;
 
   // Custom colony display (e.g., baseComfort, energy, food, water) if the structure is a colony
   if (isColony) {
@@ -413,6 +444,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildInputContainer.appendChild(autoBuildInput);
 
   autoBuildContainer.appendChild(autoBuildInputContainer);
+  structureUIElements[structure.name].autoBuildInputContainer = autoBuildInputContainer;
+  cached.autoBuildInputContainer = autoBuildInputContainer;
 
   const autoBuildTarget = document.createElement('span');
   const autoBuildTargetContainer = document.createElement('div');
@@ -618,6 +651,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   }
 
   combinedStructureRow.append(autoBuildContainer);
+
+  collapseArrow.addEventListener('click', () => {
+    cached.collapsed = !cached.collapsed;
+    applyCollapseState(structure.name);
+  });
+
+  applyCollapseState(structure.name);
 
   return combinedStructureRow;
 }
@@ -1100,6 +1140,7 @@ function updateDecreaseButtonText(button, buildCount) {
       if (structure instanceof Colony) {
         updateColonyDetailsDisplay(structureRow, structure);
       }
+      applyCollapseState(structureName);
     }
     updateUnhideButtons();
   }
