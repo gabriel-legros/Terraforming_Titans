@@ -55,13 +55,13 @@ describe('automation settings cache', () => {
     ctx.updateProjectUI('spaceStorage');
     const els = ctx.projectElements[project.name];
 
-    expect(els.cachedAutomationItems.length).toBe(3);
+    expect(els.cachedAutomationItems.length).toBe(4);
 
     while (els.automationSettingsContainer.firstChild) {
       els.automationSettingsContainer.firstChild.remove();
     }
     ctx.updateProjectUI('spaceStorage');
-    expect(els.cachedAutomationItems.length).toBe(3);
+    expect(els.cachedAutomationItems.length).toBe(4);
     expect(els.automationSettingsContainer.style.display).toBe('flex');
 
     ctx.invalidateAutomationSettingsCache(project.name);

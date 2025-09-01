@@ -66,6 +66,7 @@ describe('Space Storage project', () => {
     project.resourceUsage = { metal: 100 };
     project.shipWithdrawMode = true;
     project.waterWithdrawTarget = 'surface';
+    project.strategicReserve = 12;
     const saved = project.saveState();
     const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
     loaded.loadState(saved);
@@ -73,6 +74,7 @@ describe('Space Storage project', () => {
     expect(loaded.resourceUsage.metal).toBe(100);
     expect(loaded.shipWithdrawMode).toBe(true);
     expect(loaded.waterWithdrawTarget).toBe('surface');
+    expect(loaded.strategicReserve).toBe(12);
   });
 
   test('renders assignment UI with resource checkboxes', () => {

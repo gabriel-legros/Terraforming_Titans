@@ -58,7 +58,8 @@ describe('Space Storage automation settings', () => {
     expect(labels).toEqual([
       'Auto Start Expansion',
       'Auto Start Ships',
-      'Prioritize space resources for mega projects'
+      'Prioritize space resources for mega projects',
+      'Strategic reserve'
     ]);
 
     els.shipAutoStartCheckbox.checked = true;
@@ -68,5 +69,9 @@ describe('Space Storage automation settings', () => {
     els.prioritizeMegaCheckbox.checked = true;
     els.prioritizeMegaCheckbox.dispatchEvent(new dom.window.Event('change'));
     expect(project.prioritizeMegaProjects).toBe(true);
+
+    els.strategicReserveInput.value = '42';
+    els.strategicReserveInput.dispatchEvent(new dom.window.Event('change'));
+    expect(project.strategicReserve).toBe(42);
   });
 });

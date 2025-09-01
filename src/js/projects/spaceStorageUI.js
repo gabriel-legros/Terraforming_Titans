@@ -70,6 +70,30 @@ if (typeof SpaceStorageProject !== 'undefined') {
     return container;
   };
 
+  SpaceStorageProject.prototype.createStrategicReserveInput = function () {
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container');
+    const label = document.createElement('label');
+    label.htmlFor = `${this.name}-strategic-reserve`;
+    label.textContent = 'Strategic reserve';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.id = `${this.name}-strategic-reserve`;
+    input.value = this.strategicReserve;
+    input.addEventListener('change', (e) => {
+      const val = parseFloat(e.target.value);
+      this.strategicReserve = isNaN(val) ? 0 : Math.max(0, val);
+    });
+    container.append(label, input);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      strategicReserveInput: input,
+      strategicReserveContainer: container,
+    };
+    return container;
+  };
+
   SpaceStorageProject.prototype.renderAutomationUI = function (container) {
     const els = projectElements[this.name] || {};
     if (
@@ -81,11 +105,14 @@ if (typeof SpaceStorageProject !== 'undefined') {
       delete els.shipAutoStartContainer;
       delete els.prioritizeMegaCheckbox;
       delete els.prioritizeMegaContainer;
+      delete els.strategicReserveInput;
+      delete els.strategicReserveContainer;
     }
     if (!els.shipAutoStartContainer) {
       const ship = this.createShipAutoStartCheckbox();
       const prioritize = this.createPrioritizeMegaCheckbox();
-      container.append(ship, prioritize);
+      const reserve = this.createStrategicReserveInput();
+      container.append(ship, prioritize, reserve);
     }
     invalidateAutomationSettingsCache(this.name);
   };

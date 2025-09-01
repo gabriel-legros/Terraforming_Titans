@@ -150,7 +150,9 @@ class Project extends EffectableEntity {
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
           const stored = storageProj.resourceUsage[key] || 0;
-          const available = resources[category][resource].value + stored;
+          const reserve = storageProj.strategicReserve || 0;
+          const usable = Math.max(0, stored - reserve);
+          const available = resources[category][resource].value + usable;
           if (available < required) {
             return false;
           }
@@ -172,8 +174,10 @@ class Project extends EffectableEntity {
         let remaining = cost[category][resource];
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
+          const reserve = storageProj.strategicReserve || 0;
+          const availableFromStorage = Math.max(0, (storageProj.resourceUsage[key] || 0) - reserve);
           if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+            const fromStorage = Math.min(availableFromStorage, remaining);
             if (fromStorage > 0) {
               storageProj.resourceUsage[key] -= fromStorage;
               storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
@@ -190,7 +194,7 @@ class Project extends EffectableEntity {
               remaining -= fromColony;
             }
             if (remaining > 0) {
-              const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+              const fromStorage = Math.min(availableFromStorage, remaining);
               if (fromStorage > 0) {
                 storageProj.resourceUsage[key] -= fromStorage;
                 storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
@@ -419,12 +423,14 @@ class Project extends EffectableEntity {
     if (!storageProj) return false;
     const key = resource === 'water' ? 'liquidWater' : resource;
     const stored = storageProj.resourceUsage[key] || 0;
+    const reserve = storageProj.strategicReserve || 0;
+    const usable = Math.max(0, stored - reserve);
     if (storageProj.prioritizeMegaProjects) {
-      return stored >= amount;
+      return usable >= amount;
     }
     const colonyAvailable = resources[category]?.[resource]?.value || 0;
     if (colonyAvailable >= amount) return false;
-    return stored >= amount - colonyAvailable;
+    return usable >= amount - colonyAvailable;
   }
 
 
