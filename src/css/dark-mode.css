@@ -60,12 +60,13 @@ body.dark-mode {
 }
 
 .dark-mode .card-header {
-    background-color: #1e1e1e;
+    background-color: #141414;
     border-bottom-color: #444;
+    color: #ffffff;
 }
 
 .dark-mode .card-title {
-    color: #ffffff;
+    color: inherit;
 }
 
 .dark-mode .card-footer {

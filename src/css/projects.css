@@ -15,12 +15,13 @@
 }
 
 .card-header {
-    background-color: #e9ecef;
+    background-color: #ced4da;
     padding: 8px 12px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #adb5bd;
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    color: #212529;
 }
 
 .collapse-arrow {
@@ -39,7 +40,7 @@
 .card-title {
     font-weight: bold;
     font-size: 1.1em;
-    color: #495057;
+    color: inherit;
 }
 
 .card-body {
