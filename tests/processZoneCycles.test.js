@@ -1,0 +1,79 @@
+global.C_P_AIR = 1004;
+global.EPSILON = 0.622;
+
+const water = require('../src/js/terraforming/water-cycle.js');
+const hydro = require('../src/js/terraforming/hydrocarbon-cycle.js');
+const dryIce = require('../src/js/terraforming/dry-ice-cycle.js');
+
+const { waterCycle } = water;
+const { methaneCycle } = hydro;
+const { co2Cycle } = dryIce;
+
+describe('water cycle processZone', () => {
+  test('conserves mass under evaporation', () => {
+    const changes = waterCycle.processZone({
+      zoneArea: 1,
+      liquidWaterCoverage: 1,
+      iceCoverage: 0,
+      dayTemperature: 300,
+      nightTemperature: 290,
+      zoneTemperature: 295,
+      atmPressure: 100000,
+      vaporPressure: 1000,
+      availableLiquid: 10,
+      availableIce: 0,
+      availableBuriedIce: 0,
+      zonalSolarFlux: 200,
+      durationSeconds: 1,
+      gravity: 3.7,
+    });
+    expect(changes.atmosphere.water).toBeGreaterThan(0);
+    const total = changes.atmosphere.water + changes.water.liquid + changes.water.ice + changes.water.buriedIce;
+    expect(total).toBeCloseTo(0, 6);
+  });
+});
+
+describe('methane cycle processZone', () => {
+  test('conserves mass under evaporation', () => {
+    const changes = methaneCycle.processZone({
+      zoneArea: 1,
+      liquidMethaneCoverage: 1,
+      hydrocarbonIceCoverage: 0,
+      dayTemperature: 110,
+      nightTemperature: 100,
+      zoneTemperature: 105,
+      atmPressure: 100000,
+      vaporPressure: 1000,
+      availableLiquid: 10,
+      availableIce: 0,
+      availableBuriedIce: 0,
+      zonalSolarFlux: 200,
+      durationSeconds: 1,
+      gravity: 1,
+    });
+    expect(changes.atmosphere.methane).toBeGreaterThan(0);
+    const total = changes.atmosphere.methane + changes.methane.liquid + changes.methane.ice + changes.methane.buriedIce;
+    expect(total).toBeCloseTo(0, 6);
+  });
+});
+
+describe('CO2 cycle processZone', () => {
+  test('conserves mass under sublimation', () => {
+    const changes = co2Cycle.processZone({
+      zoneArea: 1,
+      dryIceCoverage: 1,
+      dayTemperature: 210,
+      nightTemperature: 200,
+      zoneTemperature: 210,
+      atmPressure: 100000,
+      vaporPressure: 100,
+      availableDryIce: 10,
+      zonalSolarFlux: 200,
+      durationSeconds: 1,
+    });
+    expect(changes.atmosphere.co2).toBeGreaterThan(0);
+    const total = changes.atmosphere.co2 + (changes.water.dryIce || 0);
+    expect(total).toBeCloseTo(0, 6);
+  });
+});
+

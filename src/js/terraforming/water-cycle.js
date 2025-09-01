@@ -119,6 +119,148 @@ class WaterCycle extends ResourceCycleClass {
       sublimationPoint: 273.15,
     });
   }
+
+  /**
+   * Calculate zonal resource changes for water using base phase-change helpers.
+   * Returns an object shaped like the entries in terraforming.updateResources's
+   * `zonalChanges` map so results can be merged directly.
+   */
+  processZone({
+    zoneArea,
+    liquidWaterCoverage = 0,
+    iceCoverage = 0,
+    dayTemperature,
+    nightTemperature,
+    zoneTemperature,
+    atmPressure,
+    vaporPressure,
+    availableLiquid = 0,
+    availableIce = 0,
+    availableBuriedIce = 0,
+    zonalSolarFlux = 0,
+    durationSeconds = 1,
+    gravity = 1,
+    precipitationMultiplier = 1,
+  }) {
+    const changes = {
+      atmosphere: { water: 0 },
+      water: { liquid: 0, ice: 0, buriedIce: 0 },
+      precipitation: { potentialRain: 0, potentialSnow: 0 },
+    };
+
+    const daySolarFlux = 2 * zonalSolarFlux;
+    const nightSolarFlux = 0;
+
+    const liquidArea = zoneArea * liquidWaterCoverage;
+    const iceArea = zoneArea * iceCoverage;
+
+    // --- Evaporation/Sublimation ---
+    let dayEvapRate = 0;
+    let nightEvapRate = 0;
+    let daySubRate = 0;
+    let nightSubRate = 0;
+    if (liquidArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        dayEvapRate = this.evaporationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+          albedo: 0.3,
+        }) * liquidArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightEvapRate = this.evaporationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+          albedo: 0.3,
+        }) * liquidArea / 1000;
+      }
+    }
+    if (iceArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        daySubRate = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSubRate = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+    }
+
+    const evaporationRate = (dayEvapRate + nightEvapRate) / 2;
+    const sublimationRate = (daySubRate + nightSubRate) / 2;
+    const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
+    changes.atmosphere.water += evaporationAmount + sublimationAmount;
+    changes.water.liquid -= evaporationAmount;
+    changes.water.ice -= sublimationAmount;
+
+    // --- Condensation (potential precipitation) ---
+    const { liquidRate, iceRate } = this.condensationRateFactor({
+      zoneArea,
+      vaporPressure,
+      gravity,
+      dayTemp: dayTemperature,
+      nightTemp: nightTemperature,
+    });
+    const potentialRain = liquidRate * precipitationMultiplier * durationSeconds;
+    const potentialSnow = iceRate * precipitationMultiplier * durationSeconds;
+    changes.precipitation.potentialRain = potentialRain;
+    changes.precipitation.potentialSnow = potentialSnow;
+    changes.atmosphere.water -= potentialRain + potentialSnow;
+    changes.water.liquid += potentialRain;
+    changes.water.ice += potentialSnow;
+
+    // --- Melting/Freezing ---
+    const meltFreezeRates = this.meltingFreezingRates({
+      temperature: zoneTemperature,
+      availableIce,
+      availableLiquid,
+      availableBuriedIce,
+      zoneArea,
+      iceCoverage,
+      liquidCoverage: liquidWaterCoverage,
+    });
+    const currentLiquid = availableLiquid + changes.water.liquid;
+    const currentIce = availableIce + changes.water.ice;
+    const currentBuried = availableBuriedIce + changes.water.buriedIce;
+    const availableForMelt = currentIce + currentBuried;
+    const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt);
+    const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, currentLiquid);
+
+    let meltFromIce = Math.min(meltAmount, currentIce);
+    let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
+
+    changes.water.liquid += meltAmount - freezeAmount;
+    changes.water.ice += freezeAmount - meltFromIce;
+    changes.water.buriedIce -= meltFromBuried;
+
+    // --- Rapid Sublimation ---
+    const remainingIce = currentIce - meltFromIce;
+    const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
+    const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
+    if (rapidAmount > 0) {
+      changes.water.ice -= rapidAmount;
+      changes.atmosphere.water += rapidAmount;
+    }
+
+    return changes;
+  }
 }
 
 const waterCycle = new WaterCycle();
