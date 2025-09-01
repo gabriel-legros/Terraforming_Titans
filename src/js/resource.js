@@ -6,6 +6,7 @@ class Resource extends EffectableEntity {
     this.name = resourceData.name || '';
     this.category = resourceData.category;
     this.displayName = resourceData.displayName || resourceData.name || '';
+    this.defaultDisplayName = this.displayName;
     this.unit = resourceData.unit || null;
     this.value = resourceData.initialValue || 0;
     this.hasCap = resourceData.hasCap || false;
@@ -29,12 +30,15 @@ class Resource extends EffectableEntity {
     this.rateHistory = []; // Keep history of recent net rates
     this.marginTop = resourceData.marginTop || 0;
     this.marginBottom = resourceData.marginBottom || 0;
+    this.defaultMarginTop = this.marginTop;
+    this.defaultMarginBottom = this.marginBottom;
   }
 
   // Method to initialize configurable properties
   initializeFromConfig(name, config) {
     if (config.displayName !== undefined) {
       this.displayName = config.displayName || config.name || this.displayName;
+      this.defaultDisplayName = config.displayName || config.name || this.defaultDisplayName;
     }
     if (config.category !== undefined) {
       this.category = config.category;
@@ -68,9 +72,11 @@ class Resource extends EffectableEntity {
     }
     if (config.marginTop !== undefined) {
       this.marginTop = config.marginTop;
+      this.defaultMarginTop = config.marginTop;
     }
     if (config.marginBottom !== undefined) {
       this.marginBottom = config.marginBottom;
+      this.defaultMarginBottom = config.marginBottom;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {
@@ -82,6 +88,13 @@ class Resource extends EffectableEntity {
     if(amount > 0){
       this.value = Math.min(this.value + amount, this.cap);
     }
+  }
+
+  // Reset display-related properties to their default values
+  reinitializeDisplayElements() {
+    this.displayName = this.defaultDisplayName;
+    this.marginTop = this.defaultMarginTop;
+    this.marginBottom = this.defaultMarginBottom;
   }
 
   decrease(amount) {
