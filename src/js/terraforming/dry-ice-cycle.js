@@ -208,7 +208,6 @@ class CO2Cycle extends ResourceCycleClass {
     });
     const potentialCond = iceRate * condensationParameter * durationSeconds;
     changes.atmosphere.co2 -= potentialCond;
-    changes.water.dryIce += potentialCond;
     changes.potentialCO2Condensation = potentialCond;
 
     // Rapid sublimation
@@ -220,7 +219,10 @@ class CO2Cycle extends ResourceCycleClass {
       changes.atmosphere.co2 += rapidAmount;
     }
 
-    return changes;
+    return {
+      ...changes,
+      sublimationAmount: sublimationAmount + rapidAmount,
+    };
   }
 }
 

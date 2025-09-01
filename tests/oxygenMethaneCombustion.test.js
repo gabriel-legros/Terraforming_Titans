@@ -49,10 +49,13 @@ jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
 
 jest.mock('../src/js/dry-ice-cycle.js', () => ({
   co2Cycle: {
-    condensationRateFactor: jest.fn(() => ({ iceRate: 0 })),
-    sublimationRate: jest.fn(() => 0),
+    processZone: jest.fn(() => ({
+      atmosphere: { co2: 0 },
+      water: { dryIce: 0 },
+      potentialCO2Condensation: 0,
+      sublimationAmount: 0,
+    })),
   },
-  rapidSublimationRateCO2: jest.fn(() => 0)
 }));
 
 jest.mock('../src/js/radiation-utils.js', () => ({
