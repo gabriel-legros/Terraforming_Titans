@@ -33,6 +33,7 @@ describe('mirror oversight settings', () => {
     expect(mirrorOversightSettings.distribution.tropical).toBeCloseTo(0.4);
     expect(mirrorOversightSettings.distribution.temperate).toBeCloseTo(0.3);
     expect(mirrorOversightSettings.distribution.focus).toBeCloseTo(0.1);
+    expect(mirrorOversightSettings.distribution.unassigned).toBeCloseTo(0);
     expect(mirrorOversightSettings.applyToLantern).toBe(true);
   });
 
@@ -41,9 +42,10 @@ describe('mirror oversight settings', () => {
     mirrorOversightSettings.distribution.temperate = 0.3;
     mirrorOversightSettings.distribution.polar = 0.4;
     mirrorOversightSettings.distribution.focus = 0.1;
+    mirrorOversightSettings.distribution.unassigned = 0.0;
     mirrorOversightSettings.applyToLantern = true;
     resetMirrorOversightSettings();
-    expect(mirrorOversightSettings.distribution).toEqual({ tropical: 0, temperate: 0, polar: 0, focus: 0 });
+    expect(mirrorOversightSettings.distribution).toEqual({ tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 });
     expect(mirrorOversightSettings.applyToLantern).toBe(false);
   });
 });

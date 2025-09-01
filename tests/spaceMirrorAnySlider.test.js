@@ -52,7 +52,8 @@ describe('space mirror any zone slider', () => {
     expect(getVal('tropical')).toBe(0);
     expect(getVal('temperate')).toBe(20);
     expect(getVal('polar')).toBe(10);
-    const total = ['tropical', 'temperate', 'polar', 'focus', 'any'].reduce((s, z) => s + getVal(z), 0);
+    expect(getVal('unassigned')).toBe(0);
+    const total = ['tropical', 'temperate', 'polar', 'focus', 'any', 'unassigned'].reduce((s, z) => s + getVal(z), 0);
     expect(total).toBe(100);
   });
 });

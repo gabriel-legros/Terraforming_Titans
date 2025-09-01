@@ -26,11 +26,12 @@ afterEach(() => {
   mirrorOversightSettings.distribution.temperate = 0;
   mirrorOversightSettings.distribution.polar = 0;
   mirrorOversightSettings.distribution.focus = 0;
+  mirrorOversightSettings.distribution.unassigned = 0;
   mirrorOversightSettings.applyToLantern = false;
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.advancedOversight = false;
-  mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
-  mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, any: 0 };
+  mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
+  mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   delete global.buildings;
   delete global.projectManager;
