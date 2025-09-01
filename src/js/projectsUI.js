@@ -85,22 +85,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs = getProjectsSubtabs();
   tabs.forEach(tab => {
     tab.addEventListener('click', function () {
-      // Remove 'active' from all cached subtabs
-      tabs.forEach(t => t.classList.remove('active'));
+      // Save scroll position of previously active subtab
+      const prevId = projectsUICache.activeSubtabId;
+      if (prevId) {
+        const prevContent = getContentById(prevId);
+        const prevContainer = prevContent ? prevContent.closest('.tab-content') : null;
+        if (prevContainer) subtabScrollPositions[prevId] = prevContainer.scrollTop;
+      }
 
-      // Add 'active' to clicked subtab
-      this.classList.add('active');
+      // Remove 'active' from all cached subtabs and contents
+      tabs.forEach(t => t.classList.remove('active'));
+      getProjectSubtabContents().forEach(content => content.classList.remove('active'));
 
       // Determine corresponding content id from data attribute
       const category = this && this.dataset ? this.dataset.subtab : null;
       projectsUICache.activeSubtabId = category || null;
 
-      // Hide all subtab contents (cached list)
-      getProjectSubtabContents().forEach(content => content.classList.remove('active'));
-
-      // Show selected subtab content (cached by id)
+      // Activate clicked subtab and restore scroll position
+      this.classList.add('active');
       const content = getContentById(category);
-      if (content) content.classList.add('active');
+      if (content) {
+        content.classList.add('active');
+        const container = content.closest('.tab-content');
+        if (container) container.scrollTop = subtabScrollPositions[category] || 0;
+      }
 
       if (typeof markProjectSubtabViewed === 'function' && category) {
         markProjectSubtabViewed(category);
@@ -952,7 +960,12 @@ function updateMegaProjectsVisibility() {
 }
 
 function activateProjectSubtab(subtabId) {
+  if (!subtabId) return;
   activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
+  projectsUICache.activeSubtabId = subtabId;
+  if (typeof markProjectSubtabViewed === 'function') {
+    markProjectSubtabViewed(subtabId);
+  }
 }
 
 let projectTabAlertNeeded = false;
