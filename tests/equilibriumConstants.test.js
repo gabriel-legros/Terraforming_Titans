@@ -24,6 +24,7 @@ global.R_AIR = 287;
 const phaseUtils = require('../src/js/phase-change-utils.js');
 global.penmanRate = phaseUtils.penmanRate;
 global.psychrometricConstant = phaseUtils.psychrometricConstant;
+global.condensationRateFactor = require('../src/js/condensation-utils.js').condensationRateFactor;
 // water-cycle functions
 const fs = require('fs');
 eval(fs.readFileSync(require.resolve('../src/js/terraforming/water-cycle.js'), 'utf8'));

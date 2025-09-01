@@ -403,3 +403,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Zonal resource changes now use nested maps grouped by resource, simplifying atmospheric and precipitation handling.
 - Added ResourceCycle base class to centralize per-zone phase-change calculations.
 - Introduced WaterCycle class extending ResourceCycle with an exported instance for evaporation and sublimation calculations.
+- Added MethaneCycle and CO2Cycle subclasses extending ResourceCycle for hydrocarbon and dry ice modeling.

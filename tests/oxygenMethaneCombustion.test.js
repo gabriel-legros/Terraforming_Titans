@@ -32,7 +32,7 @@ jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
 }));
 
 jest.mock('../src/js/dry-ice-cycle.js', () => ({
-  calculateCO2CondensationRateFactor: jest.fn(() => ({ rateFactor: 0 })),
+  calculateCO2CondensationRateFactor: jest.fn(() => 0),
   rapidSublimationRateCO2: jest.fn(() => 0)
 }));
 
