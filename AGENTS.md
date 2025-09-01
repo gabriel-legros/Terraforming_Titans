@@ -412,4 +412,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - index.html loads `resource-cycle.js` before cycle modules so subclasses can extend the base class in browser environments.
 - Added `processZone` methods to water, methane, and CO₂ cycles, composing base helpers to generate zonal change objects.
 - MethaneCycle constructor now accepts transitionRange, maxDiff, boilingPointFn, and boilTransitionRange options used during zonal processing.
+- Resource panel margins are now configurable; default planet parameters add 5px spacing after workers, glass and food, and before androids.
 - Subtabs now remember and restore their vertical scroll position when revisited.

@@ -27,6 +27,8 @@ class Resource extends EffectableEntity {
     this.hideRate = resourceData.hideRate || false; // Flag to hide rate display in UI
     this.overflowRate = 0; // Track overflow/leakage rate for tooltip display
     this.rateHistory = []; // Keep history of recent net rates
+    this.marginTop = resourceData.marginTop || 0;
+    this.marginBottom = resourceData.marginBottom || 0;
   }
 
   // Method to initialize configurable properties
@@ -63,6 +65,12 @@ class Resource extends EffectableEntity {
     }
     if (config.hideRate !== undefined) {
       this.hideRate = config.hideRate;
+    }
+    if (config.marginTop !== undefined) {
+      this.marginTop = config.marginTop;
+    }
+    if (config.marginBottom !== undefined) {
+      this.marginBottom = config.marginBottom;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {
