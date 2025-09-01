@@ -119,6 +119,25 @@ function addTooltipHover(anchor, tooltip) {
   });
 }
 
+function makeCollapsibleCard(card) {
+  if (!card) return;
+  const header = card.querySelector('.card-header');
+  if (!header) return;
+  const arrow = document.createElement('span');
+  arrow.classList.add('collapse-arrow');
+  arrow.innerHTML = '&#9660;';
+  header.insertBefore(arrow, header.firstChild);
+
+  const title = header.querySelector('.card-title');
+  const toggleTarget = title || header;
+  const toggle = () => {
+    card.classList.toggle('collapsed');
+    arrow.innerHTML = card.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+  arrow.addEventListener('click', toggle);
+  if (toggleTarget !== arrow) toggleTarget.addEventListener('click', toggle);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { activateSubtab, addTooltipHover, subtabScrollPositions };
+  module.exports = { activateSubtab, addTooltipHover, subtabScrollPositions, makeCollapsibleCard };
 }

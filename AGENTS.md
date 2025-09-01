@@ -421,3 +421,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Reducing a space mirror oversight slider now transfers the removed percentage to Unassigned.
 - Space mirror oversight settings persist through save and load as part of the project state.
 - Loading a saved game now triggers a one-time forced render to refresh the UI.
+- Special project cards like Mirror Oversight, Planetary Thrusters, Space Storage, and Dyson Swarm now feature collapsible headers.

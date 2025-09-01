@@ -19,6 +19,17 @@ try {
   }
 } catch (e) {}
 
+if (typeof makeCollapsibleCard === 'undefined') {
+  var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
+    ? globalThis.makeCollapsibleCard
+    : null;
+  try {
+    if (!makeCollapsibleCard && typeof require === 'function') {
+      ({ makeCollapsibleCard } = require('../ui-utils.js'));
+    }
+  } catch (e) {}
+}
+
 /* ---------- helpers ---------------------------------------------------- */
 const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
   n.toLocaleString(undefined,int?{maximumFractionDigits:0}:
@@ -130,6 +141,7 @@ class PlanetaryThrustersProject extends Project{
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
+    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(spinCard);
     spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
@@ -157,6 +169,7 @@ class PlanetaryThrustersProject extends Project{
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
+    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(motCard);
     motCard.style.display=this.isCompleted?"block":"none";
 
     /* power */
@@ -180,6 +193,7 @@ class PlanetaryThrustersProject extends Project{
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
+    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(pwrCard);
     pwrCard.style.display=this.isCompleted?"block":"none";
 
     /* refs */

@@ -1,3 +1,14 @@
+if (typeof makeCollapsibleCard === 'undefined') {
+  var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
+    ? globalThis.makeCollapsibleCard
+    : null;
+  try {
+    if (!makeCollapsibleCard && typeof require === 'function') {
+      ({ makeCollapsibleCard } = require('../ui-utils.js'));
+    }
+  } catch (e) {}
+}
+
 function renderDysonSwarmUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('dyson-swarm-card');
@@ -15,6 +26,7 @@ function renderDysonSwarmUI(project, container) {
       <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container"><input type="checkbox" id="ds-auto"><label for="ds-auto">Auto start</label></div>
     </div>`;
+  if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   container.appendChild(card);
 
   projectElements[project.name] = {
