@@ -15,6 +15,8 @@ describe('building subtab alert clears on subtab switch', () => {
     const ctx = dom.getInternalVMContext();
     ctx.gameSettings = { silenceUnlockAlert: false };
     ctx.buildings = { mine: { category: 'resource', unlocked: true, alertedWhenUnlocked: false } };
+    const uiUtilsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ui-utils.js'), 'utf8');
+    vm.runInContext(uiUtilsCode, ctx);
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildingUI.js'), 'utf8');
     vm.runInContext(code, ctx);
 

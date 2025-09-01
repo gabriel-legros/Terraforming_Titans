@@ -1,4 +1,12 @@
+const subtabScrollPositions = {};
+
 function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
+  const activeContent = document.querySelector(`.${contentClass}.active`);
+  if (activeContent) {
+    const id = activeContent.getAttribute && activeContent.getAttribute('id');
+    if (typeof id === 'string') subtabScrollPositions[id] = activeContent.scrollTop;
+  }
+
   document.querySelectorAll(`.${subtabClass}`).forEach(t => t.classList.remove('active'));
   document.querySelectorAll(`.${contentClass}`).forEach(c => c.classList.remove('active'));
 
@@ -12,6 +20,7 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
     }
     subtab.classList.add('active');
     content.classList.add('active');
+    content.scrollTop = subtabScrollPositions[subtabId] || 0;
   }
 }
 
@@ -107,5 +116,5 @@ function addTooltipHover(anchor, tooltip) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { activateSubtab, addTooltipHover };
+  module.exports = { activateSubtab, addTooltipHover, subtabScrollPositions };
 }
