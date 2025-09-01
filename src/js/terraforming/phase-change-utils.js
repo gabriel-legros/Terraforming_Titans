@@ -47,13 +47,13 @@
      const diff = temperature - freezingPoint;
 
     const surfaceIceCoverage = iceCoverage;
-    const surfaceMeltCap = surfaceIceCoverage > 1e-6 ? zoneArea * surfaceIceCoverage : zoneArea * Math.sqrt(surfaceIceCoverage) * 1e-3;
-     const cappedSurfaceIce = Math.min(availableIce || 0, surfaceMeltCap);
+    const surfaceMeltCap = zoneArea * surfaceIceCoverage;
+     const cappedSurfaceIce = surfaceMeltCap;
      const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
  
      const buriedIceCoverage = 1;
      const buriedMeltCap = zoneArea * buriedIceCoverage * 0.1;
-     const cappedBuriedIce = Math.min(availableBuriedIce || 0, buriedMeltCap);
+     const cappedBuriedIce = buriedMeltCap;
      const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.5;
  
      let actualBuriedMeltRate = 0;
@@ -67,9 +67,9 @@
 
     const surfaceLiquidCoverage = liquidCoverage;
     const baseFreezeRate = freezingRateMultiplier * diff;
-    const surfaceFreezeCap = surfaceLiquidCoverage > 1e-6 ? zoneArea * surfaceLiquidCoverage : zoneArea * Math.sqrt(surfaceLiquidCoverage) * 1e-3;
+    const surfaceFreezeCap = zoneArea * surfaceLiquidCoverage;
 
-    const cappedLiquid = Math.min(availableLiquid || 0, surfaceFreezeCap);
+    const cappedLiquid = surfaceFreezeCap;
 
     freezingRate = baseFreezeRate * cappedLiquid;
   }
