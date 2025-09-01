@@ -3,11 +3,14 @@ const { JSDOM } = require('jsdom');
 global.Project = class {};
 global.projectElements = {};
 const {
+  SpaceMirrorFacilityProject,
   initializeMirrorOversightUI,
-  mirrorOversightSettings,
   resetMirrorOversightSettings,
   updateAssignmentDisplays
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 
 global.formatNumber = numbers.formatNumber;
 global.formatBuildingCount = numbers.formatBuildingCount;

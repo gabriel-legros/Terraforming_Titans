@@ -11,7 +11,7 @@ global.formatBuildingCount = numbers.formatBuildingCount;
 global.toDisplayTemperature = numbers.toDisplayTemperature;
 global.getTemperatureUnit = numbers.getTemperatureUnit;
 const {
-  mirrorOversightSettings,
+  SpaceMirrorFacilityProject,
   toggleFinerControls,
   calculateZoneSolarFluxWithFacility,
   distributeAssignmentsFromSliders,
@@ -21,6 +21,8 @@ const {
   updateMirrorOversightUI
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
 
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 global.mirrorOversightSettings = mirrorOversightSettings;
 
 global.getZoneRatio = getZoneRatio;

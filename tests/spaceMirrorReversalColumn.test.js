@@ -61,7 +61,6 @@ describe('space mirror reversal column', () => {
     global.buildings = originalBuildings;
     global.projectElements = originalProjectElements || {};
     global.projectManager = originalProjectManager;
-    delete global.mirrorOversightSettings;
     delete global.setMirrorDistribution;
     delete global.resetMirrorOversightSettings;
     delete global.initializeMirrorOversightUI;

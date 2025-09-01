@@ -1,20 +1,24 @@
 ﻿// Mirror oversight controls
-var mirrorOversightSettings = globalThis.mirrorOversightSettings || {
-  distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
-  applyToLantern: false,
-  useFinerControls: false,
-  assignmentStep: 1,
-  advancedOversight: false,
-  targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
-  tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
-  priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
-  autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
-  assignments: {
-    mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-    lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-    reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
-  }
-};
+function createDefaultMirrorOversightSettings() {
+  return {
+    distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
+    applyToLantern: false,
+    useFinerControls: false,
+    assignmentStep: 1,
+    advancedOversight: false,
+    targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
+    tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
+    priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
+    autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
+    assignments: {
+      mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
+      lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
+      reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
+    }
+  };
+}
+
+var mirrorOversightSettings = null;
 
 var advancedAssignmentInProgress = false;
 
@@ -1285,6 +1289,8 @@ class SpaceMirrorFacilityProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.reversalAvailable = false;
+    this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
+    mirrorOversightSettings = this.mirrorOversightSettings;
   }
 
   enableReversal() {
@@ -1453,18 +1459,96 @@ class SpaceMirrorFacilityProject extends Project {
   saveState() {
     return {
       ...super.saveState(),
+      mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings)),
     };
   }
 
   loadState(state) {
     super.loadState(state);
+    this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
+    mirrorOversightSettings = this.mirrorOversightSettings;
+    const saved = state?.mirrorOversightSettings || {};
+    const settings = this.mirrorOversightSettings;
+
+    if (saved.distribution) {
+      Object.assign(settings.distribution, saved.distribution);
+      ['tropical','temperate','polar','focus','unassigned'].forEach(z => {
+        const v = Number(settings.distribution[z]);
+        settings.distribution[z] = isNaN(v) ? 0 : v;
+      });
+    }
+
+    settings.applyToLantern = !!saved.applyToLantern;
+    settings.useFinerControls = !!saved.useFinerControls;
+    settings.assignmentStep = typeof saved.assignmentStep === 'number' && saved.assignmentStep > 0
+      ? saved.assignmentStep
+      : 1;
+    settings.advancedOversight = !!saved.advancedOversight;
+
+    if (saved.targets) {
+      Object.assign(settings.targets, saved.targets);
+      ['tropical','temperate','polar','water'].forEach(k => {
+        const v = Number(settings.targets[k]);
+        settings.targets[k] = isNaN(v) ? 0 : v;
+      });
+    }
+
+    if (saved.tempMode) {
+      Object.assign(settings.tempMode, saved.tempMode);
+      ['tropical','temperate','polar'].forEach(z => {
+        const val = settings.tempMode[z];
+        settings.tempMode[z] = (val === 'day' || val === 'night') ? val : 'average';
+      });
+    }
+
+    if (saved.priority) {
+      Object.assign(settings.priority, saved.priority);
+      ['tropical','temperate','polar','focus'].forEach(z => {
+        const val = parseInt(settings.priority[z], 10);
+        settings.priority[z] = val >= 1 && val <= 5 ? val : 1;
+      });
+    }
+
+    if (saved.autoAssign) {
+      Object.assign(settings.autoAssign, saved.autoAssign);
+      ['tropical','temperate','polar','focus','any'].forEach(z => {
+        settings.autoAssign[z] = !!settings.autoAssign[z];
+      });
+    }
+
+    if (saved.assignments) {
+      const sa = saved.assignments;
+      if (sa.mirrors) {
+        Object.assign(settings.assignments.mirrors, sa.mirrors);
+        ['tropical','temperate','polar','focus','unassigned','any'].forEach(z => {
+          const v = Number(settings.assignments.mirrors[z]);
+          settings.assignments.mirrors[z] = isNaN(v) ? 0 : v;
+        });
+      }
+      if (sa.lanterns) {
+        Object.assign(settings.assignments.lanterns, sa.lanterns);
+        ['tropical','temperate','polar','focus','unassigned','any'].forEach(z => {
+          const v = Number(settings.assignments.lanterns[z]);
+          settings.assignments.lanterns[z] = isNaN(v) ? 0 : v;
+        });
+      }
+      if (sa.reversalMode) {
+        Object.assign(settings.assignments.reversalMode, sa.reversalMode);
+        ['tropical','temperate','polar','focus','any'].forEach(z => {
+          settings.assignments.reversalMode[z] = !!settings.assignments.reversalMode[z];
+        });
+      }
+    }
+
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
+    }
   }
 }
 
 // Expose constructor globally for browser usage
 if (typeof globalThis !== 'undefined') {
   globalThis.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject;
-  globalThis.mirrorOversightSettings = mirrorOversightSettings;
   globalThis.setMirrorDistribution = setMirrorDistribution;
   globalThis.resetMirrorOversightSettings = resetMirrorOversightSettings;
   globalThis.initializeMirrorOversightUI = initializeMirrorOversightUI;
@@ -1481,7 +1565,6 @@ if (typeof globalThis !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     SpaceMirrorFacilityProject,
-    mirrorOversightSettings,
     setMirrorDistribution,
     resetMirrorOversightSettings,
     initializeMirrorOversightUI,

@@ -57,7 +57,6 @@ function getGameState() {
     colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
     ghgFactorySettings: typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined,
     oxygenFactorySettings: typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined,
-    mirrorOversightSettings: typeof globalThis.mirrorOversightSettings !== 'undefined' ? globalThis.mirrorOversightSettings : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
     totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined
@@ -238,6 +237,11 @@ function loadGame(slotOrCustomString) {
     
       // Restore projects
       if (gameState.projects) {
+          if (gameState.mirrorOversightSettings &&
+              gameState.projects.spaceMirrorFacility &&
+              !gameState.projects.spaceMirrorFacility.mirrorOversightSettings) {
+            gameState.projects.spaceMirrorFacility.mirrorOversightSettings = gameState.mirrorOversightSettings;
+          }
           projectManager.loadState(gameState.projects);
       }
 
@@ -386,10 +390,6 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.oxygenFactorySettings){
       Object.assign(oxygenFactorySettingsRef, gameState.oxygenFactorySettings);
-    }
-
-    if(gameState.mirrorOversightSettings){
-      Object.assign(mirrorOversightSettings, gameState.mirrorOversightSettings);
     }
 
       if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){

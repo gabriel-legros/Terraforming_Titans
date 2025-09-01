@@ -12,7 +12,9 @@ hydrology.calculateMeltingFreezingRates = () => ({
 });
 global.Project = class {};
 global.projectElements = {};
-const { mirrorOversightSettings, applyFocusedMelt } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const { SpaceMirrorFacilityProject, applyFocusedMelt } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 mirrorOversightSettings.distribution.focus = 1;
 mirrorOversightSettings.applyToLantern = false;
 

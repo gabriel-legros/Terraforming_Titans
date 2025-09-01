@@ -40,7 +40,7 @@ describe('space mirror reflect mode', () => {
     expect(checkbox).not.toBeNull();
     expect(checkbox.style.display).not.toBe('none');
     checkbox.click();
-    expect(global.mirrorOversightSettings.assignments.reversalMode.tropical).toBe(true);
+    expect(project.mirrorOversightSettings.assignments.reversalMode.tropical).toBe(true);
 
     global.document = originalDocument;
     global.Project = originalProject;
@@ -49,7 +49,6 @@ describe('space mirror reflect mode', () => {
     global.buildings = originalBuildings;
     global.projectElements = originalProjectElements || {};
     delete global.projectManager;
-    delete global.mirrorOversightSettings;
     delete global.setMirrorDistribution;
     delete global.resetMirrorOversightSettings;
     delete global.initializeMirrorOversightUI;

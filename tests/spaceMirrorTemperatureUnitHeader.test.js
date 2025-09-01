@@ -30,7 +30,8 @@ describe('Space Mirror temperature header', () => {
     global.projectElements = {};
     global.buildings = {};
 
-    const { initializeMirrorOversightUI, updateZonalFluxTable } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+    const { SpaceMirrorFacilityProject, initializeMirrorOversightUI, updateZonalFluxTable } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+    const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
     const container = document.getElementById('container');
     initializeMirrorOversightUI(container);
     let header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');

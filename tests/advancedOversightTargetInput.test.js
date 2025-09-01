@@ -35,7 +35,10 @@ describe('advanced oversight target inputs', () => {
     };
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects/SpaceMirrorFacilityProject.js'), 'utf8');
-    vm.runInContext(code + '; this.updateMirrorOversightUI = updateMirrorOversightUI; this.mirrorOversightSettings = mirrorOversightSettings;', ctx);
+    vm.runInContext(code + '; this.SpaceMirrorFacilityProject = SpaceMirrorFacilityProject; this.updateMirrorOversightUI = updateMirrorOversightUI;', ctx);
+
+    const project = new ctx.SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+    ctx.mirrorOversightSettings = project.mirrorOversightSettings;
 
     ctx.mirrorOversightSettings.advancedOversight = true;
     ctx.mirrorOversightSettings.targets.tropical = 300;

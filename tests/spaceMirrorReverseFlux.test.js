@@ -4,7 +4,9 @@ const lifeParameters = require('../src/js/life-parameters.js');
 
 global.Project = class {};
 global.projectElements = {};
-const { mirrorOversightSettings } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const { SpaceMirrorFacilityProject } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 global.mirrorOversightSettings = mirrorOversightSettings;
 
 global.getZoneRatio = getZoneRatio;

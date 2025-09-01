@@ -418,3 +418,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror facility adds an Unassigned slider leaving a portion of mirrors and lanterns idle.
 - Buildings now feature collapse arrows hiding cost, production, consumption, maintenance, description and advanced autobuild controls.
 - Reducing a space mirror oversight slider now transfers the removed percentage to Unassigned.
+- Space mirror oversight settings persist through save and load as part of the project state.

@@ -8,13 +8,16 @@ const dom = new JSDOM('<!doctype html><html><body></body></html>');
 global.document = dom.window.document;
 
 const {
+  SpaceMirrorFacilityProject,
   setMirrorDistribution,
   distributeAssignmentsFromSliders,
-  mirrorOversightSettings,
   toggleAdvancedOversight,
   resetMirrorOversightSettings,
   initializeMirrorOversightUI,
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 
 // cleanup globals injected by module
 delete global.Project;
@@ -22,7 +25,6 @@ delete global.projectElements;
 delete global.terraforming;
 if (originalFormatNumber !== undefined) global.formatNumber = originalFormatNumber; else delete global.formatNumber;
 delete global.calculateZoneSolarFluxWithFacility;
-delete global.mirrorOversightSettings;
 delete global.setMirrorDistribution;
 delete global.resetMirrorOversightSettings;
 delete global.initializeMirrorOversightUI;

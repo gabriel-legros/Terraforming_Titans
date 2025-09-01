@@ -37,6 +37,7 @@ describe('space mirror slider reduction', () => {
 
     const config = ctx.projectParameters.spaceMirrorFacility;
     const project = new ctx.SpaceMirrorFacilityProject(config, 'spaceMirrorFacility');
+    ctx.mirrorOversightSettings = project.mirrorOversightSettings;
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     ctx.projectElements = vm.runInContext('projectElements', ctx);

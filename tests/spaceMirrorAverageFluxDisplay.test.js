@@ -16,9 +16,11 @@ describe('space mirror average flux display', () => {
     };
 
     const {
+      SpaceMirrorFacilityProject,
       initializeMirrorOversightUI,
       updateZonalFluxTable,
     } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+    const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
     const container = dom.window.document.getElementById('root');
     initializeMirrorOversightUI(container);
     updateZonalFluxTable();
@@ -35,7 +37,6 @@ describe('space mirror average flux display', () => {
     delete global.toDisplayTemperature;
     delete global.Project;
     delete global.terraforming;
-    delete global.mirrorOversightSettings;
     delete global.setMirrorDistribution;
     delete global.resetMirrorOversightSettings;
     delete global.initializeMirrorOversightUI;

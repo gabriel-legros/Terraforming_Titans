@@ -14,7 +14,8 @@ global.buildings = {};
 global.terraforming = { calculateZoneSolarFlux: () => 0 };
 global.formatNumber = () => '';
 
-const { initializeMirrorOversightUI, updateMirrorOversightUI } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const { SpaceMirrorFacilityProject, initializeMirrorOversightUI, updateMirrorOversightUI } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
 
 afterAll(() => {
   global.Project = originalProject;

@@ -1,6 +1,8 @@
 global.Project = class {};
 global.projectElements = {};
-const { runAdvancedOversightAssignments, mirrorOversightSettings } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const { SpaceMirrorFacilityProject, runAdvancedOversightAssignments } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 
 describe('runAdvancedOversightAssignments', () => {
   let baseTemps;

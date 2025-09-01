@@ -5,10 +5,13 @@ global.terraforming = { calculateMirrorEffect: () => ({ interceptedPower: 0, pow
 global.formatNumber = () => '';
 
 const {
+  SpaceMirrorFacilityProject,
   setMirrorDistribution,
-  resetMirrorOversightSettings,
-  mirrorOversightSettings
+  resetMirrorOversightSettings
 } = require('../src/js/projects/SpaceMirrorFacilityProject.js');
+
+const project = new SpaceMirrorFacilityProject({ name: 'Mirror', cost: {}, duration: 0 }, 'spaceMirrorFacility');
+const mirrorOversightSettings = project.mirrorOversightSettings;
 
 delete global.Project;
 delete global.projectElements;
@@ -16,7 +19,6 @@ delete global.buildings;
 delete global.terraforming;
 delete global.formatNumber;
 delete global.calculateZoneSolarFluxWithFacility;
-delete global.mirrorOversightSettings;
 delete global.setMirrorDistribution;
 delete global.resetMirrorOversightSettings;
 delete global.initializeMirrorOversightUI;
