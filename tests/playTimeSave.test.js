@@ -89,7 +89,7 @@ describe('play time persistence', () => {
     vm.runInContext('playTimeSeconds = 730; totalPlayTimeSeconds = 1000;', ctx);
     vm.runInContext('var saved = JSON.stringify(getGameState());', ctx);
     vm.runInContext('playTimeSeconds = 0; totalPlayTimeSeconds = 0;', ctx);
-    vm.runInContext('loadGame(saved);', ctx);
+    vm.runInContext('updateRender = () => {}; loadGame(saved);', ctx);
     const result = vm.runInContext('playTimeSeconds', ctx);
     const totalResult = vm.runInContext('totalPlayTimeSeconds', ctx);
 

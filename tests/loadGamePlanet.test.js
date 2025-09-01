@@ -104,12 +104,13 @@ describe('load game planet initialization', () => {
     const savedString = vm.runInContext('savedString', ctx);
 
     // Reset to Mars and load the Titan save
-    vm.runInContext(`
-      defaultPlanet = 'mars';
-      currentPlanetParameters = planetParameters.mars;
-      initializeGameState();
-      loadGame(savedString);
-    `, ctx);
+      vm.runInContext(`
+        defaultPlanet = 'mars';
+        currentPlanetParameters = planetParameters.mars;
+        initializeGameState();
+        updateRender = () => {};
+        loadGame(savedString);
+      `, ctx);
 
     const radius = vm.runInContext('terraforming.celestialParameters.radius', ctx);
 

@@ -88,7 +88,7 @@ describe('skillPoints save/load', () => {
     vm.runInContext('skillManager.skillPoints = 5;', ctx);
     vm.runInContext('var saved = JSON.stringify(getGameState());', ctx);
     vm.runInContext('skillManager.skillPoints = 0;', ctx);
-    vm.runInContext('loadGame(saved);', ctx);
+    vm.runInContext('updateRender = () => {}; loadGame(saved);', ctx);
     const result = vm.runInContext('skillManager.skillPoints', ctx);
 
     global.window = originalWindow;

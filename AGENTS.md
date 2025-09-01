@@ -420,3 +420,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Buildings now feature collapse arrows hiding cost, production, consumption, maintenance, description and advanced autobuild controls.
 - Reducing a space mirror oversight slider now transfers the removed percentage to Unassigned.
 - Space mirror oversight settings persist through save and load as part of the project state.
+- Loading a saved game now triggers a one-time forced render to refresh the UI.
