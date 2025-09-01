@@ -3,9 +3,23 @@ const path = require('path');
 const vm = require('vm');
 
 test('reinitializeDisplayElements restores default name and margins', () => {
-  const context = {};
-  const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
-  const resourceCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resource.js'), 'utf8');
+  const context = {
+    defaultPlanetParameters: {
+      resources: {
+        colony: {
+          foo: { displayName: 'Foo', marginTop: 3, marginBottom: 4 },
+        },
+      },
+    },
+  };
+  const effectCode = fs.readFileSync(
+    path.join(__dirname, '..', 'src/js', 'effectable-entity.js'),
+    'utf8'
+  );
+  const resourceCode = fs.readFileSync(
+    path.join(__dirname, '..', 'src/js', 'resource.js'),
+    'utf8'
+  );
   vm.runInNewContext(effectCode, context);
   vm.runInNewContext(resourceCode + '\nthis.Resource = Resource;', context);
 
@@ -26,12 +40,17 @@ test('reinitializeDisplayElements restores default name and margins', () => {
   expect(res.marginTop).toBe(3);
   expect(res.marginBottom).toBe(4);
 
-  res.initializeFromConfig('foo', { displayName: 'Baz', marginTop: 1, marginBottom: 2 });
+  res.initializeFromConfig('foo', {
+    displayName: 'Baz',
+    marginTop: 1,
+    marginBottom: 2,
+  });
   res.displayName = 'Qux';
   res.marginTop = 7;
   res.marginBottom = 8;
   res.reinitializeDisplayElements();
-  expect(res.displayName).toBe('Baz');
-  expect(res.marginTop).toBe(1);
-  expect(res.marginBottom).toBe(2);
+  expect(res.displayName).toBe('Foo');
+  expect(res.marginTop).toBe(3);
+  expect(res.marginBottom).toBe(4);
 });
+
