@@ -282,7 +282,7 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active;
+      const base = maintenanceCost[resource] * building.active * building.productivity;
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
@@ -439,16 +439,18 @@ function produceResources(deltaTime, buildings) {
       const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
       projectData[name] = { project, cost, gain };
     }
+    const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
     for (const name of names) {
       const data = projectData[name];
       if (!data || data.project.treatAsBuilding) continue;
       const { project } = data;
+      const productivity = productivityMap[name] ?? 1;
       if (project.autoStart === false) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges);
+        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
         continue;
       }
-      project.estimateCostAndGain(deltaTime, true);
-      project.applyCostAndGain(deltaTime, accumulatedChanges);
+      project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
   }
 
@@ -540,6 +542,7 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
     for (const resource in totalNet[category]) {
       const available =
         (resources[category]?.[resource]?.value || 0) +
+        (totalNet[category]?.[resource] || 0) +
         (accumulatedChanges[category]?.[resource] || 0);
       const net = totalNet[category][resource];
       const ratio = net > 0 ? Math.min(available / net, 1) : 1;

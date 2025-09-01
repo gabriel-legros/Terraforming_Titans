@@ -561,8 +561,6 @@ class SpaceshipProject extends Project {
               (totals.cost[category][resource] || 0) + capacity * this.assignedSpaceships * fraction;
             if (this.attributes.fundingGainAmount && resources.colony?.funding) {
               const fundingRate = capacity * this.assignedSpaceships * factor * this.attributes.fundingGainAmount * (applyRates ? productivity : 1);
-              console.log(productivity);
-              console.log(fundingRate);
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
