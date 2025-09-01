@@ -1,4 +1,4 @@
-const { calculateMethaneCondensationRateFactor } = require('../src/js/hydrocarbon-cycle.js');
+const { methaneCycle, boilingPointMethane } = require('../src/js/hydrocarbon-cycle.js');
 
 describe('methane condensation smoothing around freezing', () => {
   const zoneArea = 1e6; // m^2
@@ -6,38 +6,50 @@ describe('methane condensation smoothing around freezing', () => {
   const atmPressure = 101325;
 
   test('above freezing favors liquid', () => {
-    const res = calculateMethaneCondensationRateFactor({
+    const { liquidRate, iceRate } = methaneCycle.condensationRateFactor({
       zoneArea,
-      methaneVaporPressure,
-      dayTemperature: 94,
-      nightTemperature: 93,
-      atmPressure,
+      vaporPressure: methaneVaporPressure,
+      gravity: 1,
+      dayTemp: 94,
+      nightTemp: 93,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointMethane(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.liquidRateFactor).toBeGreaterThan(0);
-    expect(res.liquidRateFactor).toBeGreaterThan(res.iceRateFactor);
+    expect(liquidRate).toBeGreaterThan(0);
+    expect(liquidRate).toBeGreaterThan(iceRate);
   });
 
   test('below freezing gives mostly ice', () => {
-    const res = calculateMethaneCondensationRateFactor({
+    const { liquidRate, iceRate } = methaneCycle.condensationRateFactor({
       zoneArea,
-      methaneVaporPressure,
-      dayTemperature: 88,
-      nightTemperature: 89,
-      atmPressure,
+      vaporPressure: methaneVaporPressure,
+      gravity: 1,
+      dayTemp: 88,
+      nightTemp: 89,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointMethane(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.iceRateFactor).toBeGreaterThan(res.liquidRateFactor);
-    expect(res.iceRateFactor).toBeGreaterThan(0);
+    expect(iceRate).toBeGreaterThan(liquidRate);
+    expect(iceRate).toBeGreaterThan(0);
   });
 
   test('temperatures near freezing mix liquid and ice', () => {
-    const res = calculateMethaneCondensationRateFactor({
+    const { liquidRate, iceRate } = methaneCycle.condensationRateFactor({
       zoneArea,
-      methaneVaporPressure,
-      dayTemperature: 91,
-      nightTemperature: 90,
-      atmPressure,
+      vaporPressure: methaneVaporPressure,
+      gravity: 1,
+      dayTemp: 91,
+      nightTemp: 90,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointMethane(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.liquidRateFactor).toBeGreaterThan(0);
-    expect(res.iceRateFactor).toBeGreaterThan(0);
+    expect(liquidRate).toBeGreaterThan(0);
+    expect(iceRate).toBeGreaterThan(0);
   });
 });

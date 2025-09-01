@@ -144,7 +144,8 @@ class CO2Cycle extends ResourceCycleClass {
     const nightPotential = calculatePotential(nightTemperature);
     const dayPotential = calculatePotential(dayTemperature);
 
-    return (nightPotential + dayPotential) / 2;
+    const rate = (nightPotential + dayPotential) / 2;
+    return { iceRate: rate };
   }
 }
 
@@ -167,23 +168,6 @@ function rapidSublimationRateCO2(temperature, availableDryIce) {
     return co2Cycle.rapidSublimationRate(temperature, availableDryIce);
 }
 
-// Calculate potential CO₂ condensation rate factor for a zone. The returned
-// value represents the rate (in tons/s) that would occur if the condensation
-// parameter were equal to 1.
-function calculateCO2CondensationRateFactor({
-    zoneArea,
-    co2VaporPressure,
-    dayTemperature,
-    nightTemperature
-}) {
-    return co2Cycle.condensationRateFactor({
-        zoneArea,
-        co2VaporPressure,
-        dayTemperature,
-        nightTemperature
-    });
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CO2Cycle,
@@ -192,8 +176,7 @@ if (typeof module !== 'undefined' && module.exports) {
         slopeSVPCO2,
         psychrometricConstantCO2,
         sublimationRateCO2,
-        rapidSublimationRateCO2,
-        calculateCO2CondensationRateFactor
+        rapidSublimationRateCO2
     };
 } else {
     // Expose functions globally for browser usage
@@ -204,5 +187,4 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.psychrometricConstantCO2 = psychrometricConstantCO2;
     globalThis.sublimationRateCO2 = sublimationRateCO2;
     globalThis.rapidSublimationRateCO2 = rapidSublimationRateCO2;
-    globalThis.calculateCO2CondensationRateFactor = calculateCO2CondensationRateFactor;
 }

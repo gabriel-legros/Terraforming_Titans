@@ -322,30 +322,6 @@ function calculateEvaporationSublimationRates({
     };
 }
 
-// Calculate potential precipitation rate factors for a zone
-function calculatePrecipitationRateFactor({
-    zoneArea,
-    waterVaporPressure,
-    gravity,
-    dayTemperature,
-    nightTemperature,
-    atmPressure
-}) {
-    const boilingPoint = boilingPointWater(atmPressure);
-    const res = waterCycle.condensationRateFactor({
-        zoneArea,
-        vaporPressure: waterVaporPressure,
-        gravity,
-        dayTemp: dayTemperature,
-        nightTemp: nightTemperature,
-        transitionRange: 2,
-        maxDiff: 10,
-        boilingPoint,
-        boilTransitionRange: 5
-    });
-    return { rainfallRateFactor: res.liquidRate, snowfallRateFactor: res.iceRate };
-}
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         WaterCycle,
@@ -357,7 +333,6 @@ if (typeof module !== 'undefined' && module.exports) {
         sublimationRateWater,
         evaporationRateWater,
         calculateEvaporationSublimationRates,
-        calculatePrecipitationRateFactor,
         boilingPointWater
     };
 } else {
@@ -371,6 +346,5 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.sublimationRateWater = sublimationRateWater;
     globalThis.evaporationRateWater = evaporationRateWater;
     globalThis.calculateEvaporationSublimationRates = calculateEvaporationSublimationRates;
-    globalThis.calculatePrecipitationRateFactor = calculatePrecipitationRateFactor;
     globalThis.boilingPointWater = boilingPointWater;
 }

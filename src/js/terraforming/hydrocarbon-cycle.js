@@ -200,33 +200,6 @@ function calculateMethaneSublimationRate({
     return (daySublimationRate + nightSublimationRate) / 2;
 }
 
-// Calculate potential methane condensation rate factor for a zone
-function calculateMethaneCondensationRateFactor({
-    zoneArea,
-    methaneVaporPressure,
-    dayTemperature,
-    nightTemperature,
-    atmPressure
-}) {
-    const boilingPoint = boilingPointMethane(atmPressure);
-    const res = methaneCycle.condensationRateFactor({
-        zoneArea,
-        vaporPressure: methaneVaporPressure,
-        gravity: 1,
-        dayTemp: dayTemperature,
-        nightTemp: nightTemperature,
-        transitionRange: 2,
-        maxDiff: 10,
-        boilingPoint,
-        boilTransitionRange: 5
-    });
-    return {
-        liquidRateFactor: res.liquidRate,
-        iceRateFactor: res.iceRate
-    };
-}
-
-
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         MethaneCycle,
@@ -235,7 +208,6 @@ if (typeof module !== 'undefined' && module.exports) {
         slopeSVPMethane,
         psychrometricConstantMethane,
         evaporationRateMethane,
-        calculateMethaneCondensationRateFactor,
         calculateMethaneEvaporationRate,
         sublimationRateMethane,
         rapidSublimationRateMethane,
@@ -250,7 +222,6 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.slopeSVPMethane = slopeSVPMethane;
     globalThis.psychrometricConstantMethane = psychrometricConstantMethane;
     globalThis.evaporationRateMethane = evaporationRateMethane;
-    globalThis.calculateMethaneCondensationRateFactor = calculateMethaneCondensationRateFactor;
     globalThis.calculateMethaneEvaporationRate = calculateMethaneEvaporationRate;
     globalThis.sublimationRateMethane = sublimationRateMethane;
     globalThis.rapidSublimationRateMethane = rapidSublimationRateMethane;

@@ -35,10 +35,11 @@ global.surfaceAlbedoMix = physics.surfaceAlbedoMix;
 global.airDensity = physics.airDensity;
 
 global.sublimationRateCO2 = dryIce.sublimationRateCO2;
-global.calculateCO2CondensationRateFactor = dryIce.calculateCO2CondensationRateFactor;
+global.co2Cycle = dryIce.co2Cycle;
 
 global.evaporationRateMethane = hydrocarbon.evaporationRateMethane;
-global.calculateMethaneCondensationRateFactor = hydrocarbon.calculateMethaneCondensationRateFactor;
+global.methaneCycle = hydrocarbon.methaneCycle;
+global.boilingPointMethane = hydrocarbon.boilingPointMethane;
 
 global.C_P_AIR = 1004;
 global.EPSILON = 0.622;

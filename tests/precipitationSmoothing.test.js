@@ -1,4 +1,4 @@
-const { calculatePrecipitationRateFactor } = require('../src/js/water-cycle.js');
+const { waterCycle, boilingPointWater } = require('../src/js/water-cycle.js');
 
 describe('precipitation smoothing around freezing', () => {
   const zoneArea = 1e6; // m^2
@@ -7,41 +7,50 @@ describe('precipitation smoothing around freezing', () => {
   const atmPressure = 101325;
 
   test('above freezing gives predominantly rain', () => {
-    const res = calculatePrecipitationRateFactor({
+    const { liquidRate, iceRate } = waterCycle.condensationRateFactor({
       zoneArea,
-      waterVaporPressure,
+      vaporPressure: waterVaporPressure,
       gravity,
-      dayTemperature: 276,
-      nightTemperature: 275,
-      atmPressure,
+      dayTemp: 276,
+      nightTemp: 275,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointWater(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.rainfallRateFactor).toBeGreaterThan(0);
-    expect(res.rainfallRateFactor).toBeGreaterThan(res.snowfallRateFactor);
+    expect(liquidRate).toBeGreaterThan(0);
+    expect(liquidRate).toBeGreaterThan(iceRate);
   });
 
   test('below freezing gives snow only', () => {
-    const res = calculatePrecipitationRateFactor({
+    const { liquidRate, iceRate } = waterCycle.condensationRateFactor({
       zoneArea,
-      waterVaporPressure,
+      vaporPressure: waterVaporPressure,
       gravity,
-      dayTemperature: 270,
-      nightTemperature: 271,
-      atmPressure,
+      dayTemp: 270,
+      nightTemp: 271,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointWater(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.rainfallRateFactor).toBe(0);
-    expect(res.snowfallRateFactor).toBeGreaterThan(0);
+    expect(liquidRate).toBe(0);
+    expect(iceRate).toBeGreaterThan(0);
   });
 
   test('temperatures straddling freezing mix rain and snow', () => {
-    const res = calculatePrecipitationRateFactor({
+    const { liquidRate, iceRate } = waterCycle.condensationRateFactor({
       zoneArea,
-      waterVaporPressure,
+      vaporPressure: waterVaporPressure,
       gravity,
-      dayTemperature: 274,
-      nightTemperature: 272,
-      atmPressure,
+      dayTemp: 274,
+      nightTemp: 272,
+      transitionRange: 2,
+      maxDiff: 10,
+      boilingPoint: boilingPointWater(atmPressure),
+      boilTransitionRange: 5
     });
-    expect(res.rainfallRateFactor).toBeGreaterThan(0);
-    expect(res.snowfallRateFactor).toBeGreaterThan(0);
+    expect(liquidRate).toBeGreaterThan(0);
+    expect(iceRate).toBeGreaterThan(0);
   });
 });
