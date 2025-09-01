@@ -136,4 +136,38 @@ describe('calculateZoneSolarFlux', () => {
     const result = terra.calculateZoneSolarFlux('tropical');
     expect(result).toBeCloseTo(expected, 5);
   });
+
+  test('unassigned slider leaves mirrors idle', () => {
+    Terraforming.prototype.calculateLanternFlux = function(){ return 0; };
+    const terra = createTerraforming();
+    global.buildings = { spaceMirror: { surfaceArea: 500, active: 1 } };
+    global.projectManager = {
+      projects: { spaceMirrorFacility: { isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight' } },
+      isBooleanFlagSet: (id) => id === 'spaceMirrorFacilityOversight'
+    };
+    mirrorOversightSettings.distribution.tropical = 0.5;
+    mirrorOversightSettings.distribution.temperate = 0;
+    mirrorOversightSettings.distribution.polar = 0;
+    mirrorOversightSettings.distribution.focus = 0;
+    mirrorOversightSettings.distribution.unassigned = 0.5;
+    mirrorOversightSettings.applyToLantern = false;
+
+    terra.luminosity.solarFlux = terra.calculateSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+    terra.luminosity.modifiedSolarFlux = terra.calculateModifiedSolarFlux(terra.celestialParameters.distanceFromSun * 149597870700);
+
+    const baseSolar = terra.luminosity.solarFlux;
+    const mirror = terra.calculateMirrorEffect();
+    const totalArea = terra.celestialParameters.surfaceArea;
+    const zonePerc = getZonePercentage('tropical');
+    const ratioT = getZoneRatio('tropical') / 0.25;
+    const ratioTemp = getZoneRatio('temperate') / 0.25;
+    const focusedMirror = (4 * mirror.interceptedPower * 0.5 * buildings.spaceMirror.active) / (totalArea * zonePerc);
+    const expectedTropical = baseSolar * ratioT + focusedMirror;
+    const expectedTemperate = baseSolar * ratioTemp;
+
+    const resultTropical = terra.calculateZoneSolarFlux('tropical');
+    const resultTemperate = terra.calculateZoneSolarFlux('temperate');
+    expect(resultTropical).toBeCloseTo(expectedTropical, 5);
+    expect(resultTemperate).toBeCloseTo(expectedTemperate, 5);
+  });
 });

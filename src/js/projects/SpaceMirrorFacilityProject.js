@@ -1163,7 +1163,16 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       // Slider distribution
       const dist = mirrorOversightSettings.distribution || {};
       const zonePerc = Math.max(0, dist[zone] || 0);
-      const globalPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
+      const globalPerc = Math.max(
+        0,
+        1 - (
+          (dist.tropical || 0) +
+          (dist.temperate || 0) +
+          (dist.polar || 0) +
+          (dist.focus || 0) +
+          (dist.unassigned || 0)
+        )
+      );
 
       distributedMirrorPower = totalMirrorPower * globalPerc;
       focusedMirrorPower = totalMirrorPower * zonePerc;
