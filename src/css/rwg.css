@@ -61,6 +61,10 @@
   color: var(--rwg-fg);
 }
 
+.rwg-input input.rwg-text {
+  user-select: text;
+}
+
 .rwg-select {
   display: flex;
   gap: 10px;

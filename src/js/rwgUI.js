@@ -11,6 +11,12 @@ let historyNextBtn;
 let historyCollapsed = false;
 let historyData = [];
 let historyPage = 0;
+let lastHistoryState = '';
+let rwgSeedEl;
+let rwgTargetEl;
+let rwgTypeEl;
+let rwgOrbitEl;
+let rwgResultEl;
 
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
@@ -76,10 +82,16 @@ function initializeRandomWorldUI() {
   `;
   container.appendChild(controls);
 
+  rwgSeedEl = container.querySelector('#rwg-seed');
+  rwgTargetEl = container.querySelector('#rwg-target');
+  rwgTypeEl = container.querySelector('#rwg-type');
+  rwgOrbitEl = container.querySelector('#rwg-orbit');
+
   const result = document.createElement('div');
   result.id = 'rwg-result';
   result.className = 'rwg-result';
   container.appendChild(result);
+  rwgResultEl = result;
 
   const history = document.createElement('div');
   history.id = 'rwg-history';
@@ -167,9 +179,8 @@ function updateRandomWorldUI() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) return;
 
-  const orbitSel = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
-  if (orbitSel) {
-    Array.from(orbitSel.options).forEach(opt => {
+  if (rwgOrbitEl) {
+    Array.from(rwgOrbitEl.options).forEach(opt => {
       if (opt.value === 'auto') return;
       const locked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
       if (opt.disabled === locked) return; // No change needed
@@ -182,9 +193,8 @@ function updateRandomWorldUI() {
     });
   }
 
-  const typeSel = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
-  if (typeSel) {
-    Array.from(typeSel.options).forEach(opt => {
+  if (rwgTypeEl) {
+    Array.from(rwgTypeEl.options).forEach(opt => {
       if (opt.value === 'auto') return;
       const key = opt.value === 'rocky' ? 'hot-rocky' : opt.value;
       const locked = typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(key) : false;
@@ -200,10 +210,9 @@ function updateRandomWorldUI() {
   // Update the currently displayed world's travel lock/warning, if present
   try {
     const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
-    const box = document.getElementById('rwg-result');
     const travelBtn = /** @type {HTMLButtonElement|null} */(document.getElementById('rwg-travel-btn'));
-    if (box && travelBtn && sm) {
-      const seedUsed = box.dataset ? box.dataset.seedUsed : undefined;
+    if (rwgResultEl && travelBtn && sm) {
+      const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const eqDone = seedUsed ? equilibratedWorlds.has(seedUsed) : false;
       const alreadyTerraformed = seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false;
       const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
@@ -646,6 +655,9 @@ function renderHistory() {
       if (bCur && !aCur) return 1;
       return b.departedAt - a.departedAt;
     });
+  const newState = JSON.stringify(entries);
+  if (newState === lastHistoryState) return;
+  lastHistoryState = newState;
   historyData = entries;
   // Hide the entire history container if no visited worlds
   if (historyContainerEl) {
