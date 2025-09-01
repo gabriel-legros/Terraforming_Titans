@@ -1,5 +1,3 @@
-// Constants
-const STEFAN_BOLTZMANN = 5.67e-8; // W/m²·K⁴
 const L_S_CO2 = 574000; // J/kg (latent heat of sublimation for CO2)
 const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 
@@ -7,11 +5,26 @@ const R_CO2 = 188.9; // J/kg·K (specific gas constant for CO2)
 const isNodeDryIce = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
-if (isNodeDryIce) {
-  try {
-    ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
-  } catch (e) {
-    // fall back to globals if require fails
+if (typeof ResourceCycleClass === 'undefined') {
+  var ResourceCycleClass = globalThis.ResourceCycle;
+  if (isNodeDryIce) {
+    try {
+      ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
+      ResourceCycleClass = require('./resource-cycle.js');
+    } catch (e) {
+      // fall back to globals if require fails
+    }
+  }
+  if (!ResourceCycleClass && typeof require === 'function') {
+    try {
+      ResourceCycleClass = require('./resource-cycle.js');
+    } catch (e) {
+      try {
+        ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
+      } catch (e2) {
+        // ignore
+      }
+    }
   }
 }
 
@@ -82,6 +95,61 @@ function slopeSVPCO2(temperature) {
     return dP_dT*1e6; // Derivative in MPa/K
 }
 
+class CO2Cycle extends ResourceCycleClass {
+  constructor() {
+    super({
+      latentHeatVaporization: L_S_CO2,
+      latentHeatSublimation: L_S_CO2,
+      saturationVaporPressureFn: calculateSaturationPressureCO2,
+      slopeSaturationVaporPressureFn: slopeSVPCO2,
+      freezePoint: 195,
+      sublimationPoint: 195,
+      rapidSublimationMultiplier: 0.00000001,
+      evaporationAlbedo: 0.6,
+      sublimationAlbedo: 0.6,
+    });
+  }
+
+  // Preserve original condensation calculation behavior
+  condensationRateFactor({ zoneArea, co2VaporPressure, dayTemperature, nightTemperature }) {
+    const condensationTemperatureCO2 = 195; // K
+
+    const calculatePotential = (temp) => {
+      if (zoneArea <= 0 || typeof temp !== 'number' || co2VaporPressure <= 0) {
+        return 0;
+      }
+      if (temp >= condensationTemperatureCO2) {
+        return 0;
+      }
+
+      const tempDifference = condensationTemperatureCO2 - temp;
+      const startLinearDiff = 5.0;
+      const maxLinearDiff = 45.0;
+
+      let temperatureScale = 0;
+      if (tempDifference > maxLinearDiff) {
+        temperatureScale = 1.0;
+      } else if (tempDifference > startLinearDiff) {
+        temperatureScale = (tempDifference - startLinearDiff) /
+          (maxLinearDiff - startLinearDiff);
+      }
+
+      const baseCalculatedFactor = zoneArea * co2VaporPressure / 1000;
+
+      return (!isNaN(baseCalculatedFactor) && baseCalculatedFactor > 0)
+        ? baseCalculatedFactor * temperatureScale
+        : 0;
+    };
+
+    const nightPotential = calculatePotential(nightTemperature);
+    const dayPotential = calculatePotential(dayTemperature);
+
+    return (nightPotential + dayPotential) / 2;
+  }
+}
+
+const co2Cycle = new CO2Cycle();
+
 // Function to calculate psychrometric constant (gamma_s)
 function psychrometricConstantCO2(atmPressure) {
   return psychrometricConstant(atmPressure, L_S_CO2); // Pa/K
@@ -89,33 +157,14 @@ function psychrometricConstantCO2(atmPressure) {
 
 // Function to calculate sublimation rate (E_sub) using the modified Penman equation
 function sublimationRateCO2(T, solarFlux, atmPressure, e_a, r_a = 100) {
-  const Delta_s = slopeSVPCO2(T); // Pa/K
-  const e_s = calculateSaturationPressureCO2(T); // Pa
-  return penmanRate({
-    T,
-    solarFlux,
-    atmPressure,
-    e_a,
-    latentHeat: L_S_CO2,
-    albedo: 0.6,
-    r_a,
-    Delta_s,
-    e_s,
-  });
+  return co2Cycle.sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a });
 }
 
 // Calculate rapid sublimation rate of surface CO₂ ice when the temperature
 // rises well above the sublimation point. Modeled similar to water melting in
 // hydrology.js using a simple linear multiplier.
 function rapidSublimationRateCO2(temperature, availableDryIce) {
-    const sublimationPoint = 195; // K
-    const sublimationRateMultiplier = 0.00000001; // per K per second
-
-    if (temperature > sublimationPoint && availableDryIce > 0) {
-        const diff = temperature - sublimationPoint;
-        return availableDryIce * sublimationRateMultiplier * diff;
-    }
-    return 0;
+    return co2Cycle.rapidSublimationRate(temperature, availableDryIce);
 }
 
 // Calculate potential CO₂ condensation rate factor for a zone. The returned
@@ -127,43 +176,18 @@ function calculateCO2CondensationRateFactor({
     dayTemperature,
     nightTemperature
 }) {
-    const condensationTemperatureCO2 = 195; // K
-
-    const calculatePotential = (temp) => {
-        if (zoneArea <= 0 || typeof temp !== 'number' || co2VaporPressure <= 0) {
-            return 0;
-        }
-        if (temp >= condensationTemperatureCO2) {
-            return 0;
-        }
-
-        const tempDifference = condensationTemperatureCO2 - temp;
-        const startLinearDiff = 5.0;
-        const maxLinearDiff = 45.0;
-
-        let temperatureScale = 0;
-        if (tempDifference > maxLinearDiff) {
-            temperatureScale = 1.0;
-        } else if (tempDifference > startLinearDiff) {
-            temperatureScale = (tempDifference - startLinearDiff) /
-                               (maxLinearDiff - startLinearDiff);
-        }
-
-        const baseCalculatedFactor = zoneArea * co2VaporPressure / 1000;
-
-        return (!isNaN(baseCalculatedFactor) && baseCalculatedFactor > 0)
-            ? baseCalculatedFactor * temperatureScale
-            : 0;
-    };
-
-    const nightPotential = calculatePotential(nightTemperature);
-    const dayPotential = calculatePotential(dayTemperature);
-
-    return (nightPotential + dayPotential) / 2;
+    return co2Cycle.condensationRateFactor({
+        zoneArea,
+        co2VaporPressure,
+        dayTemperature,
+        nightTemperature
+    });
 }
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        CO2Cycle,
+        co2Cycle,
         calculateSaturationPressureCO2,
         slopeSVPCO2,
         psychrometricConstantCO2,
@@ -173,6 +197,8 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 } else {
     // Expose functions globally for browser usage
+    globalThis.CO2Cycle = CO2Cycle;
+    globalThis.co2Cycle = co2Cycle;
     globalThis.calculateSaturationPressureCO2 = calculateSaturationPressureCO2;
     globalThis.slopeSVPCO2 = slopeSVPCO2;
     globalThis.psychrometricConstantCO2 = psychrometricConstantCO2;

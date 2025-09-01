@@ -3,7 +3,7 @@ const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-let ResourceCycleClass = globalThis.ResourceCycle;
+var ResourceCycleClass = globalThis.ResourceCycle;
 if (!ResourceCycleClass && typeof require === 'function') {
   try {
     ResourceCycleClass = require('./resource-cycle.js');

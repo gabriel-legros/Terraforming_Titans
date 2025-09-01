@@ -5,13 +5,24 @@ const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var penmanRate = globalThis.penmanRate;
 var psychrometricConstant = globalThis.psychrometricConstant;
-var condensationRateFactorUtil = globalThis.condensationRateFactor;
+var ResourceCycleClass = globalThis.ResourceCycle;
 if (isNodeHydrocarbon) {
   try {
     ({ penmanRate, psychrometricConstant } = require('./phase-change-utils.js'));
-    condensationRateFactorUtil = require('./condensation-utils.js').condensationRateFactor;
+    ResourceCycleClass = require('./resource-cycle.js');
   } catch (e) {
     // fall back to globals if require fails
+  }
+}
+if (!ResourceCycleClass && typeof require === 'function') {
+  try {
+    ResourceCycleClass = require('./resource-cycle.js');
+  } catch (e) {
+    try {
+      ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
+    } catch (e2) {
+      // ignore
+    }
   }
 }
 
@@ -73,6 +84,24 @@ function slopeSVPMethane(temperature) {
     return dP_dT * 1e6; // Convert MPa/K to Pa/K
 }
 
+class MethaneCycle extends ResourceCycleClass {
+  constructor() {
+    super({
+      latentHeatVaporization: L_V_METHANE,
+      latentHeatSublimation: L_S_METHANE,
+      saturationVaporPressureFn: calculateSaturationPressureMethane,
+      slopeSaturationVaporPressureFn: slopeSVPMethane,
+      freezePoint: 90.7,
+      sublimationPoint: 90.7,
+      rapidSublimationMultiplier: 0.000001,
+      evaporationAlbedo: 0.1,
+      sublimationAlbedo: 0.6,
+    });
+  }
+}
+
+const methaneCycle = new MethaneCycle();
+
 // Function to calculate psychrometric constant for methane
 function psychrometricConstantMethane(atmPressure) {
   return psychrometricConstant(atmPressure, L_V_METHANE); // Pa/K
@@ -90,19 +119,7 @@ function boilingPointMethane(atmPressure) {
 
 // Function to calculate evaporation rate for methane using the modified Penman equation
 function evaporationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    const Delta_s = slopeSVPMethane(T);
-    const e_s = calculateSaturationPressureMethane(T);
-    return penmanRate({
-        T,
-        solarFlux,
-        atmPressure,
-        e_a,
-        latentHeat: L_V_METHANE,
-        albedo: 0.1,
-        r_a,
-        Delta_s,
-        e_s,
-    });
+    return methaneCycle.evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a });
 }
 
 // Function to calculate psychrometric constant for methane sublimation
@@ -112,30 +129,11 @@ function psychrometricConstantMethaneSublimation(atmPressure) {
 
 // Function to calculate sublimation rate for methane using the modified Penman equation
 function sublimationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
-    const Delta_s = slopeSVPMethane(T);
-    const e_s = calculateSaturationPressureMethane(T);
-    return penmanRate({
-        T,
-        solarFlux,
-        atmPressure,
-        e_a,
-        latentHeat: L_S_METHANE,
-        albedo: 0.6,
-        r_a,
-        Delta_s,
-        e_s,
-    });
+    return methaneCycle.sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a });
 }
 
 function rapidSublimationRateMethane(temperature, availableMethaneIce) {
-    const sublimationPoint = 90.7; // K
-    const sublimationRateMultiplier = 0.000001; // per K per second
-
-    if (temperature > sublimationPoint && availableMethaneIce > 0) {
-        const diff = temperature - sublimationPoint;
-        return availableMethaneIce * sublimationRateMultiplier * diff;
-    }
-    return 0;
+    return methaneCycle.rapidSublimationRate(temperature, availableMethaneIce);
 }
 
 function calculateMethaneEvaporationRate({
@@ -211,14 +209,12 @@ function calculateMethaneCondensationRateFactor({
     atmPressure
 }) {
     const boilingPoint = boilingPointMethane(atmPressure);
-    const res = condensationRateFactorUtil({
+    const res = methaneCycle.condensationRateFactor({
         zoneArea,
         vaporPressure: methaneVaporPressure,
         gravity: 1,
         dayTemp: dayTemperature,
         nightTemp: nightTemperature,
-        saturationFn: calculateSaturationPressureMethane,
-        freezePoint: 90.7,
         transitionRange: 2,
         maxDiff: 10,
         boilingPoint,
@@ -233,6 +229,8 @@ function calculateMethaneCondensationRateFactor({
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        MethaneCycle,
+        methaneCycle,
         calculateSaturationPressureMethane,
         slopeSVPMethane,
         psychrometricConstantMethane,
@@ -246,6 +244,8 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 } else {
     // Expose functions globally for browser usage
+    globalThis.MethaneCycle = MethaneCycle;
+    globalThis.methaneCycle = methaneCycle;
     globalThis.calculateSaturationPressureMethane = calculateSaturationPressureMethane;
     globalThis.slopeSVPMethane = slopeSVPMethane;
     globalThis.psychrometricConstantMethane = psychrometricConstantMethane;
