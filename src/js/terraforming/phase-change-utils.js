@@ -83,21 +83,23 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
     const LIQUID_BIAS_WEIGHT = 0.60;
     const REMAIN_WEIGHT = 0.35; // 1.0 - WIND_WEIGHT - LIQUID_BIAS_WEIGHT
 
-    let actualLiquidPrecipKey, actualIcePrecipKey, liquidCoverageType;
+    let liquidKey, iceKey, resourceKey, liquidCoverageType;
 
     if (substance === 'water') {
-        actualLiquidPrecipKey = 'actualRainfall';
-        actualIcePrecipKey = 'actualSnowfall';
+        liquidKey = 'rain';
+        iceKey = 'snow';
+        resourceKey = 'water';
         liquidCoverageType = 'liquidWater';
     } else if (substance === 'methane') {
-        actualLiquidPrecipKey = 'actualMethaneCondensation';
-        actualIcePrecipKey = 'actualMethaneIceCondensation';
+        liquidKey = 'methaneRain';
+        iceKey = 'methaneSnow';
+        resourceKey = 'methane';
         liquidCoverageType = 'liquidMethane';
     } else {
         return; // Unknown substance
     }
 
-    const totalPrecip = zones.reduce((sum, z) => sum + (zonalChanges[z][actualLiquidPrecipKey] || 0) + (zonalChanges[z][actualIcePrecipKey] || 0), 0);
+    const totalPrecip = zones.reduce((sum, z) => sum + (zonalChanges[z].precipitation[liquidKey] || 0) + (zonalChanges[z].precipitation[iceKey] || 0), 0);
 
     if (totalPrecip <= 1e-9 || zones.length === 0) {
         return; // No precipitation to redistribute
@@ -116,7 +118,7 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
     let totalNegativeDiff = 0;
 
     zones.forEach(z => {
-        const currentPrecip = (zonalChanges[z][actualLiquidPrecipKey] || 0) + (zonalChanges[z][actualIcePrecipKey] || 0);
+        const currentPrecip = (zonalChanges[z].precipitation[liquidKey] || 0) + (zonalChanges[z].precipitation[iceKey] || 0);
 
         // 1. The portion that remains in the zone
         const remainAmount = currentPrecip * REMAIN_WEIGHT;
@@ -163,26 +165,20 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
             liquidAdj = isLiquid ? scaledDiff : 0;
             iceAdj = isLiquid ? 0 : scaledDiff;
         } else { // Surplus zone
-            const precipInZone = (zonalChanges[z][actualLiquidPrecipKey] || 0) + (zonalChanges[z][actualIcePrecipKey] || 0);
+            const precipInZone = (zonalChanges[z].precipitation[liquidKey] || 0) + (zonalChanges[z].precipitation[iceKey] || 0);
             if (precipInZone > 1e-9) {
-                const liquidFraction = (zonalChanges[z][actualLiquidPrecipKey] || 0) / precipInZone;
-                const iceFraction = (zonalChanges[z][actualIcePrecipKey] || 0) / precipInZone;
+                const liquidFraction = (zonalChanges[z].precipitation[liquidKey] || 0) / precipInZone;
+                const iceFraction = (zonalChanges[z].precipitation[iceKey] || 0) / precipInZone;
                 liquidAdj = diff * liquidFraction;
                 iceAdj = diff * iceFraction;
             }
         }
 
-        if (substance === 'water') {
-            zonalChanges[z].liquidWater += liquidAdj;
-            zonalChanges[z].ice += iceAdj;
-            zonalChanges[z][actualLiquidPrecipKey] += liquidAdj;
-            zonalChanges[z][actualIcePrecipKey] += iceAdj;
-        } else if (substance === 'methane') {
-            zonalChanges[z].liquidMethane += liquidAdj;
-            zonalChanges[z].hydrocarbonIce += iceAdj;
-            zonalChanges[z][actualLiquidPrecipKey] += liquidAdj;
-            zonalChanges[z][actualIcePrecipKey] += iceAdj;
-        }
+        const resource = zonalChanges[z][resourceKey];
+        resource.liquid += liquidAdj;
+        resource.ice += iceAdj;
+        zonalChanges[z].precipitation[liquidKey] += liquidAdj;
+        zonalChanges[z].precipitation[iceKey] += iceAdj;
     });
 }
 
