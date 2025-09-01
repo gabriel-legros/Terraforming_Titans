@@ -11,7 +11,6 @@ describe('life tooltip zone percentages', () => {
     const ctx = dom.getInternalVMContext();
     ctx.getZonePercentage = zones.getZonePercentage;
     ctx.calculateAverageCoverage = () => 0;
-    ctx.calculateZonalCoverage = () => 0;
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
       zonalCoverageCache: {

@@ -1,10 +1,10 @@
 const { getPlanetParameters } = require('../src/js/planet-parameters.js');
-const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
+const { getZoneRatio, getZonePercentage, estimateCoverage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
 const dryIce = require('../src/js/dry-ice-cycle.js');
-const { calculateAverageCoverage, calculateZonalCoverage } = require('../src/js/terraforming-utils.js');
+const { calculateAverageCoverage } = require('../src/js/terraforming-utils.js');
 const { calculateEvaporationSublimationRates } = require('../src/js/terraforming/water-cycle.js');
 
 // globals expected by terraforming.js
@@ -59,16 +59,6 @@ describe('terraforming-utils integration', () => {
     expect(terra.getWaterStatus()).toBe(expectedStatus);
   });
 
-  test('calculateZonalCoverage returns bounded values', () => {
-    const params = getPlanetParameters('mars');
-    const res = createResources(params.resources);
-    const terra = new Terraforming(res, params.celestialParameters);
-    terra.zonalWater.tropical.liquid = 2e6;
-    const cov = calculateZonalCoverage(terra, 'tropical', 'liquidWater');
-    expect(cov).toBeGreaterThanOrEqual(0);
-    expect(cov).toBeLessThanOrEqual(1);
-  });
-
   test('coverage and evaporation ignore buried ice', () => {
     const params = getPlanetParameters('mars');
     global.currentPlanetParameters = params;
@@ -79,10 +69,11 @@ describe('terraforming-utils integration', () => {
     terra.calculateInitialValues(params);
 
     terra.zonalWater.polar.ice = 1000;
-    const initialCov = calculateZonalCoverage(terra, 'polar', 'ice');
+    const zoneArea = terra.celestialParameters.surfaceArea * getZonePercentage('polar');
+    const initialCov = estimateCoverage(terra.zonalWater.polar.ice, zoneArea, 0.01);
 
     terra.zonalWater.polar.buriedIce = 5000;
-    const covWithBuried = calculateZonalCoverage(terra, 'polar', 'ice');
+    const covWithBuried = estimateCoverage(terra.zonalWater.polar.ice, zoneArea, 0.01);
     expect(covWithBuried).toBeCloseTo(initialCov, 5);
 
     // remove all surface water and ice so only buried ice remains

@@ -13,7 +13,6 @@ jest.mock('../src/js/hydrology.js', () => ({
 
 jest.mock('../src/js/terraforming-utils.js', () => ({
   calculateAverageCoverage: jest.fn(() => 0),
-  calculateZonalCoverage: jest.fn(() => ({})),
   calculateSurfaceFractions: jest.fn(() => ({})),
   calculateZonalSurfaceFractions: jest.fn(() => ({}))
 }));

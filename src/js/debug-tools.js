@@ -2,7 +2,6 @@
   const isNode = typeof module !== 'undefined' && module.exports;
   let calculateEvaporationSublimationRates,
       calculatePrecipitationRateFactor,
-      calculateZonalCoverage,
       calculateCO2CondensationRateFactor,
       rapidSublimationRateCO2,
       calculateMethaneCondensationRateFactor,
@@ -11,15 +10,13 @@
       rapidSublimationRateMethane,
       getZonePercentage,
       getZoneRatio,
+      estimateCoverage,
       reconstructJournalState,
       calculateAtmosphericPressure;
   if (isNode) {
     const waterCycle = require('./terraforming/water-cycle.js');
     calculateEvaporationSublimationRates = waterCycle.calculateEvaporationSublimationRates;
     calculatePrecipitationRateFactor = waterCycle.calculatePrecipitationRateFactor;
-    const utils = require('./terraforming/terraforming-utils.js');
-    calculateZonalCoverage = utils.calculateZonalCoverage;
-
     const dryIceCycle = require('./terraforming/dry-ice-cycle.js');
     calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
     rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
@@ -36,13 +33,13 @@
     const zonesMod = require('./terraforming/zones.js');
     getZonePercentage = zonesMod.getZonePercentage;
     getZoneRatio = zonesMod.getZoneRatio;
+    estimateCoverage = zonesMod.estimateCoverage;
     globalThis.ZONES = zonesMod.ZONES;
 
     reconstructJournalState = require('./journal-reconstruction.js');
   } else {
     calculateEvaporationSublimationRates = globalThis.calculateEvaporationSublimationRates;
     calculatePrecipitationRateFactor = globalThis.calculatePrecipitationRateFactor;
-    calculateZonalCoverage = globalThis.calculateZonalCoverage;
     calculateCO2CondensationRateFactor = globalThis.calculateCO2CondensationRateFactor;
     rapidSublimationRateCO2 = globalThis.rapidSublimationRateCO2;
     calculateMethaneCondensationRateFactor = globalThis.calculateMethaneCondensationRateFactor;
@@ -51,6 +48,7 @@
     rapidSublimationRateMethane = globalThis.rapidSublimationRateMethane;
     getZonePercentage = globalThis.getZonePercentage;
     getZoneRatio = globalThis.getZoneRatio;
+    estimateCoverage = globalThis.estimateCoverage;
     reconstructJournalState = globalThis.reconstructJournalState;
     calculateAtmosphericPressure = globalThis.calculateAtmosphericPressure;
   }
@@ -256,7 +254,8 @@
       });
       potentialCondensationRateFactor += co2CondRateFactor;
 
-      const liquidMethaneCoverage = calculateZonalCoverage(this, zone, 'liquidMethane');
+      const liquidMethane = this.zonalHydrocarbons[zone]?.liquid || 0;
+      const liquidMethaneCoverage = estimateCoverage(liquidMethane, zoneArea);
       const methaneEvaporationRateValue = calculateMethaneEvaporationRate({
         zoneArea,
         liquidMethaneCoverage,
@@ -268,7 +267,8 @@
       });
       initialTotalMethaneEvapRate += methaneEvaporationRateValue;
 
-      const hydrocarbonIceCoverage = calculateZonalCoverage(this, zone, 'hydrocarbonIce');
+      const hydrocarbonIce = this.zonalHydrocarbons[zone]?.ice || 0;
+      const hydrocarbonIceCoverage = estimateCoverage(hydrocarbonIce, zoneArea, 0.01);
       const methaneSublimationRateValue = calculateMethaneSublimationRate({
         zoneArea,
         hydrocarbonIceCoverage,

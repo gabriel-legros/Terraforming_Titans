@@ -1,66 +1,22 @@
 // Utility functions for terraforming calculations
 
 const isNode = (typeof module !== 'undefined' && module.exports);
-var ZONES_NODE, getZonePercentageNode, estimateCoverageFn;
+let ZONES_LIST, getZonePercentageFn;
 
 if (isNode) {
   const zonesMod = require('./zones.js');
-  ZONES_NODE = zonesMod.ZONES;
-  getZonePercentageNode = zonesMod.getZonePercentage;
-  estimateCoverageFn = zonesMod.estimateCoverage;
+  ZONES_LIST = zonesMod.ZONES;
+  getZonePercentageFn = zonesMod.getZonePercentage;
 } else {
-  estimateCoverageFn = globalThis.estimateCoverage;
-}
-
-
-function getZones() {
-  return isNode ? ZONES_NODE : globalThis.ZONES;
-}
-
-function zonePercentage(zone) {
-  return isNode ? getZonePercentageNode(zone) : globalThis.getZonePercentage(zone);
-}
-
-function calculateZonalCoverage(terraforming, zone, resourceType) {
-  const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-  const zoneArea = totalSurfaceArea * zonePercentage(zone);
-  if (zoneArea <= 0) return 0;
-
-  let zonalAmount = 0;
-  if (resourceType === 'liquidWater') {
-    zonalAmount = terraforming.zonalWater[zone]?.liquid || 0;
-  } else if (resourceType === 'ice') {
-    zonalAmount = terraforming.zonalWater[zone]?.ice || 0; // exclude buried ice from coverage
-  } else if (resourceType === 'buriedIce') {
-    zonalAmount = terraforming.zonalWater[zone]?.buriedIce || 0;
-  } else if (resourceType === 'biomass') {
-    zonalAmount = terraforming.zonalSurface[zone]?.biomass || 0;
-  } else if (resourceType === 'dryIce') {
-    zonalAmount = terraforming.zonalSurface[zone]?.dryIce || 0;
-  } else if (resourceType === 'liquidMethane') {
-    zonalAmount = terraforming.zonalHydrocarbons[zone]?.liquid || 0;
-  } else if (resourceType === 'hydrocarbonIce') {
-    zonalAmount = terraforming.zonalHydrocarbons[zone]?.ice || 0;
-  } else {
-    console.warn(`calculateZonalCoverage called with invalid resourceType: ${resourceType}`);
-    return 0;
-  }
-
-  let scale = 0.0001;
-  if (resourceType === 'dryIce' || resourceType === 'ice' || resourceType === 'hydrocarbonIce') {
-    scale *= 100;
-  } else if (resourceType === 'biomass') {
-    scale *= 100000;
-  }
-
-  return estimateCoverageFn(zonalAmount, zoneArea, scale);
+  ZONES_LIST = globalThis.ZONES;
+  getZonePercentageFn = globalThis.getZonePercentage;
 }
 
 function calculateAverageCoverage(terraforming, resourceType) {
   let weightedAverageCoverage = 0;
-  for (const zone of getZones()) {
+  for (const zone of ZONES_LIST) {
     const cov = terraforming.zonalCoverageCache[zone]?.[resourceType] ?? 0;
-    const zonePct = zonePercentage(zone);
+    const zonePct = getZonePercentageFn(zone);
     weightedAverageCoverage += cov * zonePct;
   }
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
@@ -113,7 +69,6 @@ function calculateZonalSurfaceFractions(terraforming, zone) {
 if (!isNode) {
   // expose helpers for browser usage
   globalThis.calculateAverageCoverage = calculateAverageCoverage;
-  globalThis.calculateZonalCoverage = calculateZonalCoverage;
   globalThis.calculateSurfaceFractions = calculateSurfaceFractions;
   globalThis.calculateZonalSurfaceFractions = calculateZonalSurfaceFractions;
 }
@@ -121,7 +76,6 @@ if (!isNode) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     calculateAverageCoverage,
-    calculateZonalCoverage,
     calculateSurfaceFractions,
     calculateZonalSurfaceFractions
   };

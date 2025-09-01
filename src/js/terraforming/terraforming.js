@@ -11,6 +11,7 @@ const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
 // Load utility functions when running under Node for tests
+var getZonePercentage, estimateCoverage;
 if (typeof module !== 'undefined' && module.exports) {
     const hydrology = require('./hydrology.js');
     var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
@@ -33,14 +34,16 @@ if (typeof module !== 'undefined' && module.exports) {
     const dryIceCycle = require('./dry-ice-cycle.js');
     var calculateCO2CondensationRateFactor = dryIceCycle.calculateCO2CondensationRateFactor;
     var rapidSublimationRateCO2 = dryIceCycle.rapidSublimationRateCO2;
-    ZONES = require('./zones.js').ZONES;
+    const zones = require('./zones.js');
+    ZONES = zones.ZONES;
+    getZonePercentage = zones.getZonePercentage;
+    estimateCoverage = zones.estimateCoverage;
     if (typeof globalThis.ZONES === 'undefined') {
         globalThis.ZONES = ZONES;
     }
 
     var terraformUtils = require('./terraforming-utils.js');
     var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
-    var calculateZonalCoverage = terraformUtils.calculateZonalCoverage;
     var calculateSurfaceFractions = terraformUtils.calculateSurfaceFractions;
     var calculateZonalSurfaceFractions = terraformUtils.calculateZonalSurfaceFractions;
     var redistributePrecipitation = require('./phase-change-utils.js').redistributePrecipitation;
@@ -62,6 +65,9 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.calculateAtmosphericPressure === 'undefined') {
         globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     }
+} else {
+    getZonePercentage = globalThis.getZonePercentage;
+    estimateCoverage = globalThis.estimateCoverage;
 }
 
 var getEcumenopolisLandFraction;
@@ -1306,8 +1312,26 @@ class Terraforming extends EffectableEntity{
             const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
             this.zonalCoverageCache[zone] = { zoneArea };
             for (const resourceType of resourceTypes) {
-                let cov = calculateZonalCoverage(this, zone, resourceType);
-                this.zonalCoverageCache[zone][resourceType] = cov;
+                let zonalAmount = 0;
+                let scale = 0.0001;
+                if (resourceType === 'liquidWater') {
+                    zonalAmount = this.zonalWater[zone]?.liquid || 0;
+                } else if (resourceType === 'ice') {
+                    zonalAmount = this.zonalWater[zone]?.ice || 0;
+                    scale *= 100;
+                } else if (resourceType === 'biomass') {
+                    zonalAmount = this.zonalSurface[zone]?.biomass || 0;
+                    scale *= 100000;
+                } else if (resourceType === 'dryIce') {
+                    zonalAmount = this.zonalSurface[zone]?.dryIce || 0;
+                    scale *= 100;
+                } else if (resourceType === 'liquidMethane') {
+                    zonalAmount = this.zonalHydrocarbons[zone]?.liquid || 0;
+                } else if (resourceType === 'hydrocarbonIce') {
+                    zonalAmount = this.zonalHydrocarbons[zone]?.ice || 0;
+                    scale *= 100;
+                }
+                this.zonalCoverageCache[zone][resourceType] = estimateCoverage(zonalAmount, zoneArea, scale);
             }
         }
     }

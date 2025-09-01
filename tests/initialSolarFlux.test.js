@@ -3,7 +3,7 @@ const { getZoneRatio, getZonePercentage } = require('../src/js/zones.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 const lifeParameters = require('../src/js/life-parameters.js');
 const physics = require('../src/js/physics.js');
-const { calculateAverageCoverage, calculateSurfaceFractions, calculateZonalCoverage, calculateZonalSurfaceFractions } = require('../src/js/terraforming-utils.js');
+const { calculateAverageCoverage, calculateSurfaceFractions, calculateZonalSurfaceFractions } = require('../src/js/terraforming-utils.js');
 
 // Preserve originals to restore after tests
 const oldGetZoneRatio = global.getZoneRatio;
@@ -19,7 +19,6 @@ const oldEffectiveTemp = global.effectiveTemp;
 const oldSurfaceAlbedoMix = global.surfaceAlbedoMix;
 const oldCalcAvgCoverage = global.calculateAverageCoverage;
 const oldCalcSurfaceFractions = global.calculateSurfaceFractions;
-const oldCalcZonalCoverage = global.calculateZonalCoverage;
 const oldCalcZonalSurfaceFractions = global.calculateZonalSurfaceFractions;
 
 // Expose globals expected by terraforming module
@@ -36,7 +35,6 @@ global.effectiveTemp = physics.effectiveTemp;
 global.surfaceAlbedoMix = physics.surfaceAlbedoMix;
 global.calculateAverageCoverage = calculateAverageCoverage;
 global.calculateSurfaceFractions = calculateSurfaceFractions;
-global.calculateZonalCoverage = calculateZonalCoverage;
 global.calculateZonalSurfaceFractions = calculateZonalSurfaceFractions;
 
 const Terraforming = require('../src/js/terraforming.js');
@@ -79,7 +77,6 @@ describe('calculateInitialValues', () => {
     global.surfaceAlbedoMix = oldSurfaceAlbedoMix;
     global.calculateAverageCoverage = oldCalcAvgCoverage;
     global.calculateSurfaceFractions = oldCalcSurfaceFractions;
-    global.calculateZonalCoverage = oldCalcZonalCoverage;
     global.calculateZonalSurfaceFractions = oldCalcZonalSurfaceFractions;
     delete global.buildings;
     delete global.resources;

@@ -13,7 +13,6 @@ describe('biomass decay without oxygen', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     ctx.getZonePercentage = () => 1;
-    ctx.calculateZonalCoverage = () => 0;
     ctx.terraforming = {
       zonalCoverageCache: {
         tropical: { liquidWater: 0.1, ice: 0 },

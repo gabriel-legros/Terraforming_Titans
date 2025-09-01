@@ -13,7 +13,6 @@ describe('geological burial slows when CO2 depleted', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     ctx.getZonePercentage = () => 1;
-    ctx.calculateZonalCoverage = () => 0;
     ctx.getEcumenopolisLandFraction = () => 0;
     ctx.terraforming = {
       zonalCoverageCache: {
