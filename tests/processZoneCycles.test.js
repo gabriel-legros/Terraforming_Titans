@@ -147,6 +147,25 @@ describe('CO2 cycle processZone', () => {
     expect(changes.atmosphere.co2).toBeGreaterThan(0);
     const total = changes.atmosphere.co2 + (changes.water.dryIce || 0);
     expect(total).toBeCloseTo(0, 6);
+    expect(changes).toHaveProperty('sublimationAmount');
+  });
+
+  test('records condensation potential without altering dry ice', () => {
+    const changes = co2Cycle.processZone({
+      zoneArea: 1,
+      dryIceCoverage: 0,
+      dayTemperature: 180,
+      nightTemperature: 170,
+      zoneTemperature: 175,
+      atmPressure: 100000,
+      vaporPressure: 100000,
+      availableDryIce: 0,
+      zonalSolarFlux: 0,
+      durationSeconds: 1,
+      condensationParameter: 1,
+    });
+    expect(changes.potentialCO2Condensation).toBeGreaterThan(0);
+    expect(changes.water.dryIce).toBeCloseTo(0, 6);
   });
 });
 
