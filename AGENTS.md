@@ -428,3 +428,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror facility's unassigned slider matches the width of other sliders and locks when finer controls are enabled.
 - Added `reinitializeDisplayElements` to Resource for resetting default display names and margins after travel.
 - Resource `reinitializeDisplayElements` now pulls display defaults from `defaultPlanetParameters` instead of storing them on each resource.
+- Life growth rate tooltip now reflects ecumenopolis land coverage and shows land reduction percentage.

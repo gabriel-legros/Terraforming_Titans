@@ -9,6 +9,11 @@ const lifeShopCategories = [
 // Growth rate increase for photosynthesis efficiency per point
 const PHOTOSYNTHESIS_RATE_PER_POINT = 0.00008;
 
+var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+}
+
 const tempAttributes = [
   'minTemperatureTolerance',
   'maxTemperatureTolerance',
@@ -727,6 +732,11 @@ function updateLifeStatusTable() {
     const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
     const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
 
+    const ecoFraction = typeof getEcumenopolisLandFraction === 'function'
+        ? getEcumenopolisLandFraction(terraforming)
+        : 0;
+    const landMult = Math.max(0, 1 - ecoFraction);
+
     // Precompute day and night temperatures
     const zonePerc = {
         tropical: getZonePercentage('tropical'),
@@ -857,7 +867,8 @@ function updateLifeStatusTable() {
         const valueSpan = growthObj?.value;
         const tooltipSpan = growthObj?.tooltip;
         const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
-        const zoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
+        const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
+        const zoneArea = baseZoneArea * landMult;
         const maxBiomassForZone = zoneArea * maxDensity;
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
 
@@ -876,7 +887,20 @@ function updateLifeStatusTable() {
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipSpan) {
-                tooltipSpan.title = `Base: ${(baseRate*100).toFixed(2)}%\nTemp: x${formatNumber(tempMult, false,2)}\nLuminosity: x${formatNumber(lumMult,false,2)}\nCapacity: x${formatNumber(capacityMult,false,2)}\nRadiation: x${formatNumber(radMult,false,2)}\nLiquid Water: x${formatNumber(waterMult,false,2)}\nOther: x${formatNumber(otherMult,false,2)}`;
+                const lines = [
+                    `Base: ${(baseRate * 100).toFixed(2)}%`,
+                    `Temp: x${formatNumber(tempMult, false, 2)}`,
+                    `Luminosity: x${formatNumber(lumMult, false, 2)}`,
+                    `Capacity: x${formatNumber(capacityMult, false, 2)}`,
+                    `Radiation: x${formatNumber(radMult, false, 2)}`,
+                    `Liquid Water: x${formatNumber(waterMult, false, 2)}`,
+                    `Other: x${formatNumber(otherMult, false, 2)}`
+                ];
+                if (ecoFraction > 0) {
+                    const landReduction = (1 - landMult) * 100;
+                    lines.push(`Ecumenopolis: x${formatNumber(landMult, false, 2)} (-${landReduction.toFixed(2)}%)`);
+                }
+                tooltipSpan.title = lines.join('\n');
             }
         }
     });
