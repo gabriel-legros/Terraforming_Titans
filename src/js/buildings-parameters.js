@@ -185,7 +185,7 @@ const buildingsParameters = {
     category: 'production',
     description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but can act as a worker and requires little consumer goods.  ',
     cost: { colony: { metal: 500, glass : 200, components: 100, electronics: 50} },
-    consumption: { colony: { energy: 100_000_000, metal: 0.1, electronics: 0.1} },
+    consumption: { colony: { energy: 100_000_000, metal: 0.4, electronics: 0.1} },
     production: { colony: { androids: 0.1 } },
     storage: {},
     dayNightActivity: false,
