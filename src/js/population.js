@@ -148,7 +148,8 @@ class PopulationModule extends EffectableEntity {
 
     if (typeof projectManager !== 'undefined' && typeof projectManager.forceUnassignAndroids === 'function') {
       if (assignedAndroids > effectiveAndroids) {
-        projectManager.forceUnassignAndroids(assignedAndroids - effectiveAndroids);
+        const toUnassign = Math.ceil(assignedAndroids - effectiveAndroids);
+        projectManager.forceUnassignAndroids(toUnassign);
         assignedAndroids = projectManager.getAssignedAndroids();
       }
     }

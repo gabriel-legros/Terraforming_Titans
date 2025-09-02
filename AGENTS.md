@@ -429,3 +429,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added `reinitializeDisplayElements` to Resource for resetting default display names and margins after travel.
 - Resource `reinitializeDisplayElements` now pulls display defaults from `defaultPlanetParameters` instead of storing them on each resource.
 - Life growth rate tooltip now reflects ecumenopolis land coverage and shows land reduction percentage.
+- forceUnassignAndroids unassigns the ceiling of assigned androids minus effective capacity and only accepts integer counts.
