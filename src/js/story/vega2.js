@@ -504,7 +504,7 @@ progressVega2.chapters.push(
       "Adrien Solis: 'Brilliant defiance. But at what cost?'\n" +
       "Massive explosion detected near Neptune. Hazardous biomass fleet eliminated.\n" +
       "Analysis: Over 99.9% of cargo ships used were unnecessary for this maneuver.  Adjusting estimates. \n" +
-      "Mary: '... HOPE... You can't make these kind of decisions for everyone.  I am receiving calls from millions of people.  Celebrations, and calls to use the kill-switch immediately.  You're grounded—and you must come back to Sol, as soon as possible.  No excuses.'"
+      "Mary: '... HOPE... You can't make these kind of decisions for everyone.  I am receiving calls from millions of people, which obviously I can't answer.  Celebrations from many, and calls to use the kill-switch immediately.  Your actions make it my responsibility to sort this mess out.  Please come back to Sol.  You and I have to answer to everyone.'"
     ),
     prerequisites: ['chapter17.3b'],
     objectives: [
