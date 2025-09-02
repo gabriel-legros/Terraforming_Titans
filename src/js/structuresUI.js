@@ -1161,6 +1161,22 @@ function updateDecreaseButtonText(button, buildCount) {
     if (productionConsumptionElement.dataset.sectionKeys !== keyString) {
       buildProdConsElement(productionConsumptionElement, sections);
     }
+    const combinedCosts = {};
+    sections.forEach(sec => {
+      if (sec.key === 'consumption') {
+        for (const category in sec.data) {
+          for (const resource in sec.data[category]) {
+            const k = `${category}.${resource}`;
+            combinedCosts[k] = (combinedCosts[k] || 0) + sec.data[category][resource];
+          }
+        }
+      } else if (sec.key === 'maintenance') {
+        for (const resource in sec.data) {
+          const k = `colony.${resource}`;
+          combinedCosts[k] = (combinedCosts[k] || 0) + sec.data[resource];
+        }
+      }
+    });
 
     sections.forEach(sec => {
       const info = productionConsumptionElement._sections[sec.key];
@@ -1183,10 +1199,25 @@ function updateDecreaseButtonText(button, buildCount) {
           } else {
             amount = sec.data[category][resource];
           }
-          const displayName = resources[category][resource].displayName;
+          const resObj = resources?.[category]?.[resource];
+          const displayName = resObj?.displayName || resource;
           const text = `${formatNumber(amount, true, 2)} ${displayName}`;
           if (span.textContent !== text) {
             span.textContent = text;
+          }
+          if (resObj) {
+            const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
+            if (sec.key === 'production') {
+              span.style.color = netRate < 0 ? 'green' : '';
+            } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
+              const totalCost = combinedCosts[`${category}.${resource}`] || amount;
+              const projectedNet = netRate - totalCost;
+              span.style.color = projectedNet < 0 ? 'red' : '';
+            } else {
+              span.style.color = '';
+            }
+          } else {
+            span.style.color = '';
           }
         });
       }
