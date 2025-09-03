@@ -824,7 +824,7 @@ function updateLifeBox() {
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Solar Flux (W/m²)</td>
+            <td>Surface Solar Flux (W/m²)</td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
@@ -839,7 +839,7 @@ function updateLifeBox() {
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Modified solar flux between 600 and 2000.";
+    targetSpan.textContent = "Target : Surface solar flux between 600 and 2000.";
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
