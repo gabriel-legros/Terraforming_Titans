@@ -33,6 +33,7 @@ describe('actual albedo tooltip', () => {
         groundAlbedo: 0.3,
         surfaceAlbedo: 0.3,
         actualAlbedo: 0.36,
+        cloudHazePenalty: 0,
         solarFlux: 1000,
         modifiedSolarFlux: 1000
       },

@@ -376,6 +376,9 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.
 - Calcite aerosol decays with a 240 second half-life and its consumption appears in resource rates.
 - Surface, actual albedo, and solar flux tooltips now refresh in real time with breakdowns.
+- Luminosity box includes Cloud & Haze penalty applied to modified solar flux.
+- Effective temperature without atmosphere uses the pre-penalty modified solar flux.
+- Zonal solar panel multipliers apply the Cloud & Haze penalty for life energy calculations.
 - Actual albedo tooltip lists per-zone values and component contributions; total is shown outside the tooltip.
 - Ground albedo tooltip shows white dust albedo and coverage, hiding coverage lines when a dust type has 0%.
 - Colony resource tooltips show a Net Change (including autobuild) line before production, subtracting the last 10 seconds of autobuild cost from the net rate. Other resources display Net Change without autobuild.

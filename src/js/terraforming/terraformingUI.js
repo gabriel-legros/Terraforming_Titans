@@ -819,6 +819,11 @@ function updateLifeBox() {
             <td><span id="actual-albedo-delta"></span></td>
           </tr>
           <tr>
+            <td>Cloud &amp; Haze Penalty <span class="info-tooltip-icon" title="Sum of albedo increases from haze, calcite aerosols, and clouds.">&#9432;</span></td>
+            <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
+            <td></td>
+          </tr>
+          <tr>
             <td>Solar Flux (W/m²)</td>
             <td><span id="modified-solar-flux">${terraforming.luminosity.modifiedSolarFlux.toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
@@ -852,6 +857,7 @@ function updateLifeBox() {
       actualAlbedoDelta: luminosityBox.querySelector('#actual-albedo-delta'),
       actualAlbedoInfo: luminosityBox.querySelector('#actual-albedo-info'),
       actualAlbedoTooltip: luminosityBox.querySelector('#actual-albedo-tooltip'),
+      cloudHazePenalty: luminosityBox.querySelector('#cloud-haze-penalty'),
       modifiedSolarFlux: luminosityBox.querySelector('#modified-solar-flux'),
       solarFluxDelta: luminosityBox.querySelector('#solar-flux-delta'),
       solarFluxInfo: luminosityBox.querySelector('#solar-flux-info'),
@@ -1065,6 +1071,10 @@ function updateLifeBox() {
       els.actualAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
 
+    if (els.cloudHazePenalty) {
+      els.cloudHazePenalty.textContent = terraforming.luminosity.cloudHazePenalty.toFixed(3);
+    }
+
     if (els.modifiedSolarFlux) {
       els.modifiedSolarFlux.textContent = terraforming.luminosity.modifiedSolarFlux.toFixed(1);
     }
@@ -1087,7 +1097,8 @@ function updateLifeBox() {
         `Temperate: ${m}`,
         `Polar: ${p}`,
         '',
-        'Values are lower because of day/night and the angle of sunlight.'
+        'Modified solar flux is 4× the average across all zones.',
+        'Reduced by Cloud & Haze penalty.'
       ];
       els.solarFluxTooltip.innerHTML = lines.join('<br>');
     }

@@ -261,6 +261,8 @@ class Terraforming extends EffectableEntity{
       initialActualAlbedo: undefined,
       solarFlux: 0,
       modifiedSolarFlux: 0,
+      modifiedSolarFluxUnpenalized: 0,
+      cloudHazePenalty: 0,
       surfaceTemperature: 0
     };
     // Zonal Surface Data (Life, Dry Ice) - Replaces global this.life coverages
@@ -1031,14 +1033,15 @@ class Terraforming extends EffectableEntity{
     updateLuminosity() {
       this.luminosity.groundAlbedo = this.calculateGroundAlbedo();
       this.luminosity.surfaceAlbedo = this.calculateSurfaceAlbedo();
-      this.luminosity.actualAlbedo = this.calculateActualAlbedo();
+      const albRes = this.calculateActualAlbedo();
+      this.luminosity.actualAlbedo = albRes.albedo;
+      this.luminosity.cloudHazePenalty = albRes.penalty;
       this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
     updateSurfaceTemperature() {
       const groundAlbedo = this.luminosity.groundAlbedo;
-      const modifiedSolarFlux = this.luminosity.modifiedSolarFlux;
       const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
       const gSurface = this.celestialParameters.gravity;
 
@@ -1063,7 +1066,7 @@ class Terraforming extends EffectableEntity{
 
       const baseParams = {
         groundAlbedo: groundAlbedo,
-        flux: modifiedSolarFlux,
+        flux: this.luminosity.modifiedSolarFlux,
         rotationPeriodH: rotationPeriod,
         surfacePressureBar: surfacePressureBar,
         composition: composition,
@@ -1091,8 +1094,10 @@ class Terraforming extends EffectableEntity{
       }
       this.temperature.value = weightedTemp;
       this.temperature.equilibriumTemperature = weightedEqTemp;
-      this.luminosity.modifiedSolarFlux = weightedFlux;
-      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, modifiedSolarFlux);
+      this.luminosity.modifiedSolarFluxUnpenalized = weightedFlux;
+      const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+      this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
+      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
     }
 
     // Estimate and store current surface and orbital radiation levels in mSv/day
@@ -1193,7 +1198,10 @@ class Terraforming extends EffectableEntity{
             aerosolsSW.calcite = column;
         }
 
-        return calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW).albedo;
+        const result = calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW) || {};
+        const comps = result.components || {};
+        const penalty = (comps.dA_ch4 || 0) + (comps.dA_calcite || 0) + (comps.dA_cloud || 0);
+        return { albedo: result.albedo, penalty };
     }
 
     _updateZonalCoverageCache() {
@@ -1399,7 +1407,8 @@ class Terraforming extends EffectableEntity{
 
     calculateZonalSolarPanelMultiplier(zone){
       if(this.luminosity.zonalFluxes && typeof this.luminosity.zonalFluxes[zone] === 'number'){
-        return this.luminosity.zonalFluxes[zone] / SOLAR_PANEL_BASE_LUMINOSITY;
+        const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+        return (this.luminosity.zonalFluxes[zone] * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
       }
       return this.calculateSolarPanelMultiplier();
     }

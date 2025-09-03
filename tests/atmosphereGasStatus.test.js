@@ -27,7 +27,7 @@ describe('atmosphere gas status icons', () => {
         effectiveTempNoAtmosphere: 0,
         zones: { tropical: { value: 0, day: 0, night: 0 }, temperate: { value: 0, day: 0, night: 0 }, polar: { value: 0, day: 0, night: 0 } } },
       atmosphere: { name: 'Atm' },
-      water: {}, luminosity: { name: 'Lum', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0, calculateSolarPanelMultiplier: () => 1 },
+      water: {}, luminosity: { name: 'Lum', albedo: 0, cloudHazePenalty: 0, solarFlux: 0, modifiedSolarFlux: 0, calculateSolarPanelMultiplier: () => 1 },
       life: { name: 'Life' }, magnetosphere: { name: 'Mag' },
       celestialParameters: { albedo: 0, gravity: 1, radius: 1 },
       calculateSolarPanelMultiplier: () => 1,

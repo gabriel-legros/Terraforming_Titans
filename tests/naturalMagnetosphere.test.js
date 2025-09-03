@@ -62,7 +62,7 @@ describe('natural magnetosphere integration', () => {
                 polar: { value: 0, day: 0, night: 0 } } },
       atmosphere: { name: 'Atm' },
       water: {},
-      luminosity: { name: 'Lum', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0 },
+      luminosity: { name: 'Lum', albedo: 0, cloudHazePenalty: 0, solarFlux: 0, modifiedSolarFlux: 0 },
       life: { name: 'Life', target: 0.5 },
       magnetosphere: { name: 'Mag' },
       surfaceRadiation: 0,

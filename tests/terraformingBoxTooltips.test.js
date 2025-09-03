@@ -29,7 +29,7 @@ describe('terraforming box tooltips', () => {
         getTemperatureStatus: () => true },
       atmosphere: { name: 'Atm' },
       water: { },
-      luminosity: { name: 'Lum', albedo: 0, solarFlux: 0, modifiedSolarFlux: 0 },
+      luminosity: { name: 'Lum', albedo: 0, cloudHazePenalty: 0, solarFlux: 0, modifiedSolarFlux: 0 },
       life: { name: 'Life', target: 0.5 },
       magnetosphere: { name: 'Mag' },
       celestialParameters: { albedo: 0, gravity: 1, radius: 1, surfaceArea: 1 },
