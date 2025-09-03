@@ -814,14 +814,14 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
+            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="Sum of albedo increases from haze, calcite aerosols, and clouds.  This value also penalizes solar panel and life growth.">&#9432;</span></td>
+            <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
+            <td></td>
+          </tr>
+          <tr>
             <td>Actual Albedo <span id="actual-albedo-info" class="info-tooltip-icon">&#9432;<span id="actual-albedo-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="actual-albedo">${(terraforming.luminosity.actualAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="actual-albedo-delta"></span></td>
-          </tr>
-          <tr>
-            <td>Cloud &amp; Haze Penalty <span class="info-tooltip-icon" title="Sum of albedo increases from haze, calcite aerosols, and clouds.">&#9432;</span></td>
-            <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
-            <td></td>
           </tr>
           <tr>
             <td>Solar Flux (W/m²)</td>
