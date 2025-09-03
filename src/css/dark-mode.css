@@ -159,6 +159,14 @@ body.dark-mode {
     background-color: #1e1e1e;
 }
 
+.dark-mode .resource-divider-top::before {
+    border-top-color: #444;
+}
+
+.dark-mode .resource-divider-bottom::after {
+    border-top-color: #444;
+}
+
 
 .dark-mode .scanning-progress {
     color: #aaa;

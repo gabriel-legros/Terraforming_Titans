@@ -605,8 +605,16 @@ function createResourceElement(category, resourceObj, resourceName) {
     }
   }
 
-  if (resourceObj.marginTop) resourceElement.style.marginTop = resourceObj.marginTop + 'px';
-  if (resourceObj.marginBottom) resourceElement.style.marginBottom = resourceObj.marginBottom + 'px';
+  if (resourceObj.marginTop) {
+    resourceElement.style.marginTop = resourceObj.marginTop + 'px';
+    resourceElement.style.setProperty('--divider-margin-top', resourceObj.marginTop + 'px');
+    resourceElement.classList.add('resource-divider-top');
+  }
+  if (resourceObj.marginBottom) {
+    resourceElement.style.marginBottom = resourceObj.marginBottom + 'px';
+    resourceElement.style.setProperty('--divider-margin-bottom', resourceObj.marginBottom + 'px');
+    resourceElement.classList.add('resource-divider-bottom');
+  }
 
   return resourceElement;
 }

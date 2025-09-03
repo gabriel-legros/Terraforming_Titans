@@ -78,10 +78,30 @@
     margin-left: 2px;
   }
 
-  .resource-wrapper {
-    background-color: #f4f4f4;
-    padding-right: 5px;
-  }
+.resource-wrapper {
+  background-color: #f4f4f4;
+  padding-right: 5px;
+}
+
+.resource-divider-top::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-1 * var(--divider-margin-top) / 2);
+  border-top: 1px solid #ccc;
+  pointer-events: none;
+}
+
+.resource-divider-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--divider-margin-bottom) / 2);
+  border-top: 1px solid #ccc;
+  pointer-events: none;
+}
 
 
   #resources-container h3 {

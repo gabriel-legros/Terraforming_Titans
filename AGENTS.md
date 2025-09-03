@@ -431,3 +431,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Life growth rate tooltip now reflects ecumenopolis land coverage and shows land reduction percentage.
 - forceUnassignAndroids unassigns the ceiling of assigned androids minus effective capacity and only accepts integer counts.
 - Building production and consumption displays color-code resources: green for production fixing deficits and red for costs that would cause deficits.
+- Resources with `marginTop` or `marginBottom` now show a thin separator line centered within that margin that only appears when the resource is visible.
