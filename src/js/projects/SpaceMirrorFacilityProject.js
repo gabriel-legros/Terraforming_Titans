@@ -782,6 +782,7 @@ function initializeMirrorOversightUI(container) {
   updateZonalFluxTable();
   // Build cache of frequently used nodes inside the oversight UI
   rebuildMirrorOversightCache();
+  updateMirrorOversightUI();
 }
 
 let mirrorOversightCache = null;
@@ -797,7 +798,7 @@ function rebuildMirrorOversightCache() {
     availableLanternCells: Array.from(document.querySelectorAll('.available-lantern-cell')),
     reversalHeader: document.querySelector('#assignment-grid .grid-header:nth-child(4)') || null,
     reversalCells: Array.from(document.querySelectorAll('#assignment-grid .grid-reversal-cell')),
-    autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-table .auto-assign')),
+    autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-grid .auto-assign')),
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
     fluxTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(3)') || null,
