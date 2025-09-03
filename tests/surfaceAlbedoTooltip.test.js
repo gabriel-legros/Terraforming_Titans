@@ -30,6 +30,7 @@ describe('surface albedo tooltip', () => {
         surfaceAlbedo: 0.3,
         actualAlbedo: 0.3,
         initialSurfaceAlbedo: 0.3,
+        cloudHazePenalty: 0,
         solarFlux: 1000,
         modifiedSolarFlux: 1000
       },

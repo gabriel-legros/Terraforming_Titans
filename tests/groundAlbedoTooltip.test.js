@@ -16,7 +16,7 @@ describe('ground albedo tooltip', () => {
     ctx.ZONES = ['tropical', 'temperate', 'polar'];
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, cloudHazePenalty: 0, solarFlux: 1000, modifiedSolarFlux: 1000 },
       celestialParameters: { albedo: 0.25, surfaceArea: 100 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1

@@ -30,6 +30,7 @@ describe('luminosity flux tooltip', () => {
         groundAlbedo: 0,
         surfaceAlbedo: 0,
         actualAlbedo: 0,
+        cloudHazePenalty: 0,
         solarFlux: 1000,
         modifiedSolarFlux: 1000,
         zonalFluxes: { tropical: 1000, temperate: 800, polar: 400 }
@@ -64,6 +65,7 @@ describe('luminosity flux tooltip', () => {
     expect(tooltip).toContain('Tropical: 250.0');
     expect(tooltip).toContain('Temperate: 200.0');
     expect(tooltip).toContain('Polar: 100.0');
-    expect(tooltip).toContain('day/night');
+    expect(tooltip).toContain('4× the average');
+    expect(tooltip).toContain('Cloud & Haze penalty');
   });
 });

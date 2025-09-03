@@ -22,7 +22,7 @@ describe('updateLuminosityBox', () => {
     ctx.DEFAULT_SURFACE_ALBEDO = require('../src/js/physics.js').DEFAULT_SURFACE_ALBEDO;
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3, initialActualAlbedo: 0.3 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, cloudHazePenalty: 0, solarFlux: 1000, modifiedSolarFlux: 1000, initialSurfaceAlbedo: 0.3, initialActualAlbedo: 0.3 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -62,7 +62,7 @@ describe('updateLuminosityBox', () => {
     ctx.ZONES = ['tropical','temperate','polar'];
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, actualAlbedo: 0.25, albedo: 0.25, solarFlux: 1000, modifiedSolarFlux: 1000 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.25, surfaceAlbedo: 0.25, actualAlbedo: 0.25, albedo: 0.25, cloudHazePenalty: 0, solarFlux: 1000, modifiedSolarFlux: 1000 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
@@ -96,7 +96,7 @@ describe('updateLuminosityBox', () => {
     ctx.ZONES = ['tropical','temperate','polar'];
 
     ctx.terraforming = {
-      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, solarFlux: 900, modifiedSolarFlux: 1100, initialSolarFlux: 1000, initialSurfaceAlbedo: 0.3, initialActualAlbedo: 0.3 },
+      luminosity: { name: 'Luminosity', groundAlbedo: 0.3, surfaceAlbedo: 0.3, actualAlbedo: 0.3, albedo: 0.3, cloudHazePenalty: 0, solarFlux: 900, modifiedSolarFlux: 1100, initialSolarFlux: 1000, initialSurfaceAlbedo: 0.3, initialActualAlbedo: 0.3 },
       celestialParameters: { albedo: 0.3 },
       getLuminosityStatus: () => true,
       calculateSolarPanelMultiplier: () => 1
