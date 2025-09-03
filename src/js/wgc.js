@@ -94,13 +94,14 @@ class WarpGateCommand extends EffectableEntity {
       }
       return e;
     });
-    const total = events.reduce((s, e) => s + (e.weight || 1), 0);
+    const weightedEvents = events.filter(e => (e.weight ?? 1) > 0);
+    const total = weightedEvents.reduce((s, e) => s + (e.weight ?? 1), 0);
     let r = Math.random() * total;
-    for (const ev of events) {
-      r -= ev.weight || 1;
+    for (const ev of weightedEvents) {
+      r -= ev.weight ?? 1;
       if (r < 0) return ev;
     }
-    return events[0];
+    return weightedEvents[0];
   }
 
   roll(dice) {
