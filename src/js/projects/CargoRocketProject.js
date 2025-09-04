@@ -463,6 +463,7 @@ class CargoRocketProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.shortfallLastTick = false;
     if (!this.isActive || !this.isContinuous() || !this.autoStart) return;
     if (!this.selectedResources || this.selectedResources.length === 0) return;
     const seconds = deltaTime / 1000;
@@ -479,6 +480,7 @@ class CargoRocketProject extends Project {
     let totalCost = costPerSecond * seconds * productivity;
     let available = resources.colony.funding.value;
     if (totalCost > available) {
+      this.shortfallLastTick = totalCost > 0;
       if (available <= 0) return;
       const scale = available / totalCost;
       purchases.forEach(p => { p.quantity *= scale; p.perSecCost *= scale; });
