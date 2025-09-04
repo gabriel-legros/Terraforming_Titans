@@ -39,6 +39,7 @@ describe('Dyson Swarm project visibility without tech', () => {
       maxRepeatCount: 1,
       autoStart: false,
       isActive: false,
+      isContinuous: () => false,
       getEffectiveCost: () => ({}),
       getScaledCost: () => ({}),
       getEffectiveDuration: () => 1000,

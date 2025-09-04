@@ -13,8 +13,8 @@ describe('project productivity', () => {
     const changes = { colony: { energy: 10, metal: 0 } };
 
     const projectData = {
-      A: { cost: { colony: { energy: 200, metal: 30 } }, gain: { colony: { metal: 10 } } },
-      B: { cost: {}, gain: { colony: { energy: 10 } } },
+      A: { project: { isContinuous: () => true }, cost: { colony: { energy: 200, metal: 30 } }, gain: { colony: { metal: 10 } } },
+      B: { project: { isContinuous: () => true }, cost: {}, gain: { colony: { energy: 10 } } },
     };
     const productivities = calculateProjectProductivities(resources, changes, projectData);
     expect(productivities.A).toBeCloseTo(110 / 200);

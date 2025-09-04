@@ -24,6 +24,7 @@ describe('resource tooltip hides non-auto-start project rates', () => {
       isActive: true,
       isCompleted: false,
       autoStart: false,
+      isContinuous: () => true,
       estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
         const cost = { colony: { energy: 100 } };
         if (applyRates) {
@@ -52,6 +53,7 @@ describe('resource tooltip hides non-auto-start project rates', () => {
       isActive: true,
       isCompleted: false,
       autoStart: false,
+      isContinuous: () => true,
       estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
         const gain = { colony: { energy: 100 } };
         if (applyRates) {
@@ -80,6 +82,7 @@ describe('resource tooltip hides non-auto-start project rates', () => {
       isActive: true,
       isCompleted: false,
       autoStart: true,
+      isContinuous: () => true,
       estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
         const cost = { colony: { energy: 100 } };
         if (applyRates) {
@@ -108,6 +111,7 @@ describe('resource tooltip hides non-auto-start project rates', () => {
       isCompleted: false,
       autoStart: false,
       treatAsBuilding: true,
+      isContinuous: () => true,
       estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
         const cost = { colony: { energy: 100 } };
         if (applyRates) {
@@ -136,6 +140,7 @@ describe('resource tooltip hides non-auto-start project rates', () => {
       isActive: true,
       isCompleted: false,
       autoStart: false,
+      isContinuous: () => true,
       estimateCostAndGain,
       applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
         accumulatedChanges.colony.energy -= 100 * productivity;

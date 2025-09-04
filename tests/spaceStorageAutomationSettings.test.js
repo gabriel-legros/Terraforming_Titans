@@ -42,6 +42,7 @@ describe('Space Storage automation settings', () => {
       unlocked: true,
       attributes: {},
       assignedSpaceships: 0,
+      isContinuous: () => false,
       isShipOperationContinuous() { return this.assignedSpaceships > 100; }
     });
 

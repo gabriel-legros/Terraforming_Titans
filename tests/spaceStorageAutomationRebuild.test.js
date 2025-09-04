@@ -43,6 +43,7 @@ describe('Space Storage automation UI recreation', () => {
       unlocked: true,
       attributes: {},
       assignedSpaceships: 0,
+      isContinuous: () => false,
       isShipOperationContinuous() { return this.assignedSpaceships > 100; }
     });
 

@@ -87,6 +87,10 @@ class Project extends EffectableEntity {
     }
   }
 
+  isContinuous() {
+    return false;
+  }
+
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
     const cost = this.getEffectiveCost();
@@ -601,7 +605,6 @@ class ProjectManager extends EffectableEntity {
       project.update(deltaTime);
 
       if (
-        typeof project.isContinuous === 'function' &&
         project.isContinuous() &&
         !project.autoStart &&
         project.isActive

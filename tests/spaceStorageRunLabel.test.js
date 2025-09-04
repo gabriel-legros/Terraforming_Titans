@@ -42,6 +42,7 @@ describe('Space Storage ship auto-start label', () => {
       unlocked: true,
       attributes: {},
       assignedSpaceships: 50,
+      isContinuous: () => false,
       isShipOperationContinuous() { return this.assignedSpaceships > 100; }
     });
 
