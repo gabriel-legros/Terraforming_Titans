@@ -538,7 +538,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     const tempInput = document.createElement('input');
     tempInput.type = 'number';
-    tempInput.step = 1;
+    tempInput.step = 0.1;
     tempInput.classList.add('ghg-temp-input');
     tempControl.appendChild(tempInput);
 
@@ -548,7 +548,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     const tempInputB = document.createElement('input');
     tempInputB.type = 'number';
-    tempInputB.step = 1;
+    tempInputB.step = 0.1;
     tempInputB.classList.add('ghg-temp-input');
     tempControl.appendChild(tempInputB);
 
