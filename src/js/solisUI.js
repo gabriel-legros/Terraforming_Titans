@@ -12,7 +12,7 @@ const shopDescriptions = {
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
   research: 'Increase starting research points by 100',
-  advancedOversight: 'Enable advanced oversight for the space mirror facility',
+  advancedOversight: 'Enable advanced oversight for the space mirror facility, which can precisely control mirrors based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
 };
 
