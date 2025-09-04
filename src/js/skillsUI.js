@@ -2,6 +2,28 @@
 let skillPrereqs = {};
 const skillPaths = {};
 let skillConnectionsDirty = false;
+let skillTreeContainerEl = null;
+let skillSVGEl = null;
+const skillButtonEls = {};
+let skillResizeObserver = null;
+let skillRedrawQueued = false;
+
+function queueSkillRedraw() {
+    if (skillRedrawQueued) return;
+    skillRedrawQueued = true;
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => {
+            skillRedrawQueued = false;
+            skillConnectionsDirty = true;
+            drawSkillConnections();
+        });
+    } else {
+        // Fallback without rAF
+        skillRedrawQueued = false;
+        skillConnectionsDirty = true;
+        drawSkillConnections();
+    }
+}
 
 function buildSkillPrereqs() {
     skillPrereqs = {};
@@ -75,6 +97,9 @@ function createSkillTree() {
     const container = document.getElementById('skill-tree');
     if (!container || container.nodeType !== 1) return;
 
+    // Cache container
+    skillTreeContainerEl = container;
+
     container.innerHTML = ''; // Clear previous content
     for (const key in skillPaths) {
         delete skillPaths[key];
@@ -83,6 +108,8 @@ function createSkillTree() {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'skill-lines';
     container.appendChild(svg);
+    // Cache SVG element
+    skillSVGEl = svg;
 
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
@@ -109,21 +136,35 @@ function createSkillTree() {
 
         button.addEventListener('click', () => purchaseSkill(id));
         container.appendChild(button);
+        // Cache button element
+        skillButtonEls[id] = button;
         updateSkillButton(skill);
     }
-    skillConnectionsDirty = true;
-    if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(() => {
-            if (skillConnectionsDirty) drawSkillConnections();
-        });
-    } else {
-        drawSkillConnections();
+
+    // Observe container resize to keep lines aligned during zoom/layout changes
+    try {
+        if (typeof ResizeObserver !== 'undefined') {
+            if (skillResizeObserver) {
+                skillResizeObserver.disconnect();
+            }
+            skillResizeObserver = new ResizeObserver(() => queueSkillRedraw());
+            skillResizeObserver.observe(container);
+        }
+    } catch (e) {
+        // Ignore if ResizeObserver is not available
     }
+
+    // Also handle window resize (covers browser zoom changes)
+    try {
+        window.addEventListener('resize', queueSkillRedraw);
+    } catch (e) { /* no-op */ }
+
+    queueSkillRedraw();
 }
 
 function drawSkillConnections() {
-    const svg = document.getElementById('skill-lines');
-    const container = document.getElementById('skill-tree');
+    const svg = skillSVGEl || document.getElementById('skill-lines');
+    const container = skillTreeContainerEl || document.getElementById('skill-tree');
     if (!svg || !container || container.nodeType !== 1) return;
 
     const containerRect = container.getBoundingClientRect();
@@ -132,26 +173,32 @@ function drawSkillConnections() {
         skillConnectionsDirty = true;
         return;
     }
+    // Ensure the SVG viewport matches the container for crisp alignment
+    const w = Math.max(1, Math.round(container.clientWidth));
+    const h = Math.max(1, Math.round(container.clientHeight));
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('width', String(w));
+    svg.setAttribute('height', String(h));
     const used = new Set();
 
     for (const id in skillManager.skills) {
         const skill = skillManager.skills[id];
         if (!skill.requires || skill.requires.length === 0) continue;
 
-        const toButton = document.getElementById(`skill-${id}`);
+        const toButton = skillButtonEls[id] || document.getElementById(`skill-${id}`);
         if (!toButton) continue;
 
         const toRect = toButton.getBoundingClientRect();
-        const toX = toRect.left - containerRect.left + toRect.width / 2;
-        const toY = toRect.top - containerRect.top;
+        const toX = Math.round(toRect.left - containerRect.left + toRect.width / 2);
+        const toY = Math.round(toRect.top - containerRect.top);
 
         for (const prereqId of skill.requires) {
-            const fromButton = document.getElementById(`skill-${prereqId}`);
+            const fromButton = skillButtonEls[prereqId] || document.getElementById(`skill-${prereqId}`);
             if (!fromButton) continue;
 
             const fromRect = fromButton.getBoundingClientRect();
-            const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
-            const fromY = fromRect.top - containerRect.top + fromRect.height;
+            const fromX = Math.round(fromRect.left - containerRect.left + fromRect.width / 2);
+            const fromY = Math.round(fromRect.top - containerRect.top + fromRect.height);
 
             const key = `${prereqId}-${id}`;
             let path = skillPaths[key];
@@ -161,7 +208,8 @@ function drawSkillConnections() {
                 svg.appendChild(path);
                 skillPaths[key] = path;
             }
-            const d = `M ${fromX},${fromY} C ${fromX},${fromY + 40} ${toX},${toY - 40} ${toX},${toY}`;
+            const ctrl = 40;
+            const d = `M ${fromX},${fromY} C ${fromX},${fromY + ctrl} ${toX},${toY - ctrl} ${toX},${toY}`;
             path.setAttribute('d', d);
 
             const prereqSkill = skillManager.skills[prereqId];

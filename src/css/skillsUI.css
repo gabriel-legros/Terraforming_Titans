@@ -71,12 +71,15 @@
     stroke-width: 2px;
     fill: none;
     transition: stroke 0.3s ease;
+    shape-rendering: geometricPrecision;
+    vector-effect: non-scaling-stroke;
 }
 
 /* Style for unlocked connectors, matching the dashed blue line */
 .skill-connector.unlocked {
     stroke: #5ac8fa;
     stroke-dasharray: 5;
+    stroke-linecap: round;
 }
 
 #skill-points-display {
