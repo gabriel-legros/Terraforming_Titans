@@ -106,7 +106,7 @@ progressVega2.storyProjects.vega2_deadhand_protocol = {
   chapter: 17,
    cost: { special: { spaceships : 100_000_000}, colony : {energy : 100_000_000_000_000_000 } },
   duration: 300_000, // 5 min
-  description: '100 million spaceships filled the brim with fuel should be enough for this.',
+  description: '100 million spaceships filled to the brim with fuel should be enough for this.',
    repeatable: true,
    maxRepeatCount: 1,
   unlocked: false,
