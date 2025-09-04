@@ -498,7 +498,10 @@ function updateTotalCostDisplay(project) {
   if (totalCostValue) {
     totalCostValue.textContent = formatNumber(totalCost, true);
     const available = resources.colony?.funding?.value || 0;
-    totalCostValue.style.color = available < totalCost ? 'red' : '';
+    const highlight = project.isContinuous()
+      ? project.shortfallLastTick
+      : available < totalCost;
+    totalCostValue.style.color = highlight ? 'red' : '';
   }
 }
 
@@ -793,8 +796,11 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
 
       // Check if the player has enough of this resource
       const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`;
-      const highlight = availableAmount < requiredAmount &&
-        !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+      const continuous = project && typeof project.isContinuous === 'function' && project.isContinuous();
+      const highlight = continuous
+        ? project.shortfallLastTick
+        : availableAmount < requiredAmount &&
+          !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
       const formattedResourceText = highlight
         ? `<span style="color: red;">${resourceText}</span>`
         : resourceText;

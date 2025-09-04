@@ -15,6 +15,7 @@ class Project extends EffectableEntity {
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
+    this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
   }
 
