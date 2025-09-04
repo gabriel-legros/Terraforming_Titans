@@ -86,4 +86,21 @@ describe('GHG factory temperature control', () => {
     inputA.dispatchEvent(new dom.window.Event('input'));
     expect(ctx.ghgFactorySettings.disableTempThreshold).toBeCloseTo(298.65, 5);
   });
+
+  test('does not overwrite while typing', () => {
+    const { dom, ctx } = setup();
+    const inputA = dom.window.document.querySelector('.ghg-temp-input');
+    ctx.ghgFactorySettings.disableTempThreshold = 275;
+    inputA.value = '25.5';
+    inputA.focus();
+    if (dom.window.document.activeElement !== inputA) {
+      inputA.value = ctx.toDisplayTemperature(ctx.ghgFactorySettings.disableTempThreshold);
+    }
+    expect(inputA.value).toBe('25.5');
+    inputA.blur();
+    if (dom.window.document.activeElement !== inputA) {
+      inputA.value = ctx.toDisplayTemperature(ctx.ghgFactorySettings.disableTempThreshold);
+    }
+    expect(parseFloat(inputA.value)).toBeCloseTo(1.85, 5);
+  });
 });
