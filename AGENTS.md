@@ -6,8 +6,6 @@
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
 - Keep checks of the kind (typeof something === 'function') and if(resources && resources.special && resources.special.spaceships) to a minimum.  If the checks fail, the code fails and it is better to catch it than let it fail.
 - All UI elements should be cached and reused instead of using querySelector.
-- Story objectives can compare against a resource's cap by adding `checkCap: true`.
-- All project classes implement an `isContinuous()` method. The base implementation returns `false` while continuous projects override to return `true`.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
