@@ -79,7 +79,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
     const changes = createChanges(ctx.resources);
     changes.colony.energy = 200;
     const totals = project.estimateCostAndGain(duration / 2);
-    const prodMap = calculateProjectProductivities(ctx.resources, changes, { p: totals });
+    const prodMap = calculateProjectProductivities(ctx.resources, changes, { p: { ...totals, project } });
     const prod = prodMap.p;
     project.applyCostAndGain(duration / 2, changes, prod);
     expect(changes.colony.energy).toBeCloseTo(0);
@@ -127,7 +127,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.update(duration / 2);
     let changes = createChanges(ctx.resources);
     let totals = project.estimateCostAndGain(duration / 2);
-    let prod = calculateProjectProductivities(ctx.resources, changes, { p: totals }).p;
+    let prod = calculateProjectProductivities(ctx.resources, changes, { p: { ...totals, project } }).p;
     project.applyCostAndGain(duration / 2, changes, prod);
     applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(495);
@@ -174,7 +174,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.update(duration / 2);
     const changes = createChanges(ctx.resources);
     const totals = project.estimateCostAndGain(duration / 2, false);
-    const prod = calculateProjectProductivities(ctx.resources, changes, { p: totals }).p;
+    const prod = calculateProjectProductivities(ctx.resources, changes, { p: { ...totals, project } }).p;
     ctx.resources.colony.energy.modifyRate.mockClear();
     ctx.resources.colony.metal.modifyRate.mockClear();
     project.estimateCostAndGain(duration / 2, true, prod);
@@ -227,7 +227,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.update(duration / 2);
     let changes = createChanges(ctx.resources);
     let totals = project.estimateCostAndGain(duration / 2);
-    let prod = calculateProjectProductivities(ctx.resources, changes, { p: totals }).p;
+    let prod = calculateProjectProductivities(ctx.resources, changes, { p: { ...totals, project } }).p;
     project.applyCostAndGain(duration / 2, changes, prod);
     applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.energy.value).toBeCloseTo(990);
@@ -235,7 +235,7 @@ describe('SpaceshipProject continuous cost and gain', () => {
     project.update(duration / 2);
     changes = createChanges(ctx.resources);
     totals = project.estimateCostAndGain(duration / 2);
-    prod = calculateProjectProductivities(ctx.resources, changes, { p: totals }).p;
+    prod = calculateProjectProductivities(ctx.resources, changes, { p: { ...totals, project } }).p;
     project.applyCostAndGain(duration / 2, changes, prod);
     applyChanges(ctx.resources, changes);
     expect(ctx.resources.colony.metal.value).toBeCloseTo(20);

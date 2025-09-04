@@ -64,6 +64,7 @@ describe('treatAsBuilding flag', () => {
     const normal = {
       estimateCostAndGain: jest.fn(() => ({ cost: {}, gain: {} })),
       applyCostAndGain: jest.fn(),
+      isContinuous: () => true,
     };
 
     ctx.projectManager.projects = { dyson, normal };

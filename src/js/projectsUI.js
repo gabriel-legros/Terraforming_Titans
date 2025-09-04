@@ -562,8 +562,7 @@ function updateProjectUI(projectName) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
   }
   if (elements.autoStartLabel) {
-    const continuous =
-      typeof project.isContinuous === 'function' && project.isContinuous();
+    const continuous = project.isContinuous();
     elements.autoStartLabel.textContent = continuous ? 'Run' : 'Auto start';
   }
 
@@ -629,7 +628,6 @@ function updateProjectUI(projectName) {
       // Update the duration in the progress bar display
       if (elements.progressButton) {
         const isContinuousProject =
-          typeof project.isContinuous === 'function' &&
           project.isContinuous() &&
           ((typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) ||
             (typeof CargoRocketProject !== 'undefined' && project instanceof CargoRocketProject));

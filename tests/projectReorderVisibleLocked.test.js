@@ -35,7 +35,8 @@ describe('project reorder includes visible locked projects', () => {
       duration: 100,
       getEffectiveDuration() { return this.duration; },
       canStart() { return true; },
-      getProgress() { return 0; }
+      getProgress() { return 0; },
+      isContinuous() { return false; }
     });
 
     ctx.projectManager.projects = {

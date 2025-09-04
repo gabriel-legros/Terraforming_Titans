@@ -554,7 +554,7 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
   const production = {};
   for (const name in projectData) {
     const project = projectData[name].project;
-    if (project && typeof project.isContinuous === 'function' && !project.isContinuous()) {
+    if (!project.isContinuous()) {
       continue;
     }
     const { cost = {}, gain = {} } = projectData[name];
@@ -601,7 +601,7 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
   const productivityMap = {};
   for (const name in projectData) {
     const { cost = {}, gain = {}, project } = projectData[name];
-    if (project && typeof project.isContinuous === 'function' && !project.isContinuous()) {
+    if (!project.isContinuous()) {
       continue;
     }
     let productivity = 1;
