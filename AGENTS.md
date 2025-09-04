@@ -436,3 +436,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Building production and consumption displays color-code resources: green for production fixing deficits and red for costs that would cause deficits.
 - Resources with `marginTop` or `marginBottom` now show a thin separator line centered within that margin that only appears when the resource is visible.
 - GHG factory temperature disable controls now accept decimal values.
+- GHG factory temperature inputs no longer overwrite user edits while focused, enabling decimal adjustments.

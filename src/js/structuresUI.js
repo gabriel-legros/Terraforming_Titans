@@ -565,8 +565,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       tempLabel.textContent = 'Disable if avg T > ';
       unitSpan.textContent = getTemperatureUnit();
       // Update both inputs (A and B)
-      tempInput.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
-      tempInputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+      if(document.activeElement !== tempInput){
+        tempInput.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+      }
+      if(document.activeElement !== tempInputB){
+        tempInputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+      }
       // Show the B side whenever reversal is available
       const showReverse = !!structure.reversalAvailable;
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
@@ -1078,8 +1082,12 @@ function updateDecreaseButtonText(button, buildCount) {
           const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
           ghgEls.container.style.display = enabled ? 'flex' : 'none';
           if (ghgEls.checkbox) ghgEls.checkbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
-          if (ghgEls.inputA) ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
-          if (ghgEls.inputB) ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+          if (ghgEls.inputA && document.activeElement !== ghgEls.inputA) {
+            ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+          }
+          if (ghgEls.inputB && document.activeElement !== ghgEls.inputB) {
+            ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+          }
           const showReverse = !!structure.reversalAvailable;
           if (ghgEls.betweenLabel) ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
           if (ghgEls.inputB) ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
