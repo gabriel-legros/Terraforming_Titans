@@ -7,7 +7,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 
 describe('solis shop max purchase UI', () => {
-  test('hides cost and button after max purchase', () => {
+  test('hides cost and button after max purchase and shows Purchased text', () => {
     const dom = new JSDOM(`<!DOCTYPE html>
       <div id="solis-shop-items"></div>
       <div id="solis-donation-items"></div>
@@ -59,5 +59,14 @@ describe('solis shop max purchase UI', () => {
     const resCost = dom.window.document.getElementById('solis-shop-researchUpgrade-cost').parentElement;
     expect(resButton.classList.contains('hidden')).toBe(true);
     expect(resCost.classList.contains('hidden')).toBe(true);
+
+    const advPurchased = advButton.parentElement.querySelector('.solis-shop-item-count');
+    const resPurchased = resButton.parentElement.querySelector('.solis-shop-item-count');
+    const fundPurchased = dom.window.document
+      .getElementById('solis-shop-funding-button')
+      .parentElement.querySelector('.solis-shop-item-count');
+    expect(advPurchased.textContent).toBe('Purchased');
+    expect(resPurchased.textContent).toBe('Purchased');
+    expect(fundPurchased.textContent).toBe('Purchased: 0');
   });
 });
