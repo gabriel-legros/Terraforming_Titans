@@ -88,15 +88,17 @@ function createShopItem(key) {
 
   const purchased = document.createElement('span');
   purchased.classList.add('solis-shop-item-count');
-  purchased.innerHTML = `Purchased: <span id="solis-shop-${key}-count">0</span>`;
+  purchased.textContent = 'Purchased: ';
+  const countSpan = document.createElement('span');
+  countSpan.id = `solis-shop-${key}-count`;
+  purchased.appendChild(countSpan);
   actions.appendChild(purchased);
 
   item.appendChild(actions);
 
   const costWrapper = label.querySelector('.solis-shop-item-cost');
   const costSpan = costWrapper.querySelector(`#solis-shop-${key}-cost`);
-  const countSpan = purchased.querySelector(`#solis-shop-${key}-count`);
-  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, item };
+  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, item };
 
   if (key === 'researchUpgrade') {
     const list = document.createElement('ul');
@@ -416,8 +418,16 @@ function updateSolisUI() {
     if (!el) continue;
     const up = solisManager.shopUpgrades[key];
     if (!up) continue;
-    if (el.count) el.count.textContent = up.purchases;
     const atMax = typeof up.max === 'number' && up.purchases >= up.max;
+    if (el.purchased && el.count) {
+      if (atMax) {
+        el.purchased.textContent = 'Purchased';
+      } else {
+        el.purchased.textContent = 'Purchased: ';
+        el.purchased.appendChild(el.count);
+        el.count.textContent = up.purchases;
+      }
+    }
     if (atMax) {
       if (el.button) el.button.classList.add('hidden');
       if (el.costWrapper) el.costWrapper.classList.add('hidden');
