@@ -437,3 +437,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - GHG factory temperature disable controls now accept decimal values.
 - GHG factory temperature inputs no longer overwrite user edits while focused, enabling decimal adjustments.
 - Solis shop displays "Purchased" instead of a count when an upgrade reaches its maximum purchases.
+- Space storage ship assignment multiplier persists through save and load.
