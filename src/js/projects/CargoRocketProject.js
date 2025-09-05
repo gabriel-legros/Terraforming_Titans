@@ -79,18 +79,43 @@ class CargoRocketProject extends Project {
 
         const buttonsContainer = document.createElement('div');
         buttonsContainer.classList.add('cargo-buttons-container');
-        const buttonValues = [0, 1, 10, 100, 1000, 10000, 100000, 1000000];
-        buttonValues.forEach((value) => {
+
+        const createButton = (text, onClick) => {
           const button = document.createElement('button');
           button.type = 'button';
           button.classList.add('increment-button');
-          button.textContent = value === 0 ? 'Clear' : `+${formatNumber(value, true)}`;
+          button.textContent = text;
           button.addEventListener('click', () => {
-            quantityInput.value = (value === 0) ? 0 : (parseInt(quantityInput.value, 10) || 0) + value;
+            onClick();
             updateTotalCostDisplay(this);
           });
           buttonsContainer.appendChild(button);
+          return button;
+        };
+
+        createButton('0', () => {
+          quantityInput.value = 0;
         });
+
+        createButton('-1', () => {
+          const current = parseInt(quantityInput.value, 10) || 0;
+          quantityInput.value = Math.max(0, current - 1);
+        });
+
+        createButton('+1', () => {
+          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + 1;
+        });
+
+        createButton('/10', () => {
+          const current = parseInt(quantityInput.value, 10) || 0;
+          quantityInput.value = Math.floor(current / 10);
+        });
+
+        createButton('x10', () => {
+          const current = parseInt(quantityInput.value, 10) || 0;
+          quantityInput.value = current * 10;
+        });
+
         resourceRow.appendChild(buttonsContainer);
         selectionGrid.appendChild(resourceRow);
       }
