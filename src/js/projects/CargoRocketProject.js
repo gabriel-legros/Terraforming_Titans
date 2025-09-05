@@ -97,23 +97,30 @@ class CargoRocketProject extends Project {
           quantityInput.value = 0;
         });
 
-        createButton('-1', () => {
+        let increment = 1;
+
+        const minusButton = createButton(`-${formatNumber(increment, true)}`, () => {
           const current = parseInt(quantityInput.value, 10) || 0;
-          quantityInput.value = Math.max(0, current - 1);
+          quantityInput.value = Math.max(0, current - increment);
         });
 
-        createButton('+1', () => {
-          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + 1;
+        const plusButton = createButton(`+${formatNumber(increment, true)}`, () => {
+          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + increment;
         });
+
+        const updateIncrementButtons = () => {
+          minusButton.textContent = `-${formatNumber(increment, true)}`;
+          plusButton.textContent = `+${formatNumber(increment, true)}`;
+        };
 
         createButton('/10', () => {
-          const current = parseInt(quantityInput.value, 10) || 0;
-          quantityInput.value = Math.floor(current / 10);
+          increment = Math.max(1, Math.floor(increment / 10));
+          updateIncrementButtons();
         });
 
         createButton('x10', () => {
-          const current = parseInt(quantityInput.value, 10) || 0;
-          quantityInput.value = current * 10;
+          increment *= 10;
+          updateIncrementButtons();
         });
 
         resourceRow.appendChild(buttonsContainer);
