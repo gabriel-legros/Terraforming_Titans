@@ -1220,7 +1220,7 @@ function updateDecreaseButtonText(button, buildCount) {
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
               const totalCost = combinedCosts[`${category}.${resource}`] || amount;
               const projectedNet = netRate - totalCost;
-              span.style.color = projectedNet < 0 ? 'red' : '';
+              span.style.color = projectedNet < 0 ? 'orange' : '';
             } else {
               span.style.color = '';
             }

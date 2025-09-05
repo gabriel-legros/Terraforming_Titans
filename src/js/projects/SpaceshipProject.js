@@ -776,6 +776,7 @@ class SpaceshipProject extends Project {
       autoAssignSpaceships: this.autoAssignSpaceships,
       selectedDisposalResource: this.selectedDisposalResource,
       waitForCapacity: this.waitForCapacity,
+      assignmentMultiplier: this.assignmentMultiplier,
     };
   }
 
@@ -786,6 +787,9 @@ class SpaceshipProject extends Project {
     this.selectedDisposalResource = state.selectedDisposalResource || this.attributes.defaultDisposal;
     if (state.waitForCapacity !== undefined) {
       this.waitForCapacity = state.waitForCapacity;
+    }
+    if (state.assignmentMultiplier !== undefined) {
+      this.assignmentMultiplier = state.assignmentMultiplier;
     }
   }
 }
