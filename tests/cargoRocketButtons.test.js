@@ -5,7 +5,7 @@ const vm = require('vm');
 const numbers = require('../src/js/numbers.js');
 
 describe('Cargo rocket quantity buttons', () => {
-  test('adjust resource input values', () => {
+  test('quantity buttons use adjustable increment', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div class="projects-subtab-content-wrapper"><div id="resources-projects-list" class="projects-list"></div></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
@@ -75,12 +75,18 @@ describe('Cargo rocket quantity buttons', () => {
     plusBtn.click();
     expect(input.value).toBe('6');
 
-    input.value = 50;
-    divBtn.click();
-    expect(input.value).toBe('5');
-
-    input.value = 7;
+    input.value = '5';
     mulBtn.click();
-    expect(input.value).toBe('70');
+    expect(input.value).toBe('5');
+    expect(minusBtn.textContent).toBe('-10');
+    expect(plusBtn.textContent).toBe('+10');
+    plusBtn.click();
+    expect(input.value).toBe('15');
+
+    divBtn.click();
+    expect(minusBtn.textContent).toBe('-1');
+    expect(plusBtn.textContent).toBe('+1');
+    minusBtn.click();
+    expect(input.value).toBe('14');
   });
 });
