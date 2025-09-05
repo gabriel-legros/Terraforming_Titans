@@ -54,10 +54,11 @@ describe('Cargo rocket quantity buttons', () => {
     const input = row.querySelector('input');
     const buttons = Array.from(row.querySelectorAll('button'));
     const zeroBtn = buttons.find(b => b.textContent === '0');
-    const minusBtn = buttons.find(b => b.textContent === '-1');
-    const plusBtn = buttons.find(b => b.textContent === '+1');
-    const divBtn = buttons.find(b => b.textContent === '/10');
-    const mulBtn = buttons.find(b => b.textContent === 'x10');
+    const minusBtn = buttons.find(b => b.textContent.startsWith('-'));
+    const plusBtn = buttons.find(b => b.textContent.startsWith('+'));
+    const headerButtons = Array.from(elements.resourceSelectionContainer.querySelector('.cargo-grid-header').querySelectorAll('button'));
+    const divBtn = headerButtons.find(b => b.textContent === '/10');
+    const mulBtn = headerButtons.find(b => b.textContent === 'x10');
 
     input.value = 5;
     zeroBtn.click();

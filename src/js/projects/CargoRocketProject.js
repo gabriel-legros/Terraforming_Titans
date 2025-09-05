@@ -21,16 +21,60 @@ class CargoRocketProject extends Project {
       ...projectElements[this.name],
       selectionInputs: [],
       priceSpans: [],
+      minusButtons: [],
+      plusButtons: [],
+      increment: 1,
+    };
+
+    const updateIncrementButtons = () => {
+      elements.minusButtons.forEach((btn) => {
+        btn.textContent = `-${formatNumber(elements.increment, true)}`;
+      });
+      elements.plusButtons.forEach((btn) => {
+        btn.textContent = `+${formatNumber(elements.increment, true)}`;
+      });
     };
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
-    headerRow.innerHTML = `
-        <span>Resource</span>
-        <span>Amount</span>
-        <span>Price (Funding)</span>
-        <span></span>
-    `;
+
+    const resourceHeader = document.createElement('span');
+    resourceHeader.textContent = 'Resource';
+    headerRow.appendChild(resourceHeader);
+
+    const amountHeader = document.createElement('span');
+    amountHeader.textContent = 'Amount';
+    headerRow.appendChild(amountHeader);
+
+    const priceHeader = document.createElement('span');
+    priceHeader.textContent = 'Price (Funding)';
+    headerRow.appendChild(priceHeader);
+
+    const headerButtons = document.createElement('div');
+    headerButtons.classList.add('cargo-buttons-container');
+    headerRow.appendChild(headerButtons);
+
+    const createHeaderButton = (text, onClick) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.classList.add('increment-button');
+      button.textContent = text;
+      button.addEventListener('click', () => {
+        onClick();
+        updateIncrementButtons();
+      });
+      headerButtons.appendChild(button);
+      return button;
+    };
+
+    createHeaderButton('/10', () => {
+      elements.increment = Math.max(1, Math.floor(elements.increment / 10));
+    });
+
+    createHeaderButton('x10', () => {
+      elements.increment *= 10;
+    });
+
     selectionGrid.appendChild(headerRow);
 
     for (const category in this.attributes.resourceChoiceGainCost) {
@@ -97,36 +141,23 @@ class CargoRocketProject extends Project {
           quantityInput.value = 0;
         });
 
-        let increment = 1;
-
-        const minusButton = createButton(`-${formatNumber(increment, true)}`, () => {
+        const minusButton = createButton(`-${formatNumber(elements.increment, true)}`, () => {
           const current = parseInt(quantityInput.value, 10) || 0;
-          quantityInput.value = Math.max(0, current - increment);
+          quantityInput.value = Math.max(0, current - elements.increment);
         });
 
-        const plusButton = createButton(`+${formatNumber(increment, true)}`, () => {
-          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + increment;
+        const plusButton = createButton(`+${formatNumber(elements.increment, true)}`, () => {
+          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + elements.increment;
         });
 
-        const updateIncrementButtons = () => {
-          minusButton.textContent = `-${formatNumber(increment, true)}`;
-          plusButton.textContent = `+${formatNumber(increment, true)}`;
-        };
-
-        createButton('/10', () => {
-          increment = Math.max(1, Math.floor(increment / 10));
-          updateIncrementButtons();
-        });
-
-        createButton('x10', () => {
-          increment *= 10;
-          updateIncrementButtons();
-        });
+        elements.minusButtons.push(minusButton);
+        elements.plusButtons.push(plusButton);
 
         resourceRow.appendChild(buttonsContainer);
         selectionGrid.appendChild(resourceRow);
       }
     }
+    updateIncrementButtons();
     sectionContainer.appendChild(selectionGrid);
     container.appendChild(sectionContainer);
   }
