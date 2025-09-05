@@ -24,7 +24,7 @@ const structuresUI = (() => {
 })();
 
 describe('production/consumption color coding', () => {
-  test('negative net production turns green and projected negative consumption turns red', () => {
+  test('negative net production turns green and projected negative consumption turns orange', () => {
     const structure = {
       name: 'testStruct',
       getModifiedStorage: () => ({}),
@@ -46,10 +46,10 @@ describe('production/consumption color coding', () => {
 
     // buildCount 2: metal would go negative
     structuresUI.updateProductionConsumptionDetails(structure, element, 2);
-    expect(metalSpan.style.color).toBe('red');
+    expect(metalSpan.style.color).toBe('orange');
   });
 
-  test('consumption and maintenance combine to show deficit in red', () => {
+  test('consumption and maintenance combine to show deficit in orange', () => {
     const structure = {
       name: 'consMaint',
       getModifiedStorage: () => ({}),
@@ -67,8 +67,8 @@ describe('production/consumption color coding', () => {
     structuresUI.updateProductionConsumptionDetails(structure, element, 1);
     const consSpan = element._sections.consumption.spans.get('colony.metal');
     const maintSpan = element._sections.maintenance.spans.get('colony.metal');
-    expect(consSpan.style.color).toBe('red');
-    expect(maintSpan.style.color).toBe('red');
+    expect(consSpan.style.color).toBe('orange');
+    expect(maintSpan.style.color).toBe('orange');
   });
 });
 
