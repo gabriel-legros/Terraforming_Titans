@@ -309,6 +309,27 @@ class WaterCycle extends ResourceCycleClass {
       redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
     }
   }
+
+  runCycle(terraforming, zones, {
+    atmPressure = 0,
+    vaporPressure = 0,
+    available = 0,
+    durationSeconds = 1,
+    gravity = 1,
+    precipitationMultiplier = 1,
+  } = {}) {
+    return super.runCycle(terraforming, zones, {
+      zonalKey: 'zonalWater',
+      surfaceBucket: 'water',
+      atmosphereKey: 'water',
+      vaporPressure,
+      available,
+      atmPressure,
+      durationSeconds,
+      availableKeys: ['liquid', 'ice', 'buriedIce'],
+      extraParams: { gravity, precipitationMultiplier },
+    });
+  }
 }
 
 const waterCycle = new WaterCycle();

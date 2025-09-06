@@ -19,45 +19,42 @@ jest.mock('../src/js/terraforming-utils.js', () => ({
 
 jest.mock('../src/js/terraforming/water-cycle.js', () => ({
   waterCycle: {
-    processZone: jest.fn(() => ({
-      atmosphere: { water: 0 },
-      water: { liquid: 0, ice: 0, buriedIce: 0 },
-      precipitation: { potentialRain: 0, potentialSnow: 0 },
-      evaporationAmount: 0,
-      sublimationAmount: 0,
-      meltAmount: 0,
-      freezeAmount: 0,
+    runCycle: jest.fn(() => ({
+      zonalChanges: {
+        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+      },
+      totals: {},
     })),
-    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
   boilingPointWater: jest.fn(() => 373.15)
 }));
 
 jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
   methaneCycle: {
-    processZone: jest.fn(() => ({
-      atmosphere: { methane: 0 },
-      methane: { liquid: 0, ice: 0, buriedIce: 0 },
-      precipitation: { potentialMethaneRain: 0, potentialMethaneSnow: 0 },
-      evaporationAmount: 0,
-      sublimationAmount: 0,
-      meltAmount: 0,
-      freezeAmount: 0,
+    runCycle: jest.fn(() => ({
+      zonalChanges: {
+        tropical: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
+        temperate: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
+        polar: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
+      },
+      totals: {},
     })),
-    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
   boilingPointMethane: jest.fn(() => 112)
 }));
 
 jest.mock('../src/js/dry-ice-cycle.js', () => ({
   co2Cycle: {
-    processZone: jest.fn(() => ({
-      atmosphere: { co2: 0 },
-      water: { dryIce: 0 },
-      potentialCO2Condensation: 0,
-      sublimationAmount: 0,
+    runCycle: jest.fn(() => ({
+      zonalChanges: {
+        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
+      },
+      totals: {},
     })),
-    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
 }));
 
