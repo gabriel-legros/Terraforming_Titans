@@ -29,6 +29,6 @@ describe('RWG Auto mode skips locked hot orbit', () => {
     const orbitSel = dom.window.document.getElementById('rwg-orbit').value;
     expect(orbitSel).toBe('auto');
     expect(ctx.lastResult.orbitPreset).not.toBe('hot');
-    expect(['hz-inner','hz-mid','hz-outer','cold']).toContain(ctx.lastResult.orbitPreset);
+    expect(['hz-inner','hz-mid','hz-outer','cold','very-cold']).toContain(ctx.lastResult.orbitPreset);
   });
 });
