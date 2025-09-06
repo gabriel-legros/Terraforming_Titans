@@ -1,4 +1,4 @@
-/* rwg.css */
+﻿/* rwg.css */
 
 :root {
   --rwg-bg: #0f1115;
@@ -172,6 +172,7 @@
 }
 .rwg-effects-row.alt { background: var(--rwg-muted); }
 .rwg-effects-head { font-weight: 600; }
+.rwg-effects-table-head { font-weight: 700; border-bottom: 1px solid var(--rwg-border); background: transparent; padding-top: 2px; padding-bottom: 6px; color: var(--rwg-fg); }
 .rwg-effects-row .col-count { text-align: right; color: var(--rwg-fg); }
 .rwg-effects-row .col-effect { text-align: right; font-weight: 600; color: var(--rwg-fg); }
 .rwg-effects-row .col-count { min-width: 64px; max-width: 64px; }
@@ -181,4 +182,5 @@
   .rwg-infobar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rwg-columns { grid-template-columns: 1fr; }
 }
+
 
