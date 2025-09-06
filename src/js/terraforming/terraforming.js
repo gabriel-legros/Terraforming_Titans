@@ -13,10 +13,6 @@ const AU_METER = 149597870700;
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 if (typeof module !== 'undefined' && module.exports) {
-    const hydrology = require('./hydrology.js');
-    var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
-    var simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
-
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
 
@@ -528,32 +524,6 @@ class Terraforming extends EffectableEntity{
             };
         });
 
-        // Simulate atmospheric and water flow between zones
-        const tempMap = {};
-        for (const z of zones) {
-          tempMap[z] = this.temperature.zones[z].value;
-        }
-        const waterFlowResult = simulateSurfaceWaterFlow(this, durationSeconds, tempMap);
-        this.flowMeltAmount = waterFlowResult.totalMelt;
-        this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
-
-        const hydrocarbonFlowResult = simulateSurfaceHydrocarbonFlow(this, durationSeconds, tempMap);
-        this.flowMethaneMeltAmount = hydrocarbonFlowResult.totalMelt;
-        this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
-
-        for (const zone of zones) {
-            if (waterFlowResult.changes[zone]) {
-                zonalChanges[zone].water.liquid += waterFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].water.ice += waterFlowResult.changes[zone].ice || 0;
-                zonalChanges[zone].water.buriedIce += waterFlowResult.changes[zone].buriedIce || 0;
-            }
-            if (hydrocarbonFlowResult.changes[zone]) {
-                zonalChanges[zone].methane.liquid += hydrocarbonFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].methane.ice += hydrocarbonFlowResult.changes[zone].ice || 0;
-                zonalChanges[zone].methane.buriedIce += hydrocarbonFlowResult.changes[zone].buriedIce || 0;
-            }
-        }
-
         // Store total atmospheric changes calculated across all zones
         let totalAtmosphericWaterChange = 0;
         let totalAtmosphericCO2Change = 0;
@@ -658,10 +628,7 @@ class Terraforming extends EffectableEntity{
             }
         }
 
-        // Include melt from zonal flow and focused power
-        cycleTotals.water.melt += this.flowMeltAmount || 0;
-        cycleTotals.methane.melt += this.flowMethaneMeltAmount || 0;
-
+        // Include melt from focused power
         const focusMeltAmount = (typeof globalThis.applyFocusedMelt === 'function')
             ? globalThis.applyFocusedMelt(this, this.resources, durationSeconds)
             : 0;
