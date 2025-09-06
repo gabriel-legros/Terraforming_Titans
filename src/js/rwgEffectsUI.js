@@ -139,7 +139,8 @@ function updateRWGEffectsUI() {
   `);
   let altFlip = false; // alternate background per group (header + effects)
   for (const entry of summary) {
-    const nice = _titleCaseArchetype(entry.type);
+    const nice = (globalThis.RWG_WORLD_TYPES && globalThis.RWG_WORLD_TYPES[entry.type]?.displayName)
+      || _titleCaseArchetype(entry.type);
     // Flip once per group
     altFlip = !altFlip;
     const groupAlt = altFlip ? ' alt' : '';

@@ -56,17 +56,7 @@ function initializeRandomWorldUI() {
         <option value="planet">Target: Planet</option>
         <option value="moon">Target: Moon</option>
       </select>
-      <select id="rwg-type">
-        <option value="auto" selected>Type: Auto</option>
-        <option value="mars-like">Type: Mars-like</option>
-        <option value="cold-desert">Type: Cold Desert</option>
-        <option value="icy-moon">Type: Icy</option>
-        <option value="titan-like">Type: Titan-like</option>
-        <option value="carbon-planet">Type: Carbon</option>
-        <option value="desiccated-desert">Type: Desiccated-desert</option>
-        <option value="super-earth">Type: Super-Earth</option>
-        <option value="venus-like" disabled>Type: Venus-like (Locked)</option>
-      </select>
+      <select id="rwg-type"></select>
       <select id="rwg-orbit">
         <option value="auto" selected>Orbit: Auto</option>
         <option value="hz-inner">Orbit: HZ Inner</option>
@@ -86,6 +76,39 @@ function initializeRandomWorldUI() {
   rwgTargetEl = container.querySelector('#rwg-target');
   rwgTypeEl = container.querySelector('#rwg-type');
   rwgOrbitEl = container.querySelector('#rwg-orbit');
+
+  if (rwgTypeEl) {
+    const typeOrder = [
+      'mars-like',
+      'cold-desert',
+      'icy-moon',
+      'titan-like',
+      'carbon-planet',
+      'desiccated-desert',
+      'super-earth',
+      'venus-like',
+    ];
+    const frag = document.createDocumentFragment();
+    const autoOpt = document.createElement('option');
+    autoOpt.value = 'auto';
+    autoOpt.textContent = 'Type: Auto';
+    autoOpt.selected = true;
+    frag.appendChild(autoOpt);
+    typeOrder.forEach(t => {
+      const info = (globalThis.RWG_WORLD_TYPES && globalThis.RWG_WORLD_TYPES[t]) || {};
+      const opt = document.createElement('option');
+      opt.value = t;
+      const base = `Type: ${info.displayName || t}`;
+      opt.textContent = base;
+      opt.dataset.baseText = base;
+      if (typeof rwgManager !== 'undefined' && typeof rwgManager.isTypeLocked === 'function' && rwgManager.isTypeLocked(t)) {
+        opt.disabled = true;
+        opt.textContent = `${base} (Locked)`;
+      }
+      frag.appendChild(opt);
+    });
+    rwgTypeEl.appendChild(frag);
+  }
 
   const result = document.createElement('div');
   result.id = 'rwg-result';
