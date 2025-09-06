@@ -5,10 +5,10 @@ test('desert and desiccated-desert worlds boost ore and sand production', () => 
   global.addEffect = (eff) => effects.push(eff);
   global.spaceManager = {
     randomWorldStatuses: {
-      a: { terraformed: true, original: { override: { classification: { archetype: 'cold-desert' } } } },
-      b: { terraformed: true, original: { override: { classification: { archetype: 'cold-desert' } } } },
-      c: { terraformed: true, original: { override: { classification: { archetype: 'desiccated-desert' } } } },
-      d: { terraformed: false, original: { override: { classification: { archetype: 'desiccated-desert' } } } },
+      a: { terraformed: true, original: { archetype: 'cold-desert', override: { classification: { archetype: 'cold-desert' } } } },
+      b: { terraformed: true, original: { archetype: 'cold-desert', override: { classification: { archetype: 'cold-desert' } } } },
+      c: { terraformed: true, original: { archetype: 'desiccated-desert', override: { classification: { archetype: 'desiccated-desert' } } } },
+      d: { terraformed: false, original: { archetype: 'desiccated-desert', override: { classification: { archetype: 'desiccated-desert' } } } },
     },
   };
 

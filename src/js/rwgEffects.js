@@ -97,8 +97,7 @@ function applyRWGEffects() {
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
-    const cls = st?.original?.override?.classification;
-    const type = typeof cls === "string" ? cls : cls?.archetype;
+    const type = st?.original?.archetype || st?.original?.override?.classification?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
     }

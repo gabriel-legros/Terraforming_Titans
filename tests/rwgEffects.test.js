@@ -61,18 +61,18 @@ function initContext(projectKey, classification) {
   };
   context.projectManager.initializeProjects({ [projectKey]: projectDefs[projectKey] });
 
-  const classObj =
+  const archetype =
     typeof classification === 'string'
-      ? { archetype: classification }
-      : classification;
+      ? classification
+      : classification.archetype;
 
   context.spaceManager = {
     randomWorldStatuses: {
-      a: { terraformed: true, original: { override: { classification: classObj } } },
-      b: { terraformed: true, original: { override: { classification: classObj } } },
+      a: { terraformed: true, original: { archetype, override: { classification: { archetype } } } },
+      b: { terraformed: true, original: { archetype, override: { classification: { archetype } } } },
       c: {
         terraformed: true,
-        original: { override: { classification: { archetype: 'rocky' } } },
+        original: { archetype: 'rocky', override: { classification: { archetype: 'rocky' } } },
       },
     },
   };
