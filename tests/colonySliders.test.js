@@ -313,11 +313,11 @@ describe('colony sliders', () => {
 
     ctx.initializeColonySlidersUI();
     let row = dom.window.document.getElementById('mechanical-assistance-row');
-    expect(row.classList.contains('invisible')).toBe(true);
+    expect(row.classList.contains('hidden')).toBe(true);
 
     ctx.colonySliderSettings.sortAllResearches = () => {};
     ctx.colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
     row = dom.window.document.getElementById('mechanical-assistance-row');
-    expect(row.classList.contains('invisible')).toBe(false);
+    expect(row.classList.contains('hidden')).toBe(false);
   });
 });

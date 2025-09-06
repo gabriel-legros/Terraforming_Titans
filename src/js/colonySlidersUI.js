@@ -352,7 +352,8 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(mechList);
   if (!colonySliderSettings.isBooleanFlagSet('mechanicalAssistance')) {
-    mechRow.classList.add('invisible');
+    // Hide the slider entirely until mechanical assistance is unlocked
+    mechRow.classList.add('hidden');
   }
   body.appendChild(mechRow);
 
