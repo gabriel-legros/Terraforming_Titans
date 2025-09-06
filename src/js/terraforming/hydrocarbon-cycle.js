@@ -6,10 +6,12 @@ const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
 var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
+var hydrologyMod = null;
 if (isNodeHydrocarbon) {
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
+    hydrologyMod = require('./hydrology.js');
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -24,6 +26,9 @@ if (!ResourceCycleClass && typeof require === 'function') {
       // ignore
     }
   }
+}
+if (!hydrologyMod && typeof globalThis.simulateSurfaceHydrocarbonFlow === 'function') {
+  hydrologyMod = { simulateSurfaceHydrocarbonFlow: globalThis.simulateSurfaceHydrocarbonFlow };
 }
 
 // Function to calculate saturation vapor pressure of methane using the Wagner equation
@@ -267,6 +272,13 @@ class MethaneCycle extends ResourceCycleClass {
       meltAmount,
       freezeAmount,
     };
+  }
+
+  simulateFlow(terraforming, durationSeconds, tempMap) {
+    if (hydrologyMod && typeof hydrologyMod.simulateSurfaceHydrocarbonFlow === 'function') {
+      return hydrologyMod.simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap);
+    }
+    return { totalMelt: 0, changes: {} };
   }
 
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {

@@ -89,6 +89,12 @@ class ResourceCycle {
     });
   }
 
+  // Optional hook for subclasses to handle surface flow and melting
+  // eslint-disable-next-line no-unused-vars
+  simulateFlow(terraforming, durationSeconds, tempMap) {
+    return { totalMelt: 0, changes: {} };
+  }
+
   // Optional hook for subclasses to redistribute precipitation across zones
   // eslint-disable-next-line no-unused-vars
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {}

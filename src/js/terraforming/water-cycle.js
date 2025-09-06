@@ -5,10 +5,12 @@ const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
 var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
+var hydrologyMod = null;
 if (isNodeWaterCycle) {
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
+    hydrologyMod = require('./hydrology.js');
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -23,6 +25,9 @@ if (!ResourceCycleClass && typeof require === 'function') {
       // ignore
     }
   }
+}
+if (!hydrologyMod && typeof globalThis.simulateSurfaceWaterFlow === 'function') {
+  hydrologyMod = { simulateSurfaceWaterFlow: globalThis.simulateSurfaceWaterFlow };
 }
 
 
@@ -276,6 +281,13 @@ class WaterCycle extends ResourceCycleClass {
       meltAmount,
       freezeAmount,
     };
+  }
+
+  simulateFlow(terraforming, durationSeconds, tempMap) {
+    if (hydrologyMod && typeof hydrologyMod.simulateSurfaceWaterFlow === 'function') {
+      return hydrologyMod.simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap);
+    }
+    return { totalMelt: 0, changes: {} };
   }
 
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {

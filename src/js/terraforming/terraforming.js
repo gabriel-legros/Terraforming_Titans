@@ -13,10 +13,6 @@ const AU_METER = 149597870700;
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 if (typeof module !== 'undefined' && module.exports) {
-    const hydrology = require('./hydrology.js');
-    var simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
-    var simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
-
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
 
@@ -561,29 +557,30 @@ class Terraforming extends EffectableEntity{
             };
         });
 
-        // Simulate atmospheric and water flow between zones
+        // Simulate surface flow for each resource cycle
         const tempMap = {};
         for (const z of zones) {
           tempMap[z] = this.temperature.zones[z].value;
         }
-        const waterFlowResult = simulateSurfaceWaterFlow(this, durationSeconds, tempMap);
-        this.flowMeltAmount = waterFlowResult.totalMelt;
-        this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
-
-        const hydrocarbonFlowResult = simulateSurfaceHydrocarbonFlow(this, durationSeconds, tempMap);
-        this.flowMethaneMeltAmount = hydrocarbonFlowResult.totalMelt;
-        this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
-
-        for (const zone of zones) {
-            if (waterFlowResult.changes[zone]) {
-                zonalChanges[zone].water.liquid += waterFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].water.ice += waterFlowResult.changes[zone].ice || 0;
-                zonalChanges[zone].water.buriedIce += waterFlowResult.changes[zone].buriedIce || 0;
-            }
-            if (hydrocarbonFlowResult.changes[zone]) {
-                zonalChanges[zone].methane.liquid += hydrocarbonFlowResult.changes[zone].liquid || 0;
-                zonalChanges[zone].methane.ice += hydrocarbonFlowResult.changes[zone].ice || 0;
-                zonalChanges[zone].methane.buriedIce += hydrocarbonFlowResult.changes[zone].buriedIce || 0;
+        for (const cycle of cycles) {
+            if (typeof cycle.instance.simulateFlow === 'function') {
+                const flowResult = cycle.instance.simulateFlow(this, durationSeconds, tempMap) || {};
+                if (cycle.name === 'water') {
+                    this.flowMeltAmount = flowResult.totalMelt || 0;
+                    this.flowMeltRate = this.flowMeltAmount / durationSeconds * 86400;
+                } else if (cycle.name === 'methane') {
+                    this.flowMethaneMeltAmount = flowResult.totalMelt || 0;
+                    this.flowMethaneMeltRate = this.flowMethaneMeltAmount / durationSeconds * 86400;
+                }
+                for (const zone of zones) {
+                    const zoneChange = flowResult.changes && flowResult.changes[zone];
+                    if (zoneChange) {
+                        for (const key of Object.keys(zoneChange)) {
+                            if (!zonalChanges[zone][cycle.surfaceBucket]) continue;
+                            zonalChanges[zone][cycle.surfaceBucket][key] += zoneChange[key] || 0;
+                        }
+                    }
+                }
             }
         }
 
