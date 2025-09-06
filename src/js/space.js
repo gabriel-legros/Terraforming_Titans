@@ -15,6 +15,11 @@ if (typeof module !== 'undefined' && module.exports) {
     ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
 }
 
+var generateRandomPlanet = globalThis.generateRandomPlanet;
+if (typeof module !== 'undefined' && module.exports) {
+    ({ generateRandomPlanet } = require('./rwg.js'));
+}
+
 class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
         super({ description: 'Manages planetary travel' });
@@ -595,6 +600,20 @@ class SpaceManager extends EffectableEntity {
 
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
+            if (typeof generateRandomPlanet === 'function') {
+                const seeds = Object.keys(this.randomWorldStatuses);
+                seeds.forEach(seed => {
+                    if (String(seed).toLowerCase().includes('auto')) {
+                        try {
+                            const { seedString } = generateRandomPlanet(seed);
+                            if (seedString && seedString !== seed) {
+                                this.randomWorldStatuses[seedString] = this.randomWorldStatuses[seed];
+                                delete this.randomWorldStatuses[seed];
+                            }
+                        } catch (_) { }
+                    }
+                });
+            }
         }
 
         if (typeof savedData.randomTabEnabled === 'boolean') {
