@@ -178,13 +178,16 @@ class ColonySlidersManager extends EffectableEntity {
 
     const allColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
     allColonies.forEach(colonyId => {
+      const tierMatch = colonyId.match(/^t(\d)_colony$/);
+      const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
+      const scaledAmount = value * Math.pow(10, tier - 3);
       const effect = {
         target: 'colony',
         targetId: colonyId,
         type: 'addResourceConsumption',
         resourceCategory: 'colony',
         resourceId: 'components',
-        amount: value,
+        amount: scaledAmount,
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
@@ -208,15 +211,27 @@ class ColonySlidersManager extends EffectableEntity {
     }
   }
 
+  saveState() {
+    return {
+      workerRatio: this.workerRatio,
+      foodConsumption: this.foodConsumption,
+      luxuryWater: this.luxuryWater,
+      oreMineWorkers: this.oreMineWorkers,
+      mechanicalAssistance: this.mechanicalAssistance,
+    };
+  }
+
+  loadState(state) {
+    if (!state) return;
+    this.setWorkforceRatio(state.workerRatio ?? 0.5);
+    this.setFoodConsumptionMultiplier(state.foodConsumption ?? 1);
+    this.setLuxuryWaterMultiplier(state.luxuryWater ?? 1);
+    this.setOreMineWorkerAssist(state.oreMineWorkers ?? 0);
+    this.setMechanicalAssistance(state.mechanicalAssistance ?? 0);
+  }
+
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
-    if (effect.flagId === 'mechanicalAssistance' && typeof document !== 'undefined') {
-      const row = document.getElementById('mechanical-assistance-row');
-      if (row) {
-        // Use 'hidden' to fully remove the slider from layout when locked
-        row.classList.toggle('hidden', !effect.value);
-      }
-    }
   }
 
   reset() {

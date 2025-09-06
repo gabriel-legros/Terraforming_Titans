@@ -10,7 +10,7 @@ const {
   colonySliderSettings,
   ColonySlidersManager
 } = require('../src/js/colonySliders.js');
-const { initializeColonySlidersUI } = require('../src/js/colonySlidersUI.js');
+const { initializeColonySlidersUI, updateColonySlidersUI } = require('../src/js/colonySlidersUI.js');
 
 const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
 const sixResearchColonies = researchColonies.slice(0,6);
@@ -121,13 +121,15 @@ describe('colony sliders', () => {
     setMechanicalAssistance(1.2);
     expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
     researchColonies.forEach(colonyId => {
+      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const expectedAmount = 1.2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
         type: 'addResourceConsumption',
         resourceCategory: 'colony',
         resourceId: 'components',
-        amount: 1.2
+        amount: expectedAmount
       }));
     });
 
@@ -147,10 +149,12 @@ describe('colony sliders', () => {
     setMechanicalAssistance(5);
     expect(colonySliderSettings.mechanicalAssistance).toBe(2);
     researchColonies.forEach(colonyId => {
+      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const expectedAmount = 2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
-        amount: 2
+        amount: expectedAmount
       }));
     });
   });
@@ -167,6 +171,37 @@ describe('colony sliders', () => {
     expect(colonySliderSettings.luxuryWater).toBe(1);
     expect(colonySliderSettings.oreMineWorkers).toBe(0);
     expect(colonySliderSettings.mechanicalAssistance).toBe(0);
+  });
+
+  test('saveState and loadState round trip', () => {
+    colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
+    setWorkforceRatio(0.7);
+    setFoodConsumptionMultiplier(2);
+    setLuxuryWaterMultiplier(3);
+    setOreMineWorkerAssist(4);
+    setMechanicalAssistance(1.5);
+
+    const saved = colonySliderSettings.saveState();
+    resetColonySliders();
+    colonySliderSettings.loadState(saved);
+
+    expect(colonySliderSettings.workerRatio).toBe(0.7);
+    expect(colonySliderSettings.foodConsumption).toBe(2);
+    expect(colonySliderSettings.luxuryWater).toBe(3);
+    expect(colonySliderSettings.oreMineWorkers).toBe(4);
+    expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.5);
+    expect(colonySliderSettings.isBooleanFlagSet('mechanicalAssistance')).toBe(true);
+  });
+
+  test('loadState handles legacy plain object', () => {
+    resetColonySliders();
+    const legacy = { workerRatio: 0.6, foodConsumption: 2, luxuryWater: 4, oreMineWorkers: 3, mechanicalAssistance: 1 };
+    colonySliderSettings.loadState(legacy);
+    expect(colonySliderSettings.workerRatio).toBe(0.6);
+    expect(colonySliderSettings.foodConsumption).toBe(2);
+    expect(colonySliderSettings.luxuryWater).toBe(4);
+    expect(colonySliderSettings.oreMineWorkers).toBe(3);
+    expect(colonySliderSettings.mechanicalAssistance).toBe(1);
   });
 
   test('initializeColonySlidersUI sets default text values', () => {
@@ -374,11 +409,12 @@ describe('colony sliders', () => {
 
     ctx.initializeColonySlidersUI();
     let row = dom.window.document.getElementById('mechanical-assistance-row');
-    expect(row.classList.contains('hidden')).toBe(true);
+    expect(row.style.display).toBe('none');
 
     ctx.colonySliderSettings.sortAllResearches = () => {};
     ctx.colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
+    ctx.updateColonySlidersUI();
     row = dom.window.document.getElementById('mechanical-assistance-row');
-    expect(row.classList.contains('hidden')).toBe(false);
+    expect(row.style.display).toBe('grid');
   });
 });

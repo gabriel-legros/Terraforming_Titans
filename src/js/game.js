@@ -387,6 +387,7 @@ function updateRender(force = false) {
       if (typeof updateGrowthRateDisplay === 'function') {
         updateGrowthRateDisplay();
       }
+      updateColonySlidersUI();
     }
 
     if (isActive('special-projects')) {
@@ -417,6 +418,7 @@ function updateRender(force = false) {
     updateBuildingDisplay(buildings);
     updateColonyDisplay(colonies);
     if (typeof updateGrowthRateDisplay === 'function') updateGrowthRateDisplay();
+    updateColonySlidersUI();
     renderProjects();
     updateResearchUI();
     updateTerraformingUI();
