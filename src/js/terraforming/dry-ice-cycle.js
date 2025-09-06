@@ -107,6 +107,16 @@ class CO2Cycle extends ResourceCycleClass {
     });
   }
 
+  /**
+   * Extract dry ice coverage values for a zone from a cache object.
+   */
+  getCoverage(zone, cache = {}) {
+    const data = cache[zone] || {};
+    return {
+      dryIceCoverage: data.dryIce ?? 0,
+    };
+  }
+
   // Preserve original condensation calculation behavior
   condensationRateFactor({ zoneArea, co2VaporPressure, dayTemperature, nightTemperature }) {
     const condensationTemperatureCO2 = 195; // K

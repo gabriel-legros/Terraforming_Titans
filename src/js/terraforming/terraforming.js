@@ -574,9 +574,15 @@ class Terraforming extends EffectableEntity{
             const availableDryIce = this.zonalSurface[zone].dryIce || 0;
             const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
             const zoneArea = this.zonalCoverageCache[zone]?.zoneArea ?? this.celestialParameters.surfaceArea * getZonePercentage(zone);
-            const liquidWaterCoverage = this.zonalCoverageCache[zone]?.liquidWater ?? 0;
-            const iceCoverage = this.zonalCoverageCache[zone]?.ice ?? 0;
-            const dryIceCoverage = this.zonalCoverageCache[zone]?.dryIce ?? 0;
+            const { liquidWaterCoverage, iceCoverage } = (typeof waterCycleInstance.getCoverage === 'function')
+                ? waterCycleInstance.getCoverage(zone, this.zonalCoverageCache)
+                : {
+                    liquidWaterCoverage: this.zonalCoverageCache[zone]?.liquidWater ?? 0,
+                    iceCoverage: this.zonalCoverageCache[zone]?.ice ?? 0,
+                };
+            const { dryIceCoverage } = (typeof co2CycleInstance.getCoverage === 'function')
+                ? co2CycleInstance.getCoverage(zone, this.zonalCoverageCache)
+                : { dryIceCoverage: this.zonalCoverageCache[zone]?.dryIce ?? 0 };
 
             // --- Water Cycle ---
             const waterResult = waterCycleInstance.processZone({
@@ -632,8 +638,12 @@ class Terraforming extends EffectableEntity{
             const availableLiquidMethane = this.zonalHydrocarbons[zone].liquid || 0;
             const availableHydrocarbonIce = this.zonalHydrocarbons[zone].ice || 0;
             const availableBuriedHydrocarbonIce = this.zonalHydrocarbons[zone].buriedIce || 0;
-            const liquidMethaneCoverage = this.zonalCoverageCache[zone]?.liquidMethane ?? 0;
-            const hydrocarbonIceCoverage = this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0;
+            const { liquidMethaneCoverage, hydrocarbonIceCoverage } = (typeof methaneCycleInstance.getCoverage === 'function')
+                ? methaneCycleInstance.getCoverage(zone, this.zonalCoverageCache)
+                : {
+                    liquidMethaneCoverage: this.zonalCoverageCache[zone]?.liquidMethane ?? 0,
+                    hydrocarbonIceCoverage: this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0,
+                };
 
             const methaneResult = methaneCycleInstance.processZone({
                 zoneArea,
@@ -1165,7 +1175,9 @@ class Terraforming extends EffectableEntity{
 
     calculateZonalSurfaceAlbedo(zone) {
         const groundAlbedo = this.calculateGroundAlbedo();
-        const fractions = calculateZonalSurfaceFractions(this, zone);
+        const fractions = (typeof calculateZonalSurfaceFractions === 'function')
+            ? calculateZonalSurfaceFractions(this, zone)
+            : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
         return surfaceAlbedoMix(groundAlbedo, fractions);
     }
 
