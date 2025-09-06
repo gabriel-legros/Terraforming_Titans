@@ -300,6 +300,27 @@ class MethaneCycle extends ResourceCycleClass {
       redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
     }
   }
+
+  runCycle(terraforming, zones, {
+    atmPressure = 0,
+    vaporPressure = 0,
+    available = 0,
+    durationSeconds = 1,
+    gravity = 1,
+    condensationParameter = 1,
+  } = {}) {
+    return super.runCycle(terraforming, zones, {
+      zonalKey: 'zonalHydrocarbons',
+      surfaceBucket: 'methane',
+      atmosphereKey: 'methane',
+      vaporPressure,
+      available,
+      atmPressure,
+      durationSeconds,
+      availableKeys: ['liquid', 'ice', 'buriedIce'],
+      extraParams: { gravity, condensationParameter },
+    });
+  }
 }
 
 const methaneCycle = new MethaneCycle();

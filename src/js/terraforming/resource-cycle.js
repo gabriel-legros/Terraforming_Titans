@@ -148,6 +148,102 @@ class ResourceCycle {
     return { totalAtmosphericChange, totalsByProcess };
   }
 
+  runCycle(terraforming, zones, {
+    zonalKey,
+    surfaceBucket,
+    atmosphereKey,
+    vaporPressure = 0,
+    available = 0,
+    atmPressure = 0,
+    durationSeconds = 1,
+    availableKeys = [],
+    extraParams = {},
+  } = {}) {
+    const zonalChanges = {};
+    const cycleTotals = { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 };
+
+    for (const zone of zones) {
+      const temps = terraforming.temperature.zones[zone] || {};
+      const zoneArea = terraforming.zonalCoverageCache?.[zone]?.zoneArea
+        ?? terraforming.celestialParameters.surfaceArea * getZonePercentage(zone);
+      const coverage = (typeof this.getCoverage === 'function')
+        ? this.getCoverage(zone, terraforming.zonalCoverageCache)
+        : {};
+      const zonalSource = terraforming[zonalKey]?.[zone] || {};
+      const params = {
+        zoneArea,
+        dayTemperature: temps.day,
+        nightTemperature: temps.night,
+        zoneTemperature: temps.value,
+        atmPressure,
+        vaporPressure,
+        zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone, true),
+        durationSeconds,
+        ...coverage,
+        ...extraParams,
+      };
+      for (const key of availableKeys) {
+        const paramKey = 'available' + key.charAt(0).toUpperCase() + key.slice(1);
+        params[paramKey] = zonalSource[key] || 0;
+      }
+      const result = this.processZone(params);
+      zonalChanges[zone] = zonalChanges[zone] || {};
+      const change = zonalChanges[zone];
+      if (!change.atmosphere) change.atmosphere = {};
+      change.atmosphere[atmosphereKey] = (change.atmosphere[atmosphereKey] || 0)
+        + (result.atmosphere?.[atmosphereKey] || 0);
+      if (!change[surfaceBucket]) change[surfaceBucket] = {};
+      const surfaceChanges = result[surfaceBucket] || {};
+      for (const [k, v] of Object.entries(surfaceChanges)) {
+        change[surfaceBucket][k] = (change[surfaceBucket][k] || 0) + v;
+      }
+      if (result.precipitation) {
+        if (!change.precipitation) change.precipitation = {};
+        for (const [k, v] of Object.entries(result.precipitation)) {
+          change.precipitation[k] = (change.precipitation[k] || 0) + v;
+        }
+      }
+      if (result.potentialCO2Condensation !== undefined) {
+        change.potentialCO2Condensation =
+          (change.potentialCO2Condensation || 0) + result.potentialCO2Condensation;
+      }
+      if (result.evaporationAmount) cycleTotals.evaporation += result.evaporationAmount;
+      if (result.sublimationAmount) cycleTotals.sublimation += result.sublimationAmount;
+      if (result.meltAmount) cycleTotals.melt += result.meltAmount;
+      if (result.freezeAmount) cycleTotals.freeze += result.freezeAmount;
+    }
+
+    const finalizeResult = this.finalizeAtmosphere({
+      available,
+      zonalChanges,
+    });
+
+    if (typeof this.redistributePrecipitation === 'function') {
+      this.redistributePrecipitation(terraforming, zonalChanges, terraforming.temperature.zones);
+    }
+
+    const processTotals = {};
+    for (const zone of zones) {
+      const precip = zonalChanges[zone]?.precipitation;
+      if (!precip) continue;
+      for (const [k, v] of Object.entries(precip)) {
+        processTotals[k] = (processTotals[k] || 0) + v;
+      }
+    }
+    if (Object.keys(processTotals).length === 0) {
+      Object.assign(processTotals, finalizeResult.totalsByProcess);
+    }
+
+    return {
+      zonalChanges,
+      totals: {
+        ...cycleTotals,
+        ...processTotals,
+        totalAtmosphericChange: finalizeResult.totalAtmosphericChange,
+      },
+    };
+  }
+
   rapidSublimationRate(temperature, availableIce) {
     if (temperature > this.sublimationPoint && availableIce > 0) {
       const diff = temperature - this.sublimationPoint;

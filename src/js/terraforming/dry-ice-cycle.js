@@ -251,6 +251,26 @@ class CO2Cycle extends ResourceCycleClass {
       ],
     });
   }
+
+  runCycle(terraforming, zones, {
+    atmPressure = 0,
+    vaporPressure = 0,
+    available = 0,
+    durationSeconds = 1,
+    condensationParameter = 1,
+  } = {}) {
+    return super.runCycle(terraforming, zones, {
+      zonalKey: 'zonalSurface',
+      surfaceBucket: 'water',
+      atmosphereKey: 'co2',
+      vaporPressure,
+      available,
+      atmPressure,
+      durationSeconds,
+      availableKeys: ['dryIce'],
+      extraParams: { condensationParameter },
+    });
+  }
 }
 
 const co2Cycle = new CO2Cycle();
