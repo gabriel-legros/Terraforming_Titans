@@ -1462,6 +1462,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'mechanical_assistance',
+        name: 'Mechanical Assistance',
+        description: 'Placeholder description.',
+        cost: { advancedResearch: 175000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colonySliders',
+            type: 'booleanFlag',
+            flagId: 'mechanicalAssistance',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',
