@@ -593,6 +593,7 @@ function addOrRemoveEffect(effect, action) {
     'solisManager' : solisManager,
     'spaceManager' : spaceManager,
     'warpGateCommand' : warpGateCommand,
+    'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
