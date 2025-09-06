@@ -193,7 +193,8 @@ class ColonySlidersManager extends EffectableEntity {
     if (effect.flagId === 'mechanicalAssistance' && typeof document !== 'undefined') {
       const row = document.getElementById('mechanical-assistance-row');
       if (row) {
-        row.classList.toggle('invisible', !effect.value);
+        // Use 'hidden' to fully remove the slider from layout when locked
+        row.classList.toggle('hidden', !effect.value);
       }
     }
   }
