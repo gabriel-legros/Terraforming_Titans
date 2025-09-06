@@ -176,6 +176,25 @@ class ColonySlidersManager extends EffectableEntity {
     value = Math.min(2, Math.max(0, value));
     this.mechanicalAssistance = value;
 
+    const allColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
+    allColonies.forEach(colonyId => {
+      const effect = {
+        target: 'colony',
+        targetId: colonyId,
+        type: 'addResourceConsumption',
+        resourceCategory: 'colony',
+        resourceId: 'components',
+        amount: value,
+        effectId: 'mechanicalAssistanceComponents',
+        sourceId: 'mechanicalAssistance'
+      };
+      if (value > 0) {
+        addEffect(effect);
+      } else {
+        removeEffect(effect);
+      }
+    });
+
     if (typeof document !== 'undefined') {
       const input = document.getElementById('mechanical-assistance-slider');
       if (input) input.value = value.toString();
