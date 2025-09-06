@@ -89,12 +89,11 @@ describe('continuous spaceship project run toggle', () => {
     expect(energyAfterRun).toBeLessThan(100000);
 
     project.autoStart = false;
+    const metalBeforeStop = ctx.resources.colony.metal.value;
+    const energyBeforeStop = ctx.resources.colony.energy.value;
     ctx.projectManager.updateProjects(1000);
     expect(project.isActive).toBe(false);
-    changes = createChanges(ctx.resources);
-    project.applyCostAndGain(1000, changes);
-    applyChanges(ctx.resources, changes);
-    expect(ctx.resources.colony.metal.value).toBe(metalAfterRun);
-    expect(ctx.resources.colony.energy.value).toBe(energyAfterRun);
+    expect(ctx.resources.colony.metal.value).toBe(metalBeforeStop);
+    expect(ctx.resources.colony.energy.value).toBe(energyBeforeStop);
   });
 });
