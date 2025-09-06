@@ -54,7 +54,7 @@ function getGameState() {
     spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
-    colonySliderSettings: typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
+    colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
     ghgFactorySettings: typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined,
     oxygenFactorySettings: typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
@@ -372,12 +372,11 @@ function loadGame(slotOrCustomString) {
     }
 
     if(gameState.colonySliderSettings){
-      Object.assign(colonySliderSettings, gameState.colonySliderSettings);
-      setWorkforceRatio(colonySliderSettings.workerRatio);
-      setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
-      setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
-      setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
-      setMechanicalAssistance(colonySliderSettings.mechanicalAssistance);
+      if (typeof colonySliderSettings.loadState === 'function') {
+        colonySliderSettings.loadState(gameState.colonySliderSettings);
+      } else {
+        Object.assign(colonySliderSettings, gameState.colonySliderSettings);
+      }
     }
 
     if(gameState.ghgFactorySettings){
