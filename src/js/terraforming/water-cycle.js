@@ -122,6 +122,17 @@ class WaterCycle extends ResourceCycleClass {
   }
 
   /**
+   * Extract water-related coverage values for a zone from a cache object.
+   */
+  getCoverage(zone, cache = {}) {
+    const data = cache[zone] || {};
+    return {
+      liquidWaterCoverage: data.liquidWater ?? 0,
+      iceCoverage: data.ice ?? 0,
+    };
+  }
+
+  /**
    * Calculate zonal resource changes for water using base phase-change helpers.
    * Returns an object shaped like the entries in terraforming.updateResources's
    * `zonalChanges` map so results can be merged directly.

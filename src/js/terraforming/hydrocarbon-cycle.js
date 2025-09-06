@@ -109,6 +109,17 @@ class MethaneCycle extends ResourceCycleClass {
   }
 
   /**
+   * Extract methane-related coverage values for a zone from a cache object.
+   */
+  getCoverage(zone, cache = {}) {
+    const data = cache[zone] || {};
+    return {
+      liquidMethaneCoverage: data.liquidMethane ?? 0,
+      hydrocarbonIceCoverage: data.hydrocarbonIce ?? 0,
+    };
+  }
+
+  /**
    * Compute methane-cycle changes for a zone over a time step.
    * Returns an object compatible with terraforming.updateResources zonal changes.
    */
