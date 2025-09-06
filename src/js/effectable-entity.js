@@ -118,6 +118,11 @@ class EffectableEntity {
         case 'workerRatio':
           this.applyWorkerRatio(effect);
           break;
+        case 'addResourceConsumption':
+          if (typeof this.applyAddResourceConsumption === 'function') {
+            this.applyAddResourceConsumption(effect);
+          }
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
@@ -262,6 +267,10 @@ class EffectableEntity {
     }
 
     applyWorkerRatio(effect) {
+
+    }
+
+    applyAddResourceConsumption(effect) {
 
     }
 
