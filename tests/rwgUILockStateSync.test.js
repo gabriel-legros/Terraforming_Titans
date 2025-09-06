@@ -32,11 +32,13 @@ describe('Random World Generator lock UI sync', () => {
 
     const hotOpt = dom.window.document.querySelector('#rwg-orbit option[value="hot"]');
     const coldOpt = dom.window.document.querySelector('#rwg-orbit option[value="cold"]');
+    const veryColdOpt = dom.window.document.querySelector('#rwg-orbit option[value="very-cold"]');
     const venusOpt = dom.window.document.querySelector('#rwg-type option[value="venus-like"]');
     const marsOpt = dom.window.document.querySelector('#rwg-type option[value="mars-like"]');
 
     expect(hotOpt.disabled).toBe(true);
     expect(venusOpt.disabled).toBe(true);
+    expect(veryColdOpt.disabled).toBe(false);
 
     vm.runInContext('rwgManager.unlockOrbit("hot"); rwgManager.unlockType("venus-like"); updateSpaceUI();', ctx);
     expect(hotOpt.disabled).toBe(false);
@@ -44,9 +46,11 @@ describe('Random World Generator lock UI sync', () => {
     expect(venusOpt.disabled).toBe(false);
     expect(venusOpt.textContent.includes("Locked")).toBe(false);
 
-    vm.runInContext('rwgManager.lockOrbit("cold"); rwgManager.lockType("mars-like"); updateSpaceUI();', ctx);
+    vm.runInContext('rwgManager.lockOrbit("cold"); rwgManager.lockOrbit("very-cold"); rwgManager.lockType("mars-like"); updateSpaceUI();', ctx);
     expect(coldOpt.disabled).toBe(true);
     expect(coldOpt.textContent.includes("Locked")).toBe(true);
+    expect(veryColdOpt.disabled).toBe(true);
+    expect(veryColdOpt.textContent.includes("Locked")).toBe(true);
     expect(marsOpt.disabled).toBe(true);
     expect(marsOpt.textContent.includes("Locked")).toBe(true);
   });

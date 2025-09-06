@@ -64,6 +64,7 @@ function initializeRandomWorldUI() {
         <option value="hz-outer">Orbit: HZ Outer</option>
         <option value="hot" disabled>Orbit: Hot (Locked)</option>
         <option value="cold">Orbit: Cold</option>
+        <option value="very-cold">Orbit: Very Cold</option>
       </select>
     </div>
     <div>

@@ -105,7 +105,8 @@ const DEFAULT_PARAMS = {
       hzInnerFluxWm2: [1200, 1500],
       hzMidFluxWm2:   [800, 1200],
       hzOuterFluxWm2: [500, 800],
-      coldFluxWm2: [100, 500]
+      coldFluxWm2: [100, 500],
+      veryColdFluxWm2: [10, 100]
     },
     moonChance: { thresholdAU: 3, chance: 0.35 }
   },
@@ -641,7 +642,7 @@ class RwgManager extends EffectableEntity {
   isTypeLocked(t) { return this.lockedTypes.has(t); }
   lockType(t) { this.lockedTypes.add(t); }
   unlockType(t) { this.lockedTypes.delete(t); }
-  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold"].filter((o) => !this.lockedOrbits.has(o)); }
+  getAvailableOrbits() { return ["hz-inner", "hz-mid", "hz-outer", "hot", "cold", "very-cold"].filter((o) => !this.lockedOrbits.has(o)); }
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
@@ -693,6 +694,7 @@ class RwgManager extends EffectableEntity {
         else if (usedPreset === "hz-outer") [lo, hi] = band("hzOuterFluxWm2");
         else if (usedPreset === "hot")      [lo, hi] = band("hotFluxWm2");
         else if (usedPreset === "cold")     [lo, hi] = band("coldFluxWm2");
+        else if (usedPreset === "very-cold") [lo, hi] = band("veryColdFluxWm2");
 
         if (lo !== undefined) {
           const flux = lo + r * (hi - lo);
