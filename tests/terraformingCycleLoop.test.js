@@ -19,13 +19,9 @@ jest.mock('../src/js/terraforming-utils.js', () => ({
 
 jest.mock('../src/js/terraforming/water-cycle.js', () => ({
   waterCycle: {
-    runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: { water: 5 }, water: { liquid: 2 }, methane: {}, precipitation: { rain: 1 } },
-        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-      },
-      totals: {
+    runCycle: jest.fn(tf => {
+      tf.zonalWater.tropical.liquid += 2;
+      return {
         evaporation: 2,
         sublimation: 0,
         melt: 0,
@@ -33,8 +29,8 @@ jest.mock('../src/js/terraforming/water-cycle.js', () => ({
         totalAtmosphericChange: 5,
         rain: 1,
         snow: 0,
-      },
-    })),
+      };
+    }),
   },
   boilingPointWater: jest.fn(() => 373.15),
 }));
@@ -42,20 +38,13 @@ jest.mock('../src/js/terraforming/water-cycle.js', () => ({
 jest.mock('../src/js/terraforming/hydrocarbon-cycle.js', () => ({
   methaneCycle: {
     runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-      },
-      totals: {
-        evaporation: 0,
-        sublimation: 0,
-        melt: 0,
-        freeze: 0,
-        totalAtmosphericChange: 0,
-        methaneRain: 0,
-        methaneSnow: 0,
-      },
+      evaporation: 0,
+      sublimation: 0,
+      melt: 0,
+      freeze: 0,
+      totalAtmosphericChange: 0,
+      methaneRain: 0,
+      methaneSnow: 0,
     })),
   },
   boilingPointMethane: jest.fn(() => 112),
@@ -64,16 +53,9 @@ jest.mock('../src/js/terraforming/hydrocarbon-cycle.js', () => ({
 jest.mock('../src/js/terraforming/dry-ice-cycle.js', () => ({
   co2Cycle: {
     runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-      },
-      totals: {
-        sublimation: 0,
-        totalAtmosphericChange: 0,
-        condensation: 0,
-      },
+      sublimation: 0,
+      totalAtmosphericChange: 0,
+      condensation: 0,
     })),
   },
 }));

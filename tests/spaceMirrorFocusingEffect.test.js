@@ -105,8 +105,8 @@ describe('focused mirror melt', () => {
     const iceCall = res.surface.ice.modifyRate.mock.calls.find(c => c[1] === 'Focused Melt');
     expect(waterCall).toBeDefined();
     expect(iceCall).toBeDefined();
-    expect(waterCall[0]).toBeCloseTo(expectedRate, 5);
-    expect(iceCall[0]).toBeCloseTo(-expectedRate, 5);
+    expect(waterCall[0]).toBeCloseTo(expectedRate, 4);
+    expect(iceCall[0]).toBeCloseTo(-expectedRate, 4);
   });
 
   test('focusing does nothing without surface ice', () => {

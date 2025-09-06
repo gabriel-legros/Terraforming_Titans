@@ -19,42 +19,21 @@ jest.mock('../src/js/terraforming-utils.js', () => ({
 
 jest.mock('../src/js/terraforming/water-cycle.js', () => ({
   waterCycle: {
-    runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-      },
-      totals: {},
-    })),
+    runCycle: jest.fn(() => ({})),
   },
   boilingPointWater: jest.fn(() => 373.15)
 }));
 
 jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
   methaneCycle: {
-    runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
-        temperate: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
-        polar: { atmosphere: {}, methane: {}, water: {}, precipitation: {} },
-      },
-      totals: {},
-    })),
+    runCycle: jest.fn(() => ({})),
   },
   boilingPointMethane: jest.fn(() => 112)
 }));
 
 jest.mock('../src/js/dry-ice-cycle.js', () => ({
   co2Cycle: {
-    runCycle: jest.fn(() => ({
-      zonalChanges: {
-        tropical: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        temperate: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-        polar: { atmosphere: {}, water: {}, methane: {}, precipitation: {} },
-      },
-      totals: {},
-    })),
+    runCycle: jest.fn(() => ({})),
   },
 }));
 

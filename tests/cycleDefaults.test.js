@@ -25,8 +25,7 @@ describe('cycle default parameters', () => {
       gravity: 9,
       precipitationMultiplier: 2,
     }));
-    expect(result.zonalChanges.tropical.atmosphere.water).toBe(0);
-    expect(result.zonalChanges.tropical.water).toBeDefined();
+    expect(result.totalAtmosphericChange).toBe(0);
   });
 
   test('methane cycle uses constructor defaults', () => {
@@ -51,8 +50,7 @@ describe('cycle default parameters', () => {
       gravity: 1.6,
       condensationParameter: 3,
     }));
-    expect(result.zonalChanges.polar.atmosphere.methane).toBe(0);
-    expect(result.zonalChanges.polar.methane).toBeDefined();
+    expect(result.totalAtmosphericChange).toBe(0);
   });
 
   test('co2 cycle uses constructor defaults', () => {
@@ -76,7 +74,6 @@ describe('cycle default parameters', () => {
       availableDryIce: 2,
       condensationParameter: 4,
     }));
-    expect(result.zonalChanges.temperate.atmosphere.co2).toBe(0);
-    expect(result.zonalChanges.temperate.water).toBeDefined();
+    expect(result.totalAtmosphericChange).toBe(0);
   });
 });

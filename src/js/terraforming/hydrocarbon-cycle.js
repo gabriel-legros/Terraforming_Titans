@@ -335,7 +335,7 @@ class MethaneCycle extends ResourceCycleClass {
   }
 
   runCycle(terraforming, zones, options = {}) {
-    const data = super.runCycle(terraforming, zones, options);
+    const data = this.calculateZonalChanges(terraforming, zones, options);
     const { durationSeconds = 1 } = options;
     const tempMap = {};
     for (const z of zones) {
@@ -354,7 +354,8 @@ class MethaneCycle extends ResourceCycleClass {
       if (zoneChange.ice) dest.methane.ice = (dest.methane.ice || 0) + zoneChange.ice;
       if (zoneChange.buriedIce) dest.methane.buriedIce = (dest.methane.buriedIce || 0) + zoneChange.buriedIce;
     }
-    return data;
+    this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    return data.totals;
   }
 }
 
