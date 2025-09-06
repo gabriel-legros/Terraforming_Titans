@@ -50,6 +50,43 @@ const RWG_EFFECTS = {
         return count;
       },
     },
+  ],    
+  "cold-desert": [
+    {
+      effectId: "rwg-desert-ore",
+      target: "building",
+      targetId: "oreMine",
+      type: "productionMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 + f * count;
+      },
+    },
+  ],
+  "desiccated-desert": [
+    {
+      effectId: "rwg-desiccated-sand",
+      target: "building",
+      targetId: "sandQuarry",
+      type: "productionMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 + f * count;
+      }
+    }],
+  "mars-like": [
+    {
+      effectId: "rwg-mars-pop",
+      target: "population",
+      type: "globalPopulationGrowth",
+      factor: 0.01,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.01;
+        return f * count;
+      },
+    },
   ],
 };
 
@@ -61,7 +98,7 @@ function applyRWGEffects() {
   for (const seed in statuses) {
     const st = statuses[seed];
     const cls = st?.original?.override?.classification;
-    const type = typeof cls === 'string' ? cls : cls?.archetype;
+    const type = typeof cls === "string" ? cls : cls?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
     }

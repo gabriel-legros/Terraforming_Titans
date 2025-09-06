@@ -61,11 +61,19 @@ function initContext(projectKey, classification) {
   };
   context.projectManager.initializeProjects({ [projectKey]: projectDefs[projectKey] });
 
+  const classObj =
+    typeof classification === 'string'
+      ? { archetype: classification }
+      : classification;
+
   context.spaceManager = {
     randomWorldStatuses: {
-      a: { terraformed: true, original: { override: { classification } } },
-      b: { terraformed: true, original: { override: { classification } } },
-      c: { terraformed: true, original: { override: { classification: 'rocky' } } },
+      a: { terraformed: true, original: { override: { classification: classObj } } },
+      b: { terraformed: true, original: { override: { classification: classObj } } },
+      c: {
+        terraformed: true,
+        original: { override: { classification: { archetype: 'rocky' } } },
+      },
     },
   };
 
@@ -111,5 +119,28 @@ describe('rwgEffects icy-moon water bonus', () => {
     expect(project.getEffectiveDuration()).toBeCloseTo(100);
     context.applyRWGEffects();
     expect(project.getEffectiveDuration()).toBeCloseTo(100 / (1 + 0.1 * 2));
+  });
+});
+
+describe('rwgEffects mars-like population bonus', () => {
+  let context;
+  beforeEach(() => {
+    context = initContext('nitrogenSpaceMining', 'mars-like');
+    context.populationModule = new context.EffectableEntity({ description: 'pop' });
+    context.populationModule.getEffectiveGrowthMultiplier = function () {
+      let m = 1;
+      this.activeEffects.forEach((e) => {
+        if (e.type === 'growthMultiplier') m *= e.value;
+      });
+      return m;
+    };
+  });
+
+  test('applies population growth bonus based on mars-like count', () => {
+    expect(context.populationModule.getEffectiveGrowthMultiplier()).toBeCloseTo(1);
+    context.applyRWGEffects();
+    expect(context.populationModule.getEffectiveGrowthMultiplier()).toBeCloseTo(
+      1 + 0.01 * 2
+    );
   });
 });
