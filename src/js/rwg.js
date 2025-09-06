@@ -652,7 +652,12 @@ class RwgManager extends EffectableEntity {
   }
 
   applyEffect(effect) {
-    if(effect.type == 'enable' && effect.type2 == 'orbit'){
+    if (effect.type === 'unlockOrbit') {
+      this.unlockOrbit(effect.targetId);
+    } else if (effect.type === 'lockOrbit') {
+      this.lockOrbit(effect.targetId);
+    } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
+      // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
     }
   }
