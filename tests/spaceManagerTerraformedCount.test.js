@@ -45,7 +45,7 @@ describe('SpaceManager terraformed planet counting', () => {
       visited: true,
       colonists: 0,
       name: 'Seed 111',
-      original: { override: { classification: { archetype: 'super-earth' } } },
+      original: { archetype: 'super-earth', override: { classification: { archetype: 'super-earth' } } },
     };
 
     global.spaceManager = sm;
