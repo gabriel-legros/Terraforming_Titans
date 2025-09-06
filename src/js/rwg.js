@@ -101,7 +101,7 @@ const DEFAULT_PARAMS = {
   orbit: {
     logAU: { min: 0.2, max: 30, outwardIndexScale: 0.25 },
     presets: {
-      hotFluxWm2: [1500, 2500],
+      hotFluxWm2: [1500, 4000],
       hzInnerFluxWm2: [1200, 1500],
       hzMidFluxWm2:   [800, 1200],
       hzOuterFluxWm2: [500, 800],
