@@ -42,15 +42,6 @@ let gameSettings = {
   preserveProjectAutoStart: false,
   autobuildAlsoSetsActive: true,
 };
-
-let colonySliderSettings = {
-  workerRatio: 0.5,
-  foodConsumption: 1,
-  luxuryWater: 1,
-  oreMineWorkers: 0
-};
-
-
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;

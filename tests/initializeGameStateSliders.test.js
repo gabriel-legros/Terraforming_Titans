@@ -101,7 +101,10 @@ test('initializeGameState resets colony sliders to defaults', () => {
     throw new Error('Script errors: ' + JSON.stringify(errors, null, 2));
   }
 
-  expect(settings).toEqual({ workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 });
+  expect(settings.workerRatio).toBe(0.5);
+  expect(settings.foodConsumption).toBe(1);
+  expect(settings.luxuryWater).toBe(1);
+  expect(settings.oreMineWorkers).toBe(0);
   expect(oversight).toEqual({
     distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
     applyToLantern: false,

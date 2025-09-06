@@ -574,7 +574,8 @@ function addOrRemoveEffect(effect, action) {
     'solisManager' : solisManager,
     'spaceManager' : spaceManager,
     'warpGateCommand' : warpGateCommand,
-    'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined
+    'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
+    'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
 
   if (effect.target in targetHandlers &&
