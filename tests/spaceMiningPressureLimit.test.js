@@ -43,7 +43,7 @@ describe('SpaceMiningProject pressure limit capping', () => {
       EffectableEntity,
       shipEfficiency: 1,
       resources: {},
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
       terraforming: { celestialParameters: { gravity: 1, radius: 0.01 } },
       calculateAtmosphericPressure: physics.calculateAtmosphericPressure,
     };

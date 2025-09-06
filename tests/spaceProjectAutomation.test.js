@@ -56,7 +56,7 @@ describe('continuous spaceship project automation', () => {
       celestialParameters: { gravity: 1, radius: 1 }
     };
     ctx.calculateAtmosphericPressure = (amount) => amount * 1000;
-    ctx.projectManager = { projects: {}, durationMultiplier: 1 };
+    ctx.projectManager = { projects: {}, getDurationMultiplier: () => 1 };
     vm.createContext(ctx);
     const projCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projCode + '; this.Project = Project;', ctx);
