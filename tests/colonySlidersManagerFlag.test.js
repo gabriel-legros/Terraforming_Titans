@@ -28,10 +28,10 @@ test('updateColonySlidersUI uses manager flag when settings lack it', () => {
 
   ctx.initializeColonySlidersUI();
   let row = dom.window.document.getElementById('mechanical-assistance-row');
-  expect(row.classList.contains('hidden')).toBe(true);
+  expect(row.style.display).toBe('none');
 
   ctx.colonySlidersManager.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
   ctx.updateColonySlidersUI();
   row = dom.window.document.getElementById('mechanical-assistance-row');
-  expect(row.classList.contains('hidden')).toBe(false);
+  expect(row.style.display).toBe('grid');
 });
