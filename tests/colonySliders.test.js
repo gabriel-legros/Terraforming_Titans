@@ -1,18 +1,28 @@
+const EffectableEntity = require('../src/js/effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
 const {
   setWorkforceRatio,
   setFoodConsumptionMultiplier,
   setLuxuryWaterMultiplier,
   setOreMineWorkerAssist,
-  resetColonySliders
+  resetColonySliders,
+  colonySliderSettings,
+  ColonySlidersManager
 } = require('../src/js/colonySliders.js');
 const { initializeColonySlidersUI } = require('../src/js/colonySlidersUI.js');
 
-const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony'];
+const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
+const sixResearchColonies = researchColonies.slice(0,6);
 
 describe('colony sliders', () => {
   beforeEach(() => {
     global.addEffect = jest.fn();
-    global.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    resetColonySliders();
+  });
+
+  test('manager inherits from EffectableEntity', () => {
+    expect(colonySliderSettings).toBeInstanceOf(ColonySlidersManager);
+    expect(colonySliderSettings).toBeInstanceOf(EffectableEntity);
   });
 
   test('setWorkforceRatio stores value and adds effect', () => {
@@ -53,7 +63,7 @@ describe('colony sliders', () => {
       type: 'growthMultiplier',
       value: growth
     }));
-    researchColonies.forEach(colonyId => {
+    sixResearchColonies.forEach(colonyId => {
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
@@ -74,7 +84,7 @@ describe('colony sliders', () => {
       type: 'growthMultiplier',
       value: growth
     }));
-    researchColonies.forEach(colonyId => {
+    sixResearchColonies.forEach(colonyId => {
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
@@ -124,6 +134,7 @@ describe('colony sliders', () => {
 
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
     ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
@@ -154,6 +165,7 @@ describe('colony sliders', () => {
 
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
     ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
@@ -174,6 +186,7 @@ describe('colony sliders', () => {
 
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
     ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
@@ -199,6 +212,7 @@ describe('colony sliders', () => {
 
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
     ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
     ctx.addEffect = jest.fn();
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');

@@ -363,6 +363,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space storage water withdrawals can target colony water or surface via a withdraw-mode dropdown.
 - Manual building toggle buttons now uncheck the Set active to target option when clicked.
 - Colony and nanocolony sliders now share styling, differing only in width.
+- Colony slider settings are managed by a `ColonySlidersManager` extending `EffectableEntity`.
 - Production and consumption displays update existing DOM nodes without rebuilding, preventing orphaned elements.
 - Nanobot growth rate now shows three decimal places, and the nanobot count and cap turn green when maxed.
 - Cargo Rocket auto-start now saves selected cargo and clears selections when auto-start is off on load.
