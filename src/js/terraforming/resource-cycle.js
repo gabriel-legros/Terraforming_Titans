@@ -89,6 +89,10 @@ class ResourceCycle {
     });
   }
 
+  // Optional hook for subclasses to redistribute precipitation across zones
+  // eslint-disable-next-line no-unused-vars
+  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {}
+
   rapidSublimationRate(temperature, availableIce) {
     if (temperature > this.sublimationPoint && availableIce > 0) {
       const diff = temperature - this.sublimationPoint;
