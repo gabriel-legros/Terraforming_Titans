@@ -93,6 +93,61 @@ class ResourceCycle {
   // eslint-disable-next-line no-unused-vars
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {}
 
+  finalizeAtmosphere({ available = 0, zonalChanges = {}, atmosphereKey, processes = [] }) {
+    let totalAtmosphericChange = 0;
+    let totalPotentialLoss = 0;
+
+    for (const zone in zonalChanges) {
+      const change = zonalChanges[zone];
+      const atm = change.atmosphere?.[atmosphereKey] || 0;
+      if (atm < 0) {
+        totalPotentialLoss -= atm;
+      } else {
+        totalAtmosphericChange += atm;
+      }
+    }
+
+    const scale = (available > 0 && totalPotentialLoss > available)
+      ? available / totalPotentialLoss
+      : 1;
+
+    const totalsByProcess = {};
+
+    for (const zone in zonalChanges) {
+      const change = zonalChanges[zone];
+      const atm = change.atmosphere?.[atmosphereKey] || 0;
+      const zoneScale = atm < 0 ? scale : 1;
+      if (atm < 0) {
+        const scaled = atm * scale;
+        change.atmosphere[atmosphereKey] = scaled;
+        totalAtmosphericChange += scaled;
+      }
+
+      for (const proc of processes) {
+        let potential;
+        if (proc.container === 'precipitation') {
+          potential = change.precipitation?.[proc.potentialKey];
+        } else {
+          potential = change[proc.potentialKey];
+        }
+        if (typeof potential !== 'number') continue;
+        const actual = potential * zoneScale;
+        if (proc.container === 'precipitation') {
+          if (!change.precipitation) change.precipitation = {};
+          change.precipitation[proc.precipitationKey] = actual;
+        }
+        if (proc.surfaceBucket && proc.surfaceKey) {
+          if (!change[proc.surfaceBucket]) change[proc.surfaceBucket] = {};
+          change[proc.surfaceBucket][proc.surfaceKey] =
+            (change[proc.surfaceBucket][proc.surfaceKey] || 0) + actual;
+        }
+        totalsByProcess[proc.totalKey] = (totalsByProcess[proc.totalKey] || 0) + actual;
+      }
+    }
+
+    return { totalAtmosphericChange, totalsByProcess };
+  }
+
   rapidSublimationRate(temperature, availableIce) {
     if (temperature > this.sublimationPoint && availableIce > 0) {
       const diff = temperature - this.sublimationPoint;

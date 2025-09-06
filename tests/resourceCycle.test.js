@@ -80,4 +80,42 @@ describe('ResourceCycle base class', () => {
     expect(rate).toBeCloseTo(50 * 0.1 * 5);
     expect(rc.rapidSublimationRate(190, 50)).toBe(0);
   });
+
+  test('finalizeAtmosphere scales losses and precipitation', () => {
+    const zones = {
+      A: {
+        atmosphere: { foo: -5 },
+        precipitation: { potentialRain: 3 },
+        foo: { liquid: 0 },
+      },
+      B: {
+        atmosphere: { foo: 1 },
+        precipitation: { potentialRain: 2 },
+        foo: { liquid: 0 },
+      },
+    };
+
+    const result = rc.finalizeAtmosphere({
+      available: 2,
+      zonalChanges: zones,
+      atmosphereKey: 'foo',
+      processes: [
+        {
+          container: 'precipitation',
+          potentialKey: 'potentialRain',
+          precipitationKey: 'rain',
+          surfaceBucket: 'foo',
+          surfaceKey: 'liquid',
+          totalKey: 'rain',
+        },
+      ],
+    });
+
+    expect(zones.A.atmosphere.foo).toBeCloseTo(-2);
+    expect(zones.A.precipitation.rain).toBeCloseTo(1.2);
+    expect(zones.A.foo.liquid).toBeCloseTo(1.2);
+    expect(zones.B.precipitation.rain).toBeCloseTo(2);
+    expect(result.totalAtmosphericChange).toBeCloseTo(-1);
+    expect(result.totalsByProcess.rain).toBeCloseTo(3.2);
+  });
 });

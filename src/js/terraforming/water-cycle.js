@@ -278,6 +278,32 @@ class WaterCycle extends ResourceCycleClass {
     };
   }
 
+  finalizeAtmosphere({ available, zonalChanges }) {
+    return super.finalizeAtmosphere({
+      available,
+      zonalChanges,
+      atmosphereKey: 'water',
+      processes: [
+        {
+          container: 'precipitation',
+          potentialKey: 'potentialRain',
+          precipitationKey: 'rain',
+          surfaceBucket: 'water',
+          surfaceKey: 'liquid',
+          totalKey: 'rain',
+        },
+        {
+          container: 'precipitation',
+          potentialKey: 'potentialSnow',
+          precipitationKey: 'snow',
+          surfaceBucket: 'water',
+          surfaceKey: 'ice',
+          totalKey: 'snow',
+        },
+      ],
+    });
+  }
+
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);

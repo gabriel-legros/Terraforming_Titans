@@ -468,3 +468,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cycle modules now expose `getCoverage(zone, cache)` helpers so `Terraforming.updateResources` pulls zonal coverage through each cycle instead of reading `zonalCoverageCache` directly.
 - ResourceCycle now exposes an optional `redistributePrecipitation` hook implemented by
   WaterCycle and MethaneCycle, and Terraforming calls the hook for each cycle.
+- ResourceCycle now provides `finalizeAtmosphere` to scale zonal atmospheric losses and apply precipitation consistently across cycles.
