@@ -353,10 +353,7 @@ function initializeColonySlidersUI() {
     mechList.appendChild(option);
   }
   container.appendChild(mechList);
-  if (!colonySliderSettings.isBooleanFlagSet('mechanicalAssistance')) {
-    // Hide the slider entirely until mechanical assistance is unlocked
-    mechanicalAssistanceRow.classList.add('hidden');
-  }
+  mechanicalAssistanceRow.style.display = colonySliderSettings.isBooleanFlagSet('mechanicalAssistance') ? 'grid' : 'none';
   body.appendChild(mechanicalAssistanceRow);
 
   card.appendChild(body);
@@ -419,9 +416,9 @@ function updateColonySlidersUI() {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
   if (!mechanicalAssistanceRow) return;
-  const manager = colonySliderSettings;
+  const manager = typeof colonySlidersManager !== 'undefined' ? colonySlidersManager : colonySliderSettings;
   const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
-  mechanicalAssistanceRow.classList.toggle('hidden', !unlocked);
+  mechanicalAssistanceRow.style.display = unlocked ? 'grid' : 'none';
 }
 
 if (typeof module !== "undefined" && module.exports) {
