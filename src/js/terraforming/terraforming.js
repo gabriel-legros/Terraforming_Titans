@@ -37,7 +37,6 @@ if (typeof module !== 'undefined' && module.exports) {
     var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
     var calculateSurfaceFractions = terraformUtils.calculateSurfaceFractions;
     var calculateZonalSurfaceFractions = terraformUtils.calculateZonalSurfaceFractions;
-    var redistributePrecipitation = require('./phase-change-utils.js').redistributePrecipitation;
 
       const radiation = require('./radiation-utils.js');
       var estimateSurfaceDoseByColumn = radiation.estimateSurfaceDoseByColumn;
@@ -97,10 +96,6 @@ if (typeof module !== 'undefined' && module.exports) {
     }
 }
 
-// Fraction of precipitation redistributed across zones
-const PRECIPITATION_REDISTRIBUTION_FRACTION = 0.3;
-// Weights for redistribution: small effect from winds, larger from water coverage
-const WIND_WEIGHT = 0.2;
 
 const terraformingGasTargets = {
   carbonDioxide : {min : 0, max : 100},
@@ -782,9 +777,13 @@ class Terraforming extends EffectableEntity{
             }
         });
 
-        // --- 3. Redistribute Precipitation ---
-        redistributePrecipitation(this, 'water', zonalChanges, this.temperature.zones);
-        redistributePrecipitation(this, 'methane', zonalChanges, this.temperature.zones);
+        // --- 3. Redistribute Precipitation via cycle hooks ---
+        const cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
+        for (const cycle of cycles) {
+            if (cycle && typeof cycle.redistributePrecipitation === 'function') {
+                cycle.redistributePrecipitation(this, zonalChanges, this.temperature.zones);
+            }
+        }
 
 
         // --- 4. Recalculate precipitation totals after redistribution for accurate UI reporting ---
