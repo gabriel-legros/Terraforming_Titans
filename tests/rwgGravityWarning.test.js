@@ -35,7 +35,8 @@ describe('RWG gravity warning icon', () => {
     let icon = chip.querySelector('.info-tooltip-icon');
     expect(icon).not.toBeNull();
     expect(icon.textContent).toBe('⚠');
-    expect(icon.getAttribute('title')).toContain('5%');
+    const penalty = Math.min((12 - 10) * 5, 100);
+    expect(icon.getAttribute('title')).toContain(`${ctx.formatNumber(penalty)}%`);
 
     baseRes.merged.celestialParameters.gravity = 9;
     html = ctx.renderWorldDetail(baseRes, 'seed');
@@ -52,7 +53,8 @@ describe('RWG gravity warning icon', () => {
     let icon = dom.window.document.querySelector('.info-tooltip-icon');
     expect(icon).not.toBeNull();
     expect(icon.textContent).toBe('⚠');
-    expect(icon.getAttribute('title')).toContain('5%');
+    const penalty = Math.min((12 - 10) * 5, 100);
+    expect(icon.getAttribute('title')).toContain(`${ctx.formatNumber(penalty)}%`);
 
     const safeHtml = ctx.renderPlanetCard({ merged: { celestialParameters: { gravity: 9, radius: 1, albedo: 0 }, name: 'B' } }, 0);
     dom = new JSDOM(safeHtml);
