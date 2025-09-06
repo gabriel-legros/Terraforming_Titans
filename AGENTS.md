@@ -459,3 +459,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration, Carbon planets speed Carbon Asteroid Mining, icy moons accelerate Ice and Water importation, and Mars-like worlds boost global population growth by 1% each.
 - Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration based on count.
 - ProjectManager duration multiplier is now computed on demand via `getDurationMultiplier` instead of a stored attribute.
+- Desert worlds grant +10% Ore Mine production per desert world terraformed, and desiccated deserts grant +10% Sand Quarry production per desiccated desert terraformed.

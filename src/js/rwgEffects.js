@@ -41,6 +41,29 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "cold-desert": [
+    {
+      effectId: "rwg-desert-ore",
+      target: "building",
+      targetId: "oreMine",
+      type: "productionMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 + f * count;
+      },
+    },
+  ],
+  "desiccated-desert": [
+    {
+      effectId: "rwg-desiccated-sand",
+      target: "building",
+      targetId: "sandQuarry",
+      type: "productionMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 + f * count;
   "mars-like": [
     {
       effectId: "rwg-mars-pop",
@@ -62,7 +85,8 @@ function applyRWGEffects() {
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
-    const type = st?.original?.override?.classification.archetype;
+    const cls = st?.original?.override?.classification;
+    const type = typeof cls === "string" ? cls : cls?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
     }
