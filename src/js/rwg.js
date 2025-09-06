@@ -113,7 +113,7 @@ const DEFAULT_PARAMS = {
       "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9], rocky: [0.6,1.2],
       "carbon-planet": [0.7, 1.4],
       "desiccated-desert": [0.6, 1.2],
-      "super-earth": [1.2, 3.0]
+      "super-earth": [1.2, 2.5]
     },
     densityRel: {
       "venus-like": [0.95,1.1], "mars-like": [0.7,0.95], "hot-rocky": [0.85,1.05],
