@@ -23,10 +23,11 @@ describe('RWG prevents travel to terraformed seeds', () => {
     global.spaceManager.setRwgLock('mars', true);
   });
 
-  test('travel button disabled when seed already terraformed', async () => {
-    spaceManager.randomWorldStatuses['123'] = { name:'World', terraformed:true };
+  test('travel button disabled when resulting seed already terraformed', async () => {
+    spaceManager.randomWorldStatuses['canonical'] = { name:'World', terraformed:true };
     const { renderWorldDetail, attachEquilibrateHandler } = require('../src/js/rwgUI.js');
     const res = {
+      seedString: 'canonical',
       star: { name:'Sun', spectralType:'G', luminositySolar:1, massSolar:1, temperatureK:5800, habitableZone:{ inner:0.5, outer:1.5 } },
       merged: {
         celestialParameters:{ distanceFromSun:1, radius:6000, gravity:9.8, albedo:0.3, rotationPeriod:24 },

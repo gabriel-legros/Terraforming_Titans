@@ -213,8 +213,13 @@ function updateRandomWorldUI() {
     const travelBtn = /** @type {HTMLButtonElement|null} */(document.getElementById('rwg-travel-btn'));
     if (rwgResultEl && travelBtn && sm) {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
-      const eqDone = seedUsed ? equilibratedWorlds.has(seedUsed) : false;
-      const alreadyTerraformed = seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false;
+      const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
+      const eqDone = seedUsed
+        ? (equilibratedWorlds.has(seedUsed) || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false))
+        : false;
+      const alreadyTerraformed = (canonicalSeed && typeof sm.isSeedTerraformed === 'function')
+        ? sm.isSeedTerraformed(canonicalSeed)
+        : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
       const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
       const travelDisabled = lockedByStory || !eqDone || !!alreadyTerraformed;
       travelBtn.disabled = travelDisabled;
@@ -255,7 +260,10 @@ function attachTravelHandler(res, sStr) {
         const box = document.getElementById('rwg-result');
         if (box) {
           box.innerHTML = renderWorldDetail(res, sStr);
-          try { box.dataset.seedUsed = sStr; } catch(_){}
+          try {
+            box.dataset.seedUsed = sStr;
+            if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+          } catch(_){}
           attachEquilibrateHandler(res, sStr, undefined, box);
           attachTravelHandler(res, sStr);
         }
@@ -306,7 +314,10 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, seedKey, archetype);
-  try { box.dataset.seedUsed = seedKey; } catch(_){}
+  try {
+    box.dataset.seedUsed = seedKey;
+    if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+  } catch(_){}
   attachEquilibrateHandler(res, seedKey, archetype, box);
   attachTravelHandler(res, seedKey);
 }
@@ -414,7 +425,10 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
-        try { box.dataset.seedUsed = sStr; } catch(_){}
+        try {
+          box.dataset.seedUsed = sStr;
+          if (newRes?.seedString) box.dataset.canonicalSeed = newRes.seedString;
+        } catch(_){}
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
@@ -422,7 +436,10 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
           equilibratedWorlds.add(sStr);
           box.innerHTML = renderWorldDetail(res, sStr, archetype);
-          try { box.dataset.seedUsed = sStr; } catch(_){}
+          try {
+            box.dataset.seedUsed = sStr;
+            if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+          } catch(_){}
           attachEquilibrateHandler(res, sStr, archetype, box);
           attachTravelHandler(res, sStr);
         } else if (e?.message !== 'cancelled') {
@@ -498,8 +515,11 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     </div>` : '';
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
-  const eqDone = seedUsed && equilibratedWorlds.has(seedUsed);
-  const alreadyTerraformed = seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false;
+  const eqDone = seedUsed
+    && (equilibratedWorlds.has(seedUsed) || (res.seedString ? equilibratedWorlds.has(res.seedString) : false));
+  const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
+    ? sm.isSeedTerraformed(res.seedString)
+    : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
   const lockedByStory = sm?.isRandomTravelLocked ? sm.isRandomTravelLocked() : false;
   const travelDisabled = lockedByStory || !eqDone || alreadyTerraformed;
   const showTemps = !seedUsed || eqDone;
