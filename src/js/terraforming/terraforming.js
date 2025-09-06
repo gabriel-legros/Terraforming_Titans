@@ -502,6 +502,45 @@ class Terraforming extends EffectableEntity{
         const condensationParameter = this.equilibriumCondensationParameter;
         const methaneCondensationParameter = this.equilibriumMethaneCondensationParameter;
 
+        const cycles = [
+            {
+                name: 'water',
+                instance: waterCycleInstance,
+                zonalKey: 'zonalWater',
+                surfaceBucket: 'water',
+                atmosphereBucket: 'water',
+                vaporPressure: () => globalWaterPressurePa,
+                availableKeys: ['liquid', 'ice', 'buriedIce'],
+                extraParams: () => ({ gravity, precipitationMultiplier }),
+            },
+            {
+                name: 'methane',
+                instance: methaneCycleInstance,
+                zonalKey: 'zonalHydrocarbons',
+                surfaceBucket: 'methane',
+                atmosphereBucket: 'methane',
+                vaporPressure: () => globalMethanePressurePa,
+                availableKeys: ['liquid', 'ice', 'buriedIce'],
+                extraParams: () => ({ gravity, condensationParameter: methaneCondensationParameter }),
+            },
+            {
+                name: 'co2',
+                instance: co2CycleInstance,
+                zonalKey: 'zonalSurface',
+                surfaceBucket: 'water',
+                atmosphereBucket: 'co2',
+                vaporPressure: () => globalCo2PressurePa,
+                availableKeys: ['dryIce'],
+                extraParams: () => ({ condensationParameter }),
+            },
+        ];
+
+        const cycleTotals = {
+            water: { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 },
+            methane: { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 },
+            co2: { sublimation: 0 },
+        };
+
         let zonalChanges = {}; // Store calculated zonal change *amounts* for the tick
         zones.forEach(zone => {
             zonalChanges[zone] = {
@@ -554,132 +593,81 @@ class Terraforming extends EffectableEntity{
         let totalAtmosphericMethaneChange = 0;
         let totalOxygenChange = 0;
         // Store total amounts for individual processes for UI rate reporting
-        let totalEvaporationAmount = 0, totalWaterSublimationAmount = 0, totalCo2SublimationAmount = 0, totalMethaneEvaporationAmount = 0, totalMethaneSublimationAmount = 0;
         let totalRainfallAmount = 0, totalSnowfallAmount = 0, totalCo2CondensationAmount = 0, totalMethaneCondensationAmount = 0, totalMethaneIceCondensationAmount = 0;
-        let totalMeltAmount = 0, totalFreezeAmount = 0, totalMethaneMeltAmount = 0, totalMethaneFreezeAmount = 0;
 
         // --- 1. Calculate potential zonal changes based on start-of-tick state ---
         for (const zone of zones) {
             const zoneTemp = this.temperature.zones[zone].value; // Current average zonal temperature
             const dayTemp = this.temperature.zones[zone].day;
             const nightTemp = this.temperature.zones[zone].night;
-            const availableLiquid = this.zonalWater[zone].liquid || 0;
-            const availableIce = this.zonalWater[zone].ice || 0;
-            const availableBuriedIce = this.zonalWater[zone].buriedIce || 0;
-            const availableDryIce = this.zonalSurface[zone].dryIce || 0;
             const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
             const zoneArea = this.zonalCoverageCache[zone]?.zoneArea ?? this.celestialParameters.surfaceArea * getZonePercentage(zone);
-            const { liquidWaterCoverage, iceCoverage } = (typeof waterCycleInstance.getCoverage === 'function')
-                ? waterCycleInstance.getCoverage(zone, this.zonalCoverageCache)
-                : {
-                    liquidWaterCoverage: this.zonalCoverageCache[zone]?.liquidWater ?? 0,
-                    iceCoverage: this.zonalCoverageCache[zone]?.ice ?? 0,
-                };
-            const { dryIceCoverage } = (typeof co2CycleInstance.getCoverage === 'function')
-                ? co2CycleInstance.getCoverage(zone, this.zonalCoverageCache)
-                : { dryIceCoverage: this.zonalCoverageCache[zone]?.dryIce ?? 0 };
 
-            // --- Water Cycle ---
-            const waterResult = waterCycleInstance.processZone({
-                zoneArea,
-                liquidWaterCoverage,
-                iceCoverage,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                zoneTemperature: zoneTemp,
-                atmPressure: globalTotalPressurePa,
-                vaporPressure: globalWaterPressurePa,
-                availableLiquid,
-                availableIce,
-                availableBuriedIce,
-                zonalSolarFlux,
-                durationSeconds,
-                gravity,
-                precipitationMultiplier,
-            });
+            for (const cycle of cycles) {
+                const coverage = (typeof cycle.instance.getCoverage === 'function')
+                    ? cycle.instance.getCoverage(zone, this.zonalCoverageCache)
+                    : {};
 
-            zonalChanges[zone].atmosphere.water += waterResult.atmosphere.water;
-            zonalChanges[zone].water.liquid += waterResult.water.liquid;
-            zonalChanges[zone].water.ice += waterResult.water.ice;
-            zonalChanges[zone].water.buriedIce += waterResult.water.buriedIce;
-            zonalChanges[zone].precipitation.potentialRain = waterResult.precipitation.potentialRain;
-            zonalChanges[zone].precipitation.potentialSnow = waterResult.precipitation.potentialSnow;
-            totalEvaporationAmount += waterResult.evaporationAmount;
-            totalWaterSublimationAmount += waterResult.sublimationAmount;
-            totalMeltAmount += waterResult.meltAmount;
-            totalFreezeAmount += waterResult.freezeAmount;
-
-            // --- CO2 Cycle ---
-            const dryIceResult = co2CycleInstance.processZone({
-                zoneArea,
-                dryIceCoverage,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                zoneTemperature: zoneTemp,
-                atmPressure: globalTotalPressurePa,
-                vaporPressure: globalCo2PressurePa,
-                availableDryIce,
-                zonalSolarFlux,
-                durationSeconds,
-                condensationParameter,
-            });
-
-            zonalChanges[zone].atmosphere.co2 += dryIceResult.atmosphere.co2;
-            zonalChanges[zone].water.dryIce += dryIceResult.water.dryIce;
-            zonalChanges[zone].potentialCO2Condensation = dryIceResult.potentialCO2Condensation;
-            totalCo2SublimationAmount += dryIceResult.sublimationAmount;
-
-            // --- Methane Cycle ---
-            const availableLiquidMethane = this.zonalHydrocarbons[zone].liquid || 0;
-            const availableHydrocarbonIce = this.zonalHydrocarbons[zone].ice || 0;
-            const availableBuriedHydrocarbonIce = this.zonalHydrocarbons[zone].buriedIce || 0;
-            const { liquidMethaneCoverage, hydrocarbonIceCoverage } = (typeof methaneCycleInstance.getCoverage === 'function')
-                ? methaneCycleInstance.getCoverage(zone, this.zonalCoverageCache)
-                : {
-                    liquidMethaneCoverage: this.zonalCoverageCache[zone]?.liquidMethane ?? 0,
-                    hydrocarbonIceCoverage: this.zonalCoverageCache[zone]?.hydrocarbonIce ?? 0,
+                const zonalSource = this[cycle.zonalKey]?.[zone] || {};
+                const params = {
+                    zoneArea,
+                    dayTemperature: dayTemp,
+                    nightTemperature: nightTemp,
+                    zoneTemperature: zoneTemp,
+                    atmPressure: globalTotalPressurePa,
+                    vaporPressure: cycle.vaporPressure(),
+                    zonalSolarFlux,
+                    durationSeconds,
+                    ...coverage,
+                    ...cycle.extraParams(),
                 };
 
-            const methaneResult = methaneCycleInstance.processZone({
-                zoneArea,
-                liquidMethaneCoverage,
-                hydrocarbonIceCoverage,
-                dayTemperature: dayTemp,
-                nightTemperature: nightTemp,
-                zoneTemperature: zoneTemp,
-                atmPressure: globalTotalPressurePa,
-                vaporPressure: globalMethanePressurePa,
-                availableLiquid: availableLiquidMethane,
-                availableIce: availableHydrocarbonIce,
-                availableBuriedIce: availableBuriedHydrocarbonIce,
-                zonalSolarFlux,
-                durationSeconds,
-                gravity,
-                condensationParameter: methaneCondensationParameter,
-            });
+                if (cycle.availableKeys.includes('liquid')) params.availableLiquid = zonalSource.liquid || 0;
+                if (cycle.availableKeys.includes('ice')) params.availableIce = zonalSource.ice || 0;
+                if (cycle.availableKeys.includes('buriedIce')) params.availableBuriedIce = zonalSource.buriedIce || 0;
+                if (cycle.availableKeys.includes('dryIce')) params.availableDryIce = zonalSource.dryIce || 0;
 
-            zonalChanges[zone].atmosphere.methane += methaneResult.atmosphere.methane;
-            zonalChanges[zone].methane.liquid += methaneResult.methane.liquid;
-            zonalChanges[zone].methane.ice += methaneResult.methane.ice;
-            zonalChanges[zone].methane.buriedIce += methaneResult.methane.buriedIce;
-            zonalChanges[zone].precipitation.potentialMethaneRain = methaneResult.precipitation.potentialMethaneRain;
-            zonalChanges[zone].precipitation.potentialMethaneSnow = methaneResult.precipitation.potentialMethaneSnow;
+                const result = cycle.instance.processZone(params);
 
-            totalMethaneEvaporationAmount += methaneResult.evaporationAmount;
-            totalMethaneSublimationAmount += methaneResult.sublimationAmount;
-            totalMethaneMeltAmount += methaneResult.meltAmount;
-            totalMethaneFreezeAmount += methaneResult.freezeAmount;
+                zonalChanges[zone].atmosphere[cycle.atmosphereBucket] += result.atmosphere[cycle.atmosphereBucket] || 0;
+
+                const surfaceChanges = result[cycle.surfaceBucket] || {};
+                for (const [key, value] of Object.entries(surfaceChanges)) {
+                    if (!zonalChanges[zone][cycle.surfaceBucket].hasOwnProperty(key)) {
+                        zonalChanges[zone][cycle.surfaceBucket][key] = 0;
+                    }
+                    zonalChanges[zone][cycle.surfaceBucket][key] += value;
+                }
+
+                if (result.precipitation) {
+                    for (const [key, value] of Object.entries(result.precipitation)) {
+                        if (!zonalChanges[zone].precipitation.hasOwnProperty(key)) {
+                            zonalChanges[zone].precipitation[key] = 0;
+                        }
+                        zonalChanges[zone].precipitation[key] += value;
+                    }
+                }
+
+                if (result.potentialCO2Condensation !== undefined) {
+                    zonalChanges[zone].potentialCO2Condensation = result.potentialCO2Condensation;
+                }
+
+                const totals = cycleTotals[cycle.name];
+                if (result.evaporationAmount) totals.evaporation += result.evaporationAmount;
+                if (result.sublimationAmount) totals.sublimation += result.sublimationAmount;
+                if (result.meltAmount) totals.melt += result.meltAmount;
+                if (result.freezeAmount) totals.freeze += result.freezeAmount;
+            }
         }
 
-        // Include melt from zonal water flow
-        totalMeltAmount += this.flowMeltAmount || 0;
-        totalMethaneMeltAmount += this.flowMethaneMeltAmount || 0;
+        // Include melt from zonal flow and focused power
+        cycleTotals.water.melt += this.flowMeltAmount || 0;
+        cycleTotals.methane.melt += this.flowMethaneMeltAmount || 0;
 
-        // Additional melt from focused mirror/lantern power
         const focusMeltAmount = (typeof globalThis.applyFocusedMelt === 'function')
             ? globalThis.applyFocusedMelt(this, this.resources, durationSeconds)
             : 0;
-        totalMeltAmount += focusMeltAmount;
+        cycleTotals.water.melt += focusMeltAmount;
         this.focusMeltAmount = focusMeltAmount;
 
         // --- 2. Aggregate global atmospheric changes and apply limits ---
@@ -778,10 +766,9 @@ class Terraforming extends EffectableEntity{
         });
 
         // --- 3. Redistribute Precipitation via cycle hooks ---
-        const cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
         for (const cycle of cycles) {
-            if (cycle && typeof cycle.redistributePrecipitation === 'function') {
-                cycle.redistributePrecipitation(this, zonalChanges, this.temperature.zones);
+            if (cycle.instance && typeof cycle.instance.redistributePrecipitation === 'function') {
+                cycle.instance.redistributePrecipitation(this, zonalChanges, this.temperature.zones);
             }
         }
 
@@ -885,21 +872,21 @@ class Terraforming extends EffectableEntity{
 
         // --- 5. Update Global Rates for UI ---
         // Calculate and STORE rates for individual processes from total amounts accumulated earlier
-        this.totalEvaporationRate = totalEvaporationAmount / durationSeconds * 86400;
-        this.totalWaterSublimationRate = totalWaterSublimationAmount / durationSeconds * 86400;
-        this.totalCo2SublimationRate = totalCo2SublimationAmount / durationSeconds * 86400;
-        this.totalMethaneSublimationRate = totalMethaneSublimationAmount / durationSeconds * 86400;
+        this.totalEvaporationRate = cycleTotals.water.evaporation / durationSeconds * 86400;
+        this.totalWaterSublimationRate = cycleTotals.water.sublimation / durationSeconds * 86400;
+        this.totalCo2SublimationRate = cycleTotals.co2.sublimation / durationSeconds * 86400;
+        this.totalMethaneSublimationRate = cycleTotals.methane.sublimation / durationSeconds * 86400;
         this.totalRainfallRate = totalRainfallAmount / durationSeconds * 86400;
         this.totalSnowfallRate = totalSnowfallAmount / durationSeconds * 86400;
-        this.totalMeltRate = totalMeltAmount / durationSeconds * 86400;
-        this.totalFreezeRate = totalFreezeAmount / durationSeconds * 86400;
+        this.totalMeltRate = cycleTotals.water.melt / durationSeconds * 86400;
+        this.totalFreezeRate = cycleTotals.water.freeze / durationSeconds * 86400;
         this.focusMeltRate = (this.focusMeltAmount || 0) / durationSeconds * 86400;
         this.totalCo2CondensationRate = totalCo2CondensationAmount / durationSeconds * 86400;
-        this.totalMethaneEvaporationRate = totalMethaneEvaporationAmount / durationSeconds * 86400;
+        this.totalMethaneEvaporationRate = cycleTotals.methane.evaporation / durationSeconds * 86400;
         this.totalMethaneCondensationRate = totalMethaneCondensationAmount / durationSeconds * 86400;
         this.totalMethaneIceCondensationRate = totalMethaneIceCondensationAmount / durationSeconds * 86400;
-        this.totalMethaneMeltRate = totalMethaneMeltAmount / durationSeconds * 86400;
-        this.totalMethaneFreezeRate = totalMethaneFreezeAmount / durationSeconds * 86400;
+        this.totalMethaneMeltRate = cycleTotals.methane.melt / durationSeconds * 86400;
+        this.totalMethaneFreezeRate = cycleTotals.methane.freeze / durationSeconds * 86400;
         this.totalMethaneCombustionRate = combustionMethaneAmount / durationSeconds * 86400;
         this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
         this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
@@ -924,11 +911,11 @@ class Terraforming extends EffectableEntity{
         const calciteDecayRate = this.totalCalciteDecayRate;
 
         // Calculate individual atmospheric process rates
-        const atmosphericWaterProductionRate = (totalEvaporationAmount + totalWaterSublimationAmount) / durationSeconds * 86400;
+        const atmosphericWaterProductionRate = (cycleTotals.water.evaporation + cycleTotals.water.sublimation) / durationSeconds * 86400;
         const atmosphericWaterConsumptionRate = (totalRainfallAmount + totalSnowfallAmount) / durationSeconds * 86400;
-        const atmosphericCO2ProductionRate = totalCo2SublimationAmount / durationSeconds * 86400;
+        const atmosphericCO2ProductionRate = cycleTotals.co2.sublimation / durationSeconds * 86400;
         const atmosphericCO2ConsumptionRate = totalCo2CondensationAmount / durationSeconds * 86400;
-        const atmosphericMethaneProductionRate = (totalMethaneEvaporationAmount + totalMethaneSublimationAmount) / durationSeconds * 86400;
+        const atmosphericMethaneProductionRate = (cycleTotals.methane.evaporation + cycleTotals.methane.sublimation) / durationSeconds * 86400;
         const atmosphericMethaneConsumptionRate = (totalMethaneCondensationAmount + totalMethaneIceCondensationAmount) / durationSeconds * 86400;
 
         const rateType = 'terraforming';
