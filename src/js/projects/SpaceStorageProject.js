@@ -43,11 +43,11 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   calculateTransferAmount() {
-    const base = this.attributes.transportPerShip || 0;
+    const perShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
     const scalingFactor = this.isShipOperationContinuous()
       ? this.assignedSpaceships
       : 1;
-    return base * scalingFactor;
+    return perShip * scalingFactor;
   }
 
   calculateSpaceshipAdjustedDuration() {
