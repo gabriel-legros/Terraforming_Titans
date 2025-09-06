@@ -5,6 +5,7 @@ const vm = require('vm');
 function setup(gravity) {
   const ctx = { console };
   ctx.milestonesManager = { getHappinessBonus: () => 0 };
+  ctx.colonySliderSettings = { mechanicalAssistance: 0 };
   ctx.resources = { colony: { metal: { updateStorageCap: () => {}, maintenanceMultiplier: 1 } } };
   ctx.buildings = {};
   ctx.terraforming = { celestialParameters: { gravity } };
