@@ -197,6 +197,11 @@ class EffectableEntity {
         case 'projectDurationReduction':
           this.applyProjectDurationReduction(effect);
           break;
+        case 'projectDurationMultiplier':
+          if (typeof this.applyProjectDurationMultiplier === 'function') {
+            this.applyProjectDurationMultiplier(effect);
+          }
+          break;
         case 'researchCostMultiplier':
           this.applyResearchCostMultiplier(effect);
           break;
