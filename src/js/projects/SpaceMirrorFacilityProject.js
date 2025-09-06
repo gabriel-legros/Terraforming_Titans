@@ -1277,7 +1277,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
           const deltaT = Math.max(0, 273.15 - (terraforming.temperature?.value || 0));
           const energyPerKg = C_P_ICE * deltaT + L_F_WATER;
           if (energyPerKg <= 0 || (mirrorPowerPer <= 0 && lanternPowerPer <= 0)) continue;
-          let requiredPower = target * 1000 * energyPerKg; // convert t/s to J/s
+          let requiredPower = target * 1000 * energyPerKg / 86400; // convert t/s to J/d
           let mirrorsNeeded = mirrorPowerPer > 0 ? Math.ceil(requiredPower / mirrorPowerPer) : 0;
           mirrorsNeeded = Math.min(mirrorsNeeded, mirrorsLeft);
           assignM[zone] = mirrorsNeeded;
