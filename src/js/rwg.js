@@ -74,7 +74,7 @@ try {
 // World type metadata
 const RWG_WORLD_TYPES = {
   "mars-like": { displayName: "Mars-like" },
-  "cold-desert": { displayName: "Cold Desert" },
+  "cold-desert": { displayName: "Desert" },
   "icy-moon": { displayName: "Icy" },
   "titan-like": { displayName: "Titan-like" },
   "carbon-planet": { displayName: "Carbon" },
