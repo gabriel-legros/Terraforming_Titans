@@ -29,7 +29,15 @@ describe('Mechanical Assistance mitigation', () => {
     vm.createContext(ctx);
     vm.runInContext(code + '; this.Colony = Colony;', ctx);
     const colony = new ctx.Colony({ consumption: { colony: { food: 1, energy: 1 } }, baseComfort: 0 }, 'test');
-    colony.updateNeedsRatio = function() { this.filledNeeds.food = 1; this.filledNeeds.energy = 1; };
+      colony.updateNeedsRatio = function() {
+        this.filledNeeds.food = 1;
+        this.filledNeeds.energy = 1;
+        if (ctx.colonySliderSettings.mechanicalAssistance > 0) {
+          this.filledNeeds.components = 1;
+        } else {
+          delete this.filledNeeds.components;
+        }
+      };
     colony.happiness = 0;
     ctx.colonies.test = colony;
     colony.updateHappiness(1000);
@@ -41,6 +49,6 @@ describe('Mechanical Assistance mitigation', () => {
     const withMit = colony.happiness;
 
     expect(noMit).toBeCloseTo(0.3);
-    expect(withMit).toBeCloseTo(0.32);
+      expect(withMit).toBeCloseTo(0.384);
   });
 });

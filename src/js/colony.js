@@ -31,6 +31,45 @@ class Colony extends Building {
     this.happiness = 0.5;
   }
 
+  rebuildFilledNeeds() {
+    const previous = this.filledNeeds || {};
+    const order = ['energy', 'food', 'components', 'electronics', 'androids'];
+    const colonyConsumption = this.consumption.colony || {};
+    const rebuilt = {};
+
+    order.forEach(res => {
+      if (res in colonyConsumption) {
+        rebuilt[res] = previous[res] ?? 1;
+      }
+    });
+
+    for (const res in colonyConsumption) {
+      if (!(res in rebuilt)) {
+        rebuilt[res] = previous[res] ?? 1;
+      }
+    }
+
+    this.filledNeeds = rebuilt;
+  }
+
+  applyActiveEffects(firstTime = true) {
+    super.applyActiveEffects(firstTime);
+    this.rebuildFilledNeeds();
+    if (typeof invalidateColonyNeedCache === 'function') {
+      invalidateColonyNeedCache();
+    }
+  }
+
+  applyAddResourceConsumption(effect) {
+    super.applyAddResourceConsumption(effect);
+    if (effect.resourceCategory === 'colony') {
+      this.rebuildFilledNeeds();
+      if (typeof invalidateColonyNeedCache === 'function') {
+        invalidateColonyNeedCache();
+      }
+    }
+  }
+
   initializeFromConfig(config, colonyName) {
     super.initializeFromConfig(config, colonyName);
     this.baseComfort = config.baseComfort;
@@ -192,9 +231,10 @@ class Colony extends Building {
     // Apply gravity penalty: every m/s² above 10 reduces happiness by 5%, capped at 100%
     const gravity = terraforming?.celestialParameters?.gravity || 0;
     let gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.05, 1) : 0;
-    const mechAssist = colonySliderSettings?.mechanicalAssistance || 0;
-    const mitigationFactor = 1 - mechAssist * 0.25;
-    gravityPenalty *= mitigationFactor;
+      const mechAssist = colonySliderSettings?.mechanicalAssistance || 0;
+      const compNeed = this.filledNeeds.components || 0;
+      const mitigationFactor = 1 - mechAssist * compNeed * 0.25;
+      gravityPenalty *= mitigationFactor;
 
     // Calculate the target happiness after gravity penalty
     const targetHappiness = (nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty);
