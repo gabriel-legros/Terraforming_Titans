@@ -450,3 +450,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Buildings and colonies can gain new consumption resources via an `addResourceConsumption` effect.
 - Colony sliders UI now provides `updateColonySlidersUI` to toggle the Mechanical Assistance slider when its flag is unlocked.
 - `updateColonySlidersUI` now reads the `mechanicalAssistance` flag from `ColonySlidersManager` rather than the settings object.
+- Mechanical Assistance slider label includes an info tooltip explaining gravity penalty mitigation.
