@@ -148,7 +148,7 @@ class ResourceCycle {
     return { totalAtmosphericChange, totalsByProcess };
   }
 
-  runCycle(terraforming, zones, {
+  calculateZonalChanges(terraforming, zones, {
     zonalKey = this.zonalKey,
     surfaceBucket = this.surfaceBucket,
     atmosphereKey = this.atmosphereKey,
@@ -244,6 +244,28 @@ class ResourceCycle {
         totalAtmosphericChange: finalizeResult.totalAtmosphericChange,
       },
     };
+  }
+
+  applyZonalChanges(terraforming, zonalChanges, zonalKey = this.zonalKey, surfaceBucket = this.surfaceBucket) {
+    const totals = {};
+    const container = terraforming[zonalKey] || {};
+    for (const zone in zonalChanges) {
+      const change = zonalChanges[zone];
+      if (!change || !change[surfaceBucket]) continue;
+      const zoneStore = container[zone] || (container[zone] = {});
+      for (const [state, amount] of Object.entries(change[surfaceBucket])) {
+        zoneStore[state] = (zoneStore[state] || 0) + amount;
+        if (zoneStore[state] < 0) zoneStore[state] = 0;
+        totals[state] = (totals[state] || 0) + amount;
+      }
+    }
+    return totals;
+  }
+
+  runCycle(terraforming, zones, options = {}) {
+    const data = this.calculateZonalChanges(terraforming, zones, options);
+    this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    return data.totals;
   }
 
   rapidSublimationRate(temperature, availableIce) {

@@ -345,7 +345,7 @@ class WaterCycle extends ResourceCycleClass {
   }
 
   runCycle(terraforming, zones, options = {}) {
-    const data = super.runCycle(terraforming, zones, options);
+    const data = this.calculateZonalChanges(terraforming, zones, options);
     const { durationSeconds = 1 } = options;
     const tempMap = {};
     for (const z of zones) {
@@ -364,7 +364,8 @@ class WaterCycle extends ResourceCycleClass {
       if (zoneChange.ice) dest.water.ice = (dest.water.ice || 0) + zoneChange.ice;
       if (zoneChange.buriedIce) dest.water.buriedIce = (dest.water.buriedIce || 0) + zoneChange.buriedIce;
     }
-    return data;
+    this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    return data.totals;
   }
 }
 

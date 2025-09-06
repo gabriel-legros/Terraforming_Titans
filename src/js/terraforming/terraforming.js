@@ -504,26 +504,6 @@ class Terraforming extends EffectableEntity{
             co2: { sublimation: 0 },
         };
 
-        let zonalChanges = {}; // Store calculated zonal change *amounts* for the tick
-        zones.forEach(zone => {
-            zonalChanges[zone] = {
-                water: { liquid: 0, ice: 0, buriedIce: 0, dryIce: 0 },
-                methane: { liquid: 0, ice: 0, buriedIce: 0 },
-                atmosphere: { water: 0, co2: 0, methane: 0, oxygen: 0 },
-                precipitation: {
-                    rain: 0,
-                    snow: 0,
-                    methaneRain: 0,
-                    methaneSnow: 0,
-                    potentialRain: 0,
-                    potentialSnow: 0,
-                    potentialMethaneRain: 0,
-                    potentialMethaneSnow: 0
-                },
-                potentialCO2Condensation: 0
-            };
-        });
-
         // Store total atmospheric changes calculated across all zones
         let totalAtmosphericWaterChange = 0;
         let totalAtmosphericCO2Change = 0;
@@ -531,37 +511,6 @@ class Terraforming extends EffectableEntity{
         let totalOxygenChange = 0;
         // Store total amounts for individual processes for UI rate reporting
         let totalRainfallAmount = 0, totalSnowfallAmount = 0, totalCo2CondensationAmount = 0, totalMethaneCondensationAmount = 0, totalMethaneIceCondensationAmount = 0;
-
-        const mergeZonalChanges = (source) => {
-            for (const zone of zones) {
-                const src = source[zone];
-                if (!src) continue;
-                const dest = zonalChanges[zone];
-                if (src.atmosphere) {
-                    for (const [k, v] of Object.entries(src.atmosphere)) {
-                        dest.atmosphere[k] = (dest.atmosphere[k] || 0) + v;
-                    }
-                }
-                if (src.water) {
-                    for (const [k, v] of Object.entries(src.water)) {
-                        dest.water[k] = (dest.water[k] || 0) + v;
-                    }
-                }
-                if (src.methane) {
-                    for (const [k, v] of Object.entries(src.methane)) {
-                        dest.methane[k] = (dest.methane[k] || 0) + v;
-                    }
-                }
-                if (src.precipitation) {
-                    for (const [k, v] of Object.entries(src.precipitation)) {
-                        dest.precipitation[k] = (dest.precipitation[k] || 0) + v;
-                    }
-                }
-                if (src.potentialCO2Condensation !== undefined) {
-                    dest.potentialCO2Condensation = src.potentialCO2Condensation;
-                }
-            }
-        };
 
         if (!waterCycleInstance.defaultExtraParams) waterCycleInstance.defaultExtraParams = {};
         waterCycleInstance.defaultExtraParams.gravity = gravity;
@@ -609,22 +558,21 @@ class Terraforming extends EffectableEntity{
         ];
 
         for (const cycle of cycleConfigs) {
-            const data = cycle.instance.runCycle(this, zones, cycle.params);
-            mergeZonalChanges(data.zonalChanges);
+            const totals = cycle.instance.runCycle(this, zones, cycle.params);
             for (const key of cycle.totalKeys) {
-                cycleTotals[cycle.key][key] = data.totals[key] || 0;
+                cycleTotals[cycle.key][key] = totals[key] || 0;
             }
             if (cycle.key === 'water') {
-                totalAtmosphericWaterChange = data.totals.totalAtmosphericChange || 0;
-                totalRainfallAmount = data.totals.rain || 0;
-                totalSnowfallAmount = data.totals.snow || 0;
+                totalAtmosphericWaterChange = totals.totalAtmosphericChange || 0;
+                totalRainfallAmount = totals.rain || 0;
+                totalSnowfallAmount = totals.snow || 0;
             } else if (cycle.key === 'methane') {
-                totalAtmosphericMethaneChange = data.totals.totalAtmosphericChange || 0;
-                totalMethaneCondensationAmount = data.totals.methaneRain || data.totals.rain || 0;
-                totalMethaneIceCondensationAmount = data.totals.methaneSnow || data.totals.snow || 0;
+                totalAtmosphericMethaneChange = totals.totalAtmosphericChange || 0;
+                totalMethaneCondensationAmount = totals.methaneRain || totals.rain || 0;
+                totalMethaneIceCondensationAmount = totals.methaneSnow || totals.snow || 0;
             } else if (cycle.key === 'co2') {
-                totalAtmosphericCO2Change = data.totals.totalAtmosphericChange || 0;
-                totalCo2CondensationAmount = data.totals.condensation || 0;
+                totalAtmosphericCO2Change = totals.totalAtmosphericChange || 0;
+                totalCo2CondensationAmount = totals.condensation || 0;
             }
         }
 
@@ -694,29 +642,6 @@ class Terraforming extends EffectableEntity{
             if (this.resources.atmospheric[resKey]) {
                 this.resources.atmospheric[resKey].value += delta;
                 this.resources.atmospheric[resKey].value = Math.max(0, this.resources.atmospheric[resKey].value);
-            }
-        }
-
-        // Apply to Zonal Surface Stores
-        for (const zone of zones) {
-            const change = zonalChanges[zone];
-            // Water resources
-            for (const [state, amount] of Object.entries(change.water)) {
-                if (state === 'dryIce') {
-                    if (!this.zonalSurface[zone].dryIce) this.zonalSurface[zone].dryIce = 0;
-                    this.zonalSurface[zone].dryIce += amount;
-                    this.zonalSurface[zone].dryIce = Math.max(0, this.zonalSurface[zone].dryIce);
-                } else {
-                    this.zonalWater[zone][state] += amount;
-                    this.zonalWater[zone][state] = Math.max(0, this.zonalWater[zone][state]);
-                }
-            }
-
-            // Methane resources
-            for (const [state, amount] of Object.entries(change.methane)) {
-                if (!this.zonalHydrocarbons[zone][state]) this.zonalHydrocarbons[zone][state] = 0;
-                this.zonalHydrocarbons[zone][state] += amount;
-                this.zonalHydrocarbons[zone][state] = Math.max(0, this.zonalHydrocarbons[zone][state]);
             }
         }
 
