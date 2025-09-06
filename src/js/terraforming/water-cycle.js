@@ -5,10 +5,12 @@ const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
 var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
+var simulateSurfaceWaterFlow = globalThis.simulateSurfaceWaterFlow;
 if (isNodeWaterCycle) {
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
+    simulateSurfaceWaterFlow = require('./hydrology.js').simulateSurfaceWaterFlow;
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -19,6 +21,17 @@ if (!ResourceCycleClass && typeof require === 'function') {
   } catch (e) {
     try {
       ResourceCycleClass = require('./src/js/terraforming/resource-cycle.js');
+    } catch (e2) {
+      // ignore
+    }
+  }
+}
+if (!simulateSurfaceWaterFlow && typeof require === 'function') {
+  try {
+    simulateSurfaceWaterFlow = require('./hydrology.js').simulateSurfaceWaterFlow;
+  } catch (e) {
+    try {
+      simulateSurfaceWaterFlow = require('./src/js/terraforming/hydrology.js').simulateSurfaceWaterFlow;
     } catch (e2) {
       // ignore
     }
@@ -320,6 +333,38 @@ class WaterCycle extends ResourceCycleClass {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
     }
+  }
+
+  surfaceFlow(terraforming, durationSeconds, tempMap) {
+    if (typeof simulateSurfaceWaterFlow === 'function'
+      && typeof ZONES !== 'undefined'
+      && terraforming && terraforming.zonalWater) {
+      return simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap);
+    }
+    return { changes: {}, totalMelt: 0 };
+  }
+
+  runCycle(terraforming, zones, options = {}) {
+    const data = super.runCycle(terraforming, zones, options);
+    const { durationSeconds = 1 } = options;
+    const tempMap = {};
+    for (const z of zones) {
+      tempMap[z] = terraforming.temperature.zones[z]?.value;
+    }
+    const flow = this.surfaceFlow(terraforming, durationSeconds, tempMap);
+    terraforming.flowMeltAmount = flow.totalMelt;
+    terraforming.flowMeltRate = flow.totalMelt / durationSeconds * 86400;
+    data.totals.melt = (data.totals.melt || 0) + flow.totalMelt;
+    for (const zone of zones) {
+      const zoneChange = flow.changes[zone];
+      if (!zoneChange) continue;
+      const dest = data.zonalChanges[zone] || (data.zonalChanges[zone] = {});
+      if (!dest.water) dest.water = {};
+      if (zoneChange.liquid) dest.water.liquid = (dest.water.liquid || 0) + zoneChange.liquid;
+      if (zoneChange.ice) dest.water.ice = (dest.water.ice || 0) + zoneChange.ice;
+      if (zoneChange.buriedIce) dest.water.buriedIce = (dest.water.buriedIce || 0) + zoneChange.buriedIce;
+    }
+    return data;
   }
 }
 
