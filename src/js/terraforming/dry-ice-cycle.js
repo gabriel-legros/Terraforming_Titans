@@ -93,7 +93,13 @@ function slopeSVPCO2(temperature) {
 }
 
 class CO2Cycle extends ResourceCycleClass {
-  constructor() {
+  constructor({
+    zonalKey = 'zonalSurface',
+    surfaceBucket = 'water',
+    atmosphereKey = 'co2',
+    availableKeys = ['dryIce'],
+    condensationParameter = 1,
+  } = {}) {
     super({
       latentHeatVaporization: L_S_CO2,
       latentHeatSublimation: L_S_CO2,
@@ -105,6 +111,11 @@ class CO2Cycle extends ResourceCycleClass {
       evaporationAlbedo: 0.6,
       sublimationAlbedo: 0.6,
     });
+    this.zonalKey = zonalKey;
+    this.surfaceBucket = surfaceBucket;
+    this.atmosphereKey = atmosphereKey;
+    this.availableKeys = availableKeys;
+    this.defaultExtraParams = { condensationParameter };
   }
 
   /**
@@ -249,26 +260,6 @@ class CO2Cycle extends ResourceCycleClass {
           totalKey: 'condensation',
         },
       ],
-    });
-  }
-
-  runCycle(terraforming, zones, {
-    atmPressure = 0,
-    vaporPressure = 0,
-    available = 0,
-    durationSeconds = 1,
-    condensationParameter = 1,
-  } = {}) {
-    return super.runCycle(terraforming, zones, {
-      zonalKey: 'zonalSurface',
-      surfaceBucket: 'water',
-      atmosphereKey: 'co2',
-      vaporPressure,
-      available,
-      atmPressure,
-      durationSeconds,
-      availableKeys: ['dryIce'],
-      extraParams: { condensationParameter },
     });
   }
 }

@@ -110,7 +110,14 @@ function derivativeSaturationVaporPressureBuck(T) {
 }
 
 class WaterCycle extends ResourceCycleClass {
-  constructor() {
+  constructor({
+    zonalKey = 'zonalWater',
+    surfaceBucket = 'water',
+    atmosphereKey = 'water',
+    availableKeys = ['liquid', 'ice', 'buriedIce'],
+    gravity = 1,
+    precipitationMultiplier = 1,
+  } = {}) {
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
@@ -119,6 +126,11 @@ class WaterCycle extends ResourceCycleClass {
       freezePoint: 273.15,
       sublimationPoint: 273.15,
     });
+    this.zonalKey = zonalKey;
+    this.surfaceBucket = surfaceBucket;
+    this.atmosphereKey = atmosphereKey;
+    this.availableKeys = availableKeys;
+    this.defaultExtraParams = { gravity, precipitationMultiplier };
   }
 
   /**
@@ -308,27 +320,6 @@ class WaterCycle extends ResourceCycleClass {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
     }
-  }
-
-  runCycle(terraforming, zones, {
-    atmPressure = 0,
-    vaporPressure = 0,
-    available = 0,
-    durationSeconds = 1,
-    gravity = 1,
-    precipitationMultiplier = 1,
-  } = {}) {
-    return super.runCycle(terraforming, zones, {
-      zonalKey: 'zonalWater',
-      surfaceBucket: 'water',
-      atmosphereKey: 'water',
-      vaporPressure,
-      available,
-      atmPressure,
-      durationSeconds,
-      availableKeys: ['liquid', 'ice', 'buriedIce'],
-      extraParams: { gravity, precipitationMultiplier },
-    });
   }
 }
 

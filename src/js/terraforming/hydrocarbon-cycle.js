@@ -90,6 +90,12 @@ class MethaneCycle extends ResourceCycleClass {
     maxDiff = 10,
     boilingPointFn = boilingPointMethane,
     boilTransitionRange = 5,
+    zonalKey = 'zonalHydrocarbons',
+    surfaceBucket = 'methane',
+    atmosphereKey = 'methane',
+    availableKeys = ['liquid', 'ice', 'buriedIce'],
+    gravity = 1,
+    condensationParameter = 1,
   } = {}) {
     super({
       latentHeatVaporization: L_V_METHANE,
@@ -106,6 +112,11 @@ class MethaneCycle extends ResourceCycleClass {
     this.maxDiff = maxDiff;
     this.boilingPointFn = boilingPointFn;
     this.boilTransitionRange = boilTransitionRange;
+    this.zonalKey = zonalKey;
+    this.surfaceBucket = surfaceBucket;
+    this.atmosphereKey = atmosphereKey;
+    this.availableKeys = availableKeys;
+    this.defaultExtraParams = { gravity, condensationParameter };
   }
 
   /**
@@ -299,27 +310,6 @@ class MethaneCycle extends ResourceCycleClass {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
     }
-  }
-
-  runCycle(terraforming, zones, {
-    atmPressure = 0,
-    vaporPressure = 0,
-    available = 0,
-    durationSeconds = 1,
-    gravity = 1,
-    condensationParameter = 1,
-  } = {}) {
-    return super.runCycle(terraforming, zones, {
-      zonalKey: 'zonalHydrocarbons',
-      surfaceBucket: 'methane',
-      atmosphereKey: 'methane',
-      vaporPressure,
-      available,
-      atmPressure,
-      durationSeconds,
-      availableKeys: ['liquid', 'ice', 'buriedIce'],
-      extraParams: { gravity, condensationParameter },
-    });
   }
 }
 

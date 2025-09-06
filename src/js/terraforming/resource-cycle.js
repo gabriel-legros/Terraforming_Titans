@@ -149,18 +149,19 @@ class ResourceCycle {
   }
 
   runCycle(terraforming, zones, {
-    zonalKey,
-    surfaceBucket,
-    atmosphereKey,
+    zonalKey = this.zonalKey,
+    surfaceBucket = this.surfaceBucket,
+    atmosphereKey = this.atmosphereKey,
     vaporPressure = 0,
     available = 0,
     atmPressure = 0,
     durationSeconds = 1,
-    availableKeys = [],
+    availableKeys = this.availableKeys || [],
     extraParams = {},
   } = {}) {
     const zonalChanges = {};
     const cycleTotals = { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 };
+    const mergedExtra = { ...(this.defaultExtraParams || {}), ...extraParams };
 
     for (const zone of zones) {
       const temps = terraforming.temperature.zones[zone] || {};
@@ -180,7 +181,7 @@ class ResourceCycle {
         zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone, true),
         durationSeconds,
         ...coverage,
-        ...extraParams,
+        ...mergedExtra,
       };
       for (const key of availableKeys) {
         const paramKey = 'available' + key.charAt(0).toUpperCase() + key.slice(1);
@@ -216,6 +217,7 @@ class ResourceCycle {
     const finalizeResult = this.finalizeAtmosphere({
       available,
       zonalChanges,
+      atmosphereKey,
     });
 
     if (typeof this.redistributePrecipitation === 'function') {
