@@ -596,51 +596,67 @@ class Terraforming extends EffectableEntity{
         if (!waterCycleInstance.defaultExtraParams) waterCycleInstance.defaultExtraParams = {};
         waterCycleInstance.defaultExtraParams.gravity = gravity;
         waterCycleInstance.defaultExtraParams.precipitationMultiplier = precipitationMultiplier;
-        const waterData = waterCycleInstance.runCycle(this, zones, {
-            atmPressure: globalTotalPressurePa,
-            vaporPressure: globalWaterPressurePa,
-            available: availableGlobalWaterVapor,
-            durationSeconds,
-        });
-        mergeZonalChanges(waterData.zonalChanges);
-        cycleTotals.water.evaporation = waterData.totals.evaporation || 0;
-        cycleTotals.water.sublimation = waterData.totals.sublimation || 0;
-        cycleTotals.water.melt = waterData.totals.melt || 0;
-        cycleTotals.water.freeze = waterData.totals.freeze || 0;
-        totalAtmosphericWaterChange = waterData.totals.totalAtmosphericChange || 0;
-        totalRainfallAmount = waterData.totals.rain || 0;
-        totalSnowfallAmount = waterData.totals.snow || 0;
-
         if (!methaneCycleInstance.defaultExtraParams) methaneCycleInstance.defaultExtraParams = {};
         methaneCycleInstance.defaultExtraParams.gravity = gravity;
         methaneCycleInstance.defaultExtraParams.condensationParameter = methaneCondensationParameter;
-        const methaneData = methaneCycleInstance.runCycle(this, zones, {
-            atmPressure: globalTotalPressurePa,
-            vaporPressure: globalMethanePressurePa,
-            available: availableGlobalMethaneGas,
-            durationSeconds,
-        });
-        mergeZonalChanges(methaneData.zonalChanges);
-        cycleTotals.methane.evaporation = methaneData.totals.evaporation || 0;
-        cycleTotals.methane.sublimation = methaneData.totals.sublimation || 0;
-        cycleTotals.methane.melt = methaneData.totals.melt || 0;
-        cycleTotals.methane.freeze = methaneData.totals.freeze || 0;
-        totalAtmosphericMethaneChange = methaneData.totals.totalAtmosphericChange || 0;
-        totalMethaneCondensationAmount = methaneData.totals.methaneRain || methaneData.totals.rain || 0;
-        totalMethaneIceCondensationAmount = methaneData.totals.methaneSnow || methaneData.totals.snow || 0;
-
         if (!co2CycleInstance.defaultExtraParams) co2CycleInstance.defaultExtraParams = {};
         co2CycleInstance.defaultExtraParams.condensationParameter = condensationParameter;
-        const co2Data = co2CycleInstance.runCycle(this, zones, {
-            atmPressure: globalTotalPressurePa,
-            vaporPressure: globalCo2PressurePa,
-            available: availableGlobalCo2Gas,
-            durationSeconds,
-        });
-        mergeZonalChanges(co2Data.zonalChanges);
-        cycleTotals.co2.sublimation = co2Data.totals.sublimation || 0;
-        totalAtmosphericCO2Change = co2Data.totals.totalAtmosphericChange || 0;
-        totalCo2CondensationAmount = co2Data.totals.condensation || 0;
+
+        const cycleConfigs = [
+            {
+                key: 'water',
+                instance: waterCycleInstance,
+                params: {
+                    atmPressure: globalTotalPressurePa,
+                    vaporPressure: globalWaterPressurePa,
+                    available: availableGlobalWaterVapor,
+                    durationSeconds,
+                },
+                totalKeys: ['evaporation', 'sublimation', 'melt', 'freeze'],
+            },
+            {
+                key: 'methane',
+                instance: methaneCycleInstance,
+                params: {
+                    atmPressure: globalTotalPressurePa,
+                    vaporPressure: globalMethanePressurePa,
+                    available: availableGlobalMethaneGas,
+                    durationSeconds,
+                },
+                totalKeys: ['evaporation', 'sublimation', 'melt', 'freeze'],
+            },
+            {
+                key: 'co2',
+                instance: co2CycleInstance,
+                params: {
+                    atmPressure: globalTotalPressurePa,
+                    vaporPressure: globalCo2PressurePa,
+                    available: availableGlobalCo2Gas,
+                    durationSeconds,
+                },
+                totalKeys: ['sublimation'],
+            },
+        ];
+
+        for (const cycle of cycleConfigs) {
+            const data = cycle.instance.runCycle(this, zones, cycle.params);
+            mergeZonalChanges(data.zonalChanges);
+            for (const key of cycle.totalKeys) {
+                cycleTotals[cycle.key][key] = data.totals[key] || 0;
+            }
+            if (cycle.key === 'water') {
+                totalAtmosphericWaterChange = data.totals.totalAtmosphericChange || 0;
+                totalRainfallAmount = data.totals.rain || 0;
+                totalSnowfallAmount = data.totals.snow || 0;
+            } else if (cycle.key === 'methane') {
+                totalAtmosphericMethaneChange = data.totals.totalAtmosphericChange || 0;
+                totalMethaneCondensationAmount = data.totals.methaneRain || data.totals.rain || 0;
+                totalMethaneIceCondensationAmount = data.totals.methaneSnow || data.totals.snow || 0;
+            } else if (cycle.key === 'co2') {
+                totalAtmosphericCO2Change = data.totals.totalAtmosphericChange || 0;
+                totalCo2CondensationAmount = data.totals.condensation || 0;
+            }
+        }
 
         // Include melt from zonal flow and focused power
         cycleTotals.water.melt += this.flowMeltAmount || 0;
