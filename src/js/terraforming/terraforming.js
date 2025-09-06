@@ -670,100 +670,29 @@ class Terraforming extends EffectableEntity{
         cycleTotals.water.melt += focusMeltAmount;
         this.focusMeltAmount = focusMeltAmount;
 
-        // --- 2. Aggregate global atmospheric changes and apply limits ---
-        let totalPotentialAtmosphericWaterLoss = 0;
-        let totalPotentialAtmosphericCO2Loss = 0;
-        let totalPotentialAtmosphericMethaneLoss = 0;
-        zones.forEach(zone => {
-            // Sum potential losses (negative changes)
-            if (zonalChanges[zone].atmosphere.water < 0) {
-                totalPotentialAtmosphericWaterLoss -= zonalChanges[zone].atmosphere.water; // Sum positive loss amounts
-            }
-            if (zonalChanges[zone].atmosphere.co2 < 0) {
-               totalPotentialAtmosphericCO2Loss -= zonalChanges[zone].atmosphere.co2; // Sum positive loss amounts
-           }
-           if (zonalChanges[zone].atmosphere.methane < 0) {
-               totalPotentialAtmosphericMethaneLoss -= zonalChanges[zone].atmosphere.methane;
-           }
-           // Sum gains (positive changes) into the global total
-           totalAtmosphericWaterChange += Math.max(0, zonalChanges[zone].atmosphere.water);
-           totalAtmosphericCO2Change += Math.max(0, zonalChanges[zone].atmosphere.co2);
-           totalAtmosphericMethaneChange += Math.max(0, zonalChanges[zone].atmosphere.methane);
-       });
-
-        // Calculate scaling factor if potential loss exceeds available amount
-        const waterLossScale = (availableGlobalWaterVapor > 0 && totalPotentialAtmosphericWaterLoss > availableGlobalWaterVapor)
-                             ? availableGlobalWaterVapor / totalPotentialAtmosphericWaterLoss : 1.0;
-        const co2LossScale = (availableGlobalCo2Gas > 0 && totalPotentialAtmosphericCO2Loss > availableGlobalCo2Gas)
-                           ? availableGlobalCo2Gas / totalPotentialAtmosphericCO2Loss : 1.0;
-        const methaneLossScale = (availableGlobalMethaneGas > 0 && totalPotentialAtmosphericMethaneLoss > availableGlobalMethaneGas)
-                           ? availableGlobalMethaneGas / totalPotentialAtmosphericMethaneLoss : 1.0;
-
-        // Apply scaled losses to global totals and calculate actual surface gains
-        zones.forEach(zone => {
-            // Adjust Water Loss/Gain
-            if (zonalChanges[zone].atmosphere.water < 0) {
-                const scaledLoss = zonalChanges[zone].atmosphere.water * waterLossScale;
-                totalAtmosphericWaterChange += scaledLoss; // Add scaled negative change to global total
-
-                // Calculate actual surface gain based on scaled loss
-                const actualRainfall = zonalChanges[zone].precipitation.potentialRain * waterLossScale;
-                const actualSnowfall = zonalChanges[zone].precipitation.potentialSnow * waterLossScale;
-                zonalChanges[zone].water.liquid += actualRainfall; // Add actual rain gain
-                zonalChanges[zone].water.ice += actualSnowfall; // Add actual snow gain
-                // Store for redistribution
-                zonalChanges[zone].precipitation.rain = actualRainfall;
-                zonalChanges[zone].precipitation.snow = actualSnowfall;
-            } else {
-                // If it was a net gain zone, add potential precipitation anyway (it wasn't limited)
-                const actualRainfall = zonalChanges[zone].precipitation.potentialRain; // Not scaled
-                const actualSnowfall = zonalChanges[zone].precipitation.potentialSnow; // Not scaled
-                zonalChanges[zone].water.liquid += actualRainfall;
-                zonalChanges[zone].water.ice += actualSnowfall;
-                // Store for redistribution
-                zonalChanges[zone].precipitation.rain = actualRainfall;
-                zonalChanges[zone].precipitation.snow = actualSnowfall;
-            }
-
-            // Adjust CO2 Loss/Gain
-             if (zonalChanges[zone].atmosphere.co2 < 0) {
-                const scaledLoss = zonalChanges[zone].atmosphere.co2 * co2LossScale;
-                totalAtmosphericCO2Change += scaledLoss; // Add scaled negative change to global total
-
-                // Calculate actual surface gain
-                const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation * co2LossScale;
-                zonalChanges[zone].water.dryIce += actualCO2Condensation; // Add actual dry ice gain
-                totalCo2CondensationAmount += actualCO2Condensation;
-            } else {
-                 // If it was a net gain zone, add potential condensation anyway
-                 const actualCO2Condensation = zonalChanges[zone].potentialCO2Condensation; // Not scaled
-                 zonalChanges[zone].water.dryIce += actualCO2Condensation;
-                 totalCo2CondensationAmount += actualCO2Condensation;
-            }
-
-            // Adjust Methane Loss/Gain
-            if (zonalChanges[zone].atmosphere.methane < 0) {
-                const scaledLoss = zonalChanges[zone].atmosphere.methane * methaneLossScale;
-                totalAtmosphericMethaneChange += scaledLoss;
-                const actualMethaneCondensation = (zonalChanges[zone].precipitation.potentialMethaneRain || 0) * methaneLossScale;
-                const actualMethaneIceCondensation = (zonalChanges[zone].precipitation.potentialMethaneSnow || 0) * methaneLossScale;
-                zonalChanges[zone].methane.liquid += actualMethaneCondensation;
-                zonalChanges[zone].methane.ice += actualMethaneIceCondensation;
-
-                // Store for redistribution
-                zonalChanges[zone].precipitation.methaneRain = actualMethaneCondensation;
-                zonalChanges[zone].precipitation.methaneSnow = actualMethaneIceCondensation;
-            } else {
-                const actualMethaneCondensation = zonalChanges[zone].precipitation.potentialMethaneRain || 0;
-                const actualMethaneIceCondensation = zonalChanges[zone].precipitation.potentialMethaneSnow || 0;
-                zonalChanges[zone].methane.liquid += actualMethaneCondensation;
-                zonalChanges[zone].methane.ice += actualMethaneIceCondensation;
-
-                // Store for redistribution
-                zonalChanges[zone].precipitation.methaneRain = actualMethaneCondensation;
-                zonalChanges[zone].precipitation.methaneSnow = actualMethaneIceCondensation;
-            }
+        // --- 2. Finalize atmospheric changes ---
+        let waterResult = waterCycleInstance.finalizeAtmosphere({
+            available: availableGlobalWaterVapor,
+            zonalChanges,
         });
+        totalAtmosphericWaterChange = waterResult.totalAtmosphericChange;
+        totalRainfallAmount = waterResult.totalsByProcess.rain || 0;
+        totalSnowfallAmount = waterResult.totalsByProcess.snow || 0;
+
+        let methaneResult = methaneCycleInstance.finalizeAtmosphere({
+            available: availableGlobalMethaneGas,
+            zonalChanges,
+        });
+        totalAtmosphericMethaneChange = methaneResult.totalAtmosphericChange;
+        totalMethaneCondensationAmount = methaneResult.totalsByProcess.rain || 0;
+        totalMethaneIceCondensationAmount = methaneResult.totalsByProcess.snow || 0;
+
+        let co2Result = co2CycleInstance.finalizeAtmosphere({
+            available: availableGlobalCo2Gas,
+            zonalChanges,
+        });
+        totalAtmosphericCO2Change = co2Result.totalAtmosphericChange;
+        totalCo2CondensationAmount = co2Result.totalsByProcess.condensation || 0;
 
         // --- 3. Redistribute Precipitation via cycle hooks ---
         for (const cycle of cycles) {

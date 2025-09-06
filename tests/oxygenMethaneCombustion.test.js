@@ -28,6 +28,7 @@ jest.mock('../src/js/terraforming/water-cycle.js', () => ({
       meltAmount: 0,
       freezeAmount: 0,
     })),
+    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
   boilingPointWater: jest.fn(() => 373.15)
 }));
@@ -43,6 +44,7 @@ jest.mock('../src/js/hydrocarbon-cycle.js', () => ({
       meltAmount: 0,
       freezeAmount: 0,
     })),
+    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
   boilingPointMethane: jest.fn(() => 112)
 }));
@@ -55,6 +57,7 @@ jest.mock('../src/js/dry-ice-cycle.js', () => ({
       potentialCO2Condensation: 0,
       sublimationAmount: 0,
     })),
+    finalizeAtmosphere: jest.fn(() => ({ totalAtmosphericChange: 0, totalsByProcess: {} })),
   },
 }));
 

@@ -234,6 +234,23 @@ class CO2Cycle extends ResourceCycleClass {
       sublimationAmount: sublimationAmount + rapidAmount,
     };
   }
+
+  finalizeAtmosphere({ available, zonalChanges }) {
+    return super.finalizeAtmosphere({
+      available,
+      zonalChanges,
+      atmosphereKey: 'co2',
+      processes: [
+        {
+          container: 'root',
+          potentialKey: 'potentialCO2Condensation',
+          surfaceBucket: 'water',
+          surfaceKey: 'dryIce',
+          totalKey: 'condensation',
+        },
+      ],
+    });
+  }
 }
 
 const co2Cycle = new CO2Cycle();

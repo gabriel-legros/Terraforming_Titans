@@ -269,6 +269,32 @@ class MethaneCycle extends ResourceCycleClass {
     };
   }
 
+  finalizeAtmosphere({ available, zonalChanges }) {
+    return super.finalizeAtmosphere({
+      available,
+      zonalChanges,
+      atmosphereKey: 'methane',
+      processes: [
+        {
+          container: 'precipitation',
+          potentialKey: 'potentialMethaneRain',
+          precipitationKey: 'methaneRain',
+          surfaceBucket: 'methane',
+          surfaceKey: 'liquid',
+          totalKey: 'rain',
+        },
+        {
+          container: 'precipitation',
+          potentialKey: 'potentialMethaneSnow',
+          precipitationKey: 'methaneSnow',
+          surfaceBucket: 'methane',
+          surfaceKey: 'ice',
+          totalKey: 'snow',
+        },
+      ],
+    });
+  }
+
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
