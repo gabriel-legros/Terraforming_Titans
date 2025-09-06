@@ -441,6 +441,6 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cargo rocket project resource selection now uses 0/-1/+1,/10,x10 controls for consistency.
 - Space storage ship assignment multiplier persists through save and load.
 - Cargo rocket x10 and /10 buttons adjust the ± buttons' increment instead of changing the current value.
-- Added Mechanical Assistance advanced research adding a `mechanicalAssistance` boolean flag to colony sliders.
+- Added Mechanical Assistance advanced research adding a `mechanicalAssistance` boolean flag to colony sliders and unlocking a "Mechanical Assistance" slider ranging from 0 to 2 in 0.2 steps.
 - Cargo rocket x10 and /10 buttons are now global controls in the resource selection header.
 - Buildings and colonies can gain new consumption resources via an `addResourceConsumption` effect.

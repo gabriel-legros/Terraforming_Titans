@@ -7,6 +7,7 @@ class ColonySlidersManager extends EffectableEntity {
     this.foodConsumption = 1;
     this.luxuryWater = 1;
     this.oreMineWorkers = 0;
+    this.mechanicalAssistance = 0;
   }
 
   setWorkforceRatio(value) {
@@ -171,11 +172,38 @@ class ColonySlidersManager extends EffectableEntity {
     }
   }
 
+  setMechanicalAssistance(value) {
+    value = Math.min(2, Math.max(0, value));
+    this.mechanicalAssistance = value;
+
+    if (typeof document !== 'undefined') {
+      const input = document.getElementById('mechanical-assistance-slider');
+      if (input) input.value = value.toString();
+      const valueSpan = document.getElementById('mechanical-assistance-slider-value');
+      const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
+      if (valueSpan && effectSpan) {
+        valueSpan.textContent = `${value.toFixed(1)}x`;
+        effectSpan.textContent = '';
+      }
+    }
+  }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    if (effect.flagId === 'mechanicalAssistance' && typeof document !== 'undefined') {
+      const row = document.getElementById('mechanical-assistance-row');
+      if (row) {
+        row.classList.toggle('invisible', !effect.value);
+      }
+    }
+  }
+
   reset() {
     this.setWorkforceRatio(0.5);
     this.setFoodConsumptionMultiplier(1);
     this.setLuxuryWaterMultiplier(1);
     this.setOreMineWorkerAssist(0);
+    this.setMechanicalAssistance(0);
   }
 }
 
@@ -199,6 +227,10 @@ function setOreMineWorkerAssist(value) {
   colonySliderSettings.setOreMineWorkerAssist(value);
 }
 
+function setMechanicalAssistance(value) {
+  colonySliderSettings.setMechanicalAssistance(value);
+}
+
 function resetColonySliders() {
   colonySliderSettings.reset();
 }
@@ -211,6 +243,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setFoodConsumptionMultiplier,
     setLuxuryWaterMultiplier,
     setOreMineWorkerAssist,
+    setMechanicalAssistance,
     resetColonySliders
   };
 }

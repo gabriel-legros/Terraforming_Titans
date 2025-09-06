@@ -377,6 +377,7 @@ function loadGame(slotOrCustomString) {
       setFoodConsumptionMultiplier(colonySliderSettings.foodConsumption);
       setLuxuryWaterMultiplier(colonySliderSettings.luxuryWater);
       setOreMineWorkerAssist(colonySliderSettings.oreMineWorkers);
+      setMechanicalAssistance(colonySliderSettings.mechanicalAssistance);
     }
 
     if(gameState.ghgFactorySettings){

@@ -301,6 +301,61 @@ function initializeColonySlidersUI() {
   container.appendChild(oreList);
   body.appendChild(oreRow);
 
+  // Mechanical assistance slider
+  const mechRow = document.createElement('div');
+  mechRow.classList.add('colony-slider');
+  mechRow.id = 'mechanical-assistance-row';
+  const mechLabel = document.createElement('label');
+  mechLabel.htmlFor = 'mechanical-assistance-slider';
+  mechLabel.textContent = 'Mechanical Assistance';
+  mechRow.appendChild(mechLabel);
+
+  const mechValue = document.createElement('span');
+  mechValue.id = 'mechanical-assistance-slider-value';
+  mechValue.classList.add('slider-value');
+  mechRow.appendChild(mechValue);
+
+  const mechInput = document.createElement('input');
+  mechInput.type = 'range';
+  mechInput.min = 0;
+  mechInput.max = 2;
+  mechInput.step = 0.2;
+  mechInput.id = 'mechanical-assistance-slider';
+  mechInput.value = colonySliderSettings.mechanicalAssistance;
+  mechInput.setAttribute('list', 'mechanical-assistance-slider-ticks');
+  mechInput.classList.add('pretty-slider');
+
+  const mechSliderContainer = document.createElement('div');
+  mechSliderContainer.classList.add('slider-container');
+  mechSliderContainer.appendChild(mechInput);
+
+  const mechTickMarks = document.createElement('div');
+  mechTickMarks.classList.add('tick-marks');
+  for (let i = 0; i <= 2; i += 0.2) {
+    const tick = document.createElement('span');
+    mechTickMarks.appendChild(tick);
+  }
+  mechSliderContainer.appendChild(mechTickMarks);
+  mechRow.appendChild(mechSliderContainer);
+
+  const mechEffect = document.createElement('span');
+  mechEffect.id = 'mechanical-assistance-slider-effect';
+  mechEffect.classList.add('slider-effect');
+  mechRow.appendChild(mechEffect);
+
+  const mechList = document.createElement('datalist');
+  mechList.id = 'mechanical-assistance-slider-ticks';
+  for (let i = 0; i <= 2; i += 0.2) {
+    const option = document.createElement('option');
+    option.value = i.toFixed(1);
+    mechList.appendChild(option);
+  }
+  container.appendChild(mechList);
+  if (!colonySliderSettings.isBooleanFlagSet('mechanicalAssistance')) {
+    mechRow.classList.add('invisible');
+  }
+  body.appendChild(mechRow);
+
   card.appendChild(body);
   container.appendChild(card);
 
@@ -329,6 +384,30 @@ function initializeColonySlidersUI() {
     try { v = parseFloat(oreInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.oreMineWorkers;
     setOreMineWorkerAssist(v);
+  });
+
+  const updateMechanicalValue = (val) => {
+    if (mechValue && mechEffect) {
+      mechValue.textContent = `${val.toFixed(1)}x`;
+      mechEffect.textContent = '';
+    }
+  };
+
+  let initialMech;
+  try { initialMech = parseFloat(mechInput.value); } catch (e) { initialMech = NaN; }
+  if (isNaN(initialMech)) initialMech = colonySliderSettings.mechanicalAssistance;
+  updateMechanicalValue(initialMech);
+  mechInput.addEventListener('input', () => {
+    let v;
+    try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
+    updateMechanicalValue(v);
+  });
+  mechInput.addEventListener('change', () => {
+    let v;
+    try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
+    setMechanicalAssistance(v);
   });
 }
 
