@@ -515,6 +515,7 @@ class CargoRocketProject extends Project {
     if (this.autoStart) {
       state.selectedResources = this.selectedResources;
     }
+    state.spaceshipPriceIncrease = this.spaceshipPriceIncrease;
     return state;
   }
 
@@ -523,6 +524,15 @@ class CargoRocketProject extends Project {
     this.selectedResources = this.autoStart && state.selectedResources
       ? state.selectedResources
       : [];
+    this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+  }
+
+  saveTravelState() {
+    return { spaceshipPriceIncrease: this.spaceshipPriceIncrease };
+  }
+
+  loadTravelState(state = {}) {
+    this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
