@@ -243,7 +243,38 @@ describe('colony sliders', () => {
     expect(oreWorkers).toBe('0');
     expect(oreBoost).toBe('Boost: 0%');
     expect(mechVal).toBe('0.0x');
-    expect(mechEffect).toBe('');
+    expect(mechEffect).toBe('Mitigation: -0%');
+  });
+
+  test('setMechanicalAssistance updates mitigation text', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
+    ctx.colonySliderSettings = {
+      workerRatio: 0.5,
+      foodConsumption: 1,
+      luxuryWater: 1,
+      oreMineWorkers: 0,
+      mechanicalAssistance: 0,
+      isBooleanFlagSet: () => true
+    };
+    ctx.addEffect = () => {};
+    ctx.removeEffect = () => {};
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
+
+    ctx.initializeColonySlidersUI();
+    ctx.setMechanicalAssistance(0.4);
+    const effect = dom.window.document.getElementById('mechanical-assistance-slider-effect').textContent;
+    expect(effect).toBe('Mitigation: -10%');
   });
 
   test('initializeColonySlidersUI keeps container hidden', () => {
@@ -358,7 +389,7 @@ describe('colony sliders', () => {
     expect(oreWorkers).toBe('40');
     expect(oreBoost).toBe('Boost: 400%');
     expect(mechVal).toBe('1.2x');
-    expect(mechEffect).toBe('');
+    expect(mechEffect).toBe('Mitigation: -30%');
   });
 
   test('mechanical assistance slider visibility toggles with flag', () => {

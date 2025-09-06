@@ -205,7 +205,8 @@ class ColonySlidersManager extends EffectableEntity {
       const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
       if (valueSpan && effectSpan) {
         valueSpan.textContent = `${value.toFixed(1)}x`;
-        effectSpan.textContent = '';
+        const mitigation = Math.round(value * 25);
+        effectSpan.textContent = `Mitigation: -${mitigation}%`;
       }
     }
   }

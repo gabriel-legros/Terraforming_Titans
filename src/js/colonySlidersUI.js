@@ -389,7 +389,8 @@ function initializeColonySlidersUI() {
   const updateMechanicalValue = (val) => {
     if (mechValue && mechEffect) {
       mechValue.textContent = `${val.toFixed(1)}x`;
-      mechEffect.textContent = '';
+      const mitigation = Math.round(val * 25);
+      mechEffect.textContent = `Mitigation: -${mitigation}%`;
     }
   };
 
