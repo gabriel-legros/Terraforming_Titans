@@ -445,6 +445,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Mechanical Assistance slider increases components consumption for all colonies by the slider's value.
 - Mechanical Assistance slider displays a mitigation percentage and reduces gravity penalty for colony growth accordingly.
 - Mechanical Assistance component costs now scale with colony tier using a 10^(tier-3) multiplier.
+- Colonies gain a Components need box when Mechanical Assistance is above 0; it sits between Food and Electronics and scales the gravity mitigation by its fill level.
 - Cargo rocket x10 and /10 buttons are now global controls in the resource selection header.
 - Buildings and colonies can gain new consumption resources via an `addResourceConsumption` effect.
 - Colony sliders UI now provides `updateColonySlidersUI` to toggle the Mechanical Assistance slider when its flag is unlocked.
