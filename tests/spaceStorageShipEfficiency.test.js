@@ -23,7 +23,7 @@ describe('Space Storage ship efficiency effect', () => {
         getTerraformedPlanetCountIncludingCurrent: () => 1,
         getTerraformedPlanetCount: () => 0
       },
-      projectManager: { durationMultiplier: 1 },
+      projectManager: { getDurationMultiplier: () => 1 },
       globalEffects: new EffectableEntity({ description: 'global' })
     };
     vm.createContext(context);

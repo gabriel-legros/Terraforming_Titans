@@ -38,7 +38,7 @@ describe('Cargo Rocket project', () => {
         colony: { funding: { value: 1e9, decrease: jest.fn(), modifyRate: jest.fn() } },
         special: { spaceships: { value: 0, increase: jest.fn(), modifyRate: jest.fn() } }
       },
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
     };
     vm.createContext(ctx);
     global.resources = ctx.resources;
@@ -81,7 +81,7 @@ describe('Cargo Rocket project', () => {
         colony: { funding: { value: 1e9, decrease: jest.fn(), modifyRate: jest.fn() } },
         special: { spaceships: { value: 0, increase: jest.fn(), modifyRate: jest.fn() } }
       },
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
     };
     vm.createContext(ctx);
     global.resources = ctx.resources;
@@ -117,7 +117,7 @@ describe('Cargo Rocket project', () => {
         colony: { funding: { value: 1e9, decrease: jest.fn(), modifyRate: jest.fn() } },
         special: { spaceships: { value: 0, increase: jest.fn(), modifyRate: jest.fn() } }
       },
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
     };
     vm.createContext(ctx);
     global.resources = ctx.resources;
@@ -163,7 +163,7 @@ describe('Cargo Rocket project', () => {
         },
         special: { spaceships: { value: 0, increase(){}, modifyRate(){}, } }
       },
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
     };
     vm.createContext(ctx);
     global.resources = ctx.resources;

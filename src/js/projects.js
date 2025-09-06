@@ -87,9 +87,9 @@ class Project extends EffectableEntity {
     let multiplier = 1;
     if (
       typeof projectManager !== 'undefined' &&
-      projectManager.durationMultiplier !== undefined
+      typeof projectManager.getDurationMultiplier === 'function'
     ) {
-      multiplier *= projectManager.durationMultiplier;
+      multiplier *= projectManager.getDurationMultiplier();
     }
     for (const effect of this.activeEffects) {
       if (effect.type === 'projectDurationMultiplier') {
@@ -575,12 +575,32 @@ class ProjectManager extends EffectableEntity {
 
     this.projects = {};
     this.projectOrder = [];
-    this.durationMultiplier = 1;
+  }
+
+  getDurationMultiplier() {
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'projectDurationReduction') {
+        multiplier *= 1 - effect.value;
+      } else if (effect.type === 'projectDurationMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
+  updateProjectDurations() {
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (typeof project.updateDurationFromEffects === 'function') {
+        project.updateDurationFromEffects();
+      }
+    }
   }
 
   applyActiveEffects(firstTime = true) {
-    this.durationMultiplier = 1;
     super.applyActiveEffects(firstTime);
+    this.updateProjectDurations();
   }
 
   // New method to activate automation
@@ -779,19 +799,11 @@ class ProjectManager extends EffectableEntity {
   }
 
   applyProjectDurationReduction(effect) {
-    this.durationMultiplier = 1 - effect.value;
+    this.updateProjectDurations();
+  }
 
-    for (const name in this.projects) {
-      const project = this.projects[name];
-      const baseDuration = project.getBaseDuration ? project.getBaseDuration() : project.duration;
-      const newDuration = baseDuration * this.durationMultiplier;
-
-      if (project.isActive) {
-        const progressRatio = (project.startingDuration - project.remainingTime) / project.startingDuration;
-        project.startingDuration = newDuration;
-        project.remainingTime = newDuration * (1 - progressRatio);
-      }
-    }
+  applyProjectDurationMultiplier(effect) {
+    this.updateProjectDurations();
   }
 
   // Save the state of all projects
