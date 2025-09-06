@@ -453,3 +453,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - `updateColonySlidersUI` now reads the `mechanicalAssistance` flag from `ColonySlidersManager` rather than the settings object.
 - Mechanical Assistance slider hides when no gravity penalty exists, only appearing on worlds with gravity above 10 m/s².
 - Mechanical Assistance slider label includes an info tooltip explaining gravity penalty mitigation.
+- Advanced oversight assignment now respects water melt targets when focusing, allocating mirrors and lanterns by priority.

@@ -1246,8 +1246,11 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
       const priority = mirrorOversightSettings.priority || {};
       const zoneOrder = ['tropical', 'temperate', 'polar', 'focus'];
+      const getTargetForZone = z => (z === 'focus'
+        ? mirrorOversightSettings.targets?.water
+        : mirrorOversightSettings.targets?.[z]);
       const zones = zoneOrder
-        .filter(z => typeof mirrorOversightSettings.targets?.[z] === 'number')
+        .filter(z => typeof getTargetForZone(z) === 'number')
         .sort((a, b) => {
           const pa = priority[a] ?? 1;
           const pb = priority[b] ?? 1;
@@ -1260,8 +1263,34 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       for (const zone of zones) {
         if (mirrorsLeft <= 0 && lanternsLeft <= 0) break;
 
-        const target = mirrorOversightSettings.targets[zone];
-        if (!isFinite(target)) continue;
+        const target = getTargetForZone(zone);
+        if (!isFinite(target) || target <= 0) continue;
+
+        // Handle focusing using water melt targets
+        if (zone === 'focus') {
+          const mirrorPowerPer = terraforming.calculateMirrorEffect?.().interceptedPower || 0;
+          const lanternPowerPer = mirrorOversightSettings.applyToLantern
+            ? ((buildings.hyperionLantern?.powerPerBuilding || 0) * (typeof buildings.hyperionLantern?.productivity === 'number' ? buildings.hyperionLantern.productivity : 1))
+            : 0;
+          const C_P_ICE = 2100; // J/kg·K
+          const L_F_WATER = 334000; // J/kg
+          const deltaT = Math.max(0, 273.15 - (terraforming.temperature?.value || 0));
+          const energyPerKg = C_P_ICE * deltaT + L_F_WATER;
+          if (energyPerKg <= 0 || (mirrorPowerPer <= 0 && lanternPowerPer <= 0)) continue;
+          let requiredPower = target * 1000 * energyPerKg; // convert t/s to J/s
+          let mirrorsNeeded = mirrorPowerPer > 0 ? Math.ceil(requiredPower / mirrorPowerPer) : 0;
+          mirrorsNeeded = Math.min(mirrorsNeeded, mirrorsLeft);
+          assignM[zone] = mirrorsNeeded;
+          mirrorsLeft -= mirrorsNeeded;
+          requiredPower -= mirrorsNeeded * mirrorPowerPer;
+          if (requiredPower > 0 && lanternPowerPer > 0 && lanternsLeft > 0) {
+            let lanternsNeeded = Math.ceil(requiredPower / lanternPowerPer);
+            lanternsNeeded = Math.min(lanternsNeeded, lanternsLeft);
+            assignL[zone] = lanternsNeeded;
+            lanternsLeft -= lanternsNeeded;
+          }
+          continue;
+        }
 
         if (typeof terraforming.updateSurfaceTemperature === 'function') {
           terraforming.updateSurfaceTemperature();
