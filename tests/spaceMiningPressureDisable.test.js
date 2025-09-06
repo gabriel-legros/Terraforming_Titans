@@ -15,7 +15,7 @@ describe('SpaceMiningProject pressure disable', () => {
       resources: {},
       buildings: {},
       colonies: {},
-      projectManager: { projects: {}, durationMultiplier: 1 },
+      projectManager: { projects: {}, getDurationMultiplier: () => 1 },
       populationModule: {},
       tabManager: {},
       fundingModule: {},

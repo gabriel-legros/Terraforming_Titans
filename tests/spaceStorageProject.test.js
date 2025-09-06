@@ -36,7 +36,7 @@ describe('Space Storage project', () => {
         getTerraformedPlanetCount: () => 2,
         getTerraformedPlanetCountIncludingCurrent: () => 3
       },
-      projectManager: { durationMultiplier: 0.5 }
+      projectManager: { getDurationMultiplier: () => 0.5 }
     };
     vm.createContext(ctx);
     vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);
@@ -148,7 +148,7 @@ describe('Space Storage project', () => {
         getTerraformedPlanetCountIncludingCurrent: () => 1,
         getTerraformedPlanetCount: () => 0
       },
-      projectManager: { durationMultiplier: 1 },
+      projectManager: { getDurationMultiplier: () => 1 },
     };
     vm.createContext(ctx);
     vm.runInContext('function capitalizeFirstLetter(s){ return s.charAt(0).toUpperCase() + s.slice(1); }', ctx);

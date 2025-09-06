@@ -18,7 +18,7 @@ describe('space storage assignment multiplier persistence', () => {
         getTerraformedPlanetCount: () => 1,
         getTerraformedPlanetCountIncludingCurrent: () => 1,
       },
-      projectManager: { durationMultiplier: 1 },
+      projectManager: { getDurationMultiplier: () => 1 },
       formatNumber: numbers.formatNumber,
     };
     vm.createContext(ctx);

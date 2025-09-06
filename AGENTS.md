@@ -457,3 +457,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Mechanical Assistance slider label includes an info tooltip explaining gravity penalty mitigation.
 - Advanced oversight assignment now respects water melt targets when focusing, allocating mirrors and lanterns by priority.
 - Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration, Carbon planets speed Carbon Asteroid Mining, and icy moons accelerate Ice and Water importation.
+- Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration based on count.
+- ProjectManager duration multiplier is now computed on demand via `getDurationMultiplier` instead of a stored attribute.
