@@ -470,3 +470,4 @@ The Random World Generator manager builds procedural planets and moons with lock
   WaterCycle and MethaneCycle, and Terraforming calls the hook for each cycle.
 - ResourceCycle now provides `finalizeAtmosphere` to scale zonal atmospheric losses and apply precipitation consistently across cycles.
 - ResourceCycle now offers a `runCycle` method that processes all zones, finalizes atmospheric changes and redistributes precipitation so terraformers can access zonal and total results.
+- Cycle subclasses store default keys and parameters so `updateResources` only supplies dynamic values when running cycles.

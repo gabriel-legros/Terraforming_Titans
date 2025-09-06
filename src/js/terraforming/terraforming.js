@@ -593,13 +593,14 @@ class Terraforming extends EffectableEntity{
             }
         };
 
+        if (!waterCycleInstance.defaultExtraParams) waterCycleInstance.defaultExtraParams = {};
+        waterCycleInstance.defaultExtraParams.gravity = gravity;
+        waterCycleInstance.defaultExtraParams.precipitationMultiplier = precipitationMultiplier;
         const waterData = waterCycleInstance.runCycle(this, zones, {
             atmPressure: globalTotalPressurePa,
             vaporPressure: globalWaterPressurePa,
             available: availableGlobalWaterVapor,
             durationSeconds,
-            gravity,
-            precipitationMultiplier,
         });
         mergeZonalChanges(waterData.zonalChanges);
         cycleTotals.water.evaporation = waterData.totals.evaporation || 0;
@@ -610,13 +611,14 @@ class Terraforming extends EffectableEntity{
         totalRainfallAmount = waterData.totals.rain || 0;
         totalSnowfallAmount = waterData.totals.snow || 0;
 
+        if (!methaneCycleInstance.defaultExtraParams) methaneCycleInstance.defaultExtraParams = {};
+        methaneCycleInstance.defaultExtraParams.gravity = gravity;
+        methaneCycleInstance.defaultExtraParams.condensationParameter = methaneCondensationParameter;
         const methaneData = methaneCycleInstance.runCycle(this, zones, {
             atmPressure: globalTotalPressurePa,
             vaporPressure: globalMethanePressurePa,
             available: availableGlobalMethaneGas,
             durationSeconds,
-            gravity,
-            condensationParameter: methaneCondensationParameter,
         });
         mergeZonalChanges(methaneData.zonalChanges);
         cycleTotals.methane.evaporation = methaneData.totals.evaporation || 0;
@@ -627,12 +629,13 @@ class Terraforming extends EffectableEntity{
         totalMethaneCondensationAmount = methaneData.totals.methaneRain || methaneData.totals.rain || 0;
         totalMethaneIceCondensationAmount = methaneData.totals.methaneSnow || methaneData.totals.snow || 0;
 
+        if (!co2CycleInstance.defaultExtraParams) co2CycleInstance.defaultExtraParams = {};
+        co2CycleInstance.defaultExtraParams.condensationParameter = condensationParameter;
         const co2Data = co2CycleInstance.runCycle(this, zones, {
             atmPressure: globalTotalPressurePa,
             vaporPressure: globalCo2PressurePa,
             available: availableGlobalCo2Gas,
             durationSeconds,
-            condensationParameter,
         });
         mergeZonalChanges(co2Data.zonalChanges);
         cycleTotals.co2.sublimation = co2Data.totals.sublimation || 0;
