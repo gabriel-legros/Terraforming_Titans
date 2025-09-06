@@ -402,6 +402,7 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
+    ctx.terraforming = { celestialParameters: { gravity: 15 } };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
