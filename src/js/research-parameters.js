@@ -1464,7 +1464,7 @@ const researchParameters = {
       {
         id: 'mechanical_assistance',
         name: 'Mechanical Assistance',
-        description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.',
+        description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',
         cost: { advancedResearch: 175000 },
         prerequisites: [],
         effects: [
