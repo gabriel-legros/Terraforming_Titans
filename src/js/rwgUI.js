@@ -221,14 +221,14 @@ function updateRandomWorldUI() {
         ? sm.isSeedTerraformed(canonicalSeed)
         : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
       const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
-      const travelDisabled = lockedByStory || !eqDone || !!alreadyTerraformed;
+      const travelDisabled = lockedByStory || !!alreadyTerraformed || !eqDone;
       travelBtn.disabled = travelDisabled;
 
       const warningMsg = lockedByStory
         ? 'You must complete the story for the current world first'
-        : (!eqDone
-          ? 'Press Equilibrate at least once before traveling.'
-          : (alreadyTerraformed ? 'This world has already been terraformed.' : ''));
+        : (alreadyTerraformed
+          ? 'This world has already been terraformed.'
+          : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
       let warnEl = document.getElementById('rwg-travel-warning');
       if (warningMsg) {
         if (!warnEl) {
@@ -521,7 +521,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
   const lockedByStory = sm?.isRandomTravelLocked ? sm.isRandomTravelLocked() : false;
-  const travelDisabled = lockedByStory || !eqDone || alreadyTerraformed;
+  const travelDisabled = lockedByStory || alreadyTerraformed || !eqDone;
   const showTemps = !seedUsed || eqDone;
   const meanTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}`
@@ -534,9 +534,9 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     : '—';
   const warningMsg = lockedByStory
     ? 'You must complete the story for the current world first'
-    : (!eqDone
-      ? 'Press Equilibrate at least once before traveling.'
-      : (alreadyTerraformed ? 'This world has already been terraformed.' : ''));
+    : (alreadyTerraformed
+      ? 'This world has already been terraformed.'
+      : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
   const gPenalty = c.gravity > 10 ? Math.min((c.gravity - 10) * 5, 100) : 0;
   const gWarn = gPenalty > 0
     ? `<span class="info-tooltip-icon" title="Humans and their bodies are very sensitive to high gravity.  Every value of gravity above 10 reduces happiness by 5% of its value, for a maximum of a 100% reduction. This world imposes a ${fmt(gPenalty)}% happiness penalty">⚠</span>`
