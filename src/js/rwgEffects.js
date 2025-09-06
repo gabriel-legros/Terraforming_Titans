@@ -15,6 +15,32 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "carbon-planet": [
+    {
+      effectId: "rwg-carbon-carbon",
+      target: "project",
+      targetId: "carbonSpaceMining",
+      type: "projectDurationMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 / (1 + f * count);
+      },
+    },
+  ],
+  "icy-moon": [
+    {
+      effectId: "rwg-icy-water",
+      target: "project",
+      targetId: "waterSpaceMining",
+      type: "projectDurationMultiplier",
+      factor: 0.1,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        return 1 / (1 + f * count);
+      },
+    },
+  ],
 };
 
 function applyRWGEffects() {

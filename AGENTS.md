@@ -456,4 +456,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Mechanical Assistance slider hides when no gravity penalty exists, only appearing on worlds with gravity above 10 m/s².
 - Mechanical Assistance slider label includes an info tooltip explaining gravity penalty mitigation.
 - Advanced oversight assignment now respects water melt targets when focusing, allocating mirrors and lanterns by priority.
-- Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration based on count.
+- Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration, Carbon planets speed Carbon Asteroid Mining, and icy moons accelerate Ice and Water importation.
