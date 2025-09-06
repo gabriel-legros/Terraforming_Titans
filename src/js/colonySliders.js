@@ -217,13 +217,11 @@ class ColonySlidersManager extends EffectableEntity {
       luxuryWater: this.luxuryWater,
       oreMineWorkers: this.oreMineWorkers,
       mechanicalAssistance: this.mechanicalAssistance,
-      booleanFlags: Array.from(this.booleanFlags)
     };
   }
 
   loadState(state) {
     if (!state) return;
-    this.booleanFlags = new Set(state.booleanFlags || state.flags || []);
     this.setWorkforceRatio(state.workerRatio ?? 0.5);
     this.setFoodConsumptionMultiplier(state.foodConsumption ?? 1);
     this.setLuxuryWaterMultiplier(state.luxuryWater ?? 1);
