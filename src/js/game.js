@@ -1,4 +1,4 @@
-const config = {
+﻿const config = {
   type: Phaser.AUTO,
   width: 0,
   height: 0,
@@ -408,6 +408,7 @@ function updateRender(force = false) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
+      if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
     if (isActive('hope')) {
@@ -450,3 +451,4 @@ function startNewGame() {
   totalPlayTimeSeconds = 0;
   initializeGameState();
 }
+
