@@ -444,3 +444,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added Mechanical Assistance advanced research adding a `mechanicalAssistance` boolean flag to colony sliders and unlocking a "Mechanical Assistance" slider ranging from 0 to 2 in 0.2 steps.
 - Cargo rocket x10 and /10 buttons are now global controls in the resource selection header.
 - Buildings and colonies can gain new consumption resources via an `addResourceConsumption` effect.
+- Colony sliders UI now provides `updateColonySlidersUI` to toggle the Mechanical Assistance slider when its flag is unlocked.

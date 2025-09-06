@@ -10,7 +10,7 @@ const {
   colonySliderSettings,
   ColonySlidersManager
 } = require('../src/js/colonySliders.js');
-const { initializeColonySlidersUI } = require('../src/js/colonySlidersUI.js');
+const { initializeColonySlidersUI, updateColonySlidersUI } = require('../src/js/colonySlidersUI.js');
 
 const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
 const sixResearchColonies = researchColonies.slice(0,6);
@@ -317,6 +317,7 @@ describe('colony sliders', () => {
 
     ctx.colonySliderSettings.sortAllResearches = () => {};
     ctx.colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
+    ctx.updateColonySlidersUI();
     row = dom.window.document.getElementById('mechanical-assistance-row');
     expect(row.classList.contains('hidden')).toBe(false);
   });
