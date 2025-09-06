@@ -521,7 +521,10 @@ progressVega2.chapters.push(
     ),
     prerequisites: ['chapter17.4'],
     objectives: [{ type: 'terraforming', terraformingParameter: 'complete' }],
-    reward: [{ target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },]
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },
+      { target: 'rwgManager', type: 'unlockOrbit', targetId: 'hot' },
+    ]
   }
 );
 
