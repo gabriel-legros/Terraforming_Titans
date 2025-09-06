@@ -3,10 +3,11 @@ const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
+var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 if (isNodeWaterCycle) {
   try {
-    ({ psychrometricConstant } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
   } catch (e) {
     // fall back to globals if require fails
@@ -264,6 +265,12 @@ class WaterCycle extends ResourceCycleClass {
       meltAmount,
       freezeAmount,
     };
+  }
+
+  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
+    if (typeof redistributePrecipitationFn === 'function') {
+      redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
+    }
   }
 }
 

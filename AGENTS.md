@@ -465,3 +465,5 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added "Very Cold" orbit preset (10–100 W/m²) to the Random World Generator.
 - Completing Vega-2 (chapter 17.5) now unlocks hot orbits in the Random World Generator.
 - Fixed the chapter 17.5 reward so the Random World Generator actually unlocks the hot orbit.
+- ResourceCycle now exposes an optional `redistributePrecipitation` hook implemented by
+  WaterCycle and MethaneCycle, and Terraforming calls the hook for each cycle.
