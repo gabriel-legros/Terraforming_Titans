@@ -47,5 +47,45 @@ describe('Spaceship price increase and decay', () => {
     const decayedCost = project.getResourceChoiceGainCost();
     expect(decayedCost).toBeCloseTo(25_003, 0);
   });
+
+  test('spaceship price increase persists through save/load', () => {
+    ctx.resources = {
+      colony: { funding: { value: 1_000_000, decrease(amount){ this.value -= amount; } } },
+      special: { spaceships: { value: 0, displayName: 'Spaceships', unlocked: true } }
+    };
+    ctx.spaceManager = new ctx.SpaceManager({ mars: {}, titan: {} });
+    ctx.spaceManager.planetStatuses.mars.terraformed = true;
+    ctx.spaceManager.planetStatuses.titan.terraformed = true;
+
+    const project = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 2 }];
+    project.deductResources(ctx.resources);
+    expect(project.spaceshipPriceIncrease).toBeCloseTo(2);
+
+    const saved = project.saveState();
+    const reloaded = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    reloaded.loadState(saved);
+    expect(reloaded.spaceshipPriceIncrease).toBeCloseTo(2);
+  });
+
+  test('spaceship price increase persists through travel state', () => {
+    ctx.resources = {
+      colony: { funding: { value: 1_000_000, decrease(amount){ this.value -= amount; } } },
+      special: { spaceships: { value: 0, displayName: 'Spaceships', unlocked: true } }
+    };
+    ctx.spaceManager = new ctx.SpaceManager({ mars: {}, titan: {} });
+    ctx.spaceManager.planetStatuses.mars.terraformed = true;
+    ctx.spaceManager.planetStatuses.titan.terraformed = true;
+
+    const project = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    project.selectedResources = [{ category: 'special', resource: 'spaceships', quantity: 4 }];
+    project.deductResources(ctx.resources);
+    expect(project.spaceshipPriceIncrease).toBeCloseTo(4);
+
+    const travel = project.saveTravelState();
+    const arriving = new ctx.CargoRocketProject(ctx.projectParameters.cargo_rocket, 'test');
+    arriving.loadTravelState(travel);
+    expect(arriving.spaceshipPriceIncrease).toBeCloseTo(4);
+  });
 });
 
