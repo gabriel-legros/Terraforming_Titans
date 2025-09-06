@@ -41,6 +41,16 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "super-earth": [
+    {
+      effectId: "rwg-super-earth-bonus",
+      target: "spaceManager",
+      type: "extraTerraformedWorlds",
+      computeValue(count) {
+        return count;
+      },
+    },
+  ],    
   "cold-desert": [
     {
       effectId: "rwg-desert-ore",

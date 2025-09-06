@@ -37,6 +37,35 @@ describe('SpaceManager terraformed planet counting', () => {
     expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(1);
     expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
   });
+
+  test('super-earth adds extra terraformed world', () => {
+    const sm = new SpaceManager({ mars: {}, titan: {} });
+    sm.randomWorldStatuses['111'] = {
+      terraformed: true,
+      visited: true,
+      colonists: 0,
+      name: 'Seed 111',
+      original: { override: { classification: { archetype: 'super-earth' } } },
+    };
+
+    global.spaceManager = sm;
+    global.addEffect = (eff) => {
+      if (eff.target === 'spaceManager') sm.addAndReplace(eff);
+    };
+    const { applyRWGEffects } = require('../src/js/rwgEffects.js');
+    applyRWGEffects();
+
+    expect(sm.getTerraformedPlanetCount()).toBe(2);
+    expect(sm.getTerraformedPlanetCountIncludingCurrent()).toBe(3);
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(2);
+
+    sm.currentRandomSeed = '111';
+    sm.currentPlanetKey = '111';
+    expect(sm.getTerraformedPlanetCountExcludingCurrent()).toBe(0);
+
+    delete global.spaceManager;
+    delete global.addEffect;
+  });
 });
 
 delete global.EffectableEntity;

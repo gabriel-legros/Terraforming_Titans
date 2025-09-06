@@ -35,6 +35,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = null;
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
+        this.extraTerraformedWorlds = 0;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -87,6 +88,8 @@ class SpaceManager extends EffectableEntity {
     applyEffect(effect) {
         if (effect.type === 'setRwgLock') {
             this.setRwgLock(effect.targetId, effect.value !== false);
+        } else if (effect.type === 'extraTerraformedWorlds') {
+            this.extraTerraformedWorlds = typeof effect.value === 'number' ? effect.value : 0;
         } else {
             super.applyEffect(effect);
         }
@@ -159,7 +162,8 @@ class SpaceManager extends EffectableEntity {
         const rings = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.orbitalRing)
             ? projectManager.projects.orbitalRing.ringCount
             : 0;
-        return base + rings;
+        const extra = typeof this.extraTerraformedWorlds === 'number' ? this.extraTerraformedWorlds : 0;
+        return base + rings + extra;
     }
 
     /**
@@ -185,11 +189,19 @@ class SpaceManager extends EffectableEntity {
     getTerraformedPlanetCountExcludingCurrent() {
         let count = this.getTerraformedPlanetCount();
         if (this.currentWorldHasOrbitalRing()) count--;
+        const isCurrentSuperEarth = this.currentRandomSeed !== null &&
+            this.randomWorldStatuses[String(this.currentRandomSeed)]?.original?.override?.classification?.archetype === 'super-earth';
         if (this.currentRandomSeed !== null) {
-            if (this.isSeedTerraformed(String(this.currentRandomSeed))) count--;
+            if (this.isSeedTerraformed(String(this.currentRandomSeed))) {
+                count--;
+                if (isCurrentSuperEarth) count--;
+            }
             return Math.max(count, 0);
         }
-        if (this.isPlanetTerraformed(this.currentPlanetKey)) count--;
+        if (this.isPlanetTerraformed(this.currentPlanetKey)) {
+            count--;
+            if (isCurrentSuperEarth) count--;
+        }
         return Math.max(count, 0);
     }
 
