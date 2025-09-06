@@ -633,6 +633,9 @@ function addEffect(effect) {
 function removeEffect(effect) {
   addOrRemoveEffect(effect, 'removeEffect');
 }
+if (typeof globalThis !== "undefined") {
+  globalThis.EffectableEntity = EffectableEntity;
+}
 if (typeof module !== "undefined" && module.exports) {
   module.exports = EffectableEntity;
 }
