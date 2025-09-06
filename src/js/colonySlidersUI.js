@@ -419,7 +419,9 @@ function updateColonySlidersUI() {
   if (!mechanicalAssistanceRow) return;
   const manager = colonySliderSettings;
   const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
-  mechanicalAssistanceRow.style.display = unlocked ? 'grid' : 'none';
+  const gravity = terraforming.celestialParameters.gravity;
+  const hasPenalty = gravity > 10;
+  mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
 }
 
 if (typeof module !== "undefined" && module.exports) {
