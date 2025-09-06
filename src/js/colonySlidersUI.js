@@ -417,7 +417,7 @@ function updateColonySlidersUI() {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
   if (!mechanicalAssistanceRow) return;
-  const manager = typeof colonySlidersManager !== 'undefined' ? colonySlidersManager : colonySliderSettings;
+  const manager = colonySliderSettings;
   const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
   mechanicalAssistanceRow.style.display = unlocked ? 'grid' : 'none';
 }
