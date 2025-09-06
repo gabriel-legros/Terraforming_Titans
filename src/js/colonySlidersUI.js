@@ -309,7 +309,12 @@ function initializeColonySlidersUI() {
   mechanicalAssistanceRow.id = 'mechanical-assistance-row';
   const mechLabel = document.createElement('label');
   mechLabel.htmlFor = 'mechanical-assistance-slider';
-  mechLabel.textContent = 'Mechanical Assistance';
+  mechLabel.textContent = 'Mechanical Assistance ';
+  const mechInfo = document.createElement('span');
+  mechInfo.classList.add('info-tooltip-icon');
+  mechInfo.title = 'Reduces gravity penalty for colony growth; mitigation scales with slider level and Components need fill.';
+  mechInfo.innerHTML = '&#9432;';
+  mechLabel.appendChild(mechInfo);
   mechanicalAssistanceRow.appendChild(mechLabel);
 
   const mechValue = document.createElement('span');
