@@ -64,6 +64,15 @@ const RWG_EFFECTS = {
       computeValue(count, def) {
         const f = typeof def.factor === "number" ? def.factor : 0.1;
         return 1 + f * count;
+  "mars-like": [
+    {
+      effectId: "rwg-mars-pop",
+      target: "population",
+      type: "globalPopulationGrowth",
+      factor: 0.01,
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.01;
+        return f * count;
       },
     },
   ],
