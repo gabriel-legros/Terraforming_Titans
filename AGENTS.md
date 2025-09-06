@@ -461,3 +461,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Random World Generator Super-Earths count as an additional terraformed world through a new effect.
 - ProjectManager duration multiplier is now computed on demand via `getDurationMultiplier` instead of a stored attribute.
 - Desert worlds grant +10% Ore Mine production per desert world terraformed, and desiccated deserts grant +10% Sand Quarry production per desiccated desert terraformed.
+- Random world types now include display names used for the type dropdown and effects list.

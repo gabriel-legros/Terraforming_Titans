@@ -71,6 +71,20 @@ try {
   calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
 } catch (_) {}
 
+// World type metadata
+const RWG_WORLD_TYPES = {
+  "mars-like": { displayName: "Mars-like" },
+  "cold-desert": { displayName: "Cold Desert" },
+  "icy-moon": { displayName: "Icy" },
+  "titan-like": { displayName: "Titan-like" },
+  "carbon-planet": { displayName: "Carbon" },
+  "desiccated-desert": { displayName: "Desiccated Desert" },
+  "super-earth": { displayName: "Super-Earth" },
+  "venus-like": { displayName: "Venus-like" },
+  rocky: { displayName: "Rocky" },
+  "hot-rocky": { displayName: "Hot Rocky" },
+};
+
 // ===================== Parameter Pack (edit here) =====================
 const DEFAULT_PARAMS = {
   naming: {
@@ -717,7 +731,22 @@ function generateRandomPlanet(seed, opts) { return rwgManager.generateRandomPlan
 function generateSystem(seed, planetCount, opts) { return rwgManager.generateSystem(seed, planetCount, opts); }
 
 // Expose globals (browser)
-if (typeof globalThis !== "undefined") { globalThis.rwgManager = rwgManager; globalThis.generateRandomPlanet = generateRandomPlanet; globalThis.generateSystem = generateSystem; globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS; }
+if (typeof globalThis !== "undefined") {
+  globalThis.rwgManager = rwgManager;
+  globalThis.generateRandomPlanet = generateRandomPlanet;
+  globalThis.generateSystem = generateSystem;
+  globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS;
+  globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
+}
 
 // CommonJS exports
-try { module.exports = { RwgManager, rwgManager, generateRandomPlanet, generateSystem, DEFAULT_PARAMS }; } catch (_) {}
+try {
+  module.exports = {
+    RwgManager,
+    rwgManager,
+    generateRandomPlanet,
+    generateSystem,
+    DEFAULT_PARAMS,
+    RWG_WORLD_TYPES,
+  };
+} catch (_) {}
