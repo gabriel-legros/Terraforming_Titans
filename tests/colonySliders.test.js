@@ -122,7 +122,7 @@ describe('colony sliders', () => {
     expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
     researchColonies.forEach(colonyId => {
       const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
-      const expectedAmount = 1.2 * Math.pow(10, tier - 2);
+      const expectedAmount = 1.2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
@@ -150,7 +150,7 @@ describe('colony sliders', () => {
     expect(colonySliderSettings.mechanicalAssistance).toBe(2);
     researchColonies.forEach(colonyId => {
       const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
-      const expectedAmount = 2 * Math.pow(10, tier - 2);
+      const expectedAmount = 2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,

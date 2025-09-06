@@ -180,7 +180,7 @@ class ColonySlidersManager extends EffectableEntity {
     allColonies.forEach(colonyId => {
       const tierMatch = colonyId.match(/^t(\d)_colony$/);
       const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
-      const scaledAmount = value * Math.pow(10, tier - 2);
+      const scaledAmount = value * Math.pow(10, tier - 3);
       const effect = {
         target: 'colony',
         targetId: colonyId,
