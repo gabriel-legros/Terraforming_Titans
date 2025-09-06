@@ -173,6 +173,37 @@ describe('colony sliders', () => {
     expect(colonySliderSettings.mechanicalAssistance).toBe(0);
   });
 
+  test('saveState and loadState round trip', () => {
+    colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
+    setWorkforceRatio(0.7);
+    setFoodConsumptionMultiplier(2);
+    setLuxuryWaterMultiplier(3);
+    setOreMineWorkerAssist(4);
+    setMechanicalAssistance(1.5);
+
+    const saved = colonySliderSettings.saveState();
+    resetColonySliders();
+    colonySliderSettings.loadState(saved);
+
+    expect(colonySliderSettings.workerRatio).toBe(0.7);
+    expect(colonySliderSettings.foodConsumption).toBe(2);
+    expect(colonySliderSettings.luxuryWater).toBe(3);
+    expect(colonySliderSettings.oreMineWorkers).toBe(4);
+    expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.5);
+    expect(colonySliderSettings.isBooleanFlagSet('mechanicalAssistance')).toBe(true);
+  });
+
+  test('loadState handles legacy plain object', () => {
+    resetColonySliders();
+    const legacy = { workerRatio: 0.6, foodConsumption: 2, luxuryWater: 4, oreMineWorkers: 3, mechanicalAssistance: 1 };
+    colonySliderSettings.loadState(legacy);
+    expect(colonySliderSettings.workerRatio).toBe(0.6);
+    expect(colonySliderSettings.foodConsumption).toBe(2);
+    expect(colonySliderSettings.luxuryWater).toBe(4);
+    expect(colonySliderSettings.oreMineWorkers).toBe(3);
+    expect(colonySliderSettings.mechanicalAssistance).toBe(1);
+  });
+
   test('initializeColonySlidersUI sets default text values', () => {
     const fs = require('fs');
     const path = require('path');
