@@ -18,6 +18,7 @@ function createDefaultMirrorOversightSettings() {
     assignmentStep: 1,
     advancedOversight: false,
     targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
+    waterMultiplier: 1000,
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
     priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
     autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
@@ -119,6 +120,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.assignmentStep = 1;
   mirrorOversightSettings.advancedOversight = false;
   mirrorOversightSettings.targets = { tropical: 0, temperate: 0, polar: 0, water: 0 };
+  mirrorOversightSettings.waterMultiplier = 1000;
   mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
   mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
@@ -515,7 +517,12 @@ function initializeMirrorOversightUI(container) {
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
-        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0" style="font-size:12px; width:50px;">
+        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0" style="font-size:12px; width:75px;">
+        <select id="adv-target-water-scale" class="stat-value" style="font-size:12px; width:50px;">
+          <option value="1000">k</option>
+          <option value="1000000">M</option>
+          <option value="1000000000">B</option>
+        </select>
         <select id="adv-priority-focus" class="stat-value" style="font-size:12px; width:40px;">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
@@ -539,6 +546,7 @@ function initializeMirrorOversightUI(container) {
     polar: div.querySelector('#adv-target-polar'),
     water: div.querySelector('#adv-target-water'),
   };
+  const waterScaleSelect = div.querySelector('#adv-target-water-scale');
   const advPriority = {
     tropical: div.querySelector('#adv-priority-tropical'),
     temperate: div.querySelector('#adv-priority-temperate'),
@@ -555,20 +563,33 @@ function initializeMirrorOversightUI(container) {
     if (!el) return;
     const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
     if (k === 'water') {
-      el.value = Number(mirrorOversightSettings.targets[k] || 0);
+      const scale = mirrorOversightSettings.waterMultiplier || 1000;
+      el.value = Number((mirrorOversightSettings.targets[k] || 0) / scale);
+      el.addEventListener('change', () => {
+        const raw = Number(el.value);
+        const mul = mirrorOversightSettings.waterMultiplier || 1000;
+        mirrorOversightSettings.targets.water = isNaN(raw) ? 0 : raw * mul;
+      });
     } else {
       const base = (mirrorOversightSettings.targets[k] || 293.15);
       el.value = toDisp(base).toFixed(2);
-    }
-    el.addEventListener('change', () => {
-      let raw = Number(el.value);
-      if (k !== 'water') {
+      el.addEventListener('change', () => {
+        let raw = Number(el.value);
         const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
         if (useC) raw = raw + 273.15; // convert back to Kelvin
-      }
-      mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
-    });
+        mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
+      });
+    }
   });
+  if (waterScaleSelect) {
+    waterScaleSelect.value = String(mirrorOversightSettings.waterMultiplier || 1000);
+    waterScaleSelect.addEventListener('change', () => {
+      const scale = Number(waterScaleSelect.value) || 1;
+      mirrorOversightSettings.waterMultiplier = scale;
+      const inputVal = Number(advInputs.water?.value) || 0;
+      mirrorOversightSettings.targets.water = inputVal * scale;
+    });
+  }
   Object.keys(advPriority).forEach(k => {
     const el = advPriority[k];
     if (!el) return;
@@ -929,8 +950,13 @@ function updateMirrorOversightUI() {
   const waterRow = document.getElementById('adv-water-row');
   if (waterRow) waterRow.style.display = focusEnabled ? 'flex' : 'none';
   const waterInput = document.getElementById('adv-target-water');
-  if (waterInput && mirrorOversightSettings.targets && document.activeElement !== waterInput) {
-    waterInput.value = Number(mirrorOversightSettings.targets.water || 0);
+  const waterScale = document.getElementById('adv-target-water-scale');
+  if (waterScale && document.activeElement !== waterScale) {
+    waterScale.value = String(mirrorOversightSettings.waterMultiplier || 1000);
+  }
+  if (waterInput && mirrorOversightSettings.targets && document.activeElement !== waterInput && document.activeElement !== waterScale) {
+    const scale = mirrorOversightSettings.waterMultiplier || 1000;
+    waterInput.value = Number((mirrorOversightSettings.targets.water || 0) / scale);
   }
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
@@ -1555,6 +1581,9 @@ class SpaceMirrorFacilityProject extends Project {
       ? saved.assignmentStep
       : 1;
     settings.advancedOversight = !!saved.advancedOversight;
+    settings.waterMultiplier = typeof saved.waterMultiplier === 'number' && saved.waterMultiplier > 0
+      ? saved.waterMultiplier
+      : 1000;
 
     if (saved.targets) {
       Object.assign(settings.targets, saved.targets);

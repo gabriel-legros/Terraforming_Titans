@@ -120,6 +120,7 @@ test('initializeGameState resets colony sliders to defaults', () => {
     assignmentStep: 1,
     advancedOversight: false,
     targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
+    waterMultiplier: 1000,
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
     priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
     autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
