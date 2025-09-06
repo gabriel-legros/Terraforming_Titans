@@ -1204,8 +1204,9 @@ function updateLifeBox() {
   }
 
 // Function to create the "Complete Terraforming" button
-function createCompleteTerraformingButton(container) {
-  const button = document.createElement('button');
+  function createCompleteTerraformingButton(container) {
+    const doc = (container && container.ownerDocument) || document;
+    const button = doc.createElement('button');
   button.id = 'complete-terraforming-button';
   button.textContent = 'Complete Terraforming';
   button.style.width = '100%';
@@ -1219,33 +1220,30 @@ function createCompleteTerraformingButton(container) {
   button.style.cursor = 'not-allowed';
   button.disabled = true; // Initially disabled
 
-  container.appendChild(button);
+    container.appendChild(button);
 
-  // Add an event listener for the button
-  button.addEventListener('click', () => {
-    if (!button.disabled) {
-        terraforming.completed = true;
-        if (typeof spaceManager !== 'undefined') {
-            spaceManager.updateCurrentPlanetTerraformedStatus(true);
-        }
-        // Refresh the space UI so the new status is displayed immediately
-        if (typeof updateSpaceUI === 'function') {
-            updateSpaceUI();
-        }
-        // Re-evaluate the button state after completing terraforming
-        if (typeof updateCompleteTerraformingButton === 'function') {
-            updateCompleteTerraformingButton();
-        }
-        button.textContent = 'ERROR : MTC not responding';
-    }
-  });
+    // Add an event listener for the button
+    button.onclick = () => {
+      terraforming.completed = true;
+      if (typeof spaceManager !== 'undefined') {
+        spaceManager.updateCurrentPlanetTerraformedStatus(true);
+      }
+      if (typeof updateSpaceUI === 'function') {
+        updateSpaceUI();
+      }
+      if (typeof updateCompleteTerraformingButton === 'function') {
+        updateCompleteTerraformingButton();
+      }
+      button.textContent = 'ERROR : MTC not responding';
+    };
 }
 
-// Function to update the button state
-function updateCompleteTerraformingButton() {
-  const button = document.getElementById('complete-terraforming-button');
+  // Function to update the button state
+  function updateCompleteTerraformingButton() {
+    const doc = typeof document !== 'undefined' ? document : null;
+    const button = doc ? doc.getElementById('complete-terraforming-button') : null;
 
-  if (!button) return;
+    if (!button) return;
 
   const planetTerraformed = (typeof spaceManager !== 'undefined' &&
     typeof spaceManager.getCurrentPlanetKey === 'function' &&

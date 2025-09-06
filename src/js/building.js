@@ -146,6 +146,19 @@ class Building extends EffectableEntity {
     this._applyRecipeMapping();
   }
 
+  applyActiveEffects(firstTime = true) {
+    this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
+    super.applyActiveEffects(firstTime);
+  }
+
+  applyAddResourceConsumption(effect) {
+    const { resourceCategory, resourceId, amount } = effect;
+    if (!this.consumption[resourceCategory]) {
+      this.consumption[resourceCategory] = {};
+    }
+    this.consumption[resourceCategory][resourceId] = amount;
+  }
+
   // Method to get the effective production multiplier
   getEffectiveProductionMultiplier() {
     let multiplier = 1; // Start with default multiplier
