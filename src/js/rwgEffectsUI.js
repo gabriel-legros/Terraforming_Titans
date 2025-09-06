@@ -89,7 +89,7 @@ function _computeRWGEffectsSummary() {
         const percent = (raw - 1) * 100;
         const what = RWG_BUILDING_OUTPUT[eff.targetId] || 'Production';
         const fEach = (typeof eff.factor === 'number' ? eff.factor : 0.1) * 100;
-        descr = descr || `${what} production increased (+${fEach.toFixed(0)}% each).`;
+        descr = descr || `${what} production increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'projectDurationMultiplier') {
         // Show as divided by (1 + factor * count)
@@ -102,7 +102,7 @@ function _computeRWGEffectsSummary() {
       } else if (eff.type === 'globalPopulationGrowth') {
         const percent = raw * 100;
         const fEach = (typeof eff.factor === 'number' ? eff.factor : 0.01) * 100;
-        descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each).`;
+        descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
