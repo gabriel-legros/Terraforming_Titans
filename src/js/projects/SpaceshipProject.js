@@ -688,19 +688,12 @@ class SpaceshipProject extends Project {
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous()) return;
     this.shortfallLastTick = false;
-    const activeTime = this.lastActiveTime || 0;
-    if (activeTime <= 0) return;
     if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
       this.isActive = false;
-      this.lastActiveTime = 0;
       return;
     }
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
-    const fraction = activeTime / duration;
-    if (fraction <= 0) {
-      this.lastActiveTime = 0;
-      return;
-    }
+    const fraction = deltaTime / duration;
 
     let shortfall = false;
     const costPerShip = this.calculateSpaceshipCost();
