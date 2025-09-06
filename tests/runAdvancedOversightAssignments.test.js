@@ -9,7 +9,7 @@ describe('runAdvancedOversightAssignments', () => {
   beforeEach(() => {
     mirrorOversightSettings.advancedOversight = true;
     mirrorOversightSettings.applyToLantern = false;
-    mirrorOversightSettings.targets = { tropical: 230, temperate: 220, polar: 0, focus: 0 };
+    mirrorOversightSettings.targets = { tropical: 230, temperate: 220, polar: 0, water: 0 };
     mirrorOversightSettings.priority = { tropical: 1, temperate: 2, polar: 3, focus: 4 };
     mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
     mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
@@ -18,7 +18,7 @@ describe('runAdvancedOversightAssignments', () => {
 
     global.buildings = {
       spaceMirror: { active: 5 },
-      hyperionLantern: { active: 0, unlocked: false }
+      hyperionLantern: { active: 0, unlocked: false, powerPerBuilding: 250000, productivity: 1 }
     };
     baseTemps = {
       tropical: { value: 200, day: 210, night: 190 },
@@ -27,12 +27,18 @@ describe('runAdvancedOversightAssignments', () => {
       focus: { value: 200, day: 210, night: 190 }
     };
     global.terraforming = {
-      temperature: { zones: {
-        tropical: { value: baseTemps.tropical.value, day: baseTemps.tropical.day, night: baseTemps.tropical.night },
-        temperate: { value: baseTemps.temperate.value, day: baseTemps.temperate.day, night: baseTemps.temperate.night },
-        polar: { value: baseTemps.polar.value, day: baseTemps.polar.day, night: baseTemps.polar.night },
-        focus: { value: baseTemps.focus.value, day: baseTemps.focus.day, night: baseTemps.focus.night },
-      } },
+      temperature: {
+        value: 200,
+        zones: {
+          tropical: { value: baseTemps.tropical.value, day: baseTemps.tropical.day, night: baseTemps.tropical.night },
+          temperate: { value: baseTemps.temperate.value, day: baseTemps.temperate.day, night: baseTemps.temperate.night },
+          polar: { value: baseTemps.polar.value, day: baseTemps.polar.day, night: baseTemps.polar.night },
+          focus: { value: baseTemps.focus.value, day: baseTemps.focus.day, night: baseTemps.focus.night },
+        }
+      },
+      calculateMirrorEffect() {
+        return { interceptedPower: 250000 };
+      },
       updateSurfaceTemperature() {
         for (const z of ['tropical','temperate','polar','focus']) {
           const rev = mirrorOversightSettings.assignments.reversalMode[z] ? -1 : 1;
@@ -55,9 +61,9 @@ describe('runAdvancedOversightAssignments', () => {
   });
 
   test('uses lanterns when mirrors insufficient', () => {
-    mirrorOversightSettings.targets = { tropical: 220, temperate: 0, polar: 0, focus: 0 };
+    mirrorOversightSettings.targets = { tropical: 220, temperate: 0, polar: 0, water: 0 };
     buildings.spaceMirror.active = 1;
-    buildings.hyperionLantern = { active: 5, unlocked: true };
+    buildings.hyperionLantern = { active: 5, unlocked: true, powerPerBuilding: 250000, productivity: 1 };
     mirrorOversightSettings.applyToLantern = true;
 
     runAdvancedOversightAssignments();
@@ -67,13 +73,28 @@ describe('runAdvancedOversightAssignments', () => {
   });
 
   test('uses selected temperature mode', () => {
-    mirrorOversightSettings.targets = { tropical: 195, temperate: 0, polar: 0, focus: 0 };
+    mirrorOversightSettings.targets = { tropical: 195, temperate: 0, polar: 0, water: 0 };
     mirrorOversightSettings.tempMode = { tropical: 'night', temperate: 'average', polar: 'average' };
     runAdvancedOversightAssignments();
     expect(mirrorOversightSettings.assignments.reversalMode.tropical).toBe(false);
     mirrorOversightSettings.tempMode.tropical = 'day';
     runAdvancedOversightAssignments();
     expect(mirrorOversightSettings.assignments.reversalMode.tropical).toBe(true);
+  });
+
+  test('prioritizes water focusing and uses lanterns when needed', () => {
+    mirrorOversightSettings.priority = { tropical: 2, temperate: 3, polar: 4, focus: 1 };
+    mirrorOversightSettings.targets = { tropical: 230, temperate: 0, polar: 0, water: 0.001 };
+    mirrorOversightSettings.applyToLantern = true;
+    buildings.spaceMirror.active = 1;
+    buildings.hyperionLantern.active = 5;
+
+    runAdvancedOversightAssignments();
+
+    expect(mirrorOversightSettings.assignments.mirrors.focus).toBe(1);
+    expect(mirrorOversightSettings.assignments.lanterns.focus).toBe(1);
+    // Remaining mirrors go to tropical but are insufficient to reach target fully
+    expect(mirrorOversightSettings.assignments.mirrors.tropical).toBe(0);
   });
   afterAll(() => {
     delete global.Project;
