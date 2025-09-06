@@ -423,23 +423,28 @@ class EffectableEntity {
     applyProjectDurationReduction(effect) {
       if (!this.projects) return;
 
-      if (this.durationMultiplier === undefined) {
-        this.durationMultiplier = 1;
-      }
-
-      const newMultiplier = 1 - effect.value;
-      this.durationMultiplier = newMultiplier;
+      const multiplier =
+        typeof this.getDurationMultiplier === 'function'
+          ? this.getDurationMultiplier()
+          : 1 - effect.value;
 
       for (const name in this.projects) {
         const project = this.projects[name];
         if (!project) continue;
-        const base = project.getBaseDuration ? project.getBaseDuration() : project.duration;
-        const newDuration = base * newMultiplier;
-
-        if (project.isActive) {
-          const progressRatio = (project.startingDuration - project.remainingTime) / project.startingDuration;
-          project.startingDuration = newDuration;
-          project.remainingTime = newDuration * (1 - progressRatio);
+        if (typeof project.updateDurationFromEffects === 'function') {
+          project.updateDurationFromEffects();
+        } else {
+          const base = project.getBaseDuration ? project.getBaseDuration() : project.duration;
+          const newDuration = base * multiplier;
+          if (project.isActive) {
+            const progressRatio =
+              (project.startingDuration - project.remainingTime) /
+              project.startingDuration;
+            project.startingDuration = newDuration;
+            project.remainingTime = newDuration * (1 - progressRatio);
+          } else {
+            project.startingDuration = newDuration;
+          }
         }
       }
     }
