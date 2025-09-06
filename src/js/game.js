@@ -355,6 +355,10 @@ function updateLogic(delta) {
   // apply rewards, and check for/activate newly available events.
   storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
 
+  if (typeof applyRWGEffects === 'function') {
+    applyRWGEffects();
+  }
+
   recalculateTotalRates();
 
 }

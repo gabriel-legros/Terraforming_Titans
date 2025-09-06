@@ -65,12 +65,7 @@ class Project extends EffectableEntity {
   }
 
   applyDurationEffects(baseDuration) {
-    const multiplier =
-      typeof projectManager !== 'undefined' &&
-      projectManager.durationMultiplier !== undefined
-        ? projectManager.durationMultiplier
-        : 1;
-    return baseDuration * multiplier;
+    return baseDuration * this.getDurationMultiplier();
   }
 
   getEffectiveDuration(){
@@ -86,6 +81,44 @@ class Project extends EffectableEntity {
     } else {
       return this.duration;
     }
+  }
+
+  getDurationMultiplier() {
+    let multiplier = 1;
+    if (
+      typeof projectManager !== 'undefined' &&
+      projectManager.durationMultiplier !== undefined
+    ) {
+      multiplier *= projectManager.durationMultiplier;
+    }
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'projectDurationMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
+  updateDurationFromEffects() {
+    const base = this.getBaseDuration();
+    const newDuration = base * this.getDurationMultiplier();
+    if (this.isActive) {
+      const progressRatio =
+        (this.startingDuration - this.remainingTime) / this.startingDuration;
+      this.startingDuration = newDuration;
+      this.remainingTime = newDuration * (1 - progressRatio);
+    } else {
+      this.startingDuration = newDuration;
+    }
+  }
+
+  applyProjectDurationMultiplier(effect) {
+    this.updateDurationFromEffects();
+  }
+
+  applyActiveEffects(firstTime = true) {
+    super.applyActiveEffects(firstTime);
+    this.updateDurationFromEffects();
   }
 
   isContinuous() {
