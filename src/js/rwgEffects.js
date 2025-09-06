@@ -41,6 +41,16 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "super-earth": [
+    {
+      effectId: "rwg-super-earth-bonus",
+      target: "spaceManager",
+      type: "extraTerraformedWorlds",
+      computeValue(count) {
+        return count;
+      },
+    },
+  ],
 };
 
 function applyRWGEffects() {
@@ -50,7 +60,8 @@ function applyRWGEffects() {
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
-    const type = st?.original?.override?.classification.archetype;
+    const cls = st?.original?.override?.classification;
+    const type = typeof cls === 'string' ? cls : cls?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
     }
