@@ -262,6 +262,24 @@ class CO2Cycle extends ResourceCycleClass {
       ],
     });
   }
+
+  updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    const rateType = 'terraforming';
+    const { sublimation = 0, condensation = 0 } = totals;
+
+    const sublimationRate = durationSeconds > 0 ? sublimation / durationSeconds * 86400 : 0;
+    const condensationRate = durationSeconds > 0 ? condensation / durationSeconds * 86400 : 0;
+
+    if (terraforming.resources.atmospheric.carbonDioxide) {
+      terraforming.resources.atmospheric.carbonDioxide.modifyRate(sublimationRate, 'CO2 Sublimation', rateType);
+      terraforming.resources.atmospheric.carbonDioxide.modifyRate(-condensationRate, 'CO2 Condensation', rateType);
+    }
+
+    if (terraforming.resources.surface.dryIce) {
+      terraforming.resources.surface.dryIce.modifyRate(-sublimationRate, 'CO2 Sublimation', rateType);
+      terraforming.resources.surface.dryIce.modifyRate(condensationRate, 'CO2 Condensation', rateType);
+    }
+  }
 }
 
 const co2Cycle = new CO2Cycle();
