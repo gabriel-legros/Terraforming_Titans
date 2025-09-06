@@ -651,6 +651,14 @@ class RwgManager extends EffectableEntity {
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 
+  applyEffect(effect) {
+    if (effect.type === 'unlockOrbit') {
+      this.unlockOrbit(effect.targetId);
+    } else {
+      super.applyEffect(effect);
+    }
+  }
+
   generateRandomPlanet(seed, opts = {}) {
     const P = resolveParams(this.params, opts.params);
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
