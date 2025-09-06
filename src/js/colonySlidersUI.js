@@ -419,7 +419,12 @@ function updateColonySlidersUI() {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
   if (!mechanicalAssistanceRow) return;
-  const unlocked = colonySliderSettings.isBooleanFlagSet('mechanicalAssistance');
+  const manager = typeof colonySlidersManager !== 'undefined'
+    ? colonySlidersManager
+    : colonySliderSettings;
+  const unlocked = manager && typeof manager.isBooleanFlagSet === 'function'
+    ? manager.isBooleanFlagSet('mechanicalAssistance')
+    : false;
   mechanicalAssistanceRow.classList.toggle('hidden', !unlocked);
 }
 
