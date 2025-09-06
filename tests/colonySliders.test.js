@@ -18,6 +18,7 @@ const sixResearchColonies = researchColonies.slice(0,6);
 describe('colony sliders', () => {
   beforeEach(() => {
     global.addEffect = jest.fn();
+    global.removeEffect = jest.fn();
     resetColonySliders();
   });
 
@@ -114,15 +115,44 @@ describe('colony sliders', () => {
     }));
   });
 
-  test('setMechanicalAssistance stores value and clamps', () => {
+  test('setMechanicalAssistance adds component consumption and clamps', () => {
     addEffect.mockClear();
+    removeEffect.mockClear();
     setMechanicalAssistance(1.2);
     expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
+    researchColonies.forEach(colonyId => {
+      expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+        target: 'colony',
+        targetId: colonyId,
+        type: 'addResourceConsumption',
+        resourceCategory: 'colony',
+        resourceId: 'components',
+        amount: 1.2
+      }));
+    });
+
+    addEffect.mockClear();
+    removeEffect.mockClear();
     setMechanicalAssistance(-1);
     expect(colonySliderSettings.mechanicalAssistance).toBe(0);
+    researchColonies.forEach(colonyId => {
+      expect(removeEffect).toHaveBeenCalledWith(expect.objectContaining({
+        target: 'colony',
+        targetId: colonyId,
+        effectId: 'mechanicalAssistanceComponents'
+      }));
+    });
+
+    addEffect.mockClear();
     setMechanicalAssistance(5);
     expect(colonySliderSettings.mechanicalAssistance).toBe(2);
-    expect(addEffect).not.toHaveBeenCalled();
+    researchColonies.forEach(colonyId => {
+      expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+        target: 'colony',
+        targetId: colonyId,
+        amount: 2
+      }));
+    });
   });
 
   test('resetColonySliders resets to default', () => {
