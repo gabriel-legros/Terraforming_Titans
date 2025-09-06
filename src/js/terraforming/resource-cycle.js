@@ -268,6 +268,12 @@ class ResourceCycle {
     return data.totals;
   }
 
+  // eslint-disable-next-line no-unused-vars
+  updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    // Base class does not update rates directly; subclasses may override
+    // to call modifyRate on specific atmospheric or surface resources.
+  }
+
   rapidSublimationRate(temperature, availableIce) {
     if (temperature > this.sublimationPoint && availableIce > 0) {
       const diff = temperature - this.sublimationPoint;

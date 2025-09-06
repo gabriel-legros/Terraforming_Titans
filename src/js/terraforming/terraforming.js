@@ -668,129 +668,80 @@ class Terraforming extends EffectableEntity{
         this.totalCombustionCo2Rate = combustionCO2Amount / durationSeconds * 86400;
         this.totalCalciteDecayRate = calciteDecayAmount / realSeconds;
 
-        // Keep local consts for modifyRate calls below if needed, or use this. properties directly
-        const evaporationRate = this.totalEvaporationRate;
-        const waterSublimationRate = this.totalWaterSublimationRate;
-        const co2SublimationRate = this.totalCo2SublimationRate;
-        const rainfallRate = this.totalRainfallRate;
-        const snowfallRate = this.totalSnowfallRate;
-        const focusedMeltRate = this.focusMeltRate;
-        const flowMeltRate = this.flowMeltRate;
-        const meltingRate = this.totalMeltRate - focusedMeltRate - flowMeltRate;
-        const freezingRate = this.totalFreezeRate;
-        const co2CondensationRate = this.totalCo2CondensationRate;
-        const combustionMethaneRate = this.totalMethaneCombustionRate;
-        const combustionOxygenRate = this.totalOxygenCombustionRate;
-        const combustionWaterRate = this.totalCombustionWaterRate;
-        const combustionCo2Rate = this.totalCombustionCo2Rate;
-        const calciteDecayRate = this.totalCalciteDecayRate;
-
-        // Calculate individual atmospheric process rates
-        const atmosphericWaterProductionRate = (cycleTotals.water.evaporation + cycleTotals.water.sublimation) / durationSeconds * 86400;
-        const atmosphericWaterConsumptionRate = (totalRainfallAmount + totalSnowfallAmount) / durationSeconds * 86400;
-        const atmosphericCO2ProductionRate = cycleTotals.co2.sublimation / durationSeconds * 86400;
-        const atmosphericCO2ConsumptionRate = totalCo2CondensationAmount / durationSeconds * 86400;
-        const atmosphericMethaneProductionRate = (cycleTotals.methane.evaporation + cycleTotals.methane.sublimation) / durationSeconds * 86400;
-        const atmosphericMethaneConsumptionRate = (totalMethaneCondensationAmount + totalMethaneIceCondensationAmount) / durationSeconds * 86400;
-
         const rateType = 'terraforming';
 
-        // Update Atmospheric Resource Rates (Individual Processes)
-        if (this.resources.atmospheric.atmosphericWater) {
-             this.resources.atmospheric.atmosphericWater.modifyRate(atmosphericWaterProductionRate, 'Evaporation/Sublimation', rateType);
-             this.resources.atmospheric.atmosphericWater.modifyRate(-atmosphericWaterConsumptionRate, 'Precipitation', rateType); // Consumption is negative
-        }
-        if (this.resources.atmospheric.carbonDioxide) {
-            this.resources.atmospheric.carbonDioxide.modifyRate(atmosphericCO2ProductionRate, 'CO2 Sublimation', rateType);
-            this.resources.atmospheric.carbonDioxide.modifyRate(-atmosphericCO2ConsumptionRate, 'CO2 Condensation', rateType); // Consumption is negative
-        }
-        if (this.resources.atmospheric.atmosphericMethane) {
-            this.resources.atmospheric.atmosphericMethane.modifyRate(atmosphericMethaneProductionRate, 'Evaporation/Sublimation', rateType);
-            this.resources.atmospheric.atmosphericMethane.modifyRate(-atmosphericMethaneConsumptionRate, 'Precipitation', rateType); // Consumption is negative
+        const updateConfigs = [
+            {
+                instance: waterCycleInstance,
+                totals: {
+                    evaporation: cycleTotals.water.evaporation,
+                    sublimation: cycleTotals.water.sublimation,
+                    melt: cycleTotals.water.melt,
+                    freeze: cycleTotals.water.freeze,
+                    rain: totalRainfallAmount,
+                    snow: totalSnowfallAmount,
+                },
+            },
+            {
+                instance: co2CycleInstance,
+                totals: {
+                    sublimation: cycleTotals.co2.sublimation,
+                    condensation: totalCo2CondensationAmount,
+                },
+            },
+            {
+                instance: methaneCycleInstance,
+                totals: {
+                    evaporation: cycleTotals.methane.evaporation,
+                    sublimation: cycleTotals.methane.sublimation,
+                    melt: cycleTotals.methane.melt,
+                    freeze: cycleTotals.methane.freeze,
+                    rain: totalMethaneCondensationAmount,
+                    snow: totalMethaneIceCondensationAmount,
+                },
+            },
+        ];
+
+        for (const { instance, totals } of updateConfigs) {
+            if (instance && typeof instance.updateResourceRates === 'function') {
+                instance.updateResourceRates(this, totals, durationSeconds);
+            }
         }
 
-        if (combustionWaterRate && this.resources.atmospheric.atmosphericWater) {
+        if (this.totalCombustionWaterRate && this.resources.atmospheric.atmosphericWater) {
             this.resources.atmospheric.atmosphericWater.modifyRate(
-                combustionWaterRate,
+                this.totalCombustionWaterRate,
                 'Methane Combustion',
                 rateType
             );
         }
-        if (combustionCo2Rate && this.resources.atmospheric.carbonDioxide) {
+        if (this.totalCombustionCo2Rate && this.resources.atmospheric.carbonDioxide) {
             this.resources.atmospheric.carbonDioxide.modifyRate(
-                combustionCo2Rate,
+                this.totalCombustionCo2Rate,
                 'Methane Combustion',
                 rateType
             );
         }
-        if (combustionMethaneRate && this.resources.atmospheric.atmosphericMethane) {
+        if (this.totalMethaneCombustionRate && this.resources.atmospheric.atmosphericMethane) {
             this.resources.atmospheric.atmosphericMethane.modifyRate(
-                -combustionMethaneRate,
+                -this.totalMethaneCombustionRate,
                 'Methane Combustion',
                 rateType
             );
         }
-        if (combustionOxygenRate && this.resources.atmospheric.oxygen) {
+        if (this.totalOxygenCombustionRate && this.resources.atmospheric.oxygen) {
             this.resources.atmospheric.oxygen.modifyRate(
-                -combustionOxygenRate,
+                -this.totalOxygenCombustionRate,
                 'Methane Combustion',
                 rateType
             );
         }
-        if (calciteDecayRate && this.resources.atmospheric.calciteAerosol) {
+        if (this.totalCalciteDecayRate && this.resources.atmospheric.calciteAerosol) {
             this.resources.atmospheric.calciteAerosol.modifyRate(
-                -calciteDecayRate,
+                -this.totalCalciteDecayRate,
                 'Calcite Decay',
                 rateType
             );
-        }
-
-        // Update Surface Resource Rates (Individual Processes for Tooltip)
-        if (this.resources.surface.liquidWater) {
-            this.resources.surface.liquidWater.modifyRate(-evaporationRate, 'Evaporation', rateType);
-            this.resources.surface.liquidWater.modifyRate(rainfallRate, 'Rain', rateType);
-            this.resources.surface.liquidWater.modifyRate(meltingRate, 'Melt', rateType);
-            this.resources.surface.liquidWater.modifyRate(-freezingRate, 'Freeze', rateType);
-            if (focusedMeltRate > 0) {
-                this.resources.surface.liquidWater.modifyRate(focusedMeltRate, 'Focused Melt', rateType);
-            }
-            if (flowMeltRate > 0) {
-                this.resources.surface.liquidWater.modifyRate(flowMeltRate, 'Flow Melt', rateType);
-            }
-        }
-        if (this.resources.surface.ice) {
-            this.resources.surface.ice.modifyRate(-waterSublimationRate, 'Sublimation', rateType);
-            this.resources.surface.ice.modifyRate(snowfallRate, 'Snow', rateType);
-            this.resources.surface.ice.modifyRate(-meltingRate, 'Melt', rateType);
-            this.resources.surface.ice.modifyRate(freezingRate, 'Freeze', rateType);
-            if (focusedMeltRate > 0) {
-                this.resources.surface.ice.modifyRate(-focusedMeltRate, 'Focused Melt', rateType);
-            }
-            if (flowMeltRate > 0) {
-                this.resources.surface.ice.modifyRate(-flowMeltRate, 'Flow Melt', rateType);
-            }
-        }
-        if (this.resources.surface.dryIce) {
-            this.resources.surface.dryIce.modifyRate(-co2SublimationRate, 'CO2 Sublimation', rateType);
-            this.resources.surface.dryIce.modifyRate(co2CondensationRate, 'CO2 Condensation', rateType);
-        }
-        if (this.resources.surface.liquidMethane) {
-            this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneEvaporationRate, 'Methane Evaporation', rateType);
-            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneCondensationRate, 'Methane Rain', rateType);
-            this.resources.surface.liquidMethane.modifyRate(this.totalMethaneMeltRate - this.flowMethaneMeltRate, 'Melt', rateType);
-            this.resources.surface.liquidMethane.modifyRate(-this.totalMethaneFreezeRate, 'Freeze', rateType);
-            if (this.flowMethaneMeltRate > 0) {
-                this.resources.surface.liquidMethane.modifyRate(this.flowMethaneMeltRate, 'Flow Melt', rateType);
-            }
-        }
-        if (this.resources.surface.hydrocarbonIce) {
-            this.resources.surface.hydrocarbonIce.modifyRate(-this.totalMethaneSublimationRate, 'Methane Sublimation', rateType);
-            this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneIceCondensationRate, 'Methane Snow', rateType);
-            this.resources.surface.hydrocarbonIce.modifyRate(-(this.totalMethaneMeltRate - this.flowMethaneMeltRate), 'Melt', rateType);
-            this.resources.surface.hydrocarbonIce.modifyRate(this.totalMethaneFreezeRate, 'Freeze', rateType);
-            if (this.flowMethaneMeltRate > 0) {
-                this.resources.surface.hydrocarbonIce.modifyRate(-this.flowMethaneMeltRate, 'Flow Melt', rateType);
-            }
         }
 
         // reset stored melt from flow for next tick
