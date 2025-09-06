@@ -647,21 +647,6 @@ class Terraforming extends EffectableEntity{
 
         // --- 5. Update Global Rates for UI ---
         // Calculate and STORE rates for individual processes from total amounts accumulated earlier
-        this.totalEvaporationRate = cycleTotals.water.evaporation / durationSeconds * 86400;
-        this.totalWaterSublimationRate = cycleTotals.water.sublimation / durationSeconds * 86400;
-        this.totalCo2SublimationRate = cycleTotals.co2.sublimation / durationSeconds * 86400;
-        this.totalMethaneSublimationRate = cycleTotals.methane.sublimation / durationSeconds * 86400;
-        this.totalRainfallRate = totalRainfallAmount / durationSeconds * 86400;
-        this.totalSnowfallRate = totalSnowfallAmount / durationSeconds * 86400;
-        this.totalMeltRate = cycleTotals.water.melt / durationSeconds * 86400;
-        this.totalFreezeRate = cycleTotals.water.freeze / durationSeconds * 86400;
-        this.focusMeltRate = (this.focusMeltAmount || 0) / durationSeconds * 86400;
-        this.totalCo2CondensationRate = totalCo2CondensationAmount / durationSeconds * 86400;
-        this.totalMethaneEvaporationRate = cycleTotals.methane.evaporation / durationSeconds * 86400;
-        this.totalMethaneCondensationRate = totalMethaneCondensationAmount / durationSeconds * 86400;
-        this.totalMethaneIceCondensationRate = totalMethaneIceCondensationAmount / durationSeconds * 86400;
-        this.totalMethaneMeltRate = cycleTotals.methane.melt / durationSeconds * 86400;
-        this.totalMethaneFreezeRate = cycleTotals.methane.freeze / durationSeconds * 86400;
         this.totalMethaneCombustionRate = combustionMethaneAmount / durationSeconds * 86400;
         this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
         this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
