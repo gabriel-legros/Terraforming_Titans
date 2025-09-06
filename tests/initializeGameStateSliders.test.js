@@ -58,7 +58,14 @@ test('initializeGameState resets colony sliders to defaults', () => {
 
   const ctx = dom.getInternalVMContext();
   ctx.structuredClone = structuredClone;
-  ctx.colonySliderSettings = { workerRatio: 0.7, foodConsumption: 2, luxuryWater: 3, oreMineWorkers: 5 };
+  ctx.colonySliderSettings = {
+    workerRatio: 0.7,
+    foodConsumption: 2,
+    luxuryWater: 3,
+    oreMineWorkers: 5,
+    mechanicalAssistance: 1,
+    isBooleanFlagSet: () => false
+  };
 
   const errors = [];
   for (const src of sources) {
@@ -105,6 +112,7 @@ test('initializeGameState resets colony sliders to defaults', () => {
   expect(settings.foodConsumption).toBe(1);
   expect(settings.luxuryWater).toBe(1);
   expect(settings.oreMineWorkers).toBe(0);
+  expect(settings.mechanicalAssistance).toBe(0);
   expect(oversight).toEqual({
     distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
     applyToLantern: false,

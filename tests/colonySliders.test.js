@@ -5,6 +5,7 @@ const {
   setFoodConsumptionMultiplier,
   setLuxuryWaterMultiplier,
   setOreMineWorkerAssist,
+  setMechanicalAssistance,
   resetColonySliders,
   colonySliderSettings,
   ColonySlidersManager
@@ -113,16 +114,29 @@ describe('colony sliders', () => {
     }));
   });
 
+  test('setMechanicalAssistance stores value and clamps', () => {
+    addEffect.mockClear();
+    setMechanicalAssistance(1.2);
+    expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
+    setMechanicalAssistance(-1);
+    expect(colonySliderSettings.mechanicalAssistance).toBe(0);
+    setMechanicalAssistance(5);
+    expect(colonySliderSettings.mechanicalAssistance).toBe(2);
+    expect(addEffect).not.toHaveBeenCalled();
+  });
+
   test('resetColonySliders resets to default', () => {
     colonySliderSettings.workerRatio = 0.7;
     colonySliderSettings.foodConsumption = 2;
     colonySliderSettings.luxuryWater = 3;
     colonySliderSettings.oreMineWorkers = 5;
+    colonySliderSettings.mechanicalAssistance = 1;
     resetColonySliders();
     expect(colonySliderSettings.workerRatio).toBe(0.5);
     expect(colonySliderSettings.foodConsumption).toBe(1);
     expect(colonySliderSettings.luxuryWater).toBe(1);
     expect(colonySliderSettings.oreMineWorkers).toBe(0);
+    expect(colonySliderSettings.mechanicalAssistance).toBe(0);
   });
 
   test('initializeColonySlidersUI sets default text values', () => {
@@ -135,7 +149,14 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
-    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    ctx.colonySliderSettings = {
+      workerRatio: 0.5,
+      foodConsumption: 1,
+      luxuryWater: 1,
+      oreMineWorkers: 0,
+      mechanicalAssistance: 0,
+      isBooleanFlagSet: (flag) => flag === 'mechanicalAssistance'
+    };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
@@ -148,12 +169,16 @@ describe('colony sliders', () => {
     const waterEffect = dom.window.document.getElementById('water-slider-effect').textContent;
     const oreWorkers = dom.window.document.getElementById('ore-worker-slider-value').textContent;
     const oreBoost = dom.window.document.getElementById('ore-worker-slider-effect').textContent;
+    const mechVal = dom.window.document.getElementById('mechanical-assistance-slider-value').textContent;
+    const mechEffect = dom.window.document.getElementById('mechanical-assistance-slider-effect').textContent;
     expect(worker).toBe('Workers: 50%');
     expect(scientist).toBe('Scientists: 50%');
     expect(foodEffect).toBe('Growth: +0.0%');
     expect(waterEffect).toBe('Growth: +0.0%');
     expect(oreWorkers).toBe('0');
     expect(oreBoost).toBe('Boost: 0%');
+    expect(mechVal).toBe('0.0x');
+    expect(mechEffect).toBe('');
   });
 
   test('initializeColonySlidersUI keeps container hidden', () => {
@@ -166,7 +191,14 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
-    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    ctx.colonySliderSettings = {
+      workerRatio: 0.5,
+      foodConsumption: 1,
+      luxuryWater: 1,
+      oreMineWorkers: 0,
+      mechanicalAssistance: 0,
+      isBooleanFlagSet: () => false
+    };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
@@ -187,7 +219,14 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
-    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    ctx.colonySliderSettings = {
+      workerRatio: 0.5,
+      foodConsumption: 1,
+      luxuryWater: 1,
+      oreMineWorkers: 0,
+      mechanicalAssistance: 0,
+      isBooleanFlagSet: () => false
+    };
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
@@ -213,7 +252,14 @@ describe('colony sliders', () => {
     const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.EffectableEntity = EffectableEntity;
-    ctx.colonySliderSettings = { workerRatio: 0.5, foodConsumption: 1, luxuryWater: 1, oreMineWorkers: 0 };
+    ctx.colonySliderSettings = {
+      workerRatio: 0.5,
+      foodConsumption: 1,
+      luxuryWater: 1,
+      oreMineWorkers: 0,
+      mechanicalAssistance: 0,
+      isBooleanFlagSet: (flag) => flag === 'mechanicalAssistance'
+    };
     ctx.addEffect = jest.fn();
     const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
     vm.runInContext(logicCode, ctx);
@@ -225,6 +271,7 @@ describe('colony sliders', () => {
     ctx.setFoodConsumptionMultiplier(2);
     ctx.setLuxuryWaterMultiplier(3);
     ctx.setOreMineWorkerAssist(4);
+    ctx.setMechanicalAssistance(1.2);
 
     const worker = dom.window.document.getElementById('workforce-slider-value').textContent;
     const scientist = dom.window.document.getElementById('workforce-slider-effect').textContent;
@@ -234,6 +281,8 @@ describe('colony sliders', () => {
     const waterEffect = dom.window.document.getElementById('water-slider-effect').textContent;
     const oreWorkers = dom.window.document.getElementById('ore-worker-slider-value').textContent;
     const oreBoost = dom.window.document.getElementById('ore-worker-slider-effect').textContent;
+    const mechVal = dom.window.document.getElementById('mechanical-assistance-slider-value').textContent;
+    const mechEffect = dom.window.document.getElementById('mechanical-assistance-slider-effect').textContent;
 
     expect(worker).toBe('Workers: 70%');
     expect(scientist).toBe('Scientists: 30%');
@@ -243,5 +292,32 @@ describe('colony sliders', () => {
     expect(waterEffect).toBe('Growth: +2.0%');
     expect(oreWorkers).toBe('40');
     expect(oreBoost).toBe('Boost: 400%');
+    expect(mechVal).toBe('1.2x');
+    expect(mechEffect).toBe('');
+  });
+
+  test('mechanical assistance slider visibility toggles with flag', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules', 'jsdom');
+    const { JSDOM } = require(jsdomPath);
+    const vm = require('vm');
+
+    const dom = new JSDOM(`<!DOCTYPE html><div id="colony-sliders-container"></div>` , { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
+    const logicCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySliders.js'), 'utf8');
+    vm.runInContext(logicCode, ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'colonySlidersUI.js'), 'utf8');
+    vm.runInContext(uiCode, ctx);
+
+    ctx.initializeColonySlidersUI();
+    let row = dom.window.document.getElementById('mechanical-assistance-row');
+    expect(row.classList.contains('invisible')).toBe(true);
+
+    ctx.colonySliderSettings.sortAllResearches = () => {};
+    ctx.colonySliderSettings.applyBooleanFlag({ flagId: 'mechanicalAssistance', value: true });
+    row = dom.window.document.getElementById('mechanical-assistance-row');
+    expect(row.classList.contains('invisible')).toBe(false);
   });
 });
