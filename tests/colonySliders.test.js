@@ -121,13 +121,15 @@ describe('colony sliders', () => {
     setMechanicalAssistance(1.2);
     expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
     researchColonies.forEach(colonyId => {
+      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const expectedAmount = 1.2 * Math.pow(10, tier - 2);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
         type: 'addResourceConsumption',
         resourceCategory: 'colony',
         resourceId: 'components',
-        amount: 1.2
+        amount: expectedAmount
       }));
     });
 
@@ -147,10 +149,12 @@ describe('colony sliders', () => {
     setMechanicalAssistance(5);
     expect(colonySliderSettings.mechanicalAssistance).toBe(2);
     researchColonies.forEach(colonyId => {
+      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const expectedAmount = 2 * Math.pow(10, tier - 2);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
-        amount: 2
+        amount: expectedAmount
       }));
     });
   });

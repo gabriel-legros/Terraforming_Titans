@@ -178,13 +178,16 @@ class ColonySlidersManager extends EffectableEntity {
 
     const allColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
     allColonies.forEach(colonyId => {
+      const tierMatch = colonyId.match(/^t(\d)_colony$/);
+      const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
+      const scaledAmount = value * Math.pow(10, tier - 2);
       const effect = {
         target: 'colony',
         targetId: colonyId,
         type: 'addResourceConsumption',
         resourceCategory: 'colony',
         resourceId: 'components',
-        amount: value,
+        amount: scaledAmount,
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
