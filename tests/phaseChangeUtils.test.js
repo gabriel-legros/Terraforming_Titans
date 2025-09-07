@@ -14,6 +14,13 @@ describe('phase-change utility helpers', () => {
     expect(res).toBeCloseTo(expected);
   });
 
+  test('psychrometricConstantWaterSublimation uses latent heat of sublimation', () => {
+    const atmPressure = 101325;
+    const res = water.psychrometricConstantWaterSublimation(atmPressure);
+    const expected = (1004 * atmPressure) / (0.622 * 2.83e6);
+    expect(res).toBeCloseTo(expected);
+  });
+
   test('penmanRate matches manual formula', () => {
     const params = {
       T: 300,
