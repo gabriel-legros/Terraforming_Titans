@@ -194,7 +194,7 @@ class ResourceCycle {
         boilTransitionRange: this.boilTransitionRange,
       });
       const safeLiquidRate = liquidForbidden ? 0 : liquidRate;
-      const safeIceRate = iceRate;
+      const safeIceRate = liquidForbidden ? liquidRate + iceRate : iceRate;
 
       const potentialLiquid = safeLiquidRate * condensationParameter * durationSeconds;
       const potentialSolid  = safeIceRate   * condensationParameter * durationSeconds;
@@ -411,10 +411,6 @@ class ResourceCycle {
         for (const [k, v] of Object.entries(result.precipitation)) {
           change.precipitation[k] = (change.precipitation[k] || 0) + v;
         }
-      }
-      if (result.potentialCO2Condensation !== undefined) {
-        change.potentialCO2Condensation =
-          (change.potentialCO2Condensation || 0) + result.potentialCO2Condensation;
       }
       if (result.evaporationAmount) cycleTotals.evaporation += result.evaporationAmount;
       if (result.sublimationAmount) cycleTotals.sublimation += result.sublimationAmount;

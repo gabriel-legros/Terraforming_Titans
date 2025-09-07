@@ -157,9 +157,9 @@ const marsOverrides = {
     }
   },
   "zonalCO2": {
-    "tropical": { "liquid": 0, "ice": 0 },
-    "temperate": { "liquid": 0, "ice": 0 },
-    "polar": { "liquid": 0, "ice": 1679492486598.075 }
+    "tropical": { "liquid": 0, "ice": 0, "buriedIce": 0 },
+    "temperate": { "liquid": 0, "ice": 0, "buriedIce": 0 },
+    "polar": { "liquid": 0, "ice": 1679492486598.075, "buriedIce": 0 }
   },
   "zonalHydrocarbons": {
     "tropical": {
