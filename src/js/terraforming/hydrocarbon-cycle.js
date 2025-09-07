@@ -360,6 +360,7 @@ class MethaneCycle extends ResourceCycleClass {
     terraforming.flowMethaneMeltAmount = flow.totalMelt;
     terraforming.flowMethaneMeltRate = flow.totalMelt / durationSeconds * 86400;
     data.totals.melt = (data.totals.melt || 0) + flow.totalMelt;
+    data.totals.flowMelt = flow.totalMelt;
     for (const zone of zones) {
       const zoneChange = flow.changes[zone];
       if (!zoneChange) continue;
@@ -370,6 +371,8 @@ class MethaneCycle extends ResourceCycleClass {
       if (zoneChange.buriedIce) dest.methane.buriedIce = (dest.methane.buriedIce || 0) + zoneChange.buriedIce;
     }
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    terraforming.flowMethaneMeltAmount = 0;
+    terraforming.flowMethaneMeltRate = 0;
     return data.totals;
   }
 
@@ -383,6 +386,7 @@ class MethaneCycle extends ResourceCycleClass {
       freeze = 0,
       methaneRain = 0,
       methaneSnow = 0,
+      flowMelt = 0,
     } = totals;
 
     const evaporationRate = durationSeconds > 0 ? evaporation / durationSeconds * 86400 : 0;
@@ -410,7 +414,7 @@ class MethaneCycle extends ResourceCycleClass {
       rateType
     );
 
-    const flowRate = terraforming.flowMethaneMeltRate || 0;
+    const flowRate = durationSeconds > 0 ? flowMelt / durationSeconds * 86400 : 0;
 
     resources.surface.liquidMethane?.modifyRate(-evaporationRate, 'Methane Evaporation', rateType);
     resources.surface.liquidMethane?.modifyRate(rainRate, 'Methane Rain', rateType);
