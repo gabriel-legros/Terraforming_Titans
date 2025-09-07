@@ -576,12 +576,8 @@ class Terraforming extends EffectableEntity{
             rateType
         );
 
-        // reset stored melt from flow for next tick
-        this.flowMeltAmount = 0;
-        this.flowMethaneMeltAmount = 0;
-
-      this.synchronizeGlobalResources();
-    }
+        this.synchronizeGlobalResources();
+      }
 
     // Function to update luminosity properties
     updateLuminosity() {

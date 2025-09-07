@@ -370,6 +370,7 @@ class WaterCycle extends ResourceCycleClass {
     terraforming.flowMeltAmount = flow.totalMelt;
     terraforming.flowMeltRate = flow.totalMelt / durationSeconds * 86400;
     data.totals.melt = (data.totals.melt || 0) + flow.totalMelt;
+    data.totals.flowMelt = flow.totalMelt;
     for (const zone of zones) {
       const zoneChange = flow.changes[zone];
       if (!zoneChange) continue;
@@ -380,6 +381,8 @@ class WaterCycle extends ResourceCycleClass {
       if (zoneChange.buriedIce) dest.water.buriedIce = (dest.water.buriedIce || 0) + zoneChange.buriedIce;
     }
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    terraforming.flowMeltAmount = 0;
+    terraforming.flowMeltRate = 0;
     return data.totals;
   }
 
@@ -393,6 +396,7 @@ class WaterCycle extends ResourceCycleClass {
       freeze = 0,
       rain = 0,
       snow = 0,
+      flowMelt = 0,
     } = totals;
 
     const focusMeltAmount = typeof globalThis.applyFocusedMelt === 'function'
@@ -428,7 +432,7 @@ class WaterCycle extends ResourceCycleClass {
     );
 
     const focusRate = terraforming.focusMeltRate || 0;
-    const flowRate = terraforming.flowMeltRate || 0;
+    const flowRate = durationSeconds > 0 ? flowMelt / durationSeconds * 86400 : 0;
 
     resources.surface.liquidWater?.modifyRate(-evaporationRate, 'Evaporation', rateType);
     resources.surface.liquidWater?.modifyRate(rainRate, 'Rain', rateType);
