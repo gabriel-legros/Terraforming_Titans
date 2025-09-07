@@ -316,19 +316,10 @@ class WaterCycle extends ResourceCycleClass {
     changes.atmosphere.water += sublimationAmount;
     changes.water.ice -= sublimationAmount;
 
-    // --- Rapid Sublimation ---
-    const remainingIce = Math.max(0, availableIce + changes.water.ice);
-    const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
-    const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
-    if (rapidAmount > 0) {
-      changes.water.ice -= rapidAmount;
-      changes.atmosphere.water += rapidAmount;
-    }
-
     return {
       ...changes,
       evaporationAmount,
-      sublimationAmount: sublimationAmount + rapidAmount,
+      sublimationAmount,
       meltAmount,
       freezeAmount,
     };
