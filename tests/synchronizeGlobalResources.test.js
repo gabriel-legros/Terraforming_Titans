@@ -69,4 +69,22 @@ describe('synchronizeGlobalResources', () => {
 
     expect(resources.surface.liquidCO2.value).toBe(60);
   });
+
+  test('sums dry ice from zonal data', () => {
+    const params = getPlanetParameters('mars');
+    const resources = createResources(params.resources);
+    global.resources = resources;
+
+    const terra = new Terraforming(resources, params.celestialParameters);
+
+    resources.surface.dryIce.value = 0;
+
+    terra.zonalCO2.tropical.ice = 10;
+    terra.zonalCO2.temperate.ice = 20;
+    terra.zonalCO2.polar.ice = 30;
+
+    terra.synchronizeGlobalResources();
+
+    expect(resources.surface.dryIce.value).toBe(60);
+  });
 });

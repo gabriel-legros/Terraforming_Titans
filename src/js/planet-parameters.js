@@ -82,9 +82,9 @@ const defaultPlanetParameters = {
     }
   },
   zonalCO2: {
-    tropical: { liquid: 0 },
-    temperate: { liquid: 0 },
-    polar: { liquid: 0 }
+    tropical: { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar: { liquid: 0, ice: 0 }
   },
   buildingParameters: {
     maintenanceFraction: 0.001
@@ -156,16 +156,10 @@ const marsOverrides = {
       "buriedIce": 700000000000000
     }
   },
-  "zonalSurface": {
-    "tropical": {
-      "dryIce": 0
-    },
-    "temperate": {
-      "dryIce": 0
-    },
-    "polar": {
-      "dryIce": 1679492486598.075
-    }
+  "zonalCO2": {
+    "tropical": { "liquid": 0, "ice": 0 },
+    "temperate": { "liquid": 0, "ice": 0 },
+    "polar": { "liquid": 0, "ice": 1679492486598.075 }
   },
   "zonalHydrocarbons": {
     "tropical": {
@@ -235,17 +229,12 @@ const titanOverrides = {
       "buriedIce": 4050000000000000
     }
   },
-  "zonalSurface": {
-    "tropical": {
-      "dryIce": 254.94383370506972
-    },
-    "temperate": {
-      "dryIce": 336.2514848320769
-    },
-    "polar": {
-      "dryIce": 61.67664497456431
-    }
+  "zonalCO2": {
+    "tropical": { "liquid": 0, "ice": 254.94383370506972 },
+    "temperate": { "liquid": 0, "ice": 336.2514848320769 },
+    "polar": { "liquid": 0, "ice": 61.67664497456431 }
   },
+  "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
     "tropical": {
       "liquid": 714716234640.4485,
@@ -341,17 +330,12 @@ const callistoOverrides = {
       "buriedIce": 1000000000000000000
     }
   },
-  "zonalSurface": {
-    "tropical": {
-      "dryIce": 9081.029927055873
-    },
-    "temperate": {
-      "dryIce": 15854.44191563618
-    },
-    "polar": {
-      "dryIce": 6866.857802233041
-    }
+  "zonalCO2": {
+    "tropical": { "liquid": 0, "ice": 9081.029927055873 },
+    "temperate": { "liquid": 0, "ice": 15854.44191563618 },
+    "polar": { "liquid": 0, "ice": 6866.857802233041 }
   },
+  "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
     "tropical": {
       "liquid": 0,
@@ -458,17 +442,12 @@ const ganymedeOverrides = {
       "buriedIce": 2000000000000000000
     }
   },
-  "zonalSurface": {
-    "tropical": {
-      "dryIce": 11290.626326998059
-    },
-    "temperate": {
-      "dryIce": 19713.531275243768
-    },
-    "polar": {
-      "dryIce": 8514.76025965708
-    }
+  "zonalCO2": {
+    "tropical": { "liquid": 0, "ice": 11290.626326998059 },
+    "temperate": { "liquid": 0, "ice": 19713.531275243768 },
+    "polar": { "liquid": 0, "ice": 8514.76025965708 }
   },
+  "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
     "tropical": {
       "liquid": 0,
@@ -549,11 +528,12 @@ const vega2Overrides = {
     temperate: { liquid: 0, ice: 0, buriedIce: 0 },
     polar: { liquid: 0, ice: 0, buriedIce: 0 }
   },
-  zonalSurface: {
-    tropical: { dryIce: 0 },
-    temperate: { dryIce: 0 },
-    polar: { dryIce: 0 }
+  zonalCO2: {
+    tropical: { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar: { liquid: 0, ice: 0 }
   },
+  zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {
     tropical: { liquid: 0, ice: 0 },
     temperate: { liquid: 0, ice: 0 },
@@ -621,11 +601,12 @@ const venusOverrides = {
     temperate: { liquid: 0, ice: 0, buriedIce: 0 },
     polar: { liquid: 0, ice: 0, buriedIce: 0 }
   },
-  zonalSurface: {
-    tropical: { dryIce: 0 },
-    temperate: { dryIce: 0 },
-    polar: { dryIce: 0 }
+  zonalCO2: {
+    tropical: { liquid: 0, ice: 0 },
+    temperate: { liquid: 0, ice: 0 },
+    polar: { liquid: 0, ice: 0 }
   },
+  zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {
     tropical: { liquid: 0, ice: 0 },
     temperate: { liquid: 0, ice: 0 },

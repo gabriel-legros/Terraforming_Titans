@@ -63,7 +63,7 @@ describe('flow melt tracking', () => {
       terra.zonalWater[z].liquid = 0;
       terra.zonalWater[z].ice = 0;
       terra.zonalWater[z].buriedIce = 0;
-      terra.zonalSurface[z] = { dryIce: 0 };
+      terra.zonalCO2[z] = { liquid: 0, ice: 0 };
     }
 
     terra.updateResources(1000);

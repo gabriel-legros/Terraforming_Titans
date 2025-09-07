@@ -113,7 +113,7 @@
       const v = sandboxResources.atmospheric && sandboxResources.atmospheric[k] ? sandboxResources.atmospheric[k].value || 0 : 0;
       out.resources.atmospheric[k] = out.resources.atmospheric[k] || {}; out.resources.atmospheric[k].initialValue = v;
     });
-    const surfKeys = ['ice','liquidWater','dryIce','liquidMethane','hydrocarbonIce'];
+    const surfKeys = ['ice','liquidWater','dryIce','liquidCO2','liquidMethane','hydrocarbonIce'];
     out.resources.surface = out.resources.surface || {};
     surfKeys.forEach(k => {
       const v = sandboxResources.surface && sandboxResources.surface[k] ? sandboxResources.surface[k].value || 0 : 0;
@@ -158,15 +158,16 @@
     function g(obj, k) { return obj[k] ? (obj[k].value || 0) : 0; }
     const metrics = [
       g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'atmosphericMethane'), g(atmo,'sulfuricAcid'),
-      g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce')
+      g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidCO2'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce')
     ];
     const zones = ['tropical', 'temperate', 'polar'];
     for (const zone of zones) {
        const zw = terra.zonalWater[zone] || {};
+       const zc = terra.zonalCO2[zone] || {};
        const zs = terra.zonalSurface[zone] || {};
        const zh = terra.zonalHydrocarbons[zone] || {};
        metrics.push(zw.liquid || 0, zw.ice || 0, zw.buriedIce || 0);
-       metrics.push(zs.dryIce || 0, zs.biomass || 0);
+       metrics.push(zc.liquid || 0, zc.ice || 0, zs.biomass || 0);
        metrics.push(zh.liquid || 0, zh.ice || 0, zh.buriedIce || 0);
     }
     return metrics;

@@ -63,6 +63,7 @@
       ice: resources.surface.ice?.value || 0,
       liquidWater: resources.surface.liquidWater?.value || 0,
       dryIce: resources.surface.dryIce?.value || 0,
+      liquidCO2: resources.surface.liquidCO2?.value || 0,
       liquidMethane: resources.surface.liquidMethane?.value || 0,
       hydrocarbonIce: resources.surface.hydrocarbonIce?.value || 0,
       co2: resources.atmospheric.carbonDioxide?.value || 0,
@@ -80,7 +81,8 @@
           ice: terraforming.zonalWater[zone]?.ice || 0,
           buriedIce: bIce,
           liquidWater: terraforming.zonalWater[zone]?.liquid || 0,
-          dryIce: terraforming.zonalSurface[zone]?.dryIce || 0,
+          dryIce: terraforming.zonalCO2[zone]?.ice || 0,
+          liquidCO2: terraforming.zonalCO2[zone]?.liquid || 0,
           biomass: terraforming.zonalSurface[zone]?.biomass || 0,
           liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
           hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
@@ -92,12 +94,12 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice','buriedIce','liquidWater','dryIce','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }
@@ -109,6 +111,7 @@
       ice: { initialValue: values.global.ice },
       liquidWater: { initialValue: values.global.liquidWater },
       dryIce: { initialValue: values.global.dryIce },
+      liquidCO2: { initialValue: values.global.liquidCO2 },
       liquidMethane: { initialValue: values.global.liquidMethane },
       hydrocarbonIce: { initialValue: values.global.hydrocarbonIce }
     };
@@ -121,6 +124,7 @@
     const zonalWater = {};
     const zonalSurface = {};
     const zonalHydrocarbons = {};
+    const zonalCO2 = {};
     for (const zone in values.zones) {
       zonalWater[zone] = {
         liquid: values.zones[zone].liquidWater,
@@ -128,14 +132,18 @@
         buriedIce: values.zones[zone].buriedIce
       };
       zonalSurface[zone] = {
-        dryIce: values.zones[zone].dryIce
+        biomass: values.zones[zone].biomass
       };
       zonalHydrocarbons[zone] = {
         liquid: values.zones[zone].liquidMethane,
         ice: values.zones[zone].hydrocarbonIce
       };
+      zonalCO2[zone] = {
+        liquid: values.zones[zone].liquidCO2,
+        ice: values.zones[zone].dryIce
+      };
     }
-    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons };
+    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons, zonalCO2 };
   }
 
   function generateOverrideSnippet(values) {
@@ -227,7 +235,7 @@
 
       const liquidWater = this.zonalWater[zone]?.liquid || 0;
       const surfaceIce = this.zonalWater[zone]?.ice || 0;
-      const surfaceDryIce = this.zonalSurface[zone]?.dryIce || 0;
+      const surfaceDryIce = this.zonalCO2[zone]?.ice || 0;
       const liquidWaterCoverage = estimateCoverage(liquidWater, zoneArea);
       const iceCoverage = estimateCoverage(surfaceIce, zoneArea, 0.01);
       const dryIceCoverage = estimateCoverage(surfaceDryIce, zoneArea, 0.01);
@@ -283,7 +291,7 @@
       initialTotalWaterEvapSublRate += evaporationRate + waterSublimationRate;
       initialTotalCO2SublRate += co2SublimationRate;
 
-      const availableDryIce = this.zonalSurface[zone]?.dryIce || 0;
+      const availableDryIce = this.zonalCO2[zone]?.ice || 0;
       const rapidCo2Rate = rapidSublimationRateCO2(dayTemp, availableDryIce);
       initialTotalCO2SublRate += rapidCo2Rate;
 

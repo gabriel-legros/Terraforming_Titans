@@ -36,9 +36,9 @@ describe('zonal surface overrides', () => {
     const terra = new Terraforming(resources, params.celestialParameters);
     terra.calculateInitialValues(params);
 
-    expect(terra.zonalSurface.tropical.dryIce).toBeCloseTo(params.zonalSurface.tropical.dryIce);
-    expect(terra.zonalSurface.temperate.dryIce).toBeCloseTo(params.zonalSurface.temperate.dryIce);
-    expect(terra.zonalSurface.polar.dryIce).toBeCloseTo(params.zonalSurface.polar.dryIce);
+    expect(terra.zonalCO2.tropical.ice).toBeCloseTo(params.zonalCO2.tropical.ice);
+    expect(terra.zonalCO2.temperate.ice).toBeCloseTo(params.zonalCO2.temperate.ice);
+    expect(terra.zonalCO2.polar.ice).toBeCloseTo(params.zonalCO2.polar.ice);
     // Biomass not provided in parameters should default to 0
     expect(terra.zonalSurface.tropical.biomass).toBe(0);
   });

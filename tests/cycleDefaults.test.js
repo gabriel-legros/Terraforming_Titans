@@ -60,10 +60,10 @@ describe('cycle default parameters', () => {
       temperature: { zones: { temperate: {} } },
       zonalCoverageCache: { temperate: { zoneArea: 1 } },
       calculateZoneSolarFlux: () => 0,
-      zonalSurface: { temperate: { dryIce: 2 } },
+      zonalCO2: { temperate: { ice: 2 } },
       celestialParameters: { surfaceArea: 1 },
     };
-    const spy = jest.spyOn(cc, 'processZone').mockReturnValue({ atmosphere: { co2: 0 }, water: { dryIce: 0 }, potentialCO2Condensation: 0 });
+    const spy = jest.spyOn(cc, 'processZone').mockReturnValue({ atmosphere: { co2: 0 }, co2: { ice: 0 }, potentialCO2Condensation: 0 });
     const result = cc.runCycle(tf, ['temperate'], {
       atmPressure: 0,
       vaporPressure: 0,
@@ -71,7 +71,7 @@ describe('cycle default parameters', () => {
       durationSeconds: 1,
     });
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-      availableDryIce: 2,
+      availableIce: 2,
       condensationParameter: 4,
     }));
     expect(result.totalAtmosphericChange).toBe(0);

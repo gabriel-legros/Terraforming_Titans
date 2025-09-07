@@ -18,11 +18,12 @@ describe('resource tooltip zonal values', () => {
           temperate: { liquid: 20, ice: 10, buriedIce: 25 },
           polar: { liquid: 30, ice: 15, buriedIce: 35 }
         },
-        zonalSurface: {
-          tropical: { dryIce: 1 },
-          temperate: { dryIce: 2 },
-          polar: { dryIce: 3 }
+        zonalCO2: {
+          tropical: { liquid: 0, ice: 1 },
+          temperate: { liquid: 0, ice: 2 },
+          polar: { liquid: 0, ice: 3 }
         },
+        zonalSurface: { tropical: {}, temperate: {}, polar: {} },
         zonalHydrocarbons: {
           tropical: { ice: 2, buriedIce: 4 },
           temperate: { ice: 3, buriedIce: 6 },

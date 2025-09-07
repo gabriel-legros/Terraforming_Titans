@@ -431,8 +431,8 @@ function estimateCoverage(amount, zoneArea, scale = 0.0001) {
 }
 function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
   const frac = getZoneFractionsSafe(params)[zone] || 0; const zoneArea = tf.celestialParameters.surfaceArea * frac; if (zoneArea <= 0) return 0;
-  const zw = tf.zonalWater?.[zone] || {}; const zh = tf.zonalHydrocarbons?.[zone] || {}; const zs = tf.zonalSurface?.[zone] || {}; let amount = 0;
-  switch (resourceType) { case "liquidWater": amount = zw.liquid || 0; break; case "ice": amount = zw.ice || 0; break; case "buriedIce": amount = zw.buriedIce || 0; break; case "biomass": amount = zs.biomass || 0; break; case "dryIce": amount = zs.dryIce || 0; break; case "liquidMethane": amount = zh.liquid || 0; break; case "hydrocarbonIce": amount = zh.ice || 0; break; }
+  const zw = tf.zonalWater?.[zone] || {}; const zh = tf.zonalHydrocarbons?.[zone] || {}; const zs = tf.zonalSurface?.[zone] || {}; const zc = tf.zonalCO2?.[zone] || {}; let amount = 0;
+  switch (resourceType) { case "liquidWater": amount = zw.liquid || 0; break; case "ice": amount = zw.ice || 0; break; case "buriedIce": amount = zw.buriedIce || 0; break; case "biomass": amount = zs.biomass || 0; break; case "dryIce": amount = zc.ice || 0; break; case "liquidMethane": amount = zh.liquid || 0; break; case "hydrocarbonIce": amount = zh.ice || 0; break; }
   let scale = 0.0001; if (["dryIce","ice","hydrocarbonIce"].includes(resourceType)) scale *= 100; else if (resourceType === "biomass") scale *= 100000; return estimateCoverage(amount, zoneArea, scale);
 }
 function calculateAverageCoverageLocal(cache, resourceType, params) { const frac = getZoneFractionsSafe(params); const zones = ["tropical","temperate","polar"]; let total = 0; for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0); return Math.max(0, Math.min(total, 1)); }
@@ -442,7 +442,8 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   const frac = getZoneFractionsSafe(params);
   const zonalWater = { tropical: { liquid: 0, ice: 0, buriedIce: 0 }, temperate: { liquid: 0, ice: 0, buriedIce: 0 }, polar: { liquid: 0, ice: 0, buriedIce: 0 } };
   const zonalHydrocarbons = { tropical: { liquid: 0, ice: 0 }, temperate: { liquid: 0, ice: 0 }, polar: { liquid: 0, ice: 0 } };
-  const zonalSurface = { tropical: { dryIce: 0 }, temperate: { dryIce: 0 }, polar: { dryIce: 0 } };
+const zonalSurface = { tropical: {}, temperate: {}, polar: {} };
+const zonalCO2 = { tropical: { liquid: 0, ice: 0 }, temperate: { liquid: 0, ice: 0 }, polar: { liquid: 0, ice: 0 } };
   const warmBias = { tropical: params.zonal.warmBiasK.tropical * (frac.tropical||0), temperate: params.zonal.warmBiasK.temperate * (frac.temperate||0), polar: params.zonal.warmBiasK.polar * (frac.polar||0) };
   const coldBias = { tropical: params.zonal.coldBiasK.tropical * (frac.tropical||0), temperate: params.zonal.coldBiasK.temperate * (frac.temperate||0), polar: params.zonal.coldBiasK.polar * (frac.polar||0) };
   const liquidWater = surface.liquidWater?.initialValue || 0; const ice = surface.ice?.initialValue || 0; const hasPolarIce = ice > 0 || Teq < 273;
@@ -459,8 +460,8 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   zonalHydrocarbons.tropical.liquid = liquidCH4Split.tropical; zonalHydrocarbons.temperate.liquid = liquidCH4Split.temperate; zonalHydrocarbons.polar.liquid = liquidCH4Split.polar;
   const hcIceSplit = distribute(hydrocarbonIce, coldBias, rng);
   zonalHydrocarbons.tropical.ice = hcIceSplit.tropical; zonalHydrocarbons.temperate.ice = hcIceSplit.temperate; zonalHydrocarbons.polar.ice = hcIceSplit.polar;
-  const dryIceGlobal = surface.dryIce?.initialValue || 0; if (dryIceGlobal > 0 || hasPolarIce) { const d = params.zonal.dryIceBias; const diBias = { tropical: d.tropical, temperate: d.temperate, polar: d.polar }; const diSplit = distribute(dryIceGlobal, diBias, rng); zonalSurface.tropical.dryIce = diSplit.tropical; zonalSurface.temperate.dryIce = diSplit.temperate; zonalSurface.polar.dryIce = diSplit.polar; }
-  return { zonalWater, zonalHydrocarbons, zonalSurface };
+  const dryIceGlobal = surface.dryIce?.initialValue || 0; if (dryIceGlobal > 0 || hasPolarIce) { const d = params.zonal.dryIceBias; const diBias = { tropical: d.tropical, temperate: d.temperate, polar: d.polar }; const diSplit = distribute(dryIceGlobal, diBias, rng); zonalCO2.tropical.ice = diSplit.tropical; zonalCO2.temperate.ice = diSplit.temperate; zonalCO2.polar.ice = diSplit.polar; }
+  return { zonalWater, zonalHydrocarbons, zonalSurface, zonalCO2 };
 }
 
 // ===================== Planet override =====================

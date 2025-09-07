@@ -77,7 +77,8 @@ describe('fastForwardToEquilibrium', () => {
     global.ZONES = ['tropical'];
     global.terraforming = {
       zonalWater: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
-      zonalSurface: { tropical: { dryIce: 0, biomass: 0 } },
+      zonalCO2: { tropical: { liquid: 0, ice: 0 } },
+      zonalSurface: { tropical: { biomass: 0 } },
       zonalHydrocarbons: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
       synchronizeGlobalResources: () => {},
       _updateZonalCoverageCache: () => {},
@@ -110,6 +111,7 @@ describe('fastForwardToEquilibrium', () => {
         ice: 10,
         liquidWater: 5,
         dryIce: 2,
+        liquidCO2: 4,
         liquidMethane: 3,
         hydrocarbonIce: 1,
         co2: 1,
@@ -123,6 +125,7 @@ describe('fastForwardToEquilibrium', () => {
           buriedIce: 4,
           liquidWater: 1,
           dryIce: 2,
+          liquidCO2: 1,
           liquidMethane: 5,
           hydrocarbonIce: 6
         }
@@ -133,8 +136,10 @@ describe('fastForwardToEquilibrium', () => {
     expect(obj.zonalWater.polar.buriedIce).toBe(4);
     expect(obj.resources.surface.liquidMethane.initialValue).toBe(3);
     expect(obj.resources.surface.hydrocarbonIce.initialValue).toBe(1);
+    expect(obj.resources.surface.liquidCO2.initialValue).toBe(4);
     expect(obj.resources.atmospheric.atmosphericMethane.initialValue).toBe(9);
     expect(obj.zonalHydrocarbons.polar.liquid).toBe(5);
     expect(obj.zonalHydrocarbons.polar.ice).toBe(6);
+    expect(obj.zonalCO2.polar.ice).toBe(2);
   });
 });

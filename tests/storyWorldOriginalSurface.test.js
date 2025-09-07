@@ -16,8 +16,8 @@ describe('story world original properties', () => {
     zones.forEach(z => {
       const zw = planetOverrides.callisto.zonalWater[z];
       expectedIce += (zw.ice || 0) + (zw.buriedIce || 0);
-      const zs = planetOverrides.callisto.zonalSurface[z];
-      expectedDryIce += zs.dryIce || 0;
+      const zc = planetOverrides.callisto.zonalCO2[z];
+      expectedDryIce += zc.ice || 0;
     });
     expect(original.merged.resources.surface.ice.initialValue).toBeCloseTo(expectedIce);
     expect(original.merged.resources.surface.dryIce.initialValue).toBeCloseTo(expectedDryIce);
