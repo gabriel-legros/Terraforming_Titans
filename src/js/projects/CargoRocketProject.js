@@ -4,6 +4,7 @@ class CargoRocketProject extends Project {
     this.spaceshipPriceIncrease = 0;
     this.convertedToContinuous = false;
     this.selectedResources = [];
+    this.selectionIncrement = 1;
   }
 
   isContinuous() {
@@ -23,7 +24,7 @@ class CargoRocketProject extends Project {
       priceSpans: [],
       minusButtons: [],
       plusButtons: [],
-      increment: 1,
+      increment: this.selectionIncrement,
     };
 
     const updateIncrementButtons = () => {
@@ -69,10 +70,12 @@ class CargoRocketProject extends Project {
 
     createHeaderButton('/10', () => {
       elements.increment = Math.max(1, Math.floor(elements.increment / 10));
+      this.selectionIncrement = elements.increment;
     });
 
     createHeaderButton('x10', () => {
       elements.increment *= 10;
+      this.selectionIncrement = elements.increment;
     });
 
     selectionGrid.appendChild(headerRow);
@@ -516,6 +519,7 @@ class CargoRocketProject extends Project {
       state.selectedResources = this.selectedResources;
     }
     state.spaceshipPriceIncrease = this.spaceshipPriceIncrease;
+    state.selectionIncrement = this.selectionIncrement;
     return state;
   }
 
@@ -525,6 +529,21 @@ class CargoRocketProject extends Project {
       ? state.selectedResources
       : [];
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+    this.selectionIncrement = state.selectionIncrement || 1;
+    const elements = typeof projectElements !== 'undefined'
+      ? projectElements[this.name]
+      : null;
+    if (elements) {
+      elements.increment = this.selectionIncrement;
+      if (typeof formatNumber === 'function') {
+        elements.minusButtons?.forEach((btn) => {
+          btn.textContent = `-${formatNumber(elements.increment, true)}`;
+        });
+        elements.plusButtons?.forEach((btn) => {
+          btn.textContent = `+${formatNumber(elements.increment, true)}`;
+        });
+      }
+    }
   }
 
   saveTravelState() {
