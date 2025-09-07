@@ -90,12 +90,13 @@ describe('methane atmospheric rate tracking', () => {
 
     const calls = res.atmospheric.atmosphericMethane.modifyRate.mock.calls;
     const labels = calls.map(c => c[1]);
-    expect(labels).toContain('Evaporation/Sublimation');
-    expect(labels).toContain('Precipitation');
+    expect(labels).toContain('Evaporation');
+    expect(labels).toContain('Sublimation');
+    expect(labels).toContain('Rain');
+    expect(labels).toContain('Snow');
 
-    const totalCondensation =
-      terra.totalMethaneCondensationRate + terra.totalMethaneIceCondensationRate;
-    expect(totalCondensation).toBeGreaterThan(0);
+    const totalPrecipitation = terra.totalRainfallRate + terra.totalSnowfallRate;
+    expect(totalPrecipitation).toBeGreaterThan(0);
   });
 });
 
