@@ -478,3 +478,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Atmospheric chemistry module now handles methane–oxygen combustion and calcite aerosol decay.
 - Added `buildAtmosphereContext` helper centralizing atmospheric pressure calculations for reuse in `Terraforming.updateResources`.
 - Atmospheric chemistry now assigns resource rates internally, removing rate handling from `Terraforming.updateResources`.
+- Removed rapid sublimation mechanics from the methane hydrocarbon cycle.
