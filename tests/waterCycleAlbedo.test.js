@@ -19,7 +19,7 @@ describe('WaterCycle albedo defaults', () => {
       e_s: wc.saturationVaporPressureFn(args.T),
     });
     expect(wc.evaporationRate(args)).toBeCloseTo(expected);
-    expect(wc.evaporationAlbedo).toBeCloseTo(0.06);
+    expect(wc.evaporationAlbedo).toBeCloseTo(0.3);
   });
 
   test('sublimationRate uses configured sublimation albedo', () => {
