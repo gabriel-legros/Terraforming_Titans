@@ -69,7 +69,7 @@ class WaterCycle extends ResourceCycleClass {
   constructor({
     key = 'water',
     atmKey = 'atmosphericWater',
-    totalKeys = ['evaporation', 'sublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
     processTotalKeys = { rain: 'rain', snow: 'snow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -116,6 +116,10 @@ class WaterCycle extends ResourceCycleClass {
       sublimation: [
         { path: 'atmospheric.atmosphericWater', label: 'Sublimation', sign: +1 },
         { path: 'surface.ice', label: 'Sublimation', sign: -1 },
+      ],
+      rapidSublimation: [
+        { path: 'atmospheric.atmosphericWater', label: 'Rapid Sublimation', sign: +1 },
+        { path: 'surface.ice', label: 'Rapid Sublimation', sign: -1 },
       ],
       // Totals often arrive as 'rain'/'snow' from zonal precipitation
       rain: [
@@ -243,7 +247,9 @@ class WaterCycle extends ResourceCycleClass {
     }
 
     // Alias expected fields
-    terraforming.totalWaterSublimationRate = terraforming.totalSublimationRate || 0;
+    const rapid = terraforming.totalRapidSublimationRate || 0;
+    terraforming.totalSublimationRate = (terraforming.totalSublimationRate || 0) + rapid;
+    terraforming.totalWaterSublimationRate = terraforming.totalSublimationRate;
     // UI expects rainfall/snowfall names, but totals keys are often rain/snow
     const rainRate = durationSeconds > 0 ? (totals.rain || 0) / durationSeconds * 86400 : 0;
     const snowRate = durationSeconds > 0 ? (totals.snow || 0) / durationSeconds * 86400 : 0;

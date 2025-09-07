@@ -210,6 +210,8 @@ class ResourceCycle {
 
     let meltAmount = 0;
     let freezeAmount = 0;
+    let sublimationAmount = 0;
+    let rapidSublimationAmount = 0;
     if (typeof this.meltingFreezingRates === 'function') {
       const rates = this.meltingFreezingRates({
         temperature: zoneTemperature,
@@ -224,8 +226,8 @@ class ResourceCycle {
       const currentIce = availableIce + (changes[surfaceBucket].ice || 0);
       const currentBuried = availableBuriedIce + (changes[surfaceBucket].buriedIce || 0);
       const availableForMelt = currentIce + currentBuried;
-      const meltingRate  = liquidForbidden ? 0 : (rates.meltingRate || 0);
-      const freezingRate = (rates.freezingRate || 0);
+      const meltingRate  = rates.meltingRate || 0;
+      const freezingRate = rates.freezingRate || 0;
 
       meltAmount  = Math.min(meltingRate  * durationSeconds, availableForMelt);
       freezeAmount= Math.min(freezingRate * durationSeconds, currentLiquid);
@@ -233,16 +235,28 @@ class ResourceCycle {
       let meltFromIce = Math.min(meltAmount, currentIce);
       let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
 
-      changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltAmount - freezeAmount;
-      if (availableIce !== undefined) {
-        changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
-      }
-      if (availableBuriedIce !== undefined) {
-        changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+      if (liquidForbidden) {
+        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) - freezeAmount;
+        if (availableIce !== undefined) {
+          changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
+        }
+        if (availableBuriedIce !== undefined) {
+          changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+        }
+        changes.atmosphere[atmosphereKey] += meltAmount;
+        rapidSublimationAmount = meltAmount;
+        meltAmount = 0;
+      } else {
+        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltAmount - freezeAmount;
+        if (availableIce !== undefined) {
+          changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
+        }
+        if (availableBuriedIce !== undefined) {
+          changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+        }
       }
     }
 
-    let sublimationAmount = 0;
     if (iceArea > 0 && (availableIce + (changes[surfaceBucket].ice || 0)) > 0
       && typeof this.sublimationRate === 'function') {
       let daySub = 0;
@@ -267,15 +281,17 @@ class ResourceCycle {
       }
       const subRate = (daySub + nightSub) / 2;
       const availableForSub = availableIce + (changes[surfaceBucket].ice || 0);
-      sublimationAmount = Math.min(subRate * durationSeconds, availableForSub);
-      changes.atmosphere[atmosphereKey] += sublimationAmount;
-      changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) - sublimationAmount;
+      const subAmount = Math.min(subRate * durationSeconds, availableForSub);
+      sublimationAmount += subAmount;
+      changes.atmosphere[atmosphereKey] += subAmount;
+      changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) - subAmount;
     }
 
     return {
       ...changes,
       evaporationAmount,
       sublimationAmount,
+      rapidSublimationAmount,
       meltAmount,
       freezeAmount,
     };
@@ -352,7 +368,7 @@ class ResourceCycle {
     extraParams = {},
   } = {}) {
     const zonalChanges = {};
-    const cycleTotals = { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 };
+    const cycleTotals = { evaporation: 0, sublimation: 0, rapidSublimation: 0, melt: 0, freeze: 0 };
     const mergedExtra = { ...(this.defaultExtraParams || {}), ...extraParams };
 
     for (const zone of zones) {
@@ -402,6 +418,7 @@ class ResourceCycle {
       }
       if (result.evaporationAmount) cycleTotals.evaporation += result.evaporationAmount;
       if (result.sublimationAmount) cycleTotals.sublimation += result.sublimationAmount;
+      if (result.rapidSublimationAmount) cycleTotals.rapidSublimation += result.rapidSublimationAmount;
       if (result.meltAmount) cycleTotals.melt += result.meltAmount;
       if (result.freezeAmount) cycleTotals.freeze += result.freezeAmount;
     }

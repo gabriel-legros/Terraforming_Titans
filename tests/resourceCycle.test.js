@@ -192,6 +192,57 @@ describe('ResourceCycle base class', () => {
     );
   });
 
+  test('processZone converts forbidden melt to rapid sublimation', () => {
+    const rc5 = new ResourceCycle({
+      latentHeatVaporization: 1,
+      latentHeatSublimation: 1,
+      saturationVaporPressureFn: () => 0,
+      slopeSaturationVaporPressureFn: () => 0,
+      freezePoint: 273.15,
+      sublimationPoint: 273.15,
+      triplePressure: 1000,
+      disallowLiquidBelowTriple: true,
+    });
+    rc5.atmosphereKey = 'foo';
+    rc5.surfaceBucket = 'foo';
+    rc5.meltingFreezingRates = () => ({ meltingRate: 2, freezingRate: 0 });
+    const result = rc5.processZone({
+      zoneArea: 1,
+      iceCoverage: 1,
+      liquidCoverage: 0,
+      zoneTemperature: 274,
+      atmPressure: 500,
+      vaporPressure: 0,
+      availableIce: 5,
+      availableBuriedIce: 0,
+      availableLiquid: 0,
+      durationSeconds: 1,
+    });
+    expect(result.rapidSublimationAmount).toBeCloseTo(2);
+    expect(result.sublimationAmount).toBeCloseTo(0);
+    expect(result.meltAmount).toBe(0);
+    expect(result.atmosphere.foo).toBeCloseTo(2);
+    expect(result.foo.ice).toBeCloseTo(-2);
+  });
+
+  test('updateResourceRates handles rapid sublimation mapping', () => {
+    const rc6 = new ResourceCycle({
+      rateMappings: {
+        rapidSublimation: [
+          { path: 'atmospheric.air', label: 'Rapid Sublimation', sign: 1 },
+          { path: 'surface.ice', label: 'Rapid Sublimation', sign: -1 },
+        ],
+      },
+    });
+    const atmospheric = { air: { modifyRate: jest.fn() } };
+    const surface = { ice: { modifyRate: jest.fn() } };
+    const tf = { resources: { atmospheric, surface } };
+    rc6.updateResourceRates(tf, { rapidSublimation: 1 }, 1);
+    expect(atmospheric.air.modifyRate).toHaveBeenCalledWith(86400, 'Rapid Sublimation', 'terraforming');
+    expect(surface.ice.modifyRate).toHaveBeenCalledWith(-86400, 'Rapid Sublimation', 'terraforming');
+    expect(tf.totalRapidSublimationRate).toBeCloseTo(86400);
+  });
+
   test('updateResourceRates uses rateMappings', () => {
     const rc4 = new ResourceCycle({
       rateMappings: {

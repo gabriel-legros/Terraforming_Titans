@@ -97,7 +97,7 @@ class MethaneCycle extends ResourceCycleClass {
   constructor({
     key = 'methane',
     atmKey = 'atmosphericMethane',
-    totalKeys = ['evaporation', 'sublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
     processTotalKeys = { rain: 'methaneRain', snow: 'methaneSnow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -144,6 +144,10 @@ class MethaneCycle extends ResourceCycleClass {
       sublimation: [
         { path: 'atmospheric.atmosphericMethane', label: 'Sublimation', sign: +1 },
         { path: 'surface.hydrocarbonIce', label: 'Methane Sublimation', sign: -1 },
+      ],
+      rapidSublimation: [
+        { path: 'atmospheric.atmosphericMethane', label: 'Rapid Sublimation', sign: +1 },
+        { path: 'surface.hydrocarbonIce', label: 'Rapid Sublimation', sign: -1 },
       ],
       // Prefer methane-specific precipitation keys collected from zonal changes
       methaneRain: [
@@ -205,6 +209,7 @@ class MethaneCycle extends ResourceCycleClass {
       sublimationAlbedo: SUBLIMATION_ALBEDO_HC_ICE,
       tripleTemperature: METHANE_T_TRIPLE,
       triplePressure: METHANE_P_TRIPLE,
+      disallowLiquidBelowTriple: true,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn,
@@ -249,6 +254,12 @@ class MethaneCycle extends ResourceCycleClass {
     if (typeof redistributePrecipitationFn === 'function') {
       redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
     }
+  }
+
+  updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    super.updateResourceRates(terraforming, totals, durationSeconds);
+    const rapid = terraforming.totalMethaneRapidSublimationRate || 0;
+    terraforming.totalMethaneSublimationRate = (terraforming.totalMethaneSublimationRate || 0) + rapid;
   }
 
 }
