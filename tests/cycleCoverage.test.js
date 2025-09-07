@@ -17,7 +17,7 @@ describe('cycle getCoverage helpers', () => {
 
   test('CO2 cycle coverage extraction', () => {
     const cache = { polar: { dryIce: 0.4 } };
-    expect(co2Cycle.getCoverage('polar', cache)).toEqual({ dryIceCoverage: 0.4 });
-    expect(co2Cycle.getCoverage('temperate', cache)).toEqual({ dryIceCoverage: 0 });
+    expect(co2Cycle.getCoverage('polar', cache)).toEqual({ dryIceCoverage: 0.4, liquidCO2Coverage: 0 });
+    expect(co2Cycle.getCoverage('temperate', cache)).toEqual({ dryIceCoverage: 0, liquidCO2Coverage: 0 });
   });
 });

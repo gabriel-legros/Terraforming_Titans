@@ -160,7 +160,10 @@ describe('CO2 cycle processZone', () => {
       durationSeconds: 1,
       condensationParameter: 1,
     });
-    expect(changes.potentialCO2Condensation).toBeGreaterThan(0);
+    const potential =
+      (changes.precipitation.potentialCO2Rain || 0) +
+      (changes.precipitation.potentialCO2Snow || 0);
+    expect(potential).toBeGreaterThan(0);
     expect(changes.co2.ice).toBeCloseTo(0, 6);
   });
 });

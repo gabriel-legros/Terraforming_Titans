@@ -109,6 +109,6 @@ describe('new game resets to Mars', () => {
     }
 
     expect(planetName).toBe('Mars');
-    expect(methaneUnlocked).toBe(false);
+    expect(methaneUnlocked).toBe(true);
   });
 });
