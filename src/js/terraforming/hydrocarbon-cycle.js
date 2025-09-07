@@ -121,9 +121,7 @@ class MethaneCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: 90.7,
       sublimationPoint: 90.7,
-      rapidSublimationMultiplier: 0.000001,
-      evaporationAlbedo: 0.1,
-      sublimationAlbedo: 0.6,
+      rapidSublimationMultiplier: 0.000001
     });
     this.key = key;
     this.atmKey = atmKey;
