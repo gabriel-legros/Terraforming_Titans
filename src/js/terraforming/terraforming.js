@@ -152,7 +152,7 @@ class Terraforming extends EffectableEntity{
 
     this.initialValuesCalculated = false;
     this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
-    this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER || EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
+    this.equilibriumCO2CondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER || EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
     this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default, will be calculated
 
       this.completed = false;
@@ -206,6 +206,7 @@ class Terraforming extends EffectableEntity{
     ['tropical', 'temperate', 'polar'].forEach(zone => {
         this.zonalCO2[zone] = {
             liquid: 0,
+            ice : 0,
         };
     });
 
