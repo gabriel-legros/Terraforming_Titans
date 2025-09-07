@@ -479,3 +479,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added `buildAtmosphereContext` helper centralizing atmospheric pressure calculations for reuse in `Terraforming.updateResources`.
 - Atmospheric chemistry now assigns resource rates internally, removing rate handling from `Terraforming.updateResources`.
 - Removed rapid sublimation logic from WaterCycle, simplifying phase change calculations.
+- Removed rapid sublimation mechanics from the methane hydrocarbon cycle.
