@@ -487,3 +487,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - ResourceCycle converts melting into rapid sublimation when liquid water is forbidden, recording rates for ice and atmosphere as "Rapid Sublimation".
 - Methane cycle converts melting into rapid sublimation when liquid methane is forbidden, tracking hydrocarbon ice and atmospheric methane as "Rapid Sublimation".
 - Cargo rocket x10 and /10 increment count now persists through save and load.
+- Added a sulfuric acid atmospheric resource integrated with physics.js and albedo cloud calculations.

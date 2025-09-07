@@ -388,7 +388,7 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
   const totalTons = totalAtmosphereMassTons(pressureBar, radius_km, gravity);
   const baseMix = (tpl && tpl.mix) ? tpl.mix : {};
-  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane"];
+  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane","sulfuricAcid"];
   const jittered = {}; let sum = 0;
   for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
   const gas = {}; if (sum <= 0) { gas.inertGas = { initialValue: totalTons, unlocked: false }; for (const k of mixKeys) if (k !== "inertGas") gas[k] = { initialValue: 0, unlocked: false }; return gas; }
@@ -507,7 +507,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   // Atmosphere composition & pressure for physics model
   let totalAtmoMass = 0; const compMass = {};
   for (const g in atmo) { const m = atmo[g]?.initialValue || 0; compMass[g] = m; totalAtmoMass += m; }
-  const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; }
+  const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; if (compMass.sulfuricAcid) composition.h2so4 = compMass.sulfuricAcid / totalAtmoMass; }
   const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
   const SOLAR_FLUX_1AU = 1361; const flux = (SOLAR_FLUX_1AU * (star.luminositySolar || 1)) / (aAU * aAU);
   const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotation, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
