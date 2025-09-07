@@ -1,0 +1,85 @@
+const isNodeChem = typeof module !== 'undefined' && module.exports;
+
+const METHANE_COMBUSTION_PARAMETER = 1e-15; // Rate coefficient for CH4/O2 combustion
+const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure for combustion
+const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
+const CALCITE_HALF_LIFE_SECONDS = 240; // Calcite aerosol half-life
+const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
+
+function runAtmosphericChemistry(resources, params = {}) {
+  const {
+    globalOxygenPressurePa = 0,
+    globalMethanePressurePa = 0,
+    availableGlobalMethaneGas = 0,
+    availableGlobalOxygenGas = 0,
+    realSeconds = 0,
+    durationSeconds = 0,
+    surfaceArea = 1,
+  } = params;
+
+  let combustionMethaneAmount = 0;
+  let combustionOxygenAmount = 0;
+  let combustionWaterAmount = 0;
+  let combustionCO2Amount = 0;
+
+  if (
+    globalOxygenPressurePa > OXYGEN_COMBUSTION_THRESHOLD &&
+    globalMethanePressurePa > METHANE_COMBUSTION_THRESHOLD
+  ) {
+    const rate =
+      METHANE_COMBUSTION_PARAMETER *
+      (globalOxygenPressurePa - OXYGEN_COMBUSTION_THRESHOLD) *
+      (globalMethanePressurePa - METHANE_COMBUSTION_THRESHOLD) *
+      surfaceArea;
+
+    combustionMethaneAmount = Math.min(
+      rate * durationSeconds,
+      availableGlobalMethaneGas,
+      availableGlobalOxygenGas / 4
+    );
+    combustionOxygenAmount = combustionMethaneAmount * 4;
+    combustionWaterAmount = combustionMethaneAmount * 2.25;
+    combustionCO2Amount = combustionMethaneAmount * 2.75;
+  }
+
+  let calciteDecayAmount = 0;
+  const currentCalcite = resources?.atmospheric?.calciteAerosol?.value || 0;
+  if (realSeconds > 0 && currentCalcite > 0) {
+    calciteDecayAmount =
+      currentCalcite * (1 - Math.exp(-CALCITE_DECAY_CONSTANT * realSeconds));
+  }
+
+  return {
+    changes: {
+      atmosphericMethane: -combustionMethaneAmount,
+      oxygen: -combustionOxygenAmount,
+      atmosphericWater: combustionWaterAmount,
+      carbonDioxide: combustionCO2Amount,
+      calciteAerosol: -calciteDecayAmount,
+    },
+    rates: {
+      methane: durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0,
+      oxygen: durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0,
+      water: durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0,
+      co2: durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0,
+      calcite: realSeconds > 0 ? calciteDecayAmount / realSeconds : 0,
+    },
+  };
+}
+
+if (isNodeChem) {
+  module.exports = {
+    runAtmosphericChemistry,
+    METHANE_COMBUSTION_PARAMETER,
+    OXYGEN_COMBUSTION_THRESHOLD,
+    METHANE_COMBUSTION_THRESHOLD,
+    CALCITE_HALF_LIFE_SECONDS,
+  };
+} else {
+  globalThis.runAtmosphericChemistry = runAtmosphericChemistry;
+  globalThis.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER;
+  globalThis.OXYGEN_COMBUSTION_THRESHOLD = OXYGEN_COMBUSTION_THRESHOLD;
+  globalThis.METHANE_COMBUSTION_THRESHOLD = METHANE_COMBUSTION_THRESHOLD;
+  globalThis.CALCITE_HALF_LIFE_SECONDS = CALCITE_HALF_LIFE_SECONDS;
+}
+

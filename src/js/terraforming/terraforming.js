@@ -51,12 +51,18 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.calculateAtmosphericPressure === 'undefined') {
         globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     }
+
+    const atmosphericChem = require('./atmospheric-chemistry.js');
+    runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
+    METHANE_COMBUSTION_PARAMETER_CONST = atmosphericChem.METHANE_COMBUSTION_PARAMETER;
 } else {
     getZonePercentage = globalThis.getZonePercentage;
     estimateCoverage = globalThis.estimateCoverage;
     waterCycleInstance = globalThis.waterCycle;
     methaneCycleInstance = globalThis.methaneCycle;
     co2CycleInstance = globalThis.co2Cycle;
+    runAtmosphericChemistry = globalThis.runAtmosphericChemistry;
+    METHANE_COMBUSTION_PARAMETER_CONST = globalThis.METHANE_COMBUSTION_PARAMETER;
 }
 
 var getEcumenopolisLandFraction;
@@ -79,12 +85,8 @@ const KPA_PER_ATM = 101.325;
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 1.35*0.0000095;
 const EQUILIBRIUM_CO2_PARAMETER = 5.5e-9;
-const METHANE_COMBUSTION_PARAMETER = 1e-15; // Rate coefficient for CH4/O2 combustion
-const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure for combustion
-const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
-
-const CALCITE_HALF_LIFE_SECONDS = 240; // Calcite aerosol half-life
-const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
+var runAtmosphericChemistry;
+var METHANE_COMBUSTION_PARAMETER_CONST;
 
 if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
@@ -527,55 +529,28 @@ class Terraforming extends EffectableEntity{
                 cycle.updateResourceRates(this, totals, durationSeconds);
             }
         }
+        const chemTotals = runAtmosphericChemistry(this.resources, {
+            globalOxygenPressurePa,
+            globalMethanePressurePa,
+            availableGlobalMethaneGas,
+            availableGlobalOxygenGas,
+            realSeconds,
+            durationSeconds,
+            surfaceArea: this.celestialParameters.surfaceArea,
+        });
 
-        // --- 4.5. Spontaneous methane/oxygen combustion ---
-        let combustionMethaneAmount = 0;
-        let combustionOxygenAmount = 0;
-        let combustionWaterAmount = 0;
-        let combustionCO2Amount = 0;
-        if (globalOxygenPressurePa > OXYGEN_COMBUSTION_THRESHOLD && globalMethanePressurePa > METHANE_COMBUSTION_THRESHOLD) {
-            const rate = METHANE_COMBUSTION_PARAMETER *
-                (globalOxygenPressurePa - OXYGEN_COMBUSTION_THRESHOLD) *
-                (globalMethanePressurePa - METHANE_COMBUSTION_THRESHOLD) *
-                this.celestialParameters.surfaceArea;
-            combustionMethaneAmount = Math.min(
-                rate * durationSeconds,
-                availableGlobalMethaneGas,
-                availableGlobalOxygenGas / 4
-            );
-            combustionOxygenAmount = combustionMethaneAmount * 4;
-            combustionWaterAmount = combustionMethaneAmount * 2.25;
-            combustionCO2Amount = combustionMethaneAmount * 2.75;
-            const atm = this.resources.atmospheric;
-            if (atm.atmosphericMethane) {
-                atm.atmosphericMethane.value = Math.max(0, atm.atmosphericMethane.value - combustionMethaneAmount);
-            }
-            if (atm.atmosphericWater) {
-                atm.atmosphericWater.value = Math.max(0, atm.atmosphericWater.value + combustionWaterAmount);
-            }
-            if (atm.carbonDioxide) {
-                atm.carbonDioxide.value = Math.max(0, atm.carbonDioxide.value + combustionCO2Amount);
-            }
-            if (atm.oxygen) {
-                atm.oxygen.value = Math.max(0, atm.oxygen.value - combustionOxygenAmount);
+        for (const [key, delta] of Object.entries(chemTotals.changes)) {
+            const res = this.resources.atmospheric[key];
+            if (res && delta) {
+                res.value = Math.max(0, res.value + delta);
             }
         }
 
-        // --- 4.6. Calcite aerosol decay ---
-        let calciteDecayAmount = 0;
-        if (this.resources.atmospheric.calciteAerosol) {
-            const currentCalcite = this.resources.atmospheric.calciteAerosol.value || 0;
-            if (realSeconds > 0 && currentCalcite > 0) {
-                calciteDecayAmount = currentCalcite * (1 - Math.exp(-CALCITE_DECAY_CONSTANT * realSeconds));
-                this.resources.atmospheric.calciteAerosol.value = Math.max(0, currentCalcite - calciteDecayAmount);
-            }
-        }
-
-        this.totalMethaneCombustionRate = combustionMethaneAmount / durationSeconds * 86400;
-        this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
-        this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
-        this.totalCombustionCo2Rate = combustionCO2Amount / durationSeconds * 86400;
-        this.totalCalciteDecayRate = calciteDecayAmount / realSeconds;
+        this.totalMethaneCombustionRate = chemTotals.rates.methane;
+        this.totalOxygenCombustionRate = chemTotals.rates.oxygen;
+        this.totalCombustionWaterRate = chemTotals.rates.water;
+        this.totalCombustionCo2Rate = chemTotals.rates.co2;
+        this.totalCalciteDecayRate = chemTotals.rates.calcite;
 
         const rateType = 'terraforming';
         this.resources.atmospheric.atmosphericWater?.modifyRate(
@@ -1406,9 +1381,10 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.setStarLuminosity = setStarLuminosity;
   module.exports.getStarLuminosity = getStarLuminosity;
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
-  module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER;
+  module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;
   globalThis.getStarLuminosity = getStarLuminosity;
+  globalThis.Terraforming = Terraforming;
 }
 
