@@ -6,7 +6,6 @@
       methaneCycleInstance,
       calculateMethaneEvaporationRate,
       calculateMethaneSublimationRate,
-      rapidSublimationRateMethane,
       getZonePercentage,
       getZoneRatio,
       estimateCoverage,
@@ -26,7 +25,6 @@
     methaneCycleInstance = hydrocarbonMod.methaneCycle;
     calculateMethaneEvaporationRate = hydrocarbonMod.calculateMethaneEvaporationRate;
     calculateMethaneSublimationRate = hydrocarbonMod.calculateMethaneSublimationRate;
-    rapidSublimationRateMethane = hydrocarbonMod.rapidSublimationRateMethane;
     boilingPointMethane = hydrocarbonMod.boilingPointMethane;
 
     const physics = require('./terraforming/physics.js');
@@ -46,7 +44,6 @@
     methaneCycleInstance = globalThis.methaneCycle;
     calculateMethaneEvaporationRate = globalThis.calculateMethaneEvaporationRate;
     calculateMethaneSublimationRate = globalThis.calculateMethaneSublimationRate;
-    rapidSublimationRateMethane = globalThis.rapidSublimationRateMethane;
     boilingPointWater = globalThis.boilingPointWater;
     boilingPointMethane = globalThis.boilingPointMethane;
     getZonePercentage = globalThis.getZonePercentage;
@@ -359,10 +356,6 @@
         zonalSolarFlux
       });
       initialTotalMethaneEvapRate += methaneSublimationRateValue;
-
-      const availableMethaneIce = this.zonalHydrocarbons[zone]?.ice || 0;
-      const rapidMethaneRate = rapidSublimationRateMethane(dayTemp, availableMethaneIce);
-      initialTotalMethaneEvapRate += rapidMethaneRate;
 
       const methaneBoil = boilingPointMethane(initialTotalPressurePa);
       const { liquidRate: ch4Liquid, iceRate: ch4Ice } = methaneCycleInstance.condensationRateFactor({

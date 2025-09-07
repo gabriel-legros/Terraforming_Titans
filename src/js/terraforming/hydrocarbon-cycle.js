@@ -121,7 +121,8 @@ class MethaneCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: 90.7,
       sublimationPoint: 90.7,
-      rapidSublimationMultiplier: 0.000001
+      evaporationAlbedo: 0.1,
+      sublimationAlbedo: 0.6,
     });
     this.key = key;
     this.atmKey = atmKey;
@@ -288,19 +289,10 @@ class MethaneCycle extends ResourceCycleClass {
     changes.atmosphere.methane += sublimationAmount;
     changes.methane.ice -= sublimationAmount;
 
-    // --- Rapid Sublimation ---
-    const remainingIce = Math.max(0, availableIce + changes.methane.ice);
-    const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
-    const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
-    if (rapidAmount > 0) {
-      changes.methane.ice -= rapidAmount;
-      changes.atmosphere.methane += rapidAmount;
-    }
-
     return {
       ...changes,
       evaporationAmount,
-      sublimationAmount: sublimationAmount + rapidAmount,
+      sublimationAmount,
       meltAmount,
       freezeAmount,
     };
@@ -464,10 +456,6 @@ function sublimationRateMethane(T, solarFlux, atmPressure, e_a, r_a = 100) {
     return methaneCycle.sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a });
 }
 
-function rapidSublimationRateMethane(temperature, availableMethaneIce) {
-    return methaneCycle.rapidSublimationRate(temperature, availableMethaneIce);
-}
-
 function calculateMethaneEvaporationRate({
     zoneArea,
     liquidMethaneCoverage,
@@ -542,7 +530,6 @@ if (typeof module !== 'undefined' && module.exports) {
         evaporationRateMethane,
         calculateMethaneEvaporationRate,
         sublimationRateMethane,
-        rapidSublimationRateMethane,
         calculateMethaneSublimationRate,
         boilingPointMethane
     };
@@ -556,7 +543,6 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.evaporationRateMethane = evaporationRateMethane;
     globalThis.calculateMethaneEvaporationRate = calculateMethaneEvaporationRate;
     globalThis.sublimationRateMethane = sublimationRateMethane;
-    globalThis.rapidSublimationRateMethane = rapidSublimationRateMethane;
     globalThis.calculateMethaneSublimationRate = calculateMethaneSublimationRate;
     globalThis.boilingPointMethane = boilingPointMethane;
 }
