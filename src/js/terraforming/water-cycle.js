@@ -1,7 +1,9 @@
 const L_S_WATER = 2.83e6; // Latent heat of sublimation for water (J/kg)
 const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
 const EVAP_ALBEDO_WATER = 0.06; // Representative albedo for liquid water
-const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice
+const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice// --- Triple point (water) ---
+const WATER_TRIPLE_T = 273.16;      // K
+const WATER_TRIPLE_P = 611.657;     // Pa  (NIST) 
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -41,87 +43,26 @@ if (!simulateSurfaceWaterFlow && typeof require === 'function') {
 }
 
 
-// Function to calculate saturation vapor pressure using the Buck Equation for water
-function saturationVaporPressureBuck(T) {
-    // T: Temperature in Kelvin (K)
-    
-    if (T < 273.15) {
-        // Buck equation for ice (solid water)
-        const A = 0.61115; // kPa
-        const C1 = 23.036;
-        const C2 = 333.7;
-        const C3 = 279.82;
-    
-        function f_ice(T_K) {
-            return (C1 - (T_K - 273.15) / C2) * ((T_K - 273.15) / (C3 + (T_K - 273.15)));
-        }
-    
-        const es_ice = A * Math.exp(f_ice(T)); // kPa
-        return es_ice * 1000; // Convert kPa to Pa
-    } else {
-        // Buck equation for water (liquid)
-        const A = 0.61121; // kPa
-        const C1 = 18.678;
-        const C2 = 234.5;
-        const C3 = 257.14;
-    
-        function f_water(T_K) {
-            return (C1 - (T_K - 273.15) / C2) * ((T_K - 273.15) / (C3 + (T_K - 273.15)));
-        }
-    
-        const es_water = A * Math.exp(f_water(T)); // kPa
-        return es_water * 1000; // Convert kPa to Pa
-    }
+// --- Murphy & Koop (2005) saturation vapor pressure (Pa) ---
+function saturationVaporPressureMK(T) {
+  if (T <= WATER_TRIPLE_T) {
+    // Over ice (natural logs, T in K, result in Pa)
+    return Math.exp(9.550426 - 5723.265 / T + 3.53068 * Math.log(T) - 0.00728332 * T);
+  } else {
+    // Over liquid water (natural logs, T in K, result in Pa)
+    const term = 54.842763 - 6763.22 / T - 4.21 * Math.log(T) + 0.000367 * T;
+    const corr = Math.tanh(0.0415 * (T - 218.8)) *
+      (53.878 - 1331.22 / T - 9.44523 * Math.log(T) + 0.014025 * T);
+    return Math.exp(term + corr);
+  }
 }
-  
-  
-// Function to calculate the derivative of saturation vapor pressure with respect to temperature
-function derivativeSaturationVaporPressureBuck(T) {
-    // T: Temperature in Kelvin (K)
-    
-    if (T < 273.15) {
-        // Buck equation derivative for ice
-        const A = 0.61115; // kPa
-        const C1 = 23.036;
-        const C2 = 333.7;
-        const C3 = 279.82;
-    
-        function f_ice(T_K) {
-            return (C1 - (T_K - 273.15) / C2) * ((T_K - 273.15) / (C3 + (T_K - 273.15)));
-        }
-    
-        function df_ice(T_K) {
-            const T_C = T_K - 273.15; // Convert to Celsius
-            const term1 = (C1 - T_C / C2) * (C3 / Math.pow(C3 + T_C, 2));
-            const term2 = (-1 / C2) * (T_C / (C3 + T_C));
-            return term1 + term2;
-        }
-    
-        const es_ice = A * Math.exp(f_ice(T)); // kPa
-        const des_dT = es_ice * df_ice(T) * 1000; // Convert kPa/K to Pa/K
-        return des_dT;
-    } else {
-        // Buck equation derivative for water
-        const A = 0.61121; // kPa
-        const C1 = 18.678;
-        const C2 = 234.5;
-        const C3 = 257.14;
-    
-        function f_water(T_K) {
-            return (C1 - (T_K - 273.15) / C2) * ((T_K - 273.15) / (C3 + (T_K - 273.15)));
-        }
-    
-        function df_water(T_K) {
-            const T_C = T_K - 273.15; // Convert to Celsius
-            const term1 = (C1 - T_C / C2) * (C3 / Math.pow(C3 + T_C, 2));
-            const term2 = (-1 / C2) * (T_C / (C3 + T_C));
-            return term1 + term2;
-        }
-    
-        const es_water = A * Math.exp(f_water(T)); // kPa
-        const des_dT = es_water * df_water(T) * 1000; // Convert kPa/K to Pa/K
-        return des_dT;
-    }
+
+// Robust numerical slope d(es)/dT (central difference)
+function derivativeSaturationVaporPressureMK(T) {
+  const h = Math.max(0.05, 1e-3 * T); // K, stable & cheap
+  const em = saturationVaporPressureMK(Math.max(1, T - h));
+  const ep = saturationVaporPressureMK(T + h);
+  return (ep - em) / (2 * h);
 }
 
 class WaterCycle extends ResourceCycleClass {
@@ -209,12 +150,15 @@ class WaterCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
-      saturationVaporPressureFn: saturationVaporPressureBuck,
-      slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureBuck,
+      saturationVaporPressureFn: saturationVaporPressureMK,
+      slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureMK,
       freezePoint: 273.15,
       sublimationPoint: 273.15,
       evaporationAlbedo: EVAP_ALBEDO_WATER,
       sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
+      tripleTemperature: WATER_TRIPLE_T,
+      triplePressure: WATER_TRIPLE_P,
+      disallowLiquidBelowTriple: true,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn: (terraforming, durationSeconds, tempMap) => {
@@ -328,17 +272,25 @@ function psychrometricConstantWaterSublimation(atmPressure) {
     return psychrometricConstant(atmPressure, L_S_WATER); // Pa/K
 }
 
-// Estimate the boiling point of water (K) from pressure (Pa) using the
-// Antoine equation. The constants cover a wide range around standard
-// atmospheric conditions, avoiding iterative solves.
+// Solve e_w(T) = atmPressure for T using MK liquid branch.
+// Returns undefined if no liquid phase exists (p <= triple pressure).
 function boilingPointWater(atmPressure) {
-    if (atmPressure <= 0) return 0;
-    const A = 8.07131; // Antoine coefficients for water
-    const B = 1730.63;
-    const C = 233.426;
-    const PmmHg = atmPressure * 0.00750062; // Pa → mmHg
-    const T_C = B / (A - Math.log10(PmmHg)) - C; // Celsius
-    return T_C + 273.15;
+  if (!(atmPressure > 0)) return undefined;
+  if (atmPressure <= WATER_TRIPLE_P) return undefined; // no liquid region
+
+  // Bracket between triple temperature and an upper cap well below critical.
+  // 450 K covers up to several bars; adjust if you simulate very high pressures.
+  let lo = WATER_TRIPLE_T, hi = 450.0;
+  // Ensure the upper bracket pressure exceeds atmPressure
+  const p_hi = saturationVaporPressureMK(hi);
+  if (p_hi < atmPressure) hi = 647.0; // near critical temp (still OK)
+  // Bisection
+  for (let i = 0; i < 32; i++) {
+    const mid = 0.5 * (lo + hi);
+    const p = saturationVaporPressureMK(mid);
+    if (p > atmPressure) hi = mid; else lo = mid;
+  }
+  return 0.5 * (lo + hi);
 }
   
 // Function to calculate sublimation rate for water ice using the modified Penman equation

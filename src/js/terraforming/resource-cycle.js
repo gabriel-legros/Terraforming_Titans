@@ -31,6 +31,9 @@ class ResourceCycle {
     rateMappings = {},
     finalizeProcesses = [],
     rateTotalsPrefix = '',
+    tripleTemperature = null,
+    triplePressure = null,
+    disallowLiquidBelowTriple = false,
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
@@ -47,6 +50,9 @@ class ResourceCycle {
     this.rateMappings = rateMappings;
     this.finalizeProcesses = finalizeProcesses;
     this.rateTotalsPrefix = rateTotalsPrefix;
+    this.tripleTemperature = tripleTemperature;
+    this.triplePressure = triplePressure;
+    this.disallowLiquidBelowTriple = disallowLiquidBelowTriple;
   }
 
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
@@ -117,6 +123,11 @@ class ResourceCycle {
       availableIce = 0,
       availableBuriedIce = 0,
     } = params;
+    const liquidForbidden =
+    !!this.disallowLiquidBelowTriple &&
+    (typeof this.triplePressure === 'number') &&
+    atmPressure < this.triplePressure;
+
     const atmosphereKey = this.atmosphereKey;
     const surfaceBucket = this.surfaceBucket;
     const liquidCoverage = this.coverageKeys.liquid
@@ -182,15 +193,19 @@ class ResourceCycle {
           : undefined,
         boilTransitionRange: this.boilTransitionRange,
       });
-      potentialLiquid = liquidRate * condensationParameter * durationSeconds;
-      potentialSolid = iceRate * condensationParameter * durationSeconds;
+      const safeLiquidRate = liquidForbidden ? 0 : liquidRate;
+      const safeIceRate = iceRate;
+
+      const potentialLiquid = safeLiquidRate * condensationParameter * durationSeconds;
+      const potentialSolid  = safeIceRate   * condensationParameter * durationSeconds;
+
       if (this.precipitationKeys.liquid) {
         changes.precipitation[this.precipitationKeys.liquid] = potentialLiquid;
       }
       if (this.precipitationKeys.solid) {
         changes.precipitation[this.precipitationKeys.solid] = potentialSolid;
       }
-      changes.atmosphere[atmosphereKey] -= potentialLiquid + potentialSolid;
+      changes.atmosphere[atmosphereKey] -= (potentialLiquid + potentialSolid);
     }
 
     let meltAmount = 0;
@@ -209,8 +224,11 @@ class ResourceCycle {
       const currentIce = availableIce + (changes[surfaceBucket].ice || 0);
       const currentBuried = availableBuriedIce + (changes[surfaceBucket].buriedIce || 0);
       const availableForMelt = currentIce + currentBuried;
-      meltAmount = Math.min(rates.meltingRate * durationSeconds, availableForMelt);
-      freezeAmount = Math.min(rates.freezingRate * durationSeconds, currentLiquid);
+      const meltingRate  = liquidForbidden ? 0 : (rates.meltingRate || 0);
+      const freezingRate = (rates.freezingRate || 0);
+
+      meltAmount  = Math.min(meltingRate  * durationSeconds, availableForMelt);
+      freezeAmount= Math.min(freezingRate * durationSeconds, currentLiquid);
 
       let meltFromIce = Math.min(meltAmount, currentIce);
       let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
