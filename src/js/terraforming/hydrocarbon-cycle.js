@@ -210,6 +210,7 @@ class MethaneCycle extends ResourceCycleClass {
       tripleTemperature: METHANE_T_TRIPLE,
       triplePressure: METHANE_P_TRIPLE,
       disallowLiquidBelowTriple: true,
+      criticalTemperature: METHANE_T_CRIT,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn,

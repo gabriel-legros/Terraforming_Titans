@@ -4,6 +4,7 @@ const EVAP_ALBEDO_WATER = 0.06; // Representative albedo for liquid water
 const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice// --- Triple point (water) ---
 const WATER_TRIPLE_T = 273.16;      // K
 const WATER_TRIPLE_P = 611.657;     // Pa  (NIST) 
+const WATER_CRITICAL_T = 647.096;   // K  (approximate critical temperature)
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -163,6 +164,7 @@ class WaterCycle extends ResourceCycleClass {
       tripleTemperature: WATER_TRIPLE_T,
       triplePressure: WATER_TRIPLE_P,
       disallowLiquidBelowTriple: true,
+      criticalTemperature: WATER_CRITICAL_T,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn: (terraforming, durationSeconds, tempMap) => {

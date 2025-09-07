@@ -525,7 +525,20 @@ progressVega2.chapters.push(
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'vega2', value: true },
       { target: 'rwgManager', type: 'unlockOrbit', targetId: 'hot' },
     ]
-  }
+  },
+  {
+        id: "chapter17.6",
+        type: "journal",
+        chapter: 17,
+        narrative: "New target designated : Venus",
+        prerequisites: ["impossible"],
+        objectives: [],
+        reward: [{
+        target: 'spaceManager',
+        targetId: 'venus',
+        type: 'enable'
+      }]
+    },
 );
 
 if (typeof module !== 'undefined') {

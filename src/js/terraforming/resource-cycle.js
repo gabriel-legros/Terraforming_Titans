@@ -34,6 +34,7 @@ class ResourceCycle {
     tripleTemperature = null,
     triplePressure = null,
     disallowLiquidBelowTriple = false,
+    criticalTemperature = Infinity,
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
@@ -53,6 +54,7 @@ class ResourceCycle {
     this.tripleTemperature = tripleTemperature;
     this.triplePressure = triplePressure;
     this.disallowLiquidBelowTriple = disallowLiquidBelowTriple;
+    this.criticalTemperature = criticalTemperature;
   }
 
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
@@ -84,6 +86,7 @@ class ResourceCycle {
       maxDiff,
       boilingPoint,
       boilTransitionRange,
+      criticalTemperature: this.criticalTemperature,
     });
   }
 

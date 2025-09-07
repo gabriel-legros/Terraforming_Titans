@@ -14,8 +14,8 @@ const MAX_BOND_ALBEDO = 0.9;
 const ALBEDO_SOFTCAP_THRESHOLD = 0.8;
 // Higher K => stronger diminishing returns near the cap
 const ALBEDO_SOFTCAP_K = 2.0;
-const A_HAZE_CH4_MAX  = 0.24; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
-const K_CH4_ALB       = 4.5;     // how quickly CH4 haze brightening saturates
+const A_HAZE_CH4_MAX  = 0.25; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
+const K_CH4_ALB       = 3;     // how quickly CH4 haze brightening saturates
 
 const A_CALCITE_HEADROOM_MAX = 0.3; // calcite can add up to +0.3 in the limit
 const K_CALCITE_ALB  = 1.0;          // saturates near τ_eff ≈ 1
@@ -24,8 +24,8 @@ const OPTICS = {
 };
 
 // ---------- Shortwave (visible) optical depth ----------
-const K_CH4_SW        = 1.0;     // haze build-up rate vs methane column
-const MU_CH4_SAT      = 3.0;     // kg/m²: methane column where haze nearly saturates
+const K_CH4_SW        = 2.0;     // haze build-up rate vs methane column
+const MU_CH4_SAT      = 4.0;     // kg/m²: methane column where haze nearly saturates
 const EPS_EXT_CALCITE = 1500;    // m²/kg: calcite mass-extinction (tunable)
 
 // Haze coverage saturator (diagnostic only)
@@ -75,21 +75,19 @@ const SIGMA = 5.670374419e-8;
 
 // ─── Existing IR greenhouse parameters ─────────────────────────────
 const COLUMN_MASS_REF = 5.0e4;   // μ0 in kg/m² (reference column for scaling)
-const ALPHA = 1.0;               // keep
 const BETA  = 0.55;              // was 0.6 in old pressure law
 
 // Keep original strengths EXCEPT water (we tune only H2O)
 const GAMMA = {
-  h2o           : 10.0,     // tuned so Earth ≈ 288 K
+  h2o           : 8,
   co2           : 10.0,
-  ch4           : 42.0,
-  h2so4         : 50.0,
+  ch4           : 20.0,
   greenhousegas : 2500.0
 };
 
 // Saturation only for CH4 (and H2SO4 if you like)
-const MU_SAT = { ch4: 3, h2so4: 2000.0 }; // kg/m²
-const SAT_EXP = { ch4: 1.0, h2so4: 1.0 };    // exponent n_i
+const MU_SAT = { ch4: 3}; // kg/m²
+const SAT_EXP = { ch4: 1.0};    // exponent n_i
 
 /*  Cloud spec kept for cloud appearance only (no haze here)
     refMix  – mixing ratio (mass fraction) that saturates availability (=1)
@@ -133,14 +131,22 @@ function opticalDepth(comp, pBar, gSurface) {
     let tau_i;
 
     if (k === 'ch4') {
-      // Apply saturation to methane optical depth to make it scale much slower after R = 0.0015
-      const saturationThreshold = 0.075;
+      const saturationThreshold = 0.0003;
       if (R <= saturationThreshold) {
-        tau_i = G * Math.pow(R, 1) * Math.pow(0.075, BETA);
+        tau_i = G * Math.pow(R, BETA);
       } else {
-        tau_i = G * Math.pow(0.075, 1) * Math.pow(R, BETA);
+        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.28*Math.pow(R - saturationThreshold,0.9));
       }
-    } else {
+    } else if (k === 'co2') {
+      const saturationThreshold = 0.0003;
+      if(R <= saturationThreshold){
+        tau_i = G * Math.pow(R, BETA);
+      }
+      else{
+        tau_i = G * (Math.pow(saturationThreshold, BETA) + Math.pow(R - saturationThreshold,0.9));
+      }
+    }
+    else  {
       // Default behavior for other gases
       tau_i = G * Math.pow(R, BETA);
     }

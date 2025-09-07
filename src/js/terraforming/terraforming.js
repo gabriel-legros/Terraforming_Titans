@@ -10,6 +10,15 @@ const C_P_AIR = 1004; // J/kg·K
 const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
+const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
+const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
+const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
+const KPA_PER_ATM = 101.325;
+
+const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
+const EQUILIBRIUM_METHANE_PARAMETER = 0.00006;
+const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
+
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 if (typeof module !== 'undefined' && module.exports) {
@@ -51,6 +60,18 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.calculateAtmosphericPressure === 'undefined') {
         globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
     }
+    if (typeof globalThis.dayNightTemperaturesModel === 'undefined') {
+    globalThis.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
+    }
+    if (typeof globalThis.autoSlabHeatCapacity === 'undefined') {
+    globalThis.autoSlabHeatCapacity = physics.autoSlabHeatCapacity;
+    }
+    if (typeof globalThis.calculateEmissivity === 'undefined') {
+    globalThis.calculateEmissivity = physics.calculateEmissivity;
+    }
+    if (typeof globalThis.effectiveTemp === 'undefined') {
+    globalThis.effectiveTemp = physics.effectiveTemp;
+    }
 
     const atmosphericChem = require('./atmospheric-chemistry.js');
     runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
@@ -77,14 +98,6 @@ function getEffectiveLifeFraction(terraforming) {
     return Math.max(0, (terraforming.life?.target || 0) - fraction);
 }
 
-const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
-const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
-const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
-const KPA_PER_ATM = 101.325;
-
-const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
-const EQUILIBRIUM_METHANE_PARAMETER = 1.35*0.0000095;
-const EQUILIBRIUM_CO2_PARAMETER = 4.2e-3;
 var runAtmosphericChemistry;
 var METHANE_COMBUSTION_PARAMETER_CONST;
 
@@ -275,7 +288,8 @@ class Terraforming extends EffectableEntity{
       modifiedSolarFlux: 0,
       modifiedSolarFluxUnpenalized: 0,
       cloudHazePenalty: 0,
-      surfaceTemperature: 0
+      surfaceTemperature: 0,
+      zonalFluxes : {}
     };
     // Zonal Surface Data (Life) - Replaces global this.life coverages
     this.zonalSurface = {};
@@ -566,64 +580,172 @@ class Terraforming extends EffectableEntity{
     }
 
     updateSurfaceTemperature() {
-      const groundAlbedo = this.luminosity.groundAlbedo;
-      const rotationPeriod = this.celestialParameters.rotationPeriod || 24;
-      const gSurface = this.celestialParameters.gravity;
+    const groundAlbedo = this.luminosity.groundAlbedo;
+    const rotationPeriodH = this.celestialParameters.rotationPeriod || 24;
+    const gSurface = this.celestialParameters.gravity || 9.81;
 
-      const { composition, totalMass } = this.calculateAtmosphericComposition();
+    // --- Atmospheric state (composition → IR emissivity, pressure → column mass)
+    const { composition, totalMass } = this.calculateAtmosphericComposition(); // totalMass in kg
+    const surfacePressurePa = calculateAtmosphericPressure(
+        totalMass / 1000, // tons → Pa via physics helper
+        gSurface,
+        this.celestialParameters.radius
+    );
+    const surfacePressureBar = surfacePressurePa / 1e5;
 
-      const surfacePressurePa = calculateAtmosphericPressure(totalMass / 1000, gSurface, this.celestialParameters.radius);
-      const surfacePressureBar = surfacePressurePa / 100000;
+    const { emissivity, tau, contributions } =
+        calculateEmissivity(composition, surfacePressureBar, gSurface);
+    this.temperature.emissivity = emissivity;
+    this.temperature.opticalDepth = tau;
+    this.temperature.opticalDepthContributions = contributions;
 
-      const { emissivity, tau, contributions } = calculateEmissivity(composition, surfacePressureBar, gSurface);
-      this.temperature.emissivity = emissivity;
-      this.temperature.opticalDepth = tau;
-      this.temperature.opticalDepthContributions = contributions;
-
-      // Build aerosols (shortwave) columns in kg/m^2
-      const aerosolsSW = {};
-      const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
-      if (this.resources?.atmospheric?.calciteAerosol) {
+    // --- Shortwave aerosols (for albedo adders, already in your model)
+    const aerosolsSW = {};
+    const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
+    if (this.resources?.atmospheric?.calciteAerosol) {
         const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
-        const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0; // kg/m^2
-        aerosolsSW.calcite = column;
-      }
+        aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0; // kg/m²
+    }
 
-      const baseParams = {
-        groundAlbedo: groundAlbedo,
-        flux: this.luminosity.modifiedSolarFlux,
-        rotationPeriodH: rotationPeriod,
-        surfacePressureBar: surfacePressureBar,
-        composition: composition,
-        gSurface: gSurface,
+    // --- Base per-zone radiative solve (exactly what you had)
+    const baseParams = {
+        groundAlbedo,
+        // flux will be set per zone below
+        rotationPeriodH,
+        surfacePressureBar,
+        composition,
+        gSurface,
         aerosolsSW
-      };
+    };
 
-      this.luminosity.zonalFluxes = {};
-      let weightedTemp = 0;
-      let weightedFlux = 0;
-      let weightedEqTemp = 0;
-      for (const zone in this.temperature.zones) {
+    const ORDER = ['tropical', 'temperate', 'polar'];
+    const z = {}; // per-zone working data
+    let weightedEqTemp = 0;
+    let weightedFluxUnpenalized = 0;
+
+    for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
-        const zoneFractions = calculateZonalSurfaceFractions(this, zone);
-        const zoneTemps = dayNightTemperaturesModel({ ...baseParams, flux: zoneFlux, surfaceFractions: zoneFractions });
-        this.temperature.zones[zone].value = zoneTemps.mean;
-        this.temperature.zones[zone].day = zoneTemps.day;
-        this.temperature.zones[zone].night = zoneTemps.night;
-        this.temperature.zones[zone].equilibriumTemperature = zoneTemps.equilibriumTemperature;
-        const zonePct = getZonePercentage(zone);
-        weightedTemp += zoneTemps.mean * zonePct;
-        weightedFlux += zoneFlux * zonePct;
-        weightedEqTemp += zoneTemps.equilibriumTemperature * zonePct;
-      }
-      this.temperature.value = weightedTemp;
-      this.temperature.equilibriumTemperature = weightedEqTemp;
-      this.luminosity.modifiedSolarFluxUnpenalized = weightedFlux;
-      const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
-      this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
-      this.temperature.effectiveTempNoAtmosphere = effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
+
+        const zoneFractions = (typeof calculateZonalSurfaceFractions === 'function')
+        ? calculateZonalSurfaceFractions(this, zone)
+        : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
+
+        const zTemps = dayNightTemperaturesModel({
+        ...baseParams,
+        flux: zoneFlux,
+        surfaceFractions: zoneFractions
+        });
+
+        // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
+        const Cslab = (typeof autoSlabHeatCapacity === 'function')
+        ? autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, zoneFractions, gSurface)
+        : // Fallback: atmosphere only
+            (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6));
+
+        const pct = getZonePercentage(zone);                       // fraction of surface (0..1)
+        const area = (this.celestialParameters.surfaceArea || 0) * pct; // m²
+
+        z[zone] = {
+        mean:  zTemps.mean,
+        day:   zTemps.day,
+        night: zTemps.night,
+        eq:    zTemps.equilibriumTemperature,
+        frac:  zoneFractions,
+        area,
+        Cslab
+        };
+
+        weightedEqTemp           += zTemps.equilibriumTemperature * pct;
+        weightedFluxUnpenalized  += zoneFlux * pct;
     }
+
+    // --- Meridional (equator↔pole) mixing strength --------------------
+    // Column mass (kg/m²) — higher => stronger mixing
+    const columnMass = surfacePressurePa / Math.max(gSurface, 1e-6);
+
+    // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
+    const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar
+    const K_MASS   = 0.03;    // how quickly mixing rises with mass
+    const A_MASS   = 1.0;     // exponent on (columnMass / MASS_REF)
+
+    // 0..~1: 1-e^{-K (M/Mref)^a}
+    const massBoost = 1 - Math.exp(-K_MASS * Math.pow(columnMass / MASS_REF, A_MASS));
+
+    // Rotation boost: slower rotation ⇒ larger Hadley cells (cap at 3×)
+    const rotFactor = Math.min(3, Math.sqrt(Math.max(0.5, rotationPeriodH / 24)));
+
+    // Planet-wide liquid coverage (water + hydrocarbons), 0..1
+    let liquidCoverageWeighted = 0, areaSum = 0;
+    for (const zone of ORDER) {
+        const liq = (z[zone].frac.ocean || 0) + (z[zone].frac.hydrocarbon || 0);
+        liquidCoverageWeighted += liq * z[zone].area;
+        areaSum += z[zone].area;
+    }
+    const liquidCoverage = areaSum > 0 ? liquidCoverageWeighted / areaSum : 0;
+
+    // Liquids aid meridional transport; keep in a sane range [0.5, 2.0]
+    const liquidFactor = 0.5 + 1.5 * Math.max(0, Math.min(1, liquidCoverage));
+
+    // Final fraction of the zonal ΔT that is equalized in one pass (0..0.95)
+    let mixFrac = massBoost * rotFactor * liquidFactor;
+    mixFrac = Math.max(0, Math.min(0.95, mixFrac));
+
+    // Stronger mixing → a few passes of pairwise exchange
+    const passes = Math.max(1, Math.min(5, Math.round(1 + 4 * mixFrac)));
+
+    // Weights are energy capacities (J/K) so updates conserve energy
+    const W = {};
+    const T = {};
+    for (const zone of ORDER) {
+        W[zone] = (z[zone].Cslab || 0) * (z[zone].area || 0);
+        T[zone] = z[zone].mean;
+    }
+
+    function mixPair(a, b, f) {
+        const Wa = W[a], Wb = W[b];
+        const denom = Wa + Wb;
+        if (denom <= 0 || f <= 0) return;
+        const dT = T[a] - T[b];
+        // Move fraction 'f' toward equalization, conserving energy
+        const deltaA = -f * (Wb / denom) * dT;
+        const deltaB =  f * (Wa / denom) * dT;
+        T[a] += deltaA;
+        T[b] += deltaB;
+    }
+
+    for (let p = 0; p < passes; p++) {
+        mixPair('tropical', 'temperate', mixFrac);
+        mixPair('temperate', 'polar',    mixFrac);
+    }
+
+    // --- Write back temperatures; shift day/night by mean offset ------
+    let weightedTemp = 0;
+    for (const zone of ORDER) {
+        const pct = getZonePercentage(zone);
+        const dMean = T[zone] - z[zone].mean;
+
+        this.temperature.zones[zone].value = T[zone];
+        this.temperature.zones[zone].day   = z[zone].day   + dMean;
+        this.temperature.zones[zone].night = z[zone].night + dMean;
+        // Keep the radiative equilibrium diagnostic (pre‑mix) visible
+        this.temperature.zones[zone].equilibriumTemperature = z[zone].eq;
+
+        weightedTemp += T[zone] * pct;
+    }
+
+    // Global diagnostics (unchanged from your logic)
+    this.temperature.value = weightedTemp;
+    this.temperature.equilibriumTemperature = weightedEqTemp;
+
+    this.luminosity.modifiedSolarFluxUnpenalized = weightedFluxUnpenalized;
+    const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+    this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
+
+    this.temperature.effectiveTempNoAtmosphere =
+        effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
+    }
+
 
     // Estimate and store current surface and orbital radiation levels in mSv/day
     updateSurfaceRadiation() {

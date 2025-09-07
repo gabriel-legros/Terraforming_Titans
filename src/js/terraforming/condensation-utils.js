@@ -9,7 +9,7 @@ if (isNodeCondensation) {
 }
 
 
-function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10, boilingPoint = Infinity, boilTransitionRange = 2 }) {
+function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10, boilingPoint = Infinity, boilTransitionRange = 2, criticalTemperature = Infinity }) {
   if (typeof saturationFn !== 'function') {
     throw new Error('condensationRateFactor requires saturationFn');
   }
@@ -17,6 +17,10 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
   const calc = (temp) => {
     let liquid = 0, ice = 0;
     if (zoneArea > 0 && typeof temp === 'number') {
+      // Above the critical temperature, no condensation (liquid or solid) can occur.
+      if (Number.isFinite(criticalTemperature) && temp >= criticalTemperature) {
+        return { liquid: 0, ice: 0 };
+      }
       // When there is no defined liquid region (boilingPoint not finite, e.g., below triple pressure),
       // use the over-ice saturation branch regardless of temperature by evaluating at or below freezePoint.
       // This ensures condensation still occurs as ice even when T > freezePoint but liquid is not permitted.

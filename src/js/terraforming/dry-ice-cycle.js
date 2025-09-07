@@ -209,6 +209,7 @@ class CO2Cycle extends ResourceCycleClass {
       tripleTemperature: CO2_T_TRIPLE,
       triplePressure: CO2_P_TRIPLE,
       disallowLiquidBelowTriple: true,
+      criticalTemperature: CO2_T_CRIT,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn,

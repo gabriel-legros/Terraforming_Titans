@@ -98,7 +98,7 @@ const defaultPlanetParameters = {
     gravity: 3.711, // Default (Mars)
     radius: 3389.5, // Default (Mars)
     mass: 6.417e23, // kg
-    albedo: 0.25, // Default (Mars)
+    albedo: 0.21, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
   }
@@ -129,37 +129,40 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 22319318076118.363
+        "initialValue": 22562632518689.97
       },
       "atmosphericWater": {
-        "initialValue": 722426.8679575237
+        "initialValue": 166774.96558488137
       },
-      "atmosphericMethane": {
-        "initialValue": 0
-      }
-    }
+    },
   },
  "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 367216.7323466248,
+      "ice": 87077.1259485495,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 582758.0109170746,
+      "ice": 150584.6530696022,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007998326138.5,
+      "ice": 4500007999593580,
       "buriedIce": 700000000000000
     }
   },
-  "zonalCO2": {
-    "tropical": { "liquid": 0, "ice": 0, "buriedIce": 0 },
-    "temperate": { "liquid": 0, "ice": 0, "buriedIce": 0 },
-    "polar": { "liquid": 0, "ice": 1679492486598.075, "buriedIce": 0 }
+  "zonalSurface": {
+    "tropical": {
+      "biomass": 0
+    },
+    "temperate": {
+      "biomass": 0
+    },
+    "polar": {
+      "biomass": 0
+    }
   },
   "zonalHydrocarbons": {
     "tropical": {
@@ -173,6 +176,20 @@ const marsOverrides = {
     "polar": {
       "liquid": 0,
       "ice": 0
+    }
+  },
+  "zonalCO2": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 1436178044031.2847
     }
   },
   fundingRate: 10
@@ -198,21 +215,21 @@ const titanOverrides = {
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       "carbonDioxide": {
-        "initialValue": 99347.1280399024
+        "initialValue": 96102.5286469488
       },
       "atmosphericWater": {
-        "initialValue": 1.6588366882881576e-14
+        "initialValue": 2.967141554253866e-8
       },
       "atmosphericMethane": {
-        "initialValue": 431758340571554.44
-      }
+        "initialValue": 432808181235630.1
+      },
     },
     special: {
       albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
       whiteDust: { baseCap: 83000000000000 }
     }
   },
-"zonalWater": {
+ "zonalWater": {
     "tropical": {
       "liquid": 0,
       "ice": 3791.2409230205194,
@@ -229,28 +246,45 @@ const titanOverrides = {
       "buriedIce": 4050000000000000
     }
   },
-  "zonalCO2": {
-    "tropical": { "liquid": 0, "ice": 254.94383370506972 },
-    "temperate": { "liquid": 0, "ice": 336.2514848320769 },
-    "polar": { "liquid": 0, "ice": 61.67664497456431 }
+  "zonalSurface": {
+    "tropical": {
+      "biomass": 0
+    },
+    "temperate": {
+      "biomass": 0
+    },
+    "polar": {
+      "biomass": 0
+    }
   },
-  "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 714716234640.4485,
+      "liquid": 877849153888.3359,
       "ice": 0
     },
     "temperate": {
-      "liquid": 941649072655.1897,
+      "liquid": 1147035443948.0461,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 10105013736396.453
+      "ice": 8686653782239.314
     }
   },
-
-
+  "zonalCO2": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 229.8198502474763
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 325.9675279328853
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 3341.6839783054147
+    }
+  },
   celestialParameters : { // Override all celestial parameters
     distanceFromSun: 9.58,
     gravity: 1.35,
@@ -580,14 +614,22 @@ const venusOverrides = {
       ore: { initialValue: 5, maxDeposits: 46000, areaTotal: 460000 },
       geothermal: { initialValue: 3, maxDeposits: 460, areaTotal: 460000 }
     },
-    atmospheric: {
-      // Very thick CO2 atmosphere (~92 bar)
-      carbonDioxide: { initialValue: 4.77e17 },
-      inertGas: { initialValue: 1.7e16 }, // mostly N2 ~3–4% by mass
-      oxygen: { initialValue: 0 },
-      atmosphericWater: { initialValue: 0 },
-      atmosphericMethane: { initialValue: 0 },
-      greenhouseGas: { initialValue: 0 }
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 460580468610238600
+      },
+      "inertGas" :{
+        "initialValue": 1.7e16
+      },
+      "atmosphericWater": {
+        "initialValue": 10000000000000
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 45496476928636.34
+      }
     },
     special: {
       // Caps scale with land * 10,000 and match between black and white dust
@@ -618,7 +660,7 @@ const venusOverrides = {
     gravity: 8.87,
     radius: 6051.8,
     mass: 4.867e24,
-    albedo: 0.75,
+    albedo: 0.15,
     rotationPeriod: 5832, // hours (~243 Earth days)
     starLuminosity: 1
   }
@@ -668,8 +710,8 @@ const planetParameters = {
     titan: getPlanetParameters('titan'),
     callisto: getPlanetParameters('callisto'),
     ganymede: getPlanetParameters('ganymede'),
+    vega2: getPlanetParameters('vega2'),
     venus: getPlanetParameters('venus'),
-    vega2: getPlanetParameters('vega2')
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
