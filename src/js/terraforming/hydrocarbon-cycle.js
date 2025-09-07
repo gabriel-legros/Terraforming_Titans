@@ -4,6 +4,11 @@ const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
 const EVAP_ALBEDO_METHANE = 0.1; // Albedo of liquid methane for evaporation calculations
 const SUBLIMATION_ALBEDO_HC_ICE = 0.6; // Albedo of hydrocarbon ice for sublimation calculations
 
+const METHANE_T_TRIPLE = 90.694;          // K  (≈ 90.67 ± 0.03 K)
+const METHANE_P_TRIPLE = 0.11696e6;       // Pa (≈ 0.1169 ± 0.0006 bar)
+const METHANE_T_CRIT   = 190.564;         // K  (≈ 190.6 ± 0.3 K)
+const METHANE_P_CRIT   = 4.5992e6;        // Pa (≈ 46.1 ± 0.3 bar)
+
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
 var redistributePrecipitationFn = globalThis.redistributePrecipitation;
@@ -41,62 +46,51 @@ if (!simulateSurfaceHydrocarbonFlow && typeof require === 'function') {
   }
 }
 
-// Function to calculate saturation vapor pressure of methane using the Wagner equation
-function calculateSaturationPressureMethane(temperature) {
-    // Critical properties of Methane
-    const Tc = 190.564; // Critical temperature in K
-    const Pc = 4.5992;   // Critical pressure in MPa
-
-    // Wagner equation constants for Methane
-    const A = -6.0292644;
-    const B = 1.6541051;
-    const C = -1.1514853;
-    const D = -1.5163253;
-
-    if (temperature > Tc) {
-        return Infinity;
-    }
-    // Calculate the reduced temperature (tau)
-    const tau = 1 - (temperature / Tc);
-
-    // Calculate the natural logarithm of reduced pressure (ln Pr)
-    const lnPr = (A * tau + B * Math.pow(tau, 1.5) + C * Math.pow(tau, 3) + D * Math.pow(tau, 6)) / (1 - tau);
-
-    // Calculate the reduced pressure (Pr)
-    const Pr = Math.exp(lnPr);
-
-    // Calculate the saturation pressure (P) in MPa
-    const P = Pr * Pc;
-
-    return P * 1e6; // Convert MPa to Pa
+// Sublimation branch (solid CH4): Dykyj et al. (1999) as compiled in Titan materials DB
+// log10(P[bar]) = 4.31972 - 451.64/(T - 4.66), valid ~48 K to 90.686 K
+function psatMethaneSolid(T) {
+  const log10Pbar = 4.31972 - 451.64 / (T - 4.66);
+  return Math.pow(10, log10Pbar) * 1e5; // bar -> Pa
 }
 
-// Function to calculate the slope of the saturation vapor pressure curve for Methane
-function slopeSVPMethane(temperature) {
-    const Tc = 190.564; // K
-    const Pc = 4.5992;   // MPa
-    const A = -6.0292644;
-    const B = 1.6541051;
-    const C = -1.1514853;
-    const D = -1.5163253;
+// Liquid-vapor branch (CH4(l) ↔ CH4(g)): NIST Antoine (Prydz & Goodwin)
+// log10(P[bar]) = 3.9895 - 443.028/(T - 0.49), valid ~90.99 K to 189.99 K
+function psatMethaneLiquid(T) {
+  const log10Pbar = 3.9895 - 443.028 / (T - 0.49); // NIST uses T + C with C = -0.49
+  return Math.pow(10, log10Pbar) * 1e5; // bar -> Pa
+}
 
-    if (temperature > Tc) {
-        return 1e12; // Return a very large number for the slope
-    }
-    const tau = 1 - (temperature / Tc);
-    const T_inv = 1 - tau;
+// Unified saturation vapor pressure (Pa)
+function calculateSaturationPressureMethane(T) {
+  if (!isFinite(T) || T <= 0) return 0;
 
-    const lnPr_numerator = A * tau + B * Math.pow(tau, 1.5) + C * Math.pow(tau, 3) + D * Math.pow(tau, 6);
-    const lnPr = lnPr_numerator / T_inv;
-    const Pr = Math.exp(lnPr);
-    const P = Pr * Pc;
+  // For T >= Tc there is no two-phase envelope; clamp to Pc for numerical stability
+  if (T >= METHANE_T_CRIT) return METHANE_P_CRIT;
 
-    const dNumerator_dtau = A + 1.5 * B * Math.pow(tau, 0.5) + 3 * C * Math.pow(tau, 2) + 6 * D * Math.pow(tau, 5);
-    const dlnPr_dtau = (dNumerator_dtau * T_inv + lnPr_numerator) / Math.pow(T_inv, 2);
-    
-    const dP_dT = - (P / Tc) * dlnPr_dtau;
+  // Below triple point: only solid ↔ vapor is thermodynamically allowed
+  if (T < METHANE_T_TRIPLE) {
+    // Limit the solid correlation to its validated low end (~48 K); extrapolation below is tiny anyway
+    const Tmin = 48.0;
+    return psatMethaneSolid(Math.max(T, Tmin));
+  }
 
-    return dP_dT * 1e6; // Convert MPa/K to Pa/K
+  // Between triple and critical: use liquid-vapor branch
+  return psatMethaneLiquid(T);
+}
+
+// Numerical derivative d(Psat)/dT (Pa/K) using central difference and the piecewise Psat above
+function slopeSVPMethane(T) {
+  const h = 0.01; // 0.01 K step gives a stable slope while keeping precision
+  const T1 = Math.max(1, T - h);
+  const T2 = T + h;
+
+  // Avoid crossing the critical clamp in the stencil
+  const p1 = calculateSaturationPressureMethane(T1);
+  const p2 = calculateSaturationPressureMethane(T2);
+  const dPdT = (p2 - p1) / (T2 - T1);
+
+  // Guard against negatives from numerical noise
+  return Number.isFinite(dPdT) ? Math.max(dPdT, 0) : 0;
 }
 
 class MethaneCycle extends ResourceCycleClass {
@@ -205,10 +199,12 @@ class MethaneCycle extends ResourceCycleClass {
       latentHeatSublimation: L_S_METHANE,
       saturationVaporPressureFn: calculateSaturationPressureMethane,
       slopeSaturationVaporPressureFn: slopeSVPMethane,
-      freezePoint: 90.7,
-      sublimationPoint: 90.7,
+      freezePoint: METHANE_T_TRIPLE,     // liquid cannot exist below T_triple
+      sublimationPoint: METHANE_T_TRIPLE,
       evaporationAlbedo: EVAP_ALBEDO_METHANE,
       sublimationAlbedo: SUBLIMATION_ALBEDO_HC_ICE,
+      tripleTemperature: METHANE_T_TRIPLE,
+      triplePressure: METHANE_P_TRIPLE,
       coverageKeys,
       precipitationKeys,
       surfaceFlowFn,
@@ -264,14 +260,22 @@ function psychrometricConstantMethane(atmPressure) {
   return psychrometricConstant(atmPressure, L_V_METHANE); // Pa/K
 }
 
-// Approximate methane boiling point (K) at a given pressure (Pa).
-// Derived from two reference points and valid roughly from 0.1 to 10 bar.
+// Boiling point T(K) such that Psat(T) = atmPressure (Pa)
+// Returns 0 if pressure is at or below P_triple (no liquid possible).
 function boilingPointMethane(atmPressure) {
-  if (atmPressure <= 0) return 0;
-  // ln(P) = A - B/T form of Clausius-Clapeyron
-  const A = 20.8676;
-  const B = 1043.0733;
-  return B / (A - Math.log(atmPressure));
+  if (!isFinite(atmPressure) || atmPressure <= METHANE_P_TRIPLE) return 0;
+  if (atmPressure >= METHANE_P_CRIT) return METHANE_T_CRIT;
+
+  // Bisection between T_triple and T_c
+  let lo = METHANE_T_TRIPLE + 1e-6;
+  let hi = METHANE_T_CRIT   - 1e-6;
+  for (let i = 0; i < 60; i++) {
+    const mid = 0.5 * (lo + hi);
+    const p = calculateSaturationPressureMethane(mid);
+    if (!isFinite(p)) break;
+    if (p > atmPressure) hi = mid; else lo = mid;
+  }
+  return 0.5 * (lo + hi);
 }
 
 // Function to calculate evaporation rate for methane using the modified Penman equation
