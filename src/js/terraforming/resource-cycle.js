@@ -126,7 +126,7 @@ class ResourceCycle {
     const liquidForbidden =
     !!this.disallowLiquidBelowTriple &&
     (typeof this.triplePressure === 'number') &&
-    atmPressure < this.triplePressure;
+    (atmPressure <= this.triplePressure);
 
     const atmosphereKey = this.atmosphereKey;
     const surfaceBucket = this.surfaceBucket;

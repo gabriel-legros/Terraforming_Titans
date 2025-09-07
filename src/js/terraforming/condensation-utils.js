@@ -17,18 +17,18 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
   const calc = (temp) => {
     let liquid = 0, ice = 0;
     if (zoneArea > 0 && typeof temp === 'number') {
-      const saturationPressure = saturationFn(temp);
+      // When there is no defined liquid region (boilingPoint not finite, e.g., below triple pressure),
+      // use the over-ice saturation branch regardless of temperature by evaluating at or below freezePoint.
+      // This ensures condensation still occurs as ice even when T > freezePoint but liquid is not permitted.
+      const useIceBranch = !Number.isFinite(boilingPoint);
+      const effectiveTemp = useIceBranch ? Math.min(temp, freezePoint) : temp;
+      const saturationPressure = saturationFn(effectiveTemp);
       if (vaporPressure > saturationPressure) {
         const excessPressure = vaporPressure - saturationPressure;
         const excessMassKg = (excessPressure * zoneArea) / gravity;
         const baseRate = (excessMassKg / 1000) / 86400; // tons per second
         if (!isNaN(baseRate) && baseRate > 0) {
           let rate = baseRate;
-          if (Number.isFinite(boilingPoint)) {
-            const boilMix = Math.min(Math.max((temp - (boilingPoint - boilTransitionRange)) / (2 * boilTransitionRange), 0), 1);
-            const boilingScale = 1 - boilMix;
-            rate *= boilingScale;
-          }
           const mix = Math.min(Math.max((temp - (freezePoint - transitionRange)) / (2 * transitionRange), 0), 1);
           liquid = rate * mix;
           ice = rate - liquid;
