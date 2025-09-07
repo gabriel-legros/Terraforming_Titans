@@ -73,15 +73,29 @@ describe('methane atmospheric rate tracking', () => {
     const terra = new Terraforming(res, params.celestialParameters);
     terra.calculateInitialValues(params);
 
-    // ensure some methane in atmosphere so condensation path runs
-    res.atmospheric.atmosphericMethane.value = 50;
+    const runSpy = jest
+      .spyOn(hydrocarbon.methaneCycle, 'runCycle')
+      .mockReturnValue({
+        evaporation: 0,
+        sublimation: 0,
+        melt: 0,
+        freeze: 0,
+        methaneRain: 5,
+        methaneSnow: 0,
+        totalAtmosphericChange: 0,
+      });
 
     terra.updateResources(1000);
+    runSpy.mockRestore();
 
     const calls = res.atmospheric.atmosphericMethane.modifyRate.mock.calls;
     const labels = calls.map(c => c[1]);
     expect(labels).toContain('Evaporation/Sublimation');
     expect(labels).toContain('Precipitation');
+
+    const totalCondensation =
+      terra.totalMethaneCondensationRate + terra.totalMethaneIceCondensationRate;
+    expect(totalCondensation).toBeGreaterThan(0);
   });
 });
 

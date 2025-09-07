@@ -494,21 +494,6 @@ class Terraforming extends EffectableEntity{
         const availableGlobalMethaneGas = this.resources.atmospheric['atmosphericMethane']?.value || 0; // tons
         const availableGlobalOxygenGas = this.resources.atmospheric['oxygen']?.value || 0; // tons
 
-        const precipitationMultiplier = this.equilibriumPrecipitationMultiplier;
-        const condensationParameter = this.equilibriumCondensationParameter;
-        const methaneCondensationParameter = this.equilibriumMethaneCondensationParameter;
-
-        const cycleTotals = {
-            water: { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 },
-            methane: { evaporation: 0, sublimation: 0, melt: 0, freeze: 0 },
-            co2: { sublimation: 0 },
-        };
-
-        // Store atmospheric changes and UI process totals by cycle
-        const atmosphericChanges = {};
-        const processTotals = {};
-        let totalOxygenChange = 0;
-
         if (!this.cycles) {
             this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
         }
@@ -533,31 +518,13 @@ class Terraforming extends EffectableEntity{
                 extraParams: cycle.getExtraParams ? cycle.getExtraParams(this) : {},
             };
             const totals = cycle.runCycle(this, zones, params);
-            const rateTotals = {};
-            for (const key of cycle.totalKeys || []) {
-                const val = totals[key] || 0;
-                cycleTotals[cycle.key][key] = val;
-                rateTotals[key] = val;
-            }
-            const procTotals = {};
-            for (const [alias, source] of Object.entries(cycle.processTotalKeys || {})) {
-                const val = totals[source] || 0;
-                procTotals[alias] = val;
-                rateTotals[alias] = val;
-            }
-            processTotals[cycle.key] = procTotals;
-            atmosphericChanges[cycle.key] = totals.totalAtmosphericChange || 0;
-            if (cycle.key === 'water') {
-                const focusMeltAmount = (typeof globalThis.applyFocusedMelt === 'function')
-                    ? globalThis.applyFocusedMelt(this, this.resources, durationSeconds)
-                    : 0;
-                cycleTotals.water.melt += focusMeltAmount;
-                this.focusMeltAmount = focusMeltAmount;
-                this.focusMeltRate = focusMeltAmount / durationSeconds * 86400;
-                rateTotals.melt += focusMeltAmount;
+            const delta = totals.totalAtmosphericChange || 0;
+            const atmRes = this.resources.atmospheric[cycle.atmKey];
+            if (atmRes) {
+                atmRes.value = Math.max(0, atmRes.value + delta);
             }
             if (typeof cycle.updateResourceRates === 'function') {
-                cycle.updateResourceRates(this, rateTotals, durationSeconds);
+                cycle.updateResourceRates(this, totals, durationSeconds);
             }
         }
 
@@ -579,10 +546,19 @@ class Terraforming extends EffectableEntity{
             combustionOxygenAmount = combustionMethaneAmount * 4;
             combustionWaterAmount = combustionMethaneAmount * 2.25;
             combustionCO2Amount = combustionMethaneAmount * 2.75;
-            atmosphericChanges.methane = (atmosphericChanges.methane || 0) - combustionMethaneAmount;
-            atmosphericChanges.water = (atmosphericChanges.water || 0) + combustionWaterAmount;
-            atmosphericChanges.co2 = (atmosphericChanges.co2 || 0) + combustionCO2Amount;
-            totalOxygenChange -= combustionOxygenAmount;
+            const atm = this.resources.atmospheric;
+            if (atm.atmosphericMethane) {
+                atm.atmosphericMethane.value = Math.max(0, atm.atmosphericMethane.value - combustionMethaneAmount);
+            }
+            if (atm.atmosphericWater) {
+                atm.atmosphericWater.value = Math.max(0, atm.atmosphericWater.value + combustionWaterAmount);
+            }
+            if (atm.carbonDioxide) {
+                atm.carbonDioxide.value = Math.max(0, atm.carbonDioxide.value + combustionCO2Amount);
+            }
+            if (atm.oxygen) {
+                atm.oxygen.value = Math.max(0, atm.oxygen.value - combustionOxygenAmount);
+            }
         }
 
         // --- 4.6. Calcite aerosol decay ---
@@ -595,41 +571,6 @@ class Terraforming extends EffectableEntity{
             }
         }
 
-        // --- 5. Apply net changes ---
-        for (const key of Object.keys(atmosphericChanges)) {
-            if (!Number.isFinite(atmosphericChanges[key])) atmosphericChanges[key] = 0;
-        }
-        if (!Number.isFinite(totalOxygenChange)) totalOxygenChange = 0;
-
-        for (const cycle of this.cycles) {
-            const delta = atmosphericChanges[cycle.key] || 0;
-            const resKey = cycle.atmKey;
-            if (this.resources.atmospheric[resKey]) {
-                this.resources.atmospheric[resKey].value += delta;
-                this.resources.atmospheric[resKey].value = Math.max(0, this.resources.atmospheric[resKey].value);
-            }
-        }
-        if (this.resources.atmospheric.oxygen) {
-            this.resources.atmospheric.oxygen.value += totalOxygenChange;
-            this.resources.atmospheric.oxygen.value = Math.max(0, this.resources.atmospheric.oxygen.value);
-        }
-
-        // --- 5. Update Global Rates for UI ---
-        this.totalEvaporationRate = cycleTotals.water.evaporation / durationSeconds * 86400;
-        this.totalWaterSublimationRate = cycleTotals.water.sublimation / durationSeconds * 86400;
-        this.totalCo2SublimationRate = cycleTotals.co2.sublimation / durationSeconds * 86400;
-        this.totalMethaneSublimationRate = cycleTotals.methane.sublimation / durationSeconds * 86400;
-        this.totalRainfallRate = (processTotals.water?.rain || 0) / durationSeconds * 86400;
-        this.totalSnowfallRate = (processTotals.water?.snow || 0) / durationSeconds * 86400;
-        this.totalMeltRate = cycleTotals.water.melt / durationSeconds * 86400;
-        this.totalFreezeRate = cycleTotals.water.freeze / durationSeconds * 86400;
-        this.focusMeltRate = (this.focusMeltAmount || 0) / durationSeconds * 86400;
-        this.totalCo2CondensationRate = (processTotals.co2?.condensation || 0) / durationSeconds * 86400;
-        this.totalMethaneEvaporationRate = cycleTotals.methane.evaporation / durationSeconds * 86400;
-        this.totalMethaneCondensationRate = (processTotals.methane?.rain || 0) / durationSeconds * 86400;
-        this.totalMethaneIceCondensationRate = (processTotals.methane?.snow || 0) / durationSeconds * 86400;
-        this.totalMethaneMeltRate = cycleTotals.methane.melt / durationSeconds * 86400;
-        this.totalMethaneFreezeRate = cycleTotals.methane.freeze / durationSeconds * 86400;
         this.totalMethaneCombustionRate = combustionMethaneAmount / durationSeconds * 86400;
         this.totalOxygenCombustionRate = combustionOxygenAmount / durationSeconds * 86400;
         this.totalCombustionWaterRate = combustionWaterAmount / durationSeconds * 86400;
@@ -637,42 +578,31 @@ class Terraforming extends EffectableEntity{
         this.totalCalciteDecayRate = calciteDecayAmount / realSeconds;
 
         const rateType = 'terraforming';
-
-        if (this.totalCombustionWaterRate && this.resources.atmospheric.atmosphericWater) {
-            this.resources.atmospheric.atmosphericWater.modifyRate(
-                this.totalCombustionWaterRate,
-                'Methane Combustion',
-                rateType
-            );
-        }
-        if (this.totalCombustionCo2Rate && this.resources.atmospheric.carbonDioxide) {
-            this.resources.atmospheric.carbonDioxide.modifyRate(
-                this.totalCombustionCo2Rate,
-                'Methane Combustion',
-                rateType
-            );
-        }
-        if (this.totalMethaneCombustionRate && this.resources.atmospheric.atmosphericMethane) {
-            this.resources.atmospheric.atmosphericMethane.modifyRate(
-                -this.totalMethaneCombustionRate,
-                'Methane Combustion',
-                rateType
-            );
-        }
-        if (this.totalOxygenCombustionRate && this.resources.atmospheric.oxygen) {
-            this.resources.atmospheric.oxygen.modifyRate(
-                -this.totalOxygenCombustionRate,
-                'Methane Combustion',
-                rateType
-            );
-        }
-        if (this.totalCalciteDecayRate && this.resources.atmospheric.calciteAerosol) {
-            this.resources.atmospheric.calciteAerosol.modifyRate(
-                -this.totalCalciteDecayRate,
-                'Calcite Decay',
-                rateType
-            );
-        }
+        this.resources.atmospheric.atmosphericWater?.modifyRate(
+            this.totalCombustionWaterRate,
+            'Methane Combustion',
+            rateType
+        );
+        this.resources.atmospheric.carbonDioxide?.modifyRate(
+            this.totalCombustionCo2Rate,
+            'Methane Combustion',
+            rateType
+        );
+        this.resources.atmospheric.atmosphericMethane?.modifyRate(
+            -this.totalMethaneCombustionRate,
+            'Methane Combustion',
+            rateType
+        );
+        this.resources.atmospheric.oxygen?.modifyRate(
+            -this.totalOxygenCombustionRate,
+            'Methane Combustion',
+            rateType
+        );
+        this.resources.atmospheric.calciteAerosol?.modifyRate(
+            -this.totalCalciteDecayRate,
+            'Calcite Decay',
+            rateType
+        );
 
         // reset stored melt from flow for next tick
         this.flowMeltAmount = 0;

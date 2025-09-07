@@ -374,43 +374,58 @@ class MethaneCycle extends ResourceCycleClass {
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    const resources = terraforming.resources;
     const rateType = 'terraforming';
-    const { evaporation = 0, sublimation = 0, melt = 0, freeze = 0, rain = 0, snow = 0 } = totals;
+    const {
+      evaporation = 0,
+      sublimation = 0,
+      melt = 0,
+      freeze = 0,
+      methaneRain = 0,
+      methaneSnow = 0,
+    } = totals;
 
     const evaporationRate = durationSeconds > 0 ? evaporation / durationSeconds * 86400 : 0;
     const sublimationRate = durationSeconds > 0 ? sublimation / durationSeconds * 86400 : 0;
     const meltRate = durationSeconds > 0 ? melt / durationSeconds * 86400 : 0;
     const freezeRate = durationSeconds > 0 ? freeze / durationSeconds * 86400 : 0;
-    const rainRate = durationSeconds > 0 ? rain / durationSeconds * 86400 : 0;
-    const snowRate = durationSeconds > 0 ? snow / durationSeconds * 86400 : 0;
+    const rainRate = durationSeconds > 0 ? methaneRain / durationSeconds * 86400 : 0;
+    const snowRate = durationSeconds > 0 ? methaneSnow / durationSeconds * 86400 : 0;
 
-    if (terraforming.resources.atmospheric.atmosphericMethane) {
-      const atmProduction = evaporationRate + sublimationRate;
-      const atmConsumption = rainRate + snowRate;
-      terraforming.resources.atmospheric.atmosphericMethane.modifyRate(atmProduction, 'Evaporation/Sublimation', rateType);
-      terraforming.resources.atmospheric.atmosphericMethane.modifyRate(-atmConsumption, 'Precipitation', rateType);
+    terraforming.totalMethaneEvaporationRate = evaporationRate;
+    terraforming.totalMethaneSublimationRate = sublimationRate;
+    terraforming.totalMethaneMeltRate = meltRate;
+    terraforming.totalMethaneFreezeRate = freezeRate;
+    terraforming.totalMethaneCondensationRate = rainRate;
+    terraforming.totalMethaneIceCondensationRate = snowRate;
+
+    resources.atmospheric.atmosphericMethane?.modifyRate(
+      evaporationRate + sublimationRate,
+      'Evaporation/Sublimation',
+      rateType
+    );
+    resources.atmospheric.atmosphericMethane?.modifyRate(
+      -(rainRate + snowRate),
+      'Precipitation',
+      rateType
+    );
+
+    const flowRate = terraforming.flowMethaneMeltRate || 0;
+
+    resources.surface.liquidMethane?.modifyRate(-evaporationRate, 'Methane Evaporation', rateType);
+    resources.surface.liquidMethane?.modifyRate(rainRate, 'Methane Rain', rateType);
+    resources.surface.liquidMethane?.modifyRate(meltRate - flowRate, 'Melt', rateType);
+    resources.surface.liquidMethane?.modifyRate(-freezeRate, 'Freeze', rateType);
+    if (flowRate > 0) {
+      resources.surface.liquidMethane?.modifyRate(flowRate, 'Flow Melt', rateType);
     }
 
-    if (terraforming.resources.surface.liquidMethane) {
-      const flowRate = terraforming.flowMethaneMeltRate || 0;
-      terraforming.resources.surface.liquidMethane.modifyRate(-evaporationRate, 'Methane Evaporation', rateType);
-      terraforming.resources.surface.liquidMethane.modifyRate(rainRate, 'Methane Rain', rateType);
-      terraforming.resources.surface.liquidMethane.modifyRate(meltRate - flowRate, 'Melt', rateType);
-      terraforming.resources.surface.liquidMethane.modifyRate(-freezeRate, 'Freeze', rateType);
-      if (flowRate > 0) {
-        terraforming.resources.surface.liquidMethane.modifyRate(flowRate, 'Flow Melt', rateType);
-      }
-    }
-
-    if (terraforming.resources.surface.hydrocarbonIce) {
-      const flowRate = terraforming.flowMethaneMeltRate || 0;
-      terraforming.resources.surface.hydrocarbonIce.modifyRate(-sublimationRate, 'Methane Sublimation', rateType);
-      terraforming.resources.surface.hydrocarbonIce.modifyRate(snowRate, 'Methane Snow', rateType);
-      terraforming.resources.surface.hydrocarbonIce.modifyRate(-(meltRate - flowRate), 'Melt', rateType);
-      terraforming.resources.surface.hydrocarbonIce.modifyRate(freezeRate, 'Freeze', rateType);
-      if (flowRate > 0) {
-        terraforming.resources.surface.hydrocarbonIce.modifyRate(-flowRate, 'Flow Melt', rateType);
-      }
+    resources.surface.hydrocarbonIce?.modifyRate(-sublimationRate, 'Methane Sublimation', rateType);
+    resources.surface.hydrocarbonIce?.modifyRate(snowRate, 'Methane Snow', rateType);
+    resources.surface.hydrocarbonIce?.modifyRate(-(meltRate - flowRate), 'Melt', rateType);
+    resources.surface.hydrocarbonIce?.modifyRate(freezeRate, 'Freeze', rateType);
+    if (flowRate > 0) {
+      resources.surface.hydrocarbonIce?.modifyRate(-flowRate, 'Flow Melt', rateType);
     }
   }
 }

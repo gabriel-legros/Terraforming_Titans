@@ -384,47 +384,72 @@ class WaterCycle extends ResourceCycleClass {
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    const resources = terraforming.resources;
     const rateType = 'terraforming';
-    const { evaporation = 0, sublimation = 0, melt = 0, freeze = 0, rain = 0, snow = 0 } = totals;
+    const {
+      evaporation = 0,
+      sublimation = 0,
+      melt = 0,
+      freeze = 0,
+      rain = 0,
+      snow = 0,
+    } = totals;
 
+    const focusMeltAmount = typeof globalThis.applyFocusedMelt === 'function'
+      ? globalThis.applyFocusedMelt(terraforming, resources, durationSeconds)
+      : 0;
+    terraforming.focusMeltAmount = focusMeltAmount;
+    terraforming.focusMeltRate = focusMeltAmount / durationSeconds * 86400;
+
+    const meltTotal = melt + focusMeltAmount;
     const evaporationRate = durationSeconds > 0 ? evaporation / durationSeconds * 86400 : 0;
     const sublimationRate = durationSeconds > 0 ? sublimation / durationSeconds * 86400 : 0;
-    const meltRate = durationSeconds > 0 ? melt / durationSeconds * 86400 : 0;
+    const meltRate = durationSeconds > 0 ? meltTotal / durationSeconds * 86400 : 0;
     const freezeRate = durationSeconds > 0 ? freeze / durationSeconds * 86400 : 0;
     const rainRate = durationSeconds > 0 ? rain / durationSeconds * 86400 : 0;
     const snowRate = durationSeconds > 0 ? snow / durationSeconds * 86400 : 0;
 
-    if (terraforming.resources.atmospheric.atmosphericWater) {
-      const atmProduction = evaporationRate + sublimationRate;
-      const atmConsumption = rainRate + snowRate;
-      terraforming.resources.atmospheric.atmosphericWater.modifyRate(atmProduction, 'Evaporation/Sublimation', rateType);
-      terraforming.resources.atmospheric.atmosphericWater.modifyRate(-atmConsumption, 'Precipitation', rateType);
+    terraforming.totalEvaporationRate = evaporationRate;
+    terraforming.totalWaterSublimationRate = sublimationRate;
+    terraforming.totalRainfallRate = rainRate;
+    terraforming.totalSnowfallRate = snowRate;
+    terraforming.totalMeltRate = meltRate;
+    terraforming.totalFreezeRate = freezeRate;
+
+    resources.atmospheric.atmosphericWater?.modifyRate(
+      evaporationRate + sublimationRate,
+      'Evaporation/Sublimation',
+      rateType
+    );
+    resources.atmospheric.atmosphericWater?.modifyRate(
+      -(rainRate + snowRate),
+      'Precipitation',
+      rateType
+    );
+
+    const focusRate = terraforming.focusMeltRate || 0;
+    const flowRate = terraforming.flowMeltRate || 0;
+
+    resources.surface.liquidWater?.modifyRate(-evaporationRate, 'Evaporation', rateType);
+    resources.surface.liquidWater?.modifyRate(rainRate, 'Rain', rateType);
+    resources.surface.liquidWater?.modifyRate(meltRate - focusRate - flowRate, 'Melt', rateType);
+    resources.surface.liquidWater?.modifyRate(-freezeRate, 'Freeze', rateType);
+    if (focusRate > 0) {
+      resources.surface.liquidWater?.modifyRate(focusRate, 'Focused Melt', rateType);
+    }
+    if (flowRate > 0) {
+      resources.surface.liquidWater?.modifyRate(flowRate, 'Flow Melt', rateType);
     }
 
-    if (terraforming.resources.surface.liquidWater) {
-      terraforming.resources.surface.liquidWater.modifyRate(-evaporationRate, 'Evaporation', rateType);
-      terraforming.resources.surface.liquidWater.modifyRate(rainRate, 'Rain', rateType);
-      terraforming.resources.surface.liquidWater.modifyRate(meltRate, 'Melt', rateType);
-      terraforming.resources.surface.liquidWater.modifyRate(-freezeRate, 'Freeze', rateType);
-      if (terraforming.focusMeltRate > 0) {
-        terraforming.resources.surface.liquidWater.modifyRate(terraforming.focusMeltRate, 'Focused Melt', rateType);
-      }
-      if (terraforming.flowMeltRate > 0) {
-        terraforming.resources.surface.liquidWater.modifyRate(terraforming.flowMeltRate, 'Flow Melt', rateType);
-      }
+    resources.surface.ice?.modifyRate(-sublimationRate, 'Sublimation', rateType);
+    resources.surface.ice?.modifyRate(snowRate, 'Snow', rateType);
+    resources.surface.ice?.modifyRate(-(meltRate - focusRate - flowRate), 'Melt', rateType);
+    resources.surface.ice?.modifyRate(freezeRate, 'Freeze', rateType);
+    if (focusRate > 0) {
+      resources.surface.ice?.modifyRate(-focusRate, 'Focused Melt', rateType);
     }
-
-    if (terraforming.resources.surface.ice) {
-      terraforming.resources.surface.ice.modifyRate(-sublimationRate, 'Sublimation', rateType);
-      terraforming.resources.surface.ice.modifyRate(snowRate, 'Snow', rateType);
-      terraforming.resources.surface.ice.modifyRate(-meltRate, 'Melt', rateType);
-      terraforming.resources.surface.ice.modifyRate(freezeRate, 'Freeze', rateType);
-      if (terraforming.focusMeltRate > 0) {
-        terraforming.resources.surface.ice.modifyRate(-terraforming.focusMeltRate, 'Focused Melt', rateType);
-      }
-      if (terraforming.flowMeltRate > 0) {
-        terraforming.resources.surface.ice.modifyRate(-terraforming.flowMeltRate, 'Flow Melt', rateType);
-      }
+    if (flowRate > 0) {
+      resources.surface.ice?.modifyRate(-flowRate, 'Flow Melt', rateType);
     }
   }
 }
