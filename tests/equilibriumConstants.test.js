@@ -29,7 +29,7 @@ global.condensationRateFactor = require('../src/js/condensation-utils.js').conde
 const fs = require('fs');
 global.ResourceCycle = require('../src/js/terraforming/resource-cycle.js');
 eval(fs.readFileSync(require.resolve('../src/js/terraforming/water-cycle.js'), 'utf8'));
-global.saturationVaporPressureBuck = saturationVaporPressureBuck;
+global.saturationVaporPressureMK = saturationVaporPressureMK;
 eval(fs.readFileSync(require.resolve('../src/js/terraforming/dry-ice-cycle.js'), 'utf8'));
 global.evaporationRateWater = evaporationRateWater;
 global.sublimationRateWater = sublimationRateWater;

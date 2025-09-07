@@ -259,7 +259,7 @@ const waterCycle = new WaterCycle();
 // Function to calculate the slope of the saturation vapor pressure curve (Delta_s)
 function slopeSaturationVaporPressureWater(T) {
     // T: Temperature in Kelvin (K)
-    return derivativeSaturationVaporPressureBuck(T); // Pa/K
+    return derivativeSaturationVaporPressureMK(T); // Pa/K
 }
   
 // Function to calculate psychrometric constant (gamma_s) for water evaporation
@@ -371,8 +371,8 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         WaterCycle,
         waterCycle,
-        saturationVaporPressureBuck,
-        derivativeSaturationVaporPressureBuck,
+        saturationVaporPressureMK,
+        derivativeSaturationVaporPressureMK,
         slopeSaturationVaporPressureWater,
         psychrometricConstantWater,
         psychrometricConstantWaterSublimation,
@@ -386,8 +386,8 @@ if (typeof module !== 'undefined' && module.exports) {
     // Expose functions globally for browser usage
     globalThis.WaterCycle = WaterCycle;
     globalThis.waterCycle = waterCycle;
-    globalThis.saturationVaporPressureBuck = saturationVaporPressureBuck;
-    globalThis.derivativeSaturationVaporPressureBuck = derivativeSaturationVaporPressureBuck;
+    globalThis.saturationVaporPressureMK = saturationVaporPressureMK;
+    globalThis.derivativeSaturationVaporPressureMK = derivativeSaturationVaporPressureMK;
     globalThis.slopeSaturationVaporPressureWater = slopeSaturationVaporPressureWater;
     globalThis.psychrometricConstantWater = psychrometricConstantWater;
     globalThis.psychrometricConstantWaterSublimation = psychrometricConstantWaterSublimation;

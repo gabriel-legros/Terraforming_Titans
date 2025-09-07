@@ -31,7 +31,7 @@ describe('phase-change utility helpers', () => {
       albedo: 0.3,
       r_a: 100,
       Delta_s: water.slopeSaturationVaporPressureWater(300),
-      e_s: water.saturationVaporPressureBuck(300)
+      e_s: water.saturationVaporPressureMK(300)
     };
     const gamma_s = utils.psychrometricConstant(params.atmPressure, params.latentHeat);
     const rho_a_val = physics.airDensity(params.atmPressure, params.T);
@@ -89,7 +89,7 @@ describe('cycle modules via utils', () => {
       albedo: 0.3,
       r_a: 100,
       Delta_s: water.slopeSaturationVaporPressureWater(T),
-      e_s: water.saturationVaporPressureBuck(T)
+      e_s: water.saturationVaporPressureMK(T)
     });
     const res = water.evaporationRateWater(T, solarFlux, atmPressure, e_a, 100);
     expect(res).toBeCloseTo(expected);

@@ -17,11 +17,11 @@ describe('condensationRateFactor generic helper', () => {
       gravity: 9.81,
       dayTemp: 276,
       nightTemp: 275,
-      saturationFn: water.saturationVaporPressureBuck,
+      saturationFn: water.saturationVaporPressureMK,
       freezePoint: 273.15
     });
-    expect(res.liquidRate).toBeCloseTo(0.0871865839926258);
-    expect(res.iceRate).toBeCloseTo(0.002247384412881595);
+    expect(res.liquidRate).toBeCloseTo(0.0871088754676007);
+    expect(res.iceRate).toBeCloseTo(0.002246246821741467);
   });
 
   test('computes expected methane condensation factors', () => {
@@ -55,7 +55,7 @@ describe('cycle wrappers match helper output', () => {
       gravity: params.gravity,
       dayTemp: params.dayTemperature,
       nightTemp: params.nightTemperature,
-      saturationFn: water.saturationVaporPressureBuck,
+      saturationFn: water.saturationVaporPressureMK,
       freezePoint: 273.15,
       boilingPoint: water.boilingPointWater(params.atmPressure),
       boilTransitionRange: 5
