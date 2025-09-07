@@ -4,7 +4,7 @@ const { CO2Cycle } = require('../src/js/terraforming/dry-ice-cycle.js');
 
 describe('cycle default parameters', () => {
   test('water cycle uses constructor defaults', () => {
-    const wc = new WaterCycle({ gravity: 9, precipitationMultiplier: 2 });
+    const wc = new WaterCycle({ gravity: 9, condensationParameter: 2 });
     wc.redistributePrecipitation = () => {};
     const tf = {
       temperature: { zones: { tropical: {} } },
@@ -23,7 +23,7 @@ describe('cycle default parameters', () => {
     expect(spy).toHaveBeenCalledWith(expect.objectContaining({
       availableLiquid: 5,
       gravity: 9,
-      precipitationMultiplier: 2,
+      condensationParameter: 2,
     }));
     expect(result.totalAtmosphericChange).toBe(0);
   });

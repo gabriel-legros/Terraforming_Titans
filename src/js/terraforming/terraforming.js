@@ -151,7 +151,7 @@ class Terraforming extends EffectableEntity{
     this.zonalCoverageCache = {};
 
     this.initialValuesCalculated = false;
-    this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
+    this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
     this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER || EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
     this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default, will be calculated
 
@@ -802,7 +802,7 @@ class Terraforming extends EffectableEntity{
     }
 
     resetDefaultConstants(){
-        this.equilibriumPrecipitationMultiplier = EQUILIBRIUM_WATER_PARAMETER;
+        this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER;
         this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER;
         this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default value
     }

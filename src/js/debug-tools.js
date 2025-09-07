@@ -380,15 +380,15 @@
     }
 
     if (potentialPrecipitationRateFactor > 1e-12) {
-      this.equilibriumPrecipitationMultiplier =
+      this.equilibriumWaterCondensationParameter =
         initialTotalWaterEvapSublRate / potentialPrecipitationRateFactor;
     } else if (initialTotalWaterEvapSublRate < 1e-12) {
-      this.equilibriumPrecipitationMultiplier = 0.0001;
+      this.equilibriumWaterCondensationParameter = 0.0001;
     } else {
       console.warn(
         'Initial state has upward water flux but no potential precipitation. Using default multiplier.'
       );
-      this.equilibriumPrecipitationMultiplier = 0.0001;
+      this.equilibriumWaterCondensationParameter = 0.0001;
     }
 
     const defaultCondensationParameter = 1.7699e-7;
@@ -420,7 +420,7 @@
     }
 
     console.log(
-      `Calculated Equilibrium Precipitation Multiplier (Rate-Based): ${this.equilibriumPrecipitationMultiplier}`
+      `Calculated Equilibrium Water Condensation Parameter (Rate-Based): ${this.equilibriumWaterCondensationParameter}`
     );
     console.log(
       `Calculated Equilibrium Condensation Parameter (Rate-Based): ${this.equilibriumCondensationParameter}`

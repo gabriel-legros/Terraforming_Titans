@@ -128,12 +128,16 @@ class WaterCycle extends ResourceCycleClass {
     atmKey = 'atmosphericWater',
     totalKeys = ['evaporation', 'sublimation', 'melt', 'freeze'],
     processTotalKeys = { rain: 'rain', snow: 'snow' },
+    transitionRange = 2,
+    maxDiff = 10,
+    boilingPointFn = boilingPointWater,
+    boilTransitionRange = 5,
     zonalKey = 'zonalWater',
     surfaceBucket = 'water',
     atmosphereKey = 'water',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
     gravity = 1,
-    precipitationMultiplier = 1,
+    condensationParameter = 1,
   } = {}) {
     super({
       latentHeatVaporization: L_V_WATER,
@@ -147,17 +151,21 @@ class WaterCycle extends ResourceCycleClass {
     this.atmKey = atmKey;
     this.totalKeys = totalKeys;
     this.processTotalKeys = processTotalKeys;
+    this.transitionRange = transitionRange;
+    this.maxDiff = maxDiff;
+    this.boilingPointFn = boilingPointFn;
+    this.boilTransitionRange = boilTransitionRange;
     this.zonalKey = zonalKey;
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
-    this.defaultExtraParams = { gravity, precipitationMultiplier };
+    this.defaultExtraParams = { gravity, condensationParameter };
   }
 
   getExtraParams(terraforming) {
     return {
       gravity: terraforming.celestialParameters.gravity,
-      precipitationMultiplier: terraforming.equilibriumPrecipitationMultiplier,
+      condensationParameter: terraforming.equilibriumWaterCondensationParameter,
     };
   }
 
@@ -192,7 +200,7 @@ class WaterCycle extends ResourceCycleClass {
     zonalSolarFlux = 0,
     durationSeconds = 1,
     gravity = 1,
-    precipitationMultiplier = 1,
+    condensationParameter = 1,
   }) {
     const changes = {
       atmosphere: { water: 0 },
@@ -206,11 +214,9 @@ class WaterCycle extends ResourceCycleClass {
     const liquidArea = zoneArea * liquidWaterCoverage;
     const iceArea = zoneArea * iceCoverage;
 
-    // --- Evaporation/Sublimation ---
+    // --- Evaporation ---
     let dayEvapRate = 0;
     let nightEvapRate = 0;
-    let daySubRate = 0;
-    let nightSubRate = 0;
     if (liquidArea > 0) {
       if (typeof dayTemperature === 'number') {
         dayEvapRate = this.evaporationRate({
@@ -233,34 +239,11 @@ class WaterCycle extends ResourceCycleClass {
         }) * liquidArea / 1000;
       }
     }
-    if (iceArea > 0) {
-      if (typeof dayTemperature === 'number') {
-        daySubRate = this.sublimationRate({
-          T: dayTemperature,
-          solarFlux: daySolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-      if (typeof nightTemperature === 'number') {
-        nightSubRate = this.sublimationRate({
-          T: nightTemperature,
-          solarFlux: nightSolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-    }
 
     const evaporationRate = (dayEvapRate + nightEvapRate) / 2;
-    const sublimationRate = (daySubRate + nightSubRate) / 2;
     const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
-    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
-    changes.atmosphere.water += evaporationAmount + sublimationAmount;
+    changes.atmosphere.water += evaporationAmount;
     changes.water.liquid -= evaporationAmount;
-    changes.water.ice -= sublimationAmount;
 
     // --- Condensation (potential precipitation) ---
     const { liquidRate, iceRate } = this.condensationRateFactor({
@@ -269,9 +252,13 @@ class WaterCycle extends ResourceCycleClass {
       gravity,
       dayTemp: dayTemperature,
       nightTemp: nightTemperature,
+      transitionRange: this.transitionRange,
+      maxDiff: this.maxDiff,
+      boilingPoint: this.boilingPointFn(atmPressure),
+      boilTransitionRange: this.boilTransitionRange,
     });
-    const potentialRain = liquidRate * precipitationMultiplier * durationSeconds;
-    const potentialSnow = iceRate * precipitationMultiplier * durationSeconds;
+    const potentialRain = liquidRate * condensationParameter * durationSeconds;
+    const potentialSnow = iceRate * condensationParameter * durationSeconds;
     changes.precipitation.potentialRain = potentialRain;
     changes.precipitation.potentialSnow = potentialSnow;
     changes.atmosphere.water -= potentialRain + potentialSnow;
@@ -300,8 +287,37 @@ class WaterCycle extends ResourceCycleClass {
     changes.water.ice += freezeAmount - meltFromIce;
     changes.water.buriedIce -= meltFromBuried;
 
+    // --- Sublimation ---
+    let daySubRate = 0;
+    let nightSubRate = 0;
+    if (iceArea > 0) {
+      if (typeof dayTemperature === 'number') {
+        daySubRate = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSubRate = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+    }
+
+    const sublimationRate = (daySubRate + nightSubRate) / 2;
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
+    changes.atmosphere.water += sublimationAmount;
+    changes.water.ice -= sublimationAmount;
+
     // --- Rapid Sublimation ---
-    const remainingIce = currentIce - meltFromIce;
+    const remainingIce = Math.max(0, availableIce + changes.water.ice);
     const rapidRate = this.rapidSublimationRate(zoneTemperature, remainingIce);
     const rapidAmount = Math.min(rapidRate * durationSeconds, remainingIce);
     if (rapidAmount > 0) {
