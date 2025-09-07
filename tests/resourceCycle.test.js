@@ -118,4 +118,106 @@ describe('ResourceCycle base class', () => {
     expect(result.totalAtmosphericChange).toBeCloseTo(-1);
     expect(result.totalsByProcess.rain).toBeCloseTo(3.2);
   });
+
+  test('processZone handles configured coverage and precipitation', () => {
+    const rc2 = new ResourceCycle({
+      latentHeatVaporization: 1,
+      latentHeatSublimation: 1,
+      saturationVaporPressureFn: () => 0,
+      slopeSaturationVaporPressureFn: () => 0,
+      freezePoint: 0,
+      sublimationPoint: 0,
+      coverageKeys: { liquid: 'liquidCov', ice: 'iceCov' },
+      precipitationKeys: { liquid: 'rain', solid: 'snow' },
+    });
+    rc2.atmosphereKey = 'foo';
+    rc2.surfaceBucket = 'foo';
+    rc2.evaporationRate = jest.fn(() => 1);
+    rc2.sublimationRate = jest.fn(() => 2);
+    rc2.condensationRateFactor = jest.fn(() => ({ liquidRate: 3, iceRate: 4 }));
+    rc2.meltingFreezingRates = jest.fn(() => ({ meltingRate: 5, freezingRate: 6 }));
+    const result = rc2.processZone({
+      zoneArea: 1,
+      liquidCov: 1,
+      iceCov: 1,
+      dayTemperature: 300,
+      nightTemperature: 280,
+      zoneTemperature: 290,
+      atmPressure: 100,
+      vaporPressure: 10,
+      availableLiquid: 10,
+      availableIce: 10,
+      availableBuriedIce: 5,
+      zonalSolarFlux: 100,
+      durationSeconds: 1,
+      gravity: 1,
+      condensationParameter: 1,
+    });
+    expect(result.atmosphere.foo).toBeCloseTo(-6.997);
+    expect(result.foo.liquid).toBeCloseTo(-1.001);
+    expect(result.foo.ice).toBeCloseTo(0.998);
+    expect(result.precipitation.rain).toBeCloseTo(3);
+    expect(result.precipitation.snow).toBeCloseTo(4);
+    expect(result.evaporationAmount).toBeCloseTo(0.001);
+    expect(result.sublimationAmount).toBeCloseTo(0.002);
+    expect(result.meltAmount).toBeCloseTo(5);
+    expect(result.freezeAmount).toBeCloseTo(6);
+  });
+
+  test('runCycle merges surfaceFlowFn results', () => {
+    const rc3 = new ResourceCycle({
+      surfaceFlowFn: () => ({ changes: { tropical: { liquid: 2 } }, totals: { melt: 2 } }),
+    });
+    rc3.zonalKey = 'zonalWater';
+    rc3.surfaceBucket = 'water';
+    rc3.atmosphereKey = 'foo';
+    rc3.calculateZonalChanges = () => ({
+      zonalChanges: { tropical: { water: { liquid: 1 } } },
+      totals: { evaporation: 1 },
+    });
+    rc3.finalizeAtmosphere = () => ({ totalAtmosphericChange: 0, totalsByProcess: {} });
+    rc3.applyZonalChanges = jest.fn();
+    const tf = {
+      temperature: { zones: { tropical: { value: 300 } } },
+      resources: {},
+    };
+    const totals = rc3.runCycle(tf, ['tropical'], { durationSeconds: 1 });
+    expect(totals.melt).toBe(2);
+    expect(totals.evaporation).toBe(1);
+    expect(rc3.applyZonalChanges).toHaveBeenCalledWith(
+      tf,
+      { tropical: { water: { liquid: 3 } } },
+      undefined,
+      undefined,
+    );
+  });
+
+  test('updateResourceRates uses rateMappings', () => {
+    const rc4 = new ResourceCycle({
+      rateMappings: {
+        evaporation: [
+          { path: 'atmospheric.air', label: 'Evap', sign: 1 },
+          { path: 'surface.water', label: 'Evap', sign: -1 },
+        ],
+        rain: [
+          { path: 'atmospheric.air', label: 'Rain', sign: -1 },
+          { path: 'surface.water', label: 'Rain', sign: 1 },
+        ],
+      },
+    });
+    const atmospheric = { air: { modifyRate: jest.fn() } };
+    const surface = { water: { modifyRate: jest.fn() } };
+    const tf = { resources: { atmospheric, surface } };
+    rc4.updateResourceRates(tf, { evaporation: 2, rain: 1 }, 2);
+    expect(atmospheric.air.modifyRate.mock.calls).toEqual(expect.arrayContaining([
+      [86400, 'Evap', 'terraforming'],
+      [-43200, 'Rain', 'terraforming'],
+    ]));
+    expect(surface.water.modifyRate.mock.calls).toEqual(expect.arrayContaining([
+      [-86400, 'Evap', 'terraforming'],
+      [43200, 'Rain', 'terraforming'],
+    ]));
+    expect(tf.totalEvaporationRate).toBeCloseTo(86400);
+    expect(tf.totalRainRate).toBeCloseTo(43200);
+  });
 });

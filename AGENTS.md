@@ -474,6 +474,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Water and methane cycles now run surface flow during `runCycle` via a shared `surfaceFlow` helper, removing standalone flow simulation from `updateResources`.
 - ResourceCycle provides `applyZonalChanges` to update zonal surface stores and return totals, letting `runCycle` and its subclasses apply results without merge loops in `updateResources`.
 - Resource cycles now update atmospheric/surface rates and terraforming total fields via `updateResourceRates`; `Terraforming.updateResources` simply delegates to each cycle.
+- ResourceCycle now provides shared zone-processing and rate-update logic through configurable coverage and precipitation keys, optional surface flow hooks, and total-to-resource mappings.
 - Cycle instances now carry atmospheric keys and process metadata and Terraforming loops over a `cycles` array to run them.
 - Atmospheric chemistry module now handles methane–oxygen combustion and calcite aerosol decay.
 - Added `buildAtmosphereContext` helper centralizing atmospheric pressure calculations for reuse in `Terraforming.updateResources`.

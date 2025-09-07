@@ -25,6 +25,10 @@ class ResourceCycle {
     rapidSublimationMultiplier = 0,
     evaporationAlbedo = 0.6,
     sublimationAlbedo = 0.6,
+    coverageKeys = {},
+    precipitationKeys = {},
+    surfaceFlowFn = null,
+    rateMappings = {},
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
@@ -35,6 +39,10 @@ class ResourceCycle {
     this.rapidSublimationMultiplier = rapidSublimationMultiplier;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
+    this.coverageKeys = coverageKeys;
+    this.precipitationKeys = precipitationKeys;
+    this.surfaceFlowFn = surfaceFlowFn;
+    this.rateMappings = rateMappings;
   }
 
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
@@ -87,6 +95,168 @@ class ResourceCycle {
       Delta_s,
       e_s,
     });
+  }
+
+  processZone(params) {
+    const {
+      zoneArea = 0,
+      dayTemperature,
+      nightTemperature,
+      zoneTemperature,
+      atmPressure,
+      vaporPressure,
+      zonalSolarFlux = 0,
+      durationSeconds = 1,
+      gravity = 1,
+      condensationParameter = 1,
+      availableLiquid = 0,
+      availableIce = 0,
+      availableBuriedIce = 0,
+    } = params;
+    const atmosphereKey = this.atmosphereKey;
+    const surfaceBucket = this.surfaceBucket;
+    const liquidCoverage = this.coverageKeys.liquid
+      ? (params[this.coverageKeys.liquid] || 0)
+      : 0;
+    const iceCoverage = this.coverageKeys.ice
+      ? (params[this.coverageKeys.ice] || 0)
+      : 0;
+
+    const changes = {
+      atmosphere: { [atmosphereKey]: 0 },
+      [surfaceBucket]: {},
+      precipitation: {},
+    };
+
+    const daySolarFlux = 2 * zonalSolarFlux;
+    const nightSolarFlux = 0;
+
+    const liquidArea = zoneArea * liquidCoverage;
+    const iceArea = zoneArea * iceCoverage;
+
+    let evaporationAmount = 0;
+    if (liquidArea > 0 && availableLiquid > 0 && typeof this.evaporationRate === 'function') {
+      let dayEvap = 0;
+      let nightEvap = 0;
+      if (typeof dayTemperature === 'number') {
+        dayEvap = this.evaporationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * liquidArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightEvap = this.evaporationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * liquidArea / 1000;
+      }
+      const evapRate = (dayEvap + nightEvap) / 2;
+      evaporationAmount = Math.min(evapRate * durationSeconds, availableLiquid);
+      changes.atmosphere[atmosphereKey] += evaporationAmount;
+      changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) - evaporationAmount;
+    }
+
+    let potentialLiquid = 0;
+    let potentialSolid = 0;
+    if (typeof this.condensationRateFactor === 'function') {
+      const { liquidRate = 0, iceRate = 0 } = this.condensationRateFactor({
+        zoneArea,
+        vaporPressure,
+        gravity,
+        dayTemp: dayTemperature,
+        nightTemp: nightTemperature,
+        transitionRange: this.transitionRange,
+        maxDiff: this.maxDiff,
+        boilingPoint: typeof this.boilingPointFn === 'function'
+          ? this.boilingPointFn(atmPressure)
+          : undefined,
+        boilTransitionRange: this.boilTransitionRange,
+      });
+      potentialLiquid = liquidRate * condensationParameter * durationSeconds;
+      potentialSolid = iceRate * condensationParameter * durationSeconds;
+      if (this.precipitationKeys.liquid) {
+        changes.precipitation[this.precipitationKeys.liquid] = potentialLiquid;
+      }
+      if (this.precipitationKeys.solid) {
+        changes.precipitation[this.precipitationKeys.solid] = potentialSolid;
+      }
+      changes.atmosphere[atmosphereKey] -= potentialLiquid + potentialSolid;
+    }
+
+    let meltAmount = 0;
+    let freezeAmount = 0;
+    if (typeof this.meltingFreezingRates === 'function') {
+      const rates = this.meltingFreezingRates({
+        temperature: zoneTemperature,
+        availableIce,
+        availableLiquid,
+        availableBuriedIce,
+        zoneArea,
+        iceCoverage,
+        liquidCoverage,
+      });
+      const currentLiquid = availableLiquid + (changes[surfaceBucket].liquid || 0);
+      const currentIce = availableIce + (changes[surfaceBucket].ice || 0);
+      const currentBuried = availableBuriedIce + (changes[surfaceBucket].buriedIce || 0);
+      const availableForMelt = currentIce + currentBuried;
+      meltAmount = Math.min(rates.meltingRate * durationSeconds, availableForMelt);
+      freezeAmount = Math.min(rates.freezingRate * durationSeconds, currentLiquid);
+
+      let meltFromIce = Math.min(meltAmount, currentIce);
+      let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
+
+      changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltAmount - freezeAmount;
+      if (availableIce !== undefined) {
+        changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
+      }
+      if (availableBuriedIce !== undefined) {
+        changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+      }
+    }
+
+    let sublimationAmount = 0;
+    if (iceArea > 0 && (availableIce + (changes[surfaceBucket].ice || 0)) > 0
+      && typeof this.sublimationRate === 'function') {
+      let daySub = 0;
+      let nightSub = 0;
+      if (typeof dayTemperature === 'number') {
+        daySub = this.sublimationRate({
+          T: dayTemperature,
+          solarFlux: daySolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      if (typeof nightTemperature === 'number') {
+        nightSub = this.sublimationRate({
+          T: nightTemperature,
+          solarFlux: nightSolarFlux,
+          atmPressure,
+          vaporPressure,
+          r_a: 100,
+        }) * iceArea / 1000;
+      }
+      const subRate = (daySub + nightSub) / 2;
+      const availableForSub = availableIce + (changes[surfaceBucket].ice || 0);
+      sublimationAmount = Math.min(subRate * durationSeconds, availableForSub);
+      changes.atmosphere[atmosphereKey] += sublimationAmount;
+      changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) - sublimationAmount;
+    }
+
+    return {
+      ...changes,
+      evaporationAmount,
+      sublimationAmount,
+      meltAmount,
+      freezeAmount,
+    };
   }
 
   // Optional hook for subclasses to redistribute precipitation across zones
@@ -263,15 +433,48 @@ class ResourceCycle {
   }
 
   runCycle(terraforming, zones, options = {}) {
+    const duration = options.durationSeconds || 1;
     const data = this.calculateZonalChanges(terraforming, zones, options);
+
+    if (typeof this.surfaceFlowFn === 'function') {
+      const tempMap = {};
+      for (const z of zones) {
+        tempMap[z] = terraforming.temperature.zones[z]?.value;
+      }
+      const flow = this.surfaceFlowFn(terraforming, duration, tempMap) || {};
+      const flowChanges = flow.changes || {};
+      const bucket = options.surfaceBucket || this.surfaceBucket;
+      for (const [zone, change] of Object.entries(flowChanges)) {
+        const dest = data.zonalChanges[zone] || (data.zonalChanges[zone] = {});
+        const bucketDest = dest[bucket] || (dest[bucket] = {});
+        for (const [state, amount] of Object.entries(change)) {
+          bucketDest[state] = (bucketDest[state] || 0) + amount;
+        }
+      }
+      const flowTotals = flow.totals || {};
+      for (const [k, v] of Object.entries(flowTotals)) {
+        data.totals[k] = (data.totals[k] || 0) + v;
+      }
+    }
+
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
     return data.totals;
   }
 
-  // eslint-disable-next-line no-unused-vars
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
-    // Base class does not update rates directly; subclasses may override
-    // to call modifyRate on specific atmospheric or surface resources.
+    const rateType = 'terraforming';
+    for (const [totalKey, mappings] of Object.entries(this.rateMappings || {})) {
+      const total = totals[totalKey] || 0;
+      const rate = durationSeconds > 0 ? total / durationSeconds * 86400 : 0;
+      const capKey = totalKey.charAt(0).toUpperCase() + totalKey.slice(1);
+      terraforming['total' + capKey + 'Rate'] = rate;
+      for (const map of mappings) {
+        const resource = map.path.split('.').reduce((obj, k) => (obj ? obj[k] : undefined), terraforming.resources);
+        if (resource && typeof resource.modifyRate === 'function') {
+          resource.modifyRate(rate * (map.sign ?? 1), map.label || capKey, rateType);
+        }
+      }
+    }
   }
 
   rapidSublimationRate(temperature, availableIce) {
