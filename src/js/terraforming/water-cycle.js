@@ -213,7 +213,7 @@ class WaterCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureBuck,
       freezePoint: 273.15,
       sublimationPoint: 273.15,
-      evaporationAlbedo: 0.3,
+      evaporationAlbedo: EVAP_ALBEDO_WATER,
       sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
       coverageKeys,
       precipitationKeys,
