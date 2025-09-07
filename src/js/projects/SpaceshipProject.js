@@ -753,7 +753,7 @@ class SpaceshipProject extends Project {
     if (this.applyMetalCostPenalty) {
       const cost = this.calculateSpaceshipCost();
       const metalCost = cost.colony?.metal || 0;
-      const penalty = metalCost * this.assignedSpaceships * fraction * productivity;
+      const penalty = metalCost * this.assignedSpaceships;
       this.applyMetalCostPenalty(gain, penalty);
     }
     this.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
