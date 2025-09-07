@@ -101,6 +101,20 @@ const terraformingGasTargets = {
   inertGas : {min : 50000, max : 100000}
 }
 
+function buildAtmosphereContext(atmospheric, gravity, radius) {
+    let totalPressurePa = 0;
+    const pressureByKey = {};
+    const availableByKey = {};
+    for (const key in atmospheric) {
+        const amount = atmospheric[key]?.value || 0;
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        totalPressurePa += pressure;
+        pressureByKey[key] = pressure;
+        availableByKey[key] = amount;
+    }
+    return { totalPressure: totalPressurePa, pressureByKey, availableByKey };
+}
+
 class Terraforming extends EffectableEntity{
   constructor(resources, celestialParameters) {
     super({ description: 'This module manages all terraforming compononents' });
@@ -476,40 +490,23 @@ class Terraforming extends EffectableEntity{
 
         const zones = ZONES;
         const gravity = this.celestialParameters.gravity;
-        // Get current global atmospheric state directly from resources or calculate pressures
-        let globalTotalPressurePa = 0;
-        let globalWaterPressurePa = 0;
-        let globalCo2PressurePa = 0;
-        let globalMethanePressurePa = 0;
-        let globalOxygenPressurePa = 0;
-        for (const gas in this.resources.atmospheric) {
-             const amount = this.resources.atmospheric[gas].value || 0;
-             const pressure = calculateAtmosphericPressure(amount, gravity, this.celestialParameters.radius);
-             globalTotalPressurePa += pressure;
-             if (gas === 'atmosphericWater') globalWaterPressurePa = pressure;
-             if (gas === 'carbonDioxide') globalCo2PressurePa = pressure;
-             if (gas === 'atmosphericMethane') globalMethanePressurePa = pressure;
-             if (gas === 'oxygen') globalOxygenPressurePa = pressure;
-        }
-        const availableGlobalWaterVapor = this.resources.atmospheric['atmosphericWater']?.value || 0; // tons
-        const availableGlobalCo2Gas = this.resources.atmospheric['carbonDioxide']?.value || 0; // tons
-        const availableGlobalMethaneGas = this.resources.atmospheric['atmosphericMethane']?.value || 0; // tons
-        const availableGlobalOxygenGas = this.resources.atmospheric['oxygen']?.value || 0; // tons
+        const {
+            totalPressure: globalTotalPressurePa,
+            pressureByKey,
+            availableByKey,
+        } = buildAtmosphereContext(
+            this.resources.atmospheric,
+            gravity,
+            this.celestialParameters.radius
+        );
+        const globalMethanePressurePa = pressureByKey.atmosphericMethane || 0;
+        const globalOxygenPressurePa = pressureByKey.oxygen || 0;
+        const availableGlobalMethaneGas = availableByKey.atmosphericMethane || 0;
+        const availableGlobalOxygenGas = availableByKey.oxygen || 0;
 
         if (!this.cycles) {
             this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
         }
-
-        const pressureByKey = {
-            atmosphericWater: globalWaterPressurePa,
-            atmosphericMethane: globalMethanePressurePa,
-            carbonDioxide: globalCo2PressurePa,
-        };
-        const availableByKey = {
-            atmosphericWater: availableGlobalWaterVapor,
-            atmosphericMethane: availableGlobalMethaneGas,
-            carbonDioxide: availableGlobalCo2Gas,
-        };
 
         for (const cycle of this.cycles) {
             const params = {
@@ -1382,9 +1379,11 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.getStarLuminosity = getStarLuminosity;
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
   module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
+  module.exports.buildAtmosphereContext = buildAtmosphereContext;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;
   globalThis.getStarLuminosity = getStarLuminosity;
   globalThis.Terraforming = Terraforming;
+  globalThis.buildAtmosphereContext = buildAtmosphereContext;
 }
 
