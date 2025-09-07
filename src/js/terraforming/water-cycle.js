@@ -482,6 +482,11 @@ function psychrometricConstantWater(atmPressure) {
     return psychrometricConstant(atmPressure, L_V_WATER); // Pa/K
 }
 
+// Function to calculate psychrometric constant for water sublimation
+function psychrometricConstantWaterSublimation(atmPressure) {
+    return psychrometricConstant(atmPressure, L_S_WATER); // Pa/K
+}
+
 // Estimate the boiling point of water (K) from pressure (Pa) using the
 // Antoine equation. The constants cover a wide range around standard
 // atmospheric conditions, avoiding iterative solves.
@@ -513,6 +518,7 @@ if (typeof module !== 'undefined' && module.exports) {
         derivativeSaturationVaporPressureBuck,
         slopeSaturationVaporPressureWater,
         psychrometricConstantWater,
+        psychrometricConstantWaterSublimation,
         sublimationRateWater,
         evaporationRateWater,
         boilingPointWater
@@ -525,6 +531,7 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.derivativeSaturationVaporPressureBuck = derivativeSaturationVaporPressureBuck;
     globalThis.slopeSaturationVaporPressureWater = slopeSaturationVaporPressureWater;
     globalThis.psychrometricConstantWater = psychrometricConstantWater;
+    globalThis.psychrometricConstantWaterSublimation = psychrometricConstantWaterSublimation;
     globalThis.sublimationRateWater = sublimationRateWater;
     globalThis.evaporationRateWater = evaporationRateWater;
     globalThis.boilingPointWater = boilingPointWater;
