@@ -99,6 +99,10 @@ function slopeSVPMethane(temperature) {
 
 class MethaneCycle extends ResourceCycleClass {
   constructor({
+    key = 'methane',
+    atmKey = 'atmosphericMethane',
+    totalKeys = ['evaporation', 'sublimation', 'melt', 'freeze'],
+    processTotalKeys = { rain: 'methaneRain', snow: 'methaneSnow' },
     transitionRange = 2,
     maxDiff = 10,
     boilingPointFn = boilingPointMethane,
@@ -121,6 +125,10 @@ class MethaneCycle extends ResourceCycleClass {
       evaporationAlbedo: 0.1,
       sublimationAlbedo: 0.6,
     });
+    this.key = key;
+    this.atmKey = atmKey;
+    this.totalKeys = totalKeys;
+    this.processTotalKeys = processTotalKeys;
     this.transitionRange = transitionRange;
     this.maxDiff = maxDiff;
     this.boilingPointFn = boilingPointFn;
@@ -130,6 +138,13 @@ class MethaneCycle extends ResourceCycleClass {
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
     this.defaultExtraParams = { gravity, condensationParameter };
+  }
+
+  getExtraParams(terraforming) {
+    return {
+      gravity: terraforming.celestialParameters.gravity,
+      condensationParameter: terraforming.equilibriumMethaneCondensationParameter,
+    };
   }
 
   /**

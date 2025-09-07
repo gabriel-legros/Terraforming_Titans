@@ -94,6 +94,10 @@ function slopeSVPCO2(temperature) {
 
 class CO2Cycle extends ResourceCycleClass {
   constructor({
+    key = 'co2',
+    atmKey = 'carbonDioxide',
+    totalKeys = ['sublimation'],
+    processTotalKeys = { condensation: 'condensation' },
     zonalKey = 'zonalSurface',
     surfaceBucket = 'water',
     atmosphereKey = 'co2',
@@ -111,11 +115,21 @@ class CO2Cycle extends ResourceCycleClass {
       evaporationAlbedo: 0.6,
       sublimationAlbedo: 0.6,
     });
+    this.key = key;
+    this.atmKey = atmKey;
+    this.totalKeys = totalKeys;
+    this.processTotalKeys = processTotalKeys;
     this.zonalKey = zonalKey;
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
     this.defaultExtraParams = { condensationParameter };
+  }
+
+  getExtraParams(terraforming) {
+    return {
+      condensationParameter: terraforming.equilibriumCondensationParameter,
+    };
   }
 
   /**

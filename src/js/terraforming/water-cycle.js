@@ -124,6 +124,10 @@ function derivativeSaturationVaporPressureBuck(T) {
 
 class WaterCycle extends ResourceCycleClass {
   constructor({
+    key = 'water',
+    atmKey = 'atmosphericWater',
+    totalKeys = ['evaporation', 'sublimation', 'melt', 'freeze'],
+    processTotalKeys = { rain: 'rain', snow: 'snow' },
     zonalKey = 'zonalWater',
     surfaceBucket = 'water',
     atmosphereKey = 'water',
@@ -139,11 +143,22 @@ class WaterCycle extends ResourceCycleClass {
       freezePoint: 273.15,
       sublimationPoint: 273.15,
     });
+    this.key = key;
+    this.atmKey = atmKey;
+    this.totalKeys = totalKeys;
+    this.processTotalKeys = processTotalKeys;
     this.zonalKey = zonalKey;
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
     this.defaultExtraParams = { gravity, precipitationMultiplier };
+  }
+
+  getExtraParams(terraforming) {
+    return {
+      gravity: terraforming.celestialParameters.gravity,
+      precipitationMultiplier: terraforming.equilibriumPrecipitationMultiplier,
+    };
   }
 
   /**

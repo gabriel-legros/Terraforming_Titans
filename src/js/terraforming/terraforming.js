@@ -509,61 +509,32 @@ class Terraforming extends EffectableEntity{
         const processTotals = {};
         let totalOxygenChange = 0;
 
-        if (!waterCycleInstance.defaultExtraParams) waterCycleInstance.defaultExtraParams = {};
-        waterCycleInstance.defaultExtraParams.gravity = gravity;
-        waterCycleInstance.defaultExtraParams.precipitationMultiplier = precipitationMultiplier;
-        if (!methaneCycleInstance.defaultExtraParams) methaneCycleInstance.defaultExtraParams = {};
-        methaneCycleInstance.defaultExtraParams.gravity = gravity;
-        methaneCycleInstance.defaultExtraParams.condensationParameter = methaneCondensationParameter;
-        if (!co2CycleInstance.defaultExtraParams) co2CycleInstance.defaultExtraParams = {};
-        co2CycleInstance.defaultExtraParams.condensationParameter = condensationParameter;
+        if (!this.cycles) {
+            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
+        }
 
-        const cycleConfigs = [
-            {
-                key: 'water',
-                atmKey: 'atmosphericWater',
-                instance: waterCycleInstance,
-                params: {
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalWaterPressurePa,
-                    available: availableGlobalWaterVapor,
-                    durationSeconds,
-                },
-                totalKeys: ['evaporation', 'sublimation', 'melt', 'freeze'],
-                processTotalKeys: { rain: 'rain', snow: 'snow' },
-            },
-            {
-                key: 'methane',
-                atmKey: 'atmosphericMethane',
-                instance: methaneCycleInstance,
-                params: {
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalMethanePressurePa,
-                    available: availableGlobalMethaneGas,
-                    durationSeconds,
-                },
-                totalKeys: ['evaporation', 'sublimation', 'melt', 'freeze'],
-                processTotalKeys: { rain: 'methaneRain', snow: 'methaneSnow' },
-            },
-            {
-                key: 'co2',
-                atmKey: 'carbonDioxide',
-                instance: co2CycleInstance,
-                params: {
-                    atmPressure: globalTotalPressurePa,
-                    vaporPressure: globalCo2PressurePa,
-                    available: availableGlobalCo2Gas,
-                    durationSeconds,
-                },
-                totalKeys: ['sublimation'],
-                processTotalKeys: { condensation: 'condensation' },
-            },
-        ];
+        const pressureByKey = {
+            atmosphericWater: globalWaterPressurePa,
+            atmosphericMethane: globalMethanePressurePa,
+            carbonDioxide: globalCo2PressurePa,
+        };
+        const availableByKey = {
+            atmosphericWater: availableGlobalWaterVapor,
+            atmosphericMethane: availableGlobalMethaneGas,
+            carbonDioxide: availableGlobalCo2Gas,
+        };
 
-        for (const cycle of cycleConfigs) {
-            const totals = cycle.instance.runCycle(this, zones, cycle.params);
+        for (const cycle of this.cycles) {
+            const params = {
+                atmPressure: globalTotalPressurePa,
+                vaporPressure: pressureByKey[cycle.atmKey] || 0,
+                available: availableByKey[cycle.atmKey] || 0,
+                durationSeconds,
+                extraParams: cycle.getExtraParams ? cycle.getExtraParams(this) : {},
+            };
+            const totals = cycle.runCycle(this, zones, params);
             const rateTotals = {};
-            for (const key of cycle.totalKeys) {
+            for (const key of cycle.totalKeys || []) {
                 const val = totals[key] || 0;
                 cycleTotals[cycle.key][key] = val;
                 rateTotals[key] = val;
@@ -585,8 +556,8 @@ class Terraforming extends EffectableEntity{
                 this.focusMeltRate = focusMeltAmount / durationSeconds * 86400;
                 rateTotals.melt += focusMeltAmount;
             }
-            if (cycle.instance && typeof cycle.instance.updateResourceRates === 'function') {
-                cycle.instance.updateResourceRates(this, rateTotals, durationSeconds);
+            if (typeof cycle.updateResourceRates === 'function') {
+                cycle.updateResourceRates(this, rateTotals, durationSeconds);
             }
         }
 
@@ -630,7 +601,7 @@ class Terraforming extends EffectableEntity{
         }
         if (!Number.isFinite(totalOxygenChange)) totalOxygenChange = 0;
 
-        for (const cycle of cycleConfigs) {
+        for (const cycle of this.cycles) {
             const delta = atmosphericChanges[cycle.key] || 0;
             const resKey = cycle.atmKey;
             if (this.resources.atmospheric[resKey]) {
