@@ -28,4 +28,11 @@ describe('physics helpers', () => {
     expect(res.cfCloud).toBeGreaterThan(0);
     expect(res.cfHaze).toBeGreaterThan(0);
   });
+
+  test('sulfuric acid clouds brighten albedo', () => {
+    const base = calculateActualAlbedoPhysics(0.3, 5, {}, 9.81);
+    const withAcid = calculateActualAlbedoPhysics(0.3, 5, { h2so4: 0.001 }, 9.81);
+    expect(withAcid.albedo).toBeGreaterThan(base.albedo);
+    expect(withAcid.cfCloud).toBeGreaterThan(base.cfCloud);
+  });
 });

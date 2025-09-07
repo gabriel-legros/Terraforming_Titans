@@ -112,7 +112,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
   }
 
   isGasResource(resource) {
-    const gases = ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane'];
+    const gases = ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane', 'sulfuricAcid'];
     return gases.includes(resource);
   }
 

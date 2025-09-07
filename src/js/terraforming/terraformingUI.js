@@ -359,7 +359,8 @@ function createTemperatureBox(row) {
             co2: 'carbonDioxide',
             h2o: 'atmosphericWater',
             ch4: 'atmosphericMethane',
-            greenhousegas: 'greenhouseGas'
+            greenhousegas: 'greenhouseGas',
+            h2so4: 'sulfuricAcid'
           };
           const resourceKey = mapping[gas.toLowerCase()];
           const displayName = resourceKey && resources.atmospheric[resourceKey]

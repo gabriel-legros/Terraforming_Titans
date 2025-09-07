@@ -659,7 +659,8 @@ function renderAtmoTable(res) {
     { label: 'Inert Gas', key: 'inertGas' },
     { label: 'O₂', key: 'oxygen' },
     { label: 'Water Vap.', key: 'atmosphericWater' },
-    { label: 'CH₄', key: 'atmosphericMethane' }
+    { label: 'CH₄', key: 'atmosphericMethane' },
+    { label: 'H₂SO₄', key: 'sulfuricAcid' }
   ];
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const cells = rows.map(r => {
