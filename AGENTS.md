@@ -480,3 +480,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Atmospheric chemistry now assigns resource rates internally, removing rate handling from `Terraforming.updateResources`.
 - Removed rapid sublimation logic from WaterCycle, simplifying phase change calculations.
 - Removed rapid sublimation mechanics from the methane hydrocarbon cycle.
+- WaterCycle now sets distinct albedo defaults for liquid water evaporation and ice sublimation.
