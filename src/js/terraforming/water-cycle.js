@@ -1,5 +1,7 @@
 const L_S_WATER = 2.83e6; // Latent heat of sublimation for water (J/kg)
 const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
+const EVAP_ALBEDO_WATER = 0.06; // Representative albedo for liquid water
+const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -146,6 +148,8 @@ class WaterCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureBuck,
       freezePoint: 273.15,
       sublimationPoint: 273.15,
+      evaporationAlbedo: EVAP_ALBEDO_WATER,
+      sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
     });
     this.key = key;
     this.atmKey = atmKey;
