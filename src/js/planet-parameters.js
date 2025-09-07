@@ -54,11 +54,11 @@ const defaultPlanetParameters = {
       ice: { name: 'Ice', initialValue: 8200007980898617, unlocked:false , unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       liquidWater: { name: 'Water', initialValue: 0, unlocked:false , unit: 'ton' },
       dryIce : {name : 'Dry Ice', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
-      liquidCO2: { name: 'Liquid CO2', initialValue: 0, unlocked: false , unit: 'ton', hideWhenSmall: true },
+      liquidCO2: { name: 'Liquid CO2', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
-      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: false , unit: 'ton', hideWhenSmall: true },
-      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: false , unit: 'ton', hideWhenSmall: true },
+      liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
+      hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
