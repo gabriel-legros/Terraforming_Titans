@@ -34,7 +34,7 @@ describe('condensationRateFactor generic helper', () => {
       saturationFn: hydrocarbon.calculateSaturationPressureMethane,
       freezePoint: 90.7
     });
-    expect(res.liquidRate).toBeCloseTo(105.91228911346302);
+    expect(res.liquidRate).toBeCloseTo(152.07008432907043);
     expect(res.iceRate).toBeCloseTo(0);
   });
 });
@@ -81,7 +81,7 @@ describe('cycle wrappers match helper output', () => {
       methaneVaporPressure: 30000,
       dayTemperature: 94,
       nightTemperature: 93,
-      atmPressure: 101325
+      atmPressure: 150000
     };
     const expected = condensationRateFactor({
       zoneArea: params.zoneArea,

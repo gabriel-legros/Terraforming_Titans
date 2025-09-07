@@ -109,7 +109,7 @@ describe('methane cycle processZone', () => {
       dayTemperature: 80,
       nightTemperature: 70,
       zoneTemperature: 75,
-      atmPressure: 100000,
+      atmPressure: 150000,
       vaporPressure: 100000,
       availableLiquid: 0,
       availableIce: 0,

@@ -21,6 +21,17 @@ describe('getPlanetParameters', () => {
     expect(params.resources.colony.advancedResearch.unlocked).toBe(false);
   });
 
+  test('default planet includes liquid CO2 resource with zonal defaults', () => {
+    const params = getPlanetParameters('mars');
+    expect(params.resources.surface.liquidCO2).toBeDefined();
+    expect(params.resources.surface.liquidCO2.initialValue).toBe(0);
+    expect(params.zonalCO2).toBeDefined();
+    ['tropical', 'temperate', 'polar'].forEach(zone => {
+      expect(params.zonalCO2[zone]).toBeDefined();
+      expect(params.zonalCO2[zone].liquid).toBe(0);
+    });
+  });
+
   test('moons specify their parent body', () => {
     const moons = [
       { key: 'titan', parent: 'Saturn' },

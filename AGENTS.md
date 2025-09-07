@@ -483,3 +483,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Removed rapid sublimation mechanics from the methane hydrocarbon cycle.
 - WaterCycle now sets distinct albedo defaults for liquid water evaporation and ice sublimation.
 - WaterCycle now uses the Murphy & Koop (2005) saturation vapor pressure formulation via `saturationVaporPressureMK` and exposes updated helpers.
+- Added liquid CO2 surface resource and zonal tracking.
