@@ -1,6 +1,8 @@
 // Constants for Methane
 const L_V_METHANE = 5.1e5; // Latent heat of vaporization for methane (J/kg)
 const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
+const EVAP_ALBEDO_METHANE = 0.1; // Albedo of liquid methane for evaporation calculations
+const SUBLIMATION_ALBEDO_HC_ICE = 0.6; // Albedo of hydrocarbon ice for sublimation calculations
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -121,8 +123,8 @@ class MethaneCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: 90.7,
       sublimationPoint: 90.7,
-      evaporationAlbedo: 0.1,
-      sublimationAlbedo: 0.6,
+      evaporationAlbedo: EVAP_ALBEDO_METHANE,
+      sublimationAlbedo: SUBLIMATION_ALBEDO_HC_ICE,
     });
     this.key = key;
     this.atmKey = atmKey;
@@ -531,7 +533,9 @@ if (typeof module !== 'undefined' && module.exports) {
         calculateMethaneEvaporationRate,
         sublimationRateMethane,
         calculateMethaneSublimationRate,
-        boilingPointMethane
+        boilingPointMethane,
+        EVAP_ALBEDO_METHANE,
+        SUBLIMATION_ALBEDO_HC_ICE
     };
 } else {
     // Expose functions globally for browser usage
@@ -545,4 +549,6 @@ if (typeof module !== 'undefined' && module.exports) {
     globalThis.sublimationRateMethane = sublimationRateMethane;
     globalThis.calculateMethaneSublimationRate = calculateMethaneSublimationRate;
     globalThis.boilingPointMethane = boilingPointMethane;
+    globalThis.EVAP_ALBEDO_METHANE = EVAP_ALBEDO_METHANE;
+    globalThis.SUBLIMATION_ALBEDO_HC_ICE = SUBLIMATION_ALBEDO_HC_ICE;
 }
