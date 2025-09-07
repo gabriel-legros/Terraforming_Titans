@@ -922,7 +922,7 @@ function updateResourceRateDisplay(resource){
           break;
         }
         case 'dryIce':
-          val = terraforming.zonalSurface?.[zone]?.dryIce;
+          val = terraforming.zonalCO2?.[zone]?.ice;
           break;
         case 'biomass':
           val = terraforming.zonalSurface?.[zone]?.biomass;

@@ -136,12 +136,12 @@ describe('CO2 cycle processZone', () => {
       zoneTemperature: 210,
       atmPressure: 100000,
       vaporPressure: 100,
-      availableDryIce: 10,
+      availableIce: 10,
       zonalSolarFlux: 200,
       durationSeconds: 1,
     });
     expect(changes.atmosphere.co2).toBeGreaterThan(0);
-    const total = changes.atmosphere.co2 + (changes.water.dryIce || 0);
+    const total = changes.atmosphere.co2 + (changes.co2.ice || 0);
     expect(total).toBeCloseTo(0, 6);
     expect(changes).toHaveProperty('sublimationAmount');
   });
@@ -155,13 +155,13 @@ describe('CO2 cycle processZone', () => {
       zoneTemperature: 175,
       atmPressure: 100000,
       vaporPressure: 100000,
-      availableDryIce: 0,
+      availableIce: 0,
       zonalSolarFlux: 0,
       durationSeconds: 1,
       condensationParameter: 1,
     });
     expect(changes.potentialCO2Condensation).toBeGreaterThan(0);
-    expect(changes.water.dryIce).toBeCloseTo(0, 6);
+    expect(changes.co2.ice).toBeCloseTo(0, 6);
   });
 });
 

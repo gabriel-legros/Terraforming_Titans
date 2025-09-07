@@ -3,7 +3,7 @@ const { redistributePrecipitation } = require('../src/js/terraforming/phase-chan
 describe('redistributePrecipitation nested structure', () => {
   function makeZone() {
     return {
-      water: { liquid: 0, ice: 0, buriedIce: 0, dryIce: 0 },
+      water: { liquid: 0, ice: 0, buriedIce: 0 },
       methane: { liquid: 0, ice: 0, buriedIce: 0 },
       atmosphere: { water: 0, co2: 0, methane: 0, oxygen: 0 },
       precipitation: { rain: 0, snow: 0, methaneRain: 0, methaneSnow: 0 },

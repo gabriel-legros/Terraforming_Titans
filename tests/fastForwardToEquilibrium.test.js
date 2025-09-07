@@ -10,6 +10,7 @@ describe('fastForwardToEquilibrium', () => {
     global.terraforming = {
       zonalWater: {},
       zonalSurface: {},
+      zonalCO2: {},
       synchronizeGlobalResources: () => {},
       _updateZonalCoverageCache: () => {},
       updateLuminosity: () => {},
@@ -42,6 +43,7 @@ describe('fastForwardToEquilibrium', () => {
     global.terraforming = {
       zonalWater: {},
       zonalSurface: {},
+      zonalCO2: {},
       synchronizeGlobalResources: () => {},
       _updateZonalCoverageCache: () => {},
       updateLuminosity: () => {},
@@ -77,7 +79,8 @@ describe('fastForwardToEquilibrium', () => {
     global.ZONES = ['tropical'];
     global.terraforming = {
       zonalWater: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
-      zonalSurface: { tropical: { dryIce: 0, biomass: 0 } },
+      zonalCO2: { tropical: { ice: 0 } },
+      zonalSurface: { tropical: { biomass: 0 } },
       zonalHydrocarbons: { tropical: { liquid: 0, ice: 0, buriedIce: 0 } },
       synchronizeGlobalResources: () => {},
       _updateZonalCoverageCache: () => {},
@@ -136,5 +139,6 @@ describe('fastForwardToEquilibrium', () => {
     expect(obj.resources.atmospheric.atmosphericMethane.initialValue).toBe(9);
     expect(obj.zonalHydrocarbons.polar.liquid).toBe(5);
     expect(obj.zonalHydrocarbons.polar.ice).toBe(6);
+    expect(obj.zonalCO2.polar.ice).toBe(2);
   });
 });

@@ -229,7 +229,8 @@ class SpaceManager extends EffectableEntity {
             totalLiquidWater += zw.liquid || 0;
             totalIce += (zw.ice || 0) + (zw.buriedIce || 0);
             const zs = merged.zonalSurface?.[z] || {};
-            totalDryIce += zs.dryIce || 0;
+            const zc = merged.zonalCO2?.[z] || {};
+            totalDryIce += zc.ice || 0;
             totalBiomass += zs.biomass || 0;
             const zh = merged.zonalHydrocarbons?.[z] || {};
             totalLiquidMethane += zh.liquid || 0;

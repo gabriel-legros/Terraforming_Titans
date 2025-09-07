@@ -80,7 +80,7 @@
           ice: terraforming.zonalWater[zone]?.ice || 0,
           buriedIce: bIce,
           liquidWater: terraforming.zonalWater[zone]?.liquid || 0,
-          dryIce: terraforming.zonalSurface[zone]?.dryIce || 0,
+          dryIce: terraforming.zonalCO2[zone]?.ice || 0,
           biomass: terraforming.zonalSurface[zone]?.biomass || 0,
           liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
           hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
@@ -121,6 +121,7 @@
     const zonalWater = {};
     const zonalSurface = {};
     const zonalHydrocarbons = {};
+    const zonalCO2 = {};
     for (const zone in values.zones) {
       zonalWater[zone] = {
         liquid: values.zones[zone].liquidWater,
@@ -128,14 +129,17 @@
         buriedIce: values.zones[zone].buriedIce
       };
       zonalSurface[zone] = {
-        dryIce: values.zones[zone].dryIce
+        biomass: values.zones[zone].biomass || 0
       };
       zonalHydrocarbons[zone] = {
         liquid: values.zones[zone].liquidMethane,
         ice: values.zones[zone].hydrocarbonIce
       };
+      zonalCO2[zone] = {
+        ice: values.zones[zone].dryIce,
+      };
     }
-    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons };
+    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons, zonalCO2 };
   }
 
   function generateOverrideSnippet(values) {
@@ -227,7 +231,7 @@
 
       const liquidWater = this.zonalWater[zone]?.liquid || 0;
       const surfaceIce = this.zonalWater[zone]?.ice || 0;
-      const surfaceDryIce = this.zonalSurface[zone]?.dryIce || 0;
+      const surfaceDryIce = this.zonalCO2[zone]?.ice || 0;
       const liquidWaterCoverage = estimateCoverage(liquidWater, zoneArea);
       const iceCoverage = estimateCoverage(surfaceIce, zoneArea, 0.01);
       const dryIceCoverage = estimateCoverage(surfaceDryIce, zoneArea, 0.01);
@@ -283,7 +287,7 @@
       initialTotalWaterEvapSublRate += evaporationRate + waterSublimationRate;
       initialTotalCO2SublRate += co2SublimationRate;
 
-      const availableDryIce = this.zonalSurface[zone]?.dryIce || 0;
+      const availableDryIce = this.zonalCO2[zone]?.ice || 0;
       const rapidCo2Rate = rapidSublimationRateCO2(dayTemp, availableDryIce);
       initialTotalCO2SublRate += rapidCo2Rate;
 

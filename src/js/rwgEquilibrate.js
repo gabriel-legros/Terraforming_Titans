@@ -123,6 +123,7 @@
     if (terra) {
       out.zonalWater = JSON.parse(JSON.stringify(terra.zonalWater || {}));
       out.zonalHydrocarbons = JSON.parse(JSON.stringify(terra.zonalHydrocarbons || {}));
+      out.zonalCO2 = JSON.parse(JSON.stringify(terra.zonalCO2 || {}));
       out.zonalSurface = JSON.parse(JSON.stringify(terra.zonalSurface || {}));
 
       if (terra.celestialParameters) {
@@ -165,8 +166,9 @@
        const zw = terra.zonalWater[zone] || {};
        const zs = terra.zonalSurface[zone] || {};
        const zh = terra.zonalHydrocarbons[zone] || {};
+       const zc = terra.zonalCO2[zone] || {};
        metrics.push(zw.liquid || 0, zw.ice || 0, zw.buriedIce || 0);
-       metrics.push(zs.dryIce || 0, zs.biomass || 0);
+       metrics.push(zc.ice || 0, zs.biomass || 0);
        metrics.push(zh.liquid || 0, zh.ice || 0, zh.buriedIce || 0);
     }
     return metrics;

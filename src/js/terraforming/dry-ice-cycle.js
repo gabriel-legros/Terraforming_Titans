@@ -98,10 +98,10 @@ class CO2Cycle extends ResourceCycleClass {
     atmKey = 'carbonDioxide',
     totalKeys = ['sublimation'],
     processTotalKeys = { condensation: 'condensation' },
-    zonalKey = 'zonalSurface',
-    surfaceBucket = 'water',
+    zonalKey = 'zonalCO2',
+    surfaceBucket = 'co2',
     atmosphereKey = 'co2',
-    availableKeys = ['dryIce'],
+    availableKeys = ['ice'],
     condensationParameter = 1,
   } = {}) {
     super({
@@ -191,14 +191,14 @@ class CO2Cycle extends ResourceCycleClass {
     zoneTemperature,
     atmPressure,
     vaporPressure,
-    availableDryIce = 0,
+    availableIce = 0,
     zonalSolarFlux = 0,
     durationSeconds = 1,
     condensationParameter = 1,
   }) {
     const changes = {
       atmosphere: { co2: 0 },
-      water: { dryIce: 0 },
+      co2: { ice: 0 },
       precipitation: {},
       potentialCO2Condensation: 0,
     };
@@ -230,9 +230,9 @@ class CO2Cycle extends ResourceCycleClass {
       }
     }
     const sublimationRate = (daySubRate + nightSubRate) / 2;
-    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableDryIce);
+    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
     changes.atmosphere.co2 += sublimationAmount;
-    changes.water.dryIce -= sublimationAmount;
+    changes.co2.ice -= sublimationAmount;
 
     // Condensation
     const { iceRate } = this.condensationRateFactor({
@@ -246,11 +246,11 @@ class CO2Cycle extends ResourceCycleClass {
     changes.potentialCO2Condensation = potentialCond;
 
     // Rapid sublimation
-    const currentIce = availableDryIce + changes.water.dryIce;
+    const currentIce = availableIce + changes.co2.ice;
     const rapidRate = this.rapidSublimationRate(zoneTemperature, currentIce);
     const rapidAmount = Math.min(rapidRate * durationSeconds, currentIce);
     if (rapidAmount > 0) {
-      changes.water.dryIce -= rapidAmount;
+      changes.co2.ice -= rapidAmount;
       changes.atmosphere.co2 += rapidAmount;
     }
 

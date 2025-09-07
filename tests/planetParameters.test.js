@@ -29,6 +29,7 @@ describe('getPlanetParameters', () => {
     ['tropical', 'temperate', 'polar'].forEach(zone => {
       expect(params.zonalCO2[zone]).toBeDefined();
       expect(params.zonalCO2[zone].liquid).toBe(0);
+      expect(typeof params.zonalCO2[zone].ice).toBe('number');
     });
   });
 
