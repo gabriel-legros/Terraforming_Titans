@@ -179,11 +179,6 @@ class Terraforming extends EffectableEntity{
     this.totalMethaneFreezeRate = 0;
     this.flowMethaneMeltAmount = 0;
     this.flowMethaneMeltRate = 0;
-    this.totalMethaneCombustionRate = 0;
-    this.totalOxygenCombustionRate = 0;
-    this.totalCombustionWaterRate = 0;
-    this.totalCombustionCo2Rate = 0;
-    this.totalCalciteDecayRate = 0;
 
     // Zonal Water Data - Replaces global this.water
     this.zonalWater = {};
@@ -542,39 +537,6 @@ class Terraforming extends EffectableEntity{
                 res.value = Math.max(0, res.value + delta);
             }
         }
-
-        this.totalMethaneCombustionRate = chemTotals.rates.methane;
-        this.totalOxygenCombustionRate = chemTotals.rates.oxygen;
-        this.totalCombustionWaterRate = chemTotals.rates.water;
-        this.totalCombustionCo2Rate = chemTotals.rates.co2;
-        this.totalCalciteDecayRate = chemTotals.rates.calcite;
-
-        const rateType = 'terraforming';
-        this.resources.atmospheric.atmosphericWater?.modifyRate(
-            this.totalCombustionWaterRate,
-            'Methane Combustion',
-            rateType
-        );
-        this.resources.atmospheric.carbonDioxide?.modifyRate(
-            this.totalCombustionCo2Rate,
-            'Methane Combustion',
-            rateType
-        );
-        this.resources.atmospheric.atmosphericMethane?.modifyRate(
-            -this.totalMethaneCombustionRate,
-            'Methane Combustion',
-            rateType
-        );
-        this.resources.atmospheric.oxygen?.modifyRate(
-            -this.totalOxygenCombustionRate,
-            'Methane Combustion',
-            rateType
-        );
-        this.resources.atmospheric.calciteAerosol?.modifyRate(
-            -this.totalCalciteDecayRate,
-            'Calcite Decay',
-            rateType
-        );
 
         this.synchronizeGlobalResources();
       }

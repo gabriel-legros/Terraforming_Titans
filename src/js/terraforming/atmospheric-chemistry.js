@@ -49,6 +49,39 @@ function runAtmosphericChemistry(resources, params = {}) {
       currentCalcite * (1 - Math.exp(-CALCITE_DECAY_CONSTANT * realSeconds));
   }
 
+  const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
+  const oxygenRate = durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0;
+  const waterRate = durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0;
+  const co2Rate = durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0;
+  const calciteRate = realSeconds > 0 ? calciteDecayAmount / realSeconds : 0;
+
+  const rateType = 'terraforming';
+  resources?.atmospheric?.atmosphericWater?.modifyRate?.(
+    waterRate,
+    'Methane Combustion',
+    rateType
+  );
+  resources?.atmospheric?.carbonDioxide?.modifyRate?.(
+    co2Rate,
+    'Methane Combustion',
+    rateType
+  );
+  resources?.atmospheric?.atmosphericMethane?.modifyRate?.(
+    -methaneRate,
+    'Methane Combustion',
+    rateType
+  );
+  resources?.atmospheric?.oxygen?.modifyRate?.(
+    -oxygenRate,
+    'Methane Combustion',
+    rateType
+  );
+  resources?.atmospheric?.calciteAerosol?.modifyRate?.(
+    -calciteRate,
+    'Calcite Decay',
+    rateType
+  );
+
   return {
     changes: {
       atmosphericMethane: -combustionMethaneAmount,
@@ -58,11 +91,11 @@ function runAtmosphericChemistry(resources, params = {}) {
       calciteAerosol: -calciteDecayAmount,
     },
     rates: {
-      methane: durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0,
-      oxygen: durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0,
-      water: durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0,
-      co2: durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0,
-      calcite: realSeconds > 0 ? calciteDecayAmount / realSeconds : 0,
+      methane: methaneRate,
+      oxygen: oxygenRate,
+      water: waterRate,
+      co2: co2Rate,
+      calcite: calciteRate,
     },
   };
 }
