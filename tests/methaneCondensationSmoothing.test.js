@@ -3,7 +3,7 @@ const { methaneCycle, boilingPointMethane } = require('../src/js/hydrocarbon-cyc
 describe('methane condensation smoothing around freezing', () => {
   const zoneArea = 1e6; // m^2
   const methaneVaporPressure = 30000; // Pa - ensure above saturation
-  const atmPressure = 101325;
+  const atmPressure = 150000;
 
   test('above freezing favors liquid', () => {
     const { liquidRate, iceRate } = methaneCycle.condensationRateFactor({

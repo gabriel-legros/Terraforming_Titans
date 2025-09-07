@@ -25,6 +25,7 @@ function calculateAverageCoverage(terraforming, resourceType) {
     liquidMethane: { cycle: terraformUtilsMethaneCycle, key: 'liquidMethaneCoverage' },
     hydrocarbonIce: { cycle: terraformUtilsMethaneCycle, key: 'hydrocarbonIceCoverage' },
     dryIce: { cycle: terraformUtilsCo2Cycle, key: 'dryIceCoverage' },
+    liquidCO2: { key: 'liquidCO2' },
     biomass: { key: 'biomass' },
   };
   const mapping = coverageMap[resourceType];
