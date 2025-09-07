@@ -476,3 +476,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource cycles now update atmospheric/surface rates and terraforming total fields via `updateResourceRates`; `Terraforming.updateResources` simply delegates to each cycle.
 - Cycle instances now carry atmospheric keys and process metadata and Terraforming loops over a `cycles` array to run them.
 - Atmospheric chemistry module now handles methane–oxygen combustion and calcite aerosol decay.
+- Added `buildAtmosphereContext` helper centralizing atmospheric pressure calculations for reuse in `Terraforming.updateResources`.
