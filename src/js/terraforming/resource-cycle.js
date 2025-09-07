@@ -29,6 +29,8 @@ class ResourceCycle {
     precipitationKeys = {},
     surfaceFlowFn = null,
     rateMappings = {},
+    finalizeProcesses = [],
+    rateTotalsPrefix = '',
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
@@ -43,6 +45,8 @@ class ResourceCycle {
     this.precipitationKeys = precipitationKeys;
     this.surfaceFlowFn = surfaceFlowFn;
     this.rateMappings = rateMappings;
+    this.finalizeProcesses = finalizeProcesses;
+    this.rateTotalsPrefix = rateTotalsPrefix;
   }
 
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
@@ -388,6 +392,7 @@ class ResourceCycle {
       available,
       zonalChanges,
       atmosphereKey,
+      processes: this.finalizeProcesses || [],
     });
 
     if (typeof this.redistributePrecipitation === 'function') {
@@ -467,7 +472,9 @@ class ResourceCycle {
       const total = totals[totalKey] || 0;
       const rate = durationSeconds > 0 ? total / durationSeconds * 86400 : 0;
       const capKey = totalKey.charAt(0).toUpperCase() + totalKey.slice(1);
-      terraforming['total' + capKey + 'Rate'] = rate;
+      const prefix = this.rateTotalsPrefix || '';
+      const totalField = 'total' + (prefix ? prefix : '') + capKey + 'Rate';
+      terraforming[totalField] = rate;
       for (const map of mappings) {
         const resource = map.path.split('.').reduce((obj, k) => (obj ? obj[k] : undefined), terraforming.resources);
         if (resource && typeof resource.modifyRate === 'function') {

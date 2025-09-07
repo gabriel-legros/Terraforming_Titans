@@ -141,6 +141,71 @@ class WaterCycle extends ResourceCycleClass {
     gravity = 1,
     condensationParameter = 1,
   } = {}) {
+    const coverageKeys = {
+      liquid: 'liquidWaterCoverage',
+      ice: 'iceCoverage',
+    };
+    const precipitationKeys = {
+      liquid: 'potentialRain',
+      solid: 'potentialSnow',
+    };
+    const finalizeProcesses = [
+      {
+        container: 'precipitation',
+        potentialKey: 'potentialRain',
+        precipitationKey: 'rain',
+        surfaceBucket: 'water',
+        surfaceKey: 'liquid',
+        totalKey: 'rainfall',
+      },
+      {
+        container: 'precipitation',
+        potentialKey: 'potentialSnow',
+        precipitationKey: 'snow',
+        surfaceBucket: 'water',
+        surfaceKey: 'ice',
+        totalKey: 'snowfall',
+      },
+    ];
+    const rateMappings = {
+      evaporation: [
+        { path: 'atmospheric.atmosphericWater', label: 'Evaporation', sign: +1 },
+        { path: 'surface.liquidWater', label: 'Evaporation', sign: -1 },
+      ],
+      sublimation: [
+        { path: 'atmospheric.atmosphericWater', label: 'Sublimation', sign: +1 },
+        { path: 'surface.ice', label: 'Sublimation', sign: -1 },
+      ],
+      // Totals often arrive as 'rain'/'snow' from zonal precipitation
+      rain: [
+        { path: 'atmospheric.atmosphericWater', label: 'Rainfall', sign: -1 },
+        { path: 'surface.liquidWater', label: 'Rain', sign: +1 },
+      ],
+      snow: [
+        { path: 'atmospheric.atmosphericWater', label: 'Snowfall', sign: -1 },
+        { path: 'surface.ice', label: 'Snow', sign: +1 },
+      ],
+      rainfall: [
+        { path: 'atmospheric.atmosphericWater', label: 'Rainfall', sign: -1 },
+        { path: 'surface.liquidWater', label: 'Rain', sign: +1 },
+      ],
+      snowfall: [
+        { path: 'atmospheric.atmosphericWater', label: 'Snowfall', sign: -1 },
+        { path: 'surface.ice', label: 'Snow', sign: +1 },
+      ],
+      melt: [
+        { path: 'surface.liquidWater', label: 'Melt', sign: +1 },
+        { path: 'surface.ice', label: 'Melt', sign: -1 },
+      ],
+      freeze: [
+        { path: 'surface.liquidWater', label: 'Freeze', sign: -1 },
+        { path: 'surface.ice', label: 'Freeze', sign: +1 },
+      ],
+      flowMelt: [
+        { path: 'surface.liquidWater', label: 'Flow Melt', sign: +1 },
+        { path: 'surface.ice', label: 'Flow Melt', sign: -1 },
+      ],
+    };
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
@@ -148,8 +213,24 @@ class WaterCycle extends ResourceCycleClass {
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureBuck,
       freezePoint: 273.15,
       sublimationPoint: 273.15,
-      evaporationAlbedo: EVAP_ALBEDO_WATER,
+      evaporationAlbedo: 0.3,
       sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
+      coverageKeys,
+      precipitationKeys,
+      surfaceFlowFn: (terraforming, durationSeconds, tempMap) => {
+        if (typeof simulateSurfaceWaterFlow === 'function'
+          && typeof ZONES !== 'undefined'
+          && terraforming && terraforming.zonalWater) {
+          const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
+          const totalMelt = flow.totalMelt || 0;
+          terraforming.flowMeltAmount = totalMelt;
+          terraforming.flowMeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
+          return { changes: flow.changes || {}, totals: { flowMelt: totalMelt } };
+        }
+        return { changes: {}, totals: { flowMelt: 0 } };
+      },
+      rateMappings,
+      finalizeProcesses,
     });
     this.key = key;
     this.atmKey = atmKey;
@@ -184,176 +265,11 @@ class WaterCycle extends ResourceCycleClass {
     };
   }
 
-  /**
-   * Calculate zonal resource changes for water using base phase-change helpers.
-   * Returns an object shaped like the entries in terraforming.updateResources's
-   * `zonalChanges` map so results can be merged directly.
-   */
-  processZone({
-    zoneArea,
-    liquidWaterCoverage = 0,
-    iceCoverage = 0,
-    dayTemperature,
-    nightTemperature,
-    zoneTemperature,
-    atmPressure,
-    vaporPressure,
-    availableLiquid = 0,
-    availableIce = 0,
-    availableBuriedIce = 0,
-    zonalSolarFlux = 0,
-    durationSeconds = 1,
-    gravity = 1,
-    condensationParameter = 1,
-  }) {
-    const changes = {
-      atmosphere: { water: 0 },
-      water: { liquid: 0, ice: 0, buriedIce: 0 },
-      precipitation: { potentialRain: 0, potentialSnow: 0 },
-    };
+  // Delegate to shared ResourceCycle implementation
+  processZone(params) { return super.processZone(params); }
 
-    const daySolarFlux = 2 * zonalSolarFlux;
-    const nightSolarFlux = 0;
 
-    const liquidArea = zoneArea * liquidWaterCoverage;
-    const iceArea = zoneArea * iceCoverage;
-
-    // --- Evaporation ---
-    let dayEvapRate = 0;
-    let nightEvapRate = 0;
-    if (liquidArea > 0) {
-      if (typeof dayTemperature === 'number') {
-        dayEvapRate = this.evaporationRate({
-          T: dayTemperature,
-          solarFlux: daySolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-          albedo: 0.3,
-        }) * liquidArea / 1000;
-      }
-      if (typeof nightTemperature === 'number') {
-        nightEvapRate = this.evaporationRate({
-          T: nightTemperature,
-          solarFlux: nightSolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-          albedo: 0.3,
-        }) * liquidArea / 1000;
-      }
-    }
-
-    const evaporationRate = (dayEvapRate + nightEvapRate) / 2;
-    const evaporationAmount = Math.min(evaporationRate * durationSeconds, availableLiquid);
-    changes.atmosphere.water += evaporationAmount;
-    changes.water.liquid -= evaporationAmount;
-
-    // --- Condensation (potential precipitation) ---
-    const { liquidRate, iceRate } = this.condensationRateFactor({
-      zoneArea,
-      vaporPressure,
-      gravity,
-      dayTemp: dayTemperature,
-      nightTemp: nightTemperature,
-      transitionRange: this.transitionRange,
-      maxDiff: this.maxDiff,
-      boilingPoint: this.boilingPointFn(atmPressure),
-      boilTransitionRange: this.boilTransitionRange,
-    });
-    const potentialRain = liquidRate * condensationParameter * durationSeconds;
-    const potentialSnow = iceRate * condensationParameter * durationSeconds;
-    changes.precipitation.potentialRain = potentialRain;
-    changes.precipitation.potentialSnow = potentialSnow;
-    changes.atmosphere.water -= potentialRain + potentialSnow;
-
-    // --- Melting/Freezing ---
-    const meltFreezeRates = this.meltingFreezingRates({
-      temperature: zoneTemperature,
-      availableIce,
-      availableLiquid,
-      availableBuriedIce,
-      zoneArea,
-      iceCoverage,
-      liquidCoverage: liquidWaterCoverage,
-    });
-    const currentLiquid = availableLiquid + changes.water.liquid;
-    const currentIce = availableIce + changes.water.ice;
-    const currentBuried = availableBuriedIce + changes.water.buriedIce;
-    const availableForMelt = currentIce + currentBuried;
-    const meltAmount = Math.min(meltFreezeRates.meltingRate * durationSeconds, availableForMelt);
-    const freezeAmount = Math.min(meltFreezeRates.freezingRate * durationSeconds, currentLiquid);
-
-    let meltFromIce = Math.min(meltAmount, currentIce);
-    let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
-
-    changes.water.liquid += meltAmount - freezeAmount;
-    changes.water.ice += freezeAmount - meltFromIce;
-    changes.water.buriedIce -= meltFromBuried;
-
-    // --- Sublimation ---
-    let daySubRate = 0;
-    let nightSubRate = 0;
-    if (iceArea > 0) {
-      if (typeof dayTemperature === 'number') {
-        daySubRate = this.sublimationRate({
-          T: dayTemperature,
-          solarFlux: daySolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-      if (typeof nightTemperature === 'number') {
-        nightSubRate = this.sublimationRate({
-          T: nightTemperature,
-          solarFlux: nightSolarFlux,
-          atmPressure,
-          vaporPressure,
-          r_a: 100,
-        }) * iceArea / 1000;
-      }
-    }
-
-    const sublimationRate = (daySubRate + nightSubRate) / 2;
-    const sublimationAmount = Math.min(sublimationRate * durationSeconds, availableIce);
-    changes.atmosphere.water += sublimationAmount;
-    changes.water.ice -= sublimationAmount;
-
-    return {
-      ...changes,
-      evaporationAmount,
-      sublimationAmount,
-      meltAmount,
-      freezeAmount,
-    };
-  }
-
-  finalizeAtmosphere({ available, zonalChanges }) {
-    return super.finalizeAtmosphere({
-      available,
-      zonalChanges,
-      atmosphereKey: 'water',
-      processes: [
-        {
-          container: 'precipitation',
-          potentialKey: 'potentialRain',
-          precipitationKey: 'rain',
-          surfaceBucket: 'water',
-          surfaceKey: 'liquid',
-          totalKey: 'rain',
-        },
-        {
-          container: 'precipitation',
-          potentialKey: 'potentialSnow',
-          precipitationKey: 'snow',
-          surfaceBucket: 'water',
-          surfaceKey: 'ice',
-          totalKey: 'snow',
-        },
-      ],
-    });
-  }
+  // Use base finalizeAtmosphere with constructor-provided finalizeProcesses
 
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
     if (typeof redistributePrecipitationFn === 'function') {
@@ -361,111 +277,36 @@ class WaterCycle extends ResourceCycleClass {
     }
   }
 
-  surfaceFlow(terraforming, durationSeconds, tempMap) {
-    if (typeof simulateSurfaceWaterFlow === 'function'
-      && typeof ZONES !== 'undefined'
-      && terraforming && terraforming.zonalWater) {
-      return simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap);
-    }
-    return { changes: {}, totalMelt: 0 };
-  }
-
-  runCycle(terraforming, zones, options = {}) {
-    const data = this.calculateZonalChanges(terraforming, zones, options);
-    const { durationSeconds = 1 } = options;
-    const tempMap = {};
-    for (const z of zones) {
-      tempMap[z] = terraforming.temperature.zones[z]?.value;
-    }
-    const flow = this.surfaceFlow(terraforming, durationSeconds, tempMap);
-    terraforming.flowMeltAmount = flow.totalMelt;
-    terraforming.flowMeltRate = flow.totalMelt / durationSeconds * 86400;
-    data.totals.melt = (data.totals.melt || 0) + flow.totalMelt;
-    data.totals.flowMelt = flow.totalMelt;
-    for (const zone of zones) {
-      const zoneChange = flow.changes[zone];
-      if (!zoneChange) continue;
-      const dest = data.zonalChanges[zone] || (data.zonalChanges[zone] = {});
-      if (!dest.water) dest.water = {};
-      if (zoneChange.liquid) dest.water.liquid = (dest.water.liquid || 0) + zoneChange.liquid;
-      if (zoneChange.ice) dest.water.ice = (dest.water.ice || 0) + zoneChange.ice;
-      if (zoneChange.buriedIce) dest.water.buriedIce = (dest.water.buriedIce || 0) + zoneChange.buriedIce;
-    }
-    this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
-    terraforming.flowMeltAmount = 0;
-    terraforming.flowMeltRate = 0;
-    return data.totals;
-  }
-
+  // Delegate to base for flow + zonal changes
+  runCycle(terraforming, zones, options = {}) { return super.runCycle(terraforming, zones, options); }
+  // Override only to add focused-melt and water-specific aliases
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
+    // Apply base rates and resource changes from mappings
+    super.updateResourceRates(terraforming, totals, durationSeconds);
+
+    // Focused melt adds extra melt on top of phase-change and flow
     const resources = terraforming.resources;
     const rateType = 'terraforming';
-    const {
-      evaporation = 0,
-      sublimation = 0,
-      melt = 0,
-      freeze = 0,
-      rain = 0,
-      snow = 0,
-      flowMelt = 0,
-    } = totals;
-
     const focusMeltAmount = typeof globalThis.applyFocusedMelt === 'function'
       ? globalThis.applyFocusedMelt(terraforming, resources, durationSeconds)
       : 0;
     terraforming.focusMeltAmount = focusMeltAmount;
-    terraforming.focusMeltRate = focusMeltAmount / durationSeconds * 86400;
-
-    const meltTotal = melt + focusMeltAmount;
-    const evaporationRate = durationSeconds > 0 ? evaporation / durationSeconds * 86400 : 0;
-    const sublimationRate = durationSeconds > 0 ? sublimation / durationSeconds * 86400 : 0;
-    const meltRate = durationSeconds > 0 ? meltTotal / durationSeconds * 86400 : 0;
-    const freezeRate = durationSeconds > 0 ? freeze / durationSeconds * 86400 : 0;
-    const rainRate = durationSeconds > 0 ? rain / durationSeconds * 86400 : 0;
-    const snowRate = durationSeconds > 0 ? snow / durationSeconds * 86400 : 0;
-
-    terraforming.totalEvaporationRate = evaporationRate;
-    terraforming.totalWaterSublimationRate = sublimationRate;
-    terraforming.totalRainfallRate = rainRate;
-    terraforming.totalSnowfallRate = snowRate;
-    terraforming.totalMeltRate = meltRate;
-    terraforming.totalFreezeRate = freezeRate;
-
-    resources.atmospheric.atmosphericWater?.modifyRate(
-      evaporationRate + sublimationRate,
-      'Evaporation/Sublimation',
-      rateType
-    );
-    resources.atmospheric.atmosphericWater?.modifyRate(
-      -(rainRate + snowRate),
-      'Precipitation',
-      rateType
-    );
-
-    const focusRate = terraforming.focusMeltRate || 0;
-    const flowRate = durationSeconds > 0 ? flowMelt / durationSeconds * 86400 : 0;
-
-    resources.surface.liquidWater?.modifyRate(-evaporationRate, 'Evaporation', rateType);
-    resources.surface.liquidWater?.modifyRate(rainRate, 'Rain', rateType);
-    resources.surface.liquidWater?.modifyRate(meltRate - focusRate - flowRate, 'Melt', rateType);
-    resources.surface.liquidWater?.modifyRate(-freezeRate, 'Freeze', rateType);
+    const focusRate = durationSeconds > 0 ? focusMeltAmount / durationSeconds * 86400 : 0;
+    terraforming.focusMeltRate = focusRate;
     if (focusRate > 0) {
       resources.surface.liquidWater?.modifyRate(focusRate, 'Focused Melt', rateType);
-    }
-    if (flowRate > 0) {
-      resources.surface.liquidWater?.modifyRate(flowRate, 'Flow Melt', rateType);
-    }
-
-    resources.surface.ice?.modifyRate(-sublimationRate, 'Sublimation', rateType);
-    resources.surface.ice?.modifyRate(snowRate, 'Snow', rateType);
-    resources.surface.ice?.modifyRate(-(meltRate - focusRate - flowRate), 'Melt', rateType);
-    resources.surface.ice?.modifyRate(freezeRate, 'Freeze', rateType);
-    if (focusRate > 0) {
       resources.surface.ice?.modifyRate(-focusRate, 'Focused Melt', rateType);
     }
-    if (flowRate > 0) {
-      resources.surface.ice?.modifyRate(-flowRate, 'Flow Melt', rateType);
-    }
+
+    // Alias expected fields
+    terraforming.totalWaterSublimationRate = terraforming.totalSublimationRate || 0;
+    // UI expects rainfall/snowfall names, but totals keys are often rain/snow
+    const rainRate = durationSeconds > 0 ? (totals.rain || 0) / durationSeconds * 86400 : 0;
+    const snowRate = durationSeconds > 0 ? (totals.snow || 0) / durationSeconds * 86400 : 0;
+    terraforming.totalRainfallRate = rainRate;
+    terraforming.totalSnowfallRate = snowRate;
+    // Include focused melt in the displayed melt rate
+    terraforming.totalMeltRate = (terraforming.totalMeltRate || 0) + focusRate;
   }
 }
 
