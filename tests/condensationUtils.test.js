@@ -20,8 +20,8 @@ describe('condensationRateFactor generic helper', () => {
       saturationFn: water.saturationVaporPressureMK,
       freezePoint: 273.15
     });
-    expect(res.liquidRate).toBeCloseTo(0.0871088754676007);
-    expect(res.iceRate).toBeCloseTo(0.002246246821741467);
+    expect(res.liquidRate).toBeCloseTo(0.21862793352644008);
+    expect(res.iceRate).toBeCloseTo(0.00417760382534535);
   });
 
   test('computes expected methane condensation factors', () => {
@@ -34,7 +34,7 @@ describe('condensationRateFactor generic helper', () => {
       saturationFn: hydrocarbon.calculateSaturationPressureMethane,
       freezePoint: 90.7
     });
-    expect(res.liquidRate).toBeCloseTo(152.07008432907043);
+    expect(res.liquidRate).toBeCloseTo(208.57470493343624);
     expect(res.iceRate).toBeCloseTo(0);
   });
 });

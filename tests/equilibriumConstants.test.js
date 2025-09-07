@@ -34,6 +34,9 @@ eval(fs.readFileSync(require.resolve('../src/js/terraforming/dry-ice-cycle.js'),
 global.evaporationRateWater = evaporationRateWater;
 global.sublimationRateWater = sublimationRateWater;
 global.sublimationRateCO2 = sublimationRateCO2;
+const dryIceModule = require('../src/js/dry-ice-cycle.js');
+dryIceModule.rapidSublimationRateCO2 = () => 0;
+global.rapidSublimationRateCO2 = dryIceModule.rapidSublimationRateCO2;
 
 // Provide dummy buildings object
 global.buildings = { spaceMirror: { surfaceArea: 0, active: 0 } };

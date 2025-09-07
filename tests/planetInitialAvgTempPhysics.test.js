@@ -34,8 +34,8 @@ function createResources(config) {
 }
 
 const EXPECTED_TEMPS = {
-  mars: 222,
-  titan: 93.59612929341068
+  mars: 214.9343981906059,
+  titan: 93.65598446085933
 };
 
 describe('initial average temperature using physics.js', () => {

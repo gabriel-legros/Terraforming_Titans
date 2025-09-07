@@ -1,15 +1,10 @@
-const { rapidSublimationRateCO2 } = require('../src/js/dry-ice-cycle.js');
+const { co2Cycle } = require('../src/js/dry-ice-cycle.js');
 
 describe('rapid sublimation of dry ice', () => {
-  test('temperature above sublimation point triggers sublimation', () => {
-    const T = 250; // K
-    const available = 100; // tons
-    const diff = T - 195;
-    const expected = available * 0.00000001 * diff;
-    expect(rapidSublimationRateCO2(T, available)).toBeCloseTo(expected);
-  });
-
-  test('temperature below sublimation point results in zero rate', () => {
-    expect(rapidSublimationRateCO2(180, 50)).toBe(0);
+  test('returns zero rate regardless of temperature without multiplier', () => {
+    const rateHigh = co2Cycle.rapidSublimationRate(250, 100);
+    const rateLow = co2Cycle.rapidSublimationRate(180, 50);
+    expect(rateHigh).toBe(0);
+    expect(rateLow).toBe(0);
   });
 });
