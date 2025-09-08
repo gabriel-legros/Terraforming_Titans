@@ -1439,7 +1439,7 @@ function runAdvancedOversightAssignments(project) {
       if (energyPerKg <= 0) return 0;
 
       const meltKgPerSec = focusPower / energyPerKg;
-      return Math.max(0, meltKgPerSec / 1000); // tons/sec
+      return Math.max(0, meltKgPerSec / 1000)*86400; // tons/sec
     };
 
     const objective = (passLevel) => {
