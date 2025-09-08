@@ -139,7 +139,15 @@
   padding: 14px;
 }
 
-.rwg-card h3, .rwg-card h4 { margin: 0 0 10px; color: var(--rwg-fg); }
+.rwg-card .card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: var(--rwg-fg);
+}
+.rwg-card h3, .rwg-card h4 { margin: 0; }
+.collapse-arrow { margin-right: 6px; cursor: pointer; }
+.rwg-card.collapsed .card-body { display: none; }
 
 .rwg-grid {
   display: grid;
