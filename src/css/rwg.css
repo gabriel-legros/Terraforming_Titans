@@ -1,4 +1,4 @@
-﻿/* rwg.css */
+/* rwg.css */
 
 :root {
   --rwg-bg: #0f1115;
@@ -144,6 +144,8 @@
   align-items: center;
   margin-bottom: 10px;
   color: var(--rwg-fg);
+  background: transparent;
+  border-bottom: 1px solid var(--rwg-border);
 }
 .rwg-card h3, .rwg-card h4 { margin: 0; }
 .collapse-arrow { margin-right: 6px; cursor: pointer; }
