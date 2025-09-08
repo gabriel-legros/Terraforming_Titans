@@ -25,7 +25,8 @@ describe('SpaceMirrorFacilityProject oversight save/load', () => {
 
     ctx.mirrorOversightSettings.distribution.tropical = 0.5;
     ctx.mirrorOversightSettings.applyToLantern = true;
-    ctx.mirrorOversightSettings.assignmentStep = 5;
+    ctx.mirrorOversightSettings.assignmentStep.mirrors = 5;
+    ctx.mirrorOversightSettings.assignmentStep.lanterns = 2;
     ctx.mirrorOversightSettings.targets.tropical = 300;
     ctx.mirrorOversightSettings.tempMode.polar = 'night';
     ctx.mirrorOversightSettings.priority.focus = 3;
@@ -44,7 +45,8 @@ describe('SpaceMirrorFacilityProject oversight save/load', () => {
 
     expect(ctx.mirrorOversightSettings.distribution.tropical).toBe(0.5);
     expect(ctx.mirrorOversightSettings.applyToLantern).toBe(true);
-    expect(ctx.mirrorOversightSettings.assignmentStep).toBe(5);
+    expect(ctx.mirrorOversightSettings.assignmentStep.mirrors).toBe(5);
+    expect(ctx.mirrorOversightSettings.assignmentStep.lanterns).toBe(2);
     expect(ctx.mirrorOversightSettings.targets.tropical).toBe(300);
     expect(ctx.mirrorOversightSettings.tempMode.polar).toBe('night');
     expect(ctx.mirrorOversightSettings.priority.focus).toBe(3);

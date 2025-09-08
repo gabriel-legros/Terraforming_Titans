@@ -431,6 +431,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space storage strategic reserve input includes a tooltip noting that mega projects respect the reserve while transfers do not, and explaining scientific notation support.
 - Space mirror facility's unassigned slider matches the width of other sliders and locks when finer controls are enabled.
 - Water melt target input in space mirror facility advanced oversight is wider and includes k/M/B scaling dropdown.
+- Space mirror oversight finer controls now provide /10 xN x10 buttons for each column, showing lantern controls only when lanterns are available.
 - Added `reinitializeDisplayElements` to Resource for resetting default display names and margins after travel.
 - Resource `reinitializeDisplayElements` now pulls display defaults from `defaultPlanetParameters` instead of storing them on each resource.
 - Life growth rate tooltip now reflects ecumenopolis land coverage and shows land reduction percentage.
