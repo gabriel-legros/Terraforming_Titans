@@ -740,10 +740,12 @@
 }
 
 #assignment-grid .assign-cell {
-    display: flex;
+    /* Use a 5-column grid so the value column aligns across rows. */
+    display: grid;
+    grid-template-columns: auto auto 60px auto auto;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    column-gap: 4px;
 }
 #assignment-grid .assign-cell span {
     font-weight: bold;
@@ -760,6 +762,9 @@
 .grid-auto-cell {
     text-align: center;
 }
+
+/* Available rows use hidden placeholders for the first and last slots,
+   so spacing matches other rows without extra visual gaps. */
 
 .finer-controls-header {
     display: flex;

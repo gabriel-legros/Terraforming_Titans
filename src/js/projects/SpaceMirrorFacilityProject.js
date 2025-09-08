@@ -651,18 +651,7 @@ function initializeMirrorOversightUI(container) {
         <input type="checkbox" id="mirror-use-finer">
         <label for="mirror-use-finer">Use Finer Controls</label>
       </div>
-      <div class="control-group step-controls">
-        <div class="type-step-controls" data-type="mirrors">
-          <button class="assignment-div10" data-type="mirrors">/10</button>
-          <span class="assignment-step-display" data-type="mirrors">x1</span>
-          <button class="assignment-mul10" data-type="mirrors">x10</button>
-        </div>
-        <div class="type-step-controls lantern-step-controls" data-type="lanterns">
-          <button class="assignment-div10" data-type="lanterns">/10</button>
-          <span class="assignment-step-display" data-type="lanterns">x1</span>
-          <button class="assignment-mul10" data-type="lanterns">x10</button>
-        </div>
-      </div>
+      <!-- Step controls moved next to Available counts for each type. -->
     </div>
     <div id="assignment-grid">
       <div class="grid-header">Zone</div>
@@ -672,18 +661,18 @@ function initializeMirrorOversightUI(container) {
       <div class="grid-header">Auto</div>
 
       <div class="grid-zone-label">Available</div>
-      <div class="assign-cell">
+      <div class="assign-cell available-mirror-cell">
         <button class="assign-zero" style="visibility: hidden;">0</button>
-        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <button class="assignment-div10" data-type="mirrors">/10</button>
         <span id="available-mirrors">0</span>
-        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assignment-mul10" data-type="mirrors">x10</button>
         <button class="assign-max" style="visibility: hidden;">Max</button>
       </div>
       <div class="assign-cell available-lantern-cell" data-type="lanterns">
         <button class="assign-zero" style="visibility: hidden;">0</button>
-        <button class="assign-minus" style="visibility: hidden;">-1</button>
+        <button class="assignment-div10" data-type="lanterns">/10</button>
         <span id="available-lanterns">0</span>
-        <button class="assign-plus" style="visibility: hidden;">+1</button>
+        <button class="assignment-mul10" data-type="lanterns">x10</button>
         <button class="assign-max" style="visibility: hidden;">Max</button>
       </div>
       <div class="grid-reversal-cell"></div>
