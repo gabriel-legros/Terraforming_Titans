@@ -495,3 +495,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - penmanRate now prevents negative humidity deficits above the critical temperature.
 - slopeSVPCO2 now returns the critical temperature slope for T ≥ Tc.
 - Ore and geothermal satellites now scale their build count with worker cap (one satellite per 5,000 cap) instead of population.
+- Android resource displays an exclamation mark when capped while unused land remains below 99% of capacity.

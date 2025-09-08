@@ -545,7 +545,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${resourceName === 'biomass' ? ' <span class="resource-warning" id="biomass-warning"></span>' : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${['biomass', 'androids'].includes(resourceName) ? ` <span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -589,7 +589,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${resourceName === 'biomass' ? ' <span class="resource-warning" id="biomass-warning"></span>' : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${['biomass', 'androids'].includes(resourceName) ? ` <span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -697,6 +697,18 @@ function updateResourceDisplay(resources) {
         const zones = terraforming?.biomassDyingZones || {};
         const count = ['tropical', 'temperate', 'polar'].reduce((n, z) => n + (zones[z] ? 1 : 0), 0);
         const text = '!'.repeat(count);
+        if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
+      }
+
+      if (resourceName === 'androids' && entry.warningEl) {
+        const land = resources.surface?.land;
+        const warn =
+          resourceObj.cap &&
+          resourceObj.value >= resourceObj.cap &&
+          land &&
+          land.value > 0 &&
+          land.reserved / land.value < 0.99;
+        const text = warn ? '!' : '';
         if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
       }
 
