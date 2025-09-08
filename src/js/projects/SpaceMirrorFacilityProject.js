@@ -1174,9 +1174,8 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       // Advanced mode: use explicit assignments only (no auto distribution)
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
-      // Allow distributed power via 'any' bucket
-      distributedMirrorPower = mirrorPowerPer * (assignM.any || 0);
-      distributedLanternPower = mirrorOversightSettings.applyToLantern ? (lanternPowerPer * (assignL.any || 0)) : 0;
+      distributedMirrorPower = 0;
+      distributedLanternPower = 0;
       focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
       focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
     } else if (mirrorOversightSettings.useFinerControls) {
@@ -1255,14 +1254,14 @@ function runAdvancedOversightAssignments(project) {
     if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
 
     // ---------------- Config knobs (tune as needed) ----------------
-    const K_TOL = 0.02;         // Temperature tolerance (K) for zones
+    const K_TOL = 0.001;         // Temperature tolerance (K) for zones
     const WATER_REL_TOL = 0.01; // Relative tol (1%) for water melt target
     const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
 
     // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
-    const MIRROR_PROBE_MIN = 10;      // Minimum mirrors per probe (useful scale for "billions")
+    const MIRROR_PROBE_MIN = 1;      // Minimum mirrors per probe (useful scale for "billions")
     const LANTERN_PROBE_MIN = 1;      // Min lanterns per probe
-    const SAFETY_FRACTION = 0.5;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
+    const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
 
     // If no resources left, allow reallocation from strictly lower priority zones
     const REALLOC_PROBE_FRAC = 0.1;     // Try to shift 10% of donor's assignment in one test
@@ -1294,8 +1293,8 @@ function runAdvancedOversightAssignments(project) {
     const totalMirrors = Math.max(0, buildings.spaceMirror?.active || 0);
     const totalLanterns = mirrorOversightSettings.applyToLantern ? Math.max(0, buildings.hyperionLantern?.active || 0) : 0;
 
-    const usedMirrors = () => (assignM.tropical)+(assignM.temperate)+(assignM.polar)+(assignM.focus)+(assignM.any||0);
-    const usedLanterns = () => (assignL.tropical)+(assignL.temperate)+(assignL.polar)+(assignL.focus)+(assignL.any||0);
+    const usedMirrors = () => (assignM.tropical)+(assignM.temperate)+(assignM.polar)+(assignM.focus);
+    const usedLanterns = () => (assignL.tropical)+(assignL.temperate)+(assignL.polar)+(assignL.focus);
     const mirrorsLeft = () => Math.max(0, totalMirrors - usedMirrors());
     const lanternsLeft = () => Math.max(0, totalLanterns - usedLanterns());
 
@@ -1517,94 +1516,95 @@ function runAdvancedOversightAssignments(project) {
         const needHeat = temps[z] < tgt - K_TOL;
 
         // Mirrors (heating)
-        // Consider even if this zone itself doesn't need heat; it might help other zones.
+        // Only add heat when baseline-aligned reversal is OFF for this zone.
         if (mirrorsLeft() > 0 && !reverse[z]) {
           const k = MIRROR_PROBE_MIN;
           const score = withTempChange(() => { reverse[z] = false; assignM[z] = (assignM[z]) + k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, mirrorsLeft());
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          // Estimate units needed from zone error (local slope for this zone)
+          const tAfter = withTempChange(() => { reverse[z] = false; assignM[z] = (assignM[z]) + k; },
+                                        () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0;
+          const dtPerUnit = dT / k;
+          let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
+          if (step > 0) cands.push({ kind:'mirror', zone:z, reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
 
         // Mirrors (cooling) via reversal
-        // Consider even if this zone itself doesn't need cooling; it might help other zones.
+        // Only add cooling when baseline-aligned reversal is ON for this zone.
         if (REVERSAL_AVAILABLE && mirrorsLeft() > 0 && !!reverse[z]) {
           const k = MIRROR_PROBE_MIN;
           const score = withTempChange(() => { reverse[z] = true; assignM[z] = (assignM[z]) + k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, mirrorsLeft());
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          const tAfter = withTempChange(() => { reverse[z] = true; assignM[z] = (assignM[z]) + k; },
+                                        () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // will be negative
+          const dtPerUnit = dT / k; // < 0 expected
+          let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
+          if (step > 0) cands.push({ kind:'mirror', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
 
-        // Lanterns (heating) — consider regardless of local need
+        // Lanterns (heating)
         if (lanternsLeft() > 0) {
           const k = LANTERN_PROBE_MIN;
           const score = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, lanternsLeft());
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'lantern', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          const tAfter = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0;
+          const dtPerUnit = dT / k;
+          let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
+          if (step > 0) cands.push({ kind:'lantern', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
 
-        // Removal candidates; examine even if local need doesn't match, commit only if beneficial
-        // - Remove cooling mirrors when reversal is ON
+        // Removal candidates when locked mode conflicts with need
+        // - If reversal is ON (cooling) but zone needs heat, try removing cooling mirrors
         if (!!reverse[z] && (assignM[z] || 0) > 0) {
           const current = assignM[z] || 0;
-          const k = Math.max(1, Math.min(current, Math.ceil(Math.max(REALLOC_MIN, current * REALLOC_PROBE_FRAC))));
+          const k = MIRROR_PROBE_MIN;;
           const score = withTempChange(() => { assignM[z] = current - k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, current);
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          const tAfter = withTempChange(() => { assignM[z] = current - k; }, () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected > 0
+          const dtPerUnit = dT / k;
+          let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+          if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
-        // - Remove heating mirrors when reversal is OFF
+        // - If reversal is OFF (heating) but zone needs cool, try removing heating mirrors
         if (!reverse[z] && (assignM[z] || 0) > 0) {
           const current = assignM[z] || 0;
-          const k = Math.max(1, Math.min(current, Math.ceil(Math.max(REALLOC_MIN, current * REALLOC_PROBE_FRAC))));
+          const k = MIRROR_PROBE_MIN;;
           const score = withTempChange(() => { assignM[z] = current - k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, current);
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          const tAfter = withTempChange(() => { assignM[z] = current - k; }, () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected < 0
+          const dtPerUnit = dT / k;
+          let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+          if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
-        // - Lanterns only heat; consider removing if beneficial
+        // - Lanterns only heat; if the zone needs cooling, try removing lanterns
         if ((assignL[z] || 0) > 0) {
           const current = assignL[z] || 0;
-          const k = Math.max(1, Math.min(current, Math.ceil(Math.max(REALLOC_MIN, current * REALLOC_PROBE_FRAC))));
+          const k = LANTERN_PROBE_MIN;;
           const score = withTempChange(() => { assignL[z] = current - k; }, () => objective(passLevel));
           const dPerUnit = (baseScore - score) / k;
-          const step = Math.min(k, current);
-          if (step > 0 && dPerUnit > 0) cands.push({ kind:'lantern-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+          const tAfter = withTempChange(() => { assignL[z] = current - k; }, () => getZoneTemp(z));
+          const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected < 0
+          const dtPerUnit = dT / k;
+          let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
+          unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+          const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+          if (step > 0) cands.push({ kind:'lantern-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
         }
-      }
-
-      // Global 'any' assignments (distributed across zones). Consider regardless of immediate need.
-      if (mirrorsLeft() > 0) {
-        const k = MIRROR_PROBE_MIN;
-        const score = withTempChange(() => { assignM.any = (assignM.any || 0) + k; }, () => objective(passLevel));
-        const dPerUnit = (baseScore - score) / k;
-        const step = Math.min(k, mirrorsLeft());
-        if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror', zone:'any', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-      }
-      if (lanternsLeft() > 0) {
-        const k = MIRROR_PROBE_MIN;
-        const score = withTempChange(() => { assignL.any = (assignL.any || 0) + k; }, () => objective(passLevel));
-        const dPerUnit = (baseScore - score) / k;
-        const step = Math.min(k, lanternsLeft());
-        if (step > 0 && dPerUnit > 0) cands.push({ kind:'lantern', zone:'any', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-      }
-      if ((assignM.any || 0) > 0) {
-        const cur = assignM.any || 0;
-        const k = Math.max(1, Math.min(cur, Math.ceil(Math.max(REALLOC_MIN, cur * REALLOC_PROBE_FRAC))));
-        const score = withTempChange(() => { assignM.any = cur - k; }, () => objective(passLevel));
-        const dPerUnit = (baseScore - score) / k;
-        const step = Math.min(k, cur);
-        if (step > 0 && dPerUnit > 0) cands.push({ kind:'mirror-remove', zone:'any', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-      }
-      if ((assignL.any || 0) > 0) {
-        const cur = assignL.any || 0;
-        const k = Math.max(1, Math.min(cur, Math.ceil(Math.max(REALLOC_MIN, cur * REALLOC_PROBE_FRAC))));
-        const score = withTempChange(() => { assignL.any = cur - k; }, () => objective(passLevel));
-        const dPerUnit = (baseScore - score) / k;
-        const step = Math.min(k, cur);
-        if (step > 0 && dPerUnit > 0) cands.push({ kind:'lantern-remove', zone:'any', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
       }
 
       // Focus water (tons/sec)
