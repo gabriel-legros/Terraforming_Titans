@@ -312,9 +312,10 @@ function updateAssignmentDisplays() {
 
 // Toggle Advanced Oversight mode: uses assignments, hides 'any', and seeds default targets
 function toggleAdvancedOversight(enable) {
+  const wasAdvanced = !!mirrorOversightSettings.advancedOversight;
   mirrorOversightSettings.advancedOversight = !!enable;
-  mirrorOversightSettings.useFinerControls = !!enable;
   if (enable) {
+    mirrorOversightSettings.useFinerControls = true;
     mirrorOversightSettings.autoAssign.any = false;
     mirrorOversightSettings.autoAssign.tropical = false;
     mirrorOversightSettings.autoAssign.temperate = false;
@@ -338,6 +339,8 @@ function toggleAdvancedOversight(enable) {
       if (!mirrorOversightSettings.tempMode.temperate) mirrorOversightSettings.tempMode.temperate = 'average';
       if (!mirrorOversightSettings.tempMode.polar) mirrorOversightSettings.tempMode.polar = 'average';
     }
+  } else if (wasAdvanced) {
+    mirrorOversightSettings.useFinerControls = true;
   }
   if (typeof updateMirrorOversightUI === 'function') updateMirrorOversightUI();
 }
