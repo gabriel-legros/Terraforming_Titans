@@ -134,6 +134,8 @@ describe('Space Mirror finer controls', () => {
     updateMirrorOversightUI();
     const cell = container.querySelector('#assignment-grid .assign-cell[data-type="lanterns"]');
     expect(cell.style.display).toBe('none');
+    const step = container.querySelector('.step-controls[data-type="lanterns"]');
+    expect(step.style.display).toBe('none');
     delete global.window;
     delete global.document;
   });
@@ -194,6 +196,30 @@ describe('Space Mirror finer controls', () => {
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(9);
     plusBtn.click();
     expect(mirrorOversightSettings.assignments.mirrors.any).toBe(10);
+    delete global.window;
+    delete global.document;
+  });
+
+  test('each column has independent step controls', () => {
+    resetMirrorOversightSettings();
+    const dom = new JSDOM('<div id="container"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    const container = document.getElementById('container');
+    global.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { active: 0, unlocked: true } };
+    global.projectManager = { isBooleanFlagSet: id => id === 'spaceMirrorFacilityOversight' };
+    initializeMirrorOversightUI(container);
+    toggleFinerControls(true);
+    const mirrorMul = container.querySelector('.assignment-mul10[data-type="mirrors"]');
+    const lanternMul = container.querySelector('.assignment-mul10[data-type="lanterns"]');
+    mirrorMul.click();
+    expect(mirrorOversightSettings.assignmentStep.mirrors).toBe(10);
+    expect(mirrorOversightSettings.assignmentStep.lanterns).toBe(1);
+    lanternMul.click();
+    expect(mirrorOversightSettings.assignmentStep.lanterns).toBe(10);
+    const mirrorDiv = container.querySelector('.assignment-div10[data-type="mirrors"]');
+    mirrorDiv.click();
+    expect(mirrorOversightSettings.assignmentStep.mirrors).toBe(1);
     delete global.window;
     delete global.document;
   });
