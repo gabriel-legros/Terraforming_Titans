@@ -8,7 +8,7 @@ This folder contains classes for repeatable projects. Any new module here should
 - **DysonSwarmReceiverProject** – builds the Dyson Swarm Receiver and deploys solar collectors that persist across planets.
 - **OrbitalRingProject** – constructs repeatable orbital rings that count as terraformed worlds and may draw from space storage.
 - **PlanetaryThrustersProject** – consumes energy continuously to change planetary rotation or orbit via spin and motion targets.
-- **ScannerProject** – produces orbital scanners that slowly reveal underground deposits; build count scales with population.
+- **ScannerProject** – produces orbital scanners that slowly reveal underground deposits; build count scales with worker cap.
 - **SpaceExportBaseProject** – shared spaceship logic for exporting or jettisoning resources, including optional capacity waiting and temperature automation.
 - **SpaceExportProject** – sells selected resources for funding; export capacity scales with terraformed worlds.
 - **SpaceDisposalProject** – jettisons selected resources and can remove greenhouse gases to cool the planet.

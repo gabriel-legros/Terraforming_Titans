@@ -20,7 +20,7 @@ describe('ScannerProject UI update', () => {
     ctx.projectElements = {};
     ctx.resources = {
       colony: {
-        colonists: { value: 15000, displayName: 'Colonists' },
+        workers: { cap: 15000, displayName: 'Workers' },
         metal:{value:0,decrease(){},updateStorageCap(){}},
         electronics:{value:0,decrease(){},updateStorageCap(){}},
         energy:{value:0,decrease(){},updateStorageCap(){}}
@@ -42,7 +42,7 @@ describe('ScannerProject UI update', () => {
     project.updateUI();
 
     expect(project.el.val.textContent).toBe('1');
-    expect(project.el.max.textContent).toBe('2');
+    expect(project.el.max.textContent).toBe('3');
     expect(project.el.dVal.textContent).toBe('0');
     expect(project.el.dMax.textContent).toBe('10');
     expect(project.el.bPlus.textContent).toBe('+1');
