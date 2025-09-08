@@ -14,7 +14,7 @@ describe('ScannerProject auto max', () => {
         metal: { value: 0, decrease(){}, updateStorageCap(){} },
         electronics: { value: 0, decrease(){}, updateStorageCap(){} },
         energy: { value: 0, decrease(){}, updateStorageCap(){} },
-        colonists: { value: 10000 }
+        workers: { cap: 10000 }
       }
     };
     vm.createContext(ctx);
@@ -24,7 +24,7 @@ describe('ScannerProject auto max', () => {
     return ctx;
   }
 
-  test('build count follows colonist cap when auto max enabled', () => {
+  test('build count follows worker cap when auto max enabled', () => {
     const ctx = createContext();
     const config = {
       name: 'scan',
@@ -39,14 +39,14 @@ describe('ScannerProject auto max', () => {
     };
     const project = new ctx.ScannerProject(config, 'scan');
     project.update(0);
-    expect(project.buildCount).toBe(1);
-    ctx.resources.colony.colonists.value = 20000;
-    project.update(0);
     expect(project.buildCount).toBe(2);
+    ctx.resources.colony.workers.cap = 20000;
+    project.update(0);
+    expect(project.buildCount).toBe(4);
     project.autoMax = false;
-    ctx.resources.colony.colonists.value = 30000;
+    ctx.resources.colony.workers.cap = 30000;
     project.update(0);
-    expect(project.buildCount).toBe(2);
+    expect(project.buildCount).toBe(4);
   });
 });
 

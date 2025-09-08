@@ -19,7 +19,7 @@ describe('ScannerProject auto-start cost rate', () => {
         metal: { value: 1000, modifyRate: jest.fn(), decrease(){}, updateStorageCap(){} },
         electronics: { value: 1000, modifyRate: jest.fn(), decrease(){}, updateStorageCap(){} },
         energy: { value: 3000000, modifyRate: jest.fn(), decrease(){}, updateStorageCap(){} },
-        colonists: { value: 100000 }
+        workers: { cap: 100000 }
       }
     };
     global.resources = ctx.resources;

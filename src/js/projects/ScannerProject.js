@@ -164,7 +164,7 @@ class ScannerProject extends Project {
   update(deltaTime) {
     super.update(deltaTime);
     if (this.autoMax) {
-      const limit = this.getColonistLimit();
+      const limit = this.getWorkerCapLimit();
       if (this.buildCount < limit) {
         this.buildCount = limit;
         if (typeof updateProjectUI === 'function') {
@@ -233,12 +233,12 @@ class ScannerProject extends Project {
     return scanData ? scanData.D_current : null;
   }
 
-  getColonistLimit() {
-    const colonistCap = Math.ceil((resources?.colony?.colonists?.value || 0) / 10000);
+  getWorkerCapLimit() {
+    const workerCap = Math.ceil((resources?.colony?.workers?.cap || 0) / 5000);
     if (this.maxRepeatCount === Infinity) {
-      return colonistCap;
+      return workerCap;
     }
-    return Math.max(Math.min(colonistCap, this.maxRepeatCount),1);
+    return Math.max(Math.min(workerCap, this.maxRepeatCount), 1);
   }
 
   getEffectiveBuildCount(count = this.buildCount) {
@@ -248,7 +248,12 @@ class ScannerProject extends Project {
 
   getScaledCost() {
     const base = super.getScaledCost();
-    const count = this.isActive ? (this.activeBuildCount || 1) : this.getEffectiveBuildCount(Math.min(this.buildCount, this.getColonistLimit()));
+    const count =
+      this.isActive
+        ? (this.activeBuildCount || 1)
+        : this.getEffectiveBuildCount(
+            Math.min(this.buildCount, this.getWorkerCapLimit())
+          );
     const scaled = {};
     for (const cat in base) {
       scaled[cat] = {};
@@ -260,21 +265,23 @@ class ScannerProject extends Project {
   }
 
   adjustBuildCount(delta) {
-    const limit = this.getColonistLimit();
+    const limit = this.getWorkerCapLimit();
     this.buildCount = Math.max(0, Math.min(this.buildCount + delta, limit));
   }
 
   setBuildCount(val) {
-    const limit = this.getColonistLimit();
+    const limit = this.getWorkerCapLimit();
     this.buildCount = Math.max(0, Math.min(val, limit));
   }
 
   setMaxBuildCount() {
-    this.setBuildCount(this.getColonistLimit());
+    this.setBuildCount(this.getWorkerCapLimit());
   }
 
   start(resources) {
-    this.activeBuildCount = this.getEffectiveBuildCount(Math.min(this.buildCount, this.getColonistLimit()));
+    this.activeBuildCount = this.getEffectiveBuildCount(
+      Math.min(this.buildCount, this.getWorkerCapLimit())
+    );
     return super.start(resources);
   }
 
@@ -345,7 +352,7 @@ class ScannerProject extends Project {
     max.id = `${this.name}-max`;
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
-    info.title = 'Colonists let us build scanners in parallel. One satellite can be produced per 10,000 colonists.';
+    info.title = 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 5,000 worker cap.';
     info.innerHTML = '&#9432;';
     amountDisplay.append(val, slash, max, info);
 
@@ -440,7 +447,7 @@ class ScannerProject extends Project {
       this.el.val.textContent = formatNumber(this.buildCount, true);
     }
     if (this.el.max) {
-      this.el.max.textContent = formatNumber(this.getColonistLimit(), true);
+      this.el.max.textContent = formatNumber(this.getWorkerCapLimit(), true);
     }
     if (this.el.bPlus) {
       this.el.bPlus.textContent = `+${formatNumber(this.step, true)}`;

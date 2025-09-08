@@ -14,7 +14,7 @@ describe('ScannerProject build count', () => {
         metal: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap(){} },
         electronics: { value: 1000, decrease(){}, updateStorageCap(){} },
         energy: { value: 1000000, decrease(){}, updateStorageCap(){} },
-        colonists: { value: 100000 }
+        workers: { cap: 100000 }
       }
     };
     vm.createContext(ctx);
@@ -50,9 +50,9 @@ describe('ScannerProject build count', () => {
     expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.5);
   });
 
-  test('build count cropped by colonists and remaining repeats', () => {
+  test('build count cropped by worker cap and remaining repeats', () => {
     const ctx = createContext();
-    ctx.resources.colony.colonists.value = 5000; // limit 1
+    ctx.resources.colony.workers.cap = 5000; // limit 1
     const config = {
       name: 'scan',
       category: 'infra',
@@ -73,13 +73,13 @@ describe('ScannerProject build count', () => {
     project.complete();
     project.update(0);
     expect(project.repeatCount).toBe(3);
-    // Strength scales with repeat count regardless of colonists
+    // Strength scales with repeat count regardless of worker cap
     expect(project.scanData.ore.currentScanningStrength).toBeCloseTo(0.3);
   });
 
-  test('colonist limit capped by max repeat count', () => {
+  test('worker cap limit capped by max repeat count', () => {
     const ctx = createContext();
-    ctx.resources.colony.colonists.value = 20000000; // would allow 2000
+    ctx.resources.colony.workers.cap = 20000000; // would allow 4000
     const config = {
       name: 'scan',
       category: 'infra',
@@ -92,6 +92,6 @@ describe('ScannerProject build count', () => {
       attributes: { scanner: { canSearchForDeposits: true, searchValue: 0.1, depositType: 'ore' } }
     };
     const project = new ctx.ScannerProject(config, 'scan');
-    expect(project.getColonistLimit()).toBe(1000);
+    expect(project.getWorkerCapLimit()).toBe(1000);
   });
 });
