@@ -34,9 +34,12 @@ function _ensureRWGEffectsUI() {
   card.className = 'rwg-card';
   card.id = 'rwg-effects-card';
   card.innerHTML = `
-    <h3>Random World Effects <span class="info-tooltip-icon" title="Bonuses from terraforming random worlds of each type">&#9432;</span></h3>
-    <div id="rwg-effects-list" class="rwg-effects-list"></div>
+    <div class="card-header">
+      <h3 class="card-title">Random World Effects <span class="info-tooltip-icon" title="Bonuses from terraforming random worlds of each type">&#9432;</span></h3>
+    </div>
+    <div id="rwg-effects-list" class="card-body rwg-effects-list"></div>
   `;
+  if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   const historyEl = document.getElementById('rwg-history');
   if (historyEl && historyEl.parentElement === container) {
     container.insertBefore(card, historyEl);

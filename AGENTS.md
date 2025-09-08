@@ -489,3 +489,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Cargo rocket x10 and /10 increment count now persists through save and load.
 - Added a sulfuric acid atmospheric resource integrated with physics.js and albedo cloud calculations.
 - Zonal dry ice storage moved from `zonalSurface` to `zonalCO2.ice` and all interactions updated accordingly.
+- Random World Effects card can now be collapsed to hide its table.
