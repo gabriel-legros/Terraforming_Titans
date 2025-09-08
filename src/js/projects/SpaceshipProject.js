@@ -9,6 +9,7 @@ class SpaceshipProject extends Project {
     this.assignmentMultiplier = 1;
     this.lastActiveTime = 0;
     this.pendingGain = null;
+    this.shipCapacityMultiplier = 1;
   }
 
   isContinuous() {
@@ -76,7 +77,7 @@ class SpaceshipProject extends Project {
 
   getShipCapacity(baseAmount = this.attributes.disposalAmount || 0) {
     const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
-    return baseAmount * efficiency;
+    return baseAmount * efficiency * this.shipCapacityMultiplier;
   }
 
   updateCostAndGains(elements) {

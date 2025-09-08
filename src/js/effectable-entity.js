@@ -194,6 +194,9 @@ class EffectableEntity {
         case 'shipEfficiency':
           this.applyShipEfficiency(effect);
           break;
+        case 'shipCapacityMultiplier':
+          this.applyShipCapacityMultiplier(effect);
+          break;
         case 'projectDurationReduction':
           this.applyProjectDurationReduction(effect);
           break;
@@ -417,6 +420,12 @@ class EffectableEntity {
     applyShipEfficiency(effect) {
       if (typeof shipEfficiency !== 'undefined') {
         shipEfficiency = 1 + effect.value;
+      }
+    }
+
+    applyShipCapacityMultiplier(effect) {
+      if (typeof this.shipCapacityMultiplier === 'number') {
+        this.shipCapacityMultiplier *= effect.value;
       }
     }
 
