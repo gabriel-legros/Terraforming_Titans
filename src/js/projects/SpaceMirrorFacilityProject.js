@@ -15,7 +15,7 @@ function createDefaultMirrorOversightSettings() {
     distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
     applyToLantern: false,
     useFinerControls: false,
-    assignmentStep: 1,
+    assignmentStep: { mirrors: 1, lanterns: 1 },
     advancedOversight: false,
     targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
     waterMultiplier: 1000,
@@ -117,7 +117,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.distribution.unassigned = 0;
   mirrorOversightSettings.applyToLantern = false;
   mirrorOversightSettings.useFinerControls = false;
-  mirrorOversightSettings.assignmentStep = 1;
+  mirrorOversightSettings.assignmentStep = { mirrors: 1, lanterns: 1 };
   mirrorOversightSettings.advancedOversight = false;
   mirrorOversightSettings.targets = { tropical: 0, temperate: 0, polar: 0, water: 0 };
   mirrorOversightSettings.waterMultiplier = 1000;
@@ -287,15 +287,19 @@ function updateAssignmentDisplays() {
       availableEl.textContent = formatBuildingCount(Math.max(0, total - assigned));
     }
   });
-  const stepEl = document.getElementById('assignment-step-display');
-  if (stepEl) stepEl.textContent = `x${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+  types.forEach(type => {
+    const step = mirrorOversightSettings.assignmentStep?.[type] || 1;
+    const stepEl = document.querySelector(`.assignment-step-display[data-type="${type}"]`);
+    if (stepEl) stepEl.textContent = `x${formatNumber(step, true)}`;
+  });
 
   zones.forEach(zone => {
     types.forEach(type => {
+      const step = mirrorOversightSettings.assignmentStep?.[type] || 1;
       const plusBtn = document.querySelector(`.assign-plus[data-type="${type}"][data-zone="${zone}"]`);
-      if (plusBtn) plusBtn.textContent = `+${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+      if (plusBtn) plusBtn.textContent = `+${formatNumber(step, true)}`;
       const minusBtn = document.querySelector(`.assign-minus[data-type="${type}"][data-zone="${zone}"]`);
-      if (minusBtn) minusBtn.textContent = `-${formatNumber(mirrorOversightSettings.assignmentStep, true)}`;
+      if (minusBtn) minusBtn.textContent = `-${formatNumber(step, true)}`;
     });
     const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
     if (checkbox) {
@@ -648,9 +652,16 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-use-finer">Use Finer Controls</label>
       </div>
       <div class="control-group step-controls">
-        <button id="assignment-div10">/10</button>
-        <span id="assignment-step-display">x1</span>
-        <button id="assignment-mul10">x10</button>
+        <div class="type-step-controls" data-type="mirrors">
+          <button class="assignment-div10" data-type="mirrors">/10</button>
+          <span class="assignment-step-display" data-type="mirrors">x1</span>
+          <button class="assignment-mul10" data-type="mirrors">x10</button>
+        </div>
+        <div class="type-step-controls lantern-step-controls" data-type="lanterns">
+          <button class="assignment-div10" data-type="lanterns">/10</button>
+          <span class="assignment-step-display" data-type="lanterns">x1</span>
+          <button class="assignment-mul10" data-type="lanterns">x10</button>
+        </div>
       </div>
     </div>
     <div id="assignment-grid">
@@ -758,13 +769,20 @@ function initializeMirrorOversightUI(container) {
       updateZonalFluxTable();
     });
   });
-  finerContent.querySelector('#assignment-mul10').addEventListener('click', () => {
-    mirrorOversightSettings.assignmentStep *= 10;
-    updateAssignmentDisplays();
+  finerContent.querySelectorAll('.assignment-mul10').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      mirrorOversightSettings.assignmentStep[type] *= 10;
+      updateAssignmentDisplays();
+    });
   });
-  finerContent.querySelector('#assignment-div10').addEventListener('click', () => {
-    mirrorOversightSettings.assignmentStep = Math.max(1, Math.floor(mirrorOversightSettings.assignmentStep / 10));
-    updateAssignmentDisplays();
+  finerContent.querySelectorAll('.assignment-div10').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      const cur = mirrorOversightSettings.assignmentStep[type] || 1;
+      mirrorOversightSettings.assignmentStep[type] = Math.max(1, Math.floor(cur / 10));
+      updateAssignmentDisplays();
+    });
   });
 
   finerContent.querySelectorAll('.assign-zero, .assign-minus, .assign-plus, .assign-max').forEach(btn => {
@@ -773,7 +791,7 @@ function initializeMirrorOversightUI(container) {
       const type = btn.dataset.type;
       const getTotal = () => type === 'mirrors' ? (buildings?.spaceMirror?.active || 0) : (buildings?.hyperionLantern?.active || 0);
       const assignments = mirrorOversightSettings.assignments[type];
-      const step = mirrorOversightSettings.assignmentStep;
+      const step = mirrorOversightSettings.assignmentStep?.[type] || 1;
       const current = assignments[zone] || 0;
 
       if (btn.classList.contains('assign-zero')) {
@@ -826,6 +844,7 @@ function rebuildMirrorOversightCache() {
     dayTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(4)') || null,
     sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
     sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
+    lanternStepControls: document.querySelector('.lantern-step-controls') || null,
   };
 }
 
@@ -961,6 +980,7 @@ function updateMirrorOversightUI() {
   if (C.lanternHeader) C.lanternHeader.style.display = lanternUnlocked ? '' : 'none';
   if (C.lanternCells) C.lanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
   if (C.availableLanternCells) C.availableLanternCells.forEach(cell => { cell.style.display = lanternUnlocked ? 'flex' : 'none'; });
+  if (C.lanternStepControls) C.lanternStepControls.style.display = lanternUnlocked ? '' : 'none';
   if (C.reversalHeader) C.reversalHeader.style.display = reversalAvailable ? '' : 'none';
   if (C.reversalCells) C.reversalCells.forEach(cell => { cell.style.display = reversalAvailable ? 'flex' : 'none'; });
 
@@ -1987,9 +2007,14 @@ class SpaceMirrorFacilityProject extends Project {
 
     settings.applyToLantern = !!saved.applyToLantern;
     settings.useFinerControls = !!saved.useFinerControls;
-    settings.assignmentStep = typeof saved.assignmentStep === 'number' && saved.assignmentStep > 0
-      ? saved.assignmentStep
-      : 1;
+    if (typeof saved.assignmentStep === 'object') {
+      settings.assignmentStep.mirrors = Math.max(1, Math.floor(saved.assignmentStep.mirrors)) || 1;
+      settings.assignmentStep.lanterns = Math.max(1, Math.floor(saved.assignmentStep.lanterns)) || 1;
+    } else {
+      const val = typeof saved.assignmentStep === 'number' && saved.assignmentStep > 0 ? saved.assignmentStep : 1;
+      settings.assignmentStep.mirrors = val;
+      settings.assignmentStep.lanterns = val;
+    }
     settings.advancedOversight = !!saved.advancedOversight;
     settings.waterMultiplier = typeof saved.waterMultiplier === 'number' && saved.waterMultiplier > 0
       ? saved.waterMultiplier
