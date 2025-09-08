@@ -78,9 +78,19 @@ function calculateSaturationPressureCO2(T) {
   if (T < CO2_T_TRIPLE) return psatCO2Solid(T); // solid branch
   return psatCO2Liquid(T);                      // liquid branch
 }
+
+// Precompute saturation vapor pressure slope at the critical point (Pa/K)
+const CRITICAL_SVP_SLOPE_CO2 = (() => {
+  const h = 0.01;
+  const p1 = psatCO2Liquid(CO2_T_CRIT - h);
+  const p2 = psatCO2Liquid(CO2_T_CRIT);
+  const slope = (p2 - p1) / h;
+  return Number.isFinite(slope) ? Math.max(slope, 0) : 0;
+})();
 // Numerical slope dPsat/dT (Pa/K)
 function slopeSVPCO2(T) {
   const h = 0.01;
+  if (T >= CO2_T_CRIT) return CRITICAL_SVP_SLOPE_CO2;
   const T1 = Math.max(1, T - h);
   const T2 = T + h;
   const p1 = calculateSaturationPressureCO2(T1);
