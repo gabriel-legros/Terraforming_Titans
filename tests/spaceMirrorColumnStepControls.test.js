@@ -37,12 +37,11 @@ describe('Space Mirror column step controls', () => {
     global.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { active: 0, unlocked: true } };
     initializeMirrorOversightUI(container);
     toggleFinerControls(true);
-    const mirrorGroup = container.querySelector('.step-controls .type-step-controls[data-type="mirrors"]');
-    const lanternGroup = container.querySelector('.step-controls .type-step-controls[data-type="lanterns"]');
-    expect(mirrorGroup.querySelector('.assignment-div10')).not.toBeNull();
-    expect(mirrorGroup.querySelector('.assignment-step-display')).not.toBeNull();
-    expect(mirrorGroup.querySelector('.assignment-mul10')).not.toBeNull();
-    expect(lanternGroup.style.display).not.toBe('none');
+    const mirrorCell = container.querySelector('.available-mirror-cell');
+    const lanternCell = container.querySelector('.available-lantern-cell');
+    expect(mirrorCell.querySelector('.assignment-div10')).not.toBeNull();
+    expect(mirrorCell.querySelector('.assignment-mul10')).not.toBeNull();
+    expect(lanternCell.style.display).not.toBe('none');
     delete global.window;
     delete global.document;
   });
@@ -55,8 +54,8 @@ describe('Space Mirror column step controls', () => {
     global.buildings = { spaceMirror: { active: 0 }, hyperionLantern: { active: 0, unlocked: false } };
     initializeMirrorOversightUI(container);
     toggleFinerControls(true);
-    const lanternGroup = container.querySelector('.step-controls .type-step-controls[data-type="lanterns"]');
-    expect(lanternGroup.style.display).toBe('none');
+    const lanternCell = container.querySelector('.available-lantern-cell');
+    expect(lanternCell.style.display).toBe('none');
     delete global.window;
     delete global.document;
   });
