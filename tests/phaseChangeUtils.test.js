@@ -42,6 +42,30 @@ describe('phase-change utility helpers', () => {
     const res = utils.penmanRate(params);
     expect(res).toBeCloseTo(expected);
   });
+
+  test('penmanRate clamps humidity deficit above critical temperature', () => {
+    const T = 700;
+    const params = {
+      T,
+      solarFlux: 500,
+      atmPressure: 101325,
+      e_a: water.saturationVaporPressureMK(T) + 1e7,
+      latentHeat: 2.45e6,
+      albedo: 0.3,
+      r_a: 100,
+      Delta_s: water.slopeSaturationVaporPressureWater(T),
+      e_s: water.saturationVaporPressureMK(T),
+      criticalTemperature: 647.096,
+    };
+    const gamma_s = utils.psychrometricConstant(params.atmPressure, params.latentHeat);
+    const rho_a_val = physics.airDensity(params.atmPressure, params.T);
+    const R_n = (1 - params.albedo) * params.solarFlux;
+    const expected =
+      (params.Delta_s * R_n + (rho_a_val * 1004 * 0) / params.r_a) /
+      ((params.Delta_s + gamma_s) * params.latentHeat);
+    const res = utils.penmanRate(params);
+    expect(res).toBeCloseTo(expected);
+  });
 });
 
 describe('meltingFreezingRates helper', () => {

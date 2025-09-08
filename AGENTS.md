@@ -492,3 +492,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Zonal dry ice storage moved from `zonalSurface` to `zonalCO2.ice` and all interactions updated accordingly.
 - Random World Effects card can now be collapsed to hide its table.
 - Disabling space mirror advanced oversight now auto-enables finer controls and retains current assignments.
+- penmanRate now prevents negative humidity deficits above the critical temperature.

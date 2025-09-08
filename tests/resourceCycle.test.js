@@ -33,6 +33,35 @@ describe('ResourceCycle base class', () => {
     expect(rc.evaporationRate(args)).toBeCloseTo(expected);
   });
 
+  test('evaporationRate clamps humidity deficit above critical temperature', () => {
+    const criticalRC = new ResourceCycle({
+      latentHeatVaporization: 1e6,
+      latentHeatSublimation: 2e6,
+      saturationVaporPressureFn: saturationFn,
+      slopeSaturationVaporPressureFn: slopeFn,
+      freezePoint: 273.15,
+      sublimationPoint: 195,
+      criticalTemperature: 500,
+    });
+    const T = 600;
+    const e_s = saturationFn(T);
+    const e_a = e_s + 1000;
+    const args = { T, solarFlux: 500, atmPressure: 100000, vaporPressure: e_a };
+    const expected = penmanRate({
+      T,
+      solarFlux: 500,
+      atmPressure: 100000,
+      e_a,
+      latentHeat: 1e6,
+      albedo: 0.6,
+      r_a: 100,
+      Delta_s: slopeFn(T),
+      e_s,
+      criticalTemperature: 500,
+    });
+    expect(criticalRC.evaporationRate(args)).toBeCloseTo(expected);
+  });
+
   test('condensationRateFactor uses provided functions', () => {
     const args = { zoneArea: 100, vaporPressure: 2000, gravity: 9.81, dayTemp: 280, nightTemp: 270 };
     const expected = condensationRateFactor({
