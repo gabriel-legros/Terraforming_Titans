@@ -12,19 +12,40 @@
    return (C_P_AIR * atmPressure) / (EPSILON * latentHeat);
  }
  
- function penmanRate({ T, solarFlux, atmPressure, e_a, latentHeat, albedo = 0.6, r_a = 100, Delta_s, e_s }) {
-   if (typeof Delta_s !== 'number' || typeof e_s !== 'number') {
-     throw new Error('penmanRate requires Delta_s and e_s');
-   }
-   const R_n = (1 - albedo) * solarFlux;
-   const gamma_s = psychrometricConstant(atmPressure, latentHeat);
-   const rho_a_val = airDensityFn(atmPressure, T);
- 
-   const numerator = (Delta_s * R_n) + (rho_a_val * C_P_AIR * (e_s - e_a) / r_a);
-   const denominator = (Delta_s + gamma_s) * latentHeat;
-   const rate = numerator / denominator;
-   return Math.max(0, rate);
- }
+function penmanRate({
+  T,
+  solarFlux,
+  atmPressure,
+  e_a,
+  latentHeat,
+  albedo = 0.6,
+  r_a = 100,
+  Delta_s,
+  e_s,
+  criticalTemperature = Infinity,
+}) {
+  if (typeof Delta_s !== 'number' || typeof e_s !== 'number') {
+    throw new Error('penmanRate requires Delta_s and e_s');
+  }
+  const R_n = (1 - albedo) * solarFlux;
+  const gamma_s = psychrometricConstant(atmPressure, latentHeat);
+  const rho_a_val = airDensityFn(atmPressure, T);
+
+  let humidityDeficit = e_s - e_a;
+  if (
+    Number.isFinite(criticalTemperature) &&
+    T >= criticalTemperature &&
+    humidityDeficit < 0
+  ) {
+    humidityDeficit = 0;
+  }
+
+  const numerator =
+    Delta_s * R_n + (rho_a_val * C_P_AIR * humidityDeficit) / r_a;
+  const denominator = (Delta_s + gamma_s) * latentHeat;
+  const rate = numerator / denominator;
+  return Math.max(0, rate);
+}
  
  // Generic helper for melting/freezing calculations used by hydrology
  function meltingFreezingRates({

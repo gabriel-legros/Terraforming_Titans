@@ -70,6 +70,7 @@ class ResourceCycle {
       r_a,
       Delta_s,
       e_s,
+      criticalTemperature: this.criticalTemperature,
     });
   }
 
@@ -107,6 +108,7 @@ class ResourceCycle {
       r_a,
       Delta_s,
       e_s,
+      criticalTemperature: this.criticalTemperature,
     });
   }
 

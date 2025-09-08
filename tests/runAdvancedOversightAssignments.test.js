@@ -84,7 +84,7 @@ describe('runAdvancedOversightAssignments', () => {
     project.reversalAvailable = false;
   });
 
-  test('prioritizes water focusing and uses lanterns when needed', () => {
+  test('prioritizes water focusing and avoids lanterns when not needed', () => {
     global.projectManager = {
       isBooleanFlagSet: (flag) => flag === 'spaceMirrorFocusing'
     };
@@ -97,7 +97,7 @@ describe('runAdvancedOversightAssignments', () => {
     runAdvancedOversightAssignments(project);
 
     expect(mirrorOversightSettings.assignments.mirrors.focus).toBe(1);
-    expect(mirrorOversightSettings.assignments.lanterns.focus).toBe(1);
+    expect(mirrorOversightSettings.assignments.lanterns.focus).toBe(0);
     // Remaining mirrors go to tropical but are insufficient to reach target fully
     expect(mirrorOversightSettings.assignments.mirrors.tropical).toBe(0);
     delete global.projectManager;
