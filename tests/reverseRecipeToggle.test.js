@@ -1,6 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
+global.Building = Building;
 const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
 
 function createGHGFactory(){
