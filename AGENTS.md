@@ -442,6 +442,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - GHG factory temperature disable controls now accept decimal values.
 - GHG factory temperature inputs no longer overwrite user edits while focused, enabling decimal adjustments.
 - GHG factory temperature control UI now resides within `GhgFactory.js` via `initUI` and `updateUI` methods.
+- Oxygen factory pressure control UI now resides within `OxygenFactory.js` via `initUI` and `updateUI` methods.
 - Solis shop displays "Purchased" instead of a count when an upgrade reaches its maximum purchases.
 - Cargo rocket project resource selection now uses 0/-1/+1,/10,x10 controls for consistency.
 - Space storage ship assignment multiplier persists through save and load.
