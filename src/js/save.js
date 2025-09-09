@@ -386,12 +386,12 @@ function loadGame(slotOrCustomString) {
     }
 
     if(gameState.ghgFactorySettings){
-      Object.assign(ghgFactorySettingsRef, gameState.ghgFactorySettings);
+      Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
       enforceGhgFactoryTempGap();
     }
 
     if(gameState.oxygenFactorySettings){
-      Object.assign(oxygenFactorySettingsRef, gameState.oxygenFactorySettings);
+      Object.assign(oxygenFactorySettings, gameState.oxygenFactorySettings);
     }
 
       if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
