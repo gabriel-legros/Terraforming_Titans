@@ -5,7 +5,7 @@ const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('Dyson Swarm energy production', () => {
-  test('completed project adds energy rate based on collectors', () => {
+  test('completed project no longer adds energy', () => {
     const ctx = {
       console,
       EffectableEntity,
@@ -47,7 +47,7 @@ describe('Dyson Swarm energy production', () => {
     project.applyCostAndGain(1000, changes);
     ctx.resources.colony.energy.value += changes.colony.energy;
 
-    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(150, 'Dyson Swarm', 'project');
-    expect(ctx.resources.colony.energy.value).toBe(150);
+    expect(ctx.resources.colony.energy.modifyRate).not.toHaveBeenCalled();
+    expect(ctx.resources.colony.energy.value).toBe(0);
   });
 });

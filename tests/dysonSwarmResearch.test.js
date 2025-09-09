@@ -24,7 +24,7 @@ describe('Dyson Swarm research parameters', () => {
     const energy = ctx.researchParameters.energy;
     const research = energy.find(r => r.id === 'dyson_swarm_receiver');
     expect(research).toBeDefined();
-    expect(research.cost.research).toBe(10000000000);
+    expect(research.cost.research).toBe(100000);
     expect(research.requiredFlags).toEqual(['dysonSwarmUnlocked']);
     const effect = research.effects.find(e => e.target === 'project' && e.targetId === 'dysonSwarmReceiver');
     expect(effect).toBeDefined();

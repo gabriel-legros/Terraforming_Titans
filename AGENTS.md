@@ -249,7 +249,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
 - Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
 - Colony upgrades consume active colonies before inactive ones and require land for inactive replacements.
-- Added a `treatAsBuilding` flag for certain projects like the Dyson Swarm Receiver so they contribute to building productivity and resource production loops.
+- Added a `treatAsBuilding` flag for certain projects so they can run during the building phase. The Dyson Swarm Receiver no longer uses this flag or produces energy directly; its power output is now handled by the Dyson Receiver building.
 - Population growth skill multiplier displays as 'Awakening' in the growth rate tooltip.
 - Autobuild cost tracker preserves overflow milliseconds for accurate 10-second spending averages.
 - Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
