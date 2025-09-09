@@ -212,7 +212,8 @@ const researchParameters = {
         prerequisites: [],
         requiredFlags: ['dysonSwarmUnlocked'],
         effects: [
-          { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' }
+          { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' },
+          { target: 'building', targetId: 'dysonReceiver', type: 'enable' }
         ]
       },
       {
