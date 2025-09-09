@@ -208,7 +208,7 @@ const researchParameters = {
         id: 'dyson_swarm_receiver',
         name: 'Dyson Swarm Receiver',
         description: 'Enables construction of a receiver for orbital solar collectors.',
-        cost: { research: 10000000000 },
+        cost: { research: 100_000 },
         prerequisites: [],
         requiredFlags: ['dysonSwarmUnlocked'],
         effects: [
