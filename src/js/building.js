@@ -1,11 +1,3 @@
-var ghgFactorySettingsRef = ghgFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').ghgFactorySettings
-    : globalThis.ghgFactorySettings);
-var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').oxygenFactorySettings
-    : globalThis.oxygenFactorySettings);
 
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
@@ -562,12 +554,10 @@ class Building extends EffectableEntity {
   }
 
   updateProductivity(resources, deltaTime) {
-    const {
-      targetProductivity: baseTarget,
-      hasAtmosphericOversight,
-      computeMaxProduction,
-      solveRequired
-    } = this.computeBaseProductivity(resources, deltaTime);
+    const { targetProductivity: baseTarget } = this.computeBaseProductivity(
+      resources,
+      deltaTime
+    );
 
     if (this.active === 0) {
       this.productivity = 0;
@@ -575,41 +565,6 @@ class Building extends EffectableEntity {
     }
 
     let targetProductivity = baseTarget;
-
-    // Automatically adjust Oxygen factory output to hit target pressure
-    if (
-      this.name === 'oxygenFactory' &&
-      hasAtmosphericOversight &&
-      oxygenFactorySettingsRef.autoDisableAbovePressure &&
-      terraforming && resources.atmospheric?.oxygen &&
-      typeof calculateAtmosphericPressure === 'function'
-    ) {
-      const oxygen = resources.atmospheric.oxygen;
-      const targetPa = oxygenFactorySettingsRef.disablePressureThreshold * 1000;
-      const currentPa = calculateAtmosphericPressure(
-        oxygen.value,
-        terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
-      );
-      if (currentPa >= targetPa) {
-        this.productivity = 0;
-        return;
-      }
-      const maxProduction = computeMaxProduction('atmospheric', 'oxygen');
-      if (maxProduction > 0) {
-        const originalAmount = oxygen.value;
-        const required = solveRequired((added) => {
-          return calculateAtmosphericPressure(
-            originalAmount + added,
-            terraforming.celestialParameters.gravity,
-            terraforming.celestialParameters.radius
-          ) - targetPa;
-        }, maxProduction);
-        this.productivity = Math.min(targetProductivity, required / maxProduction);
-        return;
-      }
-      // If pressure is below threshold but we can't compute amount, fall through
-    }
 
     // Disable Biodome when designed life cannot survive anywhere
     if (
@@ -830,6 +785,15 @@ function initializeBuildings(buildingsParameters) {
       }
       GhgFactoryCtor = GhgFactoryCtor || globalThis.GhgFactory || Building;
       buildings[buildingName] = new GhgFactoryCtor(buildingConfig, buildingName);
+    } else if (buildingName === 'oxygenFactory') {
+      let OxygenFactoryCtor;
+      if (typeof require !== 'undefined') {
+        try {
+          OxygenFactoryCtor = require('./buildings/OxygenFactory.js').OxygenFactory;
+        } catch (e) {}
+      }
+      OxygenFactoryCtor = OxygenFactoryCtor || globalThis.OxygenFactory || Building;
+      buildings[buildingName] = new OxygenFactoryCtor(buildingConfig, buildingName);
     } else {
       buildings[buildingName] = new Building(buildingConfig, buildingName);
     }

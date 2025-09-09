@@ -1,7 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { oxygenFactorySettings } = require('../src/js/ghg-automation.js');
-const { Building } = require('../src/js/building.js');
+const { OxygenFactory } = require('../src/js/buildings/OxygenFactory.js');
 
 describe('Oxygen factory pressure derivative', () => {
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe('Oxygen factory pressure derivative', () => {
       unlocked: true,
     };
 
-    const building = new Building(config, 'oxygenFactory');
+    const building = new OxygenFactory(config, 'oxygenFactory');
     building.active = 1;
     building.addEffect({ type: 'booleanFlag', flagId: 'terraformingBureauFeature', value: true });
 
