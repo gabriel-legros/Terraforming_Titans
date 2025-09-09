@@ -1,6 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
+const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
 
 function createGHGFactory(){
   const config = {
@@ -24,7 +25,7 @@ function createGHGFactory(){
       calcite: { production: { atmospheric: { calciteAerosol: 10 } }, reverseTarget: { category: 'atmospheric', resource: 'calciteAerosol' } }
     }
   };
-  return new Building(config, 'ghgFactory');
+  return new GhgFactory(config, 'ghgFactory');
 }
 
 function createDustFactory(){
