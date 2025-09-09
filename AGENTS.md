@@ -6,6 +6,7 @@
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
 - Keep checks of the kind (typeof something === 'function') and if(resources && resources.special && resources.special.spaceships) to a minimum.  If the checks fail, the code fails and it is better to catch it than let it fail.
 - All UI elements should be cached and reused instead of using querySelector.
+- Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
