@@ -17,12 +17,15 @@ describe('colony hide button state', () => {
     ctx.divideByTen = n => Math.max(1, Math.floor(n / 10));
     ctx.resources = { colony: { colonists: { value: 0 }, workers: { value: 0 } } };
     ctx.globalEffects = { isBooleanFlagSet: () => false };
-    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
-    vm.runInContext(factorySettings, ctx);
-    ctx.ghgFactorySettings.autoDisableAboveTemp = false;
-    ctx.ghgFactorySettings.disableTempThreshold = 0;
-    ctx.ghgFactorySettings.restartCap = 1;
-    ctx.ghgFactorySettings.restartTimer = 0;
+    ctx.ghgFactorySettings = {
+      autoDisableAboveTemp: false,
+      disableTempThreshold: 0,
+      reverseTempThreshold: 0,
+      restartCap: 1,
+      restartTimer: 0,
+    };
+    ctx.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15 };
+    ctx.enforceGhgFactoryTempGap = () => {};
     ctx.dayNightCycle = { isNight: () => false };
     ctx.toDisplayTemperature = () => 0;
     ctx.getTemperatureUnit = () => 'K';

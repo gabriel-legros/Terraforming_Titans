@@ -2,8 +2,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
 global.Building = Building;
-const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
-const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
+const { GhgFactory, ghgFactorySettings } = require('../src/js/buildings/GhgFactory.js');
 
 const researchedManagerStub = {
   getResearchById: () => ({ isResearched: true })

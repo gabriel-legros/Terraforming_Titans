@@ -44,8 +44,13 @@ describe('research alerts persist after loading', () => {
     ctx.spaceManager = { saveState: () => ({}), loadState: () => {}, getCurrentPlanetKey: () => 'mars' };
     ctx.selectedBuildCounts = {};
     ctx.colonySliderSettings = {};
-    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
-    vm.runInContext(factorySettings, ctx);
+    ctx.ghgFactorySettings = {
+      autoDisableAboveTemp: false,
+      disableTempThreshold: 283.15,
+      reverseTempThreshold: 283.15,
+    };
+    ctx.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15 };
+    ctx.enforceGhgFactoryTempGap = () => {};
     ctx.mirrorOversightSettings = {};
     ctx.playTimeSeconds = 0;
     ctx.planetParameters = { mars: { resources: {} } };

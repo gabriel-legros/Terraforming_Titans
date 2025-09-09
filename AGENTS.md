@@ -388,7 +388,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Resource tooltips split into three columns when too tall to fit above or below the viewport, prioritizing below placement.
 - Workers tooltip lists how many workers come from colonists above the android count.
 - Resource tooltips only update while hovered, reducing unnecessary DOM work.
-- GHG and oxygen factory settings now export from src/js/ghg-automation.js.
+- GHG and oxygen factory settings now export from `src/js/buildings/GhgFactory.js` and `src/js/buildings/OxygenFactory.js`.
 - Reverse button toggles dust or GHG factory recipes even when no factories are built.
 - Random World Generator history lists visited worlds with names, types, seeds, states and departure times.
 - Random world departures now log timestamp and Ecumenopolis land coverage.

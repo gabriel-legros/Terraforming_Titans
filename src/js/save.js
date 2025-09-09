@@ -1,10 +1,16 @@
 var ghgFactorySettingsRef = ghgFactorySettingsRef ||
   (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').ghgFactorySettings
+    ? (() => {
+        try { return require('./buildings/GhgFactory.js').ghgFactorySettings; }
+        catch (e) { return globalThis.ghgFactorySettings; }
+      })()
     : globalThis.ghgFactorySettings);
 var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
   (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').oxygenFactorySettings
+    ? (() => {
+        try { return require('./buildings/OxygenFactory.js').oxygenFactorySettings; }
+        catch (e) { return globalThis.oxygenFactorySettings; }
+      })()
     : globalThis.oxygenFactorySettings);
 
 globalGameIsLoadingFromSave = false;

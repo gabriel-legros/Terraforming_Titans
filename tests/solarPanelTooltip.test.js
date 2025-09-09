@@ -35,8 +35,13 @@ describe('Solar panel tooltip', () => {
     ctx.updateBuildingDisplay = () => {};
     ctx.terraforming = { celestialParameters: {} };
 
-    const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
-    vm.runInContext(factorySettings, ctx);
+    ctx.ghgFactorySettings = {
+      autoDisableAboveTemp: false,
+      disableTempThreshold: 283.15,
+      reverseTempThreshold: 283.15,
+    };
+    ctx.oxygenFactorySettings = { autoDisableAbovePressure: false, disablePressureThreshold: 15 };
+    ctx.enforceGhgFactoryTempGap = () => {};
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'structuresUI.js'), 'utf8');
     vm.runInContext(code, ctx);

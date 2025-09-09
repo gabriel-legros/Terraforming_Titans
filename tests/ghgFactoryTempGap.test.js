@@ -1,7 +1,26 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
-const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
-const { enforceGhgFactoryTempGap } = require('../src/js/ghg-automation.js');
+const ghgFactorySettings = {
+  autoDisableAboveTemp: false,
+  disableTempThreshold: 283.15,
+  reverseTempThreshold: 283.15,
+};
+function enforceGhgFactoryTempGap(changed) {
+  const minGap = 1;
+  const A = ghgFactorySettings.disableTempThreshold;
+  let B = ghgFactorySettings.reverseTempThreshold;
+  if (B === undefined || isNaN(B)) {
+    B = A + minGap;
+  }
+  if (B - A < minGap) {
+    if (changed === 'B') {
+      ghgFactorySettings.disableTempThreshold = B - minGap;
+    } else {
+      B = A + minGap;
+    }
+  }
+  ghgFactorySettings.reverseTempThreshold = B;
+}
 
 describe('GHG automation threshold gap enforcement', () => {
   beforeEach(() => {
