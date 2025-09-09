@@ -752,7 +752,8 @@ const constructors = {
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
   biodome: 'Biodome',
-  dysonReceiver: 'dysonReceiver'
+  dysonReceiver: 'dysonReceiver',
+  solarPanel: 'solarPanel'
 };
 
 function loadConstructor(name) {
