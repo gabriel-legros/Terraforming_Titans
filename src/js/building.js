@@ -464,12 +464,6 @@ class Building extends EffectableEntity {
       if (activate) {
         this.active += buildCount;
       }
-      if (this.name === 'oreMine' && typeof projectManager !== 'undefined') {
-        const dm = projectManager.projects?.deeperMining;
-        if (dm && typeof dm.registerMine === 'function') {
-          dm.registerMine();
-        }
-      }
       if(this.active > 0){
         this.productivity = oldProductivity * (oldActive / this.active);
       } else {
@@ -899,8 +893,18 @@ function initializeBuildings(buildingsParameters) {
     const buildingConfig = {
       ...buildingData
     };
-
-    buildings[buildingName] = new Building(buildingConfig, buildingName);
+    if (buildingName === 'oreMine') {
+      let OreMineCtor;
+      if (typeof require !== 'undefined') {
+        try {
+          OreMineCtor = require('./buildings/OreMine.js').OreMine;
+        } catch (e) {}
+      }
+      OreMineCtor = OreMineCtor || globalThis.OreMine || Building;
+      buildings[buildingName] = new OreMineCtor(buildingConfig, buildingName);
+    } else {
+      buildings[buildingName] = new Building(buildingConfig, buildingName);
+    }
   }
   initializeBuildingTabs();
   return buildings;
@@ -908,4 +912,7 @@ function initializeBuildings(buildingsParameters) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { Building, initializeBuildings };
+} else if (typeof globalThis !== 'undefined') {
+  globalThis.Building = Building;
+  globalThis.initializeBuildings = initializeBuildings;
 }
