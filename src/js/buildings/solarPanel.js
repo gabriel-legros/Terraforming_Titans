@@ -9,6 +9,22 @@ class SolarPanel extends Building {
     const allowed = Math.min(buildCount, remaining);
     return super.build(allowed, activate);
   }
+
+  initUI(_, cache) {
+    const row = cache?.row;
+    if (!row || cache.countTooltip) return;
+    const countEl =
+      row.querySelector(`#${this.name}-count-active`) ||
+      row.querySelector(`#${this.name}-count`);
+    if (!countEl) return;
+    const tooltip = document.createElement('span');
+    tooltip.classList.add('info-tooltip-icon');
+    tooltip.title =
+      'Solar panels are limited to 10× the initial land amount.';
+    tooltip.innerHTML = '&#9432;';
+    countEl.parentElement.insertBefore(tooltip, countEl.nextSibling);
+    cache.countTooltip = tooltip;
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

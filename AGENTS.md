@@ -507,3 +507,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added `Biodome` subclass disabling productivity when life can't survive anywhere.
 - Added `DysonReceiver` building capping energy output to Dyson Swarm production.
 - Added `SolarPanel` subclass limiting total panels to ten times the world's initial land value.
+- Solar Panel counts now include a tooltip noting the 10× initial land construction cap.
