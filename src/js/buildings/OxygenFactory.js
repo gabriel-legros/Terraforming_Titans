@@ -1,7 +1,7 @@
-var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? require('../ghg-automation.js').oxygenFactorySettings
-    : globalThis.oxygenFactorySettings);
+var oxygenFactorySettings = oxygenFactorySettings || {
+  autoDisableAbovePressure: false,
+  disablePressureThreshold: 15, // kPa
+};
 
 class OxygenFactory extends Building {
   updateProductivity(resources, deltaTime) {
@@ -21,13 +21,13 @@ class OxygenFactory extends Building {
 
     if (
       hasAtmosphericOversight &&
-      oxygenFactorySettingsRef.autoDisableAbovePressure &&
+      oxygenFactorySettings.autoDisableAbovePressure &&
       terraforming &&
       resources.atmospheric?.oxygen &&
       typeof calculateAtmosphericPressure === 'function'
     ) {
       const oxygen = resources.atmospheric.oxygen;
-      const targetPa = oxygenFactorySettingsRef.disablePressureThreshold * 1000;
+      const targetPa = oxygenFactorySettings.disablePressureThreshold * 1000;
       const currentPa = calculateAtmosphericPressure(
         oxygen.value,
         terraforming.celestialParameters.gravity,
@@ -79,9 +79,9 @@ class OxygenFactory extends Building {
     const pressureCheckbox = document.createElement('input');
     pressureCheckbox.type = 'checkbox';
     pressureCheckbox.classList.add('o2-pressure-checkbox');
-    pressureCheckbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
+    pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
     pressureCheckbox.addEventListener('change', () => {
-      oxygenFactorySettingsRef.autoDisableAbovePressure = pressureCheckbox.checked;
+      oxygenFactorySettings.autoDisableAbovePressure = pressureCheckbox.checked;
     });
     pressureControl.appendChild(pressureCheckbox);
 
@@ -102,14 +102,14 @@ class OxygenFactory extends Building {
 
     const update = () => {
       if (document.activeElement !== pressureInput) {
-        pressureInput.value = oxygenFactorySettingsRef.disablePressureThreshold;
+        pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
       }
     };
     update();
 
     pressureInput.addEventListener('input', () => {
       const val = parseFloat(pressureInput.value);
-      oxygenFactorySettingsRef.disablePressureThreshold = val;
+      oxygenFactorySettings.disablePressureThreshold = val;
     });
 
     autoBuildContainer.appendChild(pressureControl);
@@ -129,10 +129,10 @@ class OxygenFactory extends Building {
     const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
     o2Els.container.style.display = enabled ? 'flex' : 'none';
     if (o2Els.checkbox) {
-      o2Els.checkbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
+      o2Els.checkbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
     }
     if (o2Els.input && document.activeElement !== o2Els.input) {
-      o2Els.input.value = oxygenFactorySettingsRef.disablePressureThreshold;
+      o2Els.input.value = oxygenFactorySettings.disablePressureThreshold;
     }
     if (o2Els.unitSpan) {
       o2Els.unitSpan.textContent = 'kPa';
@@ -141,7 +141,8 @@ class OxygenFactory extends Building {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { OxygenFactory };
+  module.exports = { OxygenFactory, oxygenFactorySettings };
 } else {
   globalThis.OxygenFactory = OxygenFactory;
+  globalThis.oxygenFactorySettings = oxygenFactorySettings;
 }
