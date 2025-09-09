@@ -323,7 +323,7 @@ const buildingsParameters = {
     name: 'Dyson Receiver',
     category: 'energy',
     description: 'Receives beamed energy from space.',
-    cost: { colony: { metal: 10000, electronics : 1000 } },
+    cost: { colony: { metal: 100000, electronics : 1000 } },
     consumption: {},
     production: { colony: { energy: 100_000_000_000 }},
     storage: {},
