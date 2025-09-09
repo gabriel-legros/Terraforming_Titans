@@ -1,7 +1,11 @@
-var ghgFactorySettingsRef = ghgFactorySettingsRef ||
+var ghgAutomationRef = ghgAutomationRef ||
   (typeof require !== 'undefined'
-    ? require('../ghg-automation.js').ghgFactorySettings
-    : globalThis.ghgFactorySettings);
+    ? require('../ghg-automation.js')
+    : globalThis);
+var ghgFactorySettingsRef = ghgFactorySettingsRef ||
+  ghgAutomationRef.ghgFactorySettings;
+var enforceGhgFactoryTempGapRef = enforceGhgFactoryTempGapRef ||
+  ghgAutomationRef.enforceGhgFactoryTempGap;
 
 class GhgFactory extends Building {
   updateProductivity(resources, deltaTime) {
@@ -112,6 +116,133 @@ class GhgFactory extends Building {
       const difference = Math.abs(targetProductivity - this.productivity);
       const dampingFactor = difference < 0.01 ? 0.01 : 0.1;
       this.productivity += dampingFactor * (targetProductivity - this.productivity);
+    }
+  }
+
+  initUI(autoBuildContainer, cache) {
+    if (!autoBuildContainer || !cache) return;
+
+    const tempControl = document.createElement('div');
+    tempControl.id = `${this.name}-temp-control`;
+    tempControl.classList.add('ghg-temp-control');
+    tempControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature') ? 'flex' : 'none';
+
+    const tempCheckbox = document.createElement('input');
+    tempCheckbox.type = 'checkbox';
+    tempCheckbox.classList.add('ghg-temp-checkbox');
+    tempCheckbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
+    tempCheckbox.addEventListener('change', () => {
+      ghgFactorySettingsRef.autoDisableAboveTemp = tempCheckbox.checked;
+    });
+    tempControl.appendChild(tempCheckbox);
+
+    const tempLabel = document.createElement('span');
+    tempControl.appendChild(tempLabel);
+
+    const tempInput = document.createElement('input');
+    tempInput.type = 'number';
+    tempInput.step = 0.1;
+    tempInput.classList.add('ghg-temp-input');
+    tempControl.appendChild(tempInput);
+
+    const betweenLabel = document.createElement('span');
+    betweenLabel.textContent = ' and avg T < ';
+    tempControl.appendChild(betweenLabel);
+
+    const tempInputB = document.createElement('input');
+    tempInputB.type = 'number';
+    tempInputB.step = 0.1;
+    tempInputB.classList.add('ghg-temp-input');
+    tempControl.appendChild(tempInputB);
+
+    const unitSpan = document.createElement('span');
+    unitSpan.classList.add('ghg-temp-unit');
+    tempControl.appendChild(unitSpan);
+
+    if (ghgFactorySettingsRef.reverseTempThreshold === undefined) {
+      ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
+    }
+    if (typeof enforceGhgFactoryTempGapRef === 'function') {
+      enforceGhgFactoryTempGapRef();
+    }
+
+    const update = () => {
+      tempLabel.textContent = 'Disable if avg T > ';
+      if (typeof getTemperatureUnit === 'function') {
+        unitSpan.textContent = getTemperatureUnit();
+      }
+      if (typeof toDisplayTemperature === 'function') {
+        if (document.activeElement !== tempInput) {
+          tempInput.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+        }
+        if (document.activeElement !== tempInputB) {
+          tempInputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+        }
+      }
+      const showReverse = !!this.reversalAvailable;
+      betweenLabel.style.display = showReverse ? 'inline' : 'none';
+      tempInputB.style.display = showReverse ? 'inline' : 'none';
+    };
+    update();
+
+    tempInput.addEventListener('input', () => {
+      const val = parseFloat(tempInput.value);
+      const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
+      ghgFactorySettingsRef.disableTempThreshold = useC ? val + 273.15 : val;
+      if (!this.reversalAvailable) {
+        ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
+      } else if (typeof enforceGhgFactoryTempGapRef === 'function') {
+        enforceGhgFactoryTempGapRef('A');
+      }
+      update();
+    });
+
+    tempInputB.addEventListener('input', () => {
+      const val = parseFloat(tempInputB.value);
+      const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
+      ghgFactorySettingsRef.reverseTempThreshold = useC ? val + 273.15 : val;
+      if (typeof enforceGhgFactoryTempGapRef === 'function') {
+        enforceGhgFactoryTempGapRef('B');
+      }
+      update();
+    });
+
+    autoBuildContainer.appendChild(tempControl);
+
+    cache.ghg = {
+      container: tempControl,
+      checkbox: tempCheckbox,
+      inputA: tempInput,
+      inputB: tempInputB,
+      betweenLabel: betweenLabel,
+      unitSpan: unitSpan
+    };
+  }
+
+  updateUI(elements) {
+    const ghgEls = elements?.ghg;
+    if (!ghgEls || !ghgEls.container) return;
+
+    const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
+    ghgEls.container.style.display = enabled ? 'flex' : 'none';
+    if (ghgEls.checkbox) {
+      ghgEls.checkbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
+    }
+    if (ghgEls.inputA && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputA) {
+      ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
+    }
+    if (ghgEls.inputB && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputB) {
+      ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
+    }
+    const showReverse = !!this.reversalAvailable;
+    if (ghgEls.betweenLabel) {
+      ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
+    }
+    if (ghgEls.inputB) {
+      ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
+    }
+    if (ghgEls.unitSpan && typeof getTemperatureUnit === 'function') {
+      ghgEls.unitSpan.textContent = getTemperatureUnit();
     }
   }
 }

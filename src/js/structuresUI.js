@@ -1,7 +1,3 @@
-var ghgFactorySettingsRef = ghgFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').ghgFactorySettings
-    : globalThis.ghgFactorySettings);
 var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
   (typeof require !== 'undefined'
     ? require('./ghg-automation.js').oxygenFactorySettings
@@ -513,101 +509,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Reversal toggle button (for buildings that support it)
   const reverseControl = document.createElement('div');
   reverseControl.classList.add('reverse-control');
-  let updateGhgTempControl;
 
   reverseControl.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   autoBuildContainer.appendChild(reverseControl);
 
-  if(structure.name === 'ghgFactory') {
-    const tempControl = document.createElement('div');
-    tempControl.id = `${structure.name}-temp-control`;
-    tempControl.classList.add('ghg-temp-control');
-    tempControl.style.display = structure.isBooleanFlagSet('terraformingBureauFeature') ? 'flex' : 'none';
-
-    const tempCheckbox = document.createElement('input');
-    tempCheckbox.type = 'checkbox';
-    tempCheckbox.classList.add('ghg-temp-checkbox');
-    tempCheckbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
-    tempCheckbox.addEventListener('change', () => {
-      ghgFactorySettingsRef.autoDisableAboveTemp = tempCheckbox.checked;
-    });
-    tempControl.appendChild(tempCheckbox);
-
-    const tempLabel = document.createElement('span');
-    tempControl.appendChild(tempLabel);
-
-    const tempInput = document.createElement('input');
-    tempInput.type = 'number';
-    tempInput.step = 0.1;
-    tempInput.classList.add('ghg-temp-input');
-    tempControl.appendChild(tempInput);
-
-    const betweenLabel = document.createElement('span');
-    betweenLabel.textContent = ' and avg T < ';
-    tempControl.appendChild(betweenLabel);
-
-    const tempInputB = document.createElement('input');
-    tempInputB.type = 'number';
-    tempInputB.step = 0.1;
-    tempInputB.classList.add('ghg-temp-input');
-    tempControl.appendChild(tempInputB);
-
-    const unitSpan = document.createElement('span');
-    unitSpan.classList.add('ghg-temp-unit');
-    tempControl.appendChild(unitSpan);
-
-    if(ghgFactorySettingsRef.reverseTempThreshold === undefined){
-      ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
-    }
-    enforceGhgFactoryTempGap();
-
-    updateGhgTempControl = () => {
-      tempLabel.textContent = 'Disable if avg T > ';
-      unitSpan.textContent = getTemperatureUnit();
-      // Update both inputs (A and B)
-      if(document.activeElement !== tempInput){
-        tempInput.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
-      }
-      if(document.activeElement !== tempInputB){
-        tempInputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
-      }
-      // Show the B side whenever reversal is available
-      const showReverse = !!structure.reversalAvailable;
-      betweenLabel.style.display = showReverse ? 'inline' : 'none';
-      tempInputB.style.display = showReverse ? 'inline' : 'none';
-    };
-    updateGhgTempControl();
-
-    tempInput.addEventListener('input', () => {
-      const val = parseFloat(tempInput.value);
-      ghgFactorySettingsRef.disableTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
-      if(!structure.reversalAvailable){
-        ghgFactorySettingsRef.reverseTempThreshold = ghgFactorySettingsRef.disableTempThreshold;
-      } else {
-        enforceGhgFactoryTempGap('A');
-      }
-      updateGhgTempControl();
-    });
-
-    tempInputB.addEventListener('input', () => {
-      const val = parseFloat(tempInputB.value);
-      ghgFactorySettingsRef.reverseTempThreshold = gameSettings.useCelsius ? val + 273.15 : val;
-      enforceGhgFactoryTempGap('B');
-      updateGhgTempControl();
-    });
-
-    autoBuildContainer.appendChild(tempControl);
-    // Cache GHG control elements
-    structureUIElements[structure.name] = structureUIElements[structure.name] || {};
-    structureUIElements[structure.name].ghg = {
-      container: tempControl,
-      checkbox: tempCheckbox,
-      inputA: tempInput,
-      inputB: tempInputB,
-      betweenLabel: betweenLabel,
-      unitSpan: unitSpan
-    };
-  }
+  structure.initUI?.(autoBuildContainer, cached);
 
   if(structure.name === 'oxygenFactory') {
     const pressureControl = document.createElement('div');
@@ -1077,22 +983,7 @@ function updateDecreaseButtonText(button, buildCount) {
           els.autoActiveCheckbox.checked = structure.autoActiveEnabled;
         }
 
-        const ghgEls = els.ghg;
-        if (ghgEls && ghgEls.container) {
-          const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
-          ghgEls.container.style.display = enabled ? 'flex' : 'none';
-          if (ghgEls.checkbox) ghgEls.checkbox.checked = ghgFactorySettingsRef.autoDisableAboveTemp;
-          if (ghgEls.inputA && document.activeElement !== ghgEls.inputA) {
-            ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettingsRef.disableTempThreshold);
-          }
-          if (ghgEls.inputB && document.activeElement !== ghgEls.inputB) {
-            ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettingsRef.reverseTempThreshold);
-          }
-          const showReverse = !!structure.reversalAvailable;
-          if (ghgEls.betweenLabel) ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
-          if (ghgEls.inputB) ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
-          if (ghgEls.unitSpan) ghgEls.unitSpan.textContent = getTemperatureUnit();
-        }
+        structure.updateUI?.(els);
 
         const o2Els = els.o2;
         if (o2Els && o2Els.container) {

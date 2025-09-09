@@ -31,8 +31,12 @@ function setup() {
   const factorySettings = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'ghg-automation.js'), 'utf8');
   vm.runInContext(factorySettings, ctx);
 
-  const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'structuresUI.js'), 'utf8');
-  vm.runInContext(code, ctx);
+  const structuresCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'structuresUI.js'), 'utf8');
+  vm.runInContext(structuresCode, ctx);
+
+  ctx.Building = class {};
+  const ghgFactoryCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildings', 'GhgFactory.js'), 'utf8');
+  vm.runInContext(ghgFactoryCode, ctx);
 
   const structure = {
     name: 'ghgFactory',
@@ -66,6 +70,8 @@ function setup() {
     updateResourceStorage: () => {},
     reversalAvailable: false,
     isBooleanFlagSet: flag => flag === 'terraformingBureauFeature',
+    initUI: ctx.GhgFactory.prototype.initUI,
+    updateUI: ctx.GhgFactory.prototype.updateUI,
   };
 
   const row = ctx.createStructureRow(structure, () => {}, () => {}, false);
