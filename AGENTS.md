@@ -498,3 +498,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Android resource displays an exclamation mark when capped while unused land remains below 99% of capacity.
 - Added Ship smelting advanced research doubling metal asteroid mining ship capacity.
 - Introduced an `OreMine` subclass of `Building` that registers deeper mining progress whenever new mines are constructed.
+- Dyson Swarm Receiver project now uses a `completedWhenUnlocked` flag to finish instantly when unlocked.
