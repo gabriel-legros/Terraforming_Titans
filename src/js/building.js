@@ -747,6 +747,26 @@ class Building extends EffectableEntity {
   }
 }
 
+const constructors = {
+  oreMine: 'OreMine',
+  ghgFactory: 'GhgFactory',
+  oxygenFactory: 'OxygenFactory',
+  biodome: 'Biodome'
+};
+
+function loadConstructor(name) {
+  const ctorName = constructors[name];
+  if (!ctorName) return Building;
+  if (typeof globalThis !== 'undefined' && globalThis[ctorName]) {
+    return globalThis[ctorName];
+  }
+  if (typeof require !== 'undefined') {
+    const mod = require(`./buildings/${ctorName}.js`);
+    return mod[ctorName] || Building;
+  }
+  return Building;
+}
+
 function initializeBuildings(buildingsParameters) {
   const buildings = {};
   for (const buildingName in buildingsParameters) {
@@ -756,45 +776,8 @@ function initializeBuildings(buildingsParameters) {
     const buildingConfig = {
       ...buildingData
     };
-    if (buildingName === 'oreMine') {
-      let OreMineCtor;
-      if (typeof require !== 'undefined') {
-        try {
-          OreMineCtor = require('./buildings/OreMine.js').OreMine;
-        } catch (e) {}
-      }
-      OreMineCtor = OreMineCtor || globalThis.OreMine || Building;
-      buildings[buildingName] = new OreMineCtor(buildingConfig, buildingName);
-    } else if (buildingName === 'ghgFactory') {
-      let GhgFactoryCtor;
-      if (typeof require !== 'undefined') {
-        try {
-          GhgFactoryCtor = require('./buildings/GhgFactory.js').GhgFactory;
-        } catch (e) {}
-      }
-      GhgFactoryCtor = GhgFactoryCtor || globalThis.GhgFactory || Building;
-      buildings[buildingName] = new GhgFactoryCtor(buildingConfig, buildingName);
-    } else if (buildingName === 'oxygenFactory') {
-      let OxygenFactoryCtor;
-      if (typeof require !== 'undefined') {
-        try {
-          OxygenFactoryCtor = require('./buildings/OxygenFactory.js').OxygenFactory;
-        } catch (e) {}
-      }
-      OxygenFactoryCtor = OxygenFactoryCtor || globalThis.OxygenFactory || Building;
-      buildings[buildingName] = new OxygenFactoryCtor(buildingConfig, buildingName);
-    } else if (buildingName === 'biodome') {
-      let BiodomeCtor;
-      if (typeof require !== 'undefined') {
-        try {
-          BiodomeCtor = require('./buildings/Biodome.js').Biodome;
-        } catch (e) {}
-      }
-      BiodomeCtor = BiodomeCtor || globalThis.Biodome || Building;
-      buildings[buildingName] = new BiodomeCtor(buildingConfig, buildingName);
-    } else {
-      buildings[buildingName] = new Building(buildingConfig, buildingName);
-    }
+    const Ctor = loadConstructor(buildingName);
+    buildings[buildingName] = new Ctor(buildingConfig, buildingName);
   }
   initializeBuildingTabs();
   return buildings;
