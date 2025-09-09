@@ -402,7 +402,7 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     treatAsBuilding: true,
-    attributes: { canUseSpaceStorage: true }
+    attributes: { canUseSpaceStorage: true, completedWhenUnlocked: true }
   },
   orbitalRing: {
     type: 'OrbitalRingProject',
