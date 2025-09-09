@@ -502,3 +502,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Dyson Swarm Receiver project now uses a `completedWhenUnlocked` flag to finish instantly when unlocked.
 - Added `GhgFactory` subclass overriding productivity with temperature control.
 - Added `OxygenFactory` subclass auto-disabling productivity above pressure thresholds.
+- Added `Biodome` subclass disabling productivity when life can't survive anywhere.

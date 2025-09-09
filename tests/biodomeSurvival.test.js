@@ -2,6 +2,8 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 // expose globally before requiring Building
 global.EffectableEntity = EffectableEntity;
 const { Building } = require('../src/js/building.js');
+global.Building = Building;
+const { Biodome } = require('../src/js/buildings/Biodome.js');
 
 function createBiodome(){
   const config = {
@@ -19,7 +21,7 @@ function createBiodome(){
     requiresWorker: 0,
     unlocked: true
   };
-  return new Building(config, 'biodome');
+  return new Biodome(config, 'biodome');
 }
 
 describe('biodome productivity requires survivable environment', () => {

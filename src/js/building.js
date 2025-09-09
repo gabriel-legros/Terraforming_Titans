@@ -566,17 +566,6 @@ class Building extends EffectableEntity {
 
     let targetProductivity = baseTarget;
 
-    // Disable Biodome when designed life cannot survive anywhere
-    if (
-      this.name === 'biodome' &&
-      typeof lifeDesigner !== 'undefined' &&
-      lifeDesigner.currentDesign &&
-      typeof lifeDesigner.currentDesign.canSurviveAnywhere === 'function' &&
-      !lifeDesigner.currentDesign.canSurviveAnywhere()
-    ) {
-      targetProductivity = 0;
-    }
-
     if (Math.abs(targetProductivity - this.productivity) < 0.001) {
       this.productivity = targetProductivity;
     } else {
@@ -794,6 +783,15 @@ function initializeBuildings(buildingsParameters) {
       }
       OxygenFactoryCtor = OxygenFactoryCtor || globalThis.OxygenFactory || Building;
       buildings[buildingName] = new OxygenFactoryCtor(buildingConfig, buildingName);
+    } else if (buildingName === 'biodome') {
+      let BiodomeCtor;
+      if (typeof require !== 'undefined') {
+        try {
+          BiodomeCtor = require('./buildings/Biodome.js').Biodome;
+        } catch (e) {}
+      }
+      BiodomeCtor = BiodomeCtor || globalThis.Biodome || Building;
+      buildings[buildingName] = new BiodomeCtor(buildingConfig, buildingName);
     } else {
       buildings[buildingName] = new Building(buildingConfig, buildingName);
     }
