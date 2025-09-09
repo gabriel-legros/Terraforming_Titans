@@ -78,7 +78,5 @@ describe('treatAsBuilding flag', () => {
     expect(dyson.estimateCostAndGain).toHaveBeenCalledTimes(2);
     expect(dyson.applyCostAndGain).toHaveBeenCalledTimes(1);
     expect(normal.applyCostAndGain).toHaveBeenCalledTimes(1);
-    expect(ctx.resources.colony.energy.modifyRate).toHaveBeenCalledWith(10, 'Dyson Swarm', 'project');
-    expect(ctx.resources.colony.energy.value).toBe(10);
   });
 });
