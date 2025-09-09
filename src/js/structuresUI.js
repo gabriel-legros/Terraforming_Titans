@@ -1,8 +1,3 @@
-var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? require('./ghg-automation.js').oxygenFactorySettings
-    : globalThis.oxygenFactorySettings);
-
 // structures-ui.js
 
 // Create an object to store the selected build count for each structure
@@ -515,51 +510,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   structure.initUI?.(autoBuildContainer, cached);
 
-  if(structure.name === 'oxygenFactory') {
-    const pressureControl = document.createElement('div');
-    pressureControl.id = `${structure.name}-pressure-control`;
-    pressureControl.classList.add('o2-pressure-control');
-    pressureControl.style.display = structure.isBooleanFlagSet('terraformingBureauFeature') ? 'flex' : 'none';
-
-    const pressureCheckbox = document.createElement('input');
-    pressureCheckbox.type = 'checkbox';
-    pressureCheckbox.classList.add('o2-pressure-checkbox');
-    pressureCheckbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
-    pressureCheckbox.addEventListener('change', () => {
-      oxygenFactorySettingsRef.autoDisableAbovePressure = pressureCheckbox.checked;
-    });
-    pressureControl.appendChild(pressureCheckbox);
-
-    const pressureLabel = document.createElement('span');
-    pressureLabel.textContent = 'Disable if O2 P > ';
-    pressureControl.appendChild(pressureLabel);
-
-    const pressureInput = document.createElement('input');
-    pressureInput.type = 'number';
-    pressureInput.step = 1;
-    pressureInput.classList.add('o2-pressure-input');
-    pressureInput.value = oxygenFactorySettingsRef.disablePressureThreshold;
-    pressureInput.addEventListener('input', () => {
-      const val = parseFloat(pressureInput.value);
-      oxygenFactorySettingsRef.disablePressureThreshold = val;
-    });
-    pressureControl.appendChild(pressureInput);
-
-    const unitSpan = document.createElement('span');
-    unitSpan.classList.add('o2-pressure-unit');
-    unitSpan.textContent = 'kPa';
-    pressureControl.appendChild(unitSpan);
-
-    autoBuildContainer.appendChild(pressureControl);
-    // Cache O2 control elements
-    structureUIElements[structure.name] = structureUIElements[structure.name] || {};
-    structureUIElements[structure.name].o2 = {
-      container: pressureControl,
-      checkbox: pressureCheckbox,
-      input: pressureInput
-    };
-  }
-
   combinedStructureRow.append(autoBuildContainer);
 
   collapseArrow.addEventListener('click', () => {
@@ -984,14 +934,6 @@ function updateDecreaseButtonText(button, buildCount) {
         }
 
         structure.updateUI?.(els);
-
-        const o2Els = els.o2;
-        if (o2Els && o2Els.container) {
-          const enabled = structure.isBooleanFlagSet('terraformingBureauFeature');
-          o2Els.container.style.display = enabled ? 'flex' : 'none';
-          if (o2Els.checkbox) o2Els.checkbox.checked = oxygenFactorySettingsRef.autoDisableAbovePressure;
-          if (o2Els.input) o2Els.input.value = oxygenFactorySettingsRef.disablePressureThreshold;
-        }
       }
   
       const productivityElement = document.getElementById(`${structureName}-productivity`);
