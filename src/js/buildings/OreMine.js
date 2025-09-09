@@ -1,8 +1,4 @@
-const BuildingRef = typeof require !== 'undefined'
-  ? require('../building.js').Building
-  : globalThis.Building;
-
-class OreMine extends BuildingRef {
+class OreMine extends Building {
   build(buildCount = 1, activate = true) {
     const built = super.build(buildCount, activate);
     if (built) {

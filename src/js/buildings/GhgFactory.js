@@ -3,11 +3,7 @@ var ghgFactorySettingsRef = ghgFactorySettingsRef ||
     ? require('../ghg-automation.js').ghgFactorySettings
     : globalThis.ghgFactorySettings);
 
-const BuildingRef = typeof require !== 'undefined'
-  ? require('../building.js').Building
-  : globalThis.Building;
-
-class GhgFactory extends BuildingRef {
+class GhgFactory extends Building {
   updateProductivity(resources, deltaTime) {
     const {
       targetProductivity,

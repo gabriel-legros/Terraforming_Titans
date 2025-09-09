@@ -3,11 +3,7 @@ var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
     ? require('../ghg-automation.js').oxygenFactorySettings
     : globalThis.oxygenFactorySettings);
 
-const BuildingRef = typeof require !== 'undefined'
-  ? require('../building.js').Building
-  : globalThis.Building;
-
-class OxygenFactory extends BuildingRef {
+class OxygenFactory extends Building {
   updateProductivity(resources, deltaTime) {
     const {
       targetProductivity: baseTarget,
