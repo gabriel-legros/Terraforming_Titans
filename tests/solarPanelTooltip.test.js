@@ -66,4 +66,41 @@ describe('Solar panel tooltip', () => {
     expect(tooltip).not.toBeNull();
     expect(tooltip.getAttribute('title')).toMatch(/10\s*×\s*the initial land/i);
   });
+
+  test('solar panel tooltip persists after UI update', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="row"><span id="solarPanel-count">0</span></div>');
+    global.document = dom.window.document;
+
+    const config = {
+      name: 'Solar Panel Array',
+      category: 'energy',
+      description: 'desc',
+      cost: {},
+      consumption: {},
+      production: {},
+      storage: {},
+      dayNightActivity: true,
+      canBeToggled: true,
+      requiresMaintenance: false,
+      requiresDeposit: false,
+      requiresWorker: 0,
+      unlocked: true
+    };
+
+    const panel = new SolarPanel(config, 'solarPanel');
+    const cache = { row: dom.window.document.getElementById('row') };
+    panel.initUI(null, cache);
+
+    let tooltip = dom.window.document.querySelector('#solarPanel-count + .info-tooltip-icon');
+    expect(tooltip).not.toBeNull();
+
+    tooltip.remove();
+    expect(dom.window.document.querySelector('#solarPanel-count + .info-tooltip-icon')).toBeNull();
+
+    panel.updateUI(cache);
+
+    tooltip = dom.window.document.querySelector('#solarPanel-count + .info-tooltip-icon');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip.getAttribute('title')).toMatch(/10\s*×\s*the initial land/i);
+  });
 });
