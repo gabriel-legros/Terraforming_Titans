@@ -453,6 +453,9 @@ class Project extends EffectableEntity {
         registerProjectUnlockAlert(`${cat}-projects`);
       }
     }
+    if (this.attributes?.completedWhenUnlocked && !this.isCompleted) {
+      this.complete();
+    }
   }
 
   usesSpaceStorageForResource(category, resource, amount) {
