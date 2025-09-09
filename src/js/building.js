@@ -751,7 +751,8 @@ const constructors = {
   oreMine: 'OreMine',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
-  biodome: 'Biodome'
+  biodome: 'Biodome',
+  dysonReceiver: 'dysonReceiver'
 };
 
 function loadConstructor(name) {
