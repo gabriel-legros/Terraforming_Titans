@@ -518,197 +518,116 @@ class Building extends EffectableEntity {
     return minRatio;
   }
 
-  updateProductivity(resources, deltaTime) {
-    if(this.active === 0){
-      this.productivity = 0;
-    } else{
-      let targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+  computeBaseProductivity(resources, deltaTime) {
+    let targetProductivity = 0;
+    if (this.active > 0) {
+      targetProductivity = Math.max(0, Math.min(1, this.calculateBaseMinRatio(resources, deltaTime)));
+    }
 
-      const hasAtmosphericOversight =
-        this.isBooleanFlagSet('terraformingBureauFeature') &&
-        typeof researchManager !== 'undefined' &&
-        typeof researchManager.getResearchById === 'function' &&
-        researchManager.getResearchById('terraforming_bureau')?.isResearched;
+    const hasAtmosphericOversight =
+      this.isBooleanFlagSet('terraformingBureauFeature') &&
+      typeof researchManager !== 'undefined' &&
+      typeof researchManager.getResearchById === 'function' &&
+      researchManager.getResearchById('terraforming_bureau')?.isResearched;
 
-      const computeMaxProduction = (category, resource) => {
-        const base = this.production[category]?.[resource] || 0;
-        const effectiveMultiplier =
-          this.getEffectiveProductionMultiplier() *
-          this.getEffectiveResourceProductionMultiplier(category, resource);
-        return this.active * base * effectiveMultiplier * (deltaTime / 1000);
-      };
+    const computeMaxProduction = (category, resource) => {
+      const base = this.production[category]?.[resource] || 0;
+      const effectiveMultiplier =
+        this.getEffectiveProductionMultiplier() *
+        this.getEffectiveResourceProductionMultiplier(category, resource);
+      return this.active * base * effectiveMultiplier * (deltaTime / 1000);
+    };
 
-      const solveRequired = (f, maxProduction) => {
-        let x = 0;
-        let fx = f(x);
-        const tolerance = 0.001;
-        for (let i = 0; i < 10 && Math.abs(fx) > tolerance; i++) {
-          const h = Math.max(maxProduction * 0.01, 1e-6);
-          let derivative;
-          if (x - h >= 0) {
-            derivative = (f(x + h) - f(x - h)) / (2 * h);
-          } else {
-            derivative = (f(x + h) - fx) / h;
-          }
-          if (derivative === 0 || !isFinite(derivative)) break;
-          x = x - fx / derivative;
-          if (x < 0) x = 0;
-          fx = f(x);
-        }
-        return Math.min(Math.max(x, 0), maxProduction);
-      };
-
-      // Automatically adjust GHG/Calcite factory output to hit target temperature
-      if (
-        this.name === 'ghgFactory' &&
-        hasAtmosphericOversight &&
-        ghgFactorySettingsRef.autoDisableAboveTemp &&
-        terraforming && terraforming.temperature
-      ) {
-        const A = ghgFactorySettingsRef.disableTempThreshold;
-        let B = ghgFactorySettingsRef.reverseTempThreshold ?? A + 5;
-        if (B - A < 1) {
-          B = A + 1;
-          ghgFactorySettingsRef.reverseTempThreshold = B;
-        }
-        const currentTemp = terraforming.temperature.value;
-        let recipeKey = this.currentRecipeKey || 'ghg';
-        let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
-
-        // If reversal is not available, use one-sided control to reach A (disable when above A)
-        if (!this.reversalAvailable) {
-          const targetTemp = A;
-          if (currentTemp >= targetTemp) {
-            this.productivity = 0;
-            return;
-          }
-          if (
-            typeof terraforming.updateSurfaceTemperature === 'function' &&
-            resources?.atmospheric?.[resourceName]
-          ) {
-            const maxProduction = computeMaxProduction('atmospheric', resourceName);
-            if (maxProduction > 0) {
-              const res = resources.atmospheric[resourceName];
-              const originalAmount = res.value;
-              const required = solveRequired((added) => {
-                res.value = originalAmount + added;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - targetTemp;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, maxProduction);
-              this.reverseEnabled = false;
-              this.productivity = Math.min(targetProductivity, required / maxProduction);
-              return;
-            }
-          }
+    const solveRequired = (f, maxProduction) => {
+      let x = 0;
+      let fx = f(x);
+      const tolerance = 0.001;
+      for (let i = 0; i < 10 && Math.abs(fx) > tolerance; i++) {
+        const h = Math.max(maxProduction * 0.01, 1e-6);
+        let derivative;
+        if (x - h >= 0) {
+          derivative = (f(x + h) - f(x - h)) / (2 * h);
         } else {
-          // Automatic bidirectional control based on A/B thresholds
-          // Idle inside the band, heat/cool outside it by switching direction as needed
-          if (currentTemp > A && currentTemp < B) {
-            this.productivity = 0;
-            return;
-          }
-          let reverse =
-            (recipeKey === 'ghg' && currentTemp >= B) ||
-            (recipeKey === 'calcite' && currentTemp <= A);
-
-          // If reversing but there is nothing to remove, toggle recipe to affect temperature in the correct direction
-          if (reverse) {
-            const resObj = resources?.atmospheric?.[resourceName];
-            const available = resObj ? resObj.value || 0 : 0;
-            if (available <= 0 && typeof this._toggleRecipe === 'function') {
-              this._toggleRecipe();
-              recipeKey = this.currentRecipeKey || 'ghg';
-              resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
-              // Recompute reverse for the new recipe
-              reverse =
-                (recipeKey === 'ghg' && currentTemp >= B) ||
-                (recipeKey === 'calcite' && currentTemp <= A);
-            }
-          }
-
-          const targetTemp = reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B);
-          if (
-            typeof terraforming.updateSurfaceTemperature === 'function' &&
-            resources?.atmospheric?.[resourceName]
-          ) {
-            const maxProduction = computeMaxProduction('atmospheric', resourceName);
-            if (maxProduction > 0) {
-              const res = resources.atmospheric[resourceName];
-              const originalAmount = res.value;
-              const required = solveRequired((amt) => {
-                res.value = originalAmount + (reverse ? -amt : amt);
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - targetTemp;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, maxProduction);
-              this.reverseEnabled = reverse;
-              this.productivity = Math.min(targetProductivity, required / maxProduction);
-              return;
-            }
-          }
+          derivative = (f(x + h) - fx) / h;
         }
-        // If temperature is outside thresholds but we can't compute amount, fall through
+        if (derivative === 0 || !isFinite(derivative)) break;
+        x = x - fx / derivative;
+        if (x < 0) x = 0;
+        fx = f(x);
       }
+      return Math.min(Math.max(x, 0), maxProduction);
+    };
 
-      // Automatically adjust Oxygen factory output to hit target pressure
-      if (
-        this.name === 'oxygenFactory' &&
-        hasAtmosphericOversight &&
-        oxygenFactorySettingsRef.autoDisableAbovePressure &&
-        terraforming && resources.atmospheric?.oxygen &&
-        typeof calculateAtmosphericPressure === 'function'
-      ) {
-        const oxygen = resources.atmospheric.oxygen;
-        const targetPa = oxygenFactorySettingsRef.disablePressureThreshold * 1000;
-        const currentPa = calculateAtmosphericPressure(
-          oxygen.value,
-          terraforming.celestialParameters.gravity,
-          terraforming.celestialParameters.radius
-        );
-        if (currentPa >= targetPa) {
-          this.productivity = 0;
-          return;
-        }
-        const maxProduction = computeMaxProduction('atmospheric', 'oxygen');
-        if (maxProduction > 0) {
-          const originalAmount = oxygen.value;
-          const required = solveRequired((added) => {
-            return calculateAtmosphericPressure(
-              originalAmount + added,
-              terraforming.celestialParameters.gravity,
-              terraforming.celestialParameters.radius
-            ) - targetPa;
-          }, maxProduction);
-          this.productivity = Math.min(targetProductivity, required / maxProduction);
-          return;
-        }
-        // If pressure is below threshold but we can't compute amount, fall through
-      }
+    return { targetProductivity, hasAtmosphericOversight, computeMaxProduction, solveRequired };
+  }
 
-      // Disable Biodome when designed life cannot survive anywhere
-      if(
-        this.name === 'biodome' &&
-        typeof lifeDesigner !== 'undefined' &&
-        lifeDesigner.currentDesign &&
-        typeof lifeDesigner.currentDesign.canSurviveAnywhere === 'function' &&
-        !lifeDesigner.currentDesign.canSurviveAnywhere()
-      ){
-        targetProductivity = 0;
-      }
+  updateProductivity(resources, deltaTime) {
+    const {
+      targetProductivity: baseTarget,
+      hasAtmosphericOversight,
+      computeMaxProduction,
+      solveRequired
+    } = this.computeBaseProductivity(resources, deltaTime);
 
-      if(Math.abs(targetProductivity - this.productivity) < 0.001){
-        this.productivity = targetProductivity;
+    if (this.active === 0) {
+      this.productivity = 0;
+      return;
+    }
+
+    let targetProductivity = baseTarget;
+
+    // Automatically adjust Oxygen factory output to hit target pressure
+    if (
+      this.name === 'oxygenFactory' &&
+      hasAtmosphericOversight &&
+      oxygenFactorySettingsRef.autoDisableAbovePressure &&
+      terraforming && resources.atmospheric?.oxygen &&
+      typeof calculateAtmosphericPressure === 'function'
+    ) {
+      const oxygen = resources.atmospheric.oxygen;
+      const targetPa = oxygenFactorySettingsRef.disablePressureThreshold * 1000;
+      const currentPa = calculateAtmosphericPressure(
+        oxygen.value,
+        terraforming.celestialParameters.gravity,
+        terraforming.celestialParameters.radius
+      );
+      if (currentPa >= targetPa) {
+        this.productivity = 0;
+        return;
       }
-      else {
-        const difference = Math.abs(targetProductivity - this.productivity);
-        const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
-        this.productivity += dampingFactor * (targetProductivity - this.productivity);
+      const maxProduction = computeMaxProduction('atmospheric', 'oxygen');
+      if (maxProduction > 0) {
+        const originalAmount = oxygen.value;
+        const required = solveRequired((added) => {
+          return calculateAtmosphericPressure(
+            originalAmount + added,
+            terraforming.celestialParameters.gravity,
+            terraforming.celestialParameters.radius
+          ) - targetPa;
+        }, maxProduction);
+        this.productivity = Math.min(targetProductivity, required / maxProduction);
+        return;
       }
+      // If pressure is below threshold but we can't compute amount, fall through
+    }
+
+    // Disable Biodome when designed life cannot survive anywhere
+    if (
+      this.name === 'biodome' &&
+      typeof lifeDesigner !== 'undefined' &&
+      lifeDesigner.currentDesign &&
+      typeof lifeDesigner.currentDesign.canSurviveAnywhere === 'function' &&
+      !lifeDesigner.currentDesign.canSurviveAnywhere()
+    ) {
+      targetProductivity = 0;
+    }
+
+    if (Math.abs(targetProductivity - this.productivity) < 0.001) {
+      this.productivity = targetProductivity;
+    } else {
+      const difference = Math.abs(targetProductivity - this.productivity);
+      const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
+      this.productivity += dampingFactor * (targetProductivity - this.productivity);
     }
   }
 
@@ -902,6 +821,15 @@ function initializeBuildings(buildingsParameters) {
       }
       OreMineCtor = OreMineCtor || globalThis.OreMine || Building;
       buildings[buildingName] = new OreMineCtor(buildingConfig, buildingName);
+    } else if (buildingName === 'ghgFactory') {
+      let GhgFactoryCtor;
+      if (typeof require !== 'undefined') {
+        try {
+          GhgFactoryCtor = require('./buildings/GhgFactory.js').GhgFactory;
+        } catch (e) {}
+      }
+      GhgFactoryCtor = GhgFactoryCtor || globalThis.GhgFactory || Building;
+      buildings[buildingName] = new GhgFactoryCtor(buildingConfig, buildingName);
     } else {
       buildings[buildingName] = new Building(buildingConfig, buildingName);
     }

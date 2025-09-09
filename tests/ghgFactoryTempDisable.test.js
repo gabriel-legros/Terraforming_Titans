@@ -1,7 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
-const { Building } = require('../src/js/building.js');
+const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
 
 const researchedManagerStub = {
   getResearchById: () => ({ isResearched: true })
@@ -23,7 +23,7 @@ function createFactory() {
     requiresWorker: 0,
     unlocked: true
   };
-  return new Building(config, 'ghgFactory');
+  return new GhgFactory(config, 'ghgFactory');
 }
 
 describe('GHG factory temperature disabling', () => {

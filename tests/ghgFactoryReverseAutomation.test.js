@@ -1,7 +1,7 @@
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 const { ghgFactorySettings } = require('../src/js/ghg-automation.js');
-const { Building } = require('../src/js/building.js');
+const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
 
 function createFactory(){
   const config = {
@@ -25,7 +25,7 @@ function createFactory(){
       calcite: { production: { atmospheric: { calciteAerosol: 10 } }, reverseTarget: { category: 'atmospheric', resource: 'calciteAerosol' } }
     }
   };
-  return new Building(config, 'ghgFactory');
+  return new GhgFactory(config, 'ghgFactory');
 }
 
 describe('GHG factory reverse automation', () => {
