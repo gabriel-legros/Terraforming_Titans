@@ -319,6 +319,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  dysonReceiver: {
+    name: 'Dyson Receiver',
+    category: 'energy',
+    description: 'Receives beamed energy from space.',
+    cost: { colony: { metal: 10000, electronics : 1000 } },
+    consumption: {},
+    production: { colony: { energy: 100_000_000_000 }},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   superalloyFusionReactor: {
     name: 'Superalloy Fusion Reactor',
     category: 'energy',
