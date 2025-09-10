@@ -4,7 +4,7 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-test('adds prioritize checkbox next to worker cost', () => {
+test('adds priority triangles next to worker cost', () => {
   const dom = new JSDOM(`<!DOCTYPE html><div id="c"></div>`, { runScripts: 'outside-only' });
   const ctx = dom.getInternalVMContext();
   ctx.document = dom.window.document;
@@ -17,7 +17,7 @@ test('adds prioritize checkbox next to worker cost', () => {
 
   const structure = {
     name: 'test',
-    workerPriority: false,
+    workerPriority: 0,
     getEffectiveCost: () => ({}),
     getTotalWorkerNeed: () => 1,
     getEffectiveWorkerMultiplier: () => 1
@@ -25,9 +25,14 @@ test('adds prioritize checkbox next to worker cost', () => {
 
   const el = ctx.document.getElementById('c');
   ctx.updateStructureCostDisplay(el, structure);
-  const checkbox = el.querySelector('input[type="checkbox"]');
-  expect(checkbox).not.toBeNull();
-  checkbox.checked = true;
-  checkbox.dispatchEvent(new dom.window.Event('change'));
-  expect(structure.workerPriority).toBe(true);
+  const up = el.querySelector('.worker-priority-btn.up');
+  const down = el.querySelector('.worker-priority-btn.down');
+  expect(up).not.toBeNull();
+  expect(down).not.toBeNull();
+  up.dispatchEvent(new dom.window.Event('click'));
+  expect(structure.workerPriority).toBe(1);
+  up.dispatchEvent(new dom.window.Event('click'));
+  expect(structure.workerPriority).toBe(0);
+  down.dispatchEvent(new dom.window.Event('click'));
+  expect(structure.workerPriority).toBe(-1);
 });

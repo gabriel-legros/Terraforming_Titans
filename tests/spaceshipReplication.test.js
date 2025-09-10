@@ -50,18 +50,18 @@ describe('spaceship self replication', () => {
     expect(ctx.resources.special.spaceships.modifyRate).toHaveBeenCalledWith(1, 'Replication', 'global');
   });
 
-  test('respects trillion cap', () => {
+  test('respects cap', () => {
     const ctx = createContext(true);
-    ctx.resources.special.spaceships.value = 1e12 - 1;
+    ctx.resources.special.spaceships.value = 1e14 - 1;
     vm.runInContext('produceResources(1000, {})', ctx);
-    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e12);
+    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e14);
   });
 
   test('counts assigned ships toward cap', () => {
     const ctx = createContext(true, 50);
-    ctx.resources.special.spaceships.value = 1e12 - 60;
+    ctx.resources.special.spaceships.value = 1e14 - 60;
     vm.runInContext('produceResources(1000, {})', ctx);
-    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e12 - 50);
+    expect(ctx.resources.special.spaceships.value).toBeCloseTo(1e14 - 50);
   });
 
   test('no replication when disabled', () => {
