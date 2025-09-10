@@ -510,3 +510,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Solar Panel counts now include a tooltip noting the 10× initial land construction cap.
 - Vega-2 now provides a travel warning that must be confirmed before visiting.
 - Building worker costs now support high/normal/low priority via up/down triangles.
+- Added Companion Satellite advanced research that keeps one ore satellite per terraformed world and auto-unlocks ore satellite infrastructure.

@@ -1291,6 +1291,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'companion_satellite',
+        name: 'Companion Satellite',
+        description: 'An autonomous scout that unlocks ore satellites and retains one per terraformed world when travelling.',
+        cost: { advancedResearch: 225000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            targetId: 'ore_scanning',
+            type: 'completeResearch'
+          }
+        ]
+      },
+      {
         id: 'hyperion_lantern',
         name: 'Hyperion Lantern',
         description: 'Research the construction of a large orbital facility that increases planetary luminosity.',

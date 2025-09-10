@@ -49,7 +49,7 @@ describe('travel warning popup', () => {
     const popup = dom.window.document.getElementById('travel-warning-popup');
     expect(popup).not.toBeNull();
     const message = popup.querySelector('.travel-warning-message');
-    expect(message.textContent).toContain('Crystal');
+    expect(message.textContent).toBe(ctx.planetParameters.vega2.travelWarning);
     expect(ctx.spaceManager.changeCurrentPlanet).not.toHaveBeenCalled();
 
     popup.querySelector('#travel-warning-confirm').click();
