@@ -523,7 +523,7 @@ const ganymedeOverrides = {
 // A completely dry, Venus-sized world with a pure inert atmosphere (>0.5 atm)
 const vega2Overrides = {
   name: 'Vega-2',
-  travelWarning: 'This world has no water.',
+  travelWarning: 'This world has no water.  Solis can help.',
 
   resources: {
     surface: {
