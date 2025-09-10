@@ -20,6 +20,12 @@ let spaceSubtabManager = null;
 let lastWorldKey = null;
 let lastWorldSeed = null;
 
+// Cached travel warning popup elements
+let travelWarningOverlay = null;
+let travelWarningMessageEl = null;
+let travelWarningConfirmBtn = null;
+let travelWarningCancelBtn = null;
+
 function showSpaceRandomTab() {
     spaceRandomTabVisible = true;
     if (spaceSubtabManager) {
@@ -42,6 +48,63 @@ function hideSpaceRandomTab() {
         if (tab) tab.classList.add('hidden');
         if (content) content.classList.add('hidden');
     }
+}
+
+function showTravelWarningPopup(message, onConfirm) {
+    if (!travelWarningOverlay) {
+        travelWarningOverlay = document.createElement('div');
+        travelWarningOverlay.id = 'travel-warning-popup';
+        travelWarningOverlay.style.position = 'fixed';
+        travelWarningOverlay.style.top = '0';
+        travelWarningOverlay.style.left = '0';
+        travelWarningOverlay.style.width = '100%';
+        travelWarningOverlay.style.height = '100%';
+        travelWarningOverlay.style.background = 'rgba(0,0,0,0.5)';
+        travelWarningOverlay.style.display = 'flex';
+        travelWarningOverlay.style.alignItems = 'center';
+        travelWarningOverlay.style.justifyContent = 'center';
+
+        const win = document.createElement('div');
+        win.style.background = '#222';
+        win.style.color = '#fff';
+        win.style.padding = '16px';
+        win.style.border = '1px solid #555';
+        win.style.maxWidth = '300px';
+        win.style.textAlign = 'center';
+
+        travelWarningMessageEl = document.createElement('div');
+        travelWarningMessageEl.className = 'travel-warning-message';
+        travelWarningMessageEl.style.marginBottom = '12px';
+        win.appendChild(travelWarningMessageEl);
+
+        const btnRow = document.createElement('div');
+        btnRow.style.display = 'flex';
+        btnRow.style.gap = '8px';
+        btnRow.style.justifyContent = 'center';
+
+        travelWarningConfirmBtn = document.createElement('button');
+        travelWarningConfirmBtn.id = 'travel-warning-confirm';
+        travelWarningConfirmBtn.textContent = 'Travel';
+        btnRow.appendChild(travelWarningConfirmBtn);
+
+        travelWarningCancelBtn = document.createElement('button');
+        travelWarningCancelBtn.id = 'travel-warning-cancel';
+        travelWarningCancelBtn.textContent = 'Cancel Travel';
+        btnRow.appendChild(travelWarningCancelBtn);
+
+        win.appendChild(btnRow);
+        travelWarningOverlay.appendChild(win);
+        document.body.appendChild(travelWarningOverlay);
+    }
+    travelWarningMessageEl.textContent = message;
+    travelWarningConfirmBtn.onclick = () => {
+        travelWarningOverlay.style.display = 'none';
+        onConfirm();
+    };
+    travelWarningCancelBtn.onclick = () => {
+        travelWarningOverlay.style.display = 'none';
+    };
+    travelWarningOverlay.style.display = 'flex';
 }
 
 function updateSpaceRandomVisibility() {
@@ -235,7 +298,7 @@ document.addEventListener('click', function(evt){
  * Select a planet and reset the game state for it.
  * @param {string} planetKey
  */
-function selectPlanet(planetKey){
+function selectPlanet(planetKey, force){
     if(!_spaceManagerInstance) {
         console.error('SpaceManager not initialized');
         return;
@@ -252,6 +315,10 @@ function selectPlanet(planetKey){
     }
     if(_spaceManagerInstance.isPlanetTerraformed(planetKey)) {
         console.warn('Target planet already terraformed.');
+        return;
+    }
+    if(!force && planetParameters[planetKey]?.travelWarning){
+        showTravelWarningPopup(planetParameters[planetKey].travelWarning, () => selectPlanet(planetKey, true));
         return;
     }
     const storageState = _spaceManagerInstance.prepareForTravel();
