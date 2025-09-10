@@ -799,27 +799,42 @@ function updateDecreaseButtonText(button, buildCount) {
           span.textContent = '';
           span.appendChild(textSpan);
 
-          const label = document.createElement('label');
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.checked = structure.workerPriority;
-          checkbox.addEventListener('change', () => {
-            structure.workerPriority = checkbox.checked;
+          const container = document.createElement('span');
+          container.classList.add('worker-priority-container');
+          const up = document.createElement('span');
+          up.textContent = '\u25B2';
+          up.classList.add('worker-priority-btn', 'up');
+          const down = document.createElement('span');
+          down.textContent = '\u25BC';
+          down.classList.add('worker-priority-btn', 'down');
+
+          const refresh = () => {
+            up.classList.toggle('active', structure.workerPriority > 0);
+            down.classList.toggle('active', structure.workerPriority < 0);
+          };
+
+          const setPriority = level => {
+            structure.workerPriority = level;
+            refresh();
             if (typeof populationModule !== 'undefined' && typeof populationModule.updateWorkerRequirements === 'function') {
               populationModule.updateWorkerRequirements();
               if (populationModule.workerResource) {
                 populationModule.workerResource.value = populationModule.workerResource.cap - populationModule.totalWorkersRequired;
               }
             }
-          });
-          label.append(checkbox, ' prioritize');
-          const container = document.createElement('span');
-          container.append(' (', label, ')');
+          };
+
+          up.addEventListener('click', () => setPriority(structure.workerPriority > 0 ? 0 : 1));
+          down.addEventListener('click', () => setPriority(structure.workerPriority < 0 ? 0 : -1));
+
+          container.append(' (', up, down, ')');
           span.appendChild(container);
-          span._priorityCheckbox = checkbox;
+          span._priorityUp = up;
+          span._priorityDown = down;
+          span._refreshPriorityUI = refresh;
         }
         textSpan.textContent = text;
-        span._priorityCheckbox.checked = structure.workerPriority;
+        span._refreshPriorityUI();
       } else {
         if (span.textContent !== text) {
           span.textContent = text;
