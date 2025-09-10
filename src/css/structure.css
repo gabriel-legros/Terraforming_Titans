@@ -157,6 +157,20 @@
     margin-left: 5px;
 }
 
+.worker-priority-container {
+    margin-left: 5px;
+}
+
+.worker-priority-btn {
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.3;
+}
+
+.worker-priority-btn.active {
+    opacity: 1;
+}
+
 .ghg-temp-control,
 .o2-pressure-control {
     display: flex;

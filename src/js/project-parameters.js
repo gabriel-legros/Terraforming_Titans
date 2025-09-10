@@ -398,7 +398,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct the receiver array to receive energy from the Dyson Swarm and enables its expansion. All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.  Collectors can be expanded even without the Dyson Swarm Receiver research.',
+    description: 'Expand your Dyson Swarm to produce power from the sun.  Build cheap receivers to receive power.  All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.  Collectors can be expanded even without the Dyson Swarm Receiver research.',
     repeatable: false,
     unlocked: false,
     attributes: { canUseSpaceStorage: true, completedWhenUnlocked: true }

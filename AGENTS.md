@@ -509,3 +509,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Added `SolarPanel` subclass limiting total panels to ten times the world's initial land value.
 - Solar Panel counts now include a tooltip noting the 10× initial land construction cap.
 - Vega-2 now provides a travel warning that must be confirmed before visiting.
+- Building worker costs now support high/normal/low priority via up/down triangles.
