@@ -115,6 +115,62 @@ function loadGame(slotOrCustomString) {
                 }
               }
             }
+
+            // Ensure procedural worlds carry a star definition on load.
+            // Prefer RWG-provided star, else regenerate via RWG using the saved seed,
+            // and only then fall back to a generic Sun-like star.
+            try {
+              if (!currentPlanetParameters.star) {
+                let star = worldOriginal.star || null;
+                const cel = currentPlanetParameters.celestialParameters || {};
+                const lum = (cel.starLuminosity != null ? cel.starLuminosity : 1);
+                if (!star) {
+                  // Attempt regeneration using RWG with the current seed
+                  const seed = (typeof spaceManager.getCurrentRandomSeed === 'function') ? spaceManager.getCurrentRandomSeed() : null;
+                  let regen = null;
+                  try {
+                    const genFn = (typeof generateRandomPlanet === 'function') ? generateRandomPlanet
+                                  : (typeof globalThis.generateRandomPlanet === 'function') ? globalThis.generateRandomPlanet
+                                  : null;
+                    if (genFn && seed != null) {
+                      regen = genFn(seed);
+                    }
+                  } catch (_) { regen = null; }
+
+                  if (regen && regen.star) {
+                    star = JSON.parse(JSON.stringify(regen.star));
+                    if (star.luminositySolar == null) star.luminositySolar = lum;
+                  } else {
+                    // Final fallback if RWG unavailable
+                    const name = 'Procedural Star';
+                    const spectralType = 'G';
+                    const massSolar = 1; // default if unknown
+                    const temperatureK = 5800;
+                    const s = Math.sqrt(lum);
+                    const habitableZone = { inner: 0.95 * s, outer: 1.37 * s };
+                    star = { name, spectralType, luminositySolar: lum, massSolar, temperatureK, habitableZone };
+                  }
+                } else {
+                  if (star.luminositySolar == null) star.luminositySolar = lum;
+                  if (!star.habitableZone && star.luminositySolar != null) {
+                    const s = Math.sqrt(star.luminositySolar);
+                    star.habitableZone = { inner: 0.95 * s, outer: 1.37 * s };
+                  }
+                }
+                currentPlanetParameters.star = star;
+              } else {
+                // Fill missing pieces if star exists but lacks fields
+                const star = currentPlanetParameters.star;
+                const cel = currentPlanetParameters.celestialParameters || {};
+                if (star.luminositySolar == null && cel.starLuminosity != null) {
+                  star.luminositySolar = cel.starLuminosity;
+                }
+                if (!star.habitableZone && star.luminositySolar != null) {
+                  const s = Math.sqrt(star.luminositySolar);
+                  star.habitableZone = { inner: 0.95 * s, outer: 1.37 * s };
+                }
+              }
+            } catch (e) { /* non-fatal */ }
           }
         } else {
           const key = spaceManager.getCurrentPlanetKey();
