@@ -129,9 +129,8 @@ progressVega2.chapters.push(
     title: 'Chapter 14: World of Light',
     narrative: (
       "Mary: 'Touchdown confirmed. Remember: no native water. Treat every gram like treasure.'\n" +
-      "Dr. Evelyn Hart: 'Crystals everywhere—towers, sheets, delicate ribs. When the sun hits them, the ground throws rainbows. It’s beautiful.'\n" +
-      "$WGC_TEAM1_LEADER$: 'Doctor, save it for the lab notes. We need shelter, power, and comms—settlement first, exploration second.'\n" +
-      "Dr. Evelyn Hart: 'Yes. One more note, then: when the wind crosses the crystal, it sings.'"
+      "Dr. Evelyn Hart: 'Crystals everywhere, towers, sheets, delicate ribs. When the sun hits them, the ground throws rainbows. It’s beautiful.'\n" +
+      "$WGC_TEAM1_LEADER$: 'Doctor, save it for the lab notes. We need shelter, power, and comms.  Settlement first, exploration second.'"
     ),
     prerequisites: ['chapter13.8'],
     objectives: [],
