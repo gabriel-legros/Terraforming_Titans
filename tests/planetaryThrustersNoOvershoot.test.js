@@ -18,7 +18,8 @@ describe('Planetary Thrusters target clamping', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1 } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1 } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -40,7 +41,7 @@ describe('Planetary Thrusters target clamping', () => {
     project.prepareJob(true, true);
     project.activeMode = 'spin';
 
-    const p = ctx.terraforming.celestialParameters;
+    const p = ctx.currentPlanetParameters.celestialParameters;
     const requiredPower = project.dVreq * p.mass / (project.getThrustPowerRatio() * 86400);
     project.power = requiredPower * 2; // overshoot in one tick
     project.update(1000);

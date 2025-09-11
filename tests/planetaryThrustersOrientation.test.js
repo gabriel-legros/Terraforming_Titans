@@ -18,7 +18,8 @@ describe('Planetary Thrusters orientation', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1 } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1 } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -30,7 +31,7 @@ describe('Planetary Thrusters orientation', () => {
     const container = dom.window.document.getElementById('container');
     project.renderUI(container);
     project.complete();
-    const p = ctx.terraforming.celestialParameters;
+    const p = ctx.currentPlanetParameters.celestialParameters;
 
     // spin orientation
     project.el.rotTarget.value = 0.5; // 12 hour day

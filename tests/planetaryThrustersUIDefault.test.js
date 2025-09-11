@@ -18,7 +18,8 @@ describe('Planetary Thrusters UI', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -49,7 +50,8 @@ describe('Planetary Thrusters UI', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 30, distanceFromSun: 1.5 } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 30, distanceFromSun: 1.5 } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -78,7 +80,8 @@ describe('Planetary Thrusters UI', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
@@ -115,7 +118,8 @@ describe('Planetary Thrusters UI', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 50000, distanceFromSun: 1 } } };
+    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 50000, distanceFromSun: 1 } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
