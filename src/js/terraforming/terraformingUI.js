@@ -268,7 +268,7 @@ function createTemperatureBox(row) {
       const penalty = terraforming.calculateMaintenancePenalty();
       if (penalty > 1) {
         els.maintenancePenalty.style.display = '';
-        els.maintenancePenalty.textContent = `Colony maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+        els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
       } else {
         els.maintenancePenalty.style.display = 'none';
       }
