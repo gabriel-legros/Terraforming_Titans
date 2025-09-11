@@ -219,7 +219,7 @@ class EffectableEntity {
           break;
         // Add other effect types here as needed
         default:
-          console.log(`Effect type "${effect.type}" is not supported for ${this.name}.`);
+          break;
       }
     }
   }
