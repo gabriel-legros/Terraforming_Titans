@@ -398,6 +398,8 @@ class Colony extends Building {
     // Unlock the new tier
     colonies[tierName].unlocked = true;
 
+    if (tierName === 'aerostat_colony') return;
+
     // Find the index of the new tier
     const newTierIndex = tiers.indexOf(tierName);
 
