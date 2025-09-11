@@ -556,6 +556,20 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
 
   // Initial colony caps scale
   const baseCapScale = clamp(landHa / DEFAULT_PARAMS.volatiles.referenceLandHa, 0.3, 3);
+  // Attach star to the overrides so deepMerge(defaultPlanetParameters, overrides)
+  // replaces the default Sun with the RWG-generated star for this system.
+  const sLum = star.luminositySolar || 1;
+  const sScale = Math.sqrt(sLum);
+  const starOverride = {
+    name: star.name,
+    spectralType: star.spectralType,
+    luminositySolar: sLum,
+    massSolar: star.massSolar,
+    radiusSolar: star.radiusSolar,
+    temperatureK: star.temperatureK,
+    habitableZone: star.habitableZone || { inner: 0.95 * sScale, outer: 1.37 * sScale }
+  };
+
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -565,7 +579,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     fundingRate: Math.round(randRange(mulberry32(seed ^ 0xB00B), 5, 15)),
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
-    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: star.luminositySolar, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
+    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
+    star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     rwgMeta: { generatorSeedInt: seed }
   };
