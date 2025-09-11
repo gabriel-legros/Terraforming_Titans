@@ -94,6 +94,9 @@ class EffectableEntity {
         case 'consumptionMultiplier':
           this.applyConsumptionMultiplier(effect.value);
           break;
+        case 'maintenanceMultiplier':
+          this.applyMaintenanceMultiplier(effect.value);
+          break;
         case 'resourceConsumptionMultiplier':
           this.applyProductionMultiplier(effect);
           break;
@@ -247,6 +250,10 @@ class EffectableEntity {
     }
 
     applyConsumptionMultiplier(value) {
+        // No logic needed for now. Placeholder method.
+    }
+
+    applyMaintenanceMultiplier(value) {
         // No logic needed for now. Placeholder method.
     }
 

@@ -13,6 +13,7 @@ const AU_METER = 149597870700;
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
 const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
+const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
@@ -1093,6 +1094,14 @@ class Terraforming extends EffectableEntity{
       return 1 + smallestDifference / 10;
   }
 
+    calculateMaintenancePenalty() {
+      const temp = this.temperature.value;
+      if (temp <= MAINTENANCE_PENALTY_THRESHOLD) {
+        return 1;
+      }
+      return 1 + 0.01 * (temp - MAINTENANCE_PENALTY_THRESHOLD);
+    }
+
     // Calculates the sum of absolute pressure changes for each gas since initialization
     calculateTotalPressureDelta() {
         let totalDelta = 0; // Use a local variable, no need to store this.totalDelta
@@ -1137,20 +1146,48 @@ class Terraforming extends EffectableEntity{
 
 
 
-      const colonyEnergyPenalty = this.calculateColonyEnergyPenalty()
-      
+      const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
+      const maintenancePenalty = this.calculateMaintenancePenalty();
+
       for (let i = 1; i <= 7; i++) {
-        const temperaturePenaltyEffect = {
+        const energyPenaltyEffect = {
             effectId: 'temperaturePenalty',
             target: 'colony',
-            targetId: `t${i}_colony`, // Dynamically set targetId
+            targetId: `t${i}_colony`,
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget: 'energy',
             value: colonyEnergyPenalty
         };
-    
-        addEffect(temperaturePenaltyEffect);
+
+        addEffect(energyPenaltyEffect);
+      }
+
+      if (typeof buildings !== 'undefined') {
+        for (const id in buildings) {
+          const b = buildings[id];
+          if (b && !b.temperatureMaintenanceImmune) {
+            addEffect({
+              effectId: 'temperatureMaintenancePenalty',
+              target: 'building',
+              targetId: id,
+              type: 'maintenanceMultiplier',
+              value: maintenancePenalty
+            });
+          }
+        }
+      }
+
+      if (typeof colonies !== 'undefined') {
+        for (const id in colonies) {
+          addEffect({
+            effectId: 'temperatureMaintenancePenalty',
+            target: 'colony',
+            targetId: id,
+            type: 'maintenanceMultiplier',
+            value: maintenancePenalty
+          });
+        }
       }
       // End of applyTerraformingEffects method body
     }

@@ -332,7 +332,8 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    temperatureMaintenanceImmune: true
   },
   superalloyFusionReactor: {
     name: 'Superalloy Fusion Reactor',
@@ -469,7 +470,8 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
-    surfaceArea: 500
+    surfaceArea: 500,
+    temperatureMaintenanceImmune: true
   },
   hyperionLantern: {
     name: 'Hyperion Lantern',
@@ -485,7 +487,8 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
-    powerPerBuilding: 1e12
+    powerPerBuilding: 1e12,
+    temperatureMaintenanceImmune: true
   },
   ghgFactory: {
     name: 'Greenhouse Gas factory',

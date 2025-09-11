@@ -58,7 +58,8 @@ class Building extends EffectableEntity {
         unlocked,
         surfaceArea,
         requiresProductivity,
-        requiresLand
+        requiresLand,
+        temperatureMaintenanceImmune
       } = config;
   
       this.name = buildingName;
@@ -80,6 +81,7 @@ class Building extends EffectableEntity {
       this.requiresProductivity = typeof requiresProductivity !== 'undefined' ? requiresProductivity : true;
       this.requiresLand = requiresLand;
       this.powerPerBuilding = config.powerPerBuilding;
+      this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
 
       this.updateResourceStorage();
     }
@@ -167,6 +169,17 @@ class Building extends EffectableEntity {
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'consumptionMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
+  }
+
+  // Method to get the effective maintenance multiplier
+  getEffectiveMaintenanceMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach(effect => {
+      if (effect.type === 'maintenanceMultiplier') {
         multiplier *= effect.value;
       }
     });
@@ -331,12 +344,13 @@ class Building extends EffectableEntity {
   calculateMaintenanceCost() {
     const maintenanceCost = {};
     const effectiveCost = this.getEffectiveCost();
+    const maintenanceMultiplier = this.getEffectiveMaintenanceMultiplier();
     for (const resource in effectiveCost.colony) {
       const resourceCost = effectiveCost.colony[resource];
       const multiplier = this.getEffectiveMaintenanceCostMultiplier('colony', resource);
       const resourceData = resources?.colony?.[resource];
       const resourceMultiplier = resourceData && resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1;
-      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier * resourceMultiplier;
+      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier * resourceMultiplier * maintenanceMultiplier;
     }
     return maintenanceCost;
   }
