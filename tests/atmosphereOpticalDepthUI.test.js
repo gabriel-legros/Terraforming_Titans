@@ -46,6 +46,8 @@ describe('atmosphere UI optical depth', () => {
       calculateSolarPanelMultiplier: () => 1,
       calculateWindTurbineMultiplier: () => 1,
       calculateTotalPressure: () => 1,
+      calculateColonyPressureCostPenalty: () => 1,
+      calculateColonyPressureCostPenalty: () => 1,
       getAtmosphereStatus: () => true,
       getLuminosityStatus: () => true,
       getMagnetosphereStatus: () => true,
@@ -62,7 +64,7 @@ describe('atmosphere UI optical depth', () => {
 
     const box = dom.window.document.getElementById('atmosphere-box');
     const pEls = box.querySelectorAll('p');
-    expect(pEls.length).toBe(3);
+    expect(pEls.length).toBe(4);
     expect(pEls[0].querySelector('#atmosphere-current')).not.toBeNull();
     expect(pEls[1].querySelector('#optical-depth')).not.toBeNull();
     const info = pEls[1].querySelector('#optical-depth-info');

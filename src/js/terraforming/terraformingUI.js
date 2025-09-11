@@ -329,6 +329,11 @@ function createTemperatureBox(row) {
       atmosphereHeading.appendChild(atmInfo);
     }
 
+    const pressurePenaltySpan = document.createElement('p');
+    pressurePenaltySpan.id = 'pressure-cost-penalty';
+    pressurePenaltySpan.style.display = 'none';
+    atmosphereBox.appendChild(pressurePenaltySpan);
+
     row.appendChild(atmosphereBox);
     const gasElements = {};
     for (const gas in resources.atmospheric) {
@@ -347,6 +352,7 @@ function createTemperatureBox(row) {
       opticalDepthInfo: atmosphereBox.querySelector('#optical-depth-info'),
       opticalDepthTooltip: atmosphereBox.querySelector('#optical-depth-tooltip'),
       windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
+      pressurePenalty: atmosphereBox.querySelector('#pressure-cost-penalty'),
       gases: gasElements
     };
     const els = terraformingUICache.atmosphere;
@@ -390,6 +396,16 @@ function createTemperatureBox(row) {
 
     if (els.windMultiplier) {
       els.windMultiplier.textContent = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
+    }
+
+    if (els.pressurePenalty && typeof terraforming.calculateColonyPressureCostPenalty === 'function') {
+      const penalty = terraforming.calculateColonyPressureCostPenalty();
+      if (penalty > 1) {
+        els.pressurePenalty.style.display = '';
+        els.pressurePenalty.textContent = `Colony cost multiplier from pressure : ${penalty.toFixed(2)}`;
+      } else {
+        els.pressurePenalty.style.display = 'none';
+      }
     }
 
     for (const gas in resources.atmospheric) {

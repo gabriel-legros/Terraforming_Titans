@@ -33,6 +33,7 @@ describe('atmosphere gas status icons', () => {
       calculateSolarPanelMultiplier: () => 1,
       calculateWindTurbineMultiplier: () => 1,
       calculateTotalPressure: () => 0,
+      calculateColonyPressureCostPenalty: () => 1,
       getAtmosphereStatus: () => true,
       getLuminosityStatus: () => true,
       getMagnetosphereStatus: () => true,
