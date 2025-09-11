@@ -1073,6 +1073,13 @@ class Terraforming extends EffectableEntity{
       return Math.sqrt(pressureAtm);
     }
 
+    calculateColonyPressureCostPenalty() {
+      const pressureKPa = this.calculateTotalPressure();
+      const pressureAtm = pressureKPa / KPA_PER_ATM;
+      const multiplier = Math.sqrt(pressureAtm);
+      return Math.max(1, multiplier);
+    }
+
     calculateColonyEnergyPenalty() {
       const zones = this.temperature.zones;
 
@@ -1147,6 +1154,7 @@ class Terraforming extends EffectableEntity{
 
 
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
+      const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
 
       for (let i = 1; i <= 7; i++) {
@@ -1161,6 +1169,29 @@ class Terraforming extends EffectableEntity{
         };
 
         addEffect(energyPenaltyEffect);
+
+        const metalCostPenaltyEffect = {
+            effectId: 'pressureCostPenalty-metal',
+            target: 'colony',
+            targetId: `t${i}_colony`,
+            type: 'resourceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: 'metal',
+            value: colonyCostPenalty
+        };
+
+        const glassCostPenaltyEffect = {
+            effectId: 'pressureCostPenalty-glass',
+            target: 'colony',
+            targetId: `t${i}_colony`,
+            type: 'resourceCostMultiplier',
+            resourceCategory: 'colony',
+            resourceId: 'glass',
+            value: colonyCostPenalty
+        };
+
+        addEffect(metalCostPenaltyEffect);
+        addEffect(glassCostPenaltyEffect);
       }
 
       if (typeof buildings !== 'undefined') {
