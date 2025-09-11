@@ -393,6 +393,11 @@ class Colony extends Building {
   }
 
   enable(tierName){
+    if (this.name === 'aerostat_colony'){
+      this.unlocked = true;
+      return;
+    }
+
     const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
     // Unlock the new tier
