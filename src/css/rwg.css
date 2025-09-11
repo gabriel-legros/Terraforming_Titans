@@ -147,7 +147,7 @@
   background: transparent;
   border-bottom: 1px solid var(--rwg-border);
 }
-.rwg-card h3, .rwg-card h4 { margin: 0; }
+.rwg-card h3, .rwg-card h4 { margin: 0; color: var(--rwg-fg); }
 .collapse-arrow { margin-right: 6px; cursor: pointer; }
 .rwg-card.collapsed .card-body { display: none; }
 
