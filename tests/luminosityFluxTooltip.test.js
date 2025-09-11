@@ -53,6 +53,8 @@ describe('luminosity flux tooltip', () => {
       zonalSurface: { tropical: { biomass: 0 }, temperate: { biomass: 0 }, polar: { biomass: 0 } },
       zonalWater: { tropical: {}, temperate: {}, polar: {} }
     };
+    ctx.terraforming.calculateMaintenancePenalty = () => 1;
+    ctx.terraforming.calculateColonyEnergyPenalty = () => 1;
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);

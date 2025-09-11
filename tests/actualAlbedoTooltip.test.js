@@ -59,6 +59,8 @@ describe('actual albedo tooltip', () => {
       calculateAtmosphericComposition: () => ({ composition: {} }),
       resources: { atmospheric: { calciteAerosol: { value: 0 } } }
     };
+    ctx.terraforming.calculateMaintenancePenalty = () => 1;
+    ctx.terraforming.calculateColonyEnergyPenalty = () => 1;
 
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'terraforming', 'terraformingUI.js'), 'utf8');
     vm.runInContext(code, ctx);

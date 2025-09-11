@@ -180,10 +180,15 @@ function createTemperatureBox(row) {
       temperatureHeading.appendChild(tempInfo);
     }
 
-    const tempPenaltySpan = document.createElement('p');
-    tempPenaltySpan.id = 'temperature-energy-penalty';
-    tempPenaltySpan.textContent = "Colony energy cost multiplier from temperature :"
-    temperatureBox.appendChild(tempPenaltySpan);
+    const energyPenaltySpan = document.createElement('p');
+    energyPenaltySpan.id = 'temperature-energy-penalty';
+    energyPenaltySpan.textContent = "Colony energy cost multiplier from temperature :";
+    temperatureBox.appendChild(energyPenaltySpan);
+
+    const maintenancePenaltySpan = document.createElement('p');
+    maintenancePenaltySpan.id = 'temperature-maintenance-penalty';
+    maintenancePenaltySpan.style.display = 'none';
+    temperatureBox.appendChild(maintenancePenaltySpan);
 
     const targetSpan = document.createElement('span');
     targetSpan.id = 'temperature-target';
@@ -214,7 +219,8 @@ function createTemperatureBox(row) {
       polarDelta: temperatureBox.querySelector('#polar-delta'),
       polarDay: temperatureBox.querySelector('#polar-day'),
       polarNight: temperatureBox.querySelector('#polar-night'),
-      penalty: temperatureBox.querySelector('#temperature-energy-penalty')
+      energyPenalty: temperatureBox.querySelector('#temperature-energy-penalty'),
+      maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty')
     };
   }
 
@@ -255,8 +261,17 @@ function createTemperatureBox(row) {
 
     temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? 'green' : 'red';
 
-    if (els.penalty) {
-      els.penalty.textContent = `Colony energy cost multiplier from temperature : ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
+    if (els.energyPenalty) {
+      els.energyPenalty.textContent = `Colony energy cost multiplier from temperature : ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
+    }
+    if (els.maintenancePenalty) {
+      const penalty = terraforming.calculateMaintenancePenalty();
+      if (penalty > 1) {
+        els.maintenancePenalty.style.display = '';
+        els.maintenancePenalty.textContent = `Colony maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+      } else {
+        els.maintenancePenalty.style.display = 'none';
+      }
     }
   }
 
