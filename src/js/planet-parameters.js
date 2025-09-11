@@ -93,6 +93,15 @@ const defaultPlanetParameters = {
     workerRatio: 0.5
   },
   fundingRate: 0, // Default
+  // Default host star information (for Solar System worlds)
+  star: {
+    name: 'Sun',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    temperatureK: 5778,
+    habitableZone: { inner: 0.95, outer: 1.4 }
+  },
   celestialParameters : {
     distanceFromSun: 1.52, // Default (Mars)
     gravity: 3.711, // Default (Mars)
