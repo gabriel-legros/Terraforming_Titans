@@ -1171,6 +1171,9 @@ function updateDecreaseButtonText(button, buildCount) {
       })
       .join(';');
 
+    const hasProduction = sections.some(s => s.key === 'production');
+    const hasConsumption = sections.some(s => s.key === 'consumption');
+
     sections.forEach((sec, idx) => {
       const container = document.createElement('span');
       const label = document.createElement('strong');
@@ -1181,7 +1184,12 @@ function updateDecreaseButtonText(button, buildCount) {
       container.appendChild(list);
       element.appendChild(container);
       if (idx < sections.length - 1) {
-        element.appendChild(document.createTextNode(', '));
+        const nextSec = sections[idx + 1];
+        if (hasProduction && hasConsumption && nextSec.key === 'maintenance') {
+          element.appendChild(document.createElement('br'));
+        } else {
+          element.appendChild(document.createTextNode(', '));
+        }
       }
 
       const info = { list, spans: new Map() };
