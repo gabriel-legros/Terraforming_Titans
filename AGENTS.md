@@ -513,3 +513,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Building worker costs now support high/normal/low priority via up/down triangles.
 - Added Companion Satellite advanced research that keeps one ore satellite per terraformed world and auto-unlocks ore satellite infrastructure.
 - High surface temperatures now scale maintenance costs for all buildings; space mirrors, Hyperion Lanterns and Dyson Receivers ignore this penalty.
+- Added atmospheric utility functions to compute mean molecular weight and specific lift.
