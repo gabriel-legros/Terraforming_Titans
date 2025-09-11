@@ -1,4 +1,20 @@
 const colonyParameters = {
+    aerostat_colony: {
+      name: 'Aerostat Colony',
+      category: 'Colony',
+      description: 'A floating habitat that avoids surface pressure and temperature extremes.',
+      cost: { colony: { metal: 50, components: 25, electronics: 25, water: 50, glass: 100 } },
+      consumption: { colony: { energy: 50000, food: 1, electronics: 0.01, androids: 0.001 } },
+      production: { colony: { research: 1 } },
+      storage: { colony: { colonists: 10 } },
+      baseComfort: 0,
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: true,
+      maintenanceFactor: 1,
+      unlocked: false,
+      requiresLand: 0
+    },
     t1_colony: {
       name: 'Research Outpost',
       category: 'Colony',
@@ -113,4 +129,4 @@ const colonyParameters = {
       unlocked: false,
       requiresLand: 100000
     }
-}
+};

@@ -23,7 +23,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'workforceRatio'
     });
 
-    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
+    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     researchColonies.forEach(colonyId => {
       addEffect({
         target: 'colony',
@@ -64,7 +64,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'foodGrowth'
     });
 
-    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
+    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     researchColonies.forEach(colonyId => {
       addEffect({
         target: 'colony',
@@ -105,7 +105,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'waterGrowth'
     });
 
-    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
+    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     researchColonies.forEach(colonyId => {
       addEffect({
         target: 'colony',
@@ -176,7 +176,7 @@ class ColonySlidersManager extends EffectableEntity {
     value = Math.min(2, Math.max(0, value));
     this.mechanicalAssistance = value;
 
-    const allColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
+    const allColonies = ['aerostat_colony','t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
     allColonies.forEach(colonyId => {
       const tierMatch = colonyId.match(/^t(\d)_colony$/);
       const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
