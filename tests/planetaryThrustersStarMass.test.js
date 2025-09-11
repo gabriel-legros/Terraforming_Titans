@@ -26,9 +26,10 @@ describe('Planetary Thrusters star mass', () => {
     const G = 6.67430e-11;
     const AU_IN_METERS = 1.496e11;
     const starMass = 2 * 1.989e30;
-    ctx.terraforming = {
+    ctx.currentPlanetParameters = {
       celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1, starMass }
     };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
 
     const config = ctx.projectParameters.planetaryThruster;
