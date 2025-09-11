@@ -46,16 +46,25 @@ class GhgFactory extends Building {
         B = A + 1;
         ghgFactorySettings.reverseTempThreshold = B;
       }
+      const M = (A + B) / 2; // Midpoint target when correcting
       const currentTemp = terraforming.temperature.value;
       let recipeKey = this.currentRecipeKey || 'ghg';
       let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
 
       if (!this.reversalAvailable) {
-        const targetTemp = A;
-        if (currentTemp >= targetTemp) {
+        // No reversal available: only push in the forward direction.
+        // Early disable checks that do not require resource access.
+        if (recipeKey === 'ghg' && currentTemp >= A) {
           this.productivity = 0;
           return;
         }
+        if (recipeKey === 'calcite' && currentTemp <= A) {
+          this.productivity = 0;
+          return;
+        }
+
+        // For calcite aim toward midpoint when outside the range,
+        // otherwise just maintain against decay while inside the range.
         if (
           typeof terraforming.updateSurfaceTemperature === 'function' &&
           resources?.atmospheric?.[resourceName]
@@ -64,21 +73,158 @@ class GhgFactory extends Building {
           if (maxProduction > 0) {
             const res = resources.atmospheric[resourceName];
             const originalAmount = res.value;
-            const required = solveRequired((added) => {
-              res.value = originalAmount + added;
-              terraforming.updateSurfaceTemperature();
-              const diff = terraforming.temperature.value - targetTemp;
-              res.value = originalAmount;
-              terraforming.updateSurfaceTemperature();
-              return diff;
-            }, maxProduction);
-            this.reverseEnabled = false;
-            this.productivity = Math.min(targetProductivity, required / maxProduction);
-            return;
+
+            if (recipeKey === 'calcite') {
+              // Too hot: produce toward midpoint
+              if (currentTemp >= B) {
+                const required = solveRequired((added) => {
+                  res.value = originalAmount + added;
+                  terraforming.updateSurfaceTemperature();
+                  const diff = terraforming.temperature.value - M;
+                  res.value = originalAmount;
+                  terraforming.updateSurfaceTemperature();
+                  return diff;
+                }, maxProduction);
+                this.reverseEnabled = false;
+                // Fallback: if solver cannot find a step but we are still above M, run at max allowed
+                const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
+                this.productivity = Math.min(targetProductivity, prod);
+                return;
+              }
+
+              // Inside the range: maintain enough to offset decay at the midpoint mass
+              const halfLife = (typeof CALCITE_HALF_LIFE_SECONDS !== 'undefined') ? CALCITE_HALF_LIFE_SECONDS : 240;
+              const k = Math.log(2) / halfLife;
+              const realSeconds = (deltaTime || 0) / 1000;
+              // Estimate midpoint calcite mass by probing both add/remove directions with a larger search window
+              const searchWindow = Math.max(maxProduction * 50, originalAmount * 0.5, 1);
+              let midMass = originalAmount;
+              let bestDiff = Math.abs(currentTemp - M);
+              const evalCandidate = (mass) => {
+                const origMass = res.value;
+                res.value = Math.max(0, mass);
+                terraforming.updateSurfaceTemperature();
+                const d = Math.abs(terraforming.temperature.value - M);
+                res.value = origMass;
+                terraforming.updateSurfaceTemperature();
+                return d;
+              };
+              // Try add direction
+              const addReq = solveRequired((amt) => {
+                res.value = originalAmount + amt;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - M;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, searchWindow);
+              if (addReq > 0) {
+                const mass = originalAmount + addReq;
+                const d = evalCandidate(mass);
+                if (d <= bestDiff) { bestDiff = d; midMass = mass; }
+              }
+              // Try remove direction
+              const remReq = solveRequired((amt) => {
+                const newVal = Math.max(0, originalAmount - amt);
+                res.value = newVal;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - M;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, searchWindow);
+              if (remReq > 0) {
+                const mass = Math.max(0, originalAmount - remReq);
+                const d = evalCandidate(mass);
+                if (d <= bestDiff) { bestDiff = d; midMass = mass; }
+              }
+
+              const decayAtMid = (realSeconds > 0 && midMass > 0) ? midMass * (1 - Math.exp(-k * realSeconds)) : 0;
+              const needed = Math.min(decayAtMid, maxProduction);
+              this.reverseEnabled = false;
+              this.productivity = Math.min(targetProductivity, needed / maxProduction);
+              return;
+            } else {
+              // GHG recipe (warming): target lower boundary A when too cold
+              const targetTemp = A;
+              const required = solveRequired((added) => {
+                res.value = originalAmount + added;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - targetTemp;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, maxProduction);
+              this.reverseEnabled = false;
+              // Fallback: if solver cannot find a step but we are still below A, run at max allowed
+              const prod = (required > 0) ? (required / maxProduction) : (currentTemp < targetTemp ? 1 : 0);
+              this.productivity = Math.min(targetProductivity, prod);
+              return;
+            }
           }
         }
       } else {
+        // Reversal available
         if (currentTemp > A && currentTemp < B) {
+          // Inside the range: for calcite, maintain enough to offset decay at the midpoint mass; otherwise stop
+          if (recipeKey === 'calcite' && resources?.atmospheric?.calciteAerosol) {
+            const maxProduction = computeMaxProduction('atmospheric', 'calciteAerosol');
+            if (maxProduction > 0) {
+              const res = resources.atmospheric.calciteAerosol;
+              const originalAmount = res.value || 0;
+              const halfLife = (typeof CALCITE_HALF_LIFE_SECONDS !== 'undefined') ? CALCITE_HALF_LIFE_SECONDS : 240;
+              const k = Math.log(2) / halfLife;
+              const realSeconds = (deltaTime || 0) / 1000;
+              // Estimate midpoint calcite mass by probing both add/remove directions with a larger search window
+              const searchWindow = Math.max(maxProduction * 50, originalAmount * 0.5, 1);
+              let midMass = originalAmount;
+              let bestDiff = Math.abs(currentTemp - M);
+              const evalCandidate = (mass) => {
+                const origMass = res.value;
+                res.value = Math.max(0, mass);
+                terraforming.updateSurfaceTemperature();
+                const d = Math.abs(terraforming.temperature.value - M);
+                res.value = origMass;
+                terraforming.updateSurfaceTemperature();
+                return d;
+              };
+              // Try add direction
+              const addReq = solveRequired((amt) => {
+                res.value = originalAmount + amt;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - M;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, searchWindow);
+              if (addReq > 0) {
+                const mass = originalAmount + addReq;
+                const d = evalCandidate(mass);
+                if (d <= bestDiff) { bestDiff = d; midMass = mass; }
+              }
+              // Try remove direction
+              const remReq = solveRequired((amt) => {
+                const newVal = Math.max(0, originalAmount - amt);
+                res.value = newVal;
+                terraforming.updateSurfaceTemperature();
+                const diff = terraforming.temperature.value - M;
+                res.value = originalAmount;
+                terraforming.updateSurfaceTemperature();
+                return diff;
+              }, searchWindow);
+              if (remReq > 0) {
+                const mass = Math.max(0, originalAmount - remReq);
+                const d = evalCandidate(mass);
+                if (d <= bestDiff) { bestDiff = d; midMass = mass; }
+              }
+
+              const decayAtMid = (realSeconds > 0 && midMass > 0) ? midMass * (1 - Math.exp(-k * realSeconds)) : 0;
+              const needed = Math.min(decayAtMid, maxProduction);
+              this.reverseEnabled = false;
+              this.productivity = Math.min(targetProductivity, needed / maxProduction);
+              return;
+            }
+          }
           this.productivity = 0;
           return;
         }
@@ -99,7 +245,8 @@ class GhgFactory extends Building {
           }
         }
 
-        const targetTemp = reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B);
+        // Aim toward midpoint when correcting, maintain decay when inside range (handled above)
+        const targetTemp = (recipeKey === 'calcite') ? M : (reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B));
         if (
           typeof terraforming.updateSurfaceTemperature === 'function' &&
           resources?.atmospheric?.[resourceName]
@@ -117,7 +264,17 @@ class GhgFactory extends Building {
               return diff;
             }, maxProduction);
             this.reverseEnabled = reverse;
-            this.productivity = Math.min(targetProductivity, required / maxProduction);
+            // Fallback: if solver returns no step but still outside the band, push at max allowed in the correct direction
+            let prod = 0;
+            if (required > 0) {
+              prod = required / maxProduction;
+            } else {
+              const outside = (currentTemp <= A) || (currentTemp >= B);
+              if (outside) {
+                prod = 1;
+              }
+            }
+            this.productivity = Math.min(targetProductivity, prod);
             return;
           }
         }
