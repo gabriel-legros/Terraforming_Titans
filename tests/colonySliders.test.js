@@ -12,8 +12,8 @@ const {
 } = require('../src/js/colonySliders.js');
 const { initializeColonySlidersUI, updateColonySlidersUI } = require('../src/js/colonySlidersUI.js');
 
-const researchColonies = ['t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
-const sixResearchColonies = researchColonies.slice(0,6);
+const researchColonies = ['aerostat_colony','t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
+const sevenResearchColonies = researchColonies.slice(0,7);
 
 describe('colony sliders', () => {
   beforeEach(() => {
@@ -65,7 +65,7 @@ describe('colony sliders', () => {
       type: 'growthMultiplier',
       value: growth
     }));
-    sixResearchColonies.forEach(colonyId => {
+    sevenResearchColonies.forEach(colonyId => {
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
@@ -86,7 +86,7 @@ describe('colony sliders', () => {
       type: 'growthMultiplier',
       value: growth
     }));
-    sixResearchColonies.forEach(colonyId => {
+    sevenResearchColonies.forEach(colonyId => {
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
@@ -121,7 +121,8 @@ describe('colony sliders', () => {
     setMechanicalAssistance(1.2);
     expect(colonySliderSettings.mechanicalAssistance).toBeCloseTo(1.2);
     researchColonies.forEach(colonyId => {
-      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const match = colonyId.match(/^t(\d)_/);
+      const tier = match ? parseInt(match[1], 10) : 2;
       const expectedAmount = 1.2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
@@ -149,7 +150,8 @@ describe('colony sliders', () => {
     setMechanicalAssistance(5);
     expect(colonySliderSettings.mechanicalAssistance).toBe(2);
     researchColonies.forEach(colonyId => {
-      const tier = parseInt(colonyId.match(/^t(\d)_/)[1], 10);
+      const match = colonyId.match(/^t(\d)_/);
+      const tier = match ? parseInt(match[1], 10) : 2;
       const expectedAmount = 2 * Math.pow(10, tier - 3);
       expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',

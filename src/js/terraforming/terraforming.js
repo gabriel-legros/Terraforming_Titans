@@ -1211,6 +1211,7 @@ class Terraforming extends EffectableEntity{
 
       if (typeof colonies !== 'undefined') {
         for (const id in colonies) {
+          if (id === 'aerostat_colony') continue;
           addEffect({
             effectId: 'temperatureMaintenancePenalty',
             target: 'colony',
