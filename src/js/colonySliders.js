@@ -64,7 +64,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'foodGrowth'
     });
 
-    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
+    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     researchColonies.forEach(colonyId => {
       addEffect({
         target: 'colony',
@@ -105,7 +105,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'waterGrowth'
     });
 
-    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony'];
+    const researchColonies = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
     researchColonies.forEach(colonyId => {
       addEffect({
         target: 'colony',
