@@ -1872,17 +1872,30 @@ class SpaceMirrorFacilityProject extends Project {
     const mirrorQuick = document.createElement('div');
     mirrorQuick.classList.add('quick-build-row');
     const mirrorQuickLabel = document.createElement('span');
-    mirrorQuickLabel.textContent = 'Quick Build: ';
+    mirrorQuickLabel.classList.add('quick-build-label');
+    mirrorQuickLabel.textContent = 'Quick Build:';
     mirrorQuick.appendChild(mirrorQuickLabel);
     const mirrorQuickButton = document.createElement('button');
+    mirrorQuickButton.classList.add('quick-build-button');
     mirrorQuick.appendChild(mirrorQuickButton);
+    // Reserve space so the build button can grow without moving x10
+    const mirrorSpacer = document.createElement('div');
+    mirrorSpacer.classList.add('qb-spacer');
     const mirrorMul = document.createElement('button');
+    mirrorMul.classList.add('increment-button', 'qb-inc');
     mirrorMul.textContent = 'x10';
+    mirrorQuick.appendChild(mirrorSpacer);
     mirrorQuick.appendChild(mirrorMul);
     const mirrorDiv = document.createElement('button');
+    mirrorDiv.classList.add('increment-button', 'qb-inc');
     mirrorDiv.textContent = '/10';
     mirrorQuick.appendChild(mirrorDiv);
-    container.appendChild(mirrorQuick);
+    const mirrorFiller = document.createElement('div');
+    mirrorFiller.classList.add('qb-fill');
+    mirrorQuick.appendChild(mirrorFiller);
+    // Place inside the Mirror Status card body for nicer layout
+    const mirrorCardBody = mirrorDetails.querySelector('.card-body');
+    if (mirrorCardBody) mirrorCardBody.appendChild(mirrorQuick);
 
     const lanternDetails = document.createElement('div');
     lanternDetails.classList.add('info-card', 'lantern-details-card');
@@ -1923,17 +1936,30 @@ class SpaceMirrorFacilityProject extends Project {
     lanternQuick.classList.add('quick-build-row');
     lanternQuick.style.display = 'none';
     const lanternQuickLabel = document.createElement('span');
-    lanternQuickLabel.textContent = 'Quick Build: ';
+    lanternQuickLabel.classList.add('quick-build-label');
+    lanternQuickLabel.textContent = 'Quick Build:';
     lanternQuick.appendChild(lanternQuickLabel);
     const lanternQuickButton = document.createElement('button');
+    lanternQuickButton.classList.add('quick-build-button');
     lanternQuick.appendChild(lanternQuickButton);
+    // Reserve space so the build button can grow without moving x10
+    const lanternSpacer = document.createElement('div');
+    lanternSpacer.classList.add('qb-spacer');
     const lanternMul = document.createElement('button');
+    lanternMul.classList.add('increment-button', 'qb-inc');
     lanternMul.textContent = 'x10';
+    lanternQuick.appendChild(lanternSpacer);
     lanternQuick.appendChild(lanternMul);
     const lanternDiv = document.createElement('button');
+    lanternDiv.classList.add('increment-button', 'qb-inc');
     lanternDiv.textContent = '/10';
     lanternQuick.appendChild(lanternDiv);
-    container.appendChild(lanternQuick);
+    const lanternFiller = document.createElement('div');
+    lanternFiller.classList.add('qb-fill');
+    lanternQuick.appendChild(lanternFiller);
+    // Place inside the Lantern Status card body
+    const lanternCardBody = lanternDetails.querySelector('.card-body');
+    if (lanternCardBody) lanternCardBody.appendChild(lanternQuick);
 
     if (typeof initializeMirrorOversightUI === 'function') {
       initializeMirrorOversightUI(container);
@@ -2020,7 +2046,12 @@ class SpaceMirrorFacilityProject extends Project {
       const building = buildings.spaceMirror;
       qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${building.displayName}`;
       const canAfford = typeof building.canAfford === 'function' ? building.canAfford(qb.count) : true;
-      qb.button.style.color = canAfford ? '' : 'red';
+      if (qb.button.classList) {
+        if (!canAfford) qb.button.classList.add('cant-afford');
+        else qb.button.classList.remove('cant-afford');
+      } else {
+        qb.button.style.color = canAfford ? '' : 'red';
+      }
     }
 
     if (elements.lanternDetails) {
@@ -2028,7 +2059,7 @@ class SpaceMirrorFacilityProject extends Project {
       const unlocked = lantern && lantern.unlocked;
       elements.lanternDetails.container.style.display = unlocked ? 'block' : 'none';
       if (elements.quickBuild && elements.quickBuild.lantern) {
-        elements.quickBuild.lantern.container.style.display = unlocked ? 'block' : 'none';
+        elements.quickBuild.lantern.container.style.display = unlocked ? 'grid' : 'none';
       }
       if (unlocked) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
@@ -2055,7 +2086,12 @@ class SpaceMirrorFacilityProject extends Project {
           const qb = elements.quickBuild.lantern;
           qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${lantern.displayName}`;
           const canAfford = typeof lantern.canAfford === 'function' ? lantern.canAfford(qb.count) : true;
-          qb.button.style.color = canAfford ? '' : 'red';
+          if (qb.button.classList) {
+            if (!canAfford) qb.button.classList.add('cant-afford');
+            else qb.button.classList.remove('cant-afford');
+          } else {
+            qb.button.style.color = canAfford ? '' : 'red';
+          }
         }
       }
     }

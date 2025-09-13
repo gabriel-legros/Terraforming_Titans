@@ -200,6 +200,49 @@
     color: #343a40;
 }
 
+/* Quick Build controls (used inside info cards) */
+.quick-build-row {
+    display: grid;
+    /* label | build (fixed) | spacer | x10 | /10 | filler */
+    grid-template-columns: auto 220px 8px 50px 50px 1fr;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.quick-build-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.quick-build-button {
+    /* Match increment button sizing */
+    padding: 2px 5px;
+    font-size: 12px;
+    cursor: pointer;
+    width: 220px; /* fixed build width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quick-build-button.cant-afford {
+    color: #dc3545; /* red text when unaffordable */
+    border-color: #dc3545;
+}
+
+/* Spacer between build and x10 so x10 doesn't shift */
+.qb-spacer { width: 8px; height: 1px; }
+
+/* Fixed width for quick-build increment buttons only */
+.qb-inc { width: 50px; }
+
+/* Invisible filler to consume remaining row space */
+.qb-fill { width: 100%; height: 1px; }
+
+/* Dark mode: make the label white for readability */
+.dark-mode .quick-build-label { color: #ffffff; }
+
 /* Display parent orbit text in a single line */
 #motion-parent-container .stat-label {
     display: inline;
