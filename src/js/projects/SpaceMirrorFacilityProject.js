@@ -25,7 +25,7 @@ function createDefaultMirrorOversightSettings() {
       assignments: {
         mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
         lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-        reversalMode: { tropical: false, temperate: false, polar: false, any: false }
+        reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
       }
   };
 }
@@ -126,7 +126,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
-    mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
+  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   updateMirrorOversightUI();
 }
 
@@ -303,7 +303,7 @@ function updateAssignmentDisplays() {
     });
     const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
     if (checkbox) {
-        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
+        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
       checkbox.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
     }
   });
@@ -436,7 +436,7 @@ function initializeMirrorOversightUI(container) {
     const box = sliderReverse[zone];
     if (!box) return;
       if (!mirrorOversightSettings.assignments.reversalMode) {
-        mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
+        mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
       }
     box.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
     box.addEventListener('change', () => {
@@ -716,6 +716,9 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
         <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
       </div>
+      <div class="grid-reversal-cell reversal-cell-with-checkbox" data-zone="focus" style="display:none;">
+        <input type="checkbox" class="reversal-checkbox" data-zone="focus" style="visibility:hidden;">
+      </div>
       <div class="grid-auto-cell" data-zone="focus" style="display:none;">
         <input type="checkbox" class="auto-assign" data-zone="focus">
       </div>
@@ -750,7 +753,7 @@ function initializeMirrorOversightUI(container) {
   finerContent.querySelectorAll('.reversal-checkbox').forEach(box => {
     box.addEventListener('change', () => {
       const zone = box.dataset.zone;
-        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
+        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
       mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
       updateZonalFluxTable();
     });
@@ -1026,9 +1029,17 @@ function updateMirrorOversightUI() {
     distributeAutoAssignments('lanterns');
     updateAssignmentDisplays();
   }
-  if (C.focusZoneCells) C.focusZoneCells.forEach(el => { el.style.display = focusEnabled ? '' : 'none'; });
-  const focusCell = document.querySelector('.assign-cell[data-zone="focus"]');
-  if (focusCell) focusCell.style.display = focusEnabled ? 'flex' : 'none';
+  if (C.focusZoneCells) C.focusZoneCells.forEach(el => {
+    if (!focusEnabled) {
+      el.style.display = 'none';
+    } else if (el.classList.contains('grid-reversal-cell')) {
+      el.style.display = reversalAvailable ? 'flex' : 'none';
+    } else if (el.classList.contains('assign-cell')) {
+      el.style.display = 'flex';
+    } else {
+      el.style.display = '';
+    }
+  });
 
 
   if (enabled) {
@@ -1291,7 +1302,7 @@ function runAdvancedOversightAssignments(project) {
     // ---------------- Short-hands / accessors ----------------
     const assignM = mirrorOversightSettings.assignments.mirrors || (mirrorOversightSettings.assignments.mirrors = {});
     const assignL = mirrorOversightSettings.assignments.lanterns || (mirrorOversightSettings.assignments.lanterns = {});
-      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, any: false });
+      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false, any: false });
 
     const prio = mirrorOversightSettings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
     const targets = mirrorOversightSettings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };

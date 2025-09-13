@@ -3,7 +3,7 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 
 describe('space mirror focus reversal', () => {
-  test('focus zone lacks reversal controls', () => {
+  test('focus zone uses hidden reversal placeholder', () => {
     const originalDocument = global.document;
     const originalProject = global.Project;
     const originalFormat = global.formatNumber;
@@ -39,13 +39,23 @@ describe('space mirror focus reversal', () => {
     project.updateUI();
 
     expect(container.querySelector('#mirror-oversight-focus-reverse')).toBeNull();
-    expect(container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]')).toBeNull();
+    const revCell = container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]');
+    expect(revCell).not.toBeNull();
+    expect(revCell.style.display).toBe('none');
+    const hiddenBox = revCell.querySelector('input.reversal-checkbox');
+    expect(hiddenBox).not.toBeNull();
+    expect(hiddenBox.style.visibility).toBe('hidden');
 
     project.enableReversal();
     project.updateUI();
 
     expect(container.querySelector('#mirror-oversight-focus-reverse')).toBeNull();
-    expect(container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]')).toBeNull();
+    const revCell2 = container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]');
+    expect(revCell2).not.toBeNull();
+    expect(revCell2.style.display).toBe('flex');
+    const hiddenBox2 = revCell2.querySelector('input.reversal-checkbox');
+    expect(hiddenBox2).not.toBeNull();
+    expect(hiddenBox2.style.visibility).toBe('hidden');
 
     global.document = originalDocument;
     global.Project = originalProject;
