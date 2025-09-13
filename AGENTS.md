@@ -356,6 +356,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Land usage recalculates on save load, and inactive structure construction checks land without reserving it.
 - Space mirror facility now verifies slider percentages each tick, clamping out-of-range values and ensuring they total 100%.
 - Space mirror facility now supports a reversible reflect mode with Toward World/Away From World selection.
+- Any Zone in space mirror finer controls now includes a reversal checkbox.
 - Reversed space mirrors now subtract flux from their zones while lanterns continue adding, and zonal flux is floored at 6 µW/m²; the luminosity tooltip notes this limit.
 - Metal exportation project shows assigned ship count as current/maximum so players know remaining capacity.
 - Space export project's max export capacity line includes a tooltip explaining Earth's metal purchase limit.

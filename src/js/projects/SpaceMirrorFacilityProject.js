@@ -696,8 +696,8 @@ function initializeMirrorOversightUI(container) {
           <button class="assign-plus" data-type="lanterns" data-zone="${zone}">+1</button>
           <button class="assign-max" data-type="lanterns" data-zone="${zone}">Max</button>
         </div>
-        <div class="grid-${zone === 'any' ? 'reversal-cell' : 'reversal-cell reversal-cell-with-checkbox'}">
-          ${zone === 'any' ? '' : `<input type="checkbox" class="reversal-checkbox" data-zone="${zone}">`}
+        <div class="grid-reversal-cell reversal-cell-with-checkbox">
+          <input type="checkbox" class="reversal-checkbox" data-zone="${zone}">
         </div>
         <div class="grid-auto-cell">
           <input type="checkbox" class="auto-assign" data-zone="${zone}">
