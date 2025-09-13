@@ -384,6 +384,8 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
+        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
