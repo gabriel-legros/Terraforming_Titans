@@ -38,7 +38,14 @@ describe('space mirror focus reversal', () => {
     project.renderUI(container);
     project.updateUI();
 
-    expect(container.querySelector('#mirror-oversight-focus-reverse')).toBeNull();
+    const sliderBox = container.querySelector('#mirror-oversight-focus-reverse');
+    const sliderLabel = container.querySelector('label[for="mirror-oversight-focus-reverse"]');
+    expect(sliderBox).not.toBeNull();
+    expect(sliderLabel).not.toBeNull();
+    expect(sliderBox.style.display).toBe('none');
+    expect(sliderLabel.style.display).toBe('none');
+    expect(sliderBox.style.visibility).toBe('hidden');
+    expect(sliderLabel.style.visibility).toBe('hidden');
     const revCell = container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]');
     expect(revCell).not.toBeNull();
     expect(revCell.style.display).toBe('none');
@@ -49,7 +56,14 @@ describe('space mirror focus reversal', () => {
     project.enableReversal();
     project.updateUI();
 
-    expect(container.querySelector('#mirror-oversight-focus-reverse')).toBeNull();
+    const sliderBox2 = container.querySelector('#mirror-oversight-focus-reverse');
+    const sliderLabel2 = container.querySelector('label[for="mirror-oversight-focus-reverse"]');
+    expect(sliderBox2).not.toBeNull();
+    expect(sliderLabel2).not.toBeNull();
+    expect(sliderBox2.style.display).toBe('');
+    expect(sliderLabel2.style.display).toBe('');
+    expect(sliderBox2.style.visibility).toBe('hidden');
+    expect(sliderLabel2.style.visibility).toBe('hidden');
     const revCell2 = container.querySelector('#assignment-grid .grid-reversal-cell[data-zone="focus"]');
     expect(revCell2).not.toBeNull();
     expect(revCell2.style.display).toBe('flex');
