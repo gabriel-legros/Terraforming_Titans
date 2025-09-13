@@ -380,19 +380,19 @@ function initializeMirrorOversightUI(container) {
         <input type="checkbox" id="mirror-oversight-polar-reverse" class="slider-reversal-checkbox" data-zone="polar" style="display:none;">
         <label for="mirror-oversight-polar-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
-      <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
-        <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
-        <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
-        <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
-        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
-      </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
         <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100">
         <span id="mirror-oversight-any-value" class="slider-value">100%</span>
         <input type="checkbox" id="mirror-oversight-any-reverse" class="slider-reversal-checkbox" data-zone="any" style="display:none;">
         <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
+      </div>
+      <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
+        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
+        <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
+        <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
+        <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
+        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-unassigned">Unassigned:</label>
@@ -414,8 +414,8 @@ function initializeMirrorOversightUI(container) {
     tropical: div.querySelector('#mirror-oversight-tropical'),
     temperate: div.querySelector('#mirror-oversight-temperate'),
     polar: div.querySelector('#mirror-oversight-polar'),
-    focus: div.querySelector('#mirror-oversight-focus'),
     any: div.querySelector('#mirror-oversight-any'),
+    focus: div.querySelector('#mirror-oversight-focus'),
     unassigned: div.querySelector('#mirror-oversight-unassigned'),
   };
   Object.keys(sliders).forEach(zone => {
