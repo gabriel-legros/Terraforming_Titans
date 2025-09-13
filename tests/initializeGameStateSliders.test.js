@@ -127,7 +127,7 @@ test('initializeGameState resets colony sliders to defaults', () => {
     assignments: {
       mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
       lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-      reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
+      reversalMode: { tropical: false, temperate: false, polar: false, any: false }
     }
   });
 });
