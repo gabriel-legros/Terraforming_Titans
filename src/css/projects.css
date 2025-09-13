@@ -227,7 +227,7 @@
 }
 
 .quick-build-button.cant-afford {
-    color: #dc3545; /* red text when unaffordable */
+    color: red; /* red text when unaffordable */
 }
 
 /* Spacer between build and x10 so x10 doesn't shift */
