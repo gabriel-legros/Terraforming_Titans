@@ -101,6 +101,10 @@ describe('SpaceMirrorFacilityProject', () => {
     const lanternCard = ctx.projectElements.spaceMirrorFacility.lanternDetails.container;
     expect(lanternCard.style.display).toBe('none');
 
+    project.isCompleted = true;
+    project.updateUI();
+    expect(lanternCard.style.display).toBe('none');
+
     ctx.buildings.hyperionLantern.unlocked = true;
     project.updateUI();
     expect(lanternCard.style.display).toBe('block');

@@ -1871,6 +1871,7 @@ class SpaceMirrorFacilityProject extends Project {
 
     const mirrorQuick = document.createElement('div');
     mirrorQuick.classList.add('quick-build-row');
+    mirrorQuick.style.display = 'none';
     const mirrorQuickLabel = document.createElement('span');
     mirrorQuickLabel.classList.add('quick-build-label');
     mirrorQuickLabel.textContent = 'Quick Build:';
@@ -2043,25 +2044,29 @@ class SpaceMirrorFacilityProject extends Project {
 
     if (elements.quickBuild && elements.quickBuild.mirror) {
       const qb = elements.quickBuild.mirror;
-      const building = buildings.spaceMirror;
-      qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${building.displayName}`;
-      const canAfford = typeof building.canAfford === 'function' ? building.canAfford(qb.count) : true;
-      if (qb.button.classList) {
-        if (!canAfford) qb.button.classList.add('cant-afford');
-        else qb.button.classList.remove('cant-afford');
-      } else {
-        qb.button.style.color = canAfford ? '' : 'red';
+      qb.container.style.display = this.isCompleted ? 'grid' : 'none';
+      if (this.isCompleted) {
+        const building = buildings.spaceMirror;
+        qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${building.displayName}`;
+        const canAfford = typeof building.canAfford === 'function' ? building.canAfford(qb.count) : true;
+        if (qb.button.classList) {
+          if (!canAfford) qb.button.classList.add('cant-afford');
+          else qb.button.classList.remove('cant-afford');
+        } else {
+          qb.button.style.color = canAfford ? '' : 'red';
+        }
       }
     }
 
     if (elements.lanternDetails) {
       const lantern = buildings.hyperionLantern;
       const unlocked = lantern && lantern.unlocked;
-      elements.lanternDetails.container.style.display = unlocked ? 'block' : 'none';
+      const showLantern = this.isCompleted && unlocked;
+      elements.lanternDetails.container.style.display = showLantern ? 'block' : 'none';
       if (elements.quickBuild && elements.quickBuild.lantern) {
-        elements.quickBuild.lantern.container.style.display = unlocked ? 'grid' : 'none';
+        elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';
       }
-      if (unlocked) {
+      if (showLantern) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
         const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
         const numLanterns = lantern.active || 0;

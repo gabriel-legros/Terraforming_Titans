@@ -58,12 +58,18 @@ describe('SpaceMirrorFacility quick build buttons', () => {
     ctx.projectElements = vm.runInContext('projectElements', ctx);
 
     project.updateUI();
+    const qbContainer = ctx.projectElements.spaceMirrorFacility.quickBuild.mirror.container;
+    expect(qbContainer.style.display).toBe('none');
+
+    project.isCompleted = true;
+    project.updateUI();
     const mirrorBtn = ctx.projectElements.spaceMirrorFacility.quickBuild.mirror.button;
-    expect(mirrorBtn.style.color).toBe('red');
+    expect(qbContainer.style.display).toBe('grid');
+    expect(mirrorBtn.classList.contains('cant-afford')).toBe(true);
 
     ctx.resources.colony.metal.value = 1000;
     project.updateUI();
-    expect(mirrorBtn.style.color).toBe('');
+    expect(mirrorBtn.classList.contains('cant-afford')).toBe(false);
 
     mirrorBtn.dispatchEvent(new dom.window.Event('click'));
     expect(ctx.resources.colony.metal.value).toBe(990);
@@ -117,8 +123,12 @@ describe('SpaceMirrorFacility quick build buttons', () => {
     const qbContainer = ctx.projectElements.spaceMirrorFacility.quickBuild.lantern.container;
     expect(qbContainer.style.display).toBe('none');
 
+    project.isCompleted = true;
+    project.updateUI();
+    expect(qbContainer.style.display).toBe('none');
+
     ctx.buildings.hyperionLantern.unlocked = true;
     project.updateUI();
-    expect(qbContainer.style.display).toBe('block');
+    expect(qbContainer.style.display).toBe('grid');
   });
 });
