@@ -22,11 +22,11 @@ function createDefaultMirrorOversightSettings() {
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
     priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
     autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
-    assignments: {
-      mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-      lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
-      reversalMode: { tropical: false, temperate: false, polar: false, focus: false, any: false }
-    }
+      assignments: {
+        mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
+        lanterns: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
+        reversalMode: { tropical: false, temperate: false, polar: false, any: false }
+      }
   };
 }
 
@@ -126,7 +126,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
-  mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+    mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
   updateMirrorOversightUI();
 }
 
@@ -303,7 +303,7 @@ function updateAssignmentDisplays() {
     });
     const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
     if (checkbox) {
-      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
       checkbox.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
     }
   });
@@ -384,8 +384,6 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
-        <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none;">
-        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div class="control-group">
         <label for="mirror-oversight-any">Any Zone:</label>
@@ -432,15 +430,14 @@ function initializeMirrorOversightUI(container) {
     tropical: div.querySelector('#mirror-oversight-tropical-reverse'),
     temperate: div.querySelector('#mirror-oversight-temperate-reverse'),
     polar: div.querySelector('#mirror-oversight-polar-reverse'),
-    focus: div.querySelector('#mirror-oversight-focus-reverse'),
     any: div.querySelector('#mirror-oversight-any-reverse'),
   };
   Object.keys(sliderReverse).forEach(zone => {
     const box = sliderReverse[zone];
     if (!box) return;
-    if (!mirrorOversightSettings.assignments.reversalMode) {
-      mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
-    }
+      if (!mirrorOversightSettings.assignments.reversalMode) {
+        mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
+      }
     box.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
     box.addEventListener('change', () => {
       mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
@@ -719,9 +716,6 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
         <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
       </div>
-      <div class="grid-reversal-cell" data-zone="focus" style="display:none;">
-        <input type="checkbox" class="reversal-checkbox" data-zone="focus">
-      </div>
       <div class="grid-auto-cell" data-zone="focus" style="display:none;">
         <input type="checkbox" class="auto-assign" data-zone="focus">
       </div>
@@ -756,7 +750,7 @@ function initializeMirrorOversightUI(container) {
   finerContent.querySelectorAll('.reversal-checkbox').forEach(box => {
     box.addEventListener('change', () => {
       const zone = box.dataset.zone;
-      if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, any: false };
       mirrorOversightSettings.assignments.reversalMode[zone] = box.checked;
       updateZonalFluxTable();
     });
@@ -1297,7 +1291,7 @@ function runAdvancedOversightAssignments(project) {
     // ---------------- Short-hands / accessors ----------------
     const assignM = mirrorOversightSettings.assignments.mirrors || (mirrorOversightSettings.assignments.mirrors = {});
     const assignL = mirrorOversightSettings.assignments.lanterns || (mirrorOversightSettings.assignments.lanterns = {});
-    const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, focus: false, any: false });
+      const reverse = (mirrorOversightSettings.assignments.reversalMode ||= { tropical: false, temperate: false, polar: false, any: false });
 
     const prio = mirrorOversightSettings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
     const targets = mirrorOversightSettings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };
@@ -1392,9 +1386,9 @@ function runAdvancedOversightAssignments(project) {
       const savedReverse = { ...reverse };
 
       // Zero assignments and turn off all reversal for baseline evaluation
-      assignM.tropical = 0; assignM.temperate = 0; assignM.polar = 0; assignM.focus = 0;
-      assignL.tropical = 0; assignL.temperate = 0; assignL.polar = 0; assignL.focus = 0;
-      reverse.tropical = false; reverse.temperate = false; reverse.polar = false; reverse.focus = false; reverse.any = false;
+        assignM.tropical = 0; assignM.temperate = 0; assignM.polar = 0; assignM.focus = 0;
+        assignL.tropical = 0; assignL.temperate = 0; assignL.polar = 0; assignL.focus = 0;
+        reverse.tropical = false; reverse.temperate = false; reverse.polar = false; reverse.any = false;
       updateTemps();
 
       // Read baseline temps with no facility effect
