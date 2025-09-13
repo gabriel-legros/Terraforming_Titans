@@ -518,3 +518,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - High surface temperatures now scale maintenance costs for all buildings; space mirrors, Hyperion Lanterns and Dyson Receivers ignore this penalty.
 - Added atmospheric utility functions to compute mean molecular weight and specific lift.
 - Added Aerostat Colony, a slider-affected colony type immune to temperature and pressure penalties.
+- Space mirror facility now provides quick build buttons for mirrors and lanterns beneath their status cards.

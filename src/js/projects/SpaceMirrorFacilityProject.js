@@ -1869,6 +1869,21 @@ class SpaceMirrorFacilityProject extends Project {
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(mirrorDetails);
     container.appendChild(mirrorDetails);
 
+    const mirrorQuick = document.createElement('div');
+    mirrorQuick.classList.add('quick-build-row');
+    const mirrorQuickLabel = document.createElement('span');
+    mirrorQuickLabel.textContent = 'Quick Build: ';
+    mirrorQuick.appendChild(mirrorQuickLabel);
+    const mirrorQuickButton = document.createElement('button');
+    mirrorQuick.appendChild(mirrorQuickButton);
+    const mirrorMul = document.createElement('button');
+    mirrorMul.textContent = 'x10';
+    mirrorQuick.appendChild(mirrorMul);
+    const mirrorDiv = document.createElement('button');
+    mirrorDiv.textContent = '/10';
+    mirrorQuick.appendChild(mirrorDiv);
+    container.appendChild(mirrorQuick);
+
     const lanternDetails = document.createElement('div');
     lanternDetails.classList.add('info-card', 'lantern-details-card');
     lanternDetails.style.display = 'none';
@@ -1904,6 +1919,22 @@ class SpaceMirrorFacilityProject extends Project {
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
+    const lanternQuick = document.createElement('div');
+    lanternQuick.classList.add('quick-build-row');
+    lanternQuick.style.display = 'none';
+    const lanternQuickLabel = document.createElement('span');
+    lanternQuickLabel.textContent = 'Quick Build: ';
+    lanternQuick.appendChild(lanternQuickLabel);
+    const lanternQuickButton = document.createElement('button');
+    lanternQuick.appendChild(lanternQuickButton);
+    const lanternMul = document.createElement('button');
+    lanternMul.textContent = 'x10';
+    lanternQuick.appendChild(lanternMul);
+    const lanternDiv = document.createElement('button');
+    lanternDiv.textContent = '/10';
+    lanternQuick.appendChild(lanternDiv);
+    container.appendChild(lanternQuick);
+
     if (typeof initializeMirrorOversightUI === 'function') {
       initializeMirrorOversightUI(container);
     }
@@ -1924,7 +1955,41 @@ class SpaceMirrorFacilityProject extends Project {
         totalPower: lanternDetails.querySelector('#total-lantern-power'),
         totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
       },
+      quickBuild: {
+        mirror: { container: mirrorQuick, button: mirrorQuickButton, mul: mirrorMul, div: mirrorDiv, count: 1 },
+        lantern: { container: lanternQuick, button: lanternQuickButton, mul: lanternMul, div: lanternDiv, count: 1 },
+      },
     };
+
+    const els = projectElements[this.name];
+    els.quickBuild.mirror.button.addEventListener('click', () => {
+      if (buildings.spaceMirror) {
+        buildings.spaceMirror.buildStructure(els.quickBuild.mirror.count);
+        this.updateUI();
+      }
+    });
+    els.quickBuild.mirror.mul.addEventListener('click', () => {
+      els.quickBuild.mirror.count = multiplyByTen(els.quickBuild.mirror.count);
+      this.updateUI();
+    });
+    els.quickBuild.mirror.div.addEventListener('click', () => {
+      els.quickBuild.mirror.count = divideByTen(els.quickBuild.mirror.count);
+      this.updateUI();
+    });
+    els.quickBuild.lantern.button.addEventListener('click', () => {
+      if (buildings.hyperionLantern) {
+        buildings.hyperionLantern.buildStructure(els.quickBuild.lantern.count);
+        this.updateUI();
+      }
+    });
+    els.quickBuild.lantern.mul.addEventListener('click', () => {
+      els.quickBuild.lantern.count = multiplyByTen(els.quickBuild.lantern.count);
+      this.updateUI();
+    });
+    els.quickBuild.lantern.div.addEventListener('click', () => {
+      els.quickBuild.lantern.count = divideByTen(els.quickBuild.lantern.count);
+      this.updateUI();
+    });
   }
 
   updateUI() {
@@ -1950,10 +2015,21 @@ class SpaceMirrorFacilityProject extends Project {
     elements.mirrorDetails.totalPower.textContent = formatNumber(totalPower, false, 2);
     elements.mirrorDetails.totalPowerArea.textContent = `${formatNumber(totalPowerArea, false, 2)} W/m²`;
 
+    if (elements.quickBuild && elements.quickBuild.mirror) {
+      const qb = elements.quickBuild.mirror;
+      const building = buildings.spaceMirror;
+      qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${building.displayName}`;
+      const canAfford = typeof building.canAfford === 'function' ? building.canAfford(qb.count) : true;
+      qb.button.style.color = canAfford ? '' : 'red';
+    }
+
     if (elements.lanternDetails) {
       const lantern = buildings.hyperionLantern;
       const unlocked = lantern && lantern.unlocked;
       elements.lanternDetails.container.style.display = unlocked ? 'block' : 'none';
+      if (elements.quickBuild && elements.quickBuild.lantern) {
+        elements.quickBuild.lantern.container.style.display = unlocked ? 'block' : 'none';
+      }
       if (unlocked) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
         const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
@@ -1974,6 +2050,13 @@ class SpaceMirrorFacilityProject extends Project {
         elements.lanternDetails.powerPerLanternArea.textContent = `${formatNumber(powerPerLanternArea, false, 2)} W/m²`;
         elements.lanternDetails.totalPower.textContent = formatNumber(totalLanternPower, false, 2);
         elements.lanternDetails.totalPowerArea.textContent = `${formatNumber(totalLanternArea, false, 2)} W/m²`;
+
+        if (elements.quickBuild && elements.quickBuild.lantern) {
+          const qb = elements.quickBuild.lantern;
+          qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${lantern.displayName}`;
+          const canAfford = typeof lantern.canAfford === 'function' ? lantern.canAfford(qb.count) : true;
+          qb.button.style.color = canAfford ? '' : 'red';
+        }
       }
     }
 
