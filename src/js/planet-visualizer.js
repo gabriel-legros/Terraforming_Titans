@@ -52,7 +52,10 @@
       this.lastCraterFactorKey = null; // memoize texture state
       this.craterLayer = null;    // cached crater alpha/color layer (static shape)
       this.cloudLayer = null;     // cached green cloud layer (static shape)
-      this.waterMask = null;      // cached water mask (grayscale FBM) for oceans
+      this.waterMask = null;      // cached water mask (grayscale FBM) for oceans (legacy)
+      this.craterAlphaData = null;   // per-pixel crater alpha (for zonal water fill)
+      this.craterZoneHists = null;   // histograms of crater alpha per zone
+      this._zoneRowIndex = null;     // cached row->zone index mapping (0=trop,1=temp,2=polar)
 
       // Bind methods
       this.animate = this.animate.bind(this);
@@ -80,10 +83,11 @@
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
         coverage: { water: 0, life: 0, cloud: 0 },
+        // Fractions per zone in [0,1]
         zonalCoverage: {
-          tropical: { water: 0, ice: 0 },
-          temperate: { water: 0, ice: 0 },
-          polar: { water: 0, ice: 0 }
+          tropical: { water: 0, ice: 0, life: 0 },
+          temperate: { water: 0, ice: 0, life: 0 },
+          polar: { water: 0, ice: 0, life: 0 }
         },
         inclinationDeg: 15,
       };
@@ -304,9 +308,20 @@
       makeRow('h2o', 'H2O vap. (kPa)', 0, 100, 0.1);
       makeRow('ch4', 'CH4 (kPa)', 0, 100, 0.1);
 
-      // Coverage sliders (percent)
-      makeRow('waterCov', 'Water (%)', 0, 100, 0.1);
-      makeRow('lifeCov',  'Life (%)',  0, 100, 0.1);
+      // Zonal coverage sliders (percent)
+      // Water by zone
+      makeRow('wTrop', 'Water Trop (%)', 0, 100, 0.1);
+      makeRow('wTemp', 'Water Temp (%)', 0, 100, 0.1);
+      makeRow('wPol',  'Water Polar (%)', 0, 100, 0.1);
+      // Ice by zone
+      makeRow('iTrop', 'Ice Trop (%)', 0, 100, 0.1);
+      makeRow('iTemp', 'Ice Temp (%)', 0, 100, 0.1);
+      makeRow('iPol',  'Ice Polar (%)', 0, 100, 0.1);
+      // Biomass by zone
+      makeRow('bTrop', 'Biomass Trop (%)', 0, 100, 0.1);
+      makeRow('bTemp', 'Biomass Temp (%)', 0, 100, 0.1);
+      makeRow('bPol',  'Biomass Polar (%)', 0, 100, 0.1);
+      // Clouds (global visual only)
       makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
 
     const controls = document.createElement('div');
@@ -348,9 +363,11 @@
       setVal('inert', Number(r.inert.range.value));
       setVal('h2o',   Number(r.h2o.range.value));
       setVal('ch4',   Number(r.ch4.range.value));
+      // Cloud (global)
       setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
-      setVal('waterCov', Number(r.waterCov.range.value));
-      setVal('lifeCov',  Number(r.lifeCov.range.value));
+      // Zonal sliders
+      const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
+      ['wTrop','wTemp','wPol','iTrop','iTemp','iPol','bTrop','bTemp','bPol'].forEach(sv);
     }
 
     // ---------- City lights ----------
@@ -954,9 +971,17 @@
       this.viz.kpa.h2o   = clampFrom(r.h2o);
       this.viz.kpa.ch4   = clampFrom(r.ch4);
 
-      // Coverage sliders (visual only)
-      this.viz.coverage.water = clampFrom(r.waterCov);
-      this.viz.coverage.life  = clampFrom(r.lifeCov);
+      // Zonal coverage sliders (visual only, store as fractions 0..1)
+      const z = this.viz.zonalCoverage;
+      const wT = clampFrom(r.wTrop) / 100, wM = clampFrom(r.wTemp) / 100, wP = clampFrom(r.wPol) / 100;
+      const iT = clampFrom(r.iTrop) / 100, iM = clampFrom(r.iTemp) / 100, iP = clampFrom(r.iPol) / 100;
+      const bT = clampFrom(r.bTrop) / 100, bM = clampFrom(r.bTemp) / 100, bP = clampFrom(r.bPol) / 100;
+      z.tropical.water = wT; z.temperate.water = wM; z.polar.water = wP;
+      z.tropical.ice   = iT; z.temperate.ice   = iM; z.polar.ice   = iP;
+      z.tropical.life  = bT; z.temperate.life  = bM; z.polar.life  = bP;
+      // Derive global coverage as a simple average for tinting and clouds
+      this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
+      this.viz.coverage.life  = ((bT + bM + bP) / 3) * 100;
       if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
 
       // Surface should reflect pressure immediately
@@ -1007,14 +1032,27 @@
         ? calculateAverageCoverage(terraforming, 'liquidWater') : 0;
       const lifeFrac  = (typeof calculateAverageCoverage === 'function' && typeof terraforming !== 'undefined')
         ? calculateAverageCoverage(terraforming, 'biomass') : 0;
-      r.waterCov.range.value = String((waterFrac * 100).toFixed(2));
-      r.waterCov.number.value = r.waterCov.range.value;
-      r.lifeCov.range.value = String((lifeFrac * 100).toFixed(2));
-      r.lifeCov.number.value = r.lifeCov.range.value;
+      const fmt = (v) => String((Math.max(0, Math.min(1, v)) * 100).toFixed(2));
+      // In absence of game-provided zonal values, mirror the global average into each zone
+      const wStr = fmt(waterFrac);
+      const lStr = fmt(lifeFrac);
+      // Water (zonal)
+      if (r.wTrop) { r.wTrop.range.value = wStr; r.wTrop.number.value = wStr; }
+      if (r.wTemp) { r.wTemp.range.value = wStr; r.wTemp.number.value = wStr; }
+      if (r.wPol)  { r.wPol.range.value  = wStr; r.wPol.number.value  = wStr; }
+      // Ice (default 0%) — leave as-is if already set
+      const iStr = fmt(0);
+      if (r.iTrop && !r.iTrop.number.value) { r.iTrop.range.value = iStr; r.iTrop.number.value = iStr; }
+      if (r.iTemp && !r.iTemp.number.value) { r.iTemp.range.value = iStr; r.iTemp.number.value = iStr; }
+      if (r.iPol  && !r.iPol.number.value)  { r.iPol.range.value  = iStr; r.iPol.number.value  = iStr; }
+      // Biomass (zonal)
+      if (r.bTrop) { r.bTrop.range.value = lStr; r.bTrop.number.value = lStr; }
+      if (r.bTemp) { r.bTemp.range.value = lStr; r.bTemp.number.value = lStr; }
+      if (r.bPol)  { r.bPol.range.value  = lStr; r.bPol.number.value  = lStr; }
       // Set clouds initially equal to water (user can change)
       if (r.cloudCov) {
-        r.cloudCov.range.value = r.waterCov.range.value;
-        r.cloudCov.number.value = r.cloudCov.range.value;
+        r.cloudCov.range.value = wStr;
+        r.cloudCov.number.value = wStr;
       }
       
       this.updateSliderValueLabels();
@@ -1028,10 +1066,22 @@
         h2o: Number(r.h2o.range.value),
         ch4: Number(r.ch4.range.value),
       };
+      // Update visualizer-local state and averages
+      const z = this.viz.zonalCoverage;
+      z.tropical.water = Math.max(0, Math.min(1, Number(r.wTrop?.range?.value || 0) / 100));
+      z.temperate.water = Math.max(0, Math.min(1, Number(r.wTemp?.range?.value || 0) / 100));
+      z.polar.water = Math.max(0, Math.min(1, Number(r.wPol?.range?.value || 0) / 100));
+      z.tropical.ice = Math.max(0, Math.min(1, Number(r.iTrop?.range?.value || 0) / 100));
+      z.temperate.ice = Math.max(0, Math.min(1, Number(r.iTemp?.range?.value || 0) / 100));
+      z.polar.ice = Math.max(0, Math.min(1, Number(r.iPol?.range?.value || 0) / 100));
+      z.tropical.life = Math.max(0, Math.min(1, Number(r.bTrop?.range?.value || 0) / 100));
+      z.temperate.life = Math.max(0, Math.min(1, Number(r.bTemp?.range?.value || 0) / 100));
+      z.polar.life = Math.max(0, Math.min(1, Number(r.bPol?.range?.value || 0) / 100));
+      const avg = (a,b,c)=> (a+b+c)/3;
       this.viz.coverage = {
-        water: Number(r.waterCov.range.value),
-        life: Number(r.lifeCov.range.value),
-        cloud: Number(r.cloudCov ? r.cloudCov.range.value : r.waterCov.range.value),
+        water: avg(z.tropical.water, z.temperate.water, z.polar.water) * 100,
+        life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
+        cloud: Number(r.cloudCov ? r.cloudCov.range.value : wStr),
       };
       this.viz.ships = Number(r.ships ? r.ships.range.value : 0);
       if (this.sunLight) this.sunLight.intensity = this.viz.illum;
@@ -1081,11 +1131,19 @@
         setPair('inert', toKPa(atm.inertGas?.value));
         setPair('h2o', toKPa(atm.atmosphericWater?.value));
         setPair('ch4', toKPa(atm.atmosphericMethane?.value));
-        // Coverage mirrors visualizer (already set from game during updateRender)
-        const setPct = (key, v) => { if (r[key]) { const s = String(Math.max(0, Math.min(100, v))); r[key].range.value = s; r[key].number.value = s; } };
-        setPct('waterCov', this.viz.coverage?.water || 0);
-        setPct('lifeCov', this.viz.coverage?.life || 0);
-        if (r.cloudCov) setPct('cloudCov', this.viz.coverage?.cloud || 0);
+        // Coverage mirrors visualizer zonals (already set from game during updateRender)
+        const setPct = (pair, v) => { if (pair) { const s = String(Math.max(0, Math.min(100, v))); pair.range.value = s; pair.number.value = s; } };
+        const zc = this.viz.zonalCoverage || {};
+        setPct(r.wTrop, (zc.tropical?.water || 0) * 100);
+        setPct(r.wTemp, (zc.temperate?.water || 0) * 100);
+        setPct(r.wPol,  (zc.polar?.water || 0) * 100);
+        setPct(r.iTrop, (zc.tropical?.ice || 0) * 100);
+        setPct(r.iTemp, (zc.temperate?.ice || 0) * 100);
+        setPct(r.iPol,  (zc.polar?.ice || 0) * 100);
+        setPct(r.bTrop, (zc.tropical?.life || 0) * 100);
+        setPct(r.bTemp, (zc.temperate?.life || 0) * 100);
+        setPct(r.bPol,  (zc.polar?.life || 0) * 100);
+        if (r.cloudCov) setPct(r.cloudCov, this.viz.coverage?.cloud || 0);
       } catch (e) {
         // Ignore display sync errors; do not disrupt rendering
       }
@@ -1100,7 +1158,7 @@
       // Memo key rounded to 2 decimals to avoid churn; include zonal coverage
         const z = this.viz.zonalCoverage || {};
         const zKey = ['tropical','temperate','polar']
-          .map(k=>`${(z[k]?.water??0).toFixed(2)}_${(z[k]?.ice??0).toFixed(2)}`)
+          .map(k=>`${(z[k]?.water??0).toFixed(2)}_${(z[k]?.ice??0).toFixed(2)}_${(z[k]?.life??0).toFixed(2)}`)
           .join('|');
         const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}`;
       if (!force && key === this.lastCraterFactorKey) return;
@@ -1124,6 +1182,7 @@
         const cctx = craterCanvas.getContext('2d');
         // Build at maximum detail (strength = 1) and keep as overlay
         const maxCount = Math.floor(250 * 1 + 50);
+        // Draw and also accumulate per-pixel alpha for later zonal water filling
         for (let i = 0; i < maxCount; i++) {
           const x = Math.random() * w;
           const y = Math.random() * h;
@@ -1147,6 +1206,39 @@
           cctx.fill();
         }
         this.craterLayer = craterCanvas;
+        // Cache crater alpha and per-zone histograms
+        const img = cctx.getImageData(0, 0, w, h);
+        const data = img.data;
+        this.craterAlphaData = new Float32Array(w * h);
+        // Map each row to a zone index once
+        const zoneForV = (v) => {
+          const latRad = (0.5 - v) * Math.PI; // 0..1 -> lat
+          const absDeg = Math.abs(latRad * (180/Math.PI));
+          if (absDeg >= 66.5) return 2; // polar
+          if (absDeg >= 23.5) return 1; // temperate
+          return 0; // tropical
+        };
+        this._zoneRowIndex = new Uint8Array(h);
+        for (let y = 0; y < h; y++) {
+          this._zoneRowIndex[y] = zoneForV(y / (h - 1));
+        }
+        // Build histograms of crater alpha per zone for fill thresholds
+        this.craterZoneHists = {
+          0: { counts: new Uint32Array(256), total: 0 }, // tropical
+          1: { counts: new Uint32Array(256), total: 0 }, // temperate
+          2: { counts: new Uint32Array(256), total: 0 }, // polar
+        };
+        for (let i = 0; i < w * h; i++) {
+          const a = data[i * 4 + 3] / 255; // alpha 0..1
+          this.craterAlphaData[i] = a;
+          if (a > 0) {
+            const y = Math.floor(i / w);
+            const zi = this._zoneRowIndex[y];
+            const bin = Math.max(0, Math.min(255, Math.floor(a * 255)));
+            this.craterZoneHists[zi].counts[bin]++;
+            this.craterZoneHists[zi].total++;
+          }
+        }
       }
 
       // Compose base + craterLayer scaled by strength (no change of shape)
@@ -1181,53 +1273,54 @@
         ctx.globalAlpha = 1;
       }
 
-      // ----- Oceans overlay (above terrain/craters) -----
-      if (!this.waterMask) {
-        this.waterMask = this.generateWaterMask(w, h);
-      }
-      // Threshold so that waterT=0 -> no oceans, 1 -> nearly full coverage
-      const thr = waterT; // base threshold
-      const coastWidth = 0.01; // sharper coastline transition
+      // ----- Water overlay per zone using crater texture -----
       const ocean = document.createElement('canvas');
       ocean.width = w; ocean.height = h;
       const octx = ocean.getContext('2d');
-      const img = octx.createImageData(w, h);
-      const data = img.data;
-      // Helper: map v in [0,1] to zone key using 23.5/66.5 deg bounds
-      const zoneForV = (v) => {
-        // v: 0 = north pole, 0.5 = equator, 1 = south pole
-        const latRad = (0.5 - v) * Math.PI; // latitude radians, positive north
-        const latDeg = latRad * (180/Math.PI);
-        const absDeg = Math.abs(latDeg);
-        if (absDeg >= 66.5) return 'polar';
-        if (absDeg >= 23.5) return 'temperate';
-        return 'tropical';
-      };
-      const zonal = this.viz.zonalCoverage || {};
-      for (let i = 0; i < w * h; i++) {
-        const v = this.waterMask[i];
-        // smoothstep inverse: ocean where v below threshold
-        let a = 1 - ((v - thr + coastWidth) / (2 * coastWidth));
-        a = Math.max(0, Math.min(1, a));
-        // Scale ocean alpha by zonal water coverage for this pixel's latitude
-        const y = Math.floor(i / w);
-        const zone = zoneForV(y / (h - 1));
-        let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
-        // In debug mode, drive water directly from the global slider
-        if (this.debug && this.debug.mode === 'debug') {
-          zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
+      const oimg = octx.createImageData(w, h);
+      const odata = oimg.data;
+      // Determine per-zone thresholds to match coverage fraction (fill most prominent craters first)
+      const zc = this.viz.zonalCoverage || {};
+      const covW = [
+        Math.max(0, Math.min(1, (zc.tropical?.water ?? 0)) ),
+        Math.max(0, Math.min(1, (zc.temperate?.water ?? 0)) ),
+        Math.max(0, Math.min(1, (zc.polar?.water ?? 0)) ),
+      ];
+      // In debug mode we now drive from zonal sliders, so no override needed
+      const thrIdx = [0,0,0];
+      for (let zi = 0; zi < 3; zi++) {
+        const hist = this.craterZoneHists?.[zi];
+        if (!hist || hist.total === 0) { thrIdx[zi] = 255; continue; }
+        const target = Math.max(0, Math.min(1, covW[zi])) * hist.total;
+        // accumulate from high alpha to low until we reach target area
+        let acc = 0; let k;
+        for (k = 255; k >= 0; k--) {
+          acc += hist.counts[k];
+          if (acc >= target) break;
         }
-        a *= zw;
-        const idx = i * 4;
-        // Deep ocean blue
-        // Deep ocean blue
-        const r = 10, g = 40, b = 120;
-        data[idx] = r;
-        data[idx + 1] = g;
-        data[idx + 2] = b;
-        data[idx + 3] = Math.floor(a * 255);
+        thrIdx[zi] = k; // pixels with alpha >= k are filled with water
       }
-      octx.putImageData(img, 0, 0);
+      // Paint per pixel
+      for (let i = 0; i < w * h; i++) {
+        const alpha = this.craterAlphaData ? this.craterAlphaData[i] : 0;
+        let a = 0;
+        if (alpha > 0) {
+          const y = Math.floor(i / w);
+          const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+          const t = thrIdx[zi] / 255;
+          if (alpha >= t) {
+            // Optional soft edge within selected band
+            a = Math.max(0, Math.min(1, (alpha - t) / Math.max(1e-6, 1 - t)));
+          }
+        }
+        const idx = i * 4;
+        const r = 10, g = 40, b = 120;
+        odata[idx] = r;
+        odata[idx + 1] = g;
+        odata[idx + 2] = b;
+        odata[idx + 3] = Math.floor(a * 255);
+      }
+      octx.putImageData(oimg, 0, 0);
       ctx.drawImage(ocean, 0, 0);
 
       // ----- Ice overlay (above oceans/terrain) -----
@@ -1238,28 +1331,31 @@
       const idata = iimg.data;
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
-        const zone = zoneForV(y / (h - 1));
-        // Use zonal ice fraction as direct alpha; clamp
-        const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
-        let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
-        if (this.debug && this.debug.mode === 'debug') {
-          zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
-        }
-        const land = Math.max(0, 1 - zw);
+        const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0; // 0=trop,1=temp,2=polar
+        const iceFrac = [
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.ice || 0))),
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.ice || 0))),
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.ice || 0))),
+        ][zi];
+        const waterFrac = [
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.water || 0))),
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.water || 0))),
+          Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.water || 0))),
+        ][zi];
+        const land = Math.max(0, 1 - waterFrac);
         const idx = i * 4;
-        // light blue-white ice color
         const r = 200, g = 220, b = 255;
         idata[idx] = r;
         idata[idx + 1] = g;
         idata[idx + 2] = b;
-        idata[idx + 3] = Math.floor(zi * land * 255); // only on land
+        idata[idx + 3] = Math.floor(Math.max(0, Math.min(1, iceFrac * land)) * 255);
       }
       ictx.putImageData(iimg, 0, 0);
       ctx.drawImage(iceCanvas, 0, 0);
 
-      // Biomass overlay: cap biomass by available land (1 - water - ice) per zone
-      const lifeT = (this.viz.coverage?.life || 0) / 100; // global biomass fraction
-      if (lifeT > 0) {
+      // Biomass overlay: even spread per zone, capped by zonal land (1 - water - ice)
+      const bAny = (this.viz.zonalCoverage.tropical.life + this.viz.zonalCoverage.temperate.life + this.viz.zonalCoverage.polar.life) > 0;
+      if (bAny) {
         const bioCanvas = document.createElement('canvas');
         bioCanvas.width = w; bioCanvas.height = h;
         const bctx = bioCanvas.getContext('2d');
@@ -1267,27 +1363,30 @@
         const bdata = bimg.data;
         for (let i = 0; i < w * h; i++) {
           const y = Math.floor(i / w);
-          const zone = zoneForV(y / (h - 1));
-          let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
-          if (this.debug && this.debug.mode === 'debug') {
-            zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
-          }
-          const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
-          // Derive per-pixel land from water mask so biomass never appears over oceans
-          const vpx = this.waterMask[i];
-          const coastWidth = 0.01;
-          let aOcean = 1 - ((vpx - thr + coastWidth) / (2 * coastWidth));
-          aOcean = Math.max(0, Math.min(1, aOcean));
-          aOcean *= zw; // scale by water fraction in this zone or slider
-          const landLocal = Math.max(0, 1 - aOcean - zi);
-          const eff = Math.min(lifeT, landLocal); // cap biomass by local land
+          const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+          const lifeFrac = [
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.life || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.life || 0))),
+          ][zi];
+          const waterFrac = [
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.water || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.water || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.water || 0))),
+          ][zi];
+          const iceFrac = [
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.ice || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.ice || 0))),
+            Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.ice || 0))),
+          ][zi];
+          const landLocal = Math.max(0, 1 - waterFrac - iceFrac);
+          const eff = Math.max(0, Math.min(1, Math.min(lifeFrac, landLocal)));
           const idx = i * 4;
-          // richer green for biomass
           const r = 30, g = 160, b = 80;
           bdata[idx] = r;
           bdata[idx + 1] = g;
           bdata[idx + 2] = b;
-          bdata[idx + 3] = Math.floor(eff * 180); // somewhat translucent
+          bdata[idx + 3] = Math.floor(eff * 180);
         }
         bctx.putImageData(bimg, 0, 0);
         ctx.drawImage(bioCanvas, 0, 0);
