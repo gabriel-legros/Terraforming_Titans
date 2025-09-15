@@ -27,6 +27,8 @@ const terraformingTabElements = {
   summaryContent: null,
   worldButton: null,
   worldContent: null,
+  lifeButton: null,
+  lifeContent: null,
 };
 
 function cacheTerraformingTabElements() {
@@ -60,6 +62,8 @@ function cacheTerraformingTabElements() {
   terraformingTabElements.summaryContent = terraformingTabElements.contentMap['summary-terraforming'] || null;
   terraformingTabElements.worldButton = terraformingTabElements.buttonMap['world-terraforming'] || null;
   terraformingTabElements.worldContent = terraformingTabElements.contentMap['world-terraforming'] || null;
+  terraformingTabElements.lifeButton = terraformingTabElements.buttonMap['life-terraforming'] || null;
+  terraformingTabElements.lifeContent = terraformingTabElements.contentMap['life-terraforming'] || null;
 
   return terraformingTabElements;
 }
@@ -84,6 +88,8 @@ function resetTerraformingUI() {
   terraformingTabElements.summaryContent = null;
   terraformingTabElements.worldButton = null;
   terraformingTabElements.worldContent = null;
+  terraformingTabElements.lifeButton = null;
+  terraformingTabElements.lifeContent = null;
   Object.keys(terraformingUICache).forEach(key => {
     terraformingUICache[key] = {};
   });
@@ -160,6 +166,26 @@ function setTerraformingSummaryVisibility(unlocked) {
     summaryButton.classList.add('hidden');
     summaryContent.classList.add('hidden');
     if (summaryButton.classList.contains('active') || summaryContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
+function setTerraformingLifeVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { lifeButton, lifeContent } = terraformingTabElements;
+  if (!lifeButton || !lifeContent) {
+    return;
+  }
+
+  if (unlocked) {
+    lifeButton.classList.remove('hidden');
+    lifeContent.classList.remove('hidden');
+  } else {
+    lifeButton.classList.add('hidden');
+    lifeContent.classList.add('hidden');
+    if (lifeButton.classList.contains('active') || lifeContent.classList.contains('active')) {
       activateTerraformingSubtab('world-terraforming');
     }
   }

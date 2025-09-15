@@ -1184,6 +1184,12 @@ const researchParameters = {
           {
             target: 'lifeDesigner',
             type: 'enable'
+          },
+          {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'lifeDesignerUnlocked',
+            value: true
           }
         ],
       },

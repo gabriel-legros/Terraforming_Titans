@@ -135,6 +135,7 @@ class Terraforming extends EffectableEntity{
 
     this.resources = resources;
     this.summaryUnlocked = false;
+    this.lifeDesignerUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
 
     // Clone so config values remain immutable
@@ -929,6 +930,9 @@ class Terraforming extends EffectableEntity{
       if (effect.flagId === 'summaryUnlocked' && typeof setTerraformingSummaryVisibility === 'function') {
         setTerraformingSummaryVisibility(!!effect.value);
       }
+      if (effect.flagId === 'lifeDesignerUnlocked' && typeof setTerraformingLifeVisibility === 'function') {
+        setTerraformingLifeVisibility(!!effect.value);
+      }
     }
 
     removeEffect(effect) {
@@ -940,6 +944,14 @@ class Terraforming extends EffectableEntity{
         typeof setTerraformingSummaryVisibility === 'function'
       ) {
         setTerraformingSummaryVisibility(false);
+      }
+      if (
+        effect.type === 'booleanFlag' &&
+        effect.flagId === 'lifeDesignerUnlocked' &&
+        !this.lifeDesignerUnlocked &&
+        typeof setTerraformingLifeVisibility === 'function'
+      ) {
+        setTerraformingLifeVisibility(false);
       }
       return result;
     }
@@ -954,6 +966,9 @@ class Terraforming extends EffectableEntity{
         initializeTerraformingTabs();
         if (typeof setTerraformingSummaryVisibility === 'function') {
           setTerraformingSummaryVisibility(this.summaryUnlocked);
+        }
+        if (typeof setTerraformingLifeVisibility === 'function') {
+          setTerraformingLifeVisibility(this.lifeDesignerUnlocked);
         }
         createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){
