@@ -1000,6 +1000,12 @@ const researchParameters = {
             value: true
           },
           {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'milestonesUnlocked',
+            value: true
+          },
+          {
             target: 'resource',
             resourceType: 'surface',
             targetId : 'liquidWater',

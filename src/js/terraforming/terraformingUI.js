@@ -29,6 +29,8 @@ const terraformingTabElements = {
   worldContent: null,
   lifeButton: null,
   lifeContent: null,
+  milestonesButton: null,
+  milestonesContent: null,
 };
 
 function cacheTerraformingTabElements() {
@@ -64,6 +66,8 @@ function cacheTerraformingTabElements() {
   terraformingTabElements.worldContent = terraformingTabElements.contentMap['world-terraforming'] || null;
   terraformingTabElements.lifeButton = terraformingTabElements.buttonMap['life-terraforming'] || null;
   terraformingTabElements.lifeContent = terraformingTabElements.contentMap['life-terraforming'] || null;
+  terraformingTabElements.milestonesButton = terraformingTabElements.buttonMap['milestone-terraforming'] || null;
+  terraformingTabElements.milestonesContent = terraformingTabElements.contentMap['milestone-terraforming'] || null;
 
   return terraformingTabElements;
 }
@@ -90,6 +94,8 @@ function resetTerraformingUI() {
   terraformingTabElements.worldContent = null;
   terraformingTabElements.lifeButton = null;
   terraformingTabElements.lifeContent = null;
+  terraformingTabElements.milestonesButton = null;
+  terraformingTabElements.milestonesContent = null;
   Object.keys(terraformingUICache).forEach(key => {
     terraformingUICache[key] = {};
   });
@@ -186,6 +192,26 @@ function setTerraformingLifeVisibility(unlocked) {
     lifeButton.classList.add('hidden');
     lifeContent.classList.add('hidden');
     if (lifeButton.classList.contains('active') || lifeContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
+function setTerraformingMilestonesVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { milestonesButton, milestonesContent } = terraformingTabElements;
+  if (!milestonesButton || !milestonesContent) {
+    return;
+  }
+
+  if (unlocked) {
+    milestonesButton.classList.remove('hidden');
+    milestonesContent.classList.remove('hidden');
+  } else {
+    milestonesButton.classList.add('hidden');
+    milestonesContent.classList.add('hidden');
+    if (milestonesButton.classList.contains('active') || milestonesContent.classList.contains('active')) {
       activateTerraformingSubtab('world-terraforming');
     }
   }
