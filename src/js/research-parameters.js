@@ -994,6 +994,12 @@ const researchParameters = {
             onLoad : false
           },
           {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'summaryUnlocked',
+            value: true
+          },
+          {
             target: 'resource',
             resourceType: 'surface',
             targetId : 'liquidWater',

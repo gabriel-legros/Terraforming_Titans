@@ -28,7 +28,7 @@ const tabParameters = {
         id: "terraforming-tab",
         label: "Terraforming",
         isActive: false,
-        isHidden: true // Hidden initially
+        isHidden: false // Visible by default
       },
       {
         id: "space-tab",

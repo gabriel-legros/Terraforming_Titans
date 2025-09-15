@@ -163,7 +163,7 @@
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
-    <div class="tab hidden" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
+    <div class="tab" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
     <div class="tab hidden" id="space-tab" data-tab="space">Space</div>
     <!-- *************************** -->
@@ -362,12 +362,14 @@
       <!-- ... existing terraforming content ... -->
        <div class="container">
         <div class="terraforming-subtabs">
-          <div class="terraforming-subtab active" data-subtab="summary-terraforming">Summary</div>
+          <div class="terraforming-subtab active" data-subtab="world-terraforming">World</div>
+          <div class="terraforming-subtab hidden" data-subtab="summary-terraforming">Summary</div>
           <div class="terraforming-subtab" data-subtab="life-terraforming">Life</div>
           <div class="terraforming-subtab" data-subtab="milestone-terraforming">Milestones<span id="milestone-subtab-alert" class="milestone-alert">!</span></div>
-      </div>
+        </div>
       <div class="terraforming-subtab-content-wrapper">
-          <div id = "summary-terraforming" class="terraforming-subtab-content active">
+          <div id="world-terraforming" class="terraforming-subtab-content active"></div>
+          <div id = "summary-terraforming" class="terraforming-subtab-content hidden">
               <div id="play-time-display">0 days</div>
                <!-- Terraforming UI goes here -->
           </div>
@@ -673,8 +675,10 @@
                 startNewGame();
             } else {
                 initializeGameState();
+                if (typeof openTerraformingWorldTab === 'function') {
+                    openTerraformingWorldTab();
+                }
             }
-            activateTab('settings');
         }
     });
 
