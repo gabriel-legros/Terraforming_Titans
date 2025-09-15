@@ -713,17 +713,25 @@ var progressMars = {
         narrative: "Receiving transmission...\n  'H.O.P.E.? This is Mary. Martin's daughter. I'm on Mars. Something's happened to Earth. There was a light... and then nothing. All our communications are down. Your systems are showing critical errors. Please, stand by.'",
         prerequisites: ["chapter4.1"],
         objectives: [],
-        reward: [          {
-              target: 'tab',          // Target the TabManager
-              targetId: 'space-tab',  // The ID of the tab button in index.html
-              type: 'enable'          // Calls the 'enable' method in TabManager
+        reward: [
+          {
+            target: 'tab',          // Target the TabManager
+            targetId: 'space-tab',  // The ID of the tab button in index.html
+            type: 'enable'          // Calls the 'enable' method in TabManager
           },
           {
             target: 'tab',
             targetId: 'space',
             type: 'activateTab',
             onLoad : false
-          }]
+          },
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'stopHidingRegular',
+            value: true
+          }
+        ]
       },
       {
         id: "chapter4.3",
