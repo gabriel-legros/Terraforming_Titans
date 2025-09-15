@@ -41,13 +41,14 @@
   grid-template-columns: 120px minmax(0, 1fr) 110px;
   gap: 6px 10px;
   align-items: center;
+  width: 100%;
 }
 
 .pv-row-label { color: #bbb; }
-.pv-row-value { text-align: right; }
+.pv-row-value { text-align: right; overflow: hidden; }
 .pv-row-value input[type="number"] {
-  width: 67%;
-  min-width: 70px;
+  width: 100%;
+  min-width: 0;
   height: 20px;
   padding: 2px 4px;
   box-sizing: border-box;
@@ -67,8 +68,9 @@
 
 /* Ensure sliders shrink within their grid cell and do not overflow */
 .planet-visualizer-debug input[type="range"] {
-  width: 200%;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
 }
 .pv-controls { margin-top: 8px; display: flex; gap: 8px; }
