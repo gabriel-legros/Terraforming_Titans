@@ -556,6 +556,7 @@ describe('Space Storage project', () => {
     project.usedStorage = 500;
     project.resourceUsage = { metal: 300 };
     project.prioritizeMegaProjects = true;
+    project.strategicReserve = 27;
 
     const saved = project.saveTravelState();
     const loaded = new ctx.SpaceStorageProject(params, 'spaceStorage');
@@ -565,6 +566,7 @@ describe('Space Storage project', () => {
     expect(loaded.usedStorage).toBe(500);
     expect(loaded.resourceUsage.metal).toBe(300);
     expect(loaded.prioritizeMegaProjects).toBe(true);
+    expect(loaded.strategicReserve).toBe(27);
   });
 
   test('transfers resources continuously based on mode', () => {
