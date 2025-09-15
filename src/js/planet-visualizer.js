@@ -53,8 +53,10 @@
       this.craterLayer = null;    // cached crater alpha/color layer (static shape)
       this.cloudLayer = null;     // cached green cloud layer (static shape)
       this.waterMask = null;      // cached water mask (grayscale FBM) for oceans (legacy)
-      this.craterAlphaData = null;   // per-pixel crater alpha (for zonal water fill)
-      this.craterZoneHists = null;   // histograms of crater alpha per zone
+      this.craterAlphaData = null;   // per-pixel crater alpha (legacy water fill)
+      this.craterZoneHists = null;   // histograms of crater alpha per zone (legacy)
+      this.heightMap = null;         // per-pixel elevation 0..1
+      this.heightZoneHists = null;   // histograms of height per zone
       this._zoneRowIndex = null;     // cached row->zone index mapping (0=trop,1=temp,2=polar)
 
       // Bind methods
@@ -1273,44 +1275,81 @@
         ctx.globalAlpha = 1;
       }
 
-      // ----- Water overlay per zone using crater texture -----
+      // Terrain height tinting for relief
+      if (!this.heightMap) this.generateHeightMap(w, h);
+      try {
+        const timg = ctx.getImageData(0, 0, w, h);
+        const tdata = timg.data;
+        for (let i = 0; i < w * h; i++) {
+          const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+          // Lighten highlands, darken lowlands
+          const f = 0.85 + 0.3 * Math.pow(hgt, 1.2);
+          const idx = i * 4;
+          tdata[idx]   = Math.min(255, Math.floor(tdata[idx]   * f));
+          tdata[idx+1] = Math.min(255, Math.floor(tdata[idx+1] * f));
+          tdata[idx+2] = Math.min(255, Math.floor(tdata[idx+2] * f));
+        }
+        ctx.putImageData(timg, 0, 0);
+      } catch (e) {
+        // ignore tint failures
+      }
+
+      // Ensure height map and histograms exist for ocean flooding by quantiles
+      if (!this.heightMap || !this.heightZoneHists || !this._zoneRowIndex) {
+        // Build row->zone map if missing
+        if (!this._zoneRowIndex) {
+          const zoneForV = (v) => {
+            const latRad = (0.5 - v) * Math.PI; // 0..1 -> lat
+            const absDeg = Math.abs(latRad * (180/Math.PI));
+            if (absDeg >= 66.5) return 2; // polar
+            if (absDeg >= 23.5) return 1; // temperate
+            return 0; // tropical
+          };
+          this._zoneRowIndex = new Uint8Array(h);
+          for (let y = 0; y < h; y++) this._zoneRowIndex[y] = zoneForV(y / (h - 1));
+        }
+        // Generate heightmap and zone histograms
+        if (!this.heightMap) this.generateHeightMap(w, h);
+      }
+
+      // ----- Water overlay per zone using height quantiles -----
       const ocean = document.createElement('canvas');
       ocean.width = w; ocean.height = h;
       const octx = ocean.getContext('2d');
       const oimg = octx.createImageData(w, h);
       const odata = oimg.data;
-      // Determine per-zone thresholds to match coverage fraction (fill most prominent craters first)
+      // Determine per-zone thresholds to match coverage fraction
       const zc = this.viz.zonalCoverage || {};
       const covW = [
         Math.max(0, Math.min(1, (zc.tropical?.water ?? 0)) ),
         Math.max(0, Math.min(1, (zc.temperate?.water ?? 0)) ),
         Math.max(0, Math.min(1, (zc.polar?.water ?? 0)) ),
       ];
-      // In debug mode we now drive from zonal sliders, so no override needed
       const thrIdx = [0,0,0];
       for (let zi = 0; zi < 3; zi++) {
-        const hist = this.craterZoneHists?.[zi];
-        if (!hist || hist.total === 0) { thrIdx[zi] = 255; continue; }
+        const hist = this.heightZoneHists?.[zi];
+        if (!hist || hist.total === 0) { thrIdx[zi] = -1; continue; }
         const target = Math.max(0, Math.min(1, covW[zi])) * hist.total;
-        // accumulate from high alpha to low until we reach target area
+        if (target <= 0) { thrIdx[zi] = -1; continue; }
         let acc = 0; let k;
-        for (k = 255; k >= 0; k--) {
+        for (k = 0; k <= 255; k++) {
           acc += hist.counts[k];
           if (acc >= target) break;
         }
-        thrIdx[zi] = k; // pixels with alpha >= k are filled with water
+        thrIdx[zi] = k; // pixels with height bin <= k become water
       }
       // Paint per pixel
       for (let i = 0; i < w * h; i++) {
-        const alpha = this.craterAlphaData ? this.craterAlphaData[i] : 0;
+        const y = Math.floor(i / w);
+        const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+        const thr = thrIdx[zi];
         let a = 0;
-        if (alpha > 0) {
-          const y = Math.floor(i / w);
-          const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
-          const t = thrIdx[zi] / 255;
-          if (alpha >= t) {
-            // Optional soft edge within selected band
-            a = Math.max(0, Math.min(1, (alpha - t) / Math.max(1e-6, 1 - t)));
+        if (thr >= 0) {
+          const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
+          if (hbin <= thr) {
+            // Soft coast: fade 1 bin above threshold
+            const d = (thr - hbin) / Math.max(1, 1);
+            a = Math.max(0, Math.min(1, 0.65 + 0.35 * d));
           }
         }
         const idx = i * 4;
@@ -1438,6 +1477,93 @@
         }
       }
       return arr;
+    }
+
+    // Procedural heightmap with continents and mountains; caches per-zone histograms
+    generateHeightMap(w, h) {
+      const seed = this.hashSeedFromPlanet();
+      let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
+      const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
+      const hash = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.00013) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const lerp = (a,b,t) => a + (b - a) * t;
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const value2 = (x, y) => {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
+        const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+        return lerp(lerp(a, b, u), lerp(c, d, u), v);
+      };
+      const fbm = (x, y, oct = 5, lac = 2.0, gain = 0.5) => {
+        let f = 0, amp = 0.5, freq = 1.0;
+        for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+        return f;
+      };
+      const ridged = (x, y, oct = 5, lac = 2.0, gain = 0.5) => {
+        let f = 0, amp = 0.5, freq = 1.5;
+        for (let o = 0; o < oct; o++) {
+          const n = value2(x * freq, y * freq);
+          const r = 1.0 - Math.abs(2 * n - 1); // triangle-shaped ridges
+          f += amp * (r * r);
+          freq *= lac; amp *= gain;
+        }
+        return f;
+      };
+
+      // Domain warp to break up symmetry
+      const scaleBase = 1.6; // continents
+      const scaleWarp = 0.8;
+      const scaleRidge = 7.0; // mountains
+      const arr = new Float32Array(w * h);
+      let minH = Infinity, maxH = -Infinity;
+      for (let y = 0; y < h; y++) {
+        const vy = y / h;
+        for (let x = 0; x < w; x++) {
+          const vx = x / w;
+          // warp coords
+          const wx = fbm(vx * scaleWarp + 11.3, vy * scaleWarp + 5.7);
+          const wy = fbm(vx * scaleWarp - 7.2, vy * scaleWarp - 3.9);
+          const ux = vx * scaleBase + (wx - 0.5) * 0.8;
+          const uy = vy * scaleBase + (wy - 0.5) * 0.4;
+          const cont = fbm(ux, uy, 5, 2.0, 0.5);      // continents
+          const mont = ridged(ux * scaleRidge, uy * scaleRidge, 5, 2.0, 0.5); // mountains
+          let hgt = cont * 0.75 + mont * 0.5 - 0.25;
+          // Latitudinal subtle bias: slightly more land near mid-lats
+          const lat = Math.abs(0.5 - vy) * 2; // 0 at equator, 1 at poles
+          hgt += (0.15 * (0.5 - Math.abs(lat - 0.5))); // bump around temperate
+          minH = Math.min(minH, hgt); maxH = Math.max(maxH, hgt);
+          arr[y * w + x] = hgt;
+        }
+      }
+      // Normalize to 0..1
+      const span = Math.max(1e-6, (maxH - minH));
+      for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minH) / span;
+      this.heightMap = arr;
+
+      // Build zone mapping if missing
+      if (!this._zoneRowIndex) {
+        this._zoneRowIndex = new Uint8Array(h);
+        const zoneForV = (v) => {
+          const latRad = (0.5 - v) * Math.PI; const absDeg = Math.abs(latRad * (180/Math.PI));
+          if (absDeg >= 66.5) return 2; if (absDeg >= 23.5) return 1; return 0;
+        };
+        for (let y = 0; y < h; y++) this._zoneRowIndex[y] = zoneForV(y / (h - 1));
+      }
+      // Build per-zone histograms (256 bins)
+      this.heightZoneHists = {
+        0: { counts: new Uint32Array(256), total: 0 },
+        1: { counts: new Uint32Array(256), total: 0 },
+        2: { counts: new Uint32Array(256), total: 0 },
+      };
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const zi = this._zoneRowIndex[y];
+        const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
+        this.heightZoneHists[zi].counts[bin]++;
+        this.heightZoneHists[zi].total++;
+      }
     }
   }
 
