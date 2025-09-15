@@ -339,7 +339,7 @@ const buildingsParameters = {
     name: 'Superalloy Fusion Reactor',
     category: 'energy',
     description: 'Enormous fusion plant using superalloys for containment.',
-    cost: { colony: { metal: 500000, components: 10000, electronics: 10000, superconductors: 5000, superalloys: 50000 } },
+    cost: { colony: { metal: 500000, components: 10000, electronics: 10000, superconductors: 5000, superalloys: 25000 } },
     consumption: { colony: { water: 1 } },
     production: { colony: { energy: 500_000_000_000 } },
     storage: {},
