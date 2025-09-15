@@ -136,6 +136,7 @@ class Terraforming extends EffectableEntity{
     this.resources = resources;
     this.summaryUnlocked = false;
     this.lifeDesignerUnlocked = false;
+    this.milestonesUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
 
     // Clone so config values remain immutable
@@ -933,6 +934,9 @@ class Terraforming extends EffectableEntity{
       if (effect.flagId === 'lifeDesignerUnlocked' && typeof setTerraformingLifeVisibility === 'function') {
         setTerraformingLifeVisibility(!!effect.value);
       }
+      if (effect.flagId === 'milestonesUnlocked' && typeof setTerraformingMilestonesVisibility === 'function') {
+        setTerraformingMilestonesVisibility(!!effect.value);
+      }
     }
 
     removeEffect(effect) {
@@ -953,6 +957,14 @@ class Terraforming extends EffectableEntity{
       ) {
         setTerraformingLifeVisibility(false);
       }
+      if (
+        effect.type === 'booleanFlag' &&
+        effect.flagId === 'milestonesUnlocked' &&
+        !this.milestonesUnlocked &&
+        typeof setTerraformingMilestonesVisibility === 'function'
+      ) {
+        setTerraformingMilestonesVisibility(false);
+      }
       return result;
     }
 
@@ -969,6 +981,9 @@ class Terraforming extends EffectableEntity{
         }
         if (typeof setTerraformingLifeVisibility === 'function') {
           setTerraformingLifeVisibility(this.lifeDesignerUnlocked);
+        }
+        if (typeof setTerraformingMilestonesVisibility === 'function') {
+          setTerraformingMilestonesVisibility(this.milestonesUnlocked);
         }
         createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){
