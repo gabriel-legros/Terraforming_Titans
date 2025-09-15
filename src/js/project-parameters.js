@@ -388,7 +388,7 @@ const projectParameters = {
   },
   dysonSwarmReceiver : {
     type: 'DysonSwarmReceiverProject',
-    name : 'Dyson Swarm Receiver',
+    name : 'Dyson Swarm',
     category : 'mega',
     cost: {
       colony: {
