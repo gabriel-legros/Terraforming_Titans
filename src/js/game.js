@@ -429,17 +429,30 @@ function updateRender(force = false) {
     }
 
     // Push world coverage to the visualizer for shading/tinting
-    if (typeof window !== 'undefined' && window.planetVisualizer && typeof calculateAverageCoverage === 'function') {
+    if (typeof window !== 'undefined' && window.planetVisualizer) {
       try {
+        // Global coverages for tinting
         const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
         const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
         const pct = (x) => Math.max(0, Math.min(100, x * 100));
         window.planetVisualizer.viz.coverage.water = pct(waterFrac);
         window.planetVisualizer.viz.coverage.life = pct(lifeFrac);
-        // Approximate clouds from water coverage for now
         window.planetVisualizer.viz.coverage.cloud = window.planetVisualizer.viz.coverage.water;
+
+        // Zonal coverages for rendering bands
+        const zones = ['tropical', 'temperate', 'polar'];
+        const zonal = {};
+        for (const z of zones) {
+          // Returns fractions 0..1
+          const f = calculateZonalSurfaceFractions(terraforming, z);
+          zonal[z] = {
+            water: Math.max(0, Math.min(1, f.ocean || 0)),
+            ice: Math.max(0, Math.min(1, f.ice || 0)),
+          };
+        }
+        window.planetVisualizer.viz.zonalCoverage = zonal;
       } catch (e) {
-        // Swallow to avoid UI disruption; visualizer will continue rendering
+        // Non-fatal if terraforming utilities are not ready yet
       }
     }
 

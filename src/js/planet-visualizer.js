@@ -76,6 +76,11 @@
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
         coverage: { water: 0, life: 0, cloud: 0 },
+        zonalCoverage: {
+          tropical: { water: 0, ice: 0 },
+          temperate: { water: 0, ice: 0 },
+          polar: { water: 0, ice: 0 }
+        },
         inclinationDeg: 15,
       };
     }
@@ -125,7 +130,8 @@
       this.updateSunFromInclination();
 
       const geometry = new THREE.SphereGeometry(1, 32, 32);
-      const material = new THREE.MeshStandardMaterial({ color: 0xaa2222 });
+      // Use neutral base color so the texture drives appearance
+      const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0.0 });
       this.sphere = new THREE.Mesh(geometry, material);
       this.scene.add(this.sphere);
 
@@ -1030,8 +1036,12 @@
       const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
       const water = (this.viz.coverage?.water || 0) / 100;
       const life = (this.viz.coverage?.life || 0) / 100;
-      // Memo key rounded to 2 decimals to avoid churn
-      const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}`;
+      // Memo key rounded to 2 decimals to avoid churn; include zonal coverage
+        const z = this.viz.zonalCoverage || {};
+        const zKey = ['tropical','temperate','polar']
+          .map(k=>`${(z[k]?.water??0).toFixed(2)}_${(z[k]?.ice??0).toFixed(2)}`)
+          .join('|');
+        const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}`;
       if (!force && key === this.lastCraterFactorKey) return;
       this.lastCraterFactorKey = key;
 
@@ -1115,18 +1125,34 @@
         this.waterMask = this.generateWaterMask(w, h);
       }
       // Threshold so that waterT=0 -> no oceans, 1 -> nearly full coverage
-      const thr = waterT; // noise < thr = ocean (0% -> no ocean, 100% -> full ocean)
+      const thr = waterT; // base threshold
       const coastWidth = 0.01; // sharper coastline transition
       const ocean = document.createElement('canvas');
       ocean.width = w; ocean.height = h;
       const octx = ocean.getContext('2d');
       const img = octx.createImageData(w, h);
       const data = img.data;
+      // Helper: map v in [0,1] to zone key using 23.5/66.5 deg bounds
+      const zoneForV = (v) => {
+        // v: 0 = north pole, 0.5 = equator, 1 = south pole
+        const latRad = (0.5 - v) * Math.PI; // latitude radians, positive north
+        const latDeg = latRad * (180/Math.PI);
+        const absDeg = Math.abs(latDeg);
+        if (absDeg >= 66.5) return 'polar';
+        if (absDeg >= 23.5) return 'temperate';
+        return 'tropical';
+      };
+      const zonal = this.viz.zonalCoverage || {};
       for (let i = 0; i < w * h; i++) {
         const v = this.waterMask[i];
         // smoothstep inverse: ocean where v below threshold
         let a = 1 - ((v - thr + coastWidth) / (2 * coastWidth));
         a = Math.max(0, Math.min(1, a));
+        // Scale ocean alpha by zonal water coverage for this pixel's latitude
+        const y = Math.floor(i / w);
+        const zone = zoneForV(y / (h - 1));
+        const zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
+        a *= zw;
         const idx = i * 4;
         // Deep ocean blue
         // Deep ocean blue
@@ -1138,6 +1164,28 @@
       }
       octx.putImageData(img, 0, 0);
       ctx.drawImage(ocean, 0, 0);
+
+      // ----- Ice overlay (above oceans/terrain) -----
+      const iceCanvas = document.createElement('canvas');
+      iceCanvas.width = w; iceCanvas.height = h;
+      const ictx = iceCanvas.getContext('2d');
+      const iimg = ictx.createImageData(w, h);
+      const idata = iimg.data;
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const zone = zoneForV(y / (h - 1));
+        // Use zonal ice fraction as direct alpha; clamp
+        const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
+        const idx = i * 4;
+        // light blue-white ice color
+        const r = 200, g = 220, b = 255;
+        idata[idx] = r;
+        idata[idx + 1] = g;
+        idata[idx + 2] = b;
+        idata[idx + 3] = Math.floor(zi * 255); // full opacity at 100%
+      }
+      ictx.putImageData(iimg, 0, 0);
+      ctx.drawImage(iceCanvas, 0, 0);
 
       // Green cloud layer scales with life coverage
       const lifeT = (this.viz.coverage?.life || 0) / 100;
@@ -1165,6 +1213,9 @@
       }
 
       const texture = new THREE.CanvasTexture(canvas);
+      if (THREE && THREE.SRGBColorSpace) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.needsUpdate = true;
