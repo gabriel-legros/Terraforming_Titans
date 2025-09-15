@@ -144,6 +144,9 @@ class Research {
     // completed researches stay visible along with the cheapest `limit`
     // incomplete ones that are displayable on the current planet.
     getVisibleResearchIdsByCategory(category, limit = 3) {
+      if (this.isBooleanFlagSet('stopHidingRegular') && category !== 'advanced') {
+        limit = Infinity;
+      }
       const researches = this.getResearchesByCategory(category);
       const visible = new Set();
       const unresearched = researches.filter(r => !r.isResearched && this.isResearchDisplayable(r));
