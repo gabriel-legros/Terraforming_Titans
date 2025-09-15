@@ -134,6 +134,7 @@ class Terraforming extends EffectableEntity{
     super({ description: 'This module manages all terraforming compononents' });
 
     this.resources = resources;
+    this.summaryUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
 
     // Clone so config values remain immutable
@@ -922,7 +923,27 @@ class Terraforming extends EffectableEntity{
       this.updateSurfaceRadiation();
 
     } // <-- Correct closing brace for the 'update' method
-  
+
+    applyBooleanFlag(effect) {
+      super.applyBooleanFlag(effect);
+      if (effect.flagId === 'summaryUnlocked' && typeof setTerraformingSummaryVisibility === 'function') {
+        setTerraformingSummaryVisibility(!!effect.value);
+      }
+    }
+
+    removeEffect(effect) {
+      const result = super.removeEffect(effect);
+      if (
+        effect.type === 'booleanFlag' &&
+        effect.flagId === 'summaryUnlocked' &&
+        !this.summaryUnlocked &&
+        typeof setTerraformingSummaryVisibility === 'function'
+      ) {
+        setTerraformingSummaryVisibility(false);
+      }
+      return result;
+    }
+
     unlock(aspect) {
       if (this[aspect]) {
         this[aspect].unlocked = true;
@@ -931,6 +952,9 @@ class Terraforming extends EffectableEntity{
 
     initializeTerraforming(){
         initializeTerraformingTabs();
+        if (typeof setTerraformingSummaryVisibility === 'function') {
+          setTerraformingSummaryVisibility(this.summaryUnlocked);
+        }
         createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){
           this.calculateInitialValues(currentPlanetParameters);

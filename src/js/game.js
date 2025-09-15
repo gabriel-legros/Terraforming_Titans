@@ -110,6 +110,9 @@ function create() {
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
     initializeGameState();
+    if (typeof openTerraformingWorldTab === 'function') {
+      openTerraformingWorldTab();
+    }
   }
 }
 
@@ -460,5 +463,8 @@ function startNewGame() {
   currentPlanetParameters = planetParameters.mars;
   totalPlayTimeSeconds = 0;
   initializeGameState();
+  if (typeof openTerraformingWorldTab === 'function') {
+    openTerraformingWorldTab();
+  }
 }
 
