@@ -500,6 +500,7 @@ class SpaceStorageProject extends SpaceshipProject {
       repeatCount: this.repeatCount,
       usedStorage: this.usedStorage,
       resourceUsage: this.resourceUsage,
+      prioritizeMegaProjects: this.prioritizeMegaProjects,
     };
   }
 
@@ -507,6 +508,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.repeatCount = state.repeatCount || 0;
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
+    this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
   }
 }
 
