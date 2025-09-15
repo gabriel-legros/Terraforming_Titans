@@ -431,26 +431,30 @@ function updateRender(force = false) {
     // Push world coverage to the visualizer for shading/tinting
     if (typeof window !== 'undefined' && window.planetVisualizer) {
       try {
-        // Global coverages for tinting
-        const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
-        const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
-        const pct = (x) => Math.max(0, Math.min(100, x * 100));
-        window.planetVisualizer.viz.coverage.water = pct(waterFrac);
-        window.planetVisualizer.viz.coverage.life = pct(lifeFrac);
-        window.planetVisualizer.viz.coverage.cloud = window.planetVisualizer.viz.coverage.water;
+        const pv = window.planetVisualizer;
+        const mode = pv?.debug?.mode || 'game';
+        if (mode !== 'debug') {
+          // Global coverages for tinting
+          const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+          const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
+          const pct = (x) => Math.max(0, Math.min(100, x * 100));
+          pv.viz.coverage.water = pct(waterFrac);
+          pv.viz.coverage.life = pct(lifeFrac);
+          pv.viz.coverage.cloud = pv.viz.coverage.water;
 
-        // Zonal coverages for rendering bands
-        const zones = ['tropical', 'temperate', 'polar'];
-        const zonal = {};
-        for (const z of zones) {
-          // Returns fractions 0..1
-          const f = calculateZonalSurfaceFractions(terraforming, z);
-          zonal[z] = {
-            water: Math.max(0, Math.min(1, f.ocean || 0)),
-            ice: Math.max(0, Math.min(1, f.ice || 0)),
-          };
+          // Zonal coverages for rendering bands
+          const zones = ['tropical', 'temperate', 'polar'];
+          const zonal = {};
+          for (const z of zones) {
+            // Returns fractions 0..1
+            const f = calculateZonalSurfaceFractions(terraforming, z);
+            zonal[z] = {
+              water: Math.max(0, Math.min(1, f.ocean || 0)),
+              ice: Math.max(0, Math.min(1, f.ice || 0)),
+            };
+          }
+          pv.viz.zonalCoverage = zonal;
         }
-        window.planetVisualizer.viz.zonalCoverage = zonal;
       } catch (e) {
         // Non-fatal if terraforming utilities are not ready yet
       }

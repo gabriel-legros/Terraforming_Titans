@@ -40,6 +40,7 @@
       this._lastAnimTime = performance.now();
       this._spawnAcc = 0; // accumulator for continuous spawning
       this._spawnRate = 6; // ships per second when below target
+      this._lastSliderSync = 0; // throttle game-mode slider syncing
 
       // Render sizing
       this.width = 0;
@@ -59,16 +60,19 @@
       this.applySlidersToGame = this.applySlidersToGame.bind(this);
       this.syncSlidersFromGame = this.syncSlidersFromGame.bind(this);
       this.updateSliderValueLabels = this.updateSliderValueLabels.bind(this);
+      this.refreshGameModeSliderDisplays = this.refreshGameModeSliderDisplays.bind(this);
 
       // Debug controls cache
-      this.debug = {
-        enabled: (function() {
-          // Default true unless explicitly false
-          return !(window['debug_planet-visualizer'] === false);
-        })(),
-        container: null,
-        rows: {}, // id -> { range, number }
-      };
+  this.debug = {
+    enabled: (function() {
+      // Default true unless explicitly false
+      return !(window['debug_planet-visualizer'] === false);
+    })(),
+    container: null,
+    rows: {}, // id -> { range, number }
+    mode: 'game', // 'game' | 'debug'
+    modeSelect: null,
+  };
 
       // Visualizer-local state (does not affect game)
       this.viz = {
@@ -115,7 +119,10 @@
       this.camera.lookAt(0, 0, 0);
 
       // Sun (directional) + a small visible marker sphere
-      const initialIllum = (currentPlanetParameters.celestialParameters.starLuminosity ?? 1) || 1;
+      const initialFlux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux)
+        ? terraforming.luminosity.modifiedSolarFlux
+        : 1000; // fallback to 1 kW/m^2 scale
+      const initialIllum = initialFlux / 1000; // intensity driven by surface solar flux/1000
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2); // direction toward the planet
       this.scene.add(this.sunLight);
@@ -212,8 +219,24 @@
       this.updateAtmosphereUniforms();
       // Update cloud shader uniforms (no relative rotation)
       this.updateCloudUniforms();
+      // Keep sunlight intensity in sync with surface solar flux in Game-driven mode
+      if (this.sunLight && this.debug?.mode === 'game' && typeof terraforming !== 'undefined') {
+        const flux = terraforming?.luminosity?.modifiedSolarFlux;
+        if (typeof flux === 'number' && isFinite(flux)) {
+          this.sunLight.intensity = flux / 1000;
+        }
+      }
       // Update ships
       this.updateShips();
+
+      // If the debug panel is in Game-driven mode, keep sliders reflecting live game
+      if (this.debug && this.debug.mode === 'game' && this.debug.rows && this.debug.container) {
+        const now = performance.now();
+        if (now - this._lastSliderSync > 500) { // sync twice per second
+          this.refreshGameModeSliderDisplays();
+          this._lastSliderSync = now;
+        }
+      }
 
       this.renderer.render(this.scene, this.camera);
       requestAnimationFrame(this.animate);
@@ -246,13 +269,13 @@
     }
 
     // ---------- Debug UI ----------
-    buildDebugControls() {
-      const host = document.createElement('div');
-      host.className = 'planet-visualizer-debug';
+  buildDebugControls() {
+    const host = document.createElement('div');
+    host.className = 'planet-visualizer-debug';
 
-      const grid = document.createElement('div');
-      grid.className = 'pv-grid';
-      host.appendChild(grid);
+    const grid = document.createElement('div');
+    grid.className = 'pv-grid';
+    host.appendChild(grid);
 
       const makeRow = (id, label, min, max, step) => {
         const l = document.createElement('div');
@@ -296,19 +319,32 @@
       makeRow('lifeCov',  'Life (%)',  0, 100, 0.1);
       makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
 
-      const controls = document.createElement('div');
-      controls.className = 'pv-controls';
-      const btnSync = document.createElement('button');
-      btnSync.textContent = 'Set to game parameters';
-      // Use arrow to ensure correct context
-      btnSync.addEventListener('click', () => this.syncSlidersFromGame());
-      controls.appendChild(btnSync);
-      host.appendChild(controls);
+    const controls = document.createElement('div');
+    controls.className = 'pv-controls';
+    const label = document.createElement('label');
+    label.textContent = 'Mode:';
+    label.style.marginRight = '6px';
+    const select = document.createElement('select');
+    const optGame = document.createElement('option'); optGame.value = 'game'; optGame.textContent = 'Game-driven';
+    const optDebug = document.createElement('option'); optDebug.value = 'debug'; optDebug.textContent = 'Slider debug';
+    select.appendChild(optGame);
+    select.appendChild(optDebug);
+    select.value = this.debug.mode;
+    select.addEventListener('change', () => {
+      this.debug.mode = select.value;
+      if (this.debug.mode === 'game') {
+        this.syncSlidersFromGame();
+      }
+    });
+    controls.appendChild(label);
+    controls.appendChild(select);
+    host.appendChild(controls);
+    this.debug.modeSelect = select;
 
-      // Place debug panel directly after the canvas container
-      this.elements.container.insertAdjacentElement('afterend', host);
-      this.debug.container = host;
-    }
+    // Place debug panel directly after the canvas container
+    this.elements.container.insertAdjacentElement('afterend', host);
+    this.debug.container = host;
+  }
 
     updateSliderValueLabels() {
       const r = this.debug.rows; if (!r) return;
@@ -547,9 +583,9 @@
           float d = smoothstep(0.55, 0.75, n);
           // Day-side lighting
           float day = clamp(dot(Nworld, normalize(sunDir))*0.7 + 0.3, 0.0, 1.0);
-          float a = d * clamp(coverage,0.0,1.0) * day;
+          float a = d * clamp(coverage,0.0,1.0) * day * 0.45;
           if (a <= 0.001) discard;
-          gl_FragColor = vec4(vec3(1.0), a);
+          gl_FragColor = vec4(vec3(0.92), a);
         }
       `;
       this.cloudMaterial = new THREE.ShaderMaterial({
@@ -826,7 +862,7 @@
       this.cloudMaterial.opacity = 0.2 + 0.8 * cov;
     }
     getCurrentPopulation() {
-      if (this.debug.enabled) {
+      if (this.debug.mode === 'debug') {
         return this.viz.pop || 0;
       }
       return (this.resources?.colony?.colonists?.value) || 0;
@@ -867,7 +903,7 @@
     updateCloudUniforms(){
       if (!this.cloudMaterial || !this.cloudMaterial.uniforms) return;
       const cov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0)/100));
-      this.cloudMaterial.uniforms.coverage.value = cov;
+      this.cloudMaterial.uniforms.coverage.value = cov * 0.5; // soften cloud density
       // Morph time: one full cycle every ~2.5 in-game days
       let t = 0.0;
       if (typeof dayNightCycle !== 'undefined' && dayNightCycle && typeof dayNightCycle.dayDuration === 'number') {
@@ -945,9 +981,10 @@
       const cel = currentPlanetParameters.celestialParameters;
 
       // Illumination
-      const illum = cel.starLuminosity ?? 1;
-      r.illum.range.value = String(illum);
-      r.illum.number.value = String(illum);
+        const flux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux) || 1000;
+        const illum = flux / 1000;
+        r.illum.range.value = String(illum);
+        r.illum.number.value = String(illum);
       // Inclination sync from local viz (default 15 deg)
       if (r.incl) {
         const inc = (this.viz?.inclinationDeg ?? 15);
@@ -1015,12 +1052,12 @@
 
     // ---------- Crater texture generation ----------
     computeTotalPressureKPa() {
-      // When debug is enabled, use visualizer kPa values; otherwise use actual game resources
-      if (this.debug.enabled) {
-        const k = this.viz.kpa;
-        return (k.co2 + k.o2 + k.inert + k.h2o + k.ch4);
-      }
-      const cel = currentPlanetParameters.celestialParameters;
+        // In debug mode, use slider-set kPa; otherwise use actual game resources
+        if (this.debug.mode === 'debug') {
+          const k = this.viz.kpa;
+          return (k.co2 + k.o2 + k.inert + k.h2o + k.ch4);
+        }
+        const cel = currentPlanetParameters.celestialParameters;
       let totalPa = 0;
       const atm = this.resources.atmospheric || {};
       for (const key in atm) {
@@ -1028,6 +1065,42 @@
         totalPa += calculateAtmosphericPressure(mass, cel.gravity, cel.radius) || 0;
       }
       return totalPa / 1000; // kPa
+    }
+
+    // Update debug sliders to mirror current game state without mutating visuals
+    refreshGameModeSliderDisplays() {
+      if (!this.debug || !this.debug.rows) return;
+      const r = this.debug.rows;
+      try {
+        const cel = currentPlanetParameters.celestialParameters;
+        // Illumination
+        const flux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux) || 1000;
+        const illum = flux / 1000;
+        if (r.illum) { r.illum.range.value = String(illum); r.illum.number.value = String(illum); }
+        // Population
+        const popNow = this.resources?.colony?.colonists?.value || 0;
+        if (r.pop) { r.pop.range.value = String(popNow); r.pop.number.value = String(popNow); }
+        // Spaceships (best-effort)
+        const shipVal = (this.resources?.special?.spaceships?.value) ?? (this.viz.ships || 0);
+        if (r.ships) { r.ships.range.value = String(shipVal); r.ships.number.value = String(shipVal); }
+        // Gas kPa from mass
+        const toKPa = (massTon) => (calculateAtmosphericPressure(massTon || 0, cel.gravity, cel.radius) / 1000);
+        const clamp100 = (v) => Math.max(0, Math.min(100, v));
+        const atm = this.resources?.atmospheric || {};
+        const setPair = (key, val) => { if (r[key]) { const s = String(clamp100(val)); r[key].range.value = s; r[key].number.value = s; } };
+        setPair('co2', toKPa(atm.carbonDioxide?.value));
+        setPair('o2', toKPa(atm.oxygen?.value));
+        setPair('inert', toKPa(atm.inertGas?.value));
+        setPair('h2o', toKPa(atm.atmosphericWater?.value));
+        setPair('ch4', toKPa(atm.atmosphericMethane?.value));
+        // Coverage mirrors visualizer (already set from game during updateRender)
+        const setPct = (key, v) => { if (r[key]) { const s = String(Math.max(0, Math.min(100, v))); r[key].range.value = s; r[key].number.value = s; } };
+        setPct('waterCov', this.viz.coverage?.water || 0);
+        setPct('lifeCov', this.viz.coverage?.life || 0);
+        if (r.cloudCov) setPct('cloudCov', this.viz.coverage?.cloud || 0);
+      } catch (e) {
+        // Ignore display sync errors; do not disrupt rendering
+      }
     }
 
     updateSurfaceTextureFromPressure(force = false) {
@@ -1094,18 +1167,9 @@
       const ctx = canvas.getContext('2d');
 
       // Water coverage: draw true oceans using a stable mask
-      // Helper to mix two hex colors
-      const mix = (a, b, t) => {
-        const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
-        const ar = (ah >> 16) & 255, ag = (ah >> 8) & 255, ab = ah & 255;
-        const br = (bh >> 16) & 255, bg = (bh >> 8) & 255, bb = bh & 255;
-        const r = Math.round(ar + (br - ar) * t);
-        const g = Math.round(ag + (bg - ag) * t);
-        const b2 = Math.round(ab + (bb - ab) * t);
-        return `rgb(${r},${g},${b2})`;
-      };
-      const waterT = (this.viz.coverage?.water || 0) / 100;
-      // Base terrain stays dry colors; oceans will be overlaid above
+      const waterT = (this.viz.coverage?.water || 0) / 100; // debug fallback
+
+      // Base terrain (dry) – oceans will overlay
       const topCol = '#8a2a2a';
       const botCol = '#6e1f1f';
       const base = ctx.createLinearGradient(0, 0, 0, h);
@@ -1120,19 +1184,12 @@
         ctx.globalAlpha = 1;
       }
 
-      // ----- Oceans overlay (above terrain/craters) -----
+      // Ensure we have the FBM land/ocean field
       if (!this.waterMask) {
         this.waterMask = this.generateWaterMask(w, h);
       }
-      // Threshold so that waterT=0 -> no oceans, 1 -> nearly full coverage
-      const thr = waterT; // base threshold
-      const coastWidth = 0.01; // sharper coastline transition
-      const ocean = document.createElement('canvas');
-      ocean.width = w; ocean.height = h;
-      const octx = ocean.getContext('2d');
-      const img = octx.createImageData(w, h);
-      const data = img.data;
-      // Helper: map v in [0,1] to zone key using 23.5/66.5 deg bounds
+
+      // Helper: map scanline to zone, and normalize inputs to [0,1]
       const zoneForV = (v) => {
         // v: 0 = north pole, 0.5 = equator, 1 = south pole
         const latRad = (0.5 - v) * Math.PI; // latitude radians, positive north
@@ -1142,75 +1199,100 @@
         if (absDeg >= 23.5) return 'temperate';
         return 'tropical';
       };
+      const norm01 = (val, fallback) => {
+        if (val == null || !isFinite(val)) return fallback;
+        return val > 1.0001 ? Math.max(0, Math.min(1, val / 100)) : Math.max(0, Math.min(1, val));
+      };
+
       const zonal = this.viz.zonalCoverage || {};
+
+      // ----- Oceans overlay (above terrain/craters) using PER-ZONE threshold -----
+      const coastWidth = 0.01; // sharper coastline transition
+      const ocean = document.createElement('canvas');
+      ocean.width = w; ocean.height = h;
+      const octx = ocean.getContext('2d');
+      const oimg = octx.createImageData(w, h);
+      const odata = oimg.data;
+
       for (let i = 0; i < w * h; i++) {
-        const v = this.waterMask[i];
-        // smoothstep inverse: ocean where v below threshold
-        let a = 1 - ((v - thr + coastWidth) / (2 * coastWidth));
-        a = Math.max(0, Math.min(1, a));
-        // Scale ocean alpha by zonal water coverage for this pixel's latitude
+        const v = this.waterMask[i];           // FBM value [0..1]
         const y = Math.floor(i / w);
         const zone = zoneForV(y / (h - 1));
-        const zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
-        a *= zw;
+        // Use zonal water fraction as the local threshold; fall back to debug slider
+        const zoneW = norm01(zonal[zone]?.water, waterT);
+        // Smooth ocean mask around coast
+        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
+        aOcean = Math.max(0, Math.min(1, aOcean));
         const idx = i * 4;
         // Deep ocean blue
-        // Deep ocean blue
-        const r = 10, g = 40, b = 120;
-        data[idx] = r;
-        data[idx + 1] = g;
-        data[idx + 2] = b;
-        data[idx + 3] = Math.floor(a * 255);
+        odata[idx]     = 10;
+        odata[idx + 1] = 40;
+        odata[idx + 2] = 120;
+        odata[idx + 3] = Math.floor(aOcean * 255);
       }
-      octx.putImageData(img, 0, 0);
+      octx.putImageData(oimg, 0, 0);
       ctx.drawImage(ocean, 0, 0);
 
-      // ----- Ice overlay (above oceans/terrain) -----
+      // ----- Ice overlay (above oceans/terrain), only on LAND from same per-zone threshold -----
       const iceCanvas = document.createElement('canvas');
       iceCanvas.width = w; iceCanvas.height = h;
       const ictx = iceCanvas.getContext('2d');
       const iimg = ictx.createImageData(w, h);
       const idata = iimg.data;
+
       for (let i = 0; i < w * h; i++) {
+        const v = this.waterMask[i];
         const y = Math.floor(i / w);
         const zone = zoneForV(y / (h - 1));
-        // Use zonal ice fraction as direct alpha; clamp
-        const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
+        const zoneW = norm01(zonal[zone]?.water, waterT);
+        const zoneI = norm01(zonal[zone]?.ice, 0);
+        // Recompute same ocean mask to derive local land
+        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
+        aOcean = Math.max(0, Math.min(1, aOcean));
+        const landLocal = Math.max(0, 1 - aOcean);
+
         const idx = i * 4;
         // light blue-white ice color
-        const r = 200, g = 220, b = 255;
-        idata[idx] = r;
-        idata[idx + 1] = g;
-        idata[idx + 2] = b;
-        idata[idx + 3] = Math.floor(zi * 255); // full opacity at 100%
+        idata[idx]     = 200;
+        idata[idx + 1] = 220;
+        idata[idx + 2] = 255;
+        idata[idx + 3] = Math.floor(zoneI * landLocal * 255); // ice only where land is present
       }
       ictx.putImageData(iimg, 0, 0);
       ctx.drawImage(iceCanvas, 0, 0);
 
-      // Green cloud layer scales with life coverage
-      const lifeT = (this.viz.coverage?.life || 0) / 100;
-      if (lifeT > 0) {
-        if (!this.cloudLayer) {
-          const cloud = document.createElement('canvas');
-          cloud.width = w; cloud.height = h;
-          const cctx = cloud.getContext('2d');
-          const blobs = 180;
-          for (let i = 0; i < blobs; i++) {
-            const x = Math.random() * w;
-            const y = Math.random() * h;
-            const r = 12 + Math.random() * 48;
-            const g = cctx.createRadialGradient(x, y, 0, x, y, r);
-            g.addColorStop(0, 'rgba(5, 241, 80, 0.88)');
-            g.addColorStop(1, 'rgba(5, 255, 84, 0)');
-            cctx.fillStyle = g;
-            cctx.beginPath(); cctx.arc(x, y, r, 0, Math.PI * 2); cctx.fill();
-          }
-          this.cloudLayer = cloud;
-        }
-        ctx.globalAlpha = Math.max(0, Math.min(1, lifeT));
-        ctx.drawImage(this.cloudLayer, 0, 0);
-        ctx.globalAlpha = 1;
+      // ----- Biomass overlay: zonal biomass, capped by local land and not under ice -----
+      const lifeGlobal = (this.viz.coverage?.life || 0) / 100; // fallback
+      const bioCanvas = document.createElement('canvas');
+      bioCanvas.width = w; bioCanvas.height = h;
+      const bctx = bioCanvas.getContext('2d');
+      const bimg = bctx.createImageData(w, h);
+      const bdata = bimg.data;
+
+      for (let i = 0; i < w * h; i++) {
+        const v = this.waterMask[i];
+        const y = Math.floor(i / w);
+        const zone = zoneForV(y / (h - 1));
+        const zoneW = norm01(zonal[zone]?.water, waterT);
+        const zoneI = norm01(zonal[zone]?.ice, 0);
+        const zoneB = norm01(zonal[zone]?.biomass, lifeGlobal);
+
+        // Land & ocean via same per-zone threshold
+        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
+        aOcean = Math.max(0, Math.min(1, aOcean));
+        const landLocal = Math.max(0, 1 - aOcean);
+        // Vegetation fraction limited by land and not covered by ice
+        const eff = Math.max(0, Math.min(1, zoneB * landLocal * (1 - zoneI)));
+
+        const idx = i * 4;
+        // richer green for biomass
+        bdata[idx]     = 30;
+        bdata[idx + 1] = 160;
+        bdata[idx + 2] = 80;
+        bdata[idx + 3] = Math.floor(eff * 200); // slightly translucent
       }
+      bctx.putImageData(bimg, 0, 0);
+      ctx.drawImage(bioCanvas, 0, 0);
 
       const texture = new THREE.CanvasTexture(canvas);
       if (THREE && THREE.SRGBColorSpace) {
@@ -1260,6 +1342,7 @@
       return arr;
     }
   }
+
 
   // Expose and initialize from game lifecycle
   window.PlanetVisualizer = PlanetVisualizer;
