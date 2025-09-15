@@ -90,6 +90,10 @@
       // Setup three.js
       this.width = container.clientWidth;
       this.height = container.clientHeight;
+      if (!this.width || !this.height) {
+        // Fallback size if tab is hidden or not yet laid out; will correct on next resize
+        this.width = this.height = 320;
+      }
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true });
       this.renderer.setPixelRatio(window.devicePixelRatio || 1);

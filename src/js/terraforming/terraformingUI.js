@@ -16,6 +16,7 @@ function getGasRangeString(gasName) {
 
 let terraformingTabsInitialized = false;
 let terraformingSummaryInitialized = false;
+let terraformingWorldInitialized = false;
 
 const terraformingTabElements = {
   subtabs: [],
@@ -86,6 +87,7 @@ function resetTerraformingUI() {
   Object.keys(terraformingUICache).forEach(key => {
     terraformingUICache[key] = {};
   });
+  terraformingWorldInitialized = false;
 }
 
 function initializeTerraformingTabs() {
@@ -112,6 +114,9 @@ function initializeTerraformingTabs() {
   activateTerraformingSubtab('world-terraforming');
 
   terraformingTabsInitialized = true;
+
+  // Build the World subtab content once (planet visualizer container)
+  createTerraformingWorldUI();
 }
 
 function activateTerraformingSubtab(subtabId) {
@@ -168,6 +173,33 @@ function openTerraformingWorldTab() {
     activateTab('terraforming');
   }
   activateTerraformingSubtab('world-terraforming');
+}
+
+// Build the Terraforming -> World subtab content (once)
+function createTerraformingWorldUI() {
+  cacheTerraformingTabElements();
+  if (terraformingWorldInitialized) return;
+  const host = terraformingTabElements.worldContent;
+  if (!host) return;
+
+  // Clear any placeholder content and create the visualizer shell
+  while (host.firstChild) host.removeChild(host.firstChild);
+
+  // Container for WebGL canvas
+  const container = document.createElement('div');
+  container.className = 'planet-visualizer';
+  container.id = 'planet-visualizer';
+
+  // Optional overlay text (kept hidden by CSS but updated by the visualizer)
+  const overlay = document.createElement('div');
+  overlay.className = 'planet-visualizer-overlay';
+  overlay.id = 'planet-visualizer-overlay';
+
+  host.appendChild(container);
+  host.appendChild(overlay);
+
+  terraformingUICache.world = { container, overlay };
+  terraformingWorldInitialized = true;
 }
 
 function createTerraformingSummaryUI() {

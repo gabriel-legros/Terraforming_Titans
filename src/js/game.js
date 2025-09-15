@@ -92,6 +92,11 @@ function create() {
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
 
+  // Initialize the Planet Visualizer (Terraforming -> World subtab)
+  if (typeof window !== 'undefined' && typeof window.initializePlanetVisualizerUI === 'function') {
+    window.initializePlanetVisualizerUI();
+  }
+
   goldenAsteroid = new GoldenAsteroid();
 
   solisManager = new SolisManager();
@@ -417,6 +422,25 @@ function updateRender(force = false) {
 
     if (isActive('terraforming')) {
       updateTerraformingUI();
+      // Ensure the visualizer resizes once the tab becomes visible
+      if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
+        window.planetVisualizer.onResize();
+      }
+    }
+
+    // Push world coverage to the visualizer for shading/tinting
+    if (typeof window !== 'undefined' && window.planetVisualizer && typeof calculateAverageCoverage === 'function') {
+      try {
+        const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+        const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
+        const pct = (x) => Math.max(0, Math.min(100, x * 100));
+        window.planetVisualizer.viz.coverage.water = pct(waterFrac);
+        window.planetVisualizer.viz.coverage.life = pct(lifeFrac);
+        // Approximate clouds from water coverage for now
+        window.planetVisualizer.viz.coverage.cloud = window.planetVisualizer.viz.coverage.water;
+      } catch (e) {
+        // Swallow to avoid UI disruption; visualizer will continue rendering
+      }
     }
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {

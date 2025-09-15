@@ -2,7 +2,12 @@
 .planet-visualizer {
   position: relative;
   margin-top: 8px;
-  height: 220px;
+  width: 100%;
+  max-width: 60%; /* cap width to 60% of parent */
+  margin-left: auto;
+  margin-right: auto;
+  aspect-ratio: 1 / 1; /* keep square */
+  height: auto;
   background: #000; /* backup background behind WebGL canvas */
   border: 1px solid #333;
   border-radius: 2px;
@@ -26,6 +31,9 @@
   border-top: 1px solid #333;
   padding: 8px 10px;
   font-size: 12px;
+  max-width: 60%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .pv-grid {
