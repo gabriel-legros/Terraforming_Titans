@@ -235,6 +235,12 @@ function restoreAutoBuildSettings(structures) {
 }
 
 function autoBuild(buildings, delta = 0) {
+    for (const buildingName in buildings) {
+        if (Object.prototype.hasOwnProperty.call(buildings, buildingName)) {
+            buildings[buildingName].autoBuildResourceBlocked = false;
+        }
+    }
+
     if (typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive) {
         return;
     }
@@ -278,7 +284,15 @@ function autoBuild(buildings, delta = 0) {
     // Step 3: Efficiently allocate builds
     buildableBuildings.forEach(({ building, requiredAmount }) => {
         let buildCount = 0;
+        let blockedByResources = false;
         const reserve = constructionOfficeState.strategicReserve;
+        const lacksResources = () => (
+            typeof building.canAfford === 'function'
+                ? !building.canAfford(1, reserve)
+                : false
+        )
+            && (typeof building.canAffordDeposit !== 'function' || building.canAffordDeposit(1))
+            && (typeof building.canAffordLand !== 'function' || building.canAffordLand(1));
         const canBuildFull = building.canAfford(requiredAmount, reserve);
         if (canBuildFull) {
             buildCount = requiredAmount;
@@ -291,6 +305,10 @@ function autoBuild(buildings, delta = 0) {
 
             if (maxBuildable > 0) {
                 buildCount = maxBuildable;
+            } else if (requiredAmount > 0) {
+                if (lacksResources()) {
+                    blockedByResources = true;
+                }
             }
         }
 
@@ -313,7 +331,13 @@ function autoBuild(buildings, delta = 0) {
             }
             if (built) {
                 autobuildCostTracker.recordCost(building.displayName, cost);
+            } else {
+                if (lacksResources()) {
+                    building.autoBuildResourceBlocked = true;
+                }
             }
+        } else if (blockedByResources) {
+            building.autoBuildResourceBlocked = true;
         }
         // Skip incremental building as it significantly impacts performance
     });

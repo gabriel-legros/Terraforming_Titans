@@ -939,7 +939,10 @@ function updateDecreaseButtonText(button, buildCount) {
         const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
         const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
         const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
-        if (targetEl) targetEl.textContent = `Target : ${formatBigInteger(targetCount)}`;
+        if (targetEl) {
+          targetEl.textContent = `Target : ${formatBigInteger(targetCount)}`;
+          targetEl.style.color = structure.autoBuildResourceBlocked ? 'orange' : '';
+        }
 
         if (els.autoBuildBasisSelect) {
           els.autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
