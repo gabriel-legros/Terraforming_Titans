@@ -119,10 +119,7 @@
       this.camera.lookAt(0, 0, 0);
 
       // Sun (directional) + a small visible marker sphere
-      const initialFlux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux)
-        ? terraforming.luminosity.modifiedSolarFlux
-        : 1000; // fallback to 1 kW/m^2 scale
-      const initialIllum = initialFlux / 1000; // intensity driven by surface solar flux/1000
+      const initialIllum = (currentPlanetParameters.celestialParameters.starLuminosity ?? 1) || 1;
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2); // direction toward the planet
       this.scene.add(this.sunLight);
@@ -219,13 +216,6 @@
       this.updateAtmosphereUniforms();
       // Update cloud shader uniforms (no relative rotation)
       this.updateCloudUniforms();
-      // Keep sunlight intensity in sync with surface solar flux in Game-driven mode
-      if (this.sunLight && this.debug?.mode === 'game' && typeof terraforming !== 'undefined') {
-        const flux = terraforming?.luminosity?.modifiedSolarFlux;
-        if (typeof flux === 'number' && isFinite(flux)) {
-          this.sunLight.intensity = flux / 1000;
-        }
-      }
       // Update ships
       this.updateShips();
 
@@ -981,10 +971,9 @@
       const cel = currentPlanetParameters.celestialParameters;
 
       // Illumination
-        const flux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux) || 1000;
-        const illum = flux / 1000;
-        r.illum.range.value = String(illum);
-        r.illum.number.value = String(illum);
+      const illum = cel.starLuminosity ?? 1;
+      r.illum.range.value = String(illum);
+      r.illum.number.value = String(illum);
       // Inclination sync from local viz (default 15 deg)
       if (r.incl) {
         const inc = (this.viz?.inclinationDeg ?? 15);
@@ -1074,8 +1063,7 @@
       try {
         const cel = currentPlanetParameters.celestialParameters;
         // Illumination
-        const flux = (typeof terraforming !== 'undefined' && terraforming?.luminosity?.modifiedSolarFlux) || 1000;
-        const illum = flux / 1000;
+        const illum = cel.starLuminosity ?? 1;
         if (r.illum) { r.illum.range.value = String(illum); r.illum.number.value = String(illum); }
         // Population
         const popNow = this.resources?.colony?.colonists?.value || 0;
@@ -1167,9 +1155,18 @@
       const ctx = canvas.getContext('2d');
 
       // Water coverage: draw true oceans using a stable mask
-      const waterT = (this.viz.coverage?.water || 0) / 100; // debug fallback
-
-      // Base terrain (dry) – oceans will overlay
+      // Helper to mix two hex colors
+      const mix = (a, b, t) => {
+        const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
+        const ar = (ah >> 16) & 255, ag = (ah >> 8) & 255, ab = ah & 255;
+        const br = (bh >> 16) & 255, bg = (bh >> 8) & 255, bb = bh & 255;
+        const r = Math.round(ar + (br - ar) * t);
+        const g = Math.round(ag + (bg - ag) * t);
+        const b2 = Math.round(ab + (bb - ab) * t);
+        return `rgb(${r},${g},${b2})`;
+      };
+      const waterT = (this.viz.coverage?.water || 0) / 100;
+      // Base terrain stays dry colors; oceans will be overlaid above
       const topCol = '#8a2a2a';
       const botCol = '#6e1f1f';
       const base = ctx.createLinearGradient(0, 0, 0, h);
@@ -1184,12 +1181,19 @@
         ctx.globalAlpha = 1;
       }
 
-      // Ensure we have the FBM land/ocean field
+      // ----- Oceans overlay (above terrain/craters) -----
       if (!this.waterMask) {
         this.waterMask = this.generateWaterMask(w, h);
       }
-
-      // Helper: map scanline to zone, and normalize inputs to [0,1]
+      // Threshold so that waterT=0 -> no oceans, 1 -> nearly full coverage
+      const thr = waterT; // base threshold
+      const coastWidth = 0.01; // sharper coastline transition
+      const ocean = document.createElement('canvas');
+      ocean.width = w; ocean.height = h;
+      const octx = ocean.getContext('2d');
+      const img = octx.createImageData(w, h);
+      const data = img.data;
+      // Helper: map v in [0,1] to zone key using 23.5/66.5 deg bounds
       const zoneForV = (v) => {
         // v: 0 = north pole, 0.5 = equator, 1 = south pole
         const latRad = (0.5 - v) * Math.PI; // latitude radians, positive north
@@ -1199,100 +1203,95 @@
         if (absDeg >= 23.5) return 'temperate';
         return 'tropical';
       };
-      const norm01 = (val, fallback) => {
-        if (val == null || !isFinite(val)) return fallback;
-        return val > 1.0001 ? Math.max(0, Math.min(1, val / 100)) : Math.max(0, Math.min(1, val));
-      };
-
       const zonal = this.viz.zonalCoverage || {};
-
-      // ----- Oceans overlay (above terrain/craters) using PER-ZONE threshold -----
-      const coastWidth = 0.01; // sharper coastline transition
-      const ocean = document.createElement('canvas');
-      ocean.width = w; ocean.height = h;
-      const octx = ocean.getContext('2d');
-      const oimg = octx.createImageData(w, h);
-      const odata = oimg.data;
-
       for (let i = 0; i < w * h; i++) {
-        const v = this.waterMask[i];           // FBM value [0..1]
+        const v = this.waterMask[i];
+        // smoothstep inverse: ocean where v below threshold
+        let a = 1 - ((v - thr + coastWidth) / (2 * coastWidth));
+        a = Math.max(0, Math.min(1, a));
+        // Scale ocean alpha by zonal water coverage for this pixel's latitude
         const y = Math.floor(i / w);
         const zone = zoneForV(y / (h - 1));
-        // Use zonal water fraction as the local threshold; fall back to debug slider
-        const zoneW = norm01(zonal[zone]?.water, waterT);
-        // Smooth ocean mask around coast
-        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
-        aOcean = Math.max(0, Math.min(1, aOcean));
+        let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
+        // In debug mode, drive water directly from the global slider
+        if (this.debug && this.debug.mode === 'debug') {
+          zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
+        }
+        a *= zw;
         const idx = i * 4;
         // Deep ocean blue
-        odata[idx]     = 10;
-        odata[idx + 1] = 40;
-        odata[idx + 2] = 120;
-        odata[idx + 3] = Math.floor(aOcean * 255);
+        // Deep ocean blue
+        const r = 10, g = 40, b = 120;
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = Math.floor(a * 255);
       }
-      octx.putImageData(oimg, 0, 0);
+      octx.putImageData(img, 0, 0);
       ctx.drawImage(ocean, 0, 0);
 
-      // ----- Ice overlay (above oceans/terrain), only on LAND from same per-zone threshold -----
+      // ----- Ice overlay (above oceans/terrain) -----
       const iceCanvas = document.createElement('canvas');
       iceCanvas.width = w; iceCanvas.height = h;
       const ictx = iceCanvas.getContext('2d');
       const iimg = ictx.createImageData(w, h);
       const idata = iimg.data;
-
       for (let i = 0; i < w * h; i++) {
-        const v = this.waterMask[i];
         const y = Math.floor(i / w);
         const zone = zoneForV(y / (h - 1));
-        const zoneW = norm01(zonal[zone]?.water, waterT);
-        const zoneI = norm01(zonal[zone]?.ice, 0);
-        // Recompute same ocean mask to derive local land
-        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
-        aOcean = Math.max(0, Math.min(1, aOcean));
-        const landLocal = Math.max(0, 1 - aOcean);
-
+        // Use zonal ice fraction as direct alpha; clamp
+        const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
+        let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
+        if (this.debug && this.debug.mode === 'debug') {
+          zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
+        }
+        const land = Math.max(0, 1 - zw);
         const idx = i * 4;
         // light blue-white ice color
-        idata[idx]     = 200;
-        idata[idx + 1] = 220;
-        idata[idx + 2] = 255;
-        idata[idx + 3] = Math.floor(zoneI * landLocal * 255); // ice only where land is present
+        const r = 200, g = 220, b = 255;
+        idata[idx] = r;
+        idata[idx + 1] = g;
+        idata[idx + 2] = b;
+        idata[idx + 3] = Math.floor(zi * land * 255); // only on land
       }
       ictx.putImageData(iimg, 0, 0);
       ctx.drawImage(iceCanvas, 0, 0);
 
-      // ----- Biomass overlay: zonal biomass, capped by local land and not under ice -----
-      const lifeGlobal = (this.viz.coverage?.life || 0) / 100; // fallback
-      const bioCanvas = document.createElement('canvas');
-      bioCanvas.width = w; bioCanvas.height = h;
-      const bctx = bioCanvas.getContext('2d');
-      const bimg = bctx.createImageData(w, h);
-      const bdata = bimg.data;
-
-      for (let i = 0; i < w * h; i++) {
-        const v = this.waterMask[i];
-        const y = Math.floor(i / w);
-        const zone = zoneForV(y / (h - 1));
-        const zoneW = norm01(zonal[zone]?.water, waterT);
-        const zoneI = norm01(zonal[zone]?.ice, 0);
-        const zoneB = norm01(zonal[zone]?.biomass, lifeGlobal);
-
-        // Land & ocean via same per-zone threshold
-        let aOcean = 1 - ((v - zoneW + coastWidth) / (2 * coastWidth));
-        aOcean = Math.max(0, Math.min(1, aOcean));
-        const landLocal = Math.max(0, 1 - aOcean);
-        // Vegetation fraction limited by land and not covered by ice
-        const eff = Math.max(0, Math.min(1, zoneB * landLocal * (1 - zoneI)));
-
-        const idx = i * 4;
-        // richer green for biomass
-        bdata[idx]     = 30;
-        bdata[idx + 1] = 160;
-        bdata[idx + 2] = 80;
-        bdata[idx + 3] = Math.floor(eff * 200); // slightly translucent
+      // Biomass overlay: cap biomass by available land (1 - water - ice) per zone
+      const lifeT = (this.viz.coverage?.life || 0) / 100; // global biomass fraction
+      if (lifeT > 0) {
+        const bioCanvas = document.createElement('canvas');
+        bioCanvas.width = w; bioCanvas.height = h;
+        const bctx = bioCanvas.getContext('2d');
+        const bimg = bctx.createImageData(w, h);
+        const bdata = bimg.data;
+        for (let i = 0; i < w * h; i++) {
+          const y = Math.floor(i / w);
+          const zone = zoneForV(y / (h - 1));
+          let zw = Math.max(0, Math.min(1, (zonal[zone]?.water ?? 0)));
+          if (this.debug && this.debug.mode === 'debug') {
+            zw = Math.max(0, Math.min(1, (this.viz.coverage?.water || 0) / 100));
+          }
+          const zi = Math.max(0, Math.min(1, (zonal[zone]?.ice ?? 0)));
+          // Derive per-pixel land from water mask so biomass never appears over oceans
+          const vpx = this.waterMask[i];
+          const coastWidth = 0.01;
+          let aOcean = 1 - ((vpx - thr + coastWidth) / (2 * coastWidth));
+          aOcean = Math.max(0, Math.min(1, aOcean));
+          aOcean *= zw; // scale by water fraction in this zone or slider
+          const landLocal = Math.max(0, 1 - aOcean - zi);
+          const eff = Math.min(lifeT, landLocal); // cap biomass by local land
+          const idx = i * 4;
+          // richer green for biomass
+          const r = 30, g = 160, b = 80;
+          bdata[idx] = r;
+          bdata[idx + 1] = g;
+          bdata[idx + 2] = b;
+          bdata[idx + 3] = Math.floor(eff * 180); // somewhat translucent
+        }
+        bctx.putImageData(bimg, 0, 0);
+        ctx.drawImage(bioCanvas, 0, 0);
       }
-      bctx.putImageData(bimg, 0, 0);
-      ctx.drawImage(bioCanvas, 0, 0);
 
       const texture = new THREE.CanvasTexture(canvas);
       if (THREE && THREE.SRGBColorSpace) {
@@ -1342,7 +1341,6 @@
       return arr;
     }
   }
-
 
   // Expose and initialize from game lifecycle
   window.PlanetVisualizer = PlanetVisualizer;
