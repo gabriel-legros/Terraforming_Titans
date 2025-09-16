@@ -85,6 +85,23 @@ const RWG_WORLD_TYPES = {
   "hot-rocky": { displayName: "Hot Rocky" },
 };
 
+const RWG_TYPE_BASE_COLORS = {
+  "mars-like": "#8a2a2a",
+  "cold-desert": "#b38c61",
+  "icy-moon": "#7a8797",
+  "titan-like": "#8a6a38",
+  "carbon-planet": "#2c2b30",
+  "desiccated-desert": "#caa16a",
+  "super-earth": "#4c6f4e",
+  "venus-like": "#cdb675",
+  rocky: "#806a58",
+  "hot-rocky": "#6d3f2f",
+};
+
+function pickBaseColorForType(type) {
+  return RWG_TYPE_BASE_COLORS[type] || "#7a4a3a";
+}
+
 // ===================== Parameter Pack (edit here) =====================
 const DEFAULT_PARAMS = {
   naming: {
@@ -570,6 +587,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     habitableZone: star.habitableZone || { inner: 0.95 * sScale, outer: 1.37 * sScale }
   };
 
+  const baseColor = pickBaseColorForType(classification?.type || type);
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -582,6 +600,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
+    visualization: { baseColor },
     rwgMeta: { generatorSeedInt: seed }
   };
   return overrides;
@@ -766,6 +785,7 @@ if (typeof globalThis !== "undefined") {
   globalThis.generateSystem = generateSystem;
   globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS;
   globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
+  globalThis.RWG_TYPE_BASE_COLORS = RWG_TYPE_BASE_COLORS;
 }
 
 // CommonJS exports
@@ -777,5 +797,6 @@ try {
     generateSystem,
     DEFAULT_PARAMS,
     RWG_WORLD_TYPES,
+    RWG_TYPE_BASE_COLORS,
   };
 } catch (_) {}

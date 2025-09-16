@@ -92,6 +92,7 @@
           temperate: { water: 0, ice: 0, life: 0 },
           polar: { water: 0, ice: 0, life: 0 }
         },
+        baseColor: '#8a2a2a',
         inclinationDeg: 15,
       };
     }
@@ -103,6 +104,66 @@
     get terraforming() {
       if (typeof window === 'undefined') return null;
       return window.terraformingManager || window.terraforming || null;
+    }
+
+    normalizeHexColor(value) {
+      if (typeof value !== 'string') return null;
+      let hex = value.trim();
+      if (!hex) return null;
+      if (hex[0] !== '#') {
+        if (/^[0-9a-fA-F]{6}$/.test(hex) || /^[0-9a-fA-F]{3}$/.test(hex)) {
+          hex = `#${hex}`;
+        } else {
+          return null;
+        }
+      }
+      if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        return `#${hex.slice(1).toLowerCase()}`;
+      }
+      if (/^#[0-9a-fA-F]{3}$/.test(hex)) {
+        const r = hex[1];
+        const g = hex[2];
+        const b = hex[3];
+        return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+      }
+      return null;
+    }
+
+    getGameBaseColor() {
+      if (typeof currentPlanetParameters === 'undefined' || !currentPlanetParameters) return null;
+      return currentPlanetParameters.visualization?.baseColor || null;
+    }
+
+    setBaseColor(color, opts = {}) {
+      const normalized = this.normalizeHexColor(color)
+        || this.normalizeHexColor(this.viz.baseColor)
+        || '#8a2a2a';
+      const prev = this.viz.baseColor;
+      const changed = opts.force || prev !== normalized;
+      this.viz.baseColor = normalized;
+      if (changed) {
+        this.lastCraterFactorKey = null;
+        if (!opts.skipSurfaceUpdate) {
+          this.updateSurfaceTextureFromPressure(true);
+        }
+      }
+
+      const colorRow = this.debug?.rows?.baseColor;
+      const shouldSyncControls = !opts.fromGame || this.debug.mode !== 'debug' || opts.force;
+      if (colorRow && shouldSyncControls) {
+        if (colorRow.color) colorRow.color.value = normalized;
+        if (colorRow.text) colorRow.text.value = normalized.toUpperCase();
+      }
+      return normalized;
+    }
+
+    updateDebugControlState() {
+      const isDebug = this.debug.mode === 'debug';
+      const colorRow = this.debug?.rows?.baseColor;
+      if (colorRow) {
+        if (colorRow.color) colorRow.color.disabled = !isDebug;
+        if (colorRow.text) colorRow.text.disabled = !isDebug;
+      }
     }
 
     init() {
@@ -137,6 +198,12 @@
       // Sun (directional) + a small visible marker sphere
       const initialIllum = this.getGameIllumination();
       this.viz.illum = initialIllum;
+      const baseColorFromGame = this.getGameBaseColor();
+      if (baseColorFromGame) {
+        this.setBaseColor(baseColorFromGame, { fromGame: true, force: true, skipSurfaceUpdate: true });
+      } else {
+        this.setBaseColor(this.viz.baseColor, { force: true, skipSurfaceUpdate: true });
+      }
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2); // direction toward the planet
       this.scene.add(this.sunLight);
@@ -380,6 +447,62 @@
       // Clouds (global visual only)
       makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
 
+      const baseColorLabel = document.createElement('div');
+      baseColorLabel.className = 'pv-row-label';
+      baseColorLabel.textContent = 'Base color';
+      const baseColorInput = document.createElement('input');
+      baseColorInput.type = 'color';
+      baseColorInput.id = 'pv-baseColor';
+      const baseColorHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+      baseColorInput.value = baseColorHex;
+      const baseColorValue = document.createElement('div');
+      baseColorValue.className = 'pv-row-value';
+      const baseColorText = document.createElement('input');
+      baseColorText.type = 'text';
+      baseColorText.value = baseColorHex.toUpperCase();
+      baseColorText.maxLength = 7;
+      baseColorText.pattern = '#[0-9a-fA-F]{6}';
+      baseColorText.spellcheck = false;
+      baseColorText.placeholder = '#RRGGBB';
+      baseColorText.autocomplete = 'off';
+      baseColorValue.appendChild(baseColorText);
+      grid.appendChild(baseColorLabel);
+      grid.appendChild(baseColorInput);
+      grid.appendChild(baseColorValue);
+      this.debug.rows.baseColor = { color: baseColorInput, text: baseColorText };
+
+      const syncBaseColorInputs = (hex) => {
+        const normalized = this.normalizeHexColor(hex) || this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+        if (baseColorInput) baseColorInput.value = normalized;
+        if (baseColorText) baseColorText.value = normalized.toUpperCase();
+        return normalized;
+      };
+
+      baseColorInput.addEventListener('input', () => {
+        if (this.debug.mode !== 'debug') {
+          syncBaseColorInputs(this.viz.baseColor);
+          return;
+        }
+        const normalized = syncBaseColorInputs(baseColorInput.value);
+        if (normalized) {
+          this.setBaseColor(normalized);
+        }
+      });
+
+      baseColorText.addEventListener('change', () => {
+        if (this.debug.mode !== 'debug') {
+          syncBaseColorInputs(this.viz.baseColor);
+          return;
+        }
+        const normalized = this.normalizeHexColor(baseColorText.value);
+        if (!normalized) {
+          syncBaseColorInputs(this.viz.baseColor);
+          return;
+        }
+        syncBaseColorInputs(normalized);
+        this.setBaseColor(normalized);
+      });
+
     const controls = document.createElement('div');
     controls.className = 'pv-controls';
     const label = document.createElement('label');
@@ -396,6 +519,12 @@
       if (this.debug.mode === 'game') {
         this.syncSlidersFromGame();
       }
+      if (this.debug.mode === 'game') {
+        this.setBaseColor(this.getGameBaseColor(), { fromGame: true });
+      } else {
+        syncBaseColorInputs(this.viz.baseColor);
+      }
+      this.updateDebugControlState();
     });
     controls.appendChild(label);
     controls.appendChild(select);
@@ -403,6 +532,7 @@
     this.debug.modeSelect = select;
 
     // Place debug panel directly after the canvas container
+    this.updateDebugControlState();
     this.elements.container.insertAdjacentElement('afterend', host);
     this.debug.container = host;
   }
@@ -1104,7 +1234,14 @@
         const s = String(avgWater.toFixed(2));
         r.cloudCov.range.value = s; r.cloudCov.number.value = s;
       }
-      
+
+      const colorRow = this.debug.rows.baseColor;
+      if (colorRow && this.debug.mode !== 'debug') {
+        const normalized = this.normalizeHexColor(this.getGameBaseColor() || this.viz.baseColor) || '#8a2a2a';
+        if (colorRow.color) colorRow.color.value = normalized;
+        if (colorRow.text) colorRow.text.value = normalized.toUpperCase();
+      }
+
       this.updateSliderValueLabels();
       // Update visualizer-local state and visuals (no game mutation)
       this.viz.illum = illum;
@@ -1197,12 +1334,13 @@
       const water = (this.viz.coverage?.water || 0) / 100;
       const life = (this.viz.coverage?.life || 0) / 100;
       const cloud = (this.viz.coverage?.cloud || 0) / 100;
-      // Memo key rounded to 2 decimals to avoid churn; include zonal coverage
-        const z = this.viz.zonalCoverage || {};
-        const zKey = ['tropical','temperate','polar']
-          .map(k=>`${(z[k]?.water??0).toFixed(2)}_${(z[k]?.ice??0).toFixed(2)}_${(z[k]?.life??0).toFixed(2)}`)
-          .join('|');
-        const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}`;
+      // Memo key rounded to 2 decimals to avoid churn; include zonal coverage and base color
+      const z = this.viz.zonalCoverage || {};
+      const zKey = ['tropical','temperate','polar']
+        .map(k=>`${(z[k]?.water??0).toFixed(2)}_${(z[k]?.ice??0).toFixed(2)}_${(z[k]?.life??0).toFixed(2)}`)
+        .join('|');
+      const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+      const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}`;
       if (!force && key === this.lastCraterFactorKey) return;
       this.lastCraterFactorKey = key;
 
@@ -1301,8 +1439,9 @@
       };
       const waterT = (this.viz.coverage?.water || 0) / 100;
       // Base terrain stays dry colors; oceans will be overlaid above
-      const topCol = '#8a2a2a';
-      const botCol = '#6e1f1f';
+      const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+      const topCol = mix(baseHex, '#ffffff', 0.2);
+      const botCol = mix(baseHex, '#000000', 0.35);
       const base = ctx.createLinearGradient(0, 0, 0, h);
       base.addColorStop(0, topCol);
       base.addColorStop(1, botCol);

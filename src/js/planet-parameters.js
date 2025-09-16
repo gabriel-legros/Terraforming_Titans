@@ -110,6 +110,9 @@ const defaultPlanetParameters = {
     albedo: 0.21, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
+  },
+  visualization: {
+    baseColor: '#8a2a2a',
   }
 };
 
@@ -201,7 +204,10 @@ const marsOverrides = {
       "ice": 1436178044031.2847
     }
   },
-  fundingRate: 10
+  fundingRate: 10,
+  visualization: {
+    baseColor: '#8a2a2a',
+  }
 };
 
 const titanOverrides = {
@@ -311,6 +317,9 @@ const titanOverrides = {
       parentBeltAtRef_mSvPerDay: 3.5,      // chosen so Titan @20.3 RS is ~0.05 airless
       beltFalloffExp: 6
     }
+  },
+  visualization: {
+    baseColor: '#8a6a38',
   }
 };
 
@@ -412,6 +421,9 @@ const callistoOverrides = {
       parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
       beltFalloffExp: 10                  // middle of 9.5–10.5 range
     }
+  },
+  visualization: {
+    baseColor: '#828a93',
   }
 };
 
@@ -524,6 +536,9 @@ const ganymedeOverrides = {
       parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
       beltFalloffExp: 10
     }
+  },
+  visualization: {
+    baseColor: '#786355',
   }
 };
 
@@ -600,8 +615,11 @@ const vega2Overrides = {
     radius: 5051.8,         // km
     mass: 1.867e24,         // kg
     albedo: 0.3,           // bright surface; no clouds unless added later
-    rotationPeriod: 18,    
+    rotationPeriod: 18,
     starLuminosity: 40
+  },
+  visualization: {
+    baseColor: '#a87d4f',
   }
 };
 
@@ -673,6 +691,9 @@ const venusOverrides = {
     albedo: 0.15,
     rotationPeriod: 5832, // hours (~243 Earth days)
     starLuminosity: 1
+  },
+  visualization: {
+    baseColor: '#d0b271',
   }
 };
 
