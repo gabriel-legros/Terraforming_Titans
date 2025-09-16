@@ -373,6 +373,88 @@ class SpaceshipProject extends Project {
     return totalDisposal;
   }
 
+  getZonalDisposalDescriptor(category, resource) {
+    if (category !== 'surface' || typeof terraforming === 'undefined') {
+      return null;
+    }
+
+    const mapping = {
+      liquidWater: { container: 'zonalWater', key: 'liquid' },
+      ice: { container: 'zonalWater', key: 'ice' },
+      dryIce: { container: 'zonalCO2', key: 'ice' },
+      liquidCO2: { container: 'zonalCO2', key: 'liquid' },
+    };
+
+    const descriptor = mapping[resource];
+    if (!descriptor) {
+      return null;
+    }
+
+    const container = terraforming?.[descriptor.container];
+    if (!container) {
+      return null;
+    }
+
+    return { container, key: descriptor.key };
+  }
+
+  removeZonalResource(category, resource, amount) {
+    if (amount <= 0) {
+      return 0;
+    }
+
+    const descriptor = this.getZonalDisposalDescriptor(category, resource);
+    if (!descriptor) {
+      return 0;
+    }
+
+    const { container, key } = descriptor;
+    const zoneNames =
+      (typeof ZONES !== 'undefined' && Array.isArray(ZONES) && ZONES.length > 0)
+        ? ZONES
+        : Object.keys(container);
+
+    const entries = zoneNames
+      .map(zone => ({ zone, amount: container[zone]?.[key] || 0 }))
+      .filter(entry => entry.amount > 0);
+
+    if (entries.length === 0) {
+      return 0;
+    }
+
+    const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    const actual = Math.min(amount, total);
+    if (actual <= 0) {
+      return 0;
+    }
+
+    let remaining = actual;
+    entries.forEach((entry, index) => {
+      const zoneData = container[entry.zone];
+      if (!zoneData) return;
+      const isLast = index === entries.length - 1;
+      const proportion = total > 0 ? entry.amount / total : 0;
+      let take = isLast ? remaining : actual * proportion;
+      take = Math.min(take, zoneData[key], remaining);
+      zoneData[key] = Math.max(0, zoneData[key] - take);
+      remaining -= take;
+    });
+
+    if (remaining > 1e-9) {
+      for (const entry of entries) {
+        if (remaining <= 0) break;
+        const zoneData = container[entry.zone];
+        if (!zoneData) continue;
+        const available = zoneData[key];
+        const take = Math.min(remaining, available);
+        zoneData[key] = Math.max(0, available - take);
+        remaining -= take;
+      }
+    }
+
+    return actual;
+  }
+
   calculateSpaceshipAdjustedDuration() {
     if (!this.attributes.spaceMining && !this.attributes.spaceExport) return this.duration;
     const maxShipsForDurationReduction = 100;
@@ -472,7 +554,12 @@ class SpaceshipProject extends Project {
         shortfall = shortfall || required > 0;
       }
       resources[category][resource].decrease(actualAmount);
-      this.pendingGain = { colony: { funding: actualAmount * this.attributes.fundingGainAmount } };
+      this.removeZonalResource(category, resource, actualAmount);
+      this.pendingGain = {
+        colony: {
+          funding: actualAmount * this.attributes.fundingGainAmount
+        }
+      };
     }
 
     this.shortfallLastTick = shortfall;
@@ -721,26 +808,40 @@ class SpaceshipProject extends Project {
 
     if (this.attributes.spaceExport && this.selectedDisposalResource) {
       const capacity = this.getShipCapacity();
-      const disposalAmount = capacity * this.assignedSpaceships * fraction * productivity;
+      const requestedAmount = capacity * this.assignedSpaceships * fraction * productivity;
       const { category, resource } = this.selectedDisposalResource;
-      const available = resources[category]?.[resource]?.value || 0;
-      if (available < disposalAmount) {
-        shortfall = shortfall || disposalAmount > 0;
-      }
+      let actualDisposal = 0;
       if (accumulatedChanges) {
-        accumulatedChanges[category][resource] -= disposalAmount;
-        if (this.attributes.fundingGainAmount && accumulatedChanges.colony && accumulatedChanges.colony.funding !== undefined) {
-          accumulatedChanges.colony.funding += disposalAmount * this.attributes.fundingGainAmount;
+        if (!accumulatedChanges[category]) {
+          accumulatedChanges[category] = {};
+        }
+        const existingChange = accumulatedChanges[category][resource] || 0;
+        const currentValue = resources[category]?.[resource]?.value || 0;
+        const effectiveAvailable = Math.max(0, currentValue + existingChange);
+        actualDisposal = Math.min(requestedAmount, effectiveAvailable);
+        accumulatedChanges[category][resource] = existingChange - actualDisposal;
+        if (
+          this.attributes.fundingGainAmount &&
+          accumulatedChanges.colony &&
+          accumulatedChanges.colony.funding !== undefined
+        ) {
+          accumulatedChanges.colony.funding += actualDisposal * this.attributes.fundingGainAmount;
         }
       } else {
         const res = resources[category]?.[resource];
         if (res && typeof res.decrease === 'function') {
-          res.decrease(disposalAmount);
+          const before = res.value;
+          res.decrease(requestedAmount);
+          actualDisposal = before - res.value;
         }
         if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-          resources.colony.funding.increase(disposalAmount * this.attributes.fundingGainAmount);
+          resources.colony.funding.increase(actualDisposal * this.attributes.fundingGainAmount);
         }
       }
+      if (actualDisposal < requestedAmount) {
+        shortfall = shortfall || requestedAmount > 0;
+      }
+      this.removeZonalResource(category, resource, actualDisposal);
     }
 
     const gainPerShip = this.calculateSpaceshipGainPerShip();
