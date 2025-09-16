@@ -16,6 +16,12 @@ class Aerostat extends BaseColony {
   }
 }
 
+const FACTORY_MITIGATION_EXCLUDED_BUILDINGS = ['oreMine'];
+
+function isBuildingEligibleForFactoryMitigation(id) {
+  return FACTORY_MITIGATION_EXCLUDED_BUILDINGS.indexOf(id) === -1;
+}
+
 function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
   const hasProvidedBuildings = Object.prototype.hasOwnProperty.call(
     context,
@@ -35,6 +41,8 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
 
   for (const id in buildingCollection) {
     if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
+
+    if (!isBuildingEligibleForFactoryMitigation(id)) continue;
 
     const building = buildingCollection[id];
     if (!building) continue;
@@ -65,7 +73,7 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
   }
 
   if (totalWorkerRequirement <= 0) {
-    return 0;
+    return 1;
   }
 
   const hasProvidedColonies = Object.prototype.hasOwnProperty.call(
@@ -120,13 +128,19 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
 Aerostat.getFactoryTemperatureMaintenancePenaltyReduction =
   getFactoryTemperatureMaintenancePenaltyReduction;
 
+Aerostat.isBuildingEligibleForFactoryMitigation =
+  isBuildingEligibleForFactoryMitigation;
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Aerostat,
-    getFactoryTemperatureMaintenancePenaltyReduction
+    getFactoryTemperatureMaintenancePenaltyReduction,
+    isBuildingEligibleForFactoryMitigation
   };
 } else {
   globalThis.Aerostat = Aerostat;
   globalThis.getFactoryTemperatureMaintenancePenaltyReduction =
     getFactoryTemperatureMaintenancePenaltyReduction;
+  globalThis.isBuildingEligibleForFactoryMitigation =
+    isBuildingEligibleForFactoryMitigation;
 }
