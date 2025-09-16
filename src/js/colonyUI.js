@@ -432,24 +432,13 @@ function updateAerostatBuoyancySection(structure) {
     if (buildLimit === null) {
       ui.limitValue.textContent = 'N/A';
     } else {
-      ui.limitValue.textContent = formatNumber(buildLimit, false, 0);
+      ui.limitValue.textContent = formatNumber(buildLimit, false, 2);
     }
   }
 
   if (ui.limitInfo) {
     let limitTitle =
       'At most 20% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
-    if (buildLimit === null) {
-      limitTitle += '\nBuild limit unavailable.';
-    } else {
-      limitTitle += `\nMaximum aerostats allowed: ${formatNumber(buildLimit, false, 0)}.`;
-      if (currentAerostats !== null) {
-        limitTitle += `\nConstructed: ${formatNumber(currentAerostats, false, 0)}.`;
-        if (remainingCapacity !== null) {
-          limitTitle += `\nRemaining capacity: ${formatNumber(remainingCapacity, false, 0)}.`;
-        }
-      }
-    }
     ui.limitInfo.title = limitTitle;
   }
 }
