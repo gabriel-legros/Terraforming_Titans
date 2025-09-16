@@ -39,7 +39,7 @@
       this.shipHeadPositions = null;
       this.shipTrailPositions = null;
       this.shipTrailColors = null;
-      this._lastAnimTime = performance.now();
+      this._lastFrameTime = performance.now();
       this._spawnAcc = 0; // accumulator for continuous spawning
       this._spawnRate = 6; // ships per second when below target
       this._lastSliderSync = 0; // throttle game-mode slider syncing
@@ -247,14 +247,26 @@
       return true;
     }
 
-    animate() {
+    animate(deltaSeconds) {
       const visible = this.isTabVisible();
+      const now = performance.now();
+      if (!this._lastFrameTime) {
+        this._lastFrameTime = now;
+      }
+      let dt;
+      if (typeof deltaSeconds === 'number' && Number.isFinite(deltaSeconds)) {
+        dt = deltaSeconds;
+      } else {
+        dt = (now - this._lastFrameTime) / 1000;
+      }
+      if (!Number.isFinite(dt) || dt < 0) {
+        dt = 0;
+      }
+      dt = Math.max(0, Math.min(0.1, dt));
+
       if (!visible) {
-        const now = performance.now();
-        this._lastAnimTime = now;
-        this._lastCloudTime = now;
+        this._lastFrameTime = now;
         this._wasVisible = false;
-        requestAnimationFrame(this.animate);
         return;
       }
 
@@ -262,6 +274,8 @@
         this._wasVisible = true;
         this.onResize();
       }
+
+      this._lastFrameTime = now;
 
       // Planet rotation + geosynchronous camera orbit
       let angle;
@@ -279,11 +293,8 @@
       }
       // Ensure cloud shell rotates with a gentle additional drift so it moves relative to terrain
       if (this.cloudMesh) {
-        const now = performance.now();
-        if (!this._lastCloudTime) this._lastCloudTime = now;
-        const dt = Math.min(0.05, (now - this._lastCloudTime) / 1000);
-        this._lastCloudTime = now;
-        this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * dt; // rad/s slow drift
+        const driftDt = Math.min(0.05, dt);
+        this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * driftDt; // rad/s slow drift
         this.cloudMesh.rotation.y = angle + this.cloudDrift;
       }
       // Camera follows the same angular position (geostationary)
@@ -310,20 +321,19 @@
       // Update cloud shader uniforms (no relative rotation)
       this.updateCloudUniforms();
       // Update ships
-      this.updateShips();
+      this.updateShips(dt);
 
       // If the debug panel is in Game-driven mode, keep sliders reflecting live game
       if (this.debug && this.debug.mode === 'game' && this.debug.rows && this.debug.container) {
-        const now = performance.now();
-        if (now - this._lastSliderSync > 500) { // sync twice per second
+        const sliderNow = performance.now();
+        if (sliderNow - this._lastSliderSync > 500) { // sync twice per second
           // Use the fuller sync to catch all values and input pairs
           this.syncSlidersFromGame();
-          this._lastSliderSync = now;
+          this._lastSliderSync = sliderNow;
         }
       }
 
       this.renderer.render(this.scene, this.camera);
-      requestAnimationFrame(this.animate);
     }
 
     updateOverlayText() {
@@ -781,10 +791,9 @@
       return new THREE.Vector3(x, y, z);
     }
 
-    updateShips() {
-      const now = performance.now();
-      const dt = Math.min(0.05, (now - this._lastAnimTime) / 1000);
-      this._lastAnimTime = now;
+    updateShips(deltaSeconds = 0) {
+      const rawDt = Number(deltaSeconds);
+      const dt = Math.max(0, Math.min(0.05, Number.isFinite(rawDt) ? rawDt : 0));
       const target = Math.max(0, Math.min(this.shipCapacity, Math.floor(this.viz?.ships || 0)));
       // Continuous spawning toward target
       if (this.shipStates.length < target) {
