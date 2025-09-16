@@ -849,14 +849,55 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function adjustStructureActivation(structure, change) {
-    if(structure.requiresLand){
-      if(change > 0){
-        change = Math.min(change, structure.landAffordCount());
+    if (!structure) return;
+
+    let desiredChange = Number.isFinite(change) ? change : 0;
+    if (typeof structure.filterActivationChange === 'function') {
+      const context = {
+        change: desiredChange,
+        currentActive: structure.active,
+        desiredActive: structure.active + desiredChange,
+        structure
+      };
+      const filtered = structure.filterActivationChange(desiredChange, context);
+      if (typeof filtered === 'number' && !Number.isNaN(filtered)) {
+        desiredChange = filtered;
+      } else if (filtered === false || filtered === null) {
+        desiredChange = 0;
       }
-      structure.adjustLand(change);
     }
-    structure.active = Math.max(0, Math.min(structure.active + change, structure.count));
-    structure.updateResourceStorage(resources);
+
+    desiredChange = Math.trunc(desiredChange);
+    if (desiredChange === 0) {
+      return;
+    }
+
+    if (structure.requiresLand) {
+      if (desiredChange > 0) {
+        desiredChange = Math.min(desiredChange, structure.landAffordCount());
+      }
+      if (desiredChange !== 0) {
+        structure.adjustLand(desiredChange);
+      }
+    }
+
+    if (desiredChange === 0) {
+      return;
+    }
+
+    const newActive = Math.max(
+      0,
+      Math.min(structure.active + desiredChange, structure.count)
+    );
+
+    if (newActive === structure.active) {
+      return;
+    }
+
+    structure.active = newActive;
+    if (typeof structure.updateResourceStorage === 'function') {
+      structure.updateResourceStorage(resources);
+    }
   }
   
   function updateStructureDisplay(structures) {

@@ -8,6 +8,8 @@ const BaseColony =
 class Aerostat extends BaseColony {
   constructor(config, colonyName) {
     super(config, colonyName);
+    this._liftDisableAccumulator = 0;
+    this._liftBelowThreshold = false;
     this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.';
   }
 
@@ -78,6 +80,172 @@ class Aerostat extends BaseColony {
 
   getBuoyancySummary() {
     return this.buoyancyNotes;
+  }
+
+  getMinimumOperationalLift() {
+    if (typeof AEROSTAT_MINIMUM_OPERATIONAL_LIFT === 'number') {
+      return AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+    }
+    return 0.2;
+  }
+
+  getAtmosphericComposition() {
+    if (
+      typeof terraforming !== 'undefined' &&
+      terraforming &&
+      terraforming.resources &&
+      terraforming.resources.atmospheric
+    ) {
+      return terraforming.resources.atmospheric;
+    }
+    if (
+      typeof resources !== 'undefined' &&
+      resources &&
+      resources.atmospheric
+    ) {
+      return resources.atmospheric;
+    }
+    return null;
+  }
+
+  getCurrentLift() {
+    if (
+      typeof calculateMolecularWeight !== 'function' ||
+      typeof calculateSpecificLift !== 'function'
+    ) {
+      return null;
+    }
+
+    const atmosphere = this.getAtmosphericComposition();
+    if (!atmosphere) {
+      return null;
+    }
+
+    const molecularWeight = calculateMolecularWeight(atmosphere);
+    if (!Number.isFinite(molecularWeight) || molecularWeight <= 0) {
+      return null;
+    }
+
+    const pressure =
+      typeof AEROSTAT_STANDARD_PRESSURE_PA === 'number'
+        ? AEROSTAT_STANDARD_PRESSURE_PA
+        : 101325;
+    const temperature =
+      typeof AEROSTAT_STANDARD_TEMPERATURE_K === 'number'
+        ? AEROSTAT_STANDARD_TEMPERATURE_K
+        : 273.15 + 21;
+    const internalMolWeight =
+      typeof AEROSTAT_INTERNAL_AIR_MOL_WEIGHT === 'number'
+        ? AEROSTAT_INTERNAL_AIR_MOL_WEIGHT
+        : 29;
+
+    const lift = calculateSpecificLift(
+      pressure,
+      temperature,
+      molecularWeight,
+      internalMolWeight
+    );
+
+    if (!Number.isFinite(lift)) {
+      return null;
+    }
+
+    return lift;
+  }
+
+  isLiftBelowThreshold(liftValue) {
+    const lift = liftValue ?? this.getCurrentLift();
+    if (lift === null) {
+      this._liftBelowThreshold = false;
+      return false;
+    }
+    const below = lift < this.getMinimumOperationalLift();
+    this._liftBelowThreshold = below;
+    return below;
+  }
+
+  filterActivationChange(change) {
+    if (!Number.isFinite(change)) {
+      return 0;
+    }
+
+    const sanitized = Math.trunc(change);
+    if (sanitized > 0 && this.isLiftBelowThreshold()) {
+      return 0;
+    }
+    return sanitized;
+  }
+
+  update(deltaTime = 0) {
+    if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
+      return;
+    }
+
+    const lift = this.getCurrentLift();
+    const belowThreshold = this.isLiftBelowThreshold(lift);
+
+    if (!belowThreshold) {
+      this._liftDisableAccumulator = 0;
+      return;
+    }
+
+    const totalBuilt = typeof this.count === 'number' ? this.count : 0;
+    if (totalBuilt <= 0) {
+      this._liftDisableAccumulator = 0;
+      return;
+    }
+
+    const currentlyActive = typeof this.active === 'number' ? this.active : 0;
+    if (currentlyActive <= 0) {
+      this._liftDisableAccumulator = 0;
+      return;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      return;
+    }
+
+    const disablePerSecond = totalBuilt * 0.01;
+    if (disablePerSecond <= 0) {
+      return;
+    }
+
+    this._liftDisableAccumulator += disablePerSecond * seconds;
+
+    if (this._liftDisableAccumulator < 1) {
+      return;
+    }
+
+    let toDisable = Math.floor(this._liftDisableAccumulator);
+    if (toDisable < 1) {
+      toDisable = 1;
+    }
+
+    this._liftDisableAccumulator = Math.max(
+      0,
+      this._liftDisableAccumulator - toDisable
+    );
+
+    const newActive = Math.max(0, currentlyActive - toDisable);
+    if (newActive === currentlyActive) {
+      return;
+    }
+
+    const change = newActive - currentlyActive;
+    this.active = newActive;
+
+    if (this.requiresLand && typeof this.adjustLand === 'function') {
+      this.adjustLand(change);
+    }
+
+    if (typeof this.updateResourceStorage === 'function') {
+      if (typeof resources !== 'undefined') {
+        this.updateResourceStorage(resources);
+      } else {
+        this.updateResourceStorage();
+      }
+    }
   }
 }
 
