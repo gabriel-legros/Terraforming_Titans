@@ -205,7 +205,12 @@ function attachAerostatBuoyancySection(container, structure) {
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI || {};
   const needsRebuild =
-    !existing.container || !existing.container.length || !existing.liftValue || !existing.mitigationValue;
+    !existing.container ||
+    !existing.container.length ||
+    !existing.liftValue ||
+    !existing.mitigationValue ||
+    !existing.limitValue ||
+    !existing.limitInfo;
   if (needsRebuild) {
     const card = document.createElement('div');
     card.classList.add('project-card', 'colony-buoyancy-card');
@@ -276,31 +281,27 @@ function attachAerostatBuoyancySection(container, structure) {
 
     body.appendChild(mitigationRow);
 
-    const notesContainer = document.createElement('div');
-    notesContainer.classList.add('colony-buoyancy-notes');
+    const limitRow = document.createElement('div');
+    limitRow.classList.add('colony-buoyancy-lift-row', 'colony-buoyancy-limit-row');
 
-    const notesTitle = document.createElement('div');
-    notesTitle.classList.add('colony-buoyancy-notes-title');
-    notesTitle.textContent = 'Notes';
-    notesContainer.appendChild(notesTitle);
+    const limitLabel = document.createElement('span');
+    limitLabel.classList.add('colony-buoyancy-lift-label', 'colony-buoyancy-limit-label');
+    limitLabel.textContent = 'Maximum Aerostats:';
+    limitRow.appendChild(limitLabel);
 
-    const notesList = document.createElement('ol');
-    notesList.classList.add('colony-buoyancy-notes-list');
+    const limitValue = document.createElement('span');
+    limitValue.classList.add('colony-buoyancy-lift-value', 'colony-buoyancy-limit-value');
+    limitValue.textContent = 'N/A';
+    limitRow.appendChild(limitValue);
 
-    const notes = [
-      'Aerostats are filled will breathable air and will gradually be forced to turn off when lift is below 0.2 kg/m^3.',
-      'The temperature maintenance multiplier is negated for factories with a total worker need adding up to the total colonists provided by aerostats.',
-      'The total number of aerostats that can be built is 0.2 per initial land, to minimize risks of collision.'
-    ];
+    const limitInfo = document.createElement('span');
+    limitInfo.classList.add('info-tooltip-icon');
+    limitInfo.innerHTML = '&#9432;';
+    limitInfo.title =
+      'At most 20% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
+    limitRow.appendChild(limitInfo);
 
-    notes.forEach(note => {
-      const item = document.createElement('li');
-      item.textContent = note;
-      notesList.appendChild(item);
-    });
-
-    notesContainer.appendChild(notesList);
-    body.appendChild(notesContainer);
+    body.appendChild(limitRow);
 
     const uiState = {
       container: card,
@@ -312,6 +313,8 @@ function attachAerostatBuoyancySection(container, structure) {
       liftInfo,
       mitigationValue,
       mitigationInfo,
+      limitValue,
+      limitInfo,
       expanded: true
     };
 
@@ -349,6 +352,27 @@ function updateAerostatBuoyancySection(structure) {
   const liftContext = getAerostatLiftContext();
   const lift = liftContext.lift;
   const molecularWeight = liftContext.molecularWeight;
+
+  let buildLimit = null;
+  if (typeof structure.getBuildLimit === 'function') {
+    const rawLimit = structure.getBuildLimit();
+    if (Number.isFinite(rawLimit)) {
+      buildLimit = Math.max(0, Math.floor(rawLimit));
+    }
+  } else if (typeof structure._getBuildLimit === 'function') {
+    const rawLimit = structure._getBuildLimit();
+    if (Number.isFinite(rawLimit)) {
+      buildLimit = Math.max(0, Math.floor(rawLimit));
+    }
+  }
+
+  const currentAerostats = Number.isFinite(structure?.count)
+    ? Math.max(0, Math.floor(structure.count))
+    : null;
+  const remainingCapacity =
+    buildLimit !== null && currentAerostats !== null
+      ? Math.max(0, buildLimit - currentAerostats)
+      : null;
 
   let mitigationShare = null;
   if (typeof getFactoryTemperatureMaintenancePenaltyReduction === 'function') {
@@ -402,6 +426,20 @@ function updateAerostatBuoyancySection(structure) {
       }
     }
     ui.mitigationInfo.title = mitigationTitle;
+  }
+
+  if (ui.limitValue) {
+    if (buildLimit === null) {
+      ui.limitValue.textContent = 'N/A';
+    } else {
+      ui.limitValue.textContent = formatNumber(buildLimit, false, 2);
+    }
+  }
+
+  if (ui.limitInfo) {
+    let limitTitle =
+      'At most 20% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
+    ui.limitInfo.title = limitTitle;
   }
 }
 // Update the colony-specific needs display

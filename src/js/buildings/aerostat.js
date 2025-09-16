@@ -8,9 +8,74 @@ const BaseColony =
 class Aerostat extends BaseColony {
   constructor(config, colonyName) {
     super(config, colonyName);
-    this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties.  Aerostats will form small communities, allowing the use of factories.';
     this._liftDisableAccumulator = 0;
     this._liftBelowThreshold = false;
+    this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.';
+  }
+
+  _getInitialLand() {
+    if (typeof terraforming === 'undefined') {
+      return 0;
+    }
+
+    const { initialLand } = terraforming;
+    return typeof initialLand === 'number' && isFinite(initialLand) && initialLand > 0
+      ? initialLand
+      : 0;
+  }
+
+  _getBuildLimit() {
+    const initialLand = this._getInitialLand();
+    if (initialLand <= 0) {
+      return 0;
+    }
+
+    return Math.floor(initialLand * 0.2);
+  }
+
+  getBuildLimit() {
+    return this._getBuildLimit();
+  }
+
+  _getRemainingBuildCapacity() {
+    const limit = this._getBuildLimit();
+    if (limit <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, limit - this.count);
+  }
+
+  build(buildCount = 1, activate = true) {
+    const remaining = this._getRemainingBuildCapacity();
+    if (remaining <= 0) {
+      return false;
+    }
+
+    const allowed = Math.min(buildCount, remaining);
+    if (allowed <= 0 || typeof BaseColony.prototype.build !== 'function') {
+      return false;
+    }
+
+    return super.build(allowed, activate);
+  }
+
+  maxBuildable(reservePercent = 0) {
+    const remaining = this._getRemainingBuildCapacity();
+    if (remaining <= 0) {
+      return 0;
+    }
+
+    let baseMax = remaining;
+    if (typeof BaseColony.prototype.maxBuildable === 'function') {
+      baseMax = super.maxBuildable(reservePercent);
+    }
+
+    if (!Number.isFinite(baseMax)) {
+      return remaining;
+    }
+
+    return Math.max(0, Math.min(baseMax, remaining));
   }
 
   getBuoyancySummary() {
@@ -184,6 +249,12 @@ class Aerostat extends BaseColony {
   }
 }
 
+const FACTORY_MITIGATION_EXCLUDED_BUILDINGS = ['oreMine'];
+
+function isBuildingEligibleForFactoryMitigation(id) {
+  return FACTORY_MITIGATION_EXCLUDED_BUILDINGS.indexOf(id) === -1;
+}
+
 function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
   const hasProvidedBuildings = Object.prototype.hasOwnProperty.call(
     context,
@@ -203,6 +274,8 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
 
   for (const id in buildingCollection) {
     if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
+
+    if (!isBuildingEligibleForFactoryMitigation(id)) continue;
 
     const building = buildingCollection[id];
     if (!building) continue;
@@ -233,7 +306,7 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
   }
 
   if (totalWorkerRequirement <= 0) {
-    return 0;
+    return 1;
   }
 
   const hasProvidedColonies = Object.prototype.hasOwnProperty.call(
@@ -288,13 +361,19 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
 Aerostat.getFactoryTemperatureMaintenancePenaltyReduction =
   getFactoryTemperatureMaintenancePenaltyReduction;
 
+Aerostat.isBuildingEligibleForFactoryMitigation =
+  isBuildingEligibleForFactoryMitigation;
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Aerostat,
-    getFactoryTemperatureMaintenancePenaltyReduction
+    getFactoryTemperatureMaintenancePenaltyReduction,
+    isBuildingEligibleForFactoryMitigation
   };
 } else {
   globalThis.Aerostat = Aerostat;
   globalThis.getFactoryTemperatureMaintenancePenaltyReduction =
     getFactoryTemperatureMaintenancePenaltyReduction;
+  globalThis.isBuildingEligibleForFactoryMitigation =
+    isBuildingEligibleForFactoryMitigation;
 }
