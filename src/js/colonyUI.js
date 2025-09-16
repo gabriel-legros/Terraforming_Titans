@@ -182,7 +182,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = 'Buoyancy';
+    title.textContent = 'Aerostats Details';
 
     header.appendChild(arrow);
     header.appendChild(title);
