@@ -461,7 +461,7 @@ function updateRender(force = false) {
     }
 
     if (isActive('terraforming')) {
-      updateTerraformingUI();
+      updateTerraformingUI(deltaSeconds);
       // Ensure the visualizer resizes once the tab becomes visible
       if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
         window.planetVisualizer.onResize();
@@ -520,14 +520,10 @@ function updateRender(force = false) {
     updateColonySlidersUI();
     renderProjects();
     updateResearchUI();
-    updateTerraformingUI();
+    updateTerraformingUI(deltaSeconds);
     updateStatisticsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
-  }
-
-  if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.animate === 'function') {
-    window.planetVisualizer.animate(deltaSeconds);
   }
 
   // Milestones often affect multiple views; keep updated

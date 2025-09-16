@@ -1,5 +1,23 @@
 // Function to create the terraforming UI elements
 
+if (typeof SubtabManager === 'undefined') {
+  if (typeof require === 'function') {
+    try {
+      SubtabManager = require('../subtab-manager.js');
+    } catch (e) {
+      // Fallback to browser global below
+    }
+  }
+  if (typeof SubtabManager === 'undefined' && typeof window !== 'undefined') {
+    SubtabManager = window.SubtabManager;
+  }
+}
+
+let terraformingSubtabManager = null;
+
+function getTerraformingSubtabManager() {
+  return terraformingSubtabManager;
+}
 
 function getGasRangeString(gasName) {
   // Check if the gas exists in the object
@@ -100,10 +118,23 @@ function resetTerraformingUI() {
     terraformingUICache[key] = {};
   });
   terraformingWorldInitialized = false;
+  terraformingSubtabManager = null;
 }
 
 function initializeTerraformingTabs() {
   cacheTerraformingTabElements();
+
+  if (!terraformingSubtabManager && typeof SubtabManager === 'undefined' && typeof window !== 'undefined') {
+    SubtabManager = window.SubtabManager;
+  }
+  if (!terraformingSubtabManager && typeof SubtabManager === 'function') {
+    terraformingSubtabManager = new SubtabManager('.terraforming-subtab', '.terraforming-subtab-content');
+    terraformingSubtabManager.onActivate(id => {
+      if (id === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
+        markMilestonesViewed();
+      }
+    });
+  }
 
   if (terraformingTabsInitialized) {
     return;
@@ -144,17 +175,43 @@ function activateTerraformingSubtab(subtabId) {
     return;
   }
 
-  terraformingTabElements.subtabs.forEach((t) => t?.classList.remove('active'));
-  terraformingTabElements.contents.forEach((c) => c?.classList.remove('active'));
+  const shouldMarkMilestones = subtabId === 'milestone-terraforming';
 
-  tab.classList.add('active');
-  if (content) {
-    content.classList.add('active');
-  }
+  if (terraformingSubtabManager && typeof terraformingSubtabManager.activate === 'function') {
+    terraformingSubtabManager.activate(subtabId);
+  } else {
+    terraformingTabElements.subtabs.forEach((t) => t?.classList.remove('active'));
+    terraformingTabElements.contents.forEach((c) => c?.classList.remove('active'));
 
-  if (subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
-    markMilestonesViewed();
+    tab.classList.add('active');
+    if (content) {
+      content.classList.add('active');
+    }
+
+    if (shouldMarkMilestones && typeof markMilestonesViewed === 'function') {
+      markMilestonesViewed();
+    }
   }
+}
+
+function isTerraformingWorldSubtabActive() {
+  if (terraformingSubtabManager && typeof terraformingSubtabManager.isActive === 'function') {
+    return terraformingSubtabManager.isActive('world-terraforming');
+  }
+  if (typeof document !== 'undefined') {
+    const worldContent = document.getElementById ? document.getElementById('world-terraforming') : null;
+    if (worldContent && worldContent.classList && worldContent.classList.contains('active')) {
+      return true;
+    }
+    if (document.querySelector) {
+      const worldButton = document.querySelector('.terraforming-subtab[data-subtab="world-terraforming"]');
+      if (worldButton && worldButton.classList && worldButton.classList.contains('active')) {
+        return true;
+      }
+    }
+    return false;
+  }
+  return true;
 }
 
 function setTerraformingSummaryVisibility(unlocked) {
@@ -290,7 +347,7 @@ function createTerraformingSummaryUI() {
   }
 
 // Function to update the terraforming UI elements
-function updateTerraformingUI() {
+function updateTerraformingUI(deltaSeconds) {
     updatePlayTimeDisplay();
     updateTemperatureBox();
     updateAtmosphereBox();
@@ -302,6 +359,21 @@ function updateTerraformingUI() {
 
     // Update the button state
     updateCompleteTerraformingButton();
+
+    const host = (typeof window !== 'undefined') ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+    if (!host || !host.planetVisualizer || typeof host.planetVisualizer.animate !== 'function') {
+      return;
+    }
+
+    if (!isTerraformingWorldSubtabActive()) {
+      return;
+    }
+
+    if (typeof deltaSeconds === 'number') {
+      host.planetVisualizer.animate(deltaSeconds);
+    } else {
+      host.planetVisualizer.animate();
+    }
   }
 
   function updatePlayTimeDisplay() {
@@ -1489,4 +1561,9 @@ function updateLifeBox() {
       button.disabled = true; // Disable the button
       button.textContent = 'Complete Terraforming';
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.getTerraformingSubtabManager = getTerraformingSubtabManager;
+  window.isTerraformingWorldSubtabActive = isTerraformingWorldSubtabActive;
 }
