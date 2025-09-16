@@ -31,6 +31,10 @@ class Aerostat extends BaseColony {
     return Math.floor(initialLand * 0.2);
   }
 
+  getBuildLimit() {
+    return this._getBuildLimit();
+  }
+
   _getRemainingBuildCapacity() {
     const limit = this._getBuildLimit();
     if (limit <= 0) {
