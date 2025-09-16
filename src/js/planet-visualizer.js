@@ -431,7 +431,7 @@
       this.cityLightsGroup = new THREE.Group();
       this.sphere.add(this.cityLightsGroup);
 
-      const geom = new THREE.SphereGeometry(0.015, 8, 8);
+      const geom = new THREE.SphereGeometry(0.005, 8, 8);
       const mat = new THREE.MeshBasicMaterial({ color: 0xffd37a }); // warm city light
 
       // Generate deterministic positions for stability across frames
