@@ -52,6 +52,11 @@ class Aerostat extends BaseColony {
       return false;
     }
 
+    const lift = this.getCurrentLift();
+    if (this.isLiftBelowThreshold(lift)) {
+      return false;
+    }
+
     const allowed = Math.min(buildCount, remaining);
     if (allowed <= 0 || typeof BaseColony.prototype.build !== 'function') {
       return false;
@@ -63,6 +68,10 @@ class Aerostat extends BaseColony {
   maxBuildable(reservePercent = 0) {
     const remaining = this._getRemainingBuildCapacity();
     if (remaining <= 0) {
+      return 0;
+    }
+
+    if (this.isLiftBelowThreshold()) {
       return 0;
     }
 
@@ -79,7 +88,13 @@ class Aerostat extends BaseColony {
   }
 
   getBuoyancySummary() {
-    return this.buoyancyNotes;
+    let summary = this.buoyancyNotes;
+    const lift = this.getCurrentLift();
+    if (this.isLiftBelowThreshold(lift)) {
+      summary +=
+        ' Current lift is below the minimum operational requirement, preventing aerostat activation and construction.';
+    }
+    return summary;
   }
 
   getMinimumOperationalLift() {
