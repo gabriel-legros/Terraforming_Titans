@@ -136,6 +136,7 @@ function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
   colonyDetails.classList.add('colony-details');
   colonyDetails.style.display = 'flex';
+  colonyDetails.style.flexWrap = 'wrap';
 
   structure.needBoxCache = {};
 
@@ -154,9 +155,84 @@ function createColonyDetails(structure) {
     colonyDetails.appendChild(needBox);
   }
 
+  attachAerostatBuoyancySection(colonyDetails, structure);
+
   return colonyDetails;
 }
 
+function attachAerostatBuoyancySection(container, structure) {
+  if (typeof Aerostat === 'undefined' || !(structure instanceof Aerostat)) {
+    return;
+  }
+
+  const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
+  const existing = structure.buoyancyUI || {};
+  if (!existing.container) {
+    const buoyancyContainer = document.createElement('div');
+    buoyancyContainer.classList.add('details-container', 'colony-buoyancy');
+    buoyancyContainer.style.flexBasis = '100%';
+    buoyancyContainer.style.marginTop = '8px';
+
+    const header = document.createElement('div');
+    header.classList.add('summary-header');
+
+    const arrow = document.createElement('span');
+    arrow.classList.add('summary-arrow');
+    arrow.textContent = '\u25B6';
+
+    const title = document.createElement('span');
+    title.textContent = 'Buoyancy';
+
+    header.appendChild(arrow);
+    header.appendChild(title);
+
+    const content = document.createElement('div');
+    content.classList.add('details-content');
+    content.style.marginTop = '6px';
+
+    const text = document.createElement('div');
+    text.classList.add('colony-buoyancy-text');
+    text.textContent = summaryText;
+    content.appendChild(text);
+
+    const uiState = {
+      container: buoyancyContainer,
+      header,
+      arrow,
+      content,
+      text,
+      expanded: true
+    };
+
+    header.addEventListener('click', () => {
+      uiState.expanded = !uiState.content.classList.toggle('hidden');
+      uiState.arrow.style.transform = uiState.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+    });
+
+    uiState.arrow.style.transform = 'rotate(90deg)';
+
+    buoyancyContainer.appendChild(header);
+    buoyancyContainer.appendChild(content);
+    structure.buoyancyUI = uiState;
+  } else {
+    existing.text.textContent = summaryText;
+    structure.buoyancyUI = existing;
+  }
+
+  container.appendChild(structure.buoyancyUI.container);
+  updateAerostatBuoyancySection(structure);
+}
+
+function updateAerostatBuoyancySection(structure) {
+  if (!structure || !structure.buoyancyUI) {
+    return;
+  }
+  const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
+  structure.buoyancyUI.text.textContent = summaryText;
+  const expanded = structure.buoyancyUI.expanded !== false;
+  structure.buoyancyUI.content.classList.toggle('hidden', !expanded);
+  structure.buoyancyUI.arrow.style.transform = expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+}
 // Update the colony-specific needs display
 function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
@@ -175,6 +251,8 @@ function updateColonyDetailsDisplay(structureRow, structure) {
     const isLuxury = luxuryResources[need];
     updateNeedBox(structure.needBoxCache[need], resources.colony[need].displayName, need, structure.filledNeeds[need], isLuxury, structure);
   }
+
+  updateAerostatBuoyancySection(structure);
 }
 
 // Helper function to create a need box with dynamic fill and color
@@ -301,3 +379,4 @@ globalThis.invalidateColonyNeedCache = invalidateColonyNeedCache;
 if (typeof module !== 'undefined') {
   module.exports = { createColonyDetails, updateColonyDetailsDisplay, rebuildColonyNeedCache, invalidateColonyNeedCache };
 }
+
