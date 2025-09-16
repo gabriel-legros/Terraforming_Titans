@@ -521,3 +521,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Space mirror facility now provides quick build buttons for mirrors and lanterns beneath their status cards.
 - Mirror and lantern quick build controls only appear once the Space Mirror Facility project is complete.
 - Regular researches remain fully visible after unlocking the space tab via a `stopHidingRegular` flag on the ResearchManager.
+- Resource disposal now removes zonal surface stores proportionally for discrete and continuous runs.
