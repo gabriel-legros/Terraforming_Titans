@@ -23,6 +23,7 @@ const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
+var isBuildingEligibleForFactoryMitigationHelper;
 if (typeof module !== 'undefined' && module.exports) {
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
@@ -80,7 +81,8 @@ if (typeof module !== 'undefined' && module.exports) {
     METHANE_COMBUSTION_PARAMETER_CONST = atmosphericChem.METHANE_COMBUSTION_PARAMETER;
 
     ({
-      getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper
+      getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper,
+      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper
     } = require('../buildings/aerostat.js'));
 } else {
     getZonePercentage = globalThis.getZonePercentage;
@@ -92,6 +94,8 @@ if (typeof module !== 'undefined' && module.exports) {
     METHANE_COMBUSTION_PARAMETER_CONST = globalThis.METHANE_COMBUSTION_PARAMETER;
     getFactoryTemperatureMaintenancePenaltyReductionHelper =
       globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
+    isBuildingEligibleForFactoryMitigationHelper =
+      globalThis.isBuildingEligibleForFactoryMitigation;
 }
 
 var getEcumenopolisLandFraction;
@@ -1268,6 +1272,11 @@ class Terraforming extends EffectableEntity{
           const b = buildings[id];
           if (!b || b.temperatureMaintenanceImmune) continue;
 
+          const countsTowardFactoryMitigation =
+            typeof isBuildingEligibleForFactoryMitigationHelper === 'function'
+              ? isBuildingEligibleForFactoryMitigationHelper(id)
+              : id !== 'oreMine';
+
           const workerNeed =
             typeof b.getTotalWorkerNeed === 'function'
               ? b.getTotalWorkerNeed()
@@ -1277,7 +1286,8 @@ class Terraforming extends EffectableEntity{
           if (
             maintenancePenalty > 1 &&
             factoryPenaltyReduction > 0 &&
-            workerNeed > 0
+            workerNeed > 0 &&
+            countsTowardFactoryMitigation
           ) {
             penaltyValue = 1 + (maintenancePenalty - 1) * (1 - factoryPenaltyReduction);
           }
