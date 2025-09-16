@@ -91,6 +91,14 @@ function create() {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
+  // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
+  if (typeof window !== 'undefined') {
+    window.terraformingManager = terraforming;
+  }
+  // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
+  if (typeof window !== 'undefined') {
+    window.terraformingManager = terraforming;
+  }
 
   // Initialize the Planet Visualizer (Terraforming -> World subtab)
   if (typeof window !== 'undefined' && typeof window.initializePlanetVisualizerUI === 'function') {
@@ -262,6 +270,34 @@ function initializeGameState(options = {}) {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
+
+  // Rebuild the Planet Visualizer with fresh references (resources/terraforming)
+  if (typeof window !== 'undefined') {
+    try {
+      const pv = window.planetVisualizer;
+      if (pv) {
+        // Detach resize listener
+        if (typeof pv.onResize === 'function') {
+          window.removeEventListener('resize', pv.onResize);
+        }
+        // Remove canvas
+        const canvas = pv.renderer && pv.renderer.domElement;
+        if (canvas && canvas.parentNode) {
+          canvas.parentNode.removeChild(canvas);
+        }
+        // Remove debug panel if present
+        if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
+          pv.debug.container.parentNode.removeChild(pv.debug.container);
+        }
+        window.planetVisualizer = null;
+      }
+      if (typeof window.initializePlanetVisualizerUI === 'function') {
+        window.initializePlanetVisualizerUI();
+      }
+    } catch (e) {
+      // Non-fatal if visualizer not yet available
+    }
+  }
 
   goldenAsteroid = new GoldenAsteroid();
 
