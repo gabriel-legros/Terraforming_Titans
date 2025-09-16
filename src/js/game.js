@@ -91,6 +91,19 @@ function create() {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
+  // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
+  if (typeof window !== 'undefined') {
+    window.terraformingManager = terraforming;
+  }
+  // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
+  if (typeof window !== 'undefined') {
+    window.terraformingManager = terraforming;
+  }
+
+  // Initialize the Planet Visualizer (Terraforming -> World subtab)
+  if (typeof window !== 'undefined' && typeof window.initializePlanetVisualizerUI === 'function') {
+    window.initializePlanetVisualizerUI();
+  }
 
   goldenAsteroid = new GoldenAsteroid();
 
@@ -110,6 +123,9 @@ function create() {
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
     initializeGameState();
+    if (typeof openTerraformingWorldTab === 'function') {
+      openTerraformingWorldTab();
+    }
   }
 }
 
@@ -254,6 +270,34 @@ function initializeGameState(options = {}) {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters);
   terraforming.initializeTerraforming();
+
+  // Rebuild the Planet Visualizer with fresh references (resources/terraforming)
+  if (typeof window !== 'undefined') {
+    try {
+      const pv = window.planetVisualizer;
+      if (pv) {
+        // Detach resize listener
+        if (typeof pv.onResize === 'function') {
+          window.removeEventListener('resize', pv.onResize);
+        }
+        // Remove canvas
+        const canvas = pv.renderer && pv.renderer.domElement;
+        if (canvas && canvas.parentNode) {
+          canvas.parentNode.removeChild(canvas);
+        }
+        // Remove debug panel if present
+        if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
+          pv.debug.container.parentNode.removeChild(pv.debug.container);
+        }
+        window.planetVisualizer = null;
+      }
+      if (typeof window.initializePlanetVisualizerUI === 'function') {
+        window.initializePlanetVisualizerUI();
+      }
+    } catch (e) {
+      // Non-fatal if visualizer not yet available
+    }
+  }
 
   goldenAsteroid = new GoldenAsteroid();
 
@@ -414,6 +458,42 @@ function updateRender(force = false) {
 
     if (isActive('terraforming')) {
       updateTerraformingUI();
+      // Ensure the visualizer resizes once the tab becomes visible
+      if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
+        window.planetVisualizer.onResize();
+      }
+    }
+
+    // Push world coverage to the visualizer for shading/tinting
+    if (typeof window !== 'undefined' && window.planetVisualizer) {
+      try {
+        const pv = window.planetVisualizer;
+        const mode = pv?.debug?.mode || 'game';
+        if (mode !== 'debug') {
+          // Global coverages for tinting
+          const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+          const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
+          const pct = (x) => Math.max(0, Math.min(100, x * 100));
+          pv.viz.coverage.water = pct(waterFrac);
+          pv.viz.coverage.life = pct(lifeFrac);
+          pv.viz.coverage.cloud = pv.viz.coverage.water;
+
+          // Zonal coverages for rendering bands
+          const zones = ['tropical', 'temperate', 'polar'];
+          const zonal = {};
+          for (const z of zones) {
+            // Returns fractions 0..1
+            const f = calculateZonalSurfaceFractions(terraforming, z);
+            zonal[z] = {
+              water: Math.max(0, Math.min(1, f.ocean || 0)),
+              ice: Math.max(0, Math.min(1, f.ice || 0)),
+            };
+          }
+          pv.viz.zonalCoverage = zonal;
+        }
+      } catch (e) {
+        // Non-fatal if terraforming utilities are not ready yet
+      }
     }
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
@@ -460,5 +540,8 @@ function startNewGame() {
   currentPlanetParameters = planetParameters.mars;
   totalPlayTimeSeconds = 0;
   initializeGameState();
+  if (typeof openTerraformingWorldTab === 'function') {
+    openTerraformingWorldTab();
+  }
 }
 

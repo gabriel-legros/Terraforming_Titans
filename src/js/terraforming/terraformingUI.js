@@ -16,6 +16,61 @@ function getGasRangeString(gasName) {
 
 let terraformingTabsInitialized = false;
 let terraformingSummaryInitialized = false;
+let terraformingWorldInitialized = false;
+
+const terraformingTabElements = {
+  subtabs: [],
+  contents: [],
+  buttonMap: {},
+  contentMap: {},
+  summaryButton: null,
+  summaryContent: null,
+  worldButton: null,
+  worldContent: null,
+  lifeButton: null,
+  lifeContent: null,
+  milestonesButton: null,
+  milestonesContent: null,
+};
+
+function cacheTerraformingTabElements() {
+  if (terraformingTabElements.subtabs.length > 0) {
+    return terraformingTabElements;
+  }
+
+  const subtabs = Array.from(document.getElementsByClassName('terraforming-subtab'));
+  const contents = Array.from(document.getElementsByClassName('terraforming-subtab-content'));
+
+  terraformingTabElements.subtabs = subtabs;
+  terraformingTabElements.contents = contents;
+  terraformingTabElements.buttonMap = {};
+  terraformingTabElements.contentMap = {};
+
+  subtabs.forEach((subtab) => {
+    const id = subtab?.dataset?.subtab;
+    if (id) {
+      terraformingTabElements.buttonMap[id] = subtab;
+    }
+  });
+
+  contents.forEach((content) => {
+    const id = content?.id;
+    if (id) {
+      terraformingTabElements.contentMap[id] = content;
+    }
+  });
+
+  terraformingTabElements.summaryButton = terraformingTabElements.buttonMap['summary-terraforming'] || null;
+  terraformingTabElements.summaryContent = terraformingTabElements.contentMap['summary-terraforming'] || null;
+  terraformingTabElements.worldButton = terraformingTabElements.buttonMap['world-terraforming'] || null;
+  terraformingTabElements.worldContent = terraformingTabElements.contentMap['world-terraforming'] || null;
+  terraformingTabElements.lifeButton = terraformingTabElements.buttonMap['life-terraforming'] || null;
+  terraformingTabElements.lifeContent = terraformingTabElements.contentMap['life-terraforming'] || null;
+  terraformingTabElements.milestonesButton = terraformingTabElements.buttonMap['milestone-terraforming'] || null;
+  terraformingTabElements.milestonesContent = terraformingTabElements.contentMap['milestone-terraforming'] || null;
+
+  return terraformingTabElements;
+}
 
 const terraformingUICache = {
   temperature: {},
@@ -28,42 +83,175 @@ const terraformingUICache = {
 
 function resetTerraformingUI() {
   terraformingSummaryInitialized = false;
+  terraformingTabsInitialized = false;
+  terraformingTabElements.subtabs = [];
+  terraformingTabElements.contents = [];
+  terraformingTabElements.buttonMap = {};
+  terraformingTabElements.contentMap = {};
+  terraformingTabElements.summaryButton = null;
+  terraformingTabElements.summaryContent = null;
+  terraformingTabElements.worldButton = null;
+  terraformingTabElements.worldContent = null;
+  terraformingTabElements.lifeButton = null;
+  terraformingTabElements.lifeContent = null;
+  terraformingTabElements.milestonesButton = null;
+  terraformingTabElements.milestonesContent = null;
   Object.keys(terraformingUICache).forEach(key => {
     terraformingUICache[key] = {};
   });
+  terraformingWorldInitialized = false;
 }
 
 function initializeTerraformingTabs() {
+  cacheTerraformingTabElements();
+
   if (terraformingTabsInitialized) {
     return;
   }
 
   // Set up event listeners for terraforming sub-tabs
-  document.querySelectorAll('.terraforming-subtab').forEach(subtab => {
-      subtab.addEventListener('click', () => {
-          const subtabContentId = subtab.dataset.subtab;
-          activateTerraformingSubtab(subtabContentId);
-      });
+  terraformingTabElements.subtabs.forEach((subtab) => {
+    if (!subtab) {
+      return;
+    }
+    subtab.addEventListener('click', () => {
+      const subtabContentId = subtab?.dataset?.subtab;
+      if (subtabContentId) {
+        activateTerraformingSubtab(subtabContentId);
+      }
+    });
   });
 
-  // Activate the 'energy' category
-  activateTerraformingSubtab('summary-terraforming');
+  // Activate the default subtab
+  activateTerraformingSubtab('world-terraforming');
 
   terraformingTabsInitialized = true;
+
+  // Build the World subtab content once (planet visualizer container)
+  createTerraformingWorldUI();
 }
 
 function activateTerraformingSubtab(subtabId) {
-  // Remove active class from all subtabs and subtab-contents
-  document.querySelectorAll('.terraforming-subtab').forEach((t) => t.classList.remove('active'));
-  document.querySelectorAll('.terraforming-subtab-content').forEach((t) => t.classList.remove('active'));
-  
-  // Add active class to the clicked subtab and corresponding content
-  document.querySelector(`[data-subtab="${subtabId}"]`).classList.add('active');
-  document.getElementById(subtabId).classList.add('active');
+  cacheTerraformingTabElements();
 
-  if(subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
+  const tab = terraformingTabElements.buttonMap[subtabId] || null;
+  const content = terraformingTabElements.contentMap[subtabId] || null;
+
+  if (!tab || tab.classList.contains('hidden')) {
+    if (subtabId !== 'world-terraforming') {
+      activateTerraformingSubtab('world-terraforming');
+    }
+    return;
+  }
+
+  terraformingTabElements.subtabs.forEach((t) => t?.classList.remove('active'));
+  terraformingTabElements.contents.forEach((c) => c?.classList.remove('active'));
+
+  tab.classList.add('active');
+  if (content) {
+    content.classList.add('active');
+  }
+
+  if (subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
     markMilestonesViewed();
   }
+}
+
+function setTerraformingSummaryVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { summaryButton, summaryContent } = terraformingTabElements;
+  if (!summaryButton || !summaryContent) {
+    return;
+  }
+
+  if (unlocked) {
+    summaryButton.classList.remove('hidden');
+    summaryContent.classList.remove('hidden');
+  } else {
+    summaryButton.classList.add('hidden');
+    summaryContent.classList.add('hidden');
+    if (summaryButton.classList.contains('active') || summaryContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
+function setTerraformingLifeVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { lifeButton, lifeContent } = terraformingTabElements;
+  if (!lifeButton || !lifeContent) {
+    return;
+  }
+
+  if (unlocked) {
+    lifeButton.classList.remove('hidden');
+    lifeContent.classList.remove('hidden');
+  } else {
+    lifeButton.classList.add('hidden');
+    lifeContent.classList.add('hidden');
+    if (lifeButton.classList.contains('active') || lifeContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
+function setTerraformingMilestonesVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { milestonesButton, milestonesContent } = terraformingTabElements;
+  if (!milestonesButton || !milestonesContent) {
+    return;
+  }
+
+  if (unlocked) {
+    milestonesButton.classList.remove('hidden');
+    milestonesContent.classList.remove('hidden');
+  } else {
+    milestonesButton.classList.add('hidden');
+    milestonesContent.classList.add('hidden');
+    if (milestonesButton.classList.contains('active') || milestonesContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
+function openTerraformingWorldTab() {
+  initializeTerraformingTabs();
+  if (typeof tabManager !== 'undefined' && tabManager && typeof tabManager.activateTab === 'function') {
+    tabManager.activateTab('terraforming');
+  } else if (typeof activateTab === 'function') {
+    activateTab('terraforming');
+  }
+  activateTerraformingSubtab('world-terraforming');
+}
+
+// Build the Terraforming -> World subtab content (once)
+function createTerraformingWorldUI() {
+  cacheTerraformingTabElements();
+  if (terraformingWorldInitialized) return;
+  const host = terraformingTabElements.worldContent;
+  if (!host) return;
+
+  // Clear any placeholder content and create the visualizer shell
+  while (host.firstChild) host.removeChild(host.firstChild);
+
+  // Container for WebGL canvas
+  const container = document.createElement('div');
+  container.className = 'planet-visualizer';
+  container.id = 'planet-visualizer';
+
+  // Optional overlay text (kept hidden by CSS but updated by the visualizer)
+  const overlay = document.createElement('div');
+  overlay.className = 'planet-visualizer-overlay';
+  overlay.id = 'planet-visualizer-overlay';
+
+  host.appendChild(container);
+  host.appendChild(overlay);
+
+  terraformingUICache.world = { container, overlay };
+  terraformingWorldInitialized = true;
 }
 
 function createTerraformingSummaryUI() {

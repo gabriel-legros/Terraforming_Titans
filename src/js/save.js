@@ -462,7 +462,11 @@ function loadGame(slotOrCustomString) {
         totalPlayTimeSeconds = gameState.totalPlayTimeSeconds;
       }
 
-      tabManager.activateTab('buildings');
+      if (typeof openTerraformingWorldTab === 'function') {
+        openTerraformingWorldTab();
+      } else if (tabManager && typeof tabManager.activateTab === 'function') {
+        tabManager.activateTab('terraforming');
+      }
 
     if(typeof applyDayNightSettingEffects === 'function'){
       applyDayNightSettingEffects();

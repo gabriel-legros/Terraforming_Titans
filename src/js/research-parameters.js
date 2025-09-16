@@ -994,6 +994,18 @@ const researchParameters = {
             onLoad : false
           },
           {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'summaryUnlocked',
+            value: true
+          },
+          {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'milestonesUnlocked',
+            value: true
+          },
+          {
             target: 'resource',
             resourceType: 'surface',
             targetId : 'liquidWater',
@@ -1178,6 +1190,12 @@ const researchParameters = {
           {
             target: 'lifeDesigner',
             type: 'enable'
+          },
+          {
+            target: 'terraforming',
+            type: 'booleanFlag',
+            flagId: 'lifeDesignerUnlocked',
+            value: true
           }
         ],
       },
