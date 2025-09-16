@@ -1,5 +1,10 @@
 let showObsoleteBuildings = false;
 
+const AEROSTAT_STANDARD_PRESSURE_PA = 101325;
+const AEROSTAT_STANDARD_TEMPERATURE_K = 273.15 + 21;
+const AEROSTAT_INTERNAL_AIR_MOL_WEIGHT = 29;
+const AEROSTAT_MINIMUM_OPERATIONAL_LIFT = 0.2;
+
 function createGrowthRateDisplay(){
   const controlsContainer = document.getElementById('colony-controls-container');
   if(!controlsContainer || document.getElementById('growth-rate-container')) return;
@@ -160,6 +165,38 @@ function createColonyDetails(structure) {
   return colonyDetails;
 }
 
+function getAerostatLiftContext() {
+  if (typeof calculateSpecificLift !== 'function' || typeof calculateMolecularWeight !== 'function') {
+    return { lift: null, molecularWeight: null };
+  }
+
+  const atmosphere = (typeof terraforming !== 'undefined' && terraforming && terraforming.resources && terraforming.resources.atmospheric)
+    ? terraforming.resources.atmospheric
+    : (typeof resources !== 'undefined' && resources && resources.atmospheric ? resources.atmospheric : null);
+
+  if (!atmosphere) {
+    return { lift: null, molecularWeight: null };
+  }
+
+  const externalMolWeight = calculateMolecularWeight(atmosphere);
+  if (!Number.isFinite(externalMolWeight) || externalMolWeight <= 0) {
+    return { lift: null, molecularWeight: null };
+  }
+
+  const lift = calculateSpecificLift(
+    AEROSTAT_STANDARD_PRESSURE_PA,
+    AEROSTAT_STANDARD_TEMPERATURE_K,
+    externalMolWeight,
+    AEROSTAT_INTERNAL_AIR_MOL_WEIGHT
+  );
+
+  if (!Number.isFinite(lift)) {
+    return { lift: null, molecularWeight: externalMolWeight };
+  }
+
+  return { lift, molecularWeight: externalMolWeight };
+}
+
 function attachAerostatBuoyancySection(container, structure) {
   if (typeof Aerostat === 'undefined' || !(structure instanceof Aerostat)) {
     return;
@@ -167,7 +204,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI || {};
-  const needsRebuild = !existing.container || !existing.container.classList.contains('project-card');
+  const needsRebuild = !existing.container || !existing.container.classList.contains('project-card') || !existing.liftValue;
   if (needsRebuild) {
     const card = document.createElement('div');
     card.classList.add('project-card', 'colony-buoyancy-card');
@@ -195,12 +232,61 @@ function attachAerostatBuoyancySection(container, structure) {
     text.textContent = summaryText;
     body.appendChild(text);
 
+    const liftRow = document.createElement('div');
+    liftRow.classList.add('colony-buoyancy-lift-row');
+
+    const liftLabel = document.createElement('span');
+    liftLabel.classList.add('colony-buoyancy-lift-label');
+    liftLabel.textContent = 'Current Lift:';
+    liftRow.appendChild(liftLabel);
+
+    const liftValue = document.createElement('span');
+    liftValue.classList.add('colony-buoyancy-lift-value');
+    liftValue.textContent = 'N/A';
+    liftRow.appendChild(liftValue);
+
+    const liftInfo = document.createElement('span');
+    liftInfo.classList.add('info-tooltip-icon');
+    liftInfo.innerHTML = '&#9432;';
+    liftInfo.title = 'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.';
+    liftRow.appendChild(liftInfo);
+
+    body.appendChild(liftRow);
+
+    const notesContainer = document.createElement('div');
+    notesContainer.classList.add('colony-buoyancy-notes');
+
+    const notesTitle = document.createElement('div');
+    notesTitle.classList.add('colony-buoyancy-notes-title');
+    notesTitle.textContent = 'Notes';
+    notesContainer.appendChild(notesTitle);
+
+    const notesList = document.createElement('ol');
+    notesList.classList.add('colony-buoyancy-notes-list');
+
+    const notes = [
+      'Aerostats are filled will breathable air and will gradually be forced to turn off when lift is below 0.2 kg/m^3.',
+      'The temperature maintenance multiplier is negated for factories with a total worker need adding up to the total colonists provided by aerostats.',
+      'The total number of aerostats that can be built is 0.2 per initial land, to minimize risks of collision.'
+    ];
+
+    notes.forEach(note => {
+      const item = document.createElement('li');
+      item.textContent = note;
+      notesList.appendChild(item);
+    });
+
+    notesContainer.appendChild(notesList);
+    body.appendChild(notesContainer);
+
     const uiState = {
       container: card,
       header,
       arrow,
       body,
       text,
+      liftValue,
+      liftInfo,
       expanded: true
     };
 
@@ -231,6 +317,34 @@ function updateAerostatBuoyancySection(structure) {
   const expanded = ui.expanded !== false;
   ui.container.classList.toggle('collapsed', !expanded);
   ui.arrow.textContent = expanded ? '\u25BC' : '\u25B6';
+  if (ui.body) {
+    ui.body.style.display = expanded ? '' : 'none';
+  }
+
+  const liftContext = getAerostatLiftContext();
+  const lift = liftContext.lift;
+  const molecularWeight = liftContext.molecularWeight;
+
+  if (ui.liftValue) {
+    if (lift === null) {
+      ui.liftValue.textContent = 'N/A';
+    } else {
+      const formattedLift = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)} kg/m³`;
+      ui.liftValue.textContent = formattedLift;
+    }
+  }
+
+  if (ui.liftInfo) {
+    let title = 'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.';
+    if (Number.isFinite(molecularWeight) && molecularWeight > 0) {
+      title += `\nExternal mean molecular weight: ${formatNumber(molecularWeight, false, 2)} g/mol.`;
+    }
+    if (lift !== null) {
+      title += `\nCurrent lift: ${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)} kg/m³.`;
+    }
+    title += `\nAerostat shutdown threshold: ${formatNumber(AEROSTAT_MINIMUM_OPERATIONAL_LIFT, false, 3)} kg/m³.`;
+    ui.liftInfo.title = title;
+  }
 }
 // Update the colony-specific needs display
 function updateColonyDetailsDisplay(structureRow, structure) {
