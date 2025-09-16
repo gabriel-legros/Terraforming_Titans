@@ -358,6 +358,10 @@ function produceResources(deltaTime, buildings) {
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
 
+    if (building && typeof building.update === 'function') {
+      building.update(deltaTime);
+    }
+
     // Set productivity to 0 if it's nighttime and the building is inactive during the night
     if (!isDay && building.dayNightActivity) {
       building.productivity = 0;
