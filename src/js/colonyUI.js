@@ -204,7 +204,8 @@ function attachAerostatBuoyancySection(container, structure) {
 
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI || {};
-  const needsRebuild = !existing.container || !existing.container.length || !existing.liftValue;
+  const needsRebuild =
+    !existing.container || !existing.container.length || !existing.liftValue || !existing.mitigationValue;
   if (needsRebuild) {
     const card = document.createElement('div');
     card.classList.add('project-card', 'colony-buoyancy-card');
@@ -253,6 +254,28 @@ function attachAerostatBuoyancySection(container, structure) {
 
     body.appendChild(liftRow);
 
+    const mitigationRow = document.createElement('div');
+    mitigationRow.classList.add('colony-buoyancy-lift-row', 'colony-buoyancy-mitigation-row');
+
+    const mitigationLabel = document.createElement('span');
+    mitigationLabel.classList.add('colony-buoyancy-lift-label', 'colony-buoyancy-mitigation-label');
+    mitigationLabel.textContent = 'Temperature Maintenance Mitigation:';
+    mitigationRow.appendChild(mitigationLabel);
+
+    const mitigationValue = document.createElement('span');
+    mitigationValue.classList.add('colony-buoyancy-lift-value', 'colony-buoyancy-mitigation-value');
+    mitigationValue.textContent = 'N/A';
+    mitigationRow.appendChild(mitigationValue);
+
+    const mitigationInfo = document.createElement('span');
+    mitigationInfo.classList.add('info-tooltip-icon');
+    mitigationInfo.innerHTML = '&#9432;';
+    mitigationInfo.title =
+      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.';
+    mitigationRow.appendChild(mitigationInfo);
+
+    body.appendChild(mitigationRow);
+
     const notesContainer = document.createElement('div');
     notesContainer.classList.add('colony-buoyancy-notes');
 
@@ -287,6 +310,8 @@ function attachAerostatBuoyancySection(container, structure) {
       text,
       liftValue,
       liftInfo,
+      mitigationValue,
+      mitigationInfo,
       expanded: true
     };
 
@@ -325,6 +350,14 @@ function updateAerostatBuoyancySection(structure) {
   const lift = liftContext.lift;
   const molecularWeight = liftContext.molecularWeight;
 
+  let mitigationShare = null;
+  if (typeof getFactoryTemperatureMaintenancePenaltyReduction === 'function') {
+    const rawMitigation = getFactoryTemperatureMaintenancePenaltyReduction();
+    if (Number.isFinite(rawMitigation)) {
+      mitigationShare = Math.max(0, Math.min(1, rawMitigation));
+    }
+  }
+
   if (ui.liftValue) {
     if (lift === null) {
       ui.liftValue.textContent = 'N/A';
@@ -344,6 +377,31 @@ function updateAerostatBuoyancySection(structure) {
     }
     title += `\nAerostat shutdown threshold: ${formatNumber(AEROSTAT_MINIMUM_OPERATIONAL_LIFT, false, 3)} kg/m³.`;
     ui.liftInfo.title = title;
+  }
+
+  if (ui.mitigationValue) {
+    if (mitigationShare === null) {
+      ui.mitigationValue.textContent = 'N/A';
+    } else {
+      ui.mitigationValue.textContent = `${formatNumber(mitigationShare * 100, false, 1)}%`;
+    }
+  }
+
+  if (ui.mitigationInfo) {
+    let mitigationTitle =
+      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.';
+    if (mitigationShare === null) {
+      mitigationTitle += '\nMitigation data unavailable.';
+    } else {
+      mitigationTitle += `\nMitigation applied: ${formatNumber(mitigationShare * 100, false, 2)}% of the penalty is negated.`;
+      if (mitigationShare < 1) {
+        mitigationTitle +=
+          '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.';
+      } else {
+        mitigationTitle += '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+      }
+    }
+    ui.mitigationInfo.title = mitigationTitle;
   }
 }
 // Update the colony-specific needs display
