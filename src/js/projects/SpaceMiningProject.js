@@ -276,8 +276,8 @@ class SpaceMiningProject extends SpaceshipProject {
       const gainPerShip = this.calculateSpaceshipGainPerShip();
       const resource = Object.keys(gainPerShip.surface)[0];
       const multiplier = perSecond
-        ? this.assignedSpaceships * (1000 / this.getEffectiveDuration())
-        : this.assignedSpaceships;
+        ? this.assignedSpaceships * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
+        : 1;
       return { surface: { [resource]: gainPerShip.surface[resource] * multiplier } };
     }
     return super.calculateSpaceshipTotalResourceGain(perSecond);
