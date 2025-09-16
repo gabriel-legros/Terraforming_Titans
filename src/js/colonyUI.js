@@ -204,7 +204,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI || {};
-  const needsRebuild = !existing.container || !existing.container.classList.contains('project-card') || !existing.liftValue;
+  const needsRebuild = !existing.container || !existing.container.length || !existing.liftValue;
   if (needsRebuild) {
     const card = document.createElement('div');
     card.classList.add('project-card', 'colony-buoyancy-card');
