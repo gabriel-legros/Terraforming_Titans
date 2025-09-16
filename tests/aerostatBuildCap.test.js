@@ -7,6 +7,11 @@ const OriginalColony = global.Colony;
 const originalResources = global.resources;
 const originalBuildings = global.buildings;
 const originalTerraforming = global.terraforming;
+const originalCalculateMolecularWeight = global.calculateMolecularWeight;
+const originalCalculateSpecificLift = global.calculateSpecificLift;
+const originalMinimumLift = global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+
+let currentLift = 0.3;
 
 class TestColony extends Building {
   constructor(config, name) {
@@ -43,6 +48,7 @@ describe('Aerostat build cap', () => {
     global.maintenanceFraction = 0;
     global.dayNightCycle = { isDay: () => true };
     global.resources = {
+      atmospheric: {},
       colony: {},
       surface: {
         land: {
@@ -59,7 +65,11 @@ describe('Aerostat build cap', () => {
       underground: {}
     };
     global.buildings = {};
-    global.terraforming = { initialLand: 100 };
+    global.terraforming = { initialLand: 100, resources: { atmospheric: {} } };
+    currentLift = 0.5;
+    global.calculateMolecularWeight = jest.fn(() => 44);
+    global.calculateSpecificLift = jest.fn(() => currentLift);
+    global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT = 0.2;
   });
 
   afterEach(() => {
@@ -72,6 +82,21 @@ describe('Aerostat build cap', () => {
     global.resources = originalResources;
     global.buildings = originalBuildings;
     global.terraforming = originalTerraforming;
+    if (typeof originalCalculateMolecularWeight === 'undefined') {
+      delete global.calculateMolecularWeight;
+    } else {
+      global.calculateMolecularWeight = originalCalculateMolecularWeight;
+    }
+    if (typeof originalCalculateSpecificLift === 'undefined') {
+      delete global.calculateSpecificLift;
+    } else {
+      global.calculateSpecificLift = originalCalculateSpecificLift;
+    }
+    if (typeof originalMinimumLift === 'undefined') {
+      delete global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+    } else {
+      global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT = originalMinimumLift;
+    }
   });
 
   test('build enforces 0.2 per initial land cap', () => {
@@ -103,5 +128,26 @@ describe('Aerostat build cap', () => {
     expect(aerostat.maxBuildable()).toBe(8);
     aerostat.count = 20;
     expect(aerostat.maxBuildable()).toBe(0);
+  });
+
+  test('build fails when atmospheric lift is below the operational threshold', () => {
+    currentLift = 0.05;
+    const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
+    expect(aerostat.build(1)).toBe(false);
+    expect(aerostat.count).toBe(0);
+  });
+
+  test('maxBuildable returns zero when lift cannot support aerostat colonies', () => {
+    currentLift = 0.05;
+    const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
+    expect(aerostat.maxBuildable()).toBe(0);
+  });
+
+  test('buoyancy summary warns about insufficient lift preventing construction', () => {
+    currentLift = 0.05;
+    const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
+    expect(aerostat.getBuoyancySummary()).toContain(
+      'preventing aerostat activation and construction'
+    );
   });
 });
