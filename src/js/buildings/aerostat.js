@@ -8,7 +8,7 @@ const BaseColony =
 class Aerostat extends BaseColony {
   constructor(config, colonyName) {
     super(config, colonyName);
-    this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties.';
+    this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties.  Aerostats will form small communities, allowing the use of factories.';
   }
 
   getBuoyancySummary() {
