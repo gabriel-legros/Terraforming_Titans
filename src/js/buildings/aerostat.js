@@ -1,7 +1,7 @@
 class Aerostat extends Colony {
   constructor(config, colonyName) {
     super(config, colonyName);
-    this.buoyancyNotes = 'Envelope lift systems nominal.';
+    this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties.';
   }
 
   getBuoyancySummary() {
