@@ -60,6 +60,17 @@ const autobuildCostTracker = {
     }
 };
 
+function resetAutoBuildPartialFlags(structures) {
+    if (!structures) return;
+    for (const name in structures) {
+        if (!Object.prototype.hasOwnProperty.call(structures, name)) continue;
+        const structure = structures[name];
+        if (structure) {
+            structure.autoBuildPartial = false;
+        }
+    }
+}
+
 // Construction Office state and UI
 const constructionOfficeState = {
     autobuilderActive: true,
@@ -235,6 +246,7 @@ function restoreAutoBuildSettings(structures) {
 }
 
 function autoBuild(buildings, delta = 0) {
+    resetAutoBuildPartialFlags(buildings);
     if (typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive) {
         return;
     }
@@ -280,6 +292,9 @@ function autoBuild(buildings, delta = 0) {
         let buildCount = 0;
         const reserve = constructionOfficeState.strategicReserve;
         const canBuildFull = building.canAfford(requiredAmount, reserve);
+        if (!canBuildFull) {
+            building.autoBuildPartial = true;
+        }
         if (canBuildFull) {
             buildCount = requiredAmount;
         } else {

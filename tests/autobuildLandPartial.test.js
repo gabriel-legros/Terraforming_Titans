@@ -24,5 +24,6 @@ describe('autoBuild limited by land', () => {
     autoBuild({ c: building });
 
     expect(building.build).toHaveBeenCalledWith(5, false);
+    expect(building.autoBuildPartial).toBe(true);
   });
 });

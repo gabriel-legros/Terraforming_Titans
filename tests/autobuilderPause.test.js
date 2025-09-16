@@ -18,8 +18,10 @@ describe('autobuilder global pause', () => {
 
     building.build.mockClear();
     constructionOfficeState.autobuilderActive = false;
+    building.autoBuildPartial = true;
     autoBuild({ A: building });
     expect(building.build).not.toHaveBeenCalled();
+    expect(building.autoBuildPartial).toBe(false);
 
     constructionOfficeState.autobuilderActive = true; // reset
   });
