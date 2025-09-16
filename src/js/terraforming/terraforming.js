@@ -22,6 +22,7 @@ const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
+var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 if (typeof module !== 'undefined' && module.exports) {
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
@@ -77,6 +78,10 @@ if (typeof module !== 'undefined' && module.exports) {
     const atmosphericChem = require('./atmospheric-chemistry.js');
     runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
     METHANE_COMBUSTION_PARAMETER_CONST = atmosphericChem.METHANE_COMBUSTION_PARAMETER;
+
+    ({
+      getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper
+    } = require('../buildings/aerostat.js'));
 } else {
     getZonePercentage = globalThis.getZonePercentage;
     estimateCoverage = globalThis.estimateCoverage;
@@ -85,6 +90,8 @@ if (typeof module !== 'undefined' && module.exports) {
     co2CycleInstance = globalThis.co2Cycle;
     runAtmosphericChemistry = globalThis.runAtmosphericChemistry;
     METHANE_COMBUSTION_PARAMETER_CONST = globalThis.METHANE_COMBUSTION_PARAMETER;
+    getFactoryTemperatureMaintenancePenaltyReductionHelper =
+      globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
 }
 
 var getEcumenopolisLandFraction;
@@ -1163,6 +1170,13 @@ class Terraforming extends EffectableEntity{
       return 1 + 0.01 * (temp - MAINTENANCE_PENALTY_THRESHOLD);
     }
 
+    getFactoryTemperatureMaintenancePenaltyReduction() {
+      if (typeof getFactoryTemperatureMaintenancePenaltyReductionHelper === 'function') {
+        return getFactoryTemperatureMaintenancePenaltyReductionHelper();
+      }
+      return 0;
+    }
+
     // Calculates the sum of absolute pressure changes for each gas since initialization
     calculateTotalPressureDelta() {
         let totalDelta = 0; // Use a local variable, no need to store this.totalDelta
@@ -1210,6 +1224,7 @@ class Terraforming extends EffectableEntity{
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
       const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
+      const factoryPenaltyReduction = this.getFactoryTemperatureMaintenancePenaltyReduction();
 
       for (let i = 1; i <= 7; i++) {
         const energyPenaltyEffect = {
@@ -1251,15 +1266,29 @@ class Terraforming extends EffectableEntity{
       if (typeof buildings !== 'undefined') {
         for (const id in buildings) {
           const b = buildings[id];
-          if (b && !b.temperatureMaintenanceImmune) {
-            addEffect({
-              effectId: 'temperatureMaintenancePenalty',
-              target: 'building',
-              targetId: id,
-              type: 'maintenanceMultiplier',
-              value: maintenancePenalty
-            });
+          if (!b || b.temperatureMaintenanceImmune) continue;
+
+          const workerNeed =
+            typeof b.getTotalWorkerNeed === 'function'
+              ? b.getTotalWorkerNeed()
+              : b.requiresWorker || 0;
+
+          let penaltyValue = maintenancePenalty;
+          if (
+            maintenancePenalty > 1 &&
+            factoryPenaltyReduction > 0 &&
+            workerNeed > 0
+          ) {
+            penaltyValue = 1 + (maintenancePenalty - 1) * (1 - factoryPenaltyReduction);
           }
+
+          addEffect({
+            effectId: 'temperatureMaintenancePenalty',
+            target: 'building',
+            targetId: id,
+            type: 'maintenanceMultiplier',
+            value: penaltyValue
+          });
         }
       }
 
