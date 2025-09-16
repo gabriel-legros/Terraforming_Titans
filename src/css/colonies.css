@@ -28,6 +28,11 @@
     justify-self: start;
   }
 
+  #colony-sliders-container .card-title,
+  #construction-office-container .card-title {
+      font-size: calc(14px * 1.1);
+  }
+
   .growth-rate-line {
     display: flex;
     align-items: center;
