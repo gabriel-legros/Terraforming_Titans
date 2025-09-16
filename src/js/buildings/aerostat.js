@@ -11,6 +11,67 @@ class Aerostat extends BaseColony {
     this.buoyancyNotes = 'Aerostats are immune to the pressure and temperature penalties.  Aerostats will form small communities, allowing the use of factories.';
   }
 
+  _getInitialLand() {
+    if (typeof terraforming === 'undefined') {
+      return 0;
+    }
+
+    const { initialLand } = terraforming;
+    return typeof initialLand === 'number' && isFinite(initialLand) && initialLand > 0
+      ? initialLand
+      : 0;
+  }
+
+  _getBuildLimit() {
+    const initialLand = this._getInitialLand();
+    if (initialLand <= 0) {
+      return 0;
+    }
+
+    return Math.floor(initialLand * 0.2);
+  }
+
+  _getRemainingBuildCapacity() {
+    const limit = this._getBuildLimit();
+    if (limit <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, limit - this.count);
+  }
+
+  build(buildCount = 1, activate = true) {
+    const remaining = this._getRemainingBuildCapacity();
+    if (remaining <= 0) {
+      return false;
+    }
+
+    const allowed = Math.min(buildCount, remaining);
+    if (allowed <= 0 || typeof BaseColony.prototype.build !== 'function') {
+      return false;
+    }
+
+    return super.build(allowed, activate);
+  }
+
+  maxBuildable(reservePercent = 0) {
+    const remaining = this._getRemainingBuildCapacity();
+    if (remaining <= 0) {
+      return 0;
+    }
+
+    let baseMax = remaining;
+    if (typeof BaseColony.prototype.maxBuildable === 'function') {
+      baseMax = super.maxBuildable(reservePercent);
+    }
+
+    if (!Number.isFinite(baseMax)) {
+      return remaining;
+    }
+
+    return Math.max(0, Math.min(baseMax, remaining));
+  }
+
   getBuoyancySummary() {
     return this.buoyancyNotes;
   }
