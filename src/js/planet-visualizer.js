@@ -12,6 +12,9 @@
       this.elements = {
         container: null,
         overlay: null,
+        host: null,
+        tabContent: null,
+        tabButton: null,
       };
 
       // three.js members
@@ -40,6 +43,7 @@
       this._spawnAcc = 0; // accumulator for continuous spawning
       this._spawnRate = 6; // ships per second when below target
       this._lastSliderSync = 0; // throttle game-mode slider syncing
+      this._wasVisible = false;
 
       // Render sizing
       this.width = 0;
@@ -173,6 +177,17 @@
         this.syncSlidersFromGame();
       }
 
+      const host = container ? container.parentElement : null;
+      this.elements.host = host;
+      if (!this.elements.tabContent && host && typeof host.closest === 'function') {
+        this.elements.tabContent = host.closest('.tab-content');
+      }
+      if (!this.elements.tabButton && typeof document !== 'undefined' && document.querySelector) {
+        this.elements.tabButton = document.querySelector('.tab[data-tab="terraforming"]');
+      }
+
+      this._wasVisible = false;
+
       this.updateOverlayText();
       // Create initial crater texture matching current pressure
       this.updateSurfaceTextureFromPressure(true);
@@ -195,7 +210,59 @@
       this.renderer.setSize(w, h);
     }
 
+    isTabVisible() {
+      const { container } = this.elements;
+      if (!container) return false;
+
+      let host = this.elements.host;
+      if (!host || (typeof document !== 'undefined' && document.body && !document.body.contains(host))) {
+        host = container.parentElement;
+        this.elements.host = host;
+      }
+      if (!host) return false;
+      if (host.classList && (host.classList.contains('hidden') || !host.classList.contains('active'))) {
+        return false;
+      }
+
+      let tabContent = this.elements.tabContent;
+      if (!tabContent || (typeof document !== 'undefined' && document.body && !document.body.contains(tabContent))) {
+        tabContent = host.closest && host.closest('.tab-content');
+        this.elements.tabContent = tabContent;
+      }
+      if (!tabContent) return false;
+      if (tabContent.classList && (tabContent.classList.contains('hidden') || !tabContent.classList.contains('active'))) {
+        return false;
+      }
+
+      if (!this.elements.tabButton && typeof document !== 'undefined' && document.querySelector) {
+        this.elements.tabButton = document.querySelector('.tab[data-tab="terraforming"]');
+      }
+      const tabButton = this.elements.tabButton;
+      if (tabButton && tabButton.classList) {
+        if (tabButton.classList.contains('hidden') || !tabButton.classList.contains('active')) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     animate() {
+      const visible = this.isTabVisible();
+      if (!visible) {
+        const now = performance.now();
+        this._lastAnimTime = now;
+        this._lastCloudTime = now;
+        this._wasVisible = false;
+        requestAnimationFrame(this.animate);
+        return;
+      }
+
+      if (!this._wasVisible) {
+        this._wasVisible = true;
+        this.onResize();
+      }
+
       // Planet rotation + geosynchronous camera orbit
       let angle;
       if (typeof dayNightCycle !== 'undefined' && dayNightCycle && typeof dayNightCycle.getDayProgress === 'function') {
