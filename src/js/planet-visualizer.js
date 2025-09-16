@@ -135,7 +135,8 @@
       this.camera.lookAt(0, 0, 0);
 
       // Sun (directional) + a small visible marker sphere
-      const initialIllum = (currentPlanetParameters.celestialParameters.starLuminosity ?? 1) || 1;
+      const initialIllum = this.getGameIllumination();
+      this.viz.illum = initialIllum;
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2); // direction toward the planet
       this.scene.add(this.sunLight);
@@ -920,6 +921,20 @@
       return (resources?.colony?.colonists?.value) || 0;
     }
 
+    getGameIllumination() {
+      const flux = this.terraforming?.luminosity?.modifiedSolarFlux;
+      if (typeof flux === 'number' && Number.isFinite(flux)) {
+        return Math.max(0, flux) / 1000;
+      }
+      if (typeof currentPlanetParameters !== 'undefined' && currentPlanetParameters?.celestialParameters) {
+        const fallback = currentPlanetParameters.celestialParameters.starLuminosity;
+        if (typeof fallback === 'number' && Number.isFinite(fallback)) {
+          return fallback;
+        }
+      }
+      return 1;
+    }
+
     updateCityLights() {
       const pop = this.getCurrentPopulation();
       const target = Math.max(0, Math.min(this.maxCityLights, Math.floor((pop / 1_000_000) * this.maxCityLights)));
@@ -1035,7 +1050,7 @@
       const cel = currentPlanetParameters.celestialParameters;
 
       // Illumination
-      const illum = cel.starLuminosity ?? 1;
+      const illum = this.getGameIllumination();
       r.illum.range.value = String(illum);
       r.illum.number.value = String(illum);
       // Inclination sync from local viz (default 15 deg)
@@ -1138,7 +1153,7 @@
       try {
         const cel = currentPlanetParameters.celestialParameters;
         // Illumination
-        const illum = cel.starLuminosity ?? 1;
+        const illum = this.getGameIllumination();
         if (r.illum) { r.illum.range.value = String(illum); r.illum.number.value = String(illum); }
         // Population
         const popNow = resources?.colony?.colonists?.value || 0;
