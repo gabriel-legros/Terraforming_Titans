@@ -322,4 +322,33 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   margin: 0;
 }
 
+.colony-buoyancy-card .colony-buoyancy-lift-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-lift-label {
+  font-weight: 600;
+}
+
+.colony-buoyancy-card .colony-buoyancy-lift-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes {
+  margin-top: 12px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes-list {
+  margin: 0 0 0 20px;
+  padding: 0;
+}
+
 
