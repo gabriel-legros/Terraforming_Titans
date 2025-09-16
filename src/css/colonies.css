@@ -313,36 +313,13 @@ input[type="range"].pretty-slider::-moz-range-thumb {
     border-bottom: 1px solid #dee2e6;
     padding-bottom: 5px;
 }
-.colony-buoyancy {
-  width: 100%;
-}
-
-.colony-buoyancy .summary-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-body:not(.dark-mode) .colony-buoyancy .summary-header {
-  color: #005a9e;
-}
-
-.colony-buoyancy .summary-arrow {
-  transition: transform 0.2s;
-}
-
-.colony-buoyancy .details-content {
-  margin-top: 6px;
-  padding-left: 16px;
-  border-left: 1px solid #444;
-}
-
-body:not(.dark-mode) .colony-buoyancy .details-content {
-  border-left-color: #ccc;
-}
-
-.colony-buoyancy-text {
+.colony-buoyancy-card .card-body {
   font-size: 0.9em;
+  color: #495057;
 }
+
+.colony-buoyancy-card .colony-buoyancy-text {
+  margin: 0;
+}
+
+

@@ -167,52 +167,50 @@ function attachAerostatBuoyancySection(container, structure) {
 
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI || {};
-  if (!existing.container) {
-    const buoyancyContainer = document.createElement('div');
-    buoyancyContainer.classList.add('details-container', 'colony-buoyancy');
-    buoyancyContainer.style.flexBasis = '100%';
-    buoyancyContainer.style.marginTop = '8px';
+  const needsRebuild = !existing.container || !existing.container.classList.contains('project-card');
+  if (needsRebuild) {
+    const card = document.createElement('div');
+    card.classList.add('project-card', 'colony-buoyancy-card');
+    card.style.flexBasis = '100%';
 
     const header = document.createElement('div');
-    header.classList.add('summary-header');
+    header.classList.add('card-header');
 
     const arrow = document.createElement('span');
-    arrow.classList.add('summary-arrow');
-    arrow.textContent = '\u25B6';
+    arrow.classList.add('collapse-arrow');
+    arrow.textContent = '\u25BC';
 
     const title = document.createElement('span');
+    title.classList.add('card-title');
     title.textContent = 'Buoyancy';
 
     header.appendChild(arrow);
     header.appendChild(title);
 
-    const content = document.createElement('div');
-    content.classList.add('details-content');
-    content.style.marginTop = '6px';
+    const body = document.createElement('div');
+    body.classList.add('card-body');
 
     const text = document.createElement('div');
     text.classList.add('colony-buoyancy-text');
     text.textContent = summaryText;
-    content.appendChild(text);
+    body.appendChild(text);
 
     const uiState = {
-      container: buoyancyContainer,
+      container: card,
       header,
       arrow,
-      content,
+      body,
       text,
       expanded: true
     };
 
     header.addEventListener('click', () => {
-      uiState.expanded = !uiState.content.classList.toggle('hidden');
-      uiState.arrow.style.transform = uiState.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+      uiState.expanded = !uiState.expanded;
+      updateAerostatBuoyancySection(structure);
     });
 
-    uiState.arrow.style.transform = 'rotate(90deg)';
-
-    buoyancyContainer.appendChild(header);
-    buoyancyContainer.appendChild(content);
+    card.appendChild(header);
+    card.appendChild(body);
     structure.buoyancyUI = uiState;
   } else {
     existing.text.textContent = summaryText;
@@ -228,10 +226,11 @@ function updateAerostatBuoyancySection(structure) {
     return;
   }
   const summaryText = structure.getBuoyancySummary ? structure.getBuoyancySummary() : 'Buoyancy telemetry pending.';
-  structure.buoyancyUI.text.textContent = summaryText;
-  const expanded = structure.buoyancyUI.expanded !== false;
-  structure.buoyancyUI.content.classList.toggle('hidden', !expanded);
-  structure.buoyancyUI.arrow.style.transform = expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+  const ui = structure.buoyancyUI;
+  ui.text.textContent = summaryText;
+  const expanded = ui.expanded !== false;
+  ui.container.classList.toggle('collapsed', !expanded);
+  ui.arrow.textContent = expanded ? '\u25BC' : '\u25B6';
 }
 // Update the colony-specific needs display
 function updateColonyDetailsDisplay(structureRow, structure) {
