@@ -924,7 +924,7 @@
     getGameIllumination() {
       const flux = this.terraforming?.luminosity?.modifiedSolarFlux;
       if (typeof flux === 'number' && Number.isFinite(flux)) {
-        return Math.max(0, flux) / 1000;
+        return Math.max(0, flux) / 250;
       }
       if (typeof currentPlanetParameters !== 'undefined' && currentPlanetParameters?.celestialParameters) {
         const fallback = currentPlanetParameters.celestialParameters.starLuminosity;
