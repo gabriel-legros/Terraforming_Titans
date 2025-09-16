@@ -21,6 +21,7 @@ class Building extends EffectableEntity {
     this.autoBuildBasis = 'population';
     this.workerPriority = 0; // -1 low, 0 normal, 1 high
     this.autoActiveEnabled = false;
+    this.autoBuildPartial = false;
 
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
