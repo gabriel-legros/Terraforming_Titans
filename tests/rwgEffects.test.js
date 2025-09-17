@@ -72,7 +72,7 @@ function initContext(projectKey, classification) {
       b: { terraformed: true, original: { archetype, override: { classification: { archetype } } } },
       c: {
         terraformed: true,
-        original: { archetype: 'rocky', override: { classification: { archetype: 'rocky' } } },
+        original: { archetype: 'super-earth', override: { classification: { archetype: 'super-earth' } } },
       },
     },
   };

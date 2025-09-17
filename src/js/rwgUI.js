@@ -220,8 +220,7 @@ function updateRandomWorldUI() {
   if (rwgTypeEl) {
     Array.from(rwgTypeEl.options).forEach(opt => {
       if (opt.value === 'auto') return;
-      const key = opt.value === 'rocky' ? 'hot-rocky' : opt.value;
-      const locked = typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(key) : false;
+      const locked = typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(opt.value) : false;
       if (opt.disabled === locked) return; // No change needed
 
       const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '');
@@ -313,7 +312,7 @@ function drawSingle(seed, options) {
   const typeOptions = typeSelect
     ? Array.from(typeSelect.options)
         .filter(opt => !opt.disabled && opt.value !== 'auto')
-        .map(opt => opt.value === 'rocky' ? 'hot-rocky' : opt.value)
+        .map(opt => opt.value)
     : undefined;
 
   let res = generateRandomPlanet(sStr, {
