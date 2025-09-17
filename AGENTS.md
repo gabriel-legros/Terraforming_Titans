@@ -124,403 +124,55 @@ second time they speak in a chapter to help clarify who is talking.
 Warp Gate Command provides a dedicated subtab for managing teams that embark on timed operations through the warp gate. Players recruit custom-named members with classes and skills, track their health, and choose operation difficulty. Operations grant experience and Alien artifacts, while R&D and Facilities menus offer equipment and training upgrades. Statistics and logs persist across planets so progress carries over between worlds.
 
 ## Space Mirror Facility
-Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally. The display now shows average and day temperature in each zone.
-The temperature column header updates to match the current Celsius or Kelvin setting.
-Oversight now includes a collapsible **Finer Controls** section for manual mirror and Hyperion Lantern assignments with adjustable step sizes and per‑zone auto‑assign checkboxes that funnel leftover units into the selected zones while locking sliders or buttons accordingly.
-Unassigned mirrors or lanterns no longer affect luminosity, and lantern controls remain hidden until Hyperion Lanterns are unlocked.
-calculateZoneSolarFluxWithFacility now respects the Unassigned slider so idle mirrors and lanterns contribute no flux.
+Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally and the display shows both average and day temperatures for each zone. Column headers track the active Celsius or Kelvin setting so readouts stay consistent.
+
+Oversight now includes a collapsible **Finer Controls** section for manual mirror and Hyperion Lantern assignments with adjustable step sizes and per‑zone auto‑assign checkboxes that funnel leftover units into the selected zones while locking sliders or buttons accordingly. Slider totals are clamped so percentages always sum to 100 and the Unassigned slider keeps its width in sync with other controls when finer controls are enabled. The focusing slider carries an integrated reversal toggle to preserve layout, and reversal options only appear once Hyperion Lanterns are unlocked.
+
+An advanced oversight mode prepares temperature and water targets, applies bisection to allocate mirrors and lanterns, and respects water melt targets when prioritizing zones. Reversed mirrors deduct flux while lanterns continue adding energy, and the luminosity tooltip explains the 6 µW/m² floor on outbound flux. Idle mirrors and lanterns contribute no flux because `calculateZoneSolarFluxWithFacility` now honours the Unassigned slider.
+
+Once the Space Mirror Facility project completes, quick build buttons appear beneath mirror and lantern status cards to streamline construction. Manual slider edits, Any Zone assignments, and the reversible reflect mode all synchronise with advanced controls so assignments persist correctly across saves and travel.
 
 ## Random World Generator
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
 
-# Changelogs
-- Cargo rocket continuous mode only produces or consumes resources when the Run checkbox is enabled.
-- The collector progress bar continues updating after the receiver is finished and controls stay disabled until the receiver completes.
-- The solar collector UI remains hidden until the receiver is built.
-- The collector cost now appears on the Dyson Swarm card.
-- Sustain costs for active projects register as `project` consumption in tooltips.
-- Projects with ongoing resources check supplies one second ahead.
-- The luminosity box shows ground and surface albedo separately.
-- Surface albedo deltas compare against initial values, listing black dust, water, ice and biomass percentages.
-- Projects now save and load themselves with dedicated methods overridden by subclasses.
-- Dyson Swarm collector duration scales with the number of terraformed planets and the button shows the time required.
-- Day-night cycle duration derives from each planet's rotation period, treating one Earth day as one minute.
-- Added a `system-pop-up` story event type for instant messages.
-- Added a `setGameSpeed` console command to multiply time progression for the current session.
-- Added Cloning Concept advanced research enabling energy-intensive cloning facilities to produce colonists.
-- Planetary thruster Spin and Motion cards include Energy Spent columns that persist when investment is toggled; motion energy resets only after a moon escapes its parent.
-- Planetary thruster invest selections persist through saves and reloads with checkboxes and targets restored on load.
-- Satellite projects display discovered and maximum deposit counts.
-- Dyson Swarm collectors contribute their generated energy to the colony instead of only displaying it.
-- Moon-based planetary thrusters show an Escape Δv row and hide spiral Δv when bound to a parent body.
-- Escaped bodies keep their parent reference but set `hasEscapedParent` to track the event.
-- ProjectManager applies project gains each tick via `applyCostAndGain`, keeping `estimateCostAndGain` as a pure rate estimate.
-- Spaceship projects now switch to proportional, per-ship continuous resource flow when more than 100 spaceships are assigned; smaller fleets resolve costs on start and gains on completion, and rates match at the 100-ship transition.
-- Automation checkboxes pause continuous spaceship projects when resources or environmental thresholds fail and resume them once conditions recover.
-- Ore and geothermal satellite UI split Amount and Deposits into separate columns with aligned controls and fonts matching space mining projects.
-- Space Disposal project displays the expected temperature reduction when jettisoning greenhouse gases and shows per-second rates in continuous mode.
-- Infrared Vision research immediately removes the day-night penalty on Ice Harvesters when the cycle is disabled.
-- Android project assignments keep androids in storage and tooltips show worker and project usage.
-- Androids above their storage cap no longer contribute workers, and excess project assignments are reduced.
-- Worker and android resource tooltips reflect effective android counts when storage is over capacity.
-- Auto-build percentages for buildings and colonies persist through planet travel while all auto-build checkboxes reset.
-- Auto-build settings can target population or worker counts.
-- Colonists slightly over their cap (by less than 0.01) are cropped to the cap instead of decaying.
-- Repeatable projects clear their completed flag on load when more repetitions remain.
-- Deeper mining proceeds without android assignments, running at normal speed.
-- Colony upgrade cost text highlights only resources that are unaffordable.
-- Solis tab features an Alien Artifact section unlocked by a flag, letting players donate artifacts for points and buy Research Upgrades that auto-research early infrastructure, including the Terraforming Bureau.
-- Added a Pre-travel save slot that automatically stores the game state before planet travel and remains hidden when empty.
-- Solis artifact donation uses the correct resource pool, properly displaying owned artifacts and enabling donations.
-- Solis artifact donations grant 10 points per artifact instead of 100.
-- Solis research upgrade lists upcoming technologies horizontally and crosses out each as it is purchased, clarifying that one tech is unlocked per purchase.
-- Chapter 13.2 reward triggers a one-time alert on the Solis tab.
-- Solis point rewards now scale with the square root of terraformed worlds and display two decimal places.
-- Solis point display now shows two decimal places, and alien artifact trade points scale with the Solis point multiplier.
-- Alien artifact donation UI displays Solis points per artifact based on the current terraformed world bonus.
-- Fixed Dyson Swarm collectors resetting after planet travel; collector counts persist across worlds while the receiver must be rebuilt on each planet.
-- Collector persistence is managed through ProjectManager travel state so only the Dyson Swarm's collector count carries over between planets.
-- Space Storage allows storing glass and preserves its capacity and stored resources across planet travel using travel state save/load.
-- Space Storage allows storing superalloys when the Superalloys research is completed.
-- Skill points are granted only when traveling from a fully terraformed planet to one not yet terraformed.
-- `getTerraformedPlanetCountIncludingCurrent` in SpaceManager avoids double counting the current planet when applying terraforming bonuses.
-- Autosave slot can be manually overwritten through the Save button.
-- Land resource tooltip notes that land can be recovered by turning off the corresponding building.
-- Space UI shows original planetary properties for story worlds without seed or type.
-- Cargo rocket ship purchases add a flat +1 funding cost per ship divided by previously terraformed worlds (excluding the current planet) and decay by 1% per second.
-- Story world original properties list partial atmospheric pressures for key gases instead of a single total.
-- Cargo rocket ship purchases raise future ship prices based on terraformed planets and decay by 1% per second.
-- Metal export cap counts previously terraformed worlds excluding the current planet.
-- SpaceManager exposes `getTerraformedPlanetCountExcludingCurrent` for modules needing previously terraformed world counts.
-- Life design biodome points scale with active Biodomes instead of total built.
-- Cargo rocket spaceship tooltip appears immediately to the right of the Spaceships label.
-- Pre-travel saves no longer update SpaceManager's current world before travel.
-- Space UI caches the last world key and seed to skip redundant detail rendering.
-- Innovation Initiative boosts android research output.
-- Alien artifact resource values persist across planet travel, mirroring advanced research.
-- Resource tooltip timeline reserves space with a blank line when no time to full or empty is shown, preventing flicker.
-- Radiation penalty values below 0.01% are hidden from the UI, and radiation display in the terraforming UI shows mSv/day without `formatNumber`, with values below 0.01 mSv/day appearing as 0.
-- Water overflow counts as production and is included in resource totals instead of showing a separate overflow line.
-- Star luminosity is a celestial parameter set during Terraforming construction, ensuring new games have correct solar flux.
-- SpaceManager stores the random world seed as `currentPlanetKey` when visiting procedural planets, unifying key handling for story and procedural worlds.
-- Optical depth tooltip lists contributions from each gas.
-- Optical depth tooltip refreshes its gas contributions in real time while hovered.
-- Optical depth tooltip uses resource display names.
-- `getTerraformedPlanetCount` now counts terraformed procedural worlds via `getAllPlanetStatuses`.
-- Space Storage withdraw mode shows an icon when colony storage is full.
-- Advanced research production scales with the number of terraformed worlds.
-- Planetary thrusters adjust day-night cycle duration when spin changes.
-- Surface flow rates scale with planet radius, so larger planets experience faster hydrological movement.
-- Spaceship projects in continuous mode display "Continuous" or "Stopped" instead of a progress bar.
-- Continuous spaceship projects revert to discrete timing when assignments fall to 100 ships or fewer.
-- Continuous spaceship projects display total gains as per-second rates.
-- Continuous spaceship projects display total costs as per-second rates.
-- Gas-importing space mining caps per-tick transfers at the configured pressure limit.
-- Dynamic water-import space mining projects scale per-second gains with the assigned ship count.
-- Space Storage project only marks ship transfers as continuous, leaving expansion progress discrete.
-- Added a setting to preserve project auto-start selections between worlds.
-- Water overflow no longer contributes to resource totals but remains displayed in tooltips.
-- Project auto-start now runs within ProjectManager and requires the `automateSpecialProjects` flag.
-- Carbon and nitrogen importation projects now start with configurable default pressure limits.
-- Cargo Rocket project cannot start without selecting any resources.
-- Space Storage continuous mode transfers resources each tick and is toggled by the Auto Start Ships checkbox.
-- Space Storage displays transfer rate under Cost & Gain.
-- Added Superalloys advanced research unlocking Superalloy Foundry, Superalloy Fusion Reactor, and Ecumenopolis District.
-- Space Storage ship transfers scale with assigned ships, matching rates across the 100-ship transition.
-- Space Storage transfers appear in resource tooltips as production or consumption.
-- Space Storage expansion duration no longer decreases when ships are assigned; transfer duration scales separately with ship count.
-- Space Storage ship transfer duration uses a fixed 100 s base unaffected by terraforming bonuses but scales with global duration multipliers, while expansion timing honors the same effects without depending on ship assignments.
-- WGC shop offers a Superalloy production multiplier upgrade unlocked by Superalloys research, capped at 900 purchases, and increasing production by 100% per purchase.
-- Added a maintenanceMultiplier attribute for resources; superalloys use a multiplier of 0 and maintenance costs scale with each resource's multiplier.
-- Added placeholder Nanotechnology Stage I advanced research costing 125k.
-- Ecumenopolis District coverage now reduces land available for life, lowers life terraforming requirements, and updates the life UI accordingly.
-- Ecumenopolis District now provides 100M android storage.
-- Colonies can upgrade to the Ecumenopolis District via the upgrade button and require full superalloy cost.
-- The "Wait for full capacity" option only requires resources to fill a single ship.
-- Self-replicating ship cap counts ships assigned to projects.
-- Colony upgrade button scales with selected build count, showing 10 → 1 by default with costs and effects adjusted accordingly.
-- Growth rate tooltip lists individual multipliers and hides neutral (+0/x1) entries.
-=======
-- Continuous spaceship and Dyson Swarm projects apply resource changes through resource.js accumulatedChanges.
-- Continuous spaceship projects start without stored energy and scale resource flow to available amounts.
-- Project productivity now sums costs and gains across all active projects and scales each by the worst resource ratio, so projects without costs (like the Dyson Swarm) still run at full output and ordering no longer matters.
-- Project resource rates in tooltips display productivity-adjusted values.
-- Continuous projects display "Stopped" when their auto-start checkbox is disabled.
-- Auto start checkbox shows 'Run' when spaceship projects enter continuous mode and reverts when they return to discrete operation.
-- Colony upgrades can be performed with fewer than ten buildings remaining, charging full cost for the final upgrade.
-- Colony upgrade costs scale with missing lower-tier buildings, adding proportional water and land costs and increasing metal and glass requirements accordingly.
-- Colony upgrades consume active colonies before inactive ones and require land for inactive replacements.
-- Added a `treatAsBuilding` flag for certain projects so they can run during the building phase. The Dyson Swarm Receiver no longer uses this flag or produces energy directly; its power output is now handled by the Dyson Receiver building.
-- Population growth skill multiplier displays as 'Awakening' in the growth rate tooltip.
-- Autobuild cost tracker preserves overflow milliseconds for accurate 10-second spending averages.
-- Life designer shift-clicking ±1/±10 buttons spends or removes all available points.
-- Projects with auto-start disabled skip cost/gain estimation, simplifying resource rate handling.
-- Life designer ±1/±10 buttons include tooltips noting Shift spends or recovers all points.
-- High-gravity worlds (>10 m/s²) show a warning in the random world generator and reduce colony happiness by 5% per m/s² above 10, capped at 100%.
-- Worlds generated with a natural magnetosphere start with the magnetic shield effect and display as "Natural magnetosphere" in the terraforming summary.
-- Random World Generator UI indicates whether a world has a magnetosphere.
-- Added Underground Land Expansion research and android-assisted project for subterranean land growth.
-- Underground Land Expansion project now operates even without androids, shows land expansion progress, and adds 0.1% of the planet's starting land per completion.
-- Underground Land Expansion android speed scales with initial land and features a distinct tooltip from Deeper mining.
-- Random World Generator temperature fields (Mean/Day/Night T) display '-' until the world is equilibrated.
-- Added Orbital Rings advanced research unlocking a repeatable orbital ring megastructure that counts as additional terraformed worlds and can draw from space storage resources.
-- Resource category headers include collapse triangles like special project cards.
-- Orbital Ring project retains active status and remaining time through planet travel, continuing construction mid-journey.
-- Worker resource can display negative values and hides its rate when `hideRate` is enabled in planet parameters.
-- Resources with `hideRate` enabled no longer display a per-second rate in the resource list.
-- Construction Office UI card unlocks with research and sits to the right of colony sliders.
-- Construction Office card manages autobuilder status and strategic reserve, persisting settings through saves and travel.
-- Strategic reserve input includes an info tooltip explaining its effect.
-- Construction Office visibility updates dynamically based on research unlocks.
-- Autobuilder respects a strategic reserve percentage, preventing builds that would dip resources below the configured reserve.
-- Life UI checkmark table lists day and night temperatures for each zone.
-- Buildings requiring workers can be prioritized via a checkbox, allocating workers to them before others.
-- Geothermal power generation research only appears on worlds with geothermal deposits.
-- Storage Depot maintenance cost reduced to 10% of its previous value.
-- Self Replicating Ships research now costs 8M advanced research points.
-- Dyson Swarm project displays when collectors exist even without receiver tech, hiding receiver energy output while allowing manual and automatic collector deployment.
-- Cargo Rocket project applies rates only once by honoring the `applyRates` flag in `estimateProjectCostAndGain`.
-- Cargo Rocket project becomes continuous after Ship trading research, immediately granting any pending gains and purchasing resources with funding over time.
-- Cargo Rocket continuous mode displays a "Continuous" progress bar and a "Run" auto-start label.
-- Milestone festival color changed to a warm green.
-- Save-to-file default filenames include the current world name and timestamp.
-- Carbon asteroid mining can auto-disable when O2 pressure exceeds a threshold (default 15 kPa), and space mining pressure controls now label gases like CO2 and N2.
-- Terraforming Bureau oversight adds an auto-disable option for oxygen factories when O2 pressure exceeds a configurable threshold (default 15 kPa).
-- Terraforming Bureau automation for GHG and oxygen factories now only operates once the Terraforming Bureau research is completed, preventing the checkboxes from functioning prematurely. Atmospheric Monitoring oversight for carbon and nitrogen space mining projects likewise requires its research before automation activates.
-- GHG factory automation now produces only the greenhouse gas required to reach the target temperature using Newton's method.
-- GHG factory automation supports automatic reversal: when reverse is enabled, it disables between two thresholds and removes greenhouse gases or calcite above the upper limit.
-- GHG automation temperature thresholds maintain at least a 1 °C gap, adjusting the other threshold when one changes.
-- Oxygen factory automation now produces only the oxygen required to reach the target pressure using Newton's method.
-- Life designer day/night temperature rows display survival and growth status icons, and the separate survival temperature row has been removed.
-- Production, consumption, and maintenance displays scale with selected build count.
-- Life UI requirement icons display tooltips explaining failure when hovered.
-- Nanotechnology system tracks a nanobot swarm with growth and Stage I sliders, consuming excess power, silicon, and producing glass while limiting maintenance. Silicon consumption draws from accumulated changes plus stored value, swarm size scales with land area, and only 1e15 bots survive travel.
-- Nanobot growth rate displays turn orange when power limits prevent reaching the optimal rate.
-- Nanobot silicon growth boost scales with actual silicon consumption rather than energy availability.
-- Nanotech UI shows both optimal and actual energy and silicon consumption rates, highlighting shortfalls in orange.
-- Nanotech swarm energy usage can be limited to a player-defined percentage of total energy production (default 10%).
-- Nanotech energy limit input now supports percentage of power or absolute (MW) modes via a dropdown with an explanatory tooltip, multiplying absolute entries by one million.
-- Story and random world travel now share preparation logic, saving Space Storage state and capping nanobots before initializing the new planet.
-- Resource disposal and space export in continuous mode display total export as per-second rates.
-- Space export and disposal projects use a shared `getShipCapacity` method so ship capacity effects scale assignment limits and per-ship amounts.
-- Advanced Logistics skill now boosts Space Storage ship transfer capacity.
-- Starting a new game now fully resets the nanotech swarm and its sliders.
-- Projects can be reordered based on visibility rather than unlocked status, using a new `isVisible` method; Dyson Swarm has a custom implementation.
-- Random world equilibration now weights final day and night temperatures by each zone's surface area percentage.
-- Planetary thrusters clamp spin and motion changes to their targets, preventing overshoot.
-- Planetary thrusters now apply delta v toward the target, accelerating or decelerating depending on whether the goal is lower or higher.
-- Added Next-Generation Fusion research doubling Superalloy Fusion Reactor energy production.
-- Temperature penalty for colonies now affects Ecumenopolis Districts.
-- Colony energy penalty from temperature is continuous, scaling with distance below 15 °C or above 20 °C.
-- High atmospheric pressure increases colony metal and glass costs, scaling with the square root of total pressure in atmospheres and shown in the atmosphere box when active.
-- High temperatures now increase colony maintenance costs by 1% per kelvin above 373.15 K, shown in the temperature box when active.
-- WGC logs now format artifact gains with two decimal places.
-- WGC team cards cache DOM nodes for buttons, inputs, selects, progress bars, logs and HP bars, rebuilding these caches when cards redraw or team counts change for faster updates.
-- Methane melting and freezing now respect methane ice coverage.
-- Planetary thrusters operate as a continuous project, drawing power from ongoing energy production instead of only stored energy.
-- Projects with sustain costs draw from current production before dipping into stored resources so they can run continuously.
-- Planetary thrusters appear in the Energy resource rate tooltip, listing their consumption.
-- Freezing processes scale with liquid surface area and accept liquid coverage functions.
-- Added decillion, undecillion, and duodecillion number units.
-- Melting and freezing rate calculations use cached coverage values.
-- Hydrology surface flow uses cached zonal coverage values.
-- Evaporation and sublimation rate calculations use cached zonal coverage values.
-- fastForwardToEquilibrium now checks zonal biomass and buried hydrocarbons for stability, matching equilibrate.
-- Hydrology surface flow now uses durationSeconds instead of deltaTime to avoid floating point drift.
-- `getTerraformedPlanetCountExcludingCurrent` now deducts the current world's orbital ring, if present, when tallying previously terraformed worlds.
-- Story projects stop running and cannot be started on worlds other than their designated planet.
-- Resource tooltips display total production and total consumption at the top of their tables.
-- Atmospheric oxygen and methane above 1 Pa combust into water and carbon dioxide at a rate proportional to the world's surface area and the excess pressure product.
-- Water overflow in resource tooltips now appears in its own section beneath Consumption and Maintenance.
-- Surface ice and liquid water tooltips display overflow in a dedicated section.
-- Added spacing before the Autobuild Cost section in resource tooltips.
-- Surface albedo tooltip explains how biomass, water, and ice coverage percentages are determined.
-- Water evaporation, condensation, and phase-change logic in `terraforming.js` now uses `waterCycle.processZone`.
- - Structures have an auto-set-active checkbox inside the "Set active to target" button to match target each tick, and its state persists through saves. The checkbox is unchecked by default.
-- calculateInitialValues now records initial solar flux so luminosity deltas compare against the baseline value.
-- Luminosity tooltips and the Space Mirror Facility now display average solar flux (dividing day flux by four to account for day/night cycles and sunlight angle).
- - Autobuild now constructs structures inactive and the auto-set-active option is disabled by default, letting players queue builds without immediately increasing active counts.
-- Autobuild now constructs structures inactive and the auto-set-active option (enabled by default) applies activation afterward, letting players queue builds without immediately increasing active counts.
-- Added a Statistics section under Save and Settings showing total playtime across all planets.
-- Added setting so enabling autobuild also toggles Set Active to Target, enabled by default.
-- Autobuild priority and auto-active settings persist through planet travel.
-- Settings page arranged in three columns with temperature and dark mode options first.
-- Colony tab split into separate structures and controls sections, placing the Nanocolony below colony controls.
-- Storage capacity display now scales with the selected build count.
-- Added an Any Zone option to space mirror finer controls for global distribution based on slider percentages.
-- Any Zone row now supports manual 0/±/Max assignment buttons for mirrors and lanterns.
-- Satellites project now features an Auto Max option that raises build count to the current colonist cap.
-- Space mirror oversight sliders now clamp values so none go negative and their total always sums to 100.
-- Space disposal projects can auto-disable gas exports when atmospheric pressure falls below a configurable kPa threshold.
-- Pressure automation controls on space mining and disposal projects now include a unit dropdown for kPa or Pa, defaulting to kPa.
-- The Any Zone slider in the space mirror facility can be increased, taking percentage from the largest other sliders so the total remains 100%.
-- Land usage recalculates on save load, and inactive structure construction checks land without reserving it.
-- Space mirror facility now verifies slider percentages each tick, clamping out-of-range values and ensuring they total 100%.
-- Space mirror facility now supports a reversible reflect mode with Toward World/Away From World selection.
-- Any Zone in space mirror finer controls now includes a reversal checkbox.
-- Reversed space mirrors now subtract flux from their zones while lanterns continue adding, and zonal flux is floored at 6 µW/m²; the luminosity tooltip notes this limit.
-- Metal exportation project shows assigned ship count as current/maximum so players know remaining capacity.
-- Space export project's max export capacity line includes a tooltip explaining Earth's metal purchase limit.
-- Max export capacity tooltip is generated once and no longer updates each tick, making it readable.
-- Max export capacity tooltip now displays an info icon so the explanation is visible.
-- Space mirror finer controls show counts of unassigned mirrors and lanterns available for manual assignment.
-- Space mirror reversal buttons again affect slider mode, and finer control checkboxes now flip flux per zone.
-- Space mirror facility supports an advanced oversight mode that removes the Any Zone assignment and prepares temperature and water targets.
-- Space storage water withdrawals can target colony water or surface via a withdraw-mode dropdown.
-- Manual building toggle buttons now uncheck the Set active to target option when clicked.
-- Colony and nanocolony sliders now share styling, differing only in width.
-- Colony slider settings are managed by a `ColonySlidersManager` extending `EffectableEntity`.
-- Production and consumption displays update existing DOM nodes without rebuilding, preventing orphaned elements.
-- Nanobot growth rate now shows three decimal places, and the nanobot count and cap turn green when maxed.
-- Cargo Rocket auto-start now saves selected cargo and clears selections when auto-start is off on load.
-- Research UI caches DOM nodes for faster updates and rebuilds caches when research order changes.
-- Space Storage project caches ship and expansion auto-start labels and rebuilds them when the automation UI is recreated.
-- Project automation settings cache their child elements for faster visibility checks and refresh the cache when options change.
-- Life UI caches modify buttons, temperature units, and status table cells, refreshing caches when designs change or the table rebuilds.
-- Colony need boxes cache DOM references for faster updates and rebuild when colony needs or structures change.
-- Project resource-selection grids cache their input elements for quicker cost calculations and rebuild those caches when grids are reset.
-- Space UI caches Random World tab elements and rebuilds the cache when the tabs regenerate.
-- Calcite aerosol decays with a 240 second half-life and its consumption appears in resource rates.
-- Surface, actual albedo, and solar flux tooltips now refresh in real time with breakdowns.
-- Luminosity box includes Cloud & Haze penalty applied to modified solar flux.
-- Effective temperature without atmosphere uses the pre-penalty modified solar flux.
-- Zonal solar panel multipliers apply the Cloud & Haze penalty for life energy calculations.
-- Actual albedo tooltip lists per-zone values and component contributions; total is shown outside the tooltip.
-- Ground albedo tooltip shows white dust albedo and coverage, hiding coverage lines when a dust type has 0%.
-- Colony resource tooltips show a Net Change (including autobuild) line before production, subtracting the last 10 seconds of autobuild cost from the net rate. Other resources display Net Change without autobuild.
-- Space storage tooltips separate transfer and expansion costs, and resource tooltips ignore consumption when costs are paid from space storage.
-- Resource tooltips split into three columns when too tall to fit above or below the viewport, prioritizing below placement.
-- Workers tooltip lists how many workers come from colonists above the android count.
-- Resource tooltips only update while hovered, reducing unnecessary DOM work.
-- GHG and oxygen factory settings now export from `src/js/buildings/GhgFactory.js` and `src/js/buildings/OxygenFactory.js`.
-- Reverse button toggles dust or GHG factory recipes even when no factories are built.
-- Random World Generator history lists visited worlds with names, types, seeds, states and departure times.
-- Random world departures now log timestamp and Ecumenopolis land coverage.
-- Space storage total cost display now shows cost per second in continuous mode.
-- Random World Generator re-renders after travel to respect new travel locks.
-- Space mirror facility advanced oversight now allocates mirrors and lanterns via bisection on zone temperature using `updateSurfaceTemperature`.
-- Solis shop offers research points, and the advanced oversight upgrade now appears under Research Upgrades beneath the research auto-complete upgrade once `solisUpgrade1` is set.
-- Space mirror reversal column hides until reversal is unlocked, removing its checkboxes when unavailable.
-- Optical depth display now shows three decimal places.
-- Added a `force` argument to `updateRender` to bypass tab visibility checks for a one-time UI update when pausing via Save & Settings.
-- Journal reconstruction now resolves `$WGC_TEAM_LEADER$` placeholders using current team leader names when loading saves.
-- Reversal buttons now appear immediately when unlocked by story effects, without requiring a reload.
-- Productivity calculation now accounts for resource production gained from maintenance conversions.
-- Project productivity now only considers continuous projects and ignores cost-free producers when determining available resources.
-- Finer controls collapse toggle now uses triangle icons instead of a plus, matching resource lists.
-- dayNightTemperaturesModel now forwards aerosol column mass to albedo calculations.
-- Solis shop upgrades respect max purchase limits, hiding cost and buy buttons once the limit is reached.
-- Life growth and decay now interpolate across a ±0.5 K band around survivable temperature limits, showing a warning icon when growth is reduced.
-- Biomass resource display shows red exclamation marks for zones with net decay.
-- Zonal resource changes now use nested maps grouped by resource, simplifying atmospheric and precipitation handling.
-- Added ResourceCycle base class to centralize per-zone phase-change calculations.
-- Introduced WaterCycle class extending ResourceCycle with an exported instance for evaporation and sublimation calculations.
-- Added MethaneCycle and CO2Cycle subclasses extending ResourceCycle for hydrocarbon and dry ice modeling.
-- Deprecated standalone condensation helpers in favor of using each cycle instance's `condensationRateFactor` method directly.
-- Split water evaporation and sublimation calculations into separate `waterCycle.evaporationRate` and `waterCycle.sublimationRate` methods.
-- Water, methane, and CO₂ cycle modules now import the shared `ResourceCycle` base class instead of defining it inline.
-- index.html loads `resource-cycle.js` before cycle modules so subclasses can extend the base class in browser environments.
-- Added `processZone` methods to water, methane, and CO₂ cycles, composing base helpers to generate zonal change objects.
-- MethaneCycle constructor now accepts transitionRange, maxDiff, boilingPointFn, and boilTransitionRange options used during zonal processing.
-- Resource panel margins are now configurable; default planet parameters add 5px spacing after workers, glass and food, and before androids.
-- Subtabs now remember and restore their vertical scroll position when revisited.
-- Special project subtabs also retain their individual scroll positions when switching categories.
-- Space mirror facility adds an Unassigned slider leaving a portion of mirrors and lanterns idle.
-- Introduced a reusable `SubtabManager` handling subtab activation, visibility, and scroll restoration across UI modules.
-- Buildings now feature collapse arrows hiding cost, production, consumption, maintenance, description and advanced autobuild controls.
-- Reducing a space mirror oversight slider now transfers the removed percentage to Unassigned.
-- Space mirror oversight settings persist through save and load as part of the project state.
-- Loading a saved game now triggers a one-time forced render to refresh the UI.
-- Special project cards like Mirror Oversight, Planetary Thrusters, Space Storage, and Dyson Swarm now feature collapsible headers.
-- Space storage strategic reserve and nanobot energy limit inputs now accept scientific notation (e.g., 1e3 for 1000).
-- Space storage strategic reserve input includes a tooltip noting that mega projects respect the reserve while transfers do not, and explaining scientific notation support.
-- Space mirror facility's unassigned slider matches the width of other sliders and locks when finer controls are enabled.
-- Space mirror facility's focusing slider includes a hidden reversal checkbox to maintain consistent slider width.
-- Water melt target input in space mirror facility advanced oversight is wider and includes k/M/B scaling dropdown.
-- Space mirror oversight finer controls now provide /10 xN x10 buttons for each column, showing lantern controls only when lanterns are available.
-- Added `reinitializeDisplayElements` to Resource for resetting default display names and margins after travel.
-- Resource `reinitializeDisplayElements` now pulls display defaults from `defaultPlanetParameters` instead of storing them on each resource.
-- Life growth rate tooltip now reflects ecumenopolis land coverage and shows land reduction percentage.
-- forceUnassignAndroids unassigns the ceiling of assigned androids minus effective capacity and only accepts integer counts.
-- Building production and consumption displays color-code resources: green for production fixing deficits and orange for costs that would cause deficits.
-- Resources with `marginTop` or `marginBottom` now show a thin separator line centered within that margin that only appears when the resource is visible.
-- GHG factory temperature disable controls now accept decimal values.
-- GHG factory temperature inputs no longer overwrite user edits while focused, enabling decimal adjustments.
-- GHG factory temperature control UI now resides within `GhgFactory.js` via `initUI` and `updateUI` methods.
-- Oxygen factory pressure control UI now resides within `OxygenFactory.js` via `initUI` and `updateUI` methods.
-- Solis shop displays "Purchased" instead of a count when an upgrade reaches its maximum purchases.
-- Cargo rocket project resource selection now uses 0/-1/+1,/10,x10 controls for consistency.
-- Space storage ship assignment multiplier persists through save and load.
-- Cargo rocket x10 and /10 buttons adjust the ± buttons' increment instead of changing the current value.
-- Cargo rocket ship price increase now persists through save/load and planetary travel.
-- Added Mechanical Assistance advanced research adding a `mechanicalAssistance` boolean flag to colony sliders and unlocking a "Mechanical Assistance" slider ranging from 0 to 2 in 0.2 steps.
-- Mechanical Assistance slider increases components consumption for all colonies by the slider's value.
-- Mechanical Assistance slider displays a mitigation percentage and reduces gravity penalty for colony growth accordingly.
-- Mechanical Assistance component costs now scale with colony tier using a 10^(tier-3) multiplier.
-- Colonies gain a Components need box when Mechanical Assistance is above 0; it sits between Food and Electronics and scales the gravity mitigation by its fill level.
-- Cargo rocket x10 and /10 buttons are now global controls in the resource selection header.
-- Buildings and colonies can gain new consumption resources via an `addResourceConsumption` effect.
-- Colony sliders UI now provides `updateColonySlidersUI` to toggle the Mechanical Assistance slider when its flag is unlocked.
-- `updateColonySlidersUI` now reads the `mechanicalAssistance` flag from `ColonySlidersManager` rather than the settings object.
-- Mechanical Assistance slider hides when no gravity penalty exists, only appearing on worlds with gravity above 10 m/s².
-- Mechanical Assistance slider label includes an info tooltip explaining gravity penalty mitigation.
-- Advanced oversight assignment now respects water melt targets when focusing, allocating mirrors and lanterns by priority.
-- Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration, Carbon planets speed Carbon Asteroid Mining, icy moons accelerate Ice and Water importation, and Mars-like worlds boost global population growth by 1% each.
-- Random World Generator terraformed-type effects now grant bonuses; Titan-like worlds shorten Nitrogen harvesting project duration based on count.
-- Random World Generator Super-Earths count as an additional terraformed world through a new effect.
-- ProjectManager duration multiplier is now computed on demand via `getDurationMultiplier` instead of a stored attribute.
-- Desert worlds grant +10% Ore Mine production per desert world terraformed, and desiccated deserts grant +10% Sand Quarry production per desiccated desert terraformed.
-- Random world types now include display names used for the type dropdown and effects list.
-- Added "Very Cold" orbit preset (10–100 W/m²) to the Random World Generator.
-- Completing Vega-2 (chapter 17.5) now unlocks hot orbits in the Random World Generator.
-- Fixed the chapter 17.5 reward so the Random World Generator actually unlocks the hot orbit.
-- Cycle modules now expose `getCoverage(zone, cache)` helpers so `Terraforming.updateResources` pulls zonal coverage through each cycle instead of reading `zonalCoverageCache` directly.
-- ResourceCycle now exposes an optional `redistributePrecipitation` hook implemented by
-  WaterCycle and MethaneCycle, and Terraforming calls the hook for each cycle.
-- ResourceCycle now provides `finalizeAtmosphere` to scale zonal atmospheric losses and apply precipitation consistently across cycles.
-- ResourceCycle now offers a `runCycle` method that processes all zones, finalizes atmospheric changes and redistributes precipitation so terraformers can access zonal and total results.
-- Cycle subclasses store default keys and parameters so `updateResources` only supplies dynamic values when running cycles.
-- Water and methane cycles now run surface flow during `runCycle` via a shared `surfaceFlow` helper, removing standalone flow simulation from `updateResources`.
-- ResourceCycle provides `applyZonalChanges` to update zonal surface stores and return totals, letting `runCycle` and its subclasses apply results without merge loops in `updateResources`.
-- Resource cycles now update atmospheric/surface rates and terraforming total fields via `updateResourceRates`; `Terraforming.updateResources` simply delegates to each cycle.
-- ResourceCycle now provides shared zone-processing and rate-update logic through configurable coverage and precipitation keys, optional surface flow hooks, and total-to-resource mappings.
-- Cycle instances now carry atmospheric keys and process metadata and Terraforming loops over a `cycles` array to run them.
-- Atmospheric chemistry module now handles methane–oxygen combustion and calcite aerosol decay.
-- Added `buildAtmosphereContext` helper centralizing atmospheric pressure calculations for reuse in `Terraforming.updateResources`.
-- Atmospheric chemistry now assigns resource rates internally, removing rate handling from `Terraforming.updateResources`.
-- Removed rapid sublimation logic from WaterCycle, simplifying phase change calculations.
-- Removed rapid sublimation mechanics from the methane hydrocarbon cycle.
-- WaterCycle now sets distinct albedo defaults for liquid water evaporation and ice sublimation.
-- WaterCycle now uses the Murphy & Koop (2005) saturation vapor pressure formulation via `saturationVaporPressureMK` and exposes updated helpers.
-- Added liquid CO2 surface resource and zonal tracking.
-- ResourceCycle converts melting into rapid sublimation when liquid water is forbidden, recording rates for ice and atmosphere as "Rapid Sublimation".
-- Methane cycle converts melting into rapid sublimation when liquid methane is forbidden, tracking hydrocarbon ice and atmospheric methane as "Rapid Sublimation".
-- Cargo rocket x10 and /10 increment count now persists through save and load.
-- Added a sulfuric acid atmospheric resource integrated with physics.js and albedo cloud calculations.
-- Zonal dry ice storage moved from `zonalSurface` to `zonalCO2.ice` and all interactions updated accordingly.
-- Random World Effects card can now be collapsed to hide its table.
-- Disabling space mirror advanced oversight now auto-enables finer controls and retains current assignments.
-- penmanRate now prevents negative humidity deficits above the critical temperature.
-- slopeSVPCO2 now returns the critical temperature slope for T ≥ Tc.
-- Ore and geothermal satellites now scale their build count with worker cap (one satellite per 5,000 cap) instead of population.
-- Android resource displays an exclamation mark when capped while unused land remains below 99% of capacity.
-- Added Ship smelting advanced research doubling metal asteroid mining ship capacity.
-- Introduced an `OreMine` subclass of `Building` that registers deeper mining progress whenever new mines are constructed.
-- Dyson Swarm Receiver project now uses a `completedWhenUnlocked` flag to finish instantly when unlocked.
-- Added `GhgFactory` subclass overriding productivity with temperature control.
-- Added `OxygenFactory` subclass auto-disabling productivity above pressure thresholds.
-- Added `Biodome` subclass disabling productivity when life can't survive anywhere.
-- Added `DysonReceiver` building capping energy output to Dyson Swarm production.
-- Added `SolarPanel` subclass limiting total panels to ten times the world's initial land value.
-- Solar Panel counts now include a tooltip noting the 10× initial land construction cap.
-- Vega-2 now provides a travel warning that must be confirmed before visiting.
-- Building worker costs now support high/normal/low priority via up/down triangles.
-- Added Companion Satellite advanced research that keeps one ore satellite per terraformed world and auto-unlocks ore satellite infrastructure.
-- High surface temperatures now scale maintenance costs for all buildings; space mirrors, Hyperion Lanterns and Dyson Receivers ignore this penalty.
-- Added atmospheric utility functions to compute mean molecular weight and specific lift.
-- Added Aerostat Colony, a slider-affected colony type immune to temperature and pressure penalties.
-- Space mirror facility now provides quick build buttons for mirrors and lanterns beneath their status cards.
-- Mirror and lantern quick build controls only appear once the Space Mirror Facility project is complete.
-- Regular researches remain fully visible after unlocking the space tab via a `stopHidingRegular` flag on the ResearchManager.
-- Resource disposal now removes zonal surface stores proportionally for discrete and continuous runs.
-- Planet visualizer split into modular files under `src/js/planet-visualizer/` covering core setup, clouds, lighting, surface textures, ships, environment, and debug controls.
+World archetypes now provide tangible bonuses: Titan-like planets shorten nitrogen harvesting, carbon worlds accelerate Carbon Asteroid Mining, icy moons hasten Ice and Water importation, Mars-like colonies gain a global 1 % population bonus, desert worlds boost ore production, desiccated deserts enhance sand quarries, and Super-Earths count as an additional terraformed world. Type dropdowns display friendly names matching these effects. Orbit presets include a new **Very Cold** range (10–100 W/m²), and completing Vega‑2 unlocks hot orbits along with a travel warning that must be acknowledged before departure. The generator logs visited seeds with their parameters and re-renders after travel to respect new locks or story progress.
+The Random World Effects card can collapse to hide the bonus table when players need a cleaner view of other space systems.
+
+# Story and System Utilities
+Story delivery gained a `system-pop-up` event type for immediate alerts, and Save & Settings now includes a Statistics panel that tracks total playtime across every planet. Designers can accelerate local testing with the `setGameSpeed` console command while Vega‑2 travel triggers a confirmation warning before the trip begins. Story projects are locked to their intended worlds and journal reconstruction fills in `$WGC_TEAM_LEADER$` placeholders when loading saves so narrative logs stay accurate.
+
+# Automation and Interface Enhancements
+Buildings and special project cards feature collapsible headers, letting players hide cost and automation details when managing crowded screens. Structures include a persistent **Set active to target** checkbox, autobuild constructs them inactive by default, and enabling autobuild can auto-toggle target matching so queues fill without immediately raising active counts. The Settings view now uses a three-column layout, the Colony tab separates structure lists from sliders, and nanocolony controls sit directly beneath the primary colony panel. Manual toggles clear auto-targeting, storage capacity displays scale with the selected build quantity, and land usage recalculations on load keep construction requirements honest. Autobuild priorities and auto-active settings persist when travelling between planets so colony automation resumes seamlessly.
+
+Interface code caches frequently accessed DOM nodes—including research lists, lifeform editors, colony need boxes, automation panels, resource-selection grids, and Random World tabs—to reduce reflows when data changes. Production and consumption displays now reuse their existing nodes instead of rebuilding markup each tick. Subtabs remember their scroll positions (including special project subpanels), the broader UI can request a one-time forced render, and project automation settings refresh their cached children when options appear or disappear. Resource panels gained configurable margins, collapse toggles adopt triangle icons, and both colony and nanocolony sliders share consistent styling.
+
+Solis storefront updates highlight new research-point offerings, mark completed upgrades as “Purchased,” and hide cost buttons once limits are reached. The advanced oversight upgrade now sits with other research improvements once `solisUpgrade1` is unlocked, ensuring related perks stay together.
+
+# Resource Displays and Inputs
+Resource presentation emphasises clarity: production entries turn green when they resolve deficits, risky consumption appears orange, and separator lines draw within custom margins. `reinitializeDisplayElements` pulls defaults from `defaultPlanetParameters` so travel resets names, spacing, and tooltips consistently. Tooltips lead with total production and consumption, include water overflow sections, and present net change lines that optionally incorporate autobuild costs. They collapse into three columns when tall, pause updates while not hovered, and list colonist-supplied workers separately. Luminosity panels now break out ground versus surface albedo, forward aerosol mass into temperature models, and document the Cloud & Haze penalty applied to solar flux. Additional panels explain albedo contributors, show average solar flux alongside day values, and track actual albedo by zone. Day-night cycle duration now derives from each planet's rotation period so averages stay accurate.
+
+Inputs across the space layer support scientific notation for strategic reserves and nanobot energy limits, while advanced oversight melt targets include k/M/B dropdowns. Space storage tooltips separate transfer versus expansion costs, continuous modes display per-second totals, and water withdrawals can target colony stores or surface reserves. GHG factory controls accept decimal values without overwriting user edits, and their UI—along with oxygen factory pressure controls—now lives inside the respective building subclasses. Life growth tooltips reflect ecumenopolis land coverage, interpolate growth and decay across a ±0.5 K band, and display warnings or red biomass markers whenever ecosystems slip into net loss.
+
+# Space Logistics and Projects
+Cargo rockets share unified 0/±1, ÷10, ×10 controls with a global increment selector, persist their increment count across sessions, and remember auto-start cargo choices. Ship price increases and strategic multipliers survive saves, while continuous mode only runs when explicitly toggled on. Space storage records ship-assignment multipliers, clarifies mega-project respect for strategic reserves, and exposes a tooltip explaining scientific notation. Export interfaces report assigned ships, provide stable max-capacity tooltips with info icons, and gate automation behind resource and environmental checks that pause or resume projects as conditions change. Project subclasses own their save/load routines, sustain costs appear as dedicated project consumption, and ongoing jobs validate resource availability one second ahead to prevent mid-tick stalls.
+
+Dyson Swarm management shows collector costs on the project card, continues progress visuals after completion, and feeds generated energy directly into the colony. Receiver projects can finish instantly once unlocked, the solar collector interface stays hidden until the receiver is operational, and collector durations scale with terraformed planet counts. Satellite dashboards split deposits from amounts, add an Auto Max control tied to colonist capacity, and ore/geothermal satellites now scale with worker cap. Planetary thrusters track energy spent, persist configuration, and show escape Δv for moons. ProjectManager applies gains every tick through `applyCostAndGain`, while spaceship projects switch to per-ship continuous flow above 100 craft so large fleets consume and produce smoothly. Project productivity readouts emphasise continuous operations, compute duration multipliers on demand, and keep automation reactive to environment-based pauses.
+
+Space disposal tools can automatically disable gas exports below configurable pressure thresholds, pressure automation toggles between kPa and Pa, and resource disposal subtracts zonal surface stores proportionally in both discrete and continuous modes. Metal export projects clarify Earth's purchase limits and keep their tooltips readable by computing them once. Any Zone mirror assignments and reversal mechanics stay in sync with advanced oversight, and idle mirrors respect slider clamping to maintain valid totals.
+
+# Colony Management and Mechanical Assistance
+Mechanical Assistance advanced research unlocks a new colony slider ranging from 0 to 2 in 0.2 steps. It raises component consumption, scales mitigation benefits with colony tier via a 10^(tier−3) multiplier, and displays the resulting gravity penalty reduction alongside an explanatory tooltip. Colonies gain a Components need when assistance is active, gravity-free worlds hide the slider entirely, and `ColonySlidersManager` with `updateColonySlidersUI` controls visibility based on the stored flag. The system also powers an `addResourceConsumption` effect so buildings and colonies can adopt new upkeep requirements.
+
+Colony management quality-of-life includes worker priority triangles on building cost displays, Android alerts when idle capacity remains, and refined nanobot readouts that show three decimal places and highlight capped totals in green. `forceUnassignAndroids` enforces integer adjustments based on effective capacity, manual toggles interact correctly with auto-targeting, and colonies share consistent slider styling with nanocolonies. Aerostat colonies introduce a gravity-immune settlement option, broadening late-game population choices.
+
+# Specialized Buildings and Research
+Several buildings now operate through dedicated subclasses: `GhgFactory` and `OxygenFactory` manage temperature and pressure cutoffs internally, `Biodome` suspends productivity when life cannot survive anywhere, `DysonReceiver` caps orbital energy intake to swarm production, `SolarPanel` enforces a 10× initial land construction cap (documented via tooltip), and `OreMine` tracks deeper mining progress. High surface temperatures scale maintenance for most buildings, sparing mirrors, Hyperion Lanterns, and Dyson receivers. Companion Satellite research keeps one ore satellite per terraformed world and unlocks its infrastructure automatically, Ship Smelting doubles metal asteroid ship capacity, and Cloning Concept adds colonist-producing facilities. Regular researches remain visible after unlocking the space tab so players can continue planning their queue.
+
+# Terraforming and Atmospheric Simulation
+Terraforming underwent a major refactor built around a shared `ResourceCycle` base class. Cycle modules expose `getCoverage` helpers, configurable defaults, `processZone` methods, and hooks for redistributing precipitation or running surface flow so `Terraforming.updateResources` simply iterates over a `cycles` array. `applyZonalChanges`, `finalizeAtmosphere`, and `updateResourceRates` centralise atmospheric and surface bookkeeping, while methane and water cycles convert forbidden melts into tracked rapid sublimation. New helpers such as `buildAtmosphereContext`, `saturationVaporPressureMK`, and revised Penman/SVPCO₂ calculations improve numerical stability and avoid negative humidity deficits near critical temperatures.
+
+The atmosphere model now handles methane–oxygen combustion, calcite aerosol decay, and a sulfuric acid gas resource tied into physics and albedo systems. Liquid CO₂ gains dedicated surface storage, dry ice tracking moved into `zonalCO2.ice`, and biomass tooltips flag zones with net decay. Fast-forward equilibrium checks include biomass and buried hydrocarbons, hydrology uses elapsed seconds to reduce drift, and terraforming totals honour terraform counts that exclude orbital rings when necessary. Fresh utility helpers compute mean molecular weight, specific lift, and nested zonal change maps so precipitation and atmospheric rates remain consistent across cycles.
+
+# Planet Visualization
+The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
+
