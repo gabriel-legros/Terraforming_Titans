@@ -171,6 +171,9 @@
         if (colorRow.color) colorRow.color.disabled = !isDebug;
         if (colorRow.text) colorRow.text.disabled = !isDebug;
       }
+      if (this.debug?.presetSelect) {
+        this.debug.presetSelect.disabled = !isDebug;
+      }
     }
 
     init() {
