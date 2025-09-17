@@ -8,6 +8,7 @@
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
+- Added a fullscreen loading overlay that displays while the game or a save file is loading.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
