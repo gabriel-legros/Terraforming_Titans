@@ -93,6 +93,48 @@ class Colony extends Building {
     this.baseComfort = config.baseComfort;
   }
 
+  saveState() {
+    const base = super.saveState();
+    return {
+      ...base,
+      baseComfort: this.baseComfort,
+      filledNeeds: { ...this.filledNeeds },
+      luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
+      obsolete: this.obsolete,
+      happiness: this.happiness
+    };
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    if (!state || typeof state !== 'object') {
+      this.rebuildFilledNeeds();
+      return;
+    }
+
+    if ('baseComfort' in state) {
+      this.baseComfort = state.baseComfort;
+    }
+    if (state.filledNeeds) {
+      this.filledNeeds = { ...state.filledNeeds };
+    } else {
+      this.filledNeeds = {};
+    }
+    if (state.luxuryResourcesEnabled) {
+      for (const resource in state.luxuryResourcesEnabled) {
+        this.luxuryResourcesEnabled[resource] = !!state.luxuryResourcesEnabled[resource];
+      }
+    }
+    if ('obsolete' in state) {
+      this.obsolete = state.obsolete;
+    }
+    if ('happiness' in state) {
+      this.happiness = state.happiness;
+    }
+
+    this.rebuildFilledNeeds();
+  }
+
   getConsumptionRatio(){
     // Calculate minRatio based on colonist availability
     const colonists = resources.colony.colonists.value;
