@@ -693,7 +693,8 @@ const venusOverrides = {
     starLuminosity: 1
   },
   visualization: {
-    baseColor: '#d0b271',
+    // Use surface rock color (basaltic gray-brown), not atmospheric tint
+    baseColor: '#7a6f5f',
   }
 };
 

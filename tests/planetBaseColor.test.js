@@ -8,7 +8,8 @@ describe('Story planet base colors', () => {
     callisto: '#828a93',
     ganymede: '#786355',
     vega2: '#a87d4f',
-    venus: '#d0b271',
+    // Venus should reflect basaltic surface rock color, not atmospheric tint
+    venus: '#7a6f5f',
   };
 
   Object.entries(expected).forEach(([key, color]) => {
