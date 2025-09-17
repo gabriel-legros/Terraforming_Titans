@@ -434,6 +434,8 @@ class Colony extends Building {
   }
 }
 
+globalThis.Colony = Colony;
+
 function initializeColonies(coloniesParameters) {
   const colonies = {};
   for (const colonyName in coloniesParameters) {
