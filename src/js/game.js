@@ -127,6 +127,9 @@ function create() {
       openTerraformingWorldTab();
     }
   }
+  if (typeof hideLoadingOverlay === 'function') {
+    hideLoadingOverlay();
+  }
 }
 
 function initializeGameState(options = {}) {

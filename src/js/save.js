@@ -15,6 +15,44 @@ var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
 
 globalGameIsLoadingFromSave = false;
 
+let loadingOverlayElement = null;
+let loadingOverlayIsVisible = true;
+
+function cacheLoadingOverlayElement() {
+  if (loadingOverlayElement || typeof document === 'undefined') {
+    return;
+  }
+  loadingOverlayElement = document.getElementById('loading-overlay');
+}
+
+function applyLoadingOverlayVisibility() {
+  if (!loadingOverlayElement || !loadingOverlayElement.classList) {
+    return;
+  }
+  if (loadingOverlayIsVisible) {
+    loadingOverlayElement.classList.remove('loading-overlay--hidden');
+  } else {
+    loadingOverlayElement.classList.add('loading-overlay--hidden');
+  }
+}
+
+function initializeLoadingOverlay() {
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
+function showLoadingOverlay() {
+  loadingOverlayIsVisible = true;
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
+function hideLoadingOverlay() {
+  loadingOverlayIsVisible = false;
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
 function recalculateLandUsage() {
   if (!resources || !resources.surface || !resources.surface.land) return;
   let reserved = 0;
@@ -99,10 +137,16 @@ function loadGame(slotOrCustomString) {
     // Load from a custom string
     savedState = slotOrCustomString;
   }
-  if (savedState) {
-      globalGameIsLoadingFromSave = true;
+  if (!savedState) {
+    console.log('No saved game found.');
+    return;
+  }
 
-      const gameState = JSON.parse(savedState);
+  showLoadingOverlay();
+  globalGameIsLoadingFromSave = true;
+
+  try {
+    const gameState = JSON.parse(savedState);
 
       // Load space state first so planet parameters are correct
       const savedSpace = gameState.spaceManager || gameState.spaceState;
@@ -494,14 +538,14 @@ function loadGame(slotOrCustomString) {
       updateBuildingDisplay(buildings);
     }
 
-    globalGameIsLoadingFromSave = false;
     if (typeof updateRender === 'function') {
       updateRender(true);
     }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
-  } else {
-      console.log('No saved game found.');
+  } finally {
+    globalGameIsLoadingFromSave = false;
+    hideLoadingOverlay();
   }
 }
 
@@ -728,7 +772,12 @@ function updateStatisticsDisplay() {
 }
 
 // Call the function to add event listeners when the page loads
-document.addEventListener('DOMContentLoaded', addSaveSlotListeners);
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeLoadingOverlay();
+    addSaveSlotListeners();
+  });
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { getGameState, loadGame, recalculateLandUsage };

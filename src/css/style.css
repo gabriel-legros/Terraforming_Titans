@@ -7,6 +7,31 @@ body {
     overflow:hidden;
 }
 
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    z-index: 2000;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.loading-overlay__text {
+    text-transform: uppercase;
+}
+
+.loading-overlay--hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .hidden {
     display: none;
 }
