@@ -360,19 +360,8 @@ function updateTerraformingUI(deltaSeconds) {
     // Update the button state
     updateCompleteTerraformingButton();
 
-    const host = (typeof window !== 'undefined') ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
-    if (!host || !host.planetVisualizer || typeof host.planetVisualizer.animate !== 'function') {
-      return;
-    }
-
-    if (!isTerraformingWorldSubtabActive()) {
-      return;
-    }
-
-    if (typeof deltaSeconds === 'number') {
-      host.planetVisualizer.animate(deltaSeconds);
-    } else {
-      host.planetVisualizer.animate();
+    if (isTerraformingWorldSubtabActive()) {
+      planetVisualizer.animate(deltaSeconds);
     }
   }
 
