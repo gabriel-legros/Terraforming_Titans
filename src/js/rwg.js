@@ -81,8 +81,6 @@ const RWG_WORLD_TYPES = {
   "desiccated-desert": { displayName: "Desiccated Desert" },
   "super-earth": { displayName: "Super-Earth" },
   "venus-like": { displayName: "Venus-like" },
-  rocky: { displayName: "Rocky" },
-  "hot-rocky": { displayName: "Hot Rocky" },
 };
 
 const RWG_TYPE_BASE_COLORS = {
@@ -94,8 +92,6 @@ const RWG_TYPE_BASE_COLORS = {
   "desiccated-desert": "#caa16a",
   "super-earth": "#4c6f4e",
   "venus-like": "#cdb675",
-  rocky: "#806a58",
-  "hot-rocky": "#6d3f2f",
 };
 
 function pickBaseColorForType(type) {
@@ -129,27 +125,27 @@ const DEFAULT_PARAMS = {
   },
   classification: {
     typeAlbedo: {
-      "venus-like": 0.75, "mars-like": 0.25, rocky: 0.35, "cold-desert": 0.5,
-      "icy-moon": 0.17, "titan-like": 0.15, "hot-rocky": 0.35,
+      "venus-like": 0.75, "mars-like": 0.25, "cold-desert": 0.5,
+      "icy-moon": 0.17, "titan-like": 0.15,
       "carbon-planet": 0.08,
       "desiccated-desert": 0.38,
       "super-earth": 0.30,
     },
     albedoGuess: { default: 0.3, beyondHZouter: 0.55 },
-    thresholdsK: { venusMin: 330, rockyMin: 290, marsLow: 200, marsHigh: 255 },
+    thresholdsK: { venusMin: 330, marsLow: 200, marsHigh: 255 },
     moonTitanLike: { rangeK: [80,110], chance: 0.7 }
   },
   bulk: {
     radiusER: {
-      "venus-like": [0.85,1.05], "mars-like": [0.3,0.6], "hot-rocky": [0.5,1.4],
-      "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9], rocky: [0.6,1.2],
+      "venus-like": [0.85,1.05], "mars-like": [0.3,0.6],
+      "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9],
       "carbon-planet": [0.7, 1.4],
       "desiccated-desert": [0.6, 1.2],
       "super-earth": [1.2, 2.5]
     },
     densityRel: {
-      "venus-like": [0.95,1.1], "mars-like": [0.7,0.95], "hot-rocky": [0.85,1.05],
-      "icy-moon": [0.3,0.55], "titan-like": [0.35,0.6], "cold-desert": [0.8,1.0], rocky: [0.8,1.1],
+      "venus-like": [0.95,1.1], "mars-like": [0.7,0.95],
+      "icy-moon": [0.3,0.55], "titan-like": [0.35,0.6], "cold-desert": [0.8,1.0],
       "carbon-planet": [0.90, 1.20],
       "desiccated-desert": [0.80, 1.05],
       "super-earth": [0.90, 1.30]
@@ -159,7 +155,6 @@ const DEFAULT_PARAMS = {
     templates: {
       "venus-like": { pressureBar: 90, mix: { carbonDioxide: 0.965, inertGas: 0.03, oxygen: 0.0003, atmosphericWater: 0.0047 } },
       "mars-like": { pressureBar: 0.006, mix: { carbonDioxide: 0.95, inertGas: 0.03, oxygen: 0.0016, atmosphericWater: 0.0004 } },
-      rocky: { pressureBar: 0.6, mix: { carbonDioxide: 0.9, inertGas: 0.09, oxygen: 0.005, atmosphericWater: 0.005 } },
       "cold-desert": { pressureBar: 0.02, mix: { carbonDioxide: 0.85, inertGas: 0.14, oxygen: 0.0005, atmosphericWater: 0.0095 } },
       "icy-moon": { pressureBar: 1e-5, mix: { carbonDioxide: 0.7, inertGas: 0.299, oxygen: 0.001, atmosphericWater: 0.0001 } },
       "titan-like": { pressureBar: 1.4, mix: { carbonDioxide: 0.00006, inertGas: 0.98, oxygen: 1e-6, atmosphericWater: 1e-9, atmosphericMethane: 0.02 } },
@@ -176,7 +171,7 @@ const DEFAULT_PARAMS = {
       }
     },
     pressureBands: {
-      "venus-like": [0.8,1.2], rocky: [0.3,2.0], "mars-like": [0.3,3.0],
+      "venus-like": [0.8,1.2], "mars-like": [0.3,3.0],
       "cold-desert": [0.2,2.0], "icy-moon": [0.1,10.0], "titan-like": [0.7,1.3],
       "carbon-planet": [0.5, 1.5],
       "desiccated-desert": [0.5, 2.0], 
@@ -185,12 +180,12 @@ const DEFAULT_PARAMS = {
   },
   volatiles: {
     H2O_total: {
-      "venus-like": 1e12, "mars-like": 8e15, rocky: 5e14, "cold-desert": 2e14, "icy-moon": 4e19, "titan-like": 1e16,
+      "venus-like": 1e12, "mars-like": 8e15, "cold-desert": 2e14, "icy-moon": 4e19, "titan-like": 1e16,
       "carbon-planet": 5e13,
       "desiccated-desert": 1e13, "super-earth": 2e15,
     },
     CH4_total: {
-      "titan-like": 3e14, "icy-moon": 0, "cold-desert": 0, "mars-like": 0, "venus-like": 0, rocky: 0,
+      "titan-like": 3e14, "icy-moon": 0, "cold-desert": 0, "mars-like": 0, "venus-like": 0,
       "carbon-planet": 5e14,
       "desiccated-desert": 0, "super-earth": 0,
     },
@@ -201,7 +196,7 @@ const DEFAULT_PARAMS = {
     warmBiasK: { tropical: 1.0, temperate: 0.6, polar: 0.1 },
     coldBiasK: { tropical: 0.05, temperate: 0.2, polar: 0.75 },
     buriedFactorByType: {
-      "icy-moon": 5.0, "titan-like": 3.0, "cold-desert": 2.0, "mars-like": 1.5, "venus-like": 0.1, rocky: 0.1,
+      "icy-moon": 5.0, "titan-like": 3.0, "cold-desert": 2.0, "mars-like": 1.5, "venus-like": 0.1,
       "carbon-planet": 0.5,
       "desiccated-desert": 0.8, "super-earth": 0.2,
     },
@@ -218,9 +213,7 @@ const DEFAULT_PARAMS = {
     ore: {
       // Type density multiplier (affects the max cap)
       densityByType: {
-        "hot-rocky": 1.20,
         "super-earth": 1.30,
-        rocky: 1.00,
         "venus-like": 1.00,
         "mars-like": 0.90,
         "carbon-planet": 0.90,
@@ -235,7 +228,6 @@ const DEFAULT_PARAMS = {
         // ~2% by default; tweak per type if you want flavor
         default: 0.002,
         "super-earth": 0.003,
-        "hot-rocky": 0.0025,
         "icy-moon": 0.001,
         "titan-like": 0.001
       },
@@ -246,7 +238,7 @@ const DEFAULT_PARAMS = {
     },
 
     // Legacy seeds kept as hints; geothermal now uses an activity model
-    geoVentInit: { rocky: 5, "mars-like": 0, default: 2, coldLow: 1 },
+    geoVentInit: { "mars-like": 0, default: 2, coldLow: 1 },
 
     // RANDOM GEOTHERMAL ACTIVITY MODEL
     geothermal: {
@@ -262,10 +254,8 @@ const DEFAULT_PARAMS = {
 
       // Intrinsic activity by archetype (0 = none unless tides help)
       baseActivityByType: {
-        "hot-rocky": 0.90,
         "venus-like": 0.80,
         "super-earth": 0.60,
-        rocky: 0.40,
         "carbon-planet": 0.35,
 
         // These only get geothermal if tides push them over threshold
@@ -286,8 +276,8 @@ const DEFAULT_PARAMS = {
   specials: { includeAlbedoUpgrades: true, includeSpaceships: true, includeAlienArtifact: true },
   magnetosphere: {
     chanceByType: {
-      "venus-like": 0.02, "mars-like": 0.06, rocky: 0.25, "cold-desert": 0.12,
-      "icy-moon": 0.03, "titan-like": 0.03, "hot-rocky": 0.08,
+      "venus-like": 0.02, "mars-like": 0.06, "cold-desert": 0.12,
+      "icy-moon": 0.03, "titan-like": 0.03,
       "carbon-planet": 0.15,
       "desiccated-desert": 0.10,
       "super-earth": 0.35,
@@ -494,7 +484,10 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   const bulk = sampleBulk(rng, type, params);
   const landHa = surfaceAreaHa(bulk.radius_km);
   const { areaTotal } = depositsFromLandHa(landHa, params);
-  if (!params.atmosphere.templates[type]) type = (classification.Teq > params.classification.thresholdsK.rockyMin && classification.Teq <= params.classification.thresholdsK.venusMin) ? "rocky" : "mars-like";
+  if (!params.atmosphere.templates[type]) {
+    const venusMin = params.classification.thresholdsK.venusMin ?? Infinity;
+    type = classification.Teq > venusMin ? "venus-like" : "mars-like";
+  }
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
   const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
   const rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
@@ -663,7 +656,7 @@ class RwgManager extends EffectableEntity {
     super({ description: "Random World Generator Manager" });
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.lockedOrbits = new Set(["hot"]);
-    this.lockedTypes = new Set(["hot-rocky", "venus-like"]);
+    this.lockedTypes = new Set(["venus-like"]);
   }
   // Param API
   setParams(overrides) { this.params = resolveParams(this.params, overrides); }
@@ -681,7 +674,7 @@ class RwgManager extends EffectableEntity {
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
-      : ["mars-like", "hot-rocky", "cold-desert", "titan-like", "venus-like", "rocky",
+      : ["mars-like", "cold-desert", "titan-like", "venus-like",
         "carbon-planet", "desiccated-desert", "super-earth"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
