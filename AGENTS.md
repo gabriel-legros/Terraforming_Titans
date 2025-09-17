@@ -5,7 +5,7 @@
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
-- Keep checks of the kind (typeof something === 'function') and if(resources && resources.special && resources.special.spaceships) to a minimum.  If the checks fail, the code fails and it is better to catch it than let it fail.
+- Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
 
