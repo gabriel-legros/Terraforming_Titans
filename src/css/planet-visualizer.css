@@ -46,7 +46,8 @@
 
 .pv-row-label { color: #bbb; }
 .pv-row-value { text-align: right; overflow: hidden; }
-.pv-row-value input[type="number"] {
+.pv-row-value input[type="number"],
+.pv-row-value input[type="text"] {
   width: 100%;
   min-width: 0;
   height: 20px;
@@ -72,6 +73,18 @@
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+}
+.planet-visualizer-debug input[type="color"] {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #555;
+  background: #1b1b1b;
+  border-radius: 3px;
+}
+.pv-row-value input[type="text"] {
+  text-transform: uppercase;
 }
 .pv-controls { margin-top: 8px; display: flex; gap: 8px; }
 .pv-controls button { font-size: 12px; padding: 3px 6px; }

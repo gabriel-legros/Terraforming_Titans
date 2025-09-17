@@ -494,6 +494,10 @@ function updateRender(force = false) {
             };
           }
           pv.viz.zonalCoverage = zonal;
+          if (typeof pv.setBaseColor === 'function') {
+            const baseColor = currentPlanetParameters?.visualization?.baseColor;
+            pv.setBaseColor(baseColor, { fromGame: true });
+          }
         }
       } catch (e) {
         // Non-fatal if terraforming utilities are not ready yet

@@ -523,3 +523,4 @@ The Random World Generator manager builds procedural planets and moons with lock
 - Mirror and lantern quick build controls only appear once the Space Mirror Facility project is complete.
 - Regular researches remain fully visible after unlocking the space tab via a `stopHidingRegular` flag on the ResearchManager.
 - Resource disposal now removes zonal surface stores proportionally for discrete and continuous runs.
+- Planet visualizer split into modular files under `src/js/planet-visualizer/` covering core setup, clouds, lighting, surface textures, ships, environment, and debug controls.
