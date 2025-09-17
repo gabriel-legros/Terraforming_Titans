@@ -3,6 +3,9 @@ const {
   OXYGEN_COMBUSTION_THRESHOLD,
   METHANE_COMBUSTION_THRESHOLD,
   CALCITE_HALF_LIFE_SECONDS,
+  SULFURIC_ACID_RAIN_THRESHOLD_K,
+  SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
+  SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
 } = require('../src/js/terraforming/atmospheric-chemistry.js');
 
 describe('atmospheric chemistry', () => {
@@ -16,6 +19,7 @@ describe('atmospheric chemistry', () => {
       realSeconds: 1,
       durationSeconds: 1,
       surfaceArea: 1e16,
+      surfaceTemperatureK: SULFURIC_ACID_RAIN_THRESHOLD_K,
     };
     const result = runAtmosphericChemistry(resources, params);
     const changes = result.changes;
@@ -36,14 +40,34 @@ describe('atmospheric chemistry', () => {
       realSeconds: CALCITE_HALF_LIFE_SECONDS,
       durationSeconds: CALCITE_HALF_LIFE_SECONDS,
       surfaceArea: 1,
+      surfaceTemperatureK: SULFURIC_ACID_RAIN_THRESHOLD_K,
     };
     const result = runAtmosphericChemistry(resources, params);
     expect(result.changes.calciteAerosol).toBeCloseTo(-initial / 2, 5);
     expect(result.rates.calcite).toBeCloseTo((initial / 2) / CALCITE_HALF_LIFE_SECONDS, 5);
   });
 
+  test('sulfuric acid rains out with a 300 second half-life at 300K', () => {
+    const initial = 200;
+    const acidHalfLifeSeconds = Math.log(2) / SULFURIC_ACID_REFERENCE_DECAY_CONSTANT;
+    const resources = { atmospheric: { sulfuricAcid: { value: initial } } };
+    const params = {
+      globalOxygenPressurePa: 0,
+      globalMethanePressurePa: 0,
+      availableGlobalMethaneGas: 0,
+      availableGlobalOxygenGas: 0,
+      realSeconds: acidHalfLifeSeconds,
+      durationSeconds: acidHalfLifeSeconds,
+      surfaceArea: 1,
+      surfaceTemperatureK: SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
+    };
+    const result = runAtmosphericChemistry(resources, params);
+    expect(result.changes.sulfuricAcid).toBeCloseTo(-initial / 2, 5);
+    expect(result.rates.acidRain).toBeCloseTo((initial / 2) / acidHalfLifeSeconds, 5);
+  });
+
   test('assigns combustion and decay rates to resources', () => {
-    const createRes = () => ({ value: 0, modifyRate: jest.fn() });
+    const createRes = (value = 0) => ({ value, modifyRate: jest.fn() });
     const resources = {
       atmospheric: {
         atmosphericWater: createRes(),
@@ -51,6 +75,7 @@ describe('atmospheric chemistry', () => {
         atmosphericMethane: createRes(),
         oxygen: createRes(),
         calciteAerosol: createRes(),
+        sulfuricAcid: createRes(10),
       },
     };
     const params = {
@@ -61,6 +86,7 @@ describe('atmospheric chemistry', () => {
       realSeconds: 1,
       durationSeconds: 1,
       surfaceArea: 1e16,
+      surfaceTemperatureK: SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
     };
     const result = runAtmosphericChemistry(resources, params);
     expect(resources.atmospheric.atmosphericWater.modifyRate).toHaveBeenCalledWith(
@@ -86,6 +112,11 @@ describe('atmospheric chemistry', () => {
     expect(resources.atmospheric.calciteAerosol.modifyRate).toHaveBeenCalledWith(
       -result.rates.calcite,
       'Calcite Decay',
+      'terraforming'
+    );
+    expect(resources.atmospheric.sulfuricAcid.modifyRate).toHaveBeenCalledWith(
+      -result.rates.acidRain,
+      'Acid rain',
       'terraforming'
     );
   });

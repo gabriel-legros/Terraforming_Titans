@@ -5,6 +5,9 @@ const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure f
 const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
 const CALCITE_HALF_LIFE_SECONDS = 240; // Calcite aerosol half-life
 const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
+const SULFURIC_ACID_RAIN_THRESHOLD_K = 570;
+const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = 300;
+const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / 300;
 
 function runAtmosphericChemistry(resources, params = {}) {
   const {
@@ -15,6 +18,7 @@ function runAtmosphericChemistry(resources, params = {}) {
     realSeconds = 0,
     durationSeconds = 0,
     surfaceArea = 1,
+    surfaceTemperatureK = SULFURIC_ACID_RAIN_THRESHOLD_K,
   } = params;
 
   let combustionMethaneAmount = 0;
@@ -49,11 +53,29 @@ function runAtmosphericChemistry(resources, params = {}) {
       currentCalcite * (1 - Math.exp(-CALCITE_DECAY_CONSTANT * realSeconds));
   }
 
+  let sulfuricAcidDecayAmount = 0;
+  const currentSulfuricAcid = resources?.atmospheric?.sulfuricAcid?.value || 0;
+  if (realSeconds > 0 && currentSulfuricAcid > 0 && surfaceTemperatureK < SULFURIC_ACID_RAIN_THRESHOLD_K) {
+    const clampedTemperature = Math.max(
+      SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
+      surfaceTemperatureK
+    );
+    const temperatureFraction =
+      (SULFURIC_ACID_RAIN_THRESHOLD_K - clampedTemperature) /
+      (SULFURIC_ACID_RAIN_THRESHOLD_K - SULFURIC_ACID_REFERENCE_TEMPERATURE_K);
+    const decayConstant = SULFURIC_ACID_REFERENCE_DECAY_CONSTANT * temperatureFraction;
+    if (decayConstant > 0) {
+      sulfuricAcidDecayAmount =
+        currentSulfuricAcid * (1 - Math.exp(-decayConstant * realSeconds));
+    }
+  }
+
   const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
   const oxygenRate = durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0;
   const waterRate = durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0;
   const co2Rate = durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0;
   const calciteRate = realSeconds > 0 ? calciteDecayAmount / realSeconds : 0;
+  const acidRainRate = realSeconds > 0 ? sulfuricAcidDecayAmount / realSeconds : 0;
 
   const rateType = 'terraforming';
   resources?.atmospheric?.atmosphericWater?.modifyRate?.(
@@ -81,6 +103,11 @@ function runAtmosphericChemistry(resources, params = {}) {
     'Calcite Decay',
     rateType
   );
+  resources?.atmospheric?.sulfuricAcid?.modifyRate?.(
+    -acidRainRate,
+    'Acid rain',
+    rateType
+  );
 
   return {
     changes: {
@@ -89,6 +116,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       atmosphericWater: combustionWaterAmount,
       carbonDioxide: combustionCO2Amount,
       calciteAerosol: -calciteDecayAmount,
+      sulfuricAcid: -sulfuricAcidDecayAmount,
     },
     rates: {
       methane: methaneRate,
@@ -96,6 +124,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       water: waterRate,
       co2: co2Rate,
       calcite: calciteRate,
+      acidRain: acidRainRate,
     },
   };
 }
@@ -107,6 +136,9 @@ if (isNodeChem) {
     OXYGEN_COMBUSTION_THRESHOLD,
     METHANE_COMBUSTION_THRESHOLD,
     CALCITE_HALF_LIFE_SECONDS,
+    SULFURIC_ACID_RAIN_THRESHOLD_K,
+    SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
+    SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
   };
 } else {
   globalThis.runAtmosphericChemistry = runAtmosphericChemistry;
@@ -114,5 +146,8 @@ if (isNodeChem) {
   globalThis.OXYGEN_COMBUSTION_THRESHOLD = OXYGEN_COMBUSTION_THRESHOLD;
   globalThis.METHANE_COMBUSTION_THRESHOLD = METHANE_COMBUSTION_THRESHOLD;
   globalThis.CALCITE_HALF_LIFE_SECONDS = CALCITE_HALF_LIFE_SECONDS;
+  globalThis.SULFURIC_ACID_RAIN_THRESHOLD_K = SULFURIC_ACID_RAIN_THRESHOLD_K;
+  globalThis.SULFURIC_ACID_REFERENCE_TEMPERATURE_K = SULFURIC_ACID_REFERENCE_TEMPERATURE_K;
+  globalThis.SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = SULFURIC_ACID_REFERENCE_DECAY_CONSTANT;
 }
 
