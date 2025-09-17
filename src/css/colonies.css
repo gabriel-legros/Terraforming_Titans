@@ -28,6 +28,11 @@
     justify-self: start;
   }
 
+  #colony-sliders-container .card-title,
+  #construction-office-container .card-title {
+      font-size: calc(14px * 1.1);
+  }
+
   .growth-rate-line {
     display: flex;
     align-items: center;
@@ -74,7 +79,7 @@
   position: absolute;
   top: 50%;
   left: 10px;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   z-index: 2;
 }
 
@@ -313,3 +318,42 @@ input[type="range"].pretty-slider::-moz-range-thumb {
     border-bottom: 1px solid #dee2e6;
     padding-bottom: 5px;
 }
+.colony-buoyancy-card .card-body {
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.colony-buoyancy-card .colony-buoyancy-text {
+  margin: 0;
+}
+
+.colony-buoyancy-card .colony-buoyancy-lift-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-lift-label {
+  font-weight: 600;
+}
+
+.colony-buoyancy-card .colony-buoyancy-lift-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes {
+  margin-top: 12px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.colony-buoyancy-card .colony-buoyancy-notes-list {
+  margin: 0 0 0 20px;
+  padding: 0;
+}
+
+

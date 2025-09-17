@@ -11,27 +11,132 @@ const MOLECULAR_WEIGHTS = {
   CH4: 16.04,
   H2: 2.016,
   He: 4.0026,
-  H2O: 18.01528
+  H2O: 18.01528,
+  SF6: 146.06,
+  H2SO4: 98.079,
+  CaCO3: 100.0869
 };
 
+const MOLECULAR_WEIGHT_ALIASES = {
+  carbondioxide: 'CO2',
+  co2: 'CO2',
+  oxygen: 'O2',
+  o2: 'O2',
+  inertgas: 'N2',
+  nitrogen: 'N2',
+  n2: 'N2',
+  atmosphericwater: 'H2O',
+  water: 'H2O',
+  h2o: 'H2O',
+  atmosphericmethane: 'CH4',
+  methane: 'CH4',
+  ch4: 'CH4',
+  greenhousegas: 'SF6',
+  sf6: 'SF6',
+  sulfuricacid: 'H2SO4',
+  h2so4: 'H2SO4',
+  calciteaerosol: 'CaCO3',
+  caco3: 'CaCO3',
+  hydrogen: 'H2',
+  h2: 'H2',
+  helium: 'He',
+  he: 'He',
+  argon: 'Ar',
+  ar: 'Ar'
+};
+
+const GRAMS_PER_TON = 1e6;
+
+function normalizeNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function extractMassTons(entry) {
+  if (entry === null || entry === undefined) {
+    return 0;
+  }
+  if (typeof entry === 'number' || typeof entry === 'string') {
+    const numeric = normalizeNumber(entry);
+    return numeric !== null ? numeric : 0;
+  }
+  if (typeof entry === 'object') {
+    const candidates = [entry.value, entry.amount, entry.initialValue];
+    for (const candidate of candidates) {
+      const numeric = normalizeNumber(candidate);
+      if (numeric !== null) {
+        return numeric;
+      }
+    }
+  }
+  return 0;
+}
+
+function resolveMolecularWeight(gasKey, weights) {
+  if (!gasKey) {
+    return undefined;
+  }
+  const direct = weights[gasKey];
+  if (typeof direct === 'number' && Number.isFinite(direct)) {
+    return direct;
+  }
+
+  const keyString = String(gasKey);
+  const lower = keyString.toLowerCase();
+
+  const lowerDirect = weights[lower];
+  if (typeof lowerDirect === 'number' && Number.isFinite(lowerDirect)) {
+    return lowerDirect;
+  }
+
+  const alias = MOLECULAR_WEIGHT_ALIASES[lower];
+  if (alias) {
+    const aliasWeight = weights[alias];
+    if (typeof aliasWeight === 'number' && Number.isFinite(aliasWeight)) {
+      return aliasWeight;
+    }
+  }
+
+  for (const key in weights) {
+    if (key.toLowerCase() === lower) {
+      const weight = weights[key];
+      if (typeof weight === 'number' && Number.isFinite(weight)) {
+        return weight;
+      }
+    }
+  }
+  return undefined;
+}
+
 /**
- * Calculate mean molecular weight of an atmosphere from component fractions.
- * @param {Object} composition - mapping of gas keys to mole fractions (summing to 1).
+ * Calculate mean molecular weight of an atmosphere from component masses.
+ * @param {Object} composition - mapping of gas keys to mass amounts (tons).
  * @param {Object} [weights=MOLECULAR_WEIGHTS] - mapping of gas keys to molecular weights.
  * @returns {number} molecular weight in g/mol.
  */
 function calculateMolecularWeight(composition, weights = MOLECULAR_WEIGHTS) {
-  let total = 0;
-  let fractionSum = 0;
-  for (const gas in composition) {
-    const fraction = composition[gas] ?? 0;
-    const weight = weights[gas];
-    if (typeof weight === 'number') {
-      total += fraction * weight;
-      fractionSum += fraction;
-    }
+  if (!composition || typeof composition !== 'object') {
+    return 0;
   }
-  return fractionSum > 0 ? total / fractionSum : 0;
+  let totalMass = 0;
+  let totalMoles = 0;
+  for (const gas in composition) {
+    const massTons = extractMassTons(composition[gas]);
+    if (!Number.isFinite(massTons) || massTons <= 0) {
+      continue;
+    }
+    const weight = resolveMolecularWeight(gas, weights);
+    if (typeof weight !== 'number' || !Number.isFinite(weight) || weight <= 0) {
+      continue;
+    }
+    const massGrams = massTons * GRAMS_PER_TON;
+    totalMass += massGrams;
+    totalMoles += massGrams / weight;
+  }
+  if (totalMass <= 0 || totalMoles <= 0) {
+    return 0;
+  }
+  return totalMass / totalMoles;
 }
 
 /**

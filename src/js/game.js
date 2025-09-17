@@ -418,6 +418,10 @@ function updateLogic(delta) {
 }
 
 function updateRender(force = false) {
+  const deltaMs = (typeof updateRender.lastDelta === 'number') ? updateRender.lastDelta : 0;
+  const deltaSeconds = Math.max(0, Math.min(0.1, deltaMs / 1000));
+  updateRender.lastDelta = 0;
+
   // Always-on UI pieces
   updateDayNightDisplay();           // Day/night display is global
   updateResourceDisplay(resources);  // Resources are global
@@ -457,7 +461,7 @@ function updateRender(force = false) {
     }
 
     if (isActive('terraforming')) {
-      updateTerraformingUI();
+      updateTerraformingUI(deltaSeconds);
       // Ensure the visualizer resizes once the tab becomes visible
       if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
         window.planetVisualizer.onResize();
@@ -520,7 +524,7 @@ function updateRender(force = false) {
     updateColonySlidersUI();
     renderProjects();
     updateResearchUI();
-    updateTerraformingUI();
+    updateTerraformingUI(deltaSeconds);
     updateStatisticsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
@@ -534,6 +538,7 @@ function update(time, delta) {
   const speed = (typeof gameSpeed !== 'undefined') ? gameSpeed : 1;
   const scaledDelta = delta * speed;
   updateLogic(scaledDelta);   // Update game state
+  updateRender.lastDelta = scaledDelta;
   updateRender();             // Render updated game state
 
   autosave(scaledDelta);      // Call the autosave function

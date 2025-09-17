@@ -6,6 +6,24 @@ const luxuryResources = {
   androids: true
 };
 
+const colonyConstructors = {
+  aerostat_colony: { className: 'Aerostat', file: 'aerostat.js' }
+};
+
+function loadColonyConstructor(name) {
+  const entry = colonyConstructors[name];
+  if (!entry) return Colony;
+  const { className, file } = entry;
+  if (typeof globalThis !== 'undefined' && globalThis[className]) {
+    return globalThis[className];
+  }
+  if (typeof require !== 'undefined') {
+    const mod = require('./buildings/' + file);
+    return mod[className] || Colony;
+  }
+  return Colony;
+}
+
 class Colony extends Building {
   constructor(config, colonyName) {
     // Call the Building constructor to initialize common properties using the config object
@@ -426,7 +444,8 @@ function initializeColonies(coloniesParameters) {
       ...colonyData
     };
 
-    colonies[colonyName] = new Colony(colonyConfig, colonyName);
+    const Ctor = loadColonyConstructor(colonyName);
+    colonies[colonyName] = new Ctor(colonyConfig, colonyName);
   }
   return colonies;
 }
@@ -436,3 +455,4 @@ function initializeColonies(coloniesParameters) {
     updateStructureDisplay(colonies);
     updateConstructionOfficeUI();
   }
+
