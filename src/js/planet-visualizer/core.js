@@ -353,8 +353,14 @@
         z[zone].life = Math.max(0, Math.min(1, Number(b) || 0));
       }
       const avg = (a, b, c) => (a + b + c) / 3;
-      this.viz.coverage.water = avg(z.tropical.water, z.temperate.water, z.polar.water) * 100;
-      this.viz.coverage.life = avg(z.tropical.life, z.temperate.life, z.polar.life) * 100;
+      const avgWater = avg(z.tropical.water, z.temperate.water, z.polar.water);
+      const avgLife = avg(z.tropical.life, z.temperate.life, z.polar.life);
+      const cloudFraction = Number.isFinite(t?.luminosity?.cloudFraction)
+        ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
+        : avgWater;
+      this.viz.coverage.water = avgWater * 100;
+      this.viz.coverage.life = avgLife * 100;
+      this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
     }
 
     getCurrentPopulation() {

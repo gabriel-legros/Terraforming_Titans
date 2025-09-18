@@ -483,7 +483,10 @@ function updateRender(force = false) {
           const pct = (x) => Math.max(0, Math.min(100, x * 100));
           pv.viz.coverage.water = pct(waterFrac);
           pv.viz.coverage.life = pct(lifeFrac);
-          pv.viz.coverage.cloud = pv.viz.coverage.water;
+          const cloudFrac = Number.isFinite(terraforming?.luminosity?.cloudFraction)
+            ? Math.max(0, Math.min(1, terraforming.luminosity.cloudFraction))
+            : waterFrac;
+          pv.viz.coverage.cloud = pct(cloudFrac);
 
           // Zonal coverages for rendering bands
           const zones = ['tropical', 'temperate', 'polar'];
