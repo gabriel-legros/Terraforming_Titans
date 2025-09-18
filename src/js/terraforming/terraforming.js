@@ -595,6 +595,126 @@ class Terraforming extends EffectableEntity{
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
+    saveTemperatureState() {
+      const zonesSnapshot = {};
+      const zones = this.temperature?.zones || {};
+      for (const zoneKey of Object.keys(zones)) {
+        const zone = zones[zoneKey] || {};
+        zonesSnapshot[zoneKey] = {
+          initial: zone.initial,
+          value: zone.value,
+          day: zone.day,
+          night: zone.night,
+          equilibriumTemperature: zone.equilibriumTemperature,
+        };
+      }
+
+      const contributionsSnapshot = {};
+      const contributions = this.temperature?.opticalDepthContributions || {};
+      for (const key of Object.keys(contributions)) {
+        contributionsSnapshot[key] = contributions[key];
+      }
+
+      const zonalFluxSnapshot = {};
+      const zonalFluxes = this.luminosity?.zonalFluxes || {};
+      for (const key of Object.keys(zonalFluxes)) {
+        zonalFluxSnapshot[key] = zonalFluxes[key];
+      }
+
+      return {
+        temperature: {
+          value: this.temperature?.value,
+          equilibriumTemperature: this.temperature?.equilibriumTemperature,
+          effectiveTempNoAtmosphere: this.temperature?.effectiveTempNoAtmosphere,
+          emissivity: this.temperature?.emissivity,
+          opticalDepth: this.temperature?.opticalDepth,
+          opticalDepthContributions: contributionsSnapshot,
+          zones: zonesSnapshot,
+        },
+        luminosity: {
+          modifiedSolarFlux: this.luminosity?.modifiedSolarFlux,
+          modifiedSolarFluxUnpenalized: this.luminosity?.modifiedSolarFluxUnpenalized,
+          zonalFluxes: zonalFluxSnapshot,
+        },
+      };
+    }
+
+    restoreTemperatureState(snapshot) {
+      if (!snapshot) {
+        return;
+      }
+
+      const tempSnapshot = snapshot.temperature || {};
+      const lumSnapshot = snapshot.luminosity || {};
+
+      if (this.temperature) {
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'value')) {
+          this.temperature.value = tempSnapshot.value;
+        }
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'equilibriumTemperature')) {
+          this.temperature.equilibriumTemperature = tempSnapshot.equilibriumTemperature;
+        }
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'effectiveTempNoAtmosphere')) {
+          this.temperature.effectiveTempNoAtmosphere = tempSnapshot.effectiveTempNoAtmosphere;
+        }
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'emissivity')) {
+          this.temperature.emissivity = tempSnapshot.emissivity;
+        }
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'opticalDepth')) {
+          this.temperature.opticalDepth = tempSnapshot.opticalDepth;
+        }
+
+        const contributions = tempSnapshot.opticalDepthContributions || {};
+        const targetContributions = this.temperature.opticalDepthContributions || {};
+        for (const key of Object.keys(targetContributions)) {
+          delete targetContributions[key];
+        }
+        for (const key of Object.keys(contributions)) {
+          targetContributions[key] = contributions[key];
+        }
+
+        const zones = this.temperature.zones || {};
+        const zoneSnapshots = tempSnapshot.zones || {};
+        for (const zoneKey of Object.keys(zones)) {
+          const zone = zones[zoneKey];
+          const snap = zoneSnapshots[zoneKey] || {};
+          if (Object.prototype.hasOwnProperty.call(snap, 'initial')) {
+            zone.initial = snap.initial;
+          }
+          if (Object.prototype.hasOwnProperty.call(snap, 'value')) {
+            zone.value = snap.value;
+          }
+          if (Object.prototype.hasOwnProperty.call(snap, 'day')) {
+            zone.day = snap.day;
+          }
+          if (Object.prototype.hasOwnProperty.call(snap, 'night')) {
+            zone.night = snap.night;
+          }
+          if (Object.prototype.hasOwnProperty.call(snap, 'equilibriumTemperature')) {
+            zone.equilibriumTemperature = snap.equilibriumTemperature;
+          }
+        }
+      }
+
+      if (this.luminosity) {
+        if (Object.prototype.hasOwnProperty.call(lumSnapshot, 'modifiedSolarFlux')) {
+          this.luminosity.modifiedSolarFlux = lumSnapshot.modifiedSolarFlux;
+        }
+        if (Object.prototype.hasOwnProperty.call(lumSnapshot, 'modifiedSolarFluxUnpenalized')) {
+          this.luminosity.modifiedSolarFluxUnpenalized = lumSnapshot.modifiedSolarFluxUnpenalized;
+        }
+
+        const zonalFluxes = lumSnapshot.zonalFluxes || {};
+        const targetFluxes = this.luminosity.zonalFluxes || {};
+        for (const key of Object.keys(targetFluxes)) {
+          delete targetFluxes[key];
+        }
+        for (const key of Object.keys(zonalFluxes)) {
+          targetFluxes[key] = zonalFluxes[key];
+        }
+      }
+    }
+
     updateSurfaceTemperature() {
     const groundAlbedo = this.luminosity.groundAlbedo;
     const rotationPeriodH = this.celestialParameters.rotationPeriod || 24;
