@@ -53,6 +53,22 @@
     makeRow('bPol', 'Biomass Polar (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
 
+    // Large-scale surface feature controls
+    const makeCheckbox = (id, label) => {
+      const l = document.createElement('div'); l.className = 'pv-row-label'; l.textContent = label;
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = `pv-${id}`;
+      const valWrap = document.createElement('div'); valWrap.className = 'pv-row-value';
+      grid.appendChild(l); grid.appendChild(cb); grid.appendChild(valWrap);
+      this.debug.rows[id] = { checkbox: cb };
+      cb.addEventListener('change', () => { this.applySlidersToGame(); });
+    };
+    makeCheckbox('featEnabled', 'Feature Enabled');
+    makeRow('featStrength', 'Feature Strength', 0, 10, 0.01);
+    makeRow('featScale', 'Feature Scale', 0.05, 20, 0.01);
+    makeRow('featContrast', 'Feature Contrast', 0, 6, 0.01);
+    makeRow('featOffsetX', 'Feature Offset X', -1, 1, 0.01);
+    makeRow('featOffsetY', 'Feature Offset Y', -1, 1, 0.01);
+
     const baseColorLabel = document.createElement('div');
     baseColorLabel.className = 'pv-row-label';
     baseColorLabel.textContent = 'Base color';
@@ -134,8 +150,45 @@
     });
     controls.appendChild(label);
     controls.appendChild(select);
+
+    const presetLabel = document.createElement('label');
+    presetLabel.textContent = 'Planet preset:';
+    presetLabel.style.marginLeft = '12px';
+    presetLabel.style.marginRight = '6px';
+    presetLabel.htmlFor = 'pv-planetPreset';
+    controls.appendChild(presetLabel);
+
+    const presetSelect = document.createElement('select');
+    presetSelect.id = 'pv-planetPreset';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select planet';
+    presetSelect.appendChild(placeholder);
+
+    const allPlanets = (typeof planetParameters !== 'undefined' && planetParameters) ? planetParameters : null;
+    if (allPlanets) {
+      const entries = Object.keys(allPlanets)
+        .map((key) => ({ key, name: allPlanets[key]?.name || key }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      for (const entry of entries) {
+        const opt = document.createElement('option');
+        opt.value = entry.key;
+        opt.textContent = entry.name;
+        presetSelect.appendChild(opt);
+      }
+    }
+
+    presetSelect.addEventListener('change', () => {
+      if (this.debug.mode !== 'debug') return;
+      const planetKey = presetSelect.value;
+      if (!planetKey) return;
+      this.applyPlanetPresetToSliders(planetKey);
+    });
+
+    controls.appendChild(presetSelect);
     host.appendChild(controls);
     this.debug.modeSelect = select;
+    this.debug.presetSelect = presetSelect;
 
     this.updateDebugControlState();
     this.elements.container.insertAdjacentElement('afterend', host);
@@ -157,6 +210,11 @@
     setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
     ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol'].forEach(sv);
+    if (r.featStrength) setVal('featStrength', Number(r.featStrength.range.value));
+    if (r.featScale) setVal('featScale', Number(r.featScale.range.value));
+    if (r.featContrast) setVal('featContrast', Number(r.featContrast.range.value));
+    if (r.featOffsetX) setVal('featOffsetX', Number(r.featOffsetX.range.value));
+    if (r.featOffsetY) setVal('featOffsetY', Number(r.featOffsetY.range.value));
   };
 
   PlanetVisualizer.prototype.applySlidersToGame = function applySlidersToGame() {
@@ -205,8 +263,164 @@
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
 
+    // Apply surface feature params
+    const f = this.viz.surfaceFeatures || (this.viz.surfaceFeatures = {});
+    if (r.featEnabled && r.featEnabled.checkbox) f.enabled = !!r.featEnabled.checkbox.checked;
+    if (r.featStrength) f.strength = Math.max(0, Math.min(10, Number(r.featStrength.range.value)));
+    if (r.featScale) f.scale = Math.max(0.05, Number(r.featScale.range.value));
+    if (r.featContrast) f.contrast = Math.max(0, Number(r.featContrast.range.value));
+    if (r.featOffsetX) f.offsetX = Number(r.featOffsetX.range.value);
+    if (r.featOffsetY) f.offsetY = Number(r.featOffsetY.range.value);
+
     this.updateSurfaceTextureFromPressure(true);
     this.updateCloudUniforms();
+  };
+
+  PlanetVisualizer.prototype.applyPlanetPresetToSliders = function applyPlanetPresetToSliders(planetKey) {
+    if (!planetKey || !this.debug || this.debug.mode !== 'debug') return;
+    const rows = this.debug.rows;
+    if (!rows) return;
+    const allPlanets = (typeof planetParameters !== 'undefined' && planetParameters) ? planetParameters : null;
+    if (!allPlanets || !allPlanets[planetKey]) return;
+
+    const planet = allPlanets[planetKey];
+    const cel = planet.celestialParameters || {};
+    const resourcesData = planet.resources || {};
+    const atmospheric = resourcesData.atmospheric || {};
+
+    const setPairValue = (pair, value, opts = {}) => {
+      if (!pair) return;
+      let numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        numeric = Number(pair.range?.min);
+      }
+      if (!Number.isFinite(numeric)) numeric = 0;
+      if (opts.round) {
+        numeric = Math.round(numeric);
+      }
+      if (typeof opts.precision === 'number' && Number.isFinite(opts.precision)) {
+        const factor = Math.pow(10, opts.precision);
+        numeric = Math.round(numeric * factor) / factor;
+      }
+      const min = Number(pair.range?.min);
+      const max = Number(pair.range?.max);
+      if (Number.isFinite(min)) numeric = Math.max(min, numeric);
+      if (Number.isFinite(max)) numeric = Math.min(max, numeric);
+      const str = String(numeric);
+      if (pair.range) pair.range.value = str;
+      if (pair.number) pair.number.value = str;
+    };
+
+    const computePressureKPa = (massTon) => {
+      const mass = Number(massTon);
+      const gravity = Number(cel.gravity ?? currentPlanetParameters?.celestialParameters?.gravity);
+      const radius = Number(cel.radius ?? currentPlanetParameters?.celestialParameters?.radius);
+      if (!Number.isFinite(mass) || mass <= 0 || !Number.isFinite(gravity) || gravity <= 0 || !Number.isFinite(radius) || radius <= 0) {
+        return 0;
+      }
+      if (typeof calculateAtmosphericPressure === 'function') {
+        try {
+          const result = calculateAtmosphericPressure(mass, gravity, radius);
+          if (Number.isFinite(result) && result > 0) {
+            return Math.max(0, result) / 1000;
+          }
+        } catch (e) {
+        }
+      }
+      const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
+      const pressurePa = (1000 * mass * gravity) / surfaceArea;
+      return Math.max(0, pressurePa) / 1000;
+    };
+
+    const starLuminosity = Number(cel.starLuminosity);
+    setPairValue(rows.illum, Number.isFinite(starLuminosity) ? starLuminosity : this.viz?.illum ?? 1, { precision: 2 });
+    if (rows.incl) {
+      const incl = Number(planet.visualization?.inclinationDeg ?? this.viz?.inclinationDeg ?? 15);
+      setPairValue(rows.incl, incl, { round: true });
+    }
+
+    const colonists = resourcesData.colony?.colonists?.initialValue ?? 0;
+    setPairValue(rows.pop, colonists, { round: true });
+    setPairValue(rows.ships, resourcesData.special?.spaceships?.initialValue ?? 0, { round: true });
+
+    setPairValue(rows.co2, computePressureKPa(atmospheric.carbonDioxide?.initialValue), { precision: 2 });
+    setPairValue(rows.o2, computePressureKPa(atmospheric.oxygen?.initialValue), { precision: 2 });
+    setPairValue(rows.inert, computePressureKPa(atmospheric.inertGas?.initialValue), { precision: 2 });
+    setPairValue(rows.h2o, computePressureKPa(atmospheric.atmosphericWater?.initialValue), { precision: 2 });
+    setPairValue(rows.ch4, computePressureKPa(atmospheric.atmosphericMethane?.initialValue), { precision: 2 });
+
+    const fallbackEstimateCoverage = (amount, zoneArea, scale = 0.0001) => {
+      if (!Number.isFinite(zoneArea) || zoneArea <= 0) return 0;
+      const normalizedAmount = Math.max(0, Number(amount) || 0);
+      const resourceRatio = (scale * normalizedAmount) / zoneArea;
+      const R0 = 0.002926577381;
+      const LINEAR_SLOPE = 50;
+      const LOG_A = LINEAR_SLOPE * R0;
+      if (resourceRatio <= 0) return 0;
+      if (resourceRatio <= R0) return Math.min(1, LINEAR_SLOPE * resourceRatio);
+      if (resourceRatio < 1) return Math.min(1, LOG_A * Math.log(resourceRatio) + 1);
+      return 1;
+    };
+
+    const estimateCoverageFn = (typeof estimateCoverage === 'function') ? estimateCoverage : fallbackEstimateCoverage;
+    const zones = ['tropical', 'temperate', 'polar'];
+    const defaultPct = 1 / zones.length;
+    const zonePercentages = {};
+    for (const zone of zones) {
+      if (typeof getZonePercentage === 'function') {
+        const pct = getZonePercentage(zone);
+        zonePercentages[zone] = Number.isFinite(pct) && pct > 0 ? pct : defaultPct;
+      } else {
+        zonePercentages[zone] = defaultPct;
+      }
+    }
+
+    const radiusKm = Number(cel.radius ?? currentPlanetParameters?.celestialParameters?.radius);
+    const totalSurfaceArea = (Number.isFinite(radiusKm) && radiusKm > 0)
+      ? 4 * Math.PI * Math.pow(radiusKm * 1000, 2)
+      : 1;
+
+    const zonalWater = planet.zonalWater || {};
+    const zonalSurface = planet.zonalSurface || {};
+    const waterFractions = [];
+
+    for (const zone of zones) {
+      const zoneArea = Math.max(1, totalSurfaceArea * (zonePercentages[zone] || defaultPct));
+      const waterData = zonalWater[zone] || {};
+      const surfaceData = zonalSurface[zone] || {};
+      const waterFraction = estimateCoverageFn(waterData.liquid, zoneArea, 0.0001);
+      const iceFraction = estimateCoverageFn(waterData.ice, zoneArea, 0.0001 * 100);
+      const lifeFraction = estimateCoverageFn(surfaceData.biomass, zoneArea, 0.0001 * 100000);
+      waterFractions.push(Math.max(0, Math.min(1, Number(waterFraction) || 0)));
+      const pctWater = (Math.max(0, Math.min(1, Number(waterFraction) || 0)) * 100);
+      const pctIce = (Math.max(0, Math.min(1, Number(iceFraction) || 0)) * 100);
+      const pctLife = (Math.max(0, Math.min(1, Number(lifeFraction) || 0)) * 100);
+      const wPair = rows[`w${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
+      const iPair = rows[`i${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
+      const bPair = rows[`b${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
+      setPairValue(wPair, pctWater, { precision: 2 });
+      setPairValue(iPair, pctIce, { precision: 2 });
+      setPairValue(bPair, pctLife, { precision: 2 });
+    }
+
+    if (rows.cloudCov) {
+      const avgWaterFraction = waterFractions.length
+        ? waterFractions.reduce((sum, val) => sum + val, 0) / waterFractions.length
+        : 0;
+      setPairValue(rows.cloudCov, avgWaterFraction * 100, { precision: 2 });
+    }
+
+    if (planet.visualization?.baseColor) {
+      const normalized = this.setBaseColor(planet.visualization.baseColor, { force: true });
+      const colorRow = rows.baseColor;
+      if (colorRow) {
+        const hex = this.normalizeHexColor(normalized) || '#8a2a2a';
+        if (colorRow.color) colorRow.color.value = hex;
+        if (colorRow.text) colorRow.text.value = hex.toUpperCase();
+      }
+    }
+
+    this.applySlidersToGame();
   };
 
   PlanetVisualizer.prototype.syncSlidersFromGame = function syncSlidersFromGame() {
@@ -258,6 +472,16 @@
       const s = String(avgWater.toFixed(2));
       r.cloudCov.range.value = s; r.cloudCov.number.value = s;
     }
+
+    // Sync surface feature params from viz
+    const f = this.viz.surfaceFeatures || {};
+    if (r.featEnabled && r.featEnabled.checkbox) r.featEnabled.checkbox.checked = !!f.enabled;
+    const setIf = (id, val) => { if (r[id]) { const s = String(val); r[id].range.value = s; r[id].number.value = s; } };
+    setIf('featStrength', Math.max(0, Math.min(10, Number(f.strength || 0))));
+    setIf('featScale', Math.max(0.05, Number(f.scale || 12)));
+    setIf('featContrast', Math.max(0, Number(f.contrast || 1.2)));
+    setIf('featOffsetX', Number(f.offsetX || 0));
+    setIf('featOffsetY', Number(f.offsetY || 0));
 
     const colorRow = this.debug.rows.baseColor;
     if (colorRow && this.debug.mode !== 'debug') {

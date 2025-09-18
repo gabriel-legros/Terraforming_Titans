@@ -13,7 +13,9 @@
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}`;
+    const sf = this.viz.surfaceFeatures || {};
+    const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -32,11 +34,11 @@
       const craterCanvas = document.createElement('canvas');
       craterCanvas.width = w; craterCanvas.height = h;
       const cctx = craterCanvas.getContext('2d');
-      const maxCount = Math.floor(250 * 1 + 50);
+      const maxCount = Math.floor(150 * 1 + 50);
       for (let i = 0; i < maxCount; i++) {
         const x = Math.random() * w;
         const y = Math.random() * h;
-        const r = (4 + Math.random() * 18) * (0.5 + 1);
+        const r = (0.5 + Math.random() * 3) * (0.5 + 1);
         const g1 = cctx.createRadialGradient(x, y, r * 0.6, x, y, r);
         g1.addColorStop(0, 'rgba(0,0,0,0)');
         g1.addColorStop(1, 'rgba(0,0,0,0.25)');
@@ -119,13 +121,65 @@
     try {
       const timg = ctx.getImageData(0, 0, w, h);
       const tdata = timg.data;
+
+      // Prepare large-scale feature noise (dark regions)
+      const seed = this.hashSeedFromPlanet();
+      let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287)) >>> 0;
+      const hash = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.000071) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const value2 = (x, y) => {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
+        const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
+      const fbm = (x, y, oct = 4, lac = 2.0, gain = 0.5) => {
+        let f = 0, amp = 0.5, freq = 1.0;
+        for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+        return f;
+      };
+      const feat = this.viz.surfaceFeatures || {};
+      const fEnabled = !!feat.enabled;
+      const fStrength = Math.max(0, Math.min(1, Number(feat.strength || 0)));
+      const fScale = Math.max(0.05, Number(feat.scale || 0.7));
+      const fContrast = Math.max(0, Number(feat.contrast || 1.2));
+      const fOffX = Number(feat.offsetX || 0);
+      const fOffY = Number(feat.offsetY || 0);
+
+      const smoothstep = (e0, e1, x) => {
+        const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
+        return t * t * (3 - 2 * t);
+      };
+
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
-        const f = 0.85 + 0.3 * Math.pow(hgt, 1.2);
+        const heightMul = 0.85 + 0.3 * Math.pow(hgt, 1.2);
+
+        // Large-scale dark regions multiplier
+        let featureMul = 1.0;
+        if (fEnabled && fStrength > 0) {
+          const x = i % w;
+          const y = (i - x) / w;
+          const nx = (x / w + fOffX) * fScale;
+          const ny = (y / h + fOffY) * (fScale * 0.5);
+          let v = fbm(nx, ny, 4, 2.0, 0.5); // 0..1
+          v = Math.max(0, Math.min(1, v));
+          // Stronger, broader mask: shift and scale before contrast
+          let level = (v - 0.1) / 0.5; // maps 0.1->0 and 0.6->1
+          if (level < 0) level = 0; else if (level > 1) level = 1;
+          const shaped = Math.pow(level, Math.max(0.0001, fContrast));
+          featureMul = 1 - fStrength * shaped;
+          if (featureMul < 0) featureMul = 0;
+        }
+
         const idx = i * 4;
-        tdata[idx] = Math.min(255, Math.floor(tdata[idx] * f));
-        tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * f));
-        tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * f));
+        const mul = heightMul * featureMul;
+        tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
+        tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
+        tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
       }
       ctx.putImageData(timg, 0, 0);
     } catch (e) {}
