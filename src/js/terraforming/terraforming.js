@@ -310,6 +310,8 @@ class Terraforming extends EffectableEntity{
       groundAlbedo: 0,
       surfaceAlbedo: 0,
       actualAlbedo: 0,
+      cloudFraction: 0,
+      hazeFraction: 0,
       initialSurfaceAlbedo: undefined,
       initialActualAlbedo: undefined,
       solarFlux: 0,
@@ -604,6 +606,8 @@ class Terraforming extends EffectableEntity{
       this.luminosity.surfaceAlbedo = this.calculateSurfaceAlbedo();
       const albRes = this.calculateActualAlbedo();
       this.luminosity.actualAlbedo = albRes.albedo;
+      this.luminosity.cloudFraction = albRes.cloudFraction;
+      this.luminosity.hazeFraction = albRes.hazeFraction;
       this.luminosity.cloudHazePenalty = albRes.penalty;
       this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
@@ -1026,7 +1030,9 @@ class Terraforming extends EffectableEntity{
         const result = calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW) || {};
         const comps = result.components || {};
         const penalty = (comps.dA_ch4 || 0) + (comps.dA_calcite || 0) + (comps.dA_cloud || 0);
-        return { albedo: result.albedo, penalty };
+        const cloudFraction = Number.isFinite(result.cfCloud) ? result.cfCloud : 0;
+        const hazeFraction = Number.isFinite(result.cfHaze) ? result.cfHaze : 0;
+        return { albedo: result.albedo, penalty, cloudFraction, hazeFraction };
     }
 
     _updateZonalCoverageCache() {
