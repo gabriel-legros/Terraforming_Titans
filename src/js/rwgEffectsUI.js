@@ -13,7 +13,7 @@ const RWG_PROJECT_NAMES = {
   waterSpaceMining: 'Water Importation',
 };
 const RWG_BUILDING_OUTPUT = {
-  oreMine: 'Ore',
+  oreMine: 'Ore Mine',
   sandQuarry: 'Sand',
 };
 
