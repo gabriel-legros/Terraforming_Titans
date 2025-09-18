@@ -15,6 +15,44 @@ var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
 
 globalGameIsLoadingFromSave = false;
 
+let loadingOverlayElement = null;
+let loadingOverlayIsVisible = true;
+
+function cacheLoadingOverlayElement() {
+  if (loadingOverlayElement || typeof document === 'undefined') {
+    return;
+  }
+  loadingOverlayElement = document.getElementById('loading-overlay');
+}
+
+function applyLoadingOverlayVisibility() {
+  if (!loadingOverlayElement || !loadingOverlayElement.classList) {
+    return;
+  }
+  if (loadingOverlayIsVisible) {
+    loadingOverlayElement.classList.remove('loading-overlay--hidden');
+  } else {
+    loadingOverlayElement.classList.add('loading-overlay--hidden');
+  }
+}
+
+function initializeLoadingOverlay() {
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
+function showLoadingOverlay() {
+  loadingOverlayIsVisible = true;
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
+function hideLoadingOverlay() {
+  loadingOverlayIsVisible = false;
+  cacheLoadingOverlayElement();
+  applyLoadingOverlayVisibility();
+}
+
 function recalculateLandUsage() {
   if (!resources || !resources.surface || !resources.surface.land) return;
   let reserved = 0;
@@ -41,8 +79,22 @@ function getGameState() {
   return {
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined' ? resources : undefined,
-    buildings: typeof buildings !== 'undefined' ? buildings : undefined,
-    colonies: typeof colonies !== 'undefined' ? colonies : undefined,
+    buildings: typeof buildings !== 'undefined'
+      ? Object.fromEntries(
+          Object.entries(buildings).map(([name, building]) => [
+            name,
+            (building && typeof building.saveState === 'function') ? building.saveState() : {}
+          ])
+        )
+      : undefined,
+    colonies: typeof colonies !== 'undefined'
+      ? Object.fromEntries(
+          Object.entries(colonies).map(([name, colony]) => [
+            name,
+            (colony && typeof colony.saveState === 'function') ? colony.saveState() : {}
+          ])
+        )
+      : undefined,
     projects: (typeof projectManager !== 'undefined' && typeof projectManager.saveState === 'function') ? projectManager.saveState() : undefined,
     research: (typeof researchManager !== 'undefined' && typeof researchManager.saveState === 'function') ? researchManager.saveState() : undefined,
     oreScanning: (typeof oreScanner !== 'undefined' && typeof oreScanner.saveState === 'function') ? oreScanner.saveState() : undefined,
@@ -85,10 +137,16 @@ function loadGame(slotOrCustomString) {
     // Load from a custom string
     savedState = slotOrCustomString;
   }
-  if (savedState) {
-      globalGameIsLoadingFromSave = true;
+  if (!savedState) {
+    console.log('No saved game found.');
+    return;
+  }
 
-      const gameState = JSON.parse(savedState);
+  showLoadingOverlay();
+  globalGameIsLoadingFromSave = true;
+
+  try {
+    const gameState = JSON.parse(savedState);
 
       // Load space state first so planet parameters are correct
       const savedSpace = gameState.spaceManager || gameState.spaceState;
@@ -230,24 +288,21 @@ function loadGame(slotOrCustomString) {
           const buildingState = gameState.buildings[buildingName];
           const building = buildings[buildingName];
           if (building) {
-            Object.assign(building, buildingState);
-            const newConfig = buildingsParameters[buildingName];
-            building.initializeFromConfig(newConfig, buildingName);
-            // After re-initializing, refresh base consumption and reapply recipe mapping
-            // so displayName/production/consumption match the saved currentRecipeKey
-            try {
-              building._baseConsumption = JSON.parse(JSON.stringify(building.consumption || {}));
-              if (typeof building._applyRecipeMapping === 'function') {
-                building._applyRecipeMapping();
-              }
-            } catch (e) { /* non-fatal */ }
-            // Reset effects applied from research
-            building.activeEffects = [];
-            if (building.booleanFlags && Array.isArray(building.booleanFlags)) {
-              building.booleanFlags = new Set(building.booleanFlags);
+            if (typeof building.loadState === 'function') {
+              building.loadState(buildingState);
             } else {
-              building.booleanFlags = new Set();
+              Object.assign(building, buildingState);
+              const newConfig = buildingsParameters ? buildingsParameters[buildingName] : undefined;
+              if (newConfig && typeof building.initializeFromConfig === 'function') {
+                building.initializeFromConfig(newConfig, buildingName);
+              }
+              if (Array.isArray(building.booleanFlags)) {
+                building.booleanFlags = new Set(building.booleanFlags);
+              } else if (!(building.booleanFlags instanceof Set)) {
+                building.booleanFlags = new Set();
+              }
             }
+            building.activeEffects = [];
             if(building.active == null){
               building.active = 0;
             }
@@ -265,16 +320,21 @@ function loadGame(slotOrCustomString) {
             const colonyState = gameState.colonies[colonyName];
             const colony = colonies[colonyName];
             if (colony) {
-              Object.assign(colony, colonyState);
-              const newConfig = colonyParameters[colonyName];
-              colony.initializeFromConfig(newConfig, colonyName);
-              // Reset effects applied from research
-              colony.activeEffects = [];
-              if (colony.booleanFlags && Array.isArray(colony.booleanFlags)) {
-                colony.booleanFlags = new Set(colony.booleanFlags);
+              if (typeof colony.loadState === 'function') {
+                colony.loadState(colonyState);
               } else {
-                colony.booleanFlags = new Set();
+                Object.assign(colony, colonyState);
+                const newConfig = colonyParameters ? colonyParameters[colonyName] : undefined;
+                if (newConfig && typeof colony.initializeFromConfig === 'function') {
+                  colony.initializeFromConfig(newConfig, colonyName);
+                }
+                if (Array.isArray(colony.booleanFlags)) {
+                  colony.booleanFlags = new Set(colony.booleanFlags);
+                } else if (!(colony.booleanFlags instanceof Set)) {
+                  colony.booleanFlags = new Set();
+                }
               }
+              colony.activeEffects = [];
             }
           }
         }
@@ -478,14 +538,14 @@ function loadGame(slotOrCustomString) {
       updateBuildingDisplay(buildings);
     }
 
-    globalGameIsLoadingFromSave = false;
     if (typeof updateRender === 'function') {
       updateRender(true);
     }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
-  } else {
-      console.log('No saved game found.');
+  } finally {
+    globalGameIsLoadingFromSave = false;
+    hideLoadingOverlay();
   }
 }
 
@@ -712,7 +772,12 @@ function updateStatisticsDisplay() {
 }
 
 // Call the function to add event listeners when the page loads
-document.addEventListener('DOMContentLoaded', addSaveSlotListeners);
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeLoadingOverlay();
+    addSaveSlotListeners();
+  });
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { getGameState, loadGame, recalculateLandUsage };

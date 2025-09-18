@@ -102,6 +102,67 @@ class Building extends EffectableEntity {
     }
   }
 
+  saveState() {
+    return {
+      unlocked: this.unlocked,
+      count: this.count,
+      active: this.active,
+      productivity: this.productivity,
+      isHidden: this.isHidden,
+      alertedWhenUnlocked: this.alertedWhenUnlocked,
+      autoBuildEnabled: this.autoBuildEnabled,
+      autoBuildPercent: this.autoBuildPercent,
+      autoBuildPriority: this.autoBuildPriority,
+      autoBuildBasis: this.autoBuildBasis,
+      workerPriority: this.workerPriority,
+      autoActiveEnabled: this.autoActiveEnabled,
+      autoBuildPartial: this.autoBuildPartial,
+      reversalAvailable: this.reversalAvailable,
+      reverseEnabled: this.reverseEnabled,
+      autoReverse: this.autoReverse,
+      currentRecipeKey: this.currentRecipeKey
+    };
+  }
+
+  loadState(state = {}) {
+    this.booleanFlags = new Set();
+
+    if (!state || typeof state !== 'object') {
+      this._applyRecipeMapping();
+      this.updateResourceStorage();
+      this.maintenanceCost = this.calculateMaintenanceCost();
+      this.currentProduction = {};
+      this.currentConsumption = {};
+      this.currentMaintenance = {};
+      return;
+    }
+
+    if ('unlocked' in state) this.unlocked = state.unlocked;
+    if ('count' in state) this.count = state.count;
+    if ('active' in state) this.active = state.active;
+    if ('productivity' in state) this.productivity = state.productivity;
+    if ('isHidden' in state) this.isHidden = state.isHidden;
+    if ('alertedWhenUnlocked' in state) this.alertedWhenUnlocked = state.alertedWhenUnlocked;
+    if ('autoBuildEnabled' in state) this.autoBuildEnabled = state.autoBuildEnabled;
+    if ('autoBuildPercent' in state) this.autoBuildPercent = state.autoBuildPercent;
+    if ('autoBuildPriority' in state) this.autoBuildPriority = state.autoBuildPriority;
+    if ('autoBuildBasis' in state) this.autoBuildBasis = state.autoBuildBasis;
+    if ('workerPriority' in state) this.workerPriority = state.workerPriority;
+    if ('autoActiveEnabled' in state) this.autoActiveEnabled = state.autoActiveEnabled;
+    if ('autoBuildPartial' in state) this.autoBuildPartial = state.autoBuildPartial;
+    if ('reversalAvailable' in state) this.reversalAvailable = state.reversalAvailable;
+    if ('reverseEnabled' in state) this.reverseEnabled = state.reverseEnabled;
+    if ('autoReverse' in state) this.autoReverse = state.autoReverse;
+    if ('currentRecipeKey' in state) this.currentRecipeKey = state.currentRecipeKey;
+
+    this._applyRecipeMapping();
+    this.updateResourceStorage();
+    this.maintenanceCost = this.calculateMaintenanceCost();
+    this.currentProduction = {};
+    this.currentConsumption = {};
+    this.currentMaintenance = {};
+  }
+
   // External: enable reversal via effect
   enableReversal() {
     this.reversalAvailable = true;

@@ -1331,6 +1331,15 @@ function runAdvancedOversightAssignments(project) {
         terraforming.updateSurfaceTemperature();
       }
     };
+    const saveTempState = terraforming?.saveTemperatureState?.bind(terraforming);
+    const restoreTempState = terraforming?.restoreTemperatureState?.bind(terraforming);
+    const rollbackTemps = (snapshot) => {
+      if (snapshot && restoreTempState) {
+        restoreTempState(snapshot);
+      } else {
+        updateTemps();
+      }
+    };
 
     const readTemps = () => {
       const out = {};
@@ -1500,6 +1509,7 @@ function runAdvancedOversightAssignments(project) {
       changer();
       const changed = !(shallowEqual(assignM, snapM) && shallowEqual(assignL, snapL) && shallowEqual(reverse, snapR));
       if (changed) {
+        const snapshot = saveTempState ? saveTempState() : null;
         // Only recompute temps when something actually changed
         updateTemps();
         const out = evaluator();
@@ -1507,7 +1517,7 @@ function runAdvancedOversightAssignments(project) {
         Object.assign(assignM, snapM);
         Object.assign(assignL, snapL);
         Object.assign(reverse, snapR);
-        updateTemps();
+        rollbackTemps(snapshot);
         return out;
       } else {
         // No change; evaluate on current state without recomputing temps

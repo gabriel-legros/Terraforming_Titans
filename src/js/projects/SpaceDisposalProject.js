@@ -58,6 +58,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const removal = Math.min(removed, originalAmount);
     const originalTemp = terraforming.temperature.value;
 
+    const saveTempState = terraforming.saveTemperatureState?.bind(terraforming);
+    const restoreTempState = terraforming.restoreTemperatureState?.bind(terraforming);
+    const snapshot = saveTempState ? saveTempState() : null;
+
     ghg.value = originalAmount - removal;
     if (typeof terraforming.updateSurfaceTemperature === 'function') {
       terraforming.updateSurfaceTemperature();
@@ -65,7 +69,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const newTemp = terraforming.temperature.value;
 
     ghg.value = originalAmount;
-    if (typeof terraforming.updateSurfaceTemperature === 'function') {
+    if (snapshot && restoreTempState) {
+      restoreTempState(snapshot);
+    } else if (typeof terraforming.updateSurfaceTemperature === 'function') {
       terraforming.updateSurfaceTemperature();
     }
 

@@ -30,6 +30,31 @@ class GhgFactory extends Building {
       solveRequired
     } = this.computeBaseProductivity(resources, deltaTime);
 
+    const saveTempState = terraforming?.saveTemperatureState?.bind(terraforming);
+    const restoreTempState = terraforming?.restoreTemperatureState?.bind(terraforming);
+    const applyTempUpdate = () => {
+      if (terraforming?.updateSurfaceTemperature) {
+        terraforming.updateSurfaceTemperature();
+      }
+    };
+    const evaluateTemperature = (applyChange, evaluate, revertChange) => {
+      const snapshot = saveTempState ? saveTempState() : null;
+      applyChange();
+      applyTempUpdate();
+      let result;
+      try {
+        result = evaluate();
+      } finally {
+        revertChange();
+        if (snapshot && restoreTempState) {
+          restoreTempState(snapshot);
+        } else {
+          applyTempUpdate();
+        }
+      }
+      return result;
+    };
+
     if (this.active === 0) {
       this.productivity = 0;
       return;
@@ -77,14 +102,13 @@ class GhgFactory extends Building {
             if (recipeKey === 'calcite') {
               // Too hot: produce toward midpoint
               if (currentTemp >= B) {
-                const required = solveRequired((added) => {
-                  res.value = originalAmount + added;
-                  terraforming.updateSurfaceTemperature();
-                  const diff = terraforming.temperature.value - M;
-                  res.value = originalAmount;
-                  terraforming.updateSurfaceTemperature();
-                  return diff;
-                }, maxProduction);
+                const required = solveRequired((added) => (
+                  evaluateTemperature(
+                    () => { res.value = originalAmount + added; },
+                    () => terraforming.temperature.value - M,
+                    () => { res.value = originalAmount; }
+                  )
+                ), maxProduction);
                 this.reverseEnabled = false;
                 // Fallback: if solver cannot find a step but we are still above M, run at max allowed
                 const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
@@ -102,37 +126,33 @@ class GhgFactory extends Building {
               let bestDiff = Math.abs(currentTemp - M);
               const evalCandidate = (mass) => {
                 const origMass = res.value;
-                res.value = Math.max(0, mass);
-                terraforming.updateSurfaceTemperature();
-                const d = Math.abs(terraforming.temperature.value - M);
-                res.value = origMass;
-                terraforming.updateSurfaceTemperature();
-                return d;
+                return evaluateTemperature(
+                  () => { res.value = Math.max(0, mass); },
+                  () => Math.abs(terraforming.temperature.value - M),
+                  () => { res.value = origMass; }
+                );
               };
               // Try add direction
-              const addReq = solveRequired((amt) => {
-                res.value = originalAmount + amt;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - M;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, searchWindow);
+              const addReq = solveRequired((amt) => (
+                evaluateTemperature(
+                  () => { res.value = originalAmount + amt; },
+                  () => terraforming.temperature.value - M,
+                  () => { res.value = originalAmount; }
+                )
+              ), searchWindow);
               if (addReq > 0) {
                 const mass = originalAmount + addReq;
                 const d = evalCandidate(mass);
                 if (d <= bestDiff) { bestDiff = d; midMass = mass; }
               }
               // Try remove direction
-              const remReq = solveRequired((amt) => {
-                const newVal = Math.max(0, originalAmount - amt);
-                res.value = newVal;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - M;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, searchWindow);
+              const remReq = solveRequired((amt) => (
+                evaluateTemperature(
+                  () => { res.value = Math.max(0, originalAmount - amt); },
+                  () => terraforming.temperature.value - M,
+                  () => { res.value = originalAmount; }
+                )
+              ), searchWindow);
               if (remReq > 0) {
                 const mass = Math.max(0, originalAmount - remReq);
                 const d = evalCandidate(mass);
@@ -147,14 +167,13 @@ class GhgFactory extends Building {
             } else {
               // GHG recipe (warming): target lower boundary A when too cold
               const targetTemp = A;
-              const required = solveRequired((added) => {
-                res.value = originalAmount + added;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - targetTemp;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, maxProduction);
+              const required = solveRequired((added) => (
+                evaluateTemperature(
+                  () => { res.value = originalAmount + added; },
+                  () => terraforming.temperature.value - targetTemp,
+                  () => { res.value = originalAmount; }
+                )
+              ), maxProduction);
               this.reverseEnabled = false;
               // Fallback: if solver cannot find a step but we are still below A, run at max allowed
               const prod = (required > 0) ? (required / maxProduction) : (currentTemp < targetTemp ? 1 : 0);
@@ -181,37 +200,33 @@ class GhgFactory extends Building {
               let bestDiff = Math.abs(currentTemp - M);
               const evalCandidate = (mass) => {
                 const origMass = res.value;
-                res.value = Math.max(0, mass);
-                terraforming.updateSurfaceTemperature();
-                const d = Math.abs(terraforming.temperature.value - M);
-                res.value = origMass;
-                terraforming.updateSurfaceTemperature();
-                return d;
+                return evaluateTemperature(
+                  () => { res.value = Math.max(0, mass); },
+                  () => Math.abs(terraforming.temperature.value - M),
+                  () => { res.value = origMass; }
+                );
               };
               // Try add direction
-              const addReq = solveRequired((amt) => {
-                res.value = originalAmount + amt;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - M;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, searchWindow);
+              const addReq = solveRequired((amt) => (
+                evaluateTemperature(
+                  () => { res.value = originalAmount + amt; },
+                  () => terraforming.temperature.value - M,
+                  () => { res.value = originalAmount; }
+                )
+              ), searchWindow);
               if (addReq > 0) {
                 const mass = originalAmount + addReq;
                 const d = evalCandidate(mass);
                 if (d <= bestDiff) { bestDiff = d; midMass = mass; }
               }
               // Try remove direction
-              const remReq = solveRequired((amt) => {
-                const newVal = Math.max(0, originalAmount - amt);
-                res.value = newVal;
-                terraforming.updateSurfaceTemperature();
-                const diff = terraforming.temperature.value - M;
-                res.value = originalAmount;
-                terraforming.updateSurfaceTemperature();
-                return diff;
-              }, searchWindow);
+              const remReq = solveRequired((amt) => (
+                evaluateTemperature(
+                  () => { res.value = Math.max(0, originalAmount - amt); },
+                  () => terraforming.temperature.value - M,
+                  () => { res.value = originalAmount; }
+                )
+              ), searchWindow);
               if (remReq > 0) {
                 const mass = Math.max(0, originalAmount - remReq);
                 const d = evalCandidate(mass);
@@ -255,14 +270,13 @@ class GhgFactory extends Building {
           if (maxProduction > 0) {
             const res = resources.atmospheric[resourceName];
             const originalAmount = res.value;
-            const required = solveRequired((amt) => {
-              res.value = originalAmount + (reverse ? -amt : amt);
-              terraforming.updateSurfaceTemperature();
-              const diff = terraforming.temperature.value - targetTemp;
-              res.value = originalAmount;
-              terraforming.updateSurfaceTemperature();
-              return diff;
-            }, maxProduction);
+            const required = solveRequired((amt) => (
+              evaluateTemperature(
+                () => { res.value = originalAmount + (reverse ? -amt : amt); },
+                () => terraforming.temperature.value - targetTemp,
+                () => { res.value = originalAmount; }
+              )
+            ), maxProduction);
             this.reverseEnabled = reverse;
             // Fallback: if solver returns no step but still outside the band, push at max allowed in the correct direction
             let prod = 0;

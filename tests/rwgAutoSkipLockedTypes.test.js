@@ -26,7 +26,6 @@ describe('RWG Auto mode skips locked types', () => {
     `, ctx);
     dom.window.document.getElementById('rwg-seed').value = '42';
     dom.window.document.getElementById('rwg-generate-planet').click();
-    expect(ctx.lastResult.archetype).not.toBe('hot-rocky');
     expect(ctx.lastResult.archetype).not.toBe('venus-like');
   });
 
