@@ -174,7 +174,7 @@
 .rwg-effects-list { margin-top: 4px; max-width: 1200px; margin-left: auto; margin-right: auto; }
 .rwg-effects-row {
   display: grid;
-  grid-template-columns: minmax(250px, 1fr) 40px minmax(100px, auto) minmax(700px, auto);
+  grid-template-columns: minmax(400px, 1fr) 40px minmax(100px, auto) minmax(700px, auto);
   gap: 6px;
   padding: 4px 10px;
   align-items: center;
