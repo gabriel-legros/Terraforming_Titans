@@ -1,6 +1,21 @@
 let milestoneAlertNeeded = false;
 let lastCompletableCount = 0;
 
+function isMilestoneSubtabUnlocked() {
+    const doc = globalThis.document;
+    if (!doc || !doc.querySelector) {
+        return true;
+    }
+    const button = doc.querySelector('.terraforming-subtab[data-subtab="milestone-terraforming"]');
+    if (!button) {
+        return false;
+    }
+    if (!button.classList) {
+        return true;
+    }
+    return !button.classList.contains('hidden');
+}
+
 function createMilestonesUI() {
     const milestonesContainer = document.getElementById('milestone-terraforming');
     milestonesContainer.innerHTML = ''; // Clear any existing content
@@ -142,17 +157,25 @@ function checkMilestoneAlert() {
 }
 
 function updateMilestoneAlert() {
-    const alertEl = document.getElementById('terraforming-alert');
-    const subtabEl = document.getElementById('milestone-subtab-alert');
+    const doc = globalThis.document;
+    if (!doc) {
+        return;
+    }
+    const alertEl = doc.getElementById ? doc.getElementById('terraforming-alert') : null;
+    const subtabEl = doc.getElementById ? doc.getElementById('milestone-subtab-alert') : null;
     if (!alertEl && !subtabEl) return;
-    if (typeof gameSettings !== 'undefined' && gameSettings.silenceMilestoneAlert) {
+    if (globalThis.gameSettings && globalThis.gameSettings.silenceMilestoneAlert) {
         if (alertEl) alertEl.style.display = 'none';
         if (subtabEl) subtabEl.style.display = 'none';
         return;
     }
-    const display = milestoneAlertNeeded ? 'inline' : 'none';
-    if (alertEl) alertEl.style.display = display;
-    if (subtabEl) subtabEl.style.display = display;
+    const milestonesUnlocked = isMilestoneSubtabUnlocked();
+    if (alertEl) {
+        alertEl.style.display = milestoneAlertNeeded && milestonesUnlocked ? 'inline' : 'none';
+    }
+    if (subtabEl) {
+        subtabEl.style.display = milestoneAlertNeeded && milestonesUnlocked ? 'inline' : 'none';
+    }
 }
 
 function markMilestonesViewed() {

@@ -31,9 +31,10 @@ describe('cloud and haze penalty', () => {
     global.resources = { atmospheric:{}, special:{ albedoUpgrades:{ value:0 } } };
     global.buildings = { spaceMirror:{ surfaceArea:500, active:1 }, hyperionLantern:{ active:0 } };
     const tf = new Terraforming(global.resources, { radius:1, distanceFromSun:1, albedo:0, gravity:1 });
+    tf.updateLuminosity();
     const penalty = 0.05 + 0.02 + 0.03;
     expect(tf.luminosity.cloudHazePenalty).toBeCloseTo(penalty, 5);
-    const weighted = ['tropical','temperate','polar'].reduce((s,z)=> s + tf.luminosity.zonalFluxes[z] * getZonePercentage(z),0);
+    const weighted = ['tropical','temperate','polar'].reduce((s,z)=> s + (tf.luminosity.zonalFluxes[z] || 0) * getZonePercentage(z),0);
     const expectedFlux = weighted * (1 - penalty);
     expect(tf.luminosity.modifiedSolarFlux).toBeCloseTo(expectedFlux, 5);
     const expectedTemp = effectiveTemp(tf.luminosity.surfaceAlbedo, weighted);

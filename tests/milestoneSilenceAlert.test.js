@@ -6,7 +6,9 @@ const vm = require('vm');
 
 describe('silence milestone alert setting', () => {
   test('alert hidden when silenced', () => {
-    const dom = new JSDOM(`<!DOCTYPE html><div id="terraforming-tab"><span id="terraforming-alert" class="milestone-alert">!</span></div>`, { runScripts: 'outside-only' });
+    const dom = new JSDOM(`<!DOCTYPE html>
+      <div id="terraforming-tab"><span id="terraforming-alert" class="milestone-alert">!</span></div>
+      <div class="terraforming-subtab" data-subtab="milestone-terraforming">Milestones<span id="milestone-subtab-alert" class="milestone-alert">!</span></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.milestonesManager = { getCompletableMilestones: () => [{}] };
     ctx.gameSettings = { silenceMilestoneAlert: true };
@@ -20,5 +22,6 @@ describe('silence milestone alert setting', () => {
     ctx.gameSettings.silenceMilestoneAlert = false;
     ctx.updateMilestoneAlert();
     expect(dom.window.document.getElementById('terraforming-alert').style.display).toBe('inline');
+    expect(dom.window.document.getElementById('milestone-subtab-alert').style.display).toBe('inline');
   });
 });
