@@ -1268,6 +1268,7 @@ function runAdvancedOversightAssignments(project) {
   if (!mirrorOversightSettings.advancedOversight) return;
   if (advancedAssignmentInProgress) return;
   advancedAssignmentInProgress = true;
+  let snapshot = terraforming.saveTemperatureState();
 
   try {
     if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
@@ -1328,16 +1329,7 @@ function runAdvancedOversightAssignments(project) {
 
     const updateTemps = () => {
       if (typeof terraforming.updateSurfaceTemperature === 'function') {
-        terraforming.updateSurfaceTemperature();
-      }
-    };
-    const saveTempState = terraforming?.saveTemperatureState?.bind(terraforming);
-    const restoreTempState = terraforming?.restoreTemperatureState?.bind(terraforming);
-    const rollbackTemps = (snapshot) => {
-      if (snapshot && restoreTempState) {
-        restoreTempState(snapshot);
-      } else {
-        updateTemps();
+        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
       }
     };
 
@@ -1509,7 +1501,6 @@ function runAdvancedOversightAssignments(project) {
       changer();
       const changed = !(shallowEqual(assignM, snapM) && shallowEqual(assignL, snapL) && shallowEqual(reverse, snapR));
       if (changed) {
-        const snapshot = saveTempState ? saveTempState() : null;
         // Only recompute temps when something actually changed
         updateTemps();
         const out = evaluator();
@@ -1517,7 +1508,7 @@ function runAdvancedOversightAssignments(project) {
         Object.assign(assignM, snapM);
         Object.assign(assignL, snapL);
         Object.assign(reverse, snapR);
-        rollbackTemps(snapshot);
+        updateTemps();
         return out;
       } else {
         // No change; evaluate on current state without recomputing temps
@@ -1817,6 +1808,7 @@ function runAdvancedOversightAssignments(project) {
   } finally {
     advancedAssignmentInProgress = false;
   }
+  terraforming.restoreTemperatureState(snapshot);
 }
 
 class SpaceMirrorFacilityProject extends Project {

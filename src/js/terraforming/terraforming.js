@@ -16,6 +16,10 @@ const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
 
+const STEFAN_BOLTZMANN = 5.670374419e-8;
+const MIN_SURFACE_HEAT_CAPACITY = 100;
+const AUTO_SLAB_ATMOS_CP = 850;
+
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.00006;
 const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
@@ -24,6 +28,7 @@ const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
+var calculateEffectiveAtmosphericHeatCapacityHelper;
 if (typeof module !== 'undefined' && module.exports) {
     const waterCycleMod = require('./water-cycle.js');
     waterCycleInstance = waterCycleMod.waterCycle;
@@ -80,6 +85,9 @@ if (typeof module !== 'undefined' && module.exports) {
     runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
     METHANE_COMBUSTION_PARAMETER_CONST = atmosphericChem.METHANE_COMBUSTION_PARAMETER;
 
+    const atmosphericUtils = require('./atmospheric-utils.js');
+    calculateEffectiveAtmosphericHeatCapacityHelper = atmosphericUtils.calculateEffectiveAtmosphericHeatCapacity;
+
     ({
       getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper,
       isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper
@@ -92,6 +100,8 @@ if (typeof module !== 'undefined' && module.exports) {
     co2CycleInstance = globalThis.co2Cycle;
     runAtmosphericChemistry = globalThis.runAtmosphericChemistry;
     METHANE_COMBUSTION_PARAMETER_CONST = globalThis.METHANE_COMBUSTION_PARAMETER;
+    calculateEffectiveAtmosphericHeatCapacityHelper =
+      globalThis.calculateEffectiveAtmosphericHeatCapacity;
     getFactoryTemperatureMaintenancePenaltyReductionHelper =
       globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
     isBuildingEligibleForFactoryMitigationHelper =
@@ -517,8 +527,9 @@ class Terraforming extends EffectableEntity{
     // ensuring calculations are based on the start-of-tick state.
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
-    updateResources(deltaTime) {
-        this.update();
+    updateResources(deltaTime, options = {}) {
+        const skipTemperature = options.skipTemperature === true;
+        this.update(0, { skipTemperature, skipRadiation: skipTemperature });
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
@@ -715,50 +726,52 @@ class Terraforming extends EffectableEntity{
       }
     }
 
-    updateSurfaceTemperature() {
-    const groundAlbedo = this.luminosity.groundAlbedo;
-    const rotationPeriodH = this.celestialParameters.rotationPeriod || 24;
-    const gSurface = this.celestialParameters.gravity || 9.81;
+    updateSurfaceTemperature(deltaTimeMs = 0, options = {}) {
+        const groundAlbedo = this.luminosity.groundAlbedo;
+        const rotationPeriodH = this.celestialParameters.rotationPeriod || 24;
+        const gSurface = this.celestialParameters.gravity || 9.81;
 
-    // --- Atmospheric state (composition → IR emissivity, pressure → column mass)
-    const { composition, totalMass } = this.calculateAtmosphericComposition(); // totalMass in kg
-    const surfacePressurePa = calculateAtmosphericPressure(
-        totalMass / 1000, // tons → Pa via physics helper
-        gSurface,
-        this.celestialParameters.radius
-    );
-    const surfacePressureBar = surfacePressurePa / 1e5;
+        const { composition, totalMass } = this.calculateAtmosphericComposition();
+        const surfacePressurePa = calculateAtmosphericPressure(
+            totalMass / 1000,
+            gSurface,
+            this.celestialParameters.radius
+        );
+        const surfacePressureBar = surfacePressurePa / 1e5;
 
-    const { emissivity, tau, contributions } =
-        calculateEmissivity(composition, surfacePressureBar, gSurface);
-    this.temperature.emissivity = emissivity;
-    this.temperature.opticalDepth = tau;
-    this.temperature.opticalDepthContributions = contributions;
+        const { emissivity, tau, contributions } =
+            calculateEmissivity(composition, surfacePressureBar, gSurface);
+        this.temperature.emissivity = emissivity;
+        this.temperature.opticalDepth = tau;
+        this.temperature.opticalDepthContributions = contributions;
 
-    // --- Shortwave aerosols (for albedo adders, already in your model)
-    const aerosolsSW = {};
-    const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
-    if (this.resources?.atmospheric?.calciteAerosol) {
-        const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
-        aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0; // kg/m²
-    }
+        const aerosolsSW = {};
+        const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
+        if (this.resources?.atmospheric?.calciteAerosol) {
+            const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
+            aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+        }
 
-    // --- Base per-zone radiative solve (exactly what you had)
-    const baseParams = {
-        groundAlbedo,
-        // flux will be set per zone below
-        rotationPeriodH,
-        surfacePressureBar,
-        composition,
-        gSurface,
-        aerosolsSW
-    };
+        const baseParams = {
+            groundAlbedo,
+            rotationPeriodH,
+            surfacePressureBar,
+            composition,
+            gSurface,
+            aerosolsSW
+        };
 
     const ORDER = ['tropical', 'temperate', 'polar'];
     const z = {}; // per-zone working data
+
+    const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
+    const greenhouseFactor = 1 + 0.75 * tau;
+    const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
+
+    let weightedTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
-
+    const atmosphericHeatCapacity = (!ignoreHeatCapacity) ? calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface) : 0;
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -787,6 +800,7 @@ class Terraforming extends EffectableEntity{
         day:   zTemps.day,
         night: zTemps.night,
         eq:    zTemps.equilibriumTemperature,
+        albedo: zTemps.albedo,
         frac:  zoneFractions,
         area,
         Cslab
@@ -856,32 +870,56 @@ class Terraforming extends EffectableEntity{
     }
 
     // --- Write back temperatures; shift day/night by mean offset ------
-    let weightedTemp = 0;
     for (const zone of ORDER) {
+        const zoneFlux = this.luminosity.zonalFluxes[zone];
         const pct = getZonePercentage(zone);
-        const dMean = T[zone] - z[zone].mean;
+        const dMean = z[zone].day - z[zone].mean;
 
-        this.temperature.zones[zone].value = T[zone];
-        this.temperature.zones[zone].day   = z[zone].day   + dMean;
-        this.temperature.zones[zone].night = z[zone].night + dMean;
+        this.temperature.zones[zone].trendValue = T[zone];
         // Keep the radiative equilibrium diagnostic (pre‑mix) visible
         this.temperature.zones[zone].equilibriumTemperature = z[zone].eq;
 
-        weightedTemp += T[zone] * pct;
+
+        const previousMean = this.temperature.zones[zone].value;
+        const zoneFractions = calculateZonalSurfaceFractions(this, zone);
+        const rawSlabCapacity = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, zoneFractions, gSurface);
+        const effectiveAtmosphericCapacity = ignoreHeatCapacity ? 0 : atmosphericHeatCapacity;
+        const capacity = Math.max(rawSlabCapacity + effectiveAtmosphericCapacity, MIN_SURFACE_HEAT_CAPACITY);
+
+        const absorbedFlux = (1 - z[zone].albedo) * zoneFlux * 0.25;
+        const emittedFlux = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
+            : 0;
+        const netFlux = absorbedFlux - emittedFlux;
+
+        let newTemp = 0;
+        if(netFlux * (T[zone] - previousMean) > 0){
+            newTemp = previousMean + (netFlux * dtSeconds) / capacity;
+        } else{
+            newTemp = previousMean + (T[zone] - previousMean) * dtSeconds / (10*86400);
+        }
+
+        newTemp = !ignoreHeatCapacity ? newTemp : T[zone];
+
+        this.temperature.zones[zone].value = newTemp;
+        this.temperature.zones[zone].day = newTemp + dMean;
+        this.temperature.zones[zone].night = newTemp - dMean;
+
+        weightedTemp += newTemp*pct;
+        weightedEqTemp += z[zone].eq*pct;
     }
 
-    // Global diagnostics (unchanged from your logic)
-    this.temperature.value = weightedTemp;
-    this.temperature.equilibriumTemperature = weightedEqTemp;
 
-    this.luminosity.modifiedSolarFluxUnpenalized = weightedFluxUnpenalized;
-    const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
-    this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
+        this.temperature.value = weightedTemp;
+        this.temperature.equilibriumTemperature = weightedEqTemp;
 
-    this.temperature.effectiveTempNoAtmosphere =
-        effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
+        this.luminosity.modifiedSolarFluxUnpenalized = weightedFluxUnpenalized;
+        const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+        this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
+
+        this.temperature.effectiveTempNoAtmosphere =
+            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
     }
-
 
     // Estimate and store current surface and orbital radiation levels in mSv/day
     updateSurfaceRadiation() {
@@ -1021,16 +1059,20 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    update() {
+    update(deltaTime = 0, options = {}) {
       // Distribute global changes (from buildings) into zones first
+      const skipTemperature = options.skipTemperature === true;
+      const skipRadiation = options.skipRadiation === true;
 
       this._updateZonalCoverageCache(); // New call at the start of the update tick
 
       //First update luminosity
       this.updateLuminosity();
 
-      // Update temperature based on the new calculateSurfaceTemperature function
-      this.updateSurfaceTemperature();
+      // Update temperature with the new heat-capacity-aware integration
+      if (!skipTemperature) {
+        this.updateSurfaceTemperature(deltaTime, options);
+      }
 
       // Update Resources will be called by resources.js
       //this.updateResources(deltaTime);
@@ -1038,7 +1080,7 @@ class Terraforming extends EffectableEntity{
       // Update total atmospheric pressure (based on updated zonal amounts via synchronization later)
       // Note: synchronizeGlobalResources now calculates this.atmosphere.value
       // this.atmosphere.value = this.calculateTotalPressure(); // No longer needed here
-  
+
       // Coverage is now calculated on-demand using calculateAverageCoverage from
       // terraforming-utils.js. Removed redundant calls to the old
       // calculateCoverage function.
@@ -1054,9 +1096,12 @@ class Terraforming extends EffectableEntity{
 
       // Synchronize zonal data back to global resources object for other systems/UI
       this.synchronizeGlobalResources();
-      this.updateSurfaceRadiation();
+      if (!skipRadiation) {
+        this.updateSurfaceRadiation();
+      }
 
     } // <-- Correct closing brace for the 'update' method
+
 
     applyBooleanFlag(effect) {
       super.applyBooleanFlag(effect);
@@ -1778,4 +1823,19 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

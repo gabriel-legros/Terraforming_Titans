@@ -167,7 +167,7 @@
         const numUpdates = Math.max(1, Math.floor(stepMs / fixedUpdateStep));
         for (let i = 0; i < numUpdates; i++) {
             const noisyStepMs = fixedUpdateStep;
-            terraforming.updateResources(noisyStepMs);
+            terraforming.updateResources(noisyStepMs, { skipTemperature: true });
         }
         const cur = captureValues();
 
@@ -427,3 +427,4 @@
     };
   }
 })();
+
