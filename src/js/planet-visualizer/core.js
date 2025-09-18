@@ -101,6 +101,15 @@
         },
         baseColor: '#8a2a2a',
         inclinationDeg: 15,
+        // Large-scale surface feature (e.g., Mars dark regions)
+        surfaceFeatures: {
+          enabled: false,
+          strength: 0,   // 0..10 multiplicative darkening strength
+          scale: 12,     // spatial frequency; larger = more patches
+          contrast: 1.2, // shape of darkening mask
+          offsetX: 0.0,  // wrap offset in longitude (-1..1)
+          offsetY: 0.0,  // wrap offset in latitude  (-1..1)
+        },
       };
     }
 
@@ -208,6 +217,17 @@
         this.setBaseColor(baseColorFromGame, { fromGame: true, force: true, skipSurfaceUpdate: true });
       } else {
         this.setBaseColor(this.viz.baseColor, { force: true, skipSurfaceUpdate: true });
+      }
+
+      // Heuristic defaults for Mars-like worlds: enable large-scale dark features
+      const planetName = (currentPlanetParameters?.name || '').toLowerCase();
+      const isMars = planetName.indexOf('mars') !== -1;
+      if (isMars) {
+        const f = this.viz.surfaceFeatures;
+        f.enabled = true;
+        f.strength = 0.67;  // stronger darkening by default
+        f.scale = 12;      // default scale 12 for visibility/detail
+        f.contrast = 2.0;  // higher contrast for visibility
       }
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2);

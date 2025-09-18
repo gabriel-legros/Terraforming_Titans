@@ -53,6 +53,22 @@
     makeRow('bPol', 'Biomass Polar (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
 
+    // Large-scale surface feature controls
+    const makeCheckbox = (id, label) => {
+      const l = document.createElement('div'); l.className = 'pv-row-label'; l.textContent = label;
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = `pv-${id}`;
+      const valWrap = document.createElement('div'); valWrap.className = 'pv-row-value';
+      grid.appendChild(l); grid.appendChild(cb); grid.appendChild(valWrap);
+      this.debug.rows[id] = { checkbox: cb };
+      cb.addEventListener('change', () => { this.applySlidersToGame(); });
+    };
+    makeCheckbox('featEnabled', 'Feature Enabled');
+    makeRow('featStrength', 'Feature Strength', 0, 10, 0.01);
+    makeRow('featScale', 'Feature Scale', 0.05, 20, 0.01);
+    makeRow('featContrast', 'Feature Contrast', 0, 6, 0.01);
+    makeRow('featOffsetX', 'Feature Offset X', -1, 1, 0.01);
+    makeRow('featOffsetY', 'Feature Offset Y', -1, 1, 0.01);
+
     const baseColorLabel = document.createElement('div');
     baseColorLabel.className = 'pv-row-label';
     baseColorLabel.textContent = 'Base color';
@@ -194,6 +210,11 @@
     setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
     ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol'].forEach(sv);
+    if (r.featStrength) setVal('featStrength', Number(r.featStrength.range.value));
+    if (r.featScale) setVal('featScale', Number(r.featScale.range.value));
+    if (r.featContrast) setVal('featContrast', Number(r.featContrast.range.value));
+    if (r.featOffsetX) setVal('featOffsetX', Number(r.featOffsetX.range.value));
+    if (r.featOffsetY) setVal('featOffsetY', Number(r.featOffsetY.range.value));
   };
 
   PlanetVisualizer.prototype.applySlidersToGame = function applySlidersToGame() {
@@ -241,6 +262,15 @@
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
+
+    // Apply surface feature params
+    const f = this.viz.surfaceFeatures || (this.viz.surfaceFeatures = {});
+    if (r.featEnabled && r.featEnabled.checkbox) f.enabled = !!r.featEnabled.checkbox.checked;
+    if (r.featStrength) f.strength = Math.max(0, Math.min(10, Number(r.featStrength.range.value)));
+    if (r.featScale) f.scale = Math.max(0.05, Number(r.featScale.range.value));
+    if (r.featContrast) f.contrast = Math.max(0, Number(r.featContrast.range.value));
+    if (r.featOffsetX) f.offsetX = Number(r.featOffsetX.range.value);
+    if (r.featOffsetY) f.offsetY = Number(r.featOffsetY.range.value);
 
     this.updateSurfaceTextureFromPressure(true);
     this.updateCloudUniforms();
@@ -442,6 +472,16 @@
       const s = String(avgWater.toFixed(2));
       r.cloudCov.range.value = s; r.cloudCov.number.value = s;
     }
+
+    // Sync surface feature params from viz
+    const f = this.viz.surfaceFeatures || {};
+    if (r.featEnabled && r.featEnabled.checkbox) r.featEnabled.checkbox.checked = !!f.enabled;
+    const setIf = (id, val) => { if (r[id]) { const s = String(val); r[id].range.value = s; r[id].number.value = s; } };
+    setIf('featStrength', Math.max(0, Math.min(10, Number(f.strength || 0))));
+    setIf('featScale', Math.max(0.05, Number(f.scale || 12)));
+    setIf('featContrast', Math.max(0, Number(f.contrast || 1.2)));
+    setIf('featOffsetX', Number(f.offsetX || 0));
+    setIf('featOffsetY', Number(f.offsetY || 0));
 
     const colorRow = this.debug.rows.baseColor;
     if (colorRow && this.debug.mode !== 'debug') {
