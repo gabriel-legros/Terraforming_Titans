@@ -14,7 +14,7 @@ const RWG_PROJECT_NAMES = {
 };
 const RWG_BUILDING_OUTPUT = {
   oreMine: 'Ore Mine',
-  sandQuarry: 'Sand',
+  sandQuarry: 'Sand Harvester',
 };
 
 function _titleCaseArchetype(t) {
