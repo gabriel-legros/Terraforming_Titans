@@ -909,7 +909,6 @@ class Terraforming extends EffectableEntity{
         this.temperature.zones[zone].night = newTemp - dMean;
 
         weightedTemp += newTemp*pct;
-        weightedEqTemp += z[zone].eq*pct;
     }
 
 
