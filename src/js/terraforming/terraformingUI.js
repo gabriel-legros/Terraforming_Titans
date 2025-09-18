@@ -390,7 +390,7 @@ function createTemperatureBox(row) {
           <tr>
             <th>Zone</th>
             <th>T (<span class="temp-unit"></span>)</th>
-            <th>T_eq</th>
+            <th>T_trend</th>
             <th>Delta</th>
             <th>Day</th>
             <th>Night</th>
@@ -400,7 +400,7 @@ function createTemperatureBox(row) {
           <tr>
             <td>Tropical</td>
             <td><span id="tropical-temp">${terraforming.temperature.zones.tropical.value.toFixed(2)}</span></td>
-            <td><span id="tropical-eq-temp"></span></td>
+            <td><span id="tropical-trend-temp"></span></td>
             <td><span id="tropical-delta"></span></td>
             <td><span id="tropical-day">${terraforming.temperature.zones.tropical.day.toFixed(2)}</span></td>
             <td><span id="tropical-night">${terraforming.temperature.zones.tropical.night.toFixed(2)}</span></td>
@@ -408,7 +408,7 @@ function createTemperatureBox(row) {
           <tr>
             <td>Temperate</td>
             <td><span id="temperate-temp">${terraforming.temperature.zones.temperate.value.toFixed(2)}</span></td>
-            <td><span id="temperate-eq-temp"></span></td>
+            <td><span id="temperate-trend-temp"></span></td>
             <td><span id="temperate-delta"></span></td>
             <td><span id="temperate-day">${terraforming.temperature.zones.temperate.day.toFixed(2)}</span></td>
             <td><span id="temperate-night">${terraforming.temperature.zones.temperate.night.toFixed(2)}</span></td>
@@ -416,7 +416,7 @@ function createTemperatureBox(row) {
           <tr>
             <td>Polar</td>
             <td><span id="polar-temp">${terraforming.temperature.zones.polar.value.toFixed(2)}</span></td>
-            <td><span id="polar-eq-temp"></span></td>
+            <td><span id="polar-trend-temp"></span></td>
             <td><span id="polar-delta"></span></td>
             <td><span id="polar-day">${terraforming.temperature.zones.polar.day.toFixed(2)}</span></td>
             <td><span id="polar-night">${terraforming.temperature.zones.polar.night.toFixed(2)}</span></td>
@@ -454,17 +454,17 @@ function createTemperatureBox(row) {
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
-      tropicalEqTemp: temperatureBox.querySelector('#tropical-eq-temp'),
+      tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
       tropicalDelta: temperatureBox.querySelector('#tropical-delta'),
       tropicalDay: temperatureBox.querySelector('#tropical-day'),
       tropicalNight: temperatureBox.querySelector('#tropical-night'),
       temperateTemp: temperatureBox.querySelector('#temperate-temp'),
-      temperateEqTemp: temperatureBox.querySelector('#temperate-eq-temp'),
+      temperateTrendTemp: temperatureBox.querySelector('#temperate-trend-temp'),
       temperateDelta: temperatureBox.querySelector('#temperate-delta'),
       temperateDay: temperatureBox.querySelector('#temperate-day'),
       temperateNight: temperatureBox.querySelector('#temperate-night'),
       polarTemp: temperatureBox.querySelector('#polar-temp'),
-      polarEqTemp: temperatureBox.querySelector('#polar-eq-temp'),
+      polarTrendTemp: temperatureBox.querySelector('#polar-trend-temp'),
       polarDelta: temperatureBox.querySelector('#polar-delta'),
       polarDay: temperatureBox.querySelector('#polar-day'),
       polarNight: temperatureBox.querySelector('#polar-night'),
@@ -488,21 +488,21 @@ function createTemperatureBox(row) {
     els.equilibrium.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
-    els.tropicalEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.equilibriumTemperature), false, 2);
+    els.tropicalTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.trendValue), false, 2);
     const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
     els.tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
     els.tropicalDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
     els.tropicalNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
 
     els.temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
-    els.temperateEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.equilibriumTemperature), false, 2);
+    els.temperateTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.trendValue), false, 2);
     const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
     els.temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
     els.temperateDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
     els.temperateNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
 
     els.polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
-    els.polarEqTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.equilibriumTemperature), false, 2);
+    els.polarTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.trendValue), false, 2);
     const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
     els.polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
     els.polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);

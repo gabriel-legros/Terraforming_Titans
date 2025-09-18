@@ -279,6 +279,7 @@ class Terraforming extends EffectableEntity{
           value: 0,
           day: 0,
           night: 0,
+          trendValue: 0,
           equilibriumTemperature: 0
         },
         temperate: {
@@ -286,6 +287,7 @@ class Terraforming extends EffectableEntity{
           value: 0,
           day: 0,
           night: 0,
+          trendValue: 0,
           equilibriumTemperature: 0
         },
         polar: {
@@ -293,6 +295,7 @@ class Terraforming extends EffectableEntity{
           value: 0,
           day: 0,
           night: 0,
+          trendValue: 0,
           equilibriumTemperature: 0
         }
       }
