@@ -508,8 +508,6 @@
     };
     this.viz.ships = Number(r.ships ? r.ships.range.value : 0);
     if (this.sunLight) this.sunLight.intensity = this.viz.illum;
-    this.updateSurfaceTextureFromPressure(true);
-    this.updateCloudUniforms();
   };
 
   PlanetVisualizer.prototype.refreshGameModeSliderDisplays = function refreshGameModeSliderDisplays() {
