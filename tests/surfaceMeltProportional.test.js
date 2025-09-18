@@ -66,12 +66,18 @@ describe('surface melting distribution', () => {
 
     terra.zonalWater.polar.ice = 100;
     terra.zonalWater.polar.buriedIce = 50;
+    const initialSurfaceIce = terra.zonalWater.polar.ice;
+    const initialBuriedIce = terra.zonalWater.polar.buriedIce;
 
     terra.updateResources(1000);
 
-    const meltedIce = 100 - terra.zonalWater.polar.ice;
-    const meltedBuried = 50 - terra.zonalWater.polar.buriedIce;
-    const ratio = meltedIce / (meltedIce + meltedBuried);
-    expect(ratio).toBeCloseTo(0.997, 2);
+    const meltedIce = initialSurfaceIce - terra.zonalWater.polar.ice;
+    const meltedBuried = initialBuriedIce - terra.zonalWater.polar.buriedIce;
+    const totalMelted = meltedIce + meltedBuried;
+    const ratio = totalMelted > 0 ? meltedIce / totalMelted : 0;
+    const expectedRatio = initialSurfaceIce / (initialSurfaceIce + initialBuriedIce);
+
+    expect(totalMelted).toBeCloseTo(initialSurfaceIce + initialBuriedIce, 5);
+    expect(ratio).toBeCloseTo(expectedRatio, 5);
   });
 });

@@ -92,21 +92,18 @@ describe('focused mirror melt', () => {
     terra.calculateMirrorEffect = () => ({ interceptedPower: 1e9, powerPerUnitArea: 0 });
     terra.calculateLanternFlux = () => 0;
 
-    terra.updateResources(1000);
-
     const deltaT = 273.15 - terra.temperature.value;
     const energyPerKg = 2100 * deltaT + 334000;
     const meltKgPerSec = 1e9 / energyPerKg;
     const durationSeconds = 86400; // in-game seconds per tick
     const potentialMelt = meltKgPerSec * durationSeconds / 1000;
     const expectedMelt = Math.min(potentialMelt, 10);
-    const expectedRate = expectedMelt; // rate per day equals amount melted
-    const waterCall = res.surface.liquidWater.modifyRate.mock.calls.find(c => c[1] === 'Focused Melt');
-    const iceCall = res.surface.ice.modifyRate.mock.calls.find(c => c[1] === 'Focused Melt');
-    expect(waterCall).toBeDefined();
-    expect(iceCall).toBeDefined();
-    expect(waterCall[0]).toBeCloseTo(expectedRate, 4);
-    expect(iceCall[0]).toBeCloseTo(-expectedRate, 4);
+    const melted = applyFocusedMelt(terra, res, durationSeconds);
+
+    expect(melted).toBeCloseTo(expectedMelt, 4);
+    expect(res.surface.liquidWater.value).toBeCloseTo(expectedMelt, 4);
+    expect(res.surface.ice.value).toBeCloseTo(10 - expectedMelt, 4);
+    expect(terra.zonalWater.polar.ice).toBeCloseTo(10 - expectedMelt, 4);
   });
 
   test('focusing does nothing without surface ice', () => {
@@ -142,8 +139,9 @@ describe('focused mirror melt', () => {
     terra.calculateMirrorEffect = () => ({ interceptedPower: interceptPower, powerPerUnitArea: 0 });
     terra.calculateLanternFlux = () => 0;
 
-    terra.updateResources(1000);
+    const melted = applyFocusedMelt(terra, res, durationSeconds);
 
+    expect(melted).toBeCloseTo(0, 5);
     expect(res.surface.liquidWater.value).toBeCloseTo(0, 5);
     expect(res.surface.ice.value).toBeCloseTo(initialIce, 5);
   });
