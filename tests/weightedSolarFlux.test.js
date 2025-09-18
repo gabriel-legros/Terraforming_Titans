@@ -30,9 +30,10 @@ describe('weighted solar flux', () => {
     global.buildings = { spaceMirror: { surfaceArea: 500, active: 1 }, hyperionLantern: { active: 0 } };
 
     const tf = new Terraforming(global.resources, { radius: 1, distanceFromSun: 1, albedo: 0, gravity: 1 });
+    tf.updateLuminosity();
 
     const zones = ['tropical','temperate','polar'];
-    const expected = zones.reduce((sum, z) => sum + tf.luminosity.zonalFluxes[z] * getZonePercentage(z), 0);
+    const expected = zones.reduce((sum, z) => sum + (tf.luminosity.zonalFluxes[z] || 0) * getZonePercentage(z), 0);
     expect(tf.luminosity.modifiedSolarFlux).toBeCloseTo(expected, 5);
   });
 });
