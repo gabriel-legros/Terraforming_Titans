@@ -377,8 +377,6 @@ function updateLogic(delta) {
   dayNightCycle.update(delta);
 
   const allStructures = {...buildings, ...colonies};
-  // Update funding
-  terraforming.update(delta);
   
   produceResources(delta, allStructures);
 

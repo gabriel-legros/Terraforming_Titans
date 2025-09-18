@@ -358,11 +358,6 @@ class Terraforming extends EffectableEntity{
       this.orbitalRadiation = 0;
       this.radiationPenalty = 0;
 
-
-
-    this.updateLuminosity();
-    this.updateSurfaceTemperature();
-    this.updateSurfaceRadiation();
   }
 
   getMagnetosphereStatus() {
@@ -505,25 +500,24 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    // Initial global pressures are no longer stored here. They will be calculated
-    // on the fly when needed (e.g., for delta or equilibrium calculations)
-    // based on the initial values stored in planetParameters.resources.atmospheric.
+      // Initial global pressures are no longer stored here. They will be calculated
+      // on the fly when needed (e.g., for delta or equilibrium calculations)
+      // based on the initial values stored in planetParameters.resources.atmospheric.
 
-    // Initial synchronization to update global resource amounts and calculate initial pressures
-    this.synchronizeGlobalResources(); // This will now read from this.atmosphere.gases
+      // Initial synchronization to update global resource amounts and calculate initial pressures
+      this.synchronizeGlobalResources();
+      this._updateZonalCoverageCache();
+      this.updateLuminosity();
+      this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
+      this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
+      this.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
 
-    this._updateZonalCoverageCache();
-    this.updateLuminosity();
-    this.luminosity.initialSurfaceAlbedo = this.luminosity.surfaceAlbedo;
-    this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
-    this.updateSurfaceTemperature();
-    this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
-
-    this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
-    this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
-    this.temperature.zones.polar.initial = this.temperature.zones.polar.value;
-    // Mark initial values as calculated
-    this.initialValuesCalculated = true;
+      this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
+      this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
+      this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
+      this.temperature.zones.polar.initial = this.temperature.zones.polar.value;
+      // Mark initial values as calculated
+      this.initialValuesCalculated = true;
     } // Correct closing brace for calculateInitialValues
 
 
@@ -1068,19 +1062,14 @@ class Terraforming extends EffectableEntity{
     }
 
     update(deltaTime = 0, options = {}) {
-      // Distribute global changes (from buildings) into zones first
-      const skipTemperature = options.skipTemperature === true;
-      const skipRadiation = options.skipRadiation === true;
-
+      this.synchronizeGlobalResources();
       this._updateZonalCoverageCache(); // New call at the start of the update tick
 
       //First update luminosity
       this.updateLuminosity();
 
       // Update temperature with the new heat-capacity-aware integration
-      if (!skipTemperature) {
-        this.updateSurfaceTemperature(deltaTime, options);
-      }
+      this.updateSurfaceTemperature(deltaTime, options);
 
       // Update Resources will be called by resources.js
       //this.updateResources(deltaTime);
@@ -1102,11 +1091,7 @@ class Terraforming extends EffectableEntity{
 
       // --- End of Status Update Logic ---
 
-      // Synchronize zonal data back to global resources object for other systems/UI
-      this.synchronizeGlobalResources();
-      if (!skipRadiation) {
-        this.updateSurfaceRadiation();
-      }
+      this.updateSurfaceRadiation();
 
     } // <-- Correct closing brace for the 'update' method
 
@@ -1809,7 +1794,7 @@ synchronizeGlobalResources() {
       if (this.luminosity.initialActualAlbedo === undefined) {
           this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
       }
-      this.updateSurfaceTemperature(); // Recalculate temperatures
+
   } // End loadState
 
 } // End Terraforming Class
@@ -1831,6 +1816,7 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
 }
+
 
 
 

@@ -150,6 +150,12 @@
     return JSON.stringify(buildOverrideObject(values), null, 2);
   }
 
+  function logTerraformingOverride() {
+    const snippet = generateOverrideSnippet(captureValues());
+    console.log('Override snippet:\n' + snippet);
+    return snippet;
+  }
+
   function fastForwardToEquilibrium(options = {}) {
     let stepMs = options.stepMs || 1000 * 60 * 60; // The "jump" size, e.g., 1 hour
     const fixedUpdateStep = options.updateStep || 100; // The actual step for updateLogic, hardcoded to 1s
@@ -412,10 +418,11 @@
 
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, calculateEquilibriumConstants, reconstructJournalState };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
+    globalThis.logTerraformingOverride = logTerraformingOverride;
     globalThis.reconstructJournalState = reconstructJournalState;
     globalThis.runEquilibriumCalculation = function(terraformingInstance) {
       if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {
