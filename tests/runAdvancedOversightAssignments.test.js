@@ -36,6 +36,7 @@ describe('runAdvancedOversightAssignments', () => {
           focus: { value: baseTemps.focus.value, day: baseTemps.focus.day, night: baseTemps.focus.night },
         }
       },
+      luminosity: { zonalFluxes: {} },
       calculateMirrorEffect() {
         return { interceptedPower: 250000 };
       },
@@ -50,6 +51,8 @@ describe('runAdvancedOversightAssignments', () => {
           this.temperature.zones[z].night = baseTemps[z].night + delta;
         }
       },
+      saveTemperatureState: jest.fn(() => ({ temperature: {}, luminosity: {} })),
+      restoreTemperatureState: jest.fn(),
     };
   });
 
