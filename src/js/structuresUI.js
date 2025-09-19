@@ -842,7 +842,15 @@ function updateDecreaseButtonText(button, buildCount) {
       }
       const hasEnough = item.available >= requiredAmount;
       const color = hasEnough ? '' : item.insufficientColor;
-      if (span.style.color !== color) {
+      if (item.key === 'colony.workers') {
+        if (span.style.color) {
+          span.style.color = '';
+        }
+        const textSpan = span._textSpan;
+        if (textSpan && textSpan.style.color !== color) {
+          textSpan.style.color = color;
+        }
+      } else if (span.style.color !== color) {
         span.style.color = color;
       }
     });
