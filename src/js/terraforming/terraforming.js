@@ -528,7 +528,7 @@ class Terraforming extends EffectableEntity{
     // using a global atmosphere model but zonal surface interactions.
     updateResources(deltaTime, options = {}) {
         const skipTemperature = options.skipTemperature === true;
-        this.update(0, { skipTemperature, skipRadiation: skipTemperature });
+        this.update(deltaTime, { skipTemperature, skipRadiation: skipTemperature });
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
