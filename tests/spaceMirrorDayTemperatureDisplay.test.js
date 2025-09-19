@@ -13,9 +13,9 @@ describe('space mirror day temperature display', () => {
     global.terraforming = {
       calculateZoneSolarFlux: () => 0,
       temperature: { zones: {
-        tropical: { day: 300, value: 0 },
-        temperate: { day: 280, value: 0 },
-        polar: { day: 260, value: 0 },
+        tropical: { day: 300, value: 295, trendValue: 298 },
+        temperate: { day: 280, value: 276, trendValue: 274 },
+        polar: { day: 260, value: 258, trendValue: 257 },
       } }
     };
 
@@ -30,10 +30,10 @@ describe('space mirror day temperature display', () => {
     updateZonalFluxTable();
 
     const header = dom.window.document.querySelector('#mirror-flux-table thead tr th:nth-child(4)').textContent;
-    expect(header).toBe('Day Temperature (K)');
-    expect(dom.window.document.getElementById('mirror-day-temp-tropical').textContent).toBe('300.00');
-    expect(dom.window.document.getElementById('mirror-day-temp-temperate').textContent).toBe('280.00');
-    expect(dom.window.document.getElementById('mirror-day-temp-polar').textContent).toBe('260.00');
+    expect(header).toBe('Day Temperature (K) Current / Trend');
+    expect(dom.window.document.getElementById('mirror-day-temp-tropical').textContent).toBe('300.00 / 303.00');
+    expect(dom.window.document.getElementById('mirror-day-temp-temperate').textContent).toBe('280.00 / 278.00');
+    expect(dom.window.document.getElementById('mirror-day-temp-polar').textContent).toBe('260.00 / 259.00');
 
     delete global.document;
     delete global.getTemperatureUnit;
