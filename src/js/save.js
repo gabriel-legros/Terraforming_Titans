@@ -21,6 +21,42 @@ var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
     ? OxygenFactoryClassRef.getAutomationSettings()
     : globalThis.oxygenFactorySettings);
 
+function refreshFactoryAutomationRefs() {
+  if (!GhgFactoryClassRef) {
+    if (typeof require !== 'undefined') {
+      try {
+        GhgFactoryClassRef = require('./buildings/GhgFactory.js').GhgFactory;
+      } catch (e) {}
+    }
+    if (!GhgFactoryClassRef && globalThis && globalThis.GhgFactory) {
+      GhgFactoryClassRef = globalThis.GhgFactory;
+    }
+  }
+  const ghgSettings = GhgFactoryClassRef && GhgFactoryClassRef.getAutomationSettings
+    ? GhgFactoryClassRef.getAutomationSettings()
+    : (globalThis && globalThis.ghgFactorySettings);
+  if (ghgSettings) {
+    ghgFactorySettingsRef = ghgSettings;
+  }
+
+  if (!OxygenFactoryClassRef) {
+    if (typeof require !== 'undefined') {
+      try {
+        OxygenFactoryClassRef = require('./buildings/OxygenFactory.js').OxygenFactory;
+      } catch (e) {}
+    }
+    if (!OxygenFactoryClassRef && globalThis && globalThis.OxygenFactory) {
+      OxygenFactoryClassRef = globalThis.OxygenFactory;
+    }
+  }
+  const oxygenSettings = OxygenFactoryClassRef && OxygenFactoryClassRef.getAutomationSettings
+    ? OxygenFactoryClassRef.getAutomationSettings()
+    : (globalThis && globalThis.oxygenFactorySettings);
+  if (oxygenSettings) {
+    oxygenFactorySettingsRef = oxygenSettings;
+  }
+}
+
 globalGameIsLoadingFromSave = false;
 
 let loadingOverlayElement = null;
@@ -84,6 +120,7 @@ function recalculateLandUsage() {
 }
 
 function getGameState() {
+  refreshFactoryAutomationRefs();
   return {
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined' ? resources : undefined,
@@ -156,6 +193,7 @@ function loadGame(slotOrCustomString) {
 
   showLoadingOverlay();
   globalGameIsLoadingFromSave = true;
+  refreshFactoryAutomationRefs();
 
   try {
     const gameState = JSON.parse(savedState);
