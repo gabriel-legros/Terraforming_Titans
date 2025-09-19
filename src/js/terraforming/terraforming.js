@@ -19,8 +19,6 @@ const KPA_PER_ATM = 101.325;
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
-const MIN_TEMPERATURE_STEP_ABSOLUTE = 1e-12; // absolute guard to keep micro-adjustments visible
-const MIN_TEMPERATURE_STEP_RELATIVE = Number.EPSILON * 32; // relative guard tied to current magnitudes
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.00006;
@@ -903,16 +901,11 @@ class Terraforming extends EffectableEntity{
             newTemp = previousMean + desiredDelta * dtSeconds / (10*86400);
         }
 
-        const appliedDelta = newTemp - previousMean;
-        const magnitude = Math.max(Math.abs(previousMean), Math.abs(newTemp), Math.abs(T[zone]), 1);
-        const epsilonStep = MIN_TEMPERATURE_STEP_RELATIVE * magnitude;
-        const minStep = Math.min(Math.abs(desiredDelta), Math.max(epsilonStep, MIN_TEMPERATURE_STEP_ABSOLUTE));
-        if (minStep > 0 && Math.abs(appliedDelta) < minStep) {
-            const direction = desiredDelta > 0 ? 1 : -1;
-            newTemp = previousMean + direction * minStep;
-        }
-
         newTemp = !ignoreHeatCapacity ? newTemp : T[zone];
+
+        if (Math.abs(newTemp - T[zone]) < 0.001) {
+            newTemp = T[zone];
+        }
 
         this.temperature.zones[zone].value = newTemp;
         this.temperature.zones[zone].day = newTemp + dMean;
@@ -1828,20 +1821,4 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
