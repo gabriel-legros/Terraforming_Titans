@@ -1,9 +1,18 @@
-var oxygenFactorySettings = oxygenFactorySettings || {
+const DEFAULT_OXYGEN_AUTOMATION_SETTINGS = {
   autoDisableAbovePressure: false,
   disablePressureThreshold: 15, // kPa
 };
 
+function sanitizeNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 class OxygenFactory extends Building {
+  getAutomationSettings() {
+    return OxygenFactory.getAutomationSettings();
+  }
+
   updateProductivity(resources, deltaTime) {
     const {
       targetProductivity: baseTarget,
@@ -18,16 +27,17 @@ class OxygenFactory extends Building {
     }
 
     let targetProductivity = baseTarget;
+    const settings = getOxygenAutomationSettings(this);
 
     if (
       hasAtmosphericOversight &&
-      oxygenFactorySettings.autoDisableAbovePressure &&
+      settings.autoDisableAbovePressure &&
       terraforming &&
       resources.atmospheric?.oxygen &&
       typeof calculateAtmosphericPressure === 'function'
     ) {
       const oxygen = resources.atmospheric.oxygen;
-      const targetPa = oxygenFactorySettings.disablePressureThreshold * 1000;
+      const targetPa = settings.disablePressureThreshold * 1000;
       const currentPa = calculateAtmosphericPressure(
         oxygen.value,
         terraforming.celestialParameters.gravity,
@@ -70,6 +80,8 @@ class OxygenFactory extends Building {
   initUI(autoBuildContainer, cache) {
     if (!autoBuildContainer || !cache) return;
 
+    const settings = getOxygenAutomationSettings(this);
+
     const pressureControl = document.createElement('div');
     pressureControl.classList.add('o2-pressure-control');
     pressureControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature')
@@ -79,9 +91,9 @@ class OxygenFactory extends Building {
     const pressureCheckbox = document.createElement('input');
     pressureCheckbox.type = 'checkbox';
     pressureCheckbox.classList.add('o2-pressure-checkbox');
-    pressureCheckbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+    pressureCheckbox.checked = settings.autoDisableAbovePressure;
     pressureCheckbox.addEventListener('change', () => {
-      oxygenFactorySettings.autoDisableAbovePressure = pressureCheckbox.checked;
+      settings.autoDisableAbovePressure = pressureCheckbox.checked;
     });
     pressureControl.appendChild(pressureCheckbox);
 
@@ -102,14 +114,14 @@ class OxygenFactory extends Building {
 
     const update = () => {
       if (document.activeElement !== pressureInput) {
-        pressureInput.value = oxygenFactorySettings.disablePressureThreshold;
+        pressureInput.value = settings.disablePressureThreshold;
       }
     };
     update();
 
     pressureInput.addEventListener('input', () => {
       const val = parseFloat(pressureInput.value);
-      oxygenFactorySettings.disablePressureThreshold = val;
+      settings.disablePressureThreshold = val;
     });
 
     autoBuildContainer.appendChild(pressureControl);
@@ -128,17 +140,60 @@ class OxygenFactory extends Building {
 
     const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
     o2Els.container.style.display = enabled ? 'flex' : 'none';
+    const settings = getOxygenAutomationSettings(this);
     if (o2Els.checkbox) {
-      o2Els.checkbox.checked = oxygenFactorySettings.autoDisableAbovePressure;
+      o2Els.checkbox.checked = settings.autoDisableAbovePressure;
     }
     if (o2Els.input && document.activeElement !== o2Els.input) {
-      o2Els.input.value = oxygenFactorySettings.disablePressureThreshold;
+      o2Els.input.value = settings.disablePressureThreshold;
     }
     if (o2Els.unitSpan) {
       o2Els.unitSpan.textContent = 'kPa';
     }
   }
+
+  static getAutomationSettings() {
+    if (!this.automationSettings) {
+      this.automationSettings = {
+        autoDisableAbovePressure: DEFAULT_OXYGEN_AUTOMATION_SETTINGS.autoDisableAbovePressure,
+        disablePressureThreshold: DEFAULT_OXYGEN_AUTOMATION_SETTINGS.disablePressureThreshold
+      };
+    }
+    return this.automationSettings;
+  }
+
+  static saveAutomationSettings() {
+    const settings = this.getAutomationSettings();
+    return {
+      autoDisableAbovePressure: !!settings.autoDisableAbovePressure,
+      disablePressureThreshold: sanitizeNumber(
+        settings.disablePressureThreshold,
+        DEFAULT_OXYGEN_AUTOMATION_SETTINGS.disablePressureThreshold
+      )
+    };
+  }
+
+  static loadAutomationSettings(saved) {
+    const settings = this.getAutomationSettings();
+    const hasData = saved && saved.constructor === Object;
+    settings.autoDisableAbovePressure = hasData && 'autoDisableAbovePressure' in saved
+      ? !!saved.autoDisableAbovePressure
+      : DEFAULT_OXYGEN_AUTOMATION_SETTINGS.autoDisableAbovePressure;
+    settings.disablePressureThreshold = hasData && 'disablePressureThreshold' in saved
+      ? sanitizeNumber(saved.disablePressureThreshold, DEFAULT_OXYGEN_AUTOMATION_SETTINGS.disablePressureThreshold)
+      : DEFAULT_OXYGEN_AUTOMATION_SETTINGS.disablePressureThreshold;
+    return settings;
+  }
 }
+
+function getOxygenAutomationSettings(context) {
+  if (context && typeof context.getAutomationSettings === 'function') {
+    return context.getAutomationSettings();
+  }
+  return OxygenFactory.getAutomationSettings();
+}
+
+const oxygenFactorySettings = OxygenFactory.getAutomationSettings();
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { OxygenFactory, oxygenFactorySettings };
