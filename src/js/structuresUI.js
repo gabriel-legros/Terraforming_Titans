@@ -45,7 +45,13 @@ function applyCollapseState(structureName) {
   if (autoContainer) {
     Array.from(autoContainer.children).forEach(child => {
       if (child !== inputContainer) {
-        child.style.display = collapsed ? 'none' : '';
+        if (collapsed) {
+          child.dataset.prevDisplay = child.style.display;
+          child.style.display = 'none';
+        } else if (Object.prototype.hasOwnProperty.call(child.dataset, 'prevDisplay')) {
+          child.style.display = child.dataset.prevDisplay;
+          delete child.dataset.prevDisplay;
+        }
       }
     });
   }
