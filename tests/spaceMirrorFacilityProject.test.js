@@ -22,7 +22,13 @@ describe('SpaceMirrorFacilityProject', () => {
       calculateMirrorEffect: () => ({ interceptedPower: 10, powerPerUnitArea: 0.5 }),
       calculateZoneSolarFlux: zone => ({ tropical: 100, temperate: 50, polar: 25 })[zone],
       celestialParameters: { crossSectionArea: 100, surfaceArea: 100 },
-      temperature: { zones: { tropical: { value: 290 }, temperate: { value: 280 }, polar: { value: 270 } } }
+      temperature: {
+        zones: {
+          tropical: { value: 290, trendValue: 289 },
+          temperate: { value: 280, trendValue: 279 },
+          polar: { value: 270, trendValue: 269 }
+        }
+      }
     };
 
     const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
@@ -65,7 +71,7 @@ describe('SpaceMirrorFacilityProject', () => {
     const fluxCell = dom.window.document.getElementById('mirror-flux-tropical');
     expect(fluxCell.textContent).toBe('25.00');
     const tempCell = dom.window.document.getElementById('mirror-temp-tropical');
-    expect(tempCell.textContent).toBe('290.00');
+    expect(tempCell.textContent).toBe('290.00 / 289.00');
   });
 
   test('shows lantern details when unlocked', () => {
