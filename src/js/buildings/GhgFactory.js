@@ -1,27 +1,19 @@
-var ghgFactorySettings = ghgFactorySettings || {
+const DEFAULT_GHG_AUTOMATION_SETTINGS = {
   autoDisableAboveTemp: false,
   disableTempThreshold: 283.15, // Kelvin
   reverseTempThreshold: 283.15,
 };
 
-function enforceGhgFactoryTempGap(changed) {
-  const minGap = 1;
-  const A = ghgFactorySettings.disableTempThreshold;
-  let B = ghgFactorySettings.reverseTempThreshold;
-  if (B === undefined || isNaN(B)) {
-    B = A + minGap;
-  }
-  if (B - A < minGap) {
-    if (changed === 'B') {
-      ghgFactorySettings.disableTempThreshold = B - minGap;
-    } else {
-      B = A + minGap;
-    }
-  }
-  ghgFactorySettings.reverseTempThreshold = B;
+function sanitizeNumber(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 class GhgFactory extends Building {
+  getAutomationSettings() {
+    return GhgFactory.getAutomationSettings();
+  }
+
   updateProductivity(resources, deltaTime) {
     const {
       targetProductivity,
@@ -29,6 +21,8 @@ class GhgFactory extends Building {
       computeMaxProduction,
       solveRequired
     } = this.computeBaseProductivity(resources, deltaTime);
+
+    const settings = getGhgAutomationSettings(this);
 
     const saveTempState = terraforming?.saveTemperatureState?.bind(terraforming);
     const restoreTempState = terraforming?.restoreTemperatureState?.bind(terraforming);
@@ -62,14 +56,14 @@ class GhgFactory extends Building {
 
     if (
       hasAtmosphericOversight &&
-      ghgFactorySettings.autoDisableAboveTemp &&
+      settings.autoDisableAboveTemp &&
       terraforming && terraforming.temperature
     ) {
-      const A = ghgFactorySettings.disableTempThreshold;
-      let B = ghgFactorySettings.reverseTempThreshold ?? A + 5;
+      const A = settings.disableTempThreshold;
+      let B = settings.reverseTempThreshold ?? A + 5;
       if (B - A < 1) {
         B = A + 1;
-        ghgFactorySettings.reverseTempThreshold = B;
+        settings.reverseTempThreshold = B;
       }
       const M = (A + B) / 2; // Midpoint target when correcting
       const currentTemp = terraforming.temperature.value;
@@ -307,6 +301,8 @@ class GhgFactory extends Building {
   initUI(autoBuildContainer, cache) {
     if (!autoBuildContainer || !cache) return;
 
+    const settings = getGhgAutomationSettings(this);
+
     const tempControl = document.createElement('div');
     tempControl.id = `${this.name}-temp-control`;
     tempControl.classList.add('ghg-temp-control');
@@ -315,9 +311,9 @@ class GhgFactory extends Building {
     const tempCheckbox = document.createElement('input');
     tempCheckbox.type = 'checkbox';
     tempCheckbox.classList.add('ghg-temp-checkbox');
-    tempCheckbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+    tempCheckbox.checked = settings.autoDisableAboveTemp;
     tempCheckbox.addEventListener('change', () => {
-      ghgFactorySettings.autoDisableAboveTemp = tempCheckbox.checked;
+      settings.autoDisableAboveTemp = tempCheckbox.checked;
     });
     tempControl.appendChild(tempCheckbox);
 
@@ -344,12 +340,10 @@ class GhgFactory extends Building {
     unitSpan.classList.add('ghg-temp-unit');
     tempControl.appendChild(unitSpan);
 
-    if (ghgFactorySettings.reverseTempThreshold === undefined) {
-      ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
+    if (settings.reverseTempThreshold === undefined) {
+      settings.reverseTempThreshold = settings.disableTempThreshold;
     }
-    if (typeof enforceGhgFactoryTempGap === 'function') {
-      enforceGhgFactoryTempGap();
-    }
+    GhgFactory.enforceAutomationThresholdGap();
 
     const update = () => {
       tempLabel.textContent = 'Disable if avg T > ';
@@ -358,10 +352,10 @@ class GhgFactory extends Building {
       }
       if (typeof toDisplayTemperature === 'function') {
         if (document.activeElement !== tempInput) {
-          tempInput.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+          tempInput.value = toDisplayTemperature(settings.disableTempThreshold);
         }
         if (document.activeElement !== tempInputB) {
-          tempInputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+          tempInputB.value = toDisplayTemperature(settings.reverseTempThreshold);
         }
       }
       const showReverse = !!this.reversalAvailable;
@@ -373,11 +367,11 @@ class GhgFactory extends Building {
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
       const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
-      ghgFactorySettings.disableTempThreshold = useC ? val + 273.15 : val;
+      settings.disableTempThreshold = useC ? val + 273.15 : val;
       if (!this.reversalAvailable) {
-        ghgFactorySettings.reverseTempThreshold = ghgFactorySettings.disableTempThreshold;
-      } else if (typeof enforceGhgFactoryTempGap === 'function') {
-        enforceGhgFactoryTempGap('A');
+        settings.reverseTempThreshold = settings.disableTempThreshold;
+      } else {
+        GhgFactory.enforceAutomationThresholdGap('A');
       }
       update();
     });
@@ -385,10 +379,8 @@ class GhgFactory extends Building {
     tempInputB.addEventListener('input', () => {
       const val = parseFloat(tempInputB.value);
       const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
-      ghgFactorySettings.reverseTempThreshold = useC ? val + 273.15 : val;
-      if (typeof enforceGhgFactoryTempGap === 'function') {
-        enforceGhgFactoryTempGap('B');
-      }
+      settings.reverseTempThreshold = useC ? val + 273.15 : val;
+      GhgFactory.enforceAutomationThresholdGap('B');
       update();
     });
 
@@ -410,14 +402,15 @@ class GhgFactory extends Building {
 
     const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
     ghgEls.container.style.display = enabled ? 'flex' : 'none';
+    const settings = getGhgAutomationSettings(this);
     if (ghgEls.checkbox) {
-      ghgEls.checkbox.checked = ghgFactorySettings.autoDisableAboveTemp;
+      ghgEls.checkbox.checked = settings.autoDisableAboveTemp;
     }
     if (ghgEls.inputA && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputA) {
-      ghgEls.inputA.value = toDisplayTemperature(ghgFactorySettings.disableTempThreshold);
+      ghgEls.inputA.value = toDisplayTemperature(settings.disableTempThreshold);
     }
     if (ghgEls.inputB && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputB) {
-      ghgEls.inputB.value = toDisplayTemperature(ghgFactorySettings.reverseTempThreshold);
+      ghgEls.inputB.value = toDisplayTemperature(settings.reverseTempThreshold);
     }
     const showReverse = !!this.reversalAvailable;
     if (ghgEls.betweenLabel) {
@@ -430,7 +423,89 @@ class GhgFactory extends Building {
       ghgEls.unitSpan.textContent = getTemperatureUnit();
     }
   }
+
+  static getAutomationSettings() {
+    if (!this.automationSettings) {
+      this.automationSettings = {
+        autoDisableAboveTemp: DEFAULT_GHG_AUTOMATION_SETTINGS.autoDisableAboveTemp,
+        disableTempThreshold: DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold,
+        reverseTempThreshold: DEFAULT_GHG_AUTOMATION_SETTINGS.reverseTempThreshold
+      };
+    }
+    return this.automationSettings;
+  }
+
+  static enforceAutomationThresholdGap(changed) {
+    const settings = this.getAutomationSettings();
+    const minGap = 1;
+    let disable = settings.disableTempThreshold;
+    if (!Number.isFinite(disable)) {
+      disable = DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold;
+      settings.disableTempThreshold = disable;
+    }
+    let reverse = settings.reverseTempThreshold;
+    if (!Number.isFinite(reverse)) {
+      reverse = disable + minGap;
+    }
+    if (reverse - disable < minGap) {
+      if (changed === 'B') {
+        settings.disableTempThreshold = reverse - minGap;
+      } else {
+        reverse = disable + minGap;
+      }
+    }
+    settings.reverseTempThreshold = reverse;
+    return settings;
+  }
+
+  static saveAutomationSettings() {
+    const settings = this.getAutomationSettings();
+    return {
+      autoDisableAboveTemp: !!settings.autoDisableAboveTemp,
+      disableTempThreshold: sanitizeNumber(
+        settings.disableTempThreshold,
+        DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold
+      ),
+      reverseTempThreshold: sanitizeNumber(
+        settings.reverseTempThreshold,
+        sanitizeNumber(settings.disableTempThreshold, DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold)
+      )
+    };
+  }
+
+  static loadAutomationSettings(saved) {
+    const settings = this.getAutomationSettings();
+    const hasData = saved && saved.constructor === Object;
+    settings.autoDisableAboveTemp = hasData && 'autoDisableAboveTemp' in saved
+      ? !!saved.autoDisableAboveTemp
+      : DEFAULT_GHG_AUTOMATION_SETTINGS.autoDisableAboveTemp;
+    const disableChanged = hasData && 'disableTempThreshold' in saved;
+    settings.disableTempThreshold = disableChanged
+      ? sanitizeNumber(saved.disableTempThreshold, DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold)
+      : DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold;
+    const reverseChanged = hasData && 'reverseTempThreshold' in saved;
+    settings.reverseTempThreshold = reverseChanged
+      ? sanitizeNumber(saved.reverseTempThreshold, settings.disableTempThreshold)
+      : DEFAULT_GHG_AUTOMATION_SETTINGS.reverseTempThreshold;
+    const changeFlag = reverseChanged ? 'B' : 'A';
+    this.enforceAutomationThresholdGap(changeFlag);
+    return settings;
+  }
 }
+
+function getGhgAutomationSettings(context) {
+  if (context && typeof context.getAutomationSettings === 'function') {
+    return context.getAutomationSettings();
+  }
+  return GhgFactory.getAutomationSettings();
+}
+
+function enforceGhgFactoryTempGap(changed) {
+  return GhgFactory.enforceAutomationThresholdGap(changed);
+}
+
+const ghgFactorySettings = GhgFactory.getAutomationSettings();
+GhgFactory.enforceAutomationThresholdGap();
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { GhgFactory, ghgFactorySettings, enforceGhgFactoryTempGap };

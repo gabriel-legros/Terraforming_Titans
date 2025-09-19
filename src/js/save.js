@@ -1,16 +1,24 @@
+var GhgFactoryClassRef = GhgFactoryClassRef ||
+  (typeof require !== 'undefined'
+    ? (() => {
+        try { return require('./buildings/GhgFactory.js').GhgFactory; }
+        catch (e) { return globalThis.GhgFactory; }
+      })()
+    : globalThis.GhgFactory);
 var ghgFactorySettingsRef = ghgFactorySettingsRef ||
-  (typeof require !== 'undefined'
-    ? (() => {
-        try { return require('./buildings/GhgFactory.js').ghgFactorySettings; }
-        catch (e) { return globalThis.ghgFactorySettings; }
-      })()
+  (GhgFactoryClassRef && GhgFactoryClassRef.getAutomationSettings
+    ? GhgFactoryClassRef.getAutomationSettings()
     : globalThis.ghgFactorySettings);
-var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
+var OxygenFactoryClassRef = OxygenFactoryClassRef ||
   (typeof require !== 'undefined'
     ? (() => {
-        try { return require('./buildings/OxygenFactory.js').oxygenFactorySettings; }
-        catch (e) { return globalThis.oxygenFactorySettings; }
+        try { return require('./buildings/OxygenFactory.js').OxygenFactory; }
+        catch (e) { return globalThis.OxygenFactory; }
       })()
+    : globalThis.OxygenFactory);
+var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
+  (OxygenFactoryClassRef && OxygenFactoryClassRef.getAutomationSettings
+    ? OxygenFactoryClassRef.getAutomationSettings()
     : globalThis.oxygenFactorySettings);
 
 globalGameIsLoadingFromSave = false;
@@ -113,8 +121,12 @@ function getGameState() {
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
-    ghgFactorySettings: typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined,
-    oxygenFactorySettings: typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined,
+    ghgFactorySettings: GhgFactoryClassRef && typeof GhgFactoryClassRef.saveAutomationSettings === 'function'
+      ? GhgFactoryClassRef.saveAutomationSettings()
+      : (typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined),
+    oxygenFactorySettings: OxygenFactoryClassRef && typeof OxygenFactoryClassRef.saveAutomationSettings === 'function'
+      ? OxygenFactoryClassRef.saveAutomationSettings()
+      : (typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined),
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
     totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined
@@ -502,12 +514,22 @@ function loadGame(slotOrCustomString) {
     }
 
     if(gameState.ghgFactorySettings){
-      Object.assign(ghgFactorySettings, gameState.ghgFactorySettings);
-      enforceGhgFactoryTempGap();
+      if (GhgFactoryClassRef && typeof GhgFactoryClassRef.loadAutomationSettings === 'function') {
+        GhgFactoryClassRef.loadAutomationSettings(gameState.ghgFactorySettings);
+      } else if (ghgFactorySettingsRef) {
+        Object.assign(ghgFactorySettingsRef, gameState.ghgFactorySettings);
+        if (typeof enforceGhgFactoryTempGap === 'function') {
+          enforceGhgFactoryTempGap();
+        }
+      }
     }
 
     if(gameState.oxygenFactorySettings){
-      Object.assign(oxygenFactorySettings, gameState.oxygenFactorySettings);
+      if (OxygenFactoryClassRef && typeof OxygenFactoryClassRef.loadAutomationSettings === 'function') {
+        OxygenFactoryClassRef.loadAutomationSettings(gameState.oxygenFactorySettings);
+      } else if (oxygenFactorySettingsRef) {
+        Object.assign(oxygenFactorySettingsRef, gameState.oxygenFactorySettings);
+      }
     }
 
       if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
