@@ -35,11 +35,11 @@ describe('Space Mirror temperature header', () => {
     const container = document.getElementById('container');
     initializeMirrorOversightUI(container);
     let header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
-    expect(header.textContent).toBe('Temperature (K)');
+    expect(header.textContent).toBe('Temperature (K) Current / Trend');
     gameSettings.useCelsius = true;
     updateZonalFluxTable();
     header = document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
-    expect(header.textContent).toBe('Temperature (°C)');
+    expect(header.textContent).toBe('Temperature (°C) Current / Trend');
 
     if (original.document === undefined) delete global.document; else global.document = original.document;
     if (original.formatNumber === undefined) delete global.formatNumber; else global.formatNumber = original.formatNumber;

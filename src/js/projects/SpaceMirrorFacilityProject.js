@@ -624,12 +624,12 @@ function initializeMirrorOversightUI(container) {
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit})</th><th>Day Temperature (${tempUnit})</th></tr>
+      <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit}) Current / Trend</th><th>Day Temperature (${tempUnit})</th></tr>
     </thead>
     <tbody>
-      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0</td><td id="mirror-day-temp-tropical">0</td></tr>
-      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0</td><td id="mirror-day-temp-temperate">0</td></tr>
-      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0</td><td id="mirror-day-temp-polar">0</td></tr>
+      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0 / 0</td><td id="mirror-day-temp-tropical">0</td></tr>
+      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0</td></tr>
+      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0</td></tr>
     </tbody>
   `;
   cardBody.appendChild(fluxTable);
@@ -1055,7 +1055,7 @@ function updateZonalFluxTable() {
   ensureMirrorOversightCache();
   const C = mirrorOversightCache || {};
   const header = C.fluxTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
-  if (header) header.textContent = `Temperature (${tempUnit})`;
+  if (header) header.textContent = `Temperature (${tempUnit}) Current / Trend`;
   const dayHeader = C.dayTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(4)');
   if (dayHeader) dayHeader.textContent = `Day Temperature (${tempUnit})`;
   const zones = ['tropical', 'temperate', 'polar'];
@@ -1071,13 +1071,22 @@ function updateZonalFluxTable() {
 
     if (tempCell) {
       let temp = 0;
+      let trend = 0;
       if (terraforming.temperature && terraforming.temperature.zones && terraforming.temperature.zones[zone]) {
-        temp = terraforming.temperature.zones[zone].value;
+        temp = Number.isFinite(terraforming.temperature.zones[zone].value)
+          ? terraforming.temperature.zones[zone].value
+          : 0;
+        trend = Number.isFinite(terraforming.temperature.zones[zone].trendValue)
+          ? terraforming.temperature.zones[zone].trendValue
+          : 0;
       }
       if (typeof toDisplayTemperature === 'function') {
         temp = toDisplayTemperature(temp);
+        trend = toDisplayTemperature(trend);
       }
-      tempCell.textContent = formatNumber(temp, false, 2);
+      const tempText = formatNumber(temp, false, 2);
+      const trendText = formatNumber(trend, false, 2);
+      tempCell.textContent = `${tempText} / ${trendText}`;
     }
 
     if (dayTempCell) {
