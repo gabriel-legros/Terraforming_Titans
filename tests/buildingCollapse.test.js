@@ -74,7 +74,7 @@ describe('building collapse arrow', () => {
     const row = ctx.createStructureRow(structure, () => {}, () => {}, false);
     dom.window.document.body.appendChild(row);
 
-    return { dom, row };
+    return { dom, row, applyCollapseState: ctx.applyCollapseState };
   }
 
   test('arrow toggles collapsed state and hides details', () => {
@@ -98,5 +98,22 @@ describe('building collapse arrow', () => {
     expect(arrow.textContent).toBe('▼');
     expect(cost.style.display).toBe('');
     expect(autoTarget.style.display).toBe('');
+  });
+
+  test('auto-build controls recover after updates while collapsed', () => {
+    const { dom, row, applyCollapseState } = setup();
+    const arrow = row.querySelector('.collapse-arrow');
+    const autoTarget = row.querySelector('.auto-build-target-container');
+    const setActive = row.querySelector('.auto-build-setactive-container');
+
+    arrow.dispatchEvent(new dom.window.Event('click'));
+    expect(autoTarget.style.display).toBe('none');
+    expect(setActive.style.display).toBe('none');
+
+    applyCollapseState('testStruct');
+
+    arrow.dispatchEvent(new dom.window.Event('click'));
+    expect(autoTarget.style.display).toBe('');
+    expect(setActive.style.display).toBe('');
   });
 });
