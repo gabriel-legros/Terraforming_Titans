@@ -4,7 +4,8 @@ const jsdomPath = path.join(process.execPath, '..', '..', 'lib', 'node_modules',
 const { JSDOM } = require(jsdomPath);
 const vm = require('vm');
 
-function setup() {
+function setup(options = {}) {
+  const { bureauEnabled = true } = options;
   const dom = new JSDOM('<!DOCTYPE html><div id="root"></div>', { runScripts: 'outside-only' });
   const ctx = dom.getInternalVMContext();
   ctx.document = dom.window.document;
@@ -74,7 +75,7 @@ function setup() {
     maintenanceCost: {},
     updateResourceStorage: () => {},
     reversalAvailable: false,
-    isBooleanFlagSet: flag => flag === 'terraformingBureauFeature',
+    isBooleanFlagSet: flag => flag === 'terraformingBureauFeature' ? bureauEnabled : false,
     initUI: ctx.GhgFactory.prototype.initUI,
     updateUI: ctx.GhgFactory.prototype.updateUI,
   };
@@ -113,5 +114,11 @@ describe('GHG factory temperature control', () => {
       inputA.value = ctx.toDisplayTemperature(ctx.ghgFactorySettings.disableTempThreshold);
     }
     expect(parseFloat(inputA.value)).toBeCloseTo(1.85, 5);
+  });
+
+  test('controls hidden without terraforming bureau research', () => {
+    const { dom } = setup({ bureauEnabled: false });
+    const control = dom.window.document.querySelector('.ghg-temp-control');
+    expect(control.style.display).toBe('none');
   });
 });
