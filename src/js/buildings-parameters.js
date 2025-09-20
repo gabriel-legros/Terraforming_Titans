@@ -535,6 +535,24 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  boschReactor: {
+    name: 'Bosch Reactor',
+    category: 'terraforming',
+    description: 'Consumes hydrogen and carbon dioxide in the Bosch reaction to produce water.',
+    cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10 } },
+    consumption: {
+      colony: { energy: 24000000 },
+      atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+    },
+    production: { colony: { water: 81.82 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   massDriver: {
     name: 'Mass Driver',
     category: 'terraforming',

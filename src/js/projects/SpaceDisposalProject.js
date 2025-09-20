@@ -36,7 +36,19 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const infoContent = document.createElement('div');
       infoContent.id = `${this.name}-mass-driver-info`;
+      infoContent.classList.add('assigned-ships-container');
+      const infoLabel = document.createElement('span');
+      infoLabel.textContent = 'Active Mass Drivers:';
+      const labelSpacer = document.createTextNode(' ');
+      const infoValue = document.createElement('span');
+      infoValue.id = `${this.name}-active-mass-drivers`;
+      infoContent.append(infoLabel, labelSpacer, infoValue);
       sectionContainer.appendChild(infoContent);
+
+      const infoNote = document.createElement('p');
+      infoNote.classList.add('mass-driver-note');
+      infoNote.textContent = 'Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.';
+      sectionContainer.appendChild(infoNote);
 
       container.appendChild(sectionContainer);
 
@@ -44,6 +56,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         ...elements,
         massDriverInfoSection: sectionContainer,
         massDriverInfoElement: infoContent,
+        massDriverCountElement: infoValue,
+        massDriverInfoNoteElement: infoNote,
       };
     }
   }
@@ -68,16 +82,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (elements.massDriverInfoSection && elements.massDriverInfoElement) {
       const enabled = this.isBooleanFlagSet('massDriverEnabled');
       if (enabled) {
-        const buildingData = typeof buildings !== 'undefined' ? buildings?.massDriver : null;
-        const active = buildingData?.active ?? 0;
+        const { buildings: globalBuildings, formatBuildingCount, formatBigInteger } = globalThis;
+        const active = globalBuildings?.massDriver?.active ?? 0;
         const formatter =
-          typeof formatBuildingCount === 'function'
-            ? formatBuildingCount
-            : (typeof formatBigInteger === 'function'
-              ? formatBigInteger
-              : (value) => value);
-        elements.massDriverInfoElement.textContent =
-          `Active Mass Drivers: ${formatter(active)}`;
+          (formatBuildingCount instanceof Function && formatBuildingCount) ||
+          (formatBigInteger instanceof Function && formatBigInteger) ||
+          ((value) => value);
+        if (elements.massDriverCountElement) {
+          elements.massDriverCountElement.textContent = formatter(active);
+        }
         elements.massDriverInfoSection.style.display = 'block';
       } else {
         elements.massDriverInfoSection.style.display = 'none';
@@ -165,3 +178,4 @@ if (typeof globalThis !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SpaceDisposalProject;
 }
+

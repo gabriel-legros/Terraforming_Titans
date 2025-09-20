@@ -12,7 +12,7 @@ describe('Mass Driver research', () => {
     vm.runInContext(code + '; this.researchParameters = researchParameters;', ctx);
 
     const terraformingResearch = ctx.researchParameters.terraforming;
-    const research = terraformingResearch.find(entry => entry.id === 'mass_driver_foundations');
+    const research = terraformingResearch.find(entry => entry.id === 'mass_driver');
 
     expect(research).toBeDefined();
     expect(research.cost.research).toBe(5000000);
