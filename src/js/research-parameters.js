@@ -1251,6 +1251,7 @@ const researchParameters = {
         description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
         cost: { research: 10000000000 },
         prerequisites: [],
+        requiredFlags: ['importHydrogenUnlocked'],
         effects: [
           {target : 'project',
             targetId : 'hydrogenSpaceMining',
