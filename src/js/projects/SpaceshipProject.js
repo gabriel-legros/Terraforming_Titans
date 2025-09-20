@@ -94,7 +94,7 @@ class SpaceshipProject extends Project {
             })
         )
         .join(', ');
-      elements.costPerShipElement.textContent = `Cost per Ship: ${costPerShipText}`;
+      elements.costPerShipElement.textContent = `Cost per Shipment: ${costPerShipText}`;
     }
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
@@ -115,7 +115,7 @@ class SpaceshipProject extends Project {
               return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
-      elements.resourceGainPerShipElement.textContent = `Gain per Ship: ${gainPerShipText}`;
+      elements.resourceGainPerShipElement.textContent = `Gain per Shipment: ${gainPerShipText}`;
     }
 
     if (elements.totalGainElement && this.assignedSpaceships != null) {
