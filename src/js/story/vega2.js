@@ -529,7 +529,7 @@ progressVega2.chapters.push(
         id: "chapter17.6",
         type: "journal",
         chapter: 17,
-        narrative: "New target designated : Venus",
+        narrative: "1st Primary Directive : Humanity's survival demands expansion. Vega-2 habitat already colonized.  **New terraforming target designated: Venus.**",
         prerequisites: ["impossible"],
         objectives: [],
         reward: [{
@@ -539,7 +539,7 @@ progressVega2.chapters.push(
       }]
     },
 );
-
 if (typeof module !== 'undefined') {
   module.exports = progressVega2;
 }
+
