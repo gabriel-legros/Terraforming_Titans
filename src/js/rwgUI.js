@@ -596,12 +596,12 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         </div>
         <div>
           <h4>Surface</h4>
-          ${renderResourceRow('Land (ha)', surf.land?.initialValue)}
-          ${renderResourceRow('Ice', surf.ice?.initialValue)}
-          ${renderResourceRow('Water', surf.liquidWater?.initialValue)}
-          ${renderResourceRow('Dry Ice', surf.dryIce?.initialValue)}
-          ${renderResourceRow('Liquid CH₄', surf.liquidMethane?.initialValue)}
-          ${renderResourceRow('CH₄ Ice', surf.hydrocarbonIce?.initialValue)}
+          ${renderResourceRow('Land (ha)', surf.land)}
+          ${renderResourceRow('Ice', surf.ice)}
+          ${renderResourceRow('Water', surf.liquidWater)}
+          ${renderResourceRow('Dry Ice', surf.dryIce)}
+          ${renderResourceRow('Liquid CH₄', surf.liquidMethane)}
+          ${renderResourceRow('CH₄ Ice', surf.hydrocarbonIce)}
         </div>
       </div>
     </div>`;
@@ -635,9 +635,11 @@ function estimateEquilibriumTemp(res, fluxWm2) {
   }
 }
 
-function renderResourceRow(label, value) {
+function renderResourceRow(label, resource) {
+  const amount = resource?.initialValue;
+  if (resource?.hideWhenSmall && Math.abs(amount ?? 0) < 1e-4) return '';
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const v = (value === undefined || value === null) ? '—' : fmt(value);
+  const v = (amount === undefined || amount === null) ? '—' : fmt(amount);
   return `<div class="rwg-row"><span>${label}</span><span>${v}</span></div>`;
 }
 
