@@ -79,6 +79,20 @@ function createTooltipElement(resourceName) {
   const netDiv = document.createElement('div');
   netDiv.id = `${resourceName}-tooltip-net`;
 
+  const warningDiv = document.createElement('div');
+  warningDiv.id = `${resourceName}-tooltip-warning`;
+  warningDiv.classList.add('resource-tooltip-warning');
+  warningDiv.style.display = 'none';
+  const warningIcon = document.createElement('span');
+  warningIcon.classList.add('info-tooltip-icon');
+  warningIcon.innerHTML = '&#9432;';
+  warningDiv.appendChild(warningIcon);
+  warningDiv.appendChild(document.createTextNode(' '));
+  const warningText = document.createElement('span');
+  warningText.classList.add('resource-tooltip-warning-text');
+  warningDiv.appendChild(warningText);
+  warningDiv._info = { icon: warningIcon, text: warningText };
+
   const headerDiv = document.createElement('div');
   headerDiv.appendChild(valueDiv);
   headerDiv.appendChild(timeDiv);
@@ -86,6 +100,7 @@ function createTooltipElement(resourceName) {
   headerDiv.appendChild(assignmentsDiv);
   headerDiv.appendChild(zonesDiv);
   headerDiv.appendChild(netDiv);
+  headerDiv.appendChild(warningDiv);
 
   const productionDiv = document.createElement('div');
   productionDiv.id = `${resourceName}-tooltip-production`;
@@ -873,6 +888,7 @@ function updateResourceRateDisplay(resource){
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(`${resource.name}-tooltip-consumption`);
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(`${resource.name}-tooltip-overflow`);
   const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(`${resource.name}-tooltip-autobuild`);
+  const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(`${resource.name}-tooltip-warning`);
 
   const netRate = resource.productionRate - resource.consumptionRate;
 
@@ -924,6 +940,55 @@ function updateResourceRateDisplay(resource){
       updateAndroidAssignments(assignmentsDiv);
     } else {
       clearElement(assignmentsDiv);
+    }
+  }
+
+  if (warningDiv) {
+    const warningInfo = warningDiv._info || {};
+    const warningMessages = [];
+
+    if (resource.autobuildShortage) {
+      warningMessages.push('Autobuild is short on required inputs for queued construction.');
+    }
+
+    if (resource.name === 'androids') {
+      let androidCapped = false;
+      if (resource.cap && resource.value >= resource.cap) {
+        if (typeof resources !== 'undefined') {
+          const land = resources.surface?.land;
+          androidCapped = !!(land && land.value > 0 && land.reserved / land.value < 0.99);
+        } else {
+          androidCapped = true;
+        }
+      }
+      if (androidCapped) {
+        warningMessages.push('Android production has reached its current cap.');
+      }
+    }
+
+    if (resource.name === 'biomass' && typeof terraforming !== 'undefined') {
+      const zones = terraforming.biomassDyingZones || {};
+      const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
+      if (dyingZones.length > 0) {
+        const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
+        warningMessages.push(`Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`);
+      }
+    }
+
+    if (warningMessages.length > 0) {
+      const joinedText = warningMessages.join(' ');
+      if (warningDiv.style.display !== 'flex') warningDiv.style.display = 'flex';
+      if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
+        warningInfo.text.textContent = joinedText;
+      }
+      if (warningInfo.icon) {
+        const joinedTitle = warningMessages.join('\n');
+        if (warningInfo.icon.title !== joinedTitle) warningInfo.icon.title = joinedTitle;
+      }
+    } else {
+      if (warningInfo.text && warningInfo.text.textContent !== '') warningInfo.text.textContent = '';
+      if (warningInfo.icon && warningInfo.icon.title) warningInfo.icon.title = '';
+      if (warningDiv.style.display !== 'none') warningDiv.style.display = 'none';
     }
   }
 
@@ -1102,6 +1167,7 @@ function cacheSingleResource(category, resourceName) {
       consumptionDiv: document.getElementById(`${resourceName}-tooltip-consumption`),
       overflowDiv: document.getElementById(`${resourceName}-tooltip-overflow`),
       autobuildDiv: document.getElementById(`${resourceName}-tooltip-autobuild`),
+      warningDiv: document.getElementById(`${resourceName}-tooltip-warning`),
     }
   };
   resourceUICache.resources[resourceName] = entry;
