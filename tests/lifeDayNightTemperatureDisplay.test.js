@@ -57,7 +57,7 @@ describe('life day/night temperature rows', () => {
     ctx.updateLifeUI();
 
     const getText = id => dom.window.document.getElementById(id).textContent;
-    expect(getText('day-temp-tropical')).toBe('300.00 ⚠');
+    expect(getText('day-temp-tropical')).toBe('300.00 ✅');
     expect(getText('night-temp-temperate')).toBe('270.00 ❌');
 
     expect(getText('day-temp-global')).toBe('✅');

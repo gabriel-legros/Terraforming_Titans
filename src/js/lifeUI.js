@@ -766,7 +766,7 @@ function updateLifeStatusTable() {
 
     const survivalRange = designToCheck.getTemperatureRanges().survival;
     const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + designToCheck.optimalGrowthTemperature.value;
-    const tolerance = designToCheck.growthTemperatureTolerance.value * 0.5;
+    const tolerance = designToCheck.getGrowthTemperatureToleranceWidth();
     const calcGrowthMult = temp => {
         if (tolerance <= 0) return temp === optimal ? 1 : 0;
         const diff = temp - optimal;

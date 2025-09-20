@@ -7,6 +7,12 @@ const baseTemperatureRanges = {
 
 // Default optimal growth temperature (20°C in Kelvin)
 const BASE_OPTIMAL_GROWTH_TEMPERATURE = 293.15;
+const BASE_GROWTH_TEMPERATURE_TOLERANCE = 1; // Degrees Celsius of free tolerance
+const GROWTH_TEMPERATURE_TOLERANCE_PER_POINT = 0.5; // Additional tolerance per point
+
+function calculateGrowthTemperatureTolerance(points) {
+  return BASE_GROWTH_TEMPERATURE_TOLERANCE + points * GROWTH_TEMPERATURE_TOLERANCE_PER_POINT;
+}
 
 const lifeDesignerConfig = {
   maxPoints : 0
@@ -40,7 +46,7 @@ class LifeAttribute {
           BASE_OPTIMAL_GROWTH_TEMPERATURE + this.value
         ).toFixed(2) + 'K';
       case 'growthTemperatureTolerance':
-        return (this.value * 0.5).toFixed(2);
+        return calculateGrowthTemperatureTolerance(this.value).toFixed(2);
       case 'photosynthesisEfficiency':
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'radiationTolerance':
@@ -109,6 +115,10 @@ class LifeDesign {
 
   getBaseGrowthRate() {
     return this.photosynthesisEfficiency.getConvertedValue();
+  }
+
+  getGrowthTemperatureToleranceWidth() {
+    return calculateGrowthTemperatureTolerance(this.growthTemperatureTolerance.value);
   }
 
   getRadiationMitigationRatio() {
@@ -364,7 +374,7 @@ class LifeDesign {
   temperatureGrowthMultiplierZone(zoneName) {
       const zoneData = terraforming.temperature.zones[zoneName];
       const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + this.optimalGrowthTemperature.value;
-      const tolerance = this.growthTemperatureTolerance.value * 0.5;
+      const tolerance = this.getGrowthTemperatureToleranceWidth();
       if (tolerance <= 0) {
           return zoneData.day === optimal ? 1 : 0;
       }
