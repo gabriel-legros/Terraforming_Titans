@@ -72,4 +72,54 @@ describe('RWG UI small resource display', () => {
     expect(labels).not.toContain('Dry Ice');
     expect(labels).not.toContain('Liquid CH₄');
   });
+
+  test('hides atmospheric resources flagged with hideWhenSmall when value is tiny', () => {
+    const ctx = setup();
+    const res = {
+      merged: {
+        name: 'Thin Air World',
+        celestialParameters: {
+          gravity: 9.5,
+          radius: 6200,
+          albedo: 0.3,
+          rotationPeriod: 24,
+          distanceFromSun: 1
+        },
+        classification: { archetype: 'mars-like' },
+        resources: {
+          surface: {
+            land: { initialValue: 5e7 },
+            ice: { initialValue: 1e6 },
+            liquidWater: { initialValue: 2e6 }
+          },
+          atmospheric: {
+            carbonDioxide: { initialValue: 1e6 },
+            inertGas: { initialValue: 5e5 },
+            hydrogen: { initialValue: 0, hideWhenSmall: true },
+            atmosphericMethane: { initialValue: 0, hideWhenSmall: true }
+          }
+        }
+      },
+      orbitAU: 1,
+      star: {
+        name: 'Test Star',
+        spectralType: 'G',
+        luminositySolar: 1,
+        massSolar: 1,
+        temperatureK: 5800
+      }
+    };
+
+    const html = ctx.renderWorldDetail(res, 'seed');
+    const dom = new JSDOM(html);
+    const atmoSection = Array.from(dom.window.document.querySelectorAll('.rwg-columns > div'))
+      .find(col => col.querySelector('h4')?.textContent === 'Atmosphere');
+    const labels = atmoSection
+      ? Array.from(atmoSection.querySelectorAll('.rwg-row span:first-child')).map(el => el.textContent)
+      : [];
+
+    expect(labels).toContain('CO₂');
+    expect(labels).not.toContain('H₂');
+    expect(labels).not.toContain('CH₄');
+  });
 });

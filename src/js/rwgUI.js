@@ -665,13 +665,17 @@ function renderAtmoTable(res) {
     { label: 'H₂SO₄', key: 'sulfuricAcid' }
   ];
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
+  const defaults = globalThis.defaultPlanetParameters?.resources?.atmospheric || {};
   const cells = rows.map(r => {
-    const amt = res.merged?.resources?.atmospheric?.[r.key]?.initialValue;
+    const resource = res.merged?.resources?.atmospheric?.[r.key];
+    const amt = resource?.initialValue;
+    const hideSmall = resource?.hideWhenSmall ?? defaults[r.key]?.hideWhenSmall;
+    if (hideSmall && Math.abs(amt ?? 0) < 1e-4) return '';
     const amtText = (amt === undefined || amt === null) ? '—' : fmt(amt);
     const kPa = estimateGasPressure(res, r.key);
     const pText = (typeof kPa === 'number' && isFinite(kPa)) ? `${formatNumber(kPa)}Pa` : '—';
     return `<div class="rwg-row"><span>${r.label}</span><span>${amtText}</span><span>${pText}</span></div>`;
-  }).join('');
+  }).filter(Boolean).join('');
   // Header row
   const header = `<div class="rwg-row"><span><strong>Gas</strong></span><span><strong>Amount</strong></span><span><strong>Pressure</strong></span></div>`;
   return `<div class="rwg-atmo-table">${header}${cells}</div>`;
