@@ -1,6 +1,13 @@
 let milestoneAlertNeeded = false;
 let lastCompletableCount = 0;
 
+function getMilestoneSettings() {
+    if (typeof gameSettings !== 'undefined') {
+        return gameSettings;
+    }
+    return globalThis.gameSettings;
+}
+
 function isMilestoneSubtabUnlocked() {
     const doc = globalThis.document;
     if (!doc || !doc.querySelector) {
@@ -35,12 +42,14 @@ function createMilestonesUI() {
     const silenceToggle = document.createElement('input');
     silenceToggle.type = 'checkbox';
     silenceToggle.id = 'milestone-silence-toggle';
-    if (typeof gameSettings !== 'undefined') {
-        silenceToggle.checked = gameSettings.silenceMilestoneAlert || false;
+    const settings = getMilestoneSettings();
+    if (settings) {
+        silenceToggle.checked = settings.silenceMilestoneAlert || false;
     }
     silenceToggle.addEventListener('change', () => {
-        if (typeof gameSettings !== 'undefined') {
-            gameSettings.silenceMilestoneAlert = silenceToggle.checked;
+        const currentSettings = getMilestoneSettings();
+        if (currentSettings) {
+            currentSettings.silenceMilestoneAlert = silenceToggle.checked;
         }
         updateMilestoneAlert();
     });
@@ -164,7 +173,8 @@ function updateMilestoneAlert() {
     const alertEl = doc.getElementById ? doc.getElementById('terraforming-alert') : null;
     const subtabEl = doc.getElementById ? doc.getElementById('milestone-subtab-alert') : null;
     if (!alertEl && !subtabEl) return;
-    if (globalThis.gameSettings && globalThis.gameSettings.silenceMilestoneAlert) {
+    const settings = getMilestoneSettings();
+    if (settings && settings.silenceMilestoneAlert) {
         if (alertEl) alertEl.style.display = 'none';
         if (subtabEl) subtabEl.style.display = 'none';
         return;

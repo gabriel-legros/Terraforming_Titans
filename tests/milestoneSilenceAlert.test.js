@@ -11,15 +11,16 @@ describe('silence milestone alert setting', () => {
       <div class="terraforming-subtab" data-subtab="milestone-terraforming">Milestones<span id="milestone-subtab-alert" class="milestone-alert">!</span></div>`, { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.milestonesManager = { getCompletableMilestones: () => [{}] };
-    ctx.gameSettings = { silenceMilestoneAlert: true };
-    const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'milestonesUI.js'), 'utf8');
+    const code = 'let gameSettings = { silenceMilestoneAlert: true };\n' +
+      fs.readFileSync(path.join(__dirname, '..', 'src/js', 'milestonesUI.js'), 'utf8');
     vm.runInContext(code, ctx);
 
     ctx.checkMilestoneAlert();
     ctx.updateMilestoneAlert();
     expect(dom.window.document.getElementById('terraforming-alert').style.display).toBe('none');
+    expect(dom.window.document.getElementById('milestone-subtab-alert').style.display).toBe('none');
 
-    ctx.gameSettings.silenceMilestoneAlert = false;
+    vm.runInContext('gameSettings.silenceMilestoneAlert = false;', ctx);
     ctx.updateMilestoneAlert();
     expect(dom.window.document.getElementById('terraforming-alert').style.display).toBe('inline');
     expect(dom.window.document.getElementById('milestone-subtab-alert').style.display).toBe('inline');
