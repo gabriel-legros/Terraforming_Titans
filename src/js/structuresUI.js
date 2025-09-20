@@ -1318,8 +1318,10 @@ function formatStorageDetails(storageObject) {
   for (const category in storageObject) {
     for (const resource in storageObject[category]) {
       const storageAmount = storageObject[category][resource];
-      if (storageAmount > 0) {
-        storageDetails += `${formatNumber(storageAmount, true, 2)} ${resources[category][resource].displayName}, `;
+      const resourceEntry = resources?.[category]?.[resource];
+      if (storageAmount > 0 && resourceEntry?.unlocked) {
+        const displayName = resourceEntry.displayName || resource;
+        storageDetails += `${formatNumber(storageAmount, true, 2)} ${displayName}, `;
       }
     }
   }
