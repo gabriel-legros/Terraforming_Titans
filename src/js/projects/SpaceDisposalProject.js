@@ -58,21 +58,32 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const removal = Math.min(removed, originalAmount);
     const originalTemp = terraforming.temperature.value;
 
-    const saveTempState = terraforming.saveTemperatureState?.bind(terraforming);
-    const restoreTempState = terraforming.restoreTemperatureState?.bind(terraforming);
+    const saveTempState =
+      typeof terraforming.saveTemperatureState === 'function'
+        ? terraforming.saveTemperatureState.bind(terraforming)
+        : null;
+    const restoreTempState =
+      typeof terraforming.restoreTemperatureState === 'function'
+        ? terraforming.restoreTemperatureState.bind(terraforming)
+        : null;
     const snapshot = saveTempState ? saveTempState() : null;
+    const canUpdateSurfaceTemperature = typeof terraforming.updateSurfaceTemperature === 'function';
 
-    ghg.value = originalAmount - removal;
-    if (typeof terraforming.updateSurfaceTemperature === 'function') {
-      terraforming.updateSurfaceTemperature();
-    }
-    const newTemp = terraforming.temperature.value;
+    let newTemp = originalTemp;
 
-    ghg.value = originalAmount;
-    if (snapshot && restoreTempState) {
-      restoreTempState(snapshot);
-    } else if (typeof terraforming.updateSurfaceTemperature === 'function') {
-      terraforming.updateSurfaceTemperature();
+    try {
+      ghg.value = originalAmount - removal;
+      if (canUpdateSurfaceTemperature) {
+        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+      }
+      newTemp = terraforming.temperature?.value ?? newTemp;
+    } finally {
+      ghg.value = originalAmount;
+      if (snapshot && restoreTempState) {
+        restoreTempState(snapshot);
+      } else if (canUpdateSurfaceTemperature) {
+        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+      }
     }
 
     return originalTemp - newTemp;
