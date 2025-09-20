@@ -535,6 +535,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  massDriver: {
+    name: 'Mass Driver',
+    category: 'terraforming',
+    description: 'Electromagnetic launcher prototype awaiting future upgrades.',
+    cost: { colony: { metal: 10000, glass : 100, components: 100, electronics: 100 } },
+    consumption: {},
+    production: {},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   biodome:{
     name: 'Biodome',
     category: 'terraforming',

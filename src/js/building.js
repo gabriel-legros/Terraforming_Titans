@@ -827,6 +827,7 @@ const constructors = {
   oreMine: 'OreMine',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
+  massDriver: 'MassDriver',
   biodome: 'Biodome',
   dysonReceiver: 'dysonReceiver',
   solarPanel: 'solarPanel'
