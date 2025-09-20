@@ -15,6 +15,10 @@ const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
+const GRAVITY_LINEAR_THRESHOLD = 10;
+const GRAVITY_EXPONENTIAL_THRESHOLD = 20;
+const GRAVITY_LINEAR_RATE = 0.1;
+const GRAVITY_EXPONENTIAL_INTERVAL = 10;
 
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
@@ -357,6 +361,7 @@ class Terraforming extends EffectableEntity{
       this.surfaceRadiation = 0;
       this.orbitalRadiation = 0;
       this.radiationPenalty = 0;
+      this.gravityCostPenalty = this.calculateGravityCostPenalty();
 
   }
 
@@ -1342,6 +1347,25 @@ class Terraforming extends EffectableEntity{
       return 1 + smallestDifference / 10;
   }
 
+    calculateGravityCostPenalty() {
+      const gravity = this.celestialParameters.gravity;
+      if (!Number.isFinite(gravity)) {
+        return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
+      }
+
+      const linearExcess = Math.max(0, gravity - GRAVITY_LINEAR_THRESHOLD);
+      const linearIncrease = linearExcess * GRAVITY_LINEAR_RATE;
+
+      let exponentialIncrease = 0;
+      if (gravity > GRAVITY_EXPONENTIAL_THRESHOLD) {
+        const exponent = (gravity - GRAVITY_EXPONENTIAL_THRESHOLD) / GRAVITY_EXPONENTIAL_INTERVAL;
+        exponentialIncrease = Math.pow(2, exponent) - 1;
+      }
+
+      const multiplier = 1 + linearIncrease + exponentialIncrease;
+      return { multiplier, linearIncrease, exponentialIncrease };
+    }
+
     calculateMaintenancePenalty() {
       const temp = this.temperature.value;
       if (temp <= MAINTENANCE_PENALTY_THRESHOLD) {
@@ -1441,6 +1465,41 @@ class Terraforming extends EffectableEntity{
 
         addEffect(metalCostPenaltyEffect);
         addEffect(glassCostPenaltyEffect);
+      }
+
+      this.gravityCostPenalty = this.calculateGravityCostPenalty();
+      const gravityCostMultiplier = this.gravityCostPenalty.multiplier;
+      const combinedStructures = globalThis.structures
+        ? globalThis.structures
+        : {
+            ...(globalThis.buildings || {}),
+            ...(globalThis.colonies || {})
+          };
+
+      for (const id in combinedStructures) {
+        const structure = combinedStructures[id];
+        if (!structure || !structure.cost) continue;
+
+        const isColony =
+          !!globalThis.colonies && Object.prototype.hasOwnProperty.call(globalThis.colonies, id);
+        const target = isColony ? 'colony' : 'building';
+
+        for (const category in structure.cost) {
+          const categoryCosts = structure.cost[category];
+          if (!categoryCosts) continue;
+
+          for (const resource in categoryCosts) {
+            addEffect({
+              effectId: `gravityCostPenalty-${category}-${resource}`,
+              target,
+              targetId: id,
+              type: 'resourceCostMultiplier',
+              resourceCategory: category,
+              resourceId: resource,
+              value: gravityCostMultiplier
+            });
+          }
+        }
       }
 
       if (typeof buildings !== 'undefined') {

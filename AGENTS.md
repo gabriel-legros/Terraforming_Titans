@@ -10,6 +10,9 @@
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 
+## Updates
+- High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
+
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
 entry point **index.html** loads scripts that create resources, buildings, colonies,

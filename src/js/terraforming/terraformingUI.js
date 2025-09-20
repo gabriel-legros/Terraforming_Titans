@@ -987,6 +987,17 @@ function updateLifeBox() {
       const orbRad = typeof terraforming.orbitalRadiation === 'number' ? terraforming.orbitalRadiation : 0;
       const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
       const radPenalty = typeof terraforming.radiationPenalty === 'number' ? terraforming.radiationPenalty : 0;
+      const gravityValue = Number.isFinite(terraforming.celestialParameters.gravity)
+        ? terraforming.celestialParameters.gravity
+        : 0;
+      const gravityPenaltyData = terraforming.gravityCostPenalty || { multiplier: 1 };
+      const gravityPenaltyMultiplier = Number.isFinite(gravityPenaltyData.multiplier)
+        ? gravityPenaltyData.multiplier
+        : 1;
+      const gravityPenaltyPercent = (gravityPenaltyMultiplier - 1) * 100;
+      const gravityPenaltyText = gravityPenaltyMultiplier > 1
+        ? `+${formatNumber(gravityPenaltyPercent, false, 2)}% build cost`
+        : '';
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
@@ -994,10 +1005,16 @@ function updateLifeBox() {
         <p>Orbital radiation: <span id="orbital-radiation">${formatRadiation(orbRad)}</span> mSv/day</p>
         <p>Surface radiation: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
         <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
+        <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
+        <p id="gravity-penalty-row">Gravity penalty: <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
       `;
     if ((radPenalty || 0) < 0.0001) {
       const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
       if (penaltyRow) penaltyRow.style.display = 'none';
+    }
+    if (gravityPenaltyMultiplier <= 1) {
+      const gravityPenaltyRow = magnetosphereBox.querySelector('#gravity-penalty-row');
+      if (gravityPenaltyRow) gravityPenaltyRow.style.display = 'none';
     }
     const magnetosphereHeading = magnetosphereBox.querySelector('h3');
     if (magnetosphereHeading) {
@@ -1010,7 +1027,10 @@ function updateLifeBox() {
       status: magnetosphereBox.querySelector('#magnetosphere-status'),
       surfaceRadiation: magnetosphereBox.querySelector('#surface-radiation'),
       orbitalRadiation: magnetosphereBox.querySelector('#orbital-radiation'),
-      surfaceRadiationPenalty: magnetosphereBox.querySelector('#surface-radiation-penalty')
+      surfaceRadiationPenalty: magnetosphereBox.querySelector('#surface-radiation-penalty'),
+      gravityValue: magnetosphereBox.querySelector('#terraforming-gravity-value'),
+      gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
+      gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty')
     };
   }
 
@@ -1023,6 +1043,9 @@ function updateLifeBox() {
     const surfaceRadiation = els.surfaceRadiation;
     const orbitalRadiation = els.orbitalRadiation;
     const surfaceRadiationPenalty = els.surfaceRadiationPenalty;
+    const gravityValue = els.gravityValue;
+    const gravityPenaltyRow = els.gravityPenaltyRow;
+    const gravityPenaltyValue = els.gravityPenaltyValue;
 
     // Update status based on natural or artificial magnetosphere
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
@@ -1049,6 +1072,29 @@ function updateLifeBox() {
       } else {
         penaltyRow.style.display = '';
         surfaceRadiationPenalty.textContent = formatNumber(penaltyValue * 100, false, 0);
+      }
+    }
+
+    if (gravityValue) {
+      const gravity = Number.isFinite(terraforming.celestialParameters.gravity)
+        ? terraforming.celestialParameters.gravity
+        : 0;
+      gravityValue.textContent = formatNumber(gravity, false, 2);
+    }
+
+    if (gravityPenaltyRow && gravityPenaltyValue) {
+      let penaltyMultiplier = 1;
+      const penaltyData = terraforming.gravityCostPenalty;
+      if (penaltyData && Number.isFinite(penaltyData.multiplier)) {
+        penaltyMultiplier = penaltyData.multiplier;
+      }
+      if (penaltyMultiplier > 1) {
+        gravityPenaltyRow.style.display = '';
+        const percent = (penaltyMultiplier - 1) * 100;
+        gravityPenaltyValue.textContent = `+${formatNumber(percent, false, 2)}% build cost`;
+      } else {
+        gravityPenaltyRow.style.display = 'none';
+        gravityPenaltyValue.textContent = '';
       }
     }
 
