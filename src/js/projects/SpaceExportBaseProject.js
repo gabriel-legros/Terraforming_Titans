@@ -294,7 +294,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
         }
       }
       if (this.isContinuous()) {
-        total *= this.assignedSpaceships * (1000 / this.getEffectiveDuration());
+        const activeShips = this.getActiveShipCount();
+        total *= activeShips * (1000 / this.getEffectiveDuration());
         elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}/s`;
       } else {
         elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
@@ -328,7 +329,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     let multiplier = 1;
     if (perSecond) {
-      multiplier = this.assignedSpaceships * (1000 / this.getEffectiveDuration());
+      multiplier = this.getActiveShipCount() * (1000 / this.getEffectiveDuration());
     }
     return {
       colony: {

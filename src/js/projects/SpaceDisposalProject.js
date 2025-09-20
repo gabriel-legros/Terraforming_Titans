@@ -2,6 +2,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   constructor(config, name) {
     super(config, name);
     this.massDriverEnabled = false;
+    this.massDriverShipEquivalency = this.attributes.massDriverShipEquivalency ?? 10;
   }
 
   createResourceDisposalUI() {
@@ -47,6 +48,18 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
   }
 
+  getMassDriverContribution() {
+    if (!this.isBooleanFlagSet('massDriverEnabled')) {
+      return 0;
+    }
+    const activeMassDrivers = buildings?.massDriver?.active ?? 0;
+    return activeMassDrivers * this.massDriverShipEquivalency;
+  }
+
+  getActiveShipCount() {
+    return super.getActiveShipCount() + this.getMassDriverContribution();
+  }
+
   updateUI() {
     super.updateUI();
     const elements = projectElements[this.name];
@@ -85,8 +98,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   calculateTemperatureReduction() {
+    const activeShips = this.getActiveShipCount();
     if (
-      this.assignedSpaceships <= 0 ||
+      activeShips <= 0 ||
       typeof terraforming === 'undefined' ||
       typeof resources === 'undefined' ||
       !resources.atmospheric?.greenhouseGas
@@ -98,7 +112,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (this.isContinuous()) {
       removed =
         this.getShipCapacity() *
-        this.assignedSpaceships *
+        activeShips *
         (1000 / this.getEffectiveDuration());
     } else {
       const totalDisposal = this.calculateSpaceshipTotalDisposal();
