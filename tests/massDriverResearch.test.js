@@ -16,7 +16,7 @@ describe('Mass Driver research', () => {
 
     expect(research).toBeDefined();
     expect(research.cost.research).toBe(5000000);
-    expect(research.prerequisites).toContain('water_electrolysis');
+    expect(research.prerequisites).not.toContain('water_electrolysis');
     expect(research.requiredFlags).toContain('massDriverUnlocked');
 
     const buildingEffect = research.effects.find(effect =>
