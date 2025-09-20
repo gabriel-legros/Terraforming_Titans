@@ -83,4 +83,79 @@ describe('autobuild resource shortage warnings', () => {
 
     expect(global.resources.colony.metal.autobuildShortage).toBe(false);
   });
+
+  test('does not flag deposits when deposit availability is exhausted', () => {
+    constructionOfficeState.strategicReserve = 0;
+    global.resources = {
+      colony: {
+        colonists: { value: 10 },
+        metal: { value: 0, cap: 100 },
+      },
+      surface: { land: { value: 100, reserved: 0 } },
+      underground: {
+        geothermal: { value: 0, reserved: 0 },
+      },
+    };
+
+    const building = {
+      displayName: 'Geo Plant',
+      autoBuildEnabled: true,
+      autoBuildPercent: 10,
+      autoBuildPriority: false,
+      autoActiveEnabled: false,
+      autoBuildBasis: 'population',
+      count: 0,
+      requiresDeposit: { underground: { geothermal: 1 } },
+      getEffectiveCost: jest.fn(count => ({
+        colony: { metal: count },
+        underground: { geothermal: count },
+      })),
+      canAfford: jest.fn(() => false),
+      canAffordDeposit: jest.fn(() => false),
+      canAffordLand: jest.fn(() => true),
+      maxBuildable: jest.fn(() => 0),
+      build: jest.fn(() => false),
+    };
+
+    autoBuild({ geoPlant: building });
+
+    expect(building.autoBuildPartial).toBe(true);
+    expect(global.resources.underground.geothermal.autobuildShortage).toBe(false);
+    expect(global.resources.colony.metal.autobuildShortage).toBe(false);
+  });
+
+  test('does not flag other resources when land availability is exhausted', () => {
+    constructionOfficeState.strategicReserve = 0;
+    global.resources = {
+      colony: {
+        colonists: { value: 10 },
+        metal: { value: 0, cap: 100 },
+      },
+      surface: {
+        land: { value: 0, reserved: 0 },
+      },
+    };
+
+    const building = {
+      displayName: 'Habitat',
+      autoBuildEnabled: true,
+      autoBuildPercent: 10,
+      autoBuildPriority: false,
+      autoActiveEnabled: false,
+      autoBuildBasis: 'population',
+      count: 0,
+      requiresLand: 5,
+      getEffectiveCost: jest.fn(count => ({ colony: { metal: count * 5 } })),
+      canAfford: jest.fn(() => false),
+      canAffordLand: jest.fn(() => false),
+      maxBuildable: jest.fn(() => 0),
+      build: jest.fn(() => false),
+    };
+
+    autoBuild({ habitat: building });
+
+    expect(building.autoBuildPartial).toBe(true);
+    expect(global.resources.surface.land.autobuildShortage).toBe(false);
+    expect(global.resources.colony.metal.autobuildShortage).toBe(false);
+  });
 });

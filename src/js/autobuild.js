@@ -91,12 +91,36 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
     if (!building || requiredAmount <= 0) return;
     if (typeof resources === 'undefined' || !resources) return;
 
-    const applyFlag = (category, name) => {
-        const res = resources?.[category]?.[name];
-        if (res) {
-            res.autobuildShortage = true;
+    const depositLimited = (() => {
+        if (!building.requiresDeposit) return false;
+        if (typeof building.canAffordDeposit === 'function') {
+            return !building.canAffordDeposit(requiredAmount);
         }
-    };
+        const deposits = building.requiresDeposit.underground || {};
+        for (const deposit in deposits) {
+            if (!Object.prototype.hasOwnProperty.call(deposits, deposit)) continue;
+            const res = resources?.underground?.[deposit];
+            const required = deposits[deposit] * requiredAmount;
+            if (!res || (res.value || 0) - (res.reserved || 0) < required) {
+                return true;
+            }
+        }
+        return false;
+    })();
+
+    const landLimited = (() => {
+        if (!building.requiresLand) return false;
+        if (typeof building.canAffordLand === 'function') {
+            return !building.canAffordLand(requiredAmount);
+        }
+        const landRes = resources?.surface?.land;
+        if (!landRes) return false;
+        return (landRes.value || 0) - (landRes.reserved || 0) < building.requiresLand * requiredAmount;
+    })();
+
+    if (depositLimited || landLimited) {
+        return;
+    }
 
     if (typeof building.getEffectiveCost === 'function') {
         const cost = building.getEffectiveCost(requiredAmount) || {};
@@ -110,7 +134,10 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
                 const reserve = (reservePercent / 100) * cap;
                 const available = (resObj.value || 0) - reserve;
                 if (available + 1e-9 < cost[category][resource]) {
-                    applyFlag(category, resource);
+                    const res = resources?.[category]?.[resource];
+                    if (res) {
+                        res.autobuildShortage = true;
+                    }
                 }
             }
         }
