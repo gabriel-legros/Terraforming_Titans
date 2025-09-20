@@ -1121,11 +1121,26 @@ const researchParameters = {
         ],
       },
       {
+        id: 'bosch_reactor',
+        name: 'Bosch Reactor',
+        description: 'Unlocks reactors that combine carbon dioxide and hydrogen into water via the Bosch reaction.',
+        cost: { research: 150000 },
+        prerequisites: [],
+        requiredFlags: ['boschReactorUnlocked'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'boschReactor',
+            type: 'enable'
+          },
+        ],
+      },
+      {
         id: 'mass_driver',
         name: 'Mass Driver Foundations',
         description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
         cost: { research: 5_000_000 },
-        prerequisites: [],
+        prerequisites: ['water_electrolysis'],
         requiredFlags: ['massDriverUnlocked'],
         effects: [
           {
