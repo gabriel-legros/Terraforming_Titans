@@ -331,16 +331,32 @@ class SpaceMirrorAdvancedOversight {
           // - If reversal is ON (cooling) but zone needs heat, try removing cooling mirrors
           if (!!reverse[z] && (assignM[z] || 0) > 0) {
             const current = assignM[z] || 0;
-            const k = MIRROR_PROBE_MIN;;
-            const score = withTempChange(() => { assignM[z] = current - k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            const tAfter = withTempChange(() => { assignM[z] = current - k; }, () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected > 0
-            const dtPerUnit = dT / k;
-            let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-            if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+            const evaluateProbe = (probeAmount) => {
+              const actual = Math.max(1, Math.min(current, probeAmount));
+              const candidateScore = withTempChange(() => { assignM[z] = current - actual; }, () => objective(passLevel));
+              const tempAfter = withTempChange(() => { assignM[z] = current - actual; }, () => getZoneTemp(z));
+              const delta = (isFinite(tempAfter) && isFinite(temps[z])) ? (tempAfter - temps[z]) : 0;
+              return { actual, candidateScore, delta };
+            };
+            let probe = MIRROR_PROBE_MIN;
+            if (probe > current) probe = current;
+            let { actual, candidateScore, delta } = evaluateProbe(probe);
+            while (delta <= 0 && actual < current) {
+              const scaled = Math.min(current, actual * 10);
+              if (scaled === actual) break;
+              const result = evaluateProbe(scaled);
+              actual = result.actual;
+              candidateScore = result.candidateScore;
+              delta = result.delta;
+            }
+            if (delta > 0) {
+              const dPerUnit = (baseScore - candidateScore) / actual;
+              const dtPerUnit = delta / actual;
+              let unitsNeeded = dtPerUnit > 0 ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
+              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+              if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:actual, kStep:step, gainPerUnit:dPerUnit });
+            }
           }
           // - If reversal is OFF (heating) but zone needs cool, try removing heating mirrors
           if (!reverse[z] && (assignM[z] || 0) > 0) {
@@ -641,3 +657,4 @@ if (typeof module !== 'undefined' && module.exports) {
     SpaceMirrorAdvancedOversight,
   };
 }
+
