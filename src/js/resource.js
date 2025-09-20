@@ -328,6 +328,9 @@ function calculateProductionRates(deltaTime, buildings) {
   if (projectManager) {
     for (const name in projectManager.projects) {
       const project = projectManager.projects[name];
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
       if (project && project.treatAsBuilding && typeof project.estimateCostAndGain === 'function') {
         project.estimateCostAndGain(deltaTime, true);
       }
@@ -415,6 +418,9 @@ function produceResources(deltaTime, buildings) {
   if (projectManager) {
     for (const name in projectManager.projects) {
       const project = projectManager.projects[name];
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
       if (project && project.treatAsBuilding && typeof project.applyCostAndGain === 'function') {
         if (typeof project.estimateCostAndGain === 'function') {
           project.estimateCostAndGain(deltaTime, true, 1);
@@ -467,6 +473,9 @@ function produceResources(deltaTime, buildings) {
     for (const name of names) {
       const project = projectManager.projects?.[name];
       if (!project || project.treatAsBuilding) continue;
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
       if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
         continue;
       }
@@ -478,6 +487,9 @@ function produceResources(deltaTime, buildings) {
       const data = projectData[name];
       if (!data || data.project.treatAsBuilding) continue;
       const { project } = data;
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
 //      const productivity = productivityMap[name] ?? 1;
       const productivity = 1;
       if (project.autoStart === false) {

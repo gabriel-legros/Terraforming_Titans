@@ -580,6 +580,21 @@ class ProjectManager extends EffectableEntity {
     this.projectOrder = [];
   }
 
+  isProjectRelevantToCurrentPlanet(project) {
+    const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
+    const globalContext = typeof globalThis !== 'undefined' ? globalThis : {};
+    const manager = this.spaceManager || globalContext.spaceManager;
+    const fallbackParameters = manager?.currentPlanetParameters || globalContext.currentPlanetParameters;
+    const currentPlanetKey =
+      manager?.getCurrentPlanetKey?.() ??
+      manager?.currentPlanetKey ??
+      fallbackParameters?.key ??
+      fallbackParameters?.planetKey ??
+      null;
+
+    return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
+  }
+
   getDurationMultiplier() {
     let multiplier = 1;
     for (const effect of this.activeEffects) {
@@ -654,6 +669,10 @@ class ProjectManager extends EffectableEntity {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
 
+      if (!this.isProjectRelevantToCurrentPlanet(project)) {
+        continue;
+      }
+
       if (typeof project.autoAssign === 'function') {
         project.autoAssign();
       }
@@ -691,6 +710,9 @@ class ProjectManager extends EffectableEntity {
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
+      if (!this.isProjectRelevantToCurrentPlanet(project)) {
+        continue;
+      }
       if (typeof project.applyCostAndGain === 'function') {
         project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
       }
