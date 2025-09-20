@@ -273,7 +273,7 @@ describe('Space Storage project', () => {
 
     const costEls = container.querySelectorAll(`#${project.name}-cost-per-ship`);
     expect(costEls.length).toBe(1);
-    expect(costEls[0].textContent).toContain('Cost per Ship');
+    expect(costEls[0].textContent).toContain('Cost per Shipment');
     expect(costEls[0].textContent).toContain('Energy');
   });
 
