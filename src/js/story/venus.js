@@ -403,7 +403,7 @@ progressVenus.chapters.push(
     id: "chapter18.19",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'Ominous. On the flipside, the referendum also addressed our new political structure. We have the birth of the United Human Federation. On paper, I am the queen of Venus right now. Looks like I only lost power for a bit. I will not keep it though. I am staying with you from now on. I get to choose a successor each time. Convenient, right?'",
+    narrative: "Mary: 'Ominous. On the flipside, the referendum also addressed our new political structure. We have the birth of the United Human Federation. On paper, I am the queen of Venus right now. Looks like I only lost power for a bit. I will not keep this crown though. I am staying with you from now on. I get to choose a successor each time. Convenient, right?'",
     prerequisites: ["chapter18.18"],
     objectives: [],
     reward: []
@@ -470,7 +470,7 @@ progressVenus.chapters.push(
     id: "chapter18.26",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Ahem. Have you heard of this thing called the military industrial complex?'",
+    narrative: "Adrien Solis: 'Ahem. Have you heard of this thing called the Military Industrial Complex?'",
     prerequisites: ["chapter18.25"],
     objectives: [],
     reward: []
@@ -479,7 +479,7 @@ progressVenus.chapters.push(
     id: "chapter18.26a",
     type: "journal",
     chapter: 18,
-    narrative: "Dr. Evelyn Hart: 'Adrien.'",
+    narrative: "Dr. Evelyn Hart: 'Adrien, why are you still on this channel?'",
     prerequisites: ["chapter18.26"],
     objectives: [],
     reward: []
@@ -488,7 +488,7 @@ progressVenus.chapters.push(
     id: "chapter18.27",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a fleet.'",
+    narrative: "Mary: 'Adrien please...  Wait...  You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a fleet.'",
     prerequisites: ["chapter18.26a"],
     objectives: [],
     reward: []

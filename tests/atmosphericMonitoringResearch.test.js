@@ -6,7 +6,7 @@ const researchPath = path.join(__dirname, '..', 'src/js', 'research-parameters.j
 const code = fs.readFileSync(researchPath, 'utf8');
 
 describe('Atmospheric Monitoring research', () => {
-  test('adds flag to carbon and nitrogen mining projects', () => {
+  test('adds flag to carbon, nitrogen, and hydrogen mining projects', () => {
     const ctx = {};
     vm.createContext(ctx);
     vm.runInContext(code + '; this.researchParameters = researchParameters;', ctx);
@@ -28,7 +28,15 @@ describe('Atmospheric Monitoring research', () => {
       e.flagId === 'atmosphericMonitoring' &&
       e.value === true
     );
+    const hydrogenFlag = research.effects.find(e =>
+      e.target === 'project' &&
+      e.targetId === 'hydrogenSpaceMining' &&
+      e.type === 'booleanFlag' &&
+      e.flagId === 'atmosphericMonitoring' &&
+      e.value === true
+    );
     expect(carbonFlag).toBeDefined();
     expect(nitrogenFlag).toBeDefined();
+    expect(hydrogenFlag).toBeDefined();
   });
 });

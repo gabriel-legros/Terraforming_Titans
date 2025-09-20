@@ -926,6 +926,13 @@ const researchParameters = {
           },
           {
             target: 'project',
+            targetId: 'hydrogenSpaceMining',
+            type: 'booleanFlag',
+            flagId: 'atmosphericMonitoring',
+            value: true
+          },
+          {
+            target: 'project',
             targetId: 'disposeResources',
             type: 'booleanFlag',
             flagId: 'atmosphericMonitoring',
@@ -1237,7 +1244,20 @@ const researchParameters = {
             type: 'enable'
           }
         ],
-      },  
+      },
+      {
+        id: 'hydrogenImport',
+        name: 'Hydrogen Importation',
+        description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
+        cost: { research: 10000000000 },
+        prerequisites: [],
+        effects: [
+          {target : 'project',
+            targetId : 'hydrogenSpaceMining',
+            type: 'enable'
+          }
+        ],
+      },
       {
         id: 'magneticShield',
         name: 'Magnetic Shield',
