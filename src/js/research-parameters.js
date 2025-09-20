@@ -1121,11 +1121,11 @@ const researchParameters = {
         ],
       },
       {
-        id: 'mass_driver_foundations',
-        name: 'Mass Driver Foundations',
+        id: 'mass_driver',
+        name: 'Mass Driver',
         description: 'Unlocks experimental mass driver launch facilities for disposing resources off-world.',
         cost: { research: 5_000_000 },
-        prerequisites: ['water_electrolysis'],
+        prerequisites: [],
         requiredFlags: ['massDriverUnlocked'],
         effects: [
           {
