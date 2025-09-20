@@ -440,9 +440,22 @@ class SpaceMirrorAdvancedOversight {
 
         // Reallocation candidates if out of resources
         const addReallocs = () => {
-          // Mirrors
+          const focusTarget = FOCUS_FLAG && (targets.water || 0) > 0 ? (targets.water) : 0;
+          const baseFocusMelt = focusTarget > 0 ? computeFocusMeltRate() : 0;
+
+          const resolveStep = (baseValue, targetValue, afterValue, donorAvailable, probe) => {
+            if (!Number.isFinite(baseValue) || !Number.isFinite(afterValue)) return probe;
+            const delta = targetValue - baseValue;
+            const change = afterValue - baseValue;
+            if (!change || delta === 0) return probe;
+            if (delta * change <= 0) return probe;
+            const unitsNeeded = Math.ceil(Math.abs(delta / change));
+            if (!(unitsNeeded > 0)) return probe;
+            const scaled = Math.max(probe, Math.ceil(SAFETY_FRACTION * unitsNeeded));
+            return Math.min(donorAvailable, scaled);
+          };
+
           if (mirrorsLeft() <= 0) {
-            // donors: zones with lower priority than current pass and with some mirrors
             const donors = [...ZONES, 'focus'].filter(dz => (assignM[dz]) > 0)
               .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
             const receivers = [...ZONES, 'focus'].filter(rz => {
@@ -453,25 +466,38 @@ class SpaceMirrorAdvancedOversight {
 
             donors.forEach(dz => receivers.forEach(rz => {
               const donorHas = assignM[dz];
-              const shift = Math.max(1, Math.min(donorHas, REALLOC_MIN));
-              const cand = withTempChange(() => {
-                // Reallocate without changing reversal; baseline alignment governs reversal.
-                assignM[dz] = donorHas - shift;
-                assignM[rz] = (assignM[rz]) + shift;
-              }, () => objective(passLevel));
-              const dPerUnit = (baseScoreR - cand) / shift;
-              if (dPerUnit > 0) {
-                cands.push({ kind:'mirror-realloc', from:dz, to:rz, kProbe:shift, kStep:shift, gainPerUnit:dPerUnit });
+              if (!(donorHas > 0)) return;
+              const probe = Math.max(1, Math.min(donorHas, REALLOC_MIN));
+              const applyProbe = (amount, evaluator) => withTempChange(() => {
+                assignM[dz] = donorHas - amount;
+                assignM[rz] = (assignM[rz]) + amount;
+              }, evaluator);
+              const candidateScore = applyProbe(probe, () => objective(passLevel));
+              const dPerUnit = (baseScoreR - candidateScore) / probe;
+              if (dPerUnit <= 0) return;
+              let step = probe;
+              if (rz === 'focus') {
+                if (focusTarget > 0) {
+                  const meltAfter = applyProbe(probe, () => computeFocusMeltRate());
+                  step = resolveStep(baseFocusMelt, focusTarget, meltAfter, donorHas, probe);
+                }
+              } else {
+                const target = targets[rz] || 0;
+                if (target > 0) {
+                  const tempAfter = applyProbe(probe, () => getZoneTemp(rz));
+                  step = resolveStep(temps[rz], target, tempAfter, donorHas, probe);
+                }
               }
+              if (step <= 0) return;
+              cands.push({ kind:'mirror-realloc', from:dz, to:rz, kProbe:probe, kStep:step, gainPerUnit:dPerUnit });
             }));
           }
-          // Lanterns
+
           if (lanternsLeft() <= 0) {
             const donors = [...ZONES, 'focus'].filter(dz => (assignL[dz]) > 0)
               .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
             const receivers = [...ZONES, 'focus'].filter(rz => {
               if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
-              // lanterns heat only; only receivers that need heat
               const t = getZoneTemp(rz);
               return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz]-K_TOL);
             });
@@ -479,15 +505,30 @@ class SpaceMirrorAdvancedOversight {
 
             donors.forEach(dz => receivers.forEach(rz => {
               const donorHas = assignL[dz];
-              const shift = Math.max(1, Math.min(donorHas, REALLOC_MIN));
-              const cand = withTempChange(() => {
-                assignL[dz] = donorHas - shift;
-                assignL[rz] = (assignL[rz]) + shift;
-              }, () => objective(passLevel));
-              const dPerUnit = (baseScoreR - cand) / shift;
-              if (dPerUnit > 0) {
-                cands.push({ kind:'lantern-realloc', from:dz, to:rz, kProbe:shift, kStep:shift, gainPerUnit:dPerUnit });
+              if (!(donorHas > 0)) return;
+              const probe = Math.max(1, Math.min(donorHas, REALLOC_MIN));
+              const applyProbe = (amount, evaluator) => withTempChange(() => {
+                assignL[dz] = donorHas - amount;
+                assignL[rz] = (assignL[rz]) + amount;
+              }, evaluator);
+              const candidateScore = applyProbe(probe, () => objective(passLevel));
+              const dPerUnit = (baseScoreR - candidateScore) / probe;
+              if (dPerUnit <= 0) return;
+              let step = probe;
+              if (rz === 'focus') {
+                if (focusTarget > 0) {
+                  const meltAfter = applyProbe(probe, () => computeFocusMeltRate());
+                  step = resolveStep(baseFocusMelt, focusTarget, meltAfter, donorHas, probe);
+                }
+              } else {
+                const target = targets[rz] || 0;
+                if (target > 0) {
+                  const tempAfter = applyProbe(probe, () => getZoneTemp(rz));
+                  step = resolveStep(temps[rz], target, tempAfter, donorHas, probe);
+                }
               }
+              if (step <= 0) return;
+              cands.push({ kind:'lantern-realloc', from:dz, to:rz, kProbe:probe, kStep:step, gainPerUnit:dPerUnit });
             }));
           }
         };
