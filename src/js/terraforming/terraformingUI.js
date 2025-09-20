@@ -654,6 +654,7 @@ function createTemperatureBox(row) {
             h2o: 'atmosphericWater',
             ch4: 'atmosphericMethane',
             greenhousegas: 'greenhouseGas',
+            h2: 'hydrogen',
             h2so4: 'sulfuricAcid'
           };
           const resourceKey = mapping[gas.toLowerCase()];

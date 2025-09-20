@@ -1219,23 +1219,25 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateAtmosphericComposition() {
-        let co2Mass = 0, h2oMass = 0, ch4Mass = 0, h2so4Mass = 0, safeGHGMass = 0, inertMass = 0;
+        let co2Mass = 0, h2oMass = 0, ch4Mass = 0, h2Mass = 0, h2so4Mass = 0, safeGHGMass = 0, inertMass = 0;
         for (const gas in this.resources.atmospheric) {
             const amountTons = this.resources.atmospheric[gas].value || 0;
             const kg = amountTons * 1000;
             if (gas === 'carbonDioxide') co2Mass += kg;
             else if (gas === 'atmosphericWater') h2oMass += kg;
             else if (gas === 'atmosphericMethane') ch4Mass += kg;
+            else if (gas === 'hydrogen') h2Mass += kg;
             else if (gas === 'sulfuricAcid') h2so4Mass += kg;
             else if (gas === 'greenhouseGas') safeGHGMass += kg;
             else inertMass += kg;
         }
-        const totalMass = co2Mass + h2oMass + ch4Mass + h2so4Mass + safeGHGMass + inertMass;
+        const totalMass = co2Mass + h2oMass + ch4Mass + h2Mass + h2so4Mass + safeGHGMass + inertMass;
         const composition = {};
         if (totalMass > 0) {
             if (co2Mass > 0) composition.co2 = co2Mass / totalMass;
             if (h2oMass > 0) composition.h2o = h2oMass / totalMass;
             if (ch4Mass > 0) composition.ch4 = ch4Mass / totalMass;
+            if (h2Mass > 0) composition.h2 = h2Mass / totalMass;
             if (h2so4Mass > 0) composition.h2so4 = h2so4Mass / totalMass;
             if (safeGHGMass > 0) composition.greenhouseGas = safeGHGMass / totalMass;
         }

@@ -106,7 +106,7 @@
   function copyBackToOverrideFromSandbox(override, sandboxResources, terra) {
     const out = JSON.parse(JSON.stringify(override));
     // Write atmospheric and surface resources back into override
-    const atmoKeys = ['carbonDioxide','inertGas','oxygen','atmosphericWater','atmosphericMethane','sulfuricAcid'];
+    const atmoKeys = ['carbonDioxide','inertGas','oxygen','atmosphericWater','atmosphericMethane','hydrogen','sulfuricAcid'];
     out.resources = out.resources || {};
     out.resources.atmospheric = out.resources.atmospheric || {};
     atmoKeys.forEach(k => {
@@ -157,7 +157,7 @@
     const surf = terra.resources.surface || {};
     function g(obj, k) { return obj[k] ? (obj[k].value || 0) : 0; }
     const metrics = [
-      g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'atmosphericMethane'), g(atmo,'sulfuricAcid'),
+      g(atmo,'carbonDioxide'), g(atmo,'inertGas'), g(atmo,'oxygen'), g(atmo,'atmosphericWater'), g(atmo,'atmosphericMethane'), g(atmo,'hydrogen'), g(atmo,'sulfuricAcid'),
       g(surf,'ice'), g(surf,'liquidWater'), g(surf,'dryIce'), g(surf,'liquidCO2'), g(surf,'liquidMethane'), g(surf,'hydrocarbonIce')
     ];
     const zones = ['tropical', 'temperate', 'polar'];
