@@ -12,6 +12,7 @@
 
 ## Updates
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
+- Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
