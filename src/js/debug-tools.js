@@ -69,6 +69,7 @@
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
+      hydrogen: resources.atmospheric.hydrogen?.value || 0,
       sulfuricAcid: resources.atmospheric.sulfuricAcid?.value || 0,
       buriedIce: 0
     };
@@ -94,7 +95,7 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','hydrogen','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
@@ -119,6 +120,7 @@
       carbonDioxide: { initialValue: values.global.co2 },
       atmosphericWater: { initialValue: values.global.waterVapor },
       atmosphericMethane: { initialValue: values.global.atmosphericMethane },
+      hydrogen: { initialValue: values.global.hydrogen },
       sulfuricAcid: { initialValue: values.global.sulfuricAcid }
     };
     const zonalWater = {};
