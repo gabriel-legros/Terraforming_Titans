@@ -18,6 +18,13 @@ let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenance
 let shipEfficiency = 1;
 let dayNightCycle;
 let buildings = {};
+Object.defineProperty(globalThis, 'buildings', {
+  get: () => buildings,
+  set: (value) => {
+    buildings = value;
+  },
+  configurable: true,
+});
 let colonies = {};
 let structures = {};
 let populationModule;
