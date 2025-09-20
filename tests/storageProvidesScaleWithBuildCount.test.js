@@ -10,7 +10,7 @@ const { getProdConsSections } = (() => {
   const ctx = dom.getInternalVMContext();
   ctx.formatNumber = n => n;
   ctx.formatStorageDetails = storage => `${storage.colony.water} Water`;
-  ctx.resources = { colony: { water: { displayName: 'Water' } } };
+  ctx.resources = { colony: { water: { displayName: 'Water', unlocked: true } } };
   ctx.terraforming = { celestialParameters: {} };
   ctx.Colony = class {};
   const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'structuresUI.js'), 'utf8');

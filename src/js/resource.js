@@ -149,13 +149,15 @@ class Resource extends EffectableEntity {
           .reduce((sum, e) => sum + e.value, 0)
       : 0;
     newCap += bonus;
+
     for (const structureName in structures) {
       const structure = structures[structureName];
-      if (structure.storage && structure.active > 0) {
-        if (structure.storage.colony && structure.storage.colony[this.name]) {
-          newCap += structure.active * structure.storage.colony[this.name] * structure.getEffectiveStorageMultiplier();
-        }
-      }
+      if (!structure.storage || structure.active <= 0) continue;
+
+      const storageByCategory = structure.storage[this.category];
+      if (!storageByCategory || storageByCategory[this.name] === undefined) continue;
+
+      newCap += structure.active * storageByCategory[this.name] * structure.getEffectiveStorageMultiplier();
     }
     this.cap = this.hasCap ? newCap : Infinity;
   }
