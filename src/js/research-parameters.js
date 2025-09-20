@@ -1140,7 +1140,7 @@ const researchParameters = {
         name: 'Mass Driver Foundations',
         description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
         cost: { research: 5_000_000 },
-        prerequisites: ['water_electrolysis'],
+        prerequisites: [],
         requiredFlags: ['massDriverUnlocked'],
         effects: [
           {

@@ -45,8 +45,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       sectionContainer.appendChild(infoContent);
 
       const infoNote = document.createElement('p');
+      infoNote.classList.add('project-description');
       infoNote.classList.add('mass-driver-note');
-      infoNote.textContent = 'Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.';
+      infoNote.textContent = 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.';
       sectionContainer.appendChild(infoNote);
 
       container.appendChild(sectionContainer);

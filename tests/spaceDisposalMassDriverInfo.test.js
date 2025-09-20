@@ -113,14 +113,15 @@ describe('SpaceDisposalProject mass driver info', () => {
       expect(elements.massDriverCountElement.textContent).toBe('7');
       expect(elements.massDriverInfoElement.textContent).toBe('Active Mass Drivers: 7');
       expect(elements.massDriverInfoNoteElement).toBeDefined();
-      expect(elements.massDriverInfoNoteElement.textContent).toBe('Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.');
+      expect(elements.massDriverInfoNoteElement.classList.contains('project-description')).toBe(true);
+      expect(elements.massDriverInfoNoteElement.textContent).toBe('Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.');
 
       global.buildings.massDriver.active = 12;
       ctx.buildings.massDriver.active = 12;
       project.updateUI();
       expect(elements.massDriverCountElement.textContent).toBe('12');
       expect(elements.massDriverInfoElement.textContent).toBe('Active Mass Drivers: 12');
-      expect(elements.massDriverInfoNoteElement.textContent).toBe('Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.');
+      expect(elements.massDriverInfoNoteElement.textContent).toBe('Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.');
     } finally {
       if (originalGlobals.document === undefined) {
         delete global.document;
