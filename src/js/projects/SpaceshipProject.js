@@ -12,8 +12,12 @@ class SpaceshipProject extends Project {
     this.shipCapacityMultiplier = 1;
   }
 
+  getActiveShipCount() {
+    return this.assignedSpaceships ?? 0;
+  }
+
   isContinuous() {
-    return this.assignedSpaceships > 100;
+    return this.getActiveShipCount() > 100;
   }
 
  assignSpaceships(count) {
@@ -336,8 +340,10 @@ class SpaceshipProject extends Project {
   calculateSpaceshipTotalCost(perSecond = false) {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? this.assignedSpaceships * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
+      ? activeShips * (1000 / duration)
       : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
@@ -351,8 +357,10 @@ class SpaceshipProject extends Project {
   calculateSpaceshipTotalResourceGain(perSecond = false) {
     const totalResourceGain = {};
     const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? this.assignedSpaceships * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() :  this.getEffectiveDuration()))
+      ? activeShips * (1000 / duration)
       : 1;
     for (const category in gainPerShip) {
       totalResourceGain[category] = {};
@@ -461,14 +469,14 @@ class SpaceshipProject extends Project {
     if (this.isContinuous()) {
       return this.duration;
     }
-    const assignedShips = Math.min(Math.max(this.assignedSpaceships, 1), maxShipsForDurationReduction);
-    return this.duration / assignedShips;
+    const activeShips = Math.min(Math.max(this.getActiveShipCount(), 1), maxShipsForDurationReduction);
+    return this.duration / activeShips;
   }
 
   canStart() {
     if (!super.canStart()) return false;
 
-    if (this.assignedSpaceships === 0) {
+    if (this.getActiveShipCount() === 0) {
       return false;
     }
 
@@ -625,6 +633,7 @@ class SpaceshipProject extends Project {
       const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
 
       if (this.isContinuous()) {
+        const activeShips = this.getActiveShipCount();
         const factor = 1000 / duration;
         const fraction = deltaTime / duration;
         if (fraction > 0) {
@@ -635,7 +644,7 @@ class SpaceshipProject extends Project {
               if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
                 continue;
               }
-              const rateValue = costPerShip[category][resource] * this.assignedSpaceships * factor * (applyRates ? productivity : 1);
+              const rateValue = costPerShip[category][resource] * activeShips * factor * (applyRates ? productivity : 1);
               if (applyRates) {
                 resources[category][resource].modifyRate(
                   -rateValue,
@@ -644,14 +653,14 @@ class SpaceshipProject extends Project {
                 );
               }
               totals.cost[category][resource] =
-                (totals.cost[category][resource] || 0) + costPerShip[category][resource] * this.assignedSpaceships * fraction;
+                (totals.cost[category][resource] || 0) + costPerShip[category][resource] * activeShips * fraction;
             }
           }
 
           const capacity = this.getShipCapacity();
           if (capacity && this.selectedDisposalResource) {
             const { category, resource } = this.selectedDisposalResource;
-            const rateValue = capacity * this.assignedSpaceships * factor * (applyRates ? productivity : 1);
+            const rateValue = capacity * activeShips * factor * (applyRates ? productivity : 1);
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
@@ -661,9 +670,9 @@ class SpaceshipProject extends Project {
             }
             if (!totals.cost[category]) totals.cost[category] = {};
             totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + capacity * this.assignedSpaceships * fraction;
+              (totals.cost[category][resource] || 0) + capacity * activeShips * fraction;
             if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-              const fundingRate = capacity * this.assignedSpaceships * factor * this.attributes.fundingGainAmount * (applyRates ? productivity : 1);
+              const fundingRate = capacity * activeShips * factor * this.attributes.fundingGainAmount * (applyRates ? productivity : 1);
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
@@ -674,7 +683,7 @@ class SpaceshipProject extends Project {
               if (!totals.gain.colony) totals.gain.colony = {};
               totals.gain.colony.funding =
                 (totals.gain.colony.funding || 0) +
-                capacity * this.assignedSpaceships * fraction * this.attributes.fundingGainAmount;
+                capacity * activeShips * fraction * this.attributes.fundingGainAmount;
             }
           }
 
@@ -690,7 +699,7 @@ class SpaceshipProject extends Project {
           for (const category in gainPerShip) {
             if (!totals.gain[category]) totals.gain[category] = {};
             for (const resource in gainPerShip[category]) {
-              const rateValue = gainPerShip[category][resource] * this.assignedSpaceships * factor * (applyRates ? productivity : 1);
+              const rateValue = gainPerShip[category][resource] * activeShips * factor * (applyRates ? productivity : 1);
               if (applyRates) {
                 resources[category][resource].modifyRate(
                   rateValue,
@@ -699,7 +708,7 @@ class SpaceshipProject extends Project {
                 );
               }
               totals.gain[category][resource] =
-                (totals.gain[category][resource] || 0) + gainPerShip[category][resource] * this.assignedSpaceships * fraction;
+                (totals.gain[category][resource] || 0) + gainPerShip[category][resource] * activeShips * fraction;
             }
           }
         }
@@ -782,6 +791,7 @@ class SpaceshipProject extends Project {
     }
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const fraction = deltaTime / duration;
+    const activeShips = this.getActiveShipCount();
 
     let shortfall = false;
     const costPerShip = this.calculateSpaceshipCost();
@@ -790,7 +800,7 @@ class SpaceshipProject extends Project {
         if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
           continue;
         }
-        const amount = costPerShip[category][resource] * this.assignedSpaceships * fraction * productivity;
+        const amount = costPerShip[category][resource] * activeShips * fraction * productivity;
         const available = resources[category]?.[resource]?.value || 0;
         if (available < amount) {
           shortfall = shortfall || amount > 0;
@@ -808,7 +818,7 @@ class SpaceshipProject extends Project {
 
     if (this.attributes.spaceExport && this.selectedDisposalResource) {
       const capacity = this.getShipCapacity();
-      const requestedAmount = capacity * this.assignedSpaceships * fraction * productivity;
+      const requestedAmount = capacity * activeShips * fraction * productivity;
       const { category, resource } = this.selectedDisposalResource;
       let actualDisposal = 0;
       if (accumulatedChanges) {
@@ -849,13 +859,13 @@ class SpaceshipProject extends Project {
     for (const category in gainPerShip) {
       gain[category] = {};
       for (const resource in gainPerShip[category]) {
-        gain[category][resource] = gainPerShip[category][resource] * this.assignedSpaceships;
+        gain[category][resource] = gainPerShip[category][resource] * activeShips;
       }
     }
     if (this.applyMetalCostPenalty) {
       const cost = this.calculateSpaceshipCost();
       const metalCost = cost.colony?.metal || 0;
-      const penalty = metalCost * this.assignedSpaceships;
+      const penalty = metalCost * activeShips;
       this.applyMetalCostPenalty(gain, penalty);
     }
     this.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);

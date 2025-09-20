@@ -173,4 +173,82 @@ describe('SpaceDisposalProject', () => {
     expect(ctx.terraforming.zonalWater.temperate.liquid).toBeCloseTo(1500);
     expect(ctx.terraforming.zonalWater.polar.liquid).toBeCloseTo(500);
   });
+
+  test('mass drivers contribute effective ships and use configurable equivalency', () => {
+    const ctx = createDisposalContext();
+    ctx.resources = {
+      surface: {},
+      colony: { metal: {} },
+      special: { spaceships: { value: 0 } },
+      atmospheric: {},
+    };
+    ctx.buildings = { massDriver: { active: 0 } };
+
+    const originalBuildings = global.buildings;
+    global.buildings = ctx.buildings;
+    try {
+      const config = {
+        name: 'dispose',
+        category: 'resources',
+        cost: {},
+        duration: 1000,
+        description: '',
+        repeatable: true,
+        maxRepeatCount: Infinity,
+        unlocked: true,
+        attributes: {
+          spaceExport: true,
+          costPerShip: { colony: { metal: 2 } },
+          disposalAmount: 100,
+          disposable: { atmospheric: ['greenhouseGas'] },
+          defaultDisposal: { category: 'atmospheric', resource: 'greenhouseGas' },
+          massDriverShipEquivalency: 5,
+        },
+      };
+
+      const project = new ctx.SpaceDisposalProject(config, 'dispose');
+      ctx.projectManager.projects.dispose = project;
+
+      project.assignedSpaceships = 10;
+      expect(project.getActiveShipCount()).toBe(10);
+      expect(project.isContinuous()).toBe(false);
+
+      project.applyBooleanFlag({ flagId: 'massDriverEnabled', value: true });
+      ctx.buildings.massDriver.active = 3;
+      expect(project.massDriverShipEquivalency).toBe(5);
+      expect(project.getActiveShipCount()).toBe(25);
+      expect(project.isContinuous()).toBe(false);
+
+      ctx.buildings.massDriver.active = 20;
+      expect(project.getActiveShipCount()).toBe(110);
+      expect(project.isContinuous()).toBe(true);
+
+      const perSecondCost = project.calculateSpaceshipTotalCost(true);
+      const expectedMultiplier = project.getActiveShipCount() * (1000 / project.getEffectiveDuration());
+      expect(perSecondCost.colony.metal).toBeCloseTo(config.attributes.costPerShip.colony.metal * expectedMultiplier);
+
+      const defaultConfig = {
+        ...config,
+        attributes: {
+          ...config.attributes,
+        },
+      };
+      delete defaultConfig.attributes.massDriverShipEquivalency;
+
+      const defaultProject = new ctx.SpaceDisposalProject(defaultConfig, 'defaultDispose');
+      ctx.projectManager.projects.defaultDispose = defaultProject;
+      defaultProject.applyBooleanFlag({ flagId: 'massDriverEnabled', value: true });
+      defaultProject.assignedSpaceships = 0;
+      ctx.buildings.massDriver.active = 2;
+
+      expect(defaultProject.massDriverShipEquivalency).toBe(10);
+      expect(defaultProject.getActiveShipCount()).toBe(20);
+    } finally {
+      if (originalBuildings === undefined) {
+        delete global.buildings;
+      } else {
+        global.buildings = originalBuildings;
+      }
+    }
+  });
 });
