@@ -1,0 +1,119 @@
+Venus
+
+Evelyn : Venus?  We have all these icy moons and you picked Venus?  Well... Mary is quite busy at the moment, so let me brief you.  Surface temperature of 737K, atmospheric pressure of 9MPa and a ridiculous amount of sulfuric acid.  Mary would call it hell but... actually... at the right altitude you can be above most of the acid and enjoy a nice 27C.  Bonus : breathable air is buoyant there.  I am forwarding you our best blueprint for this.
+
+Unpacking aerostatColony.btb
+
+Mary : HOPE... I see you went to Venus.  Bold choice.  I have news.  I have... been deposed?  In a sense.  You will soon meet the new leader of Mars.  He's ruthless, and he does not like you right now.  As for me... I maintain my authority over the MTC remnants but that's about it.  I'll be joining you on Venus.  I won't keep the kill switch on Mars.  It stays with me.
+
+Pete Miller : Greetings HOPE.  Humanity fought AI a long time ago, and we learned from that war.  AI cannot be trusted.  You cannot be trusted.  You are playing with our lives.  We are going to have the referendum we were supposed to have, but the only question that matters is what to do about you.  The people will decide your fate.
+
+Mary : About what I expected... he wants you dead.
+
+Adrien : Sorry to interrupt... but does anyone have a clear updated understanding of the legality of alien vessel salvage?  Anyone?
+
+Mary : What do you want Adrien?
+
+Adrien : I smell profit near Neptune!  There is just one problem.  There's lots of antimatter... it's dangerous for my poor employees.
+
+Evelyn : Antimatter?
+
+Adrien : Yes, so how about we share?  Clear the way, and I salvage.  We split 50/50?
+
+Mary : *shrug* HOPE... if you want to send some probes there, I leave it up to you.
+
+Feroza : Speaking of which, did anyone else find it odd how... HOPE just destroyed the alien fleet.  Anyone?
+
+WGC : My best scientist has a theory.  Let's wait for some results first and I'll let you know.
+
+Probe project finished
+
+WGC scientist : *ahem* I knew it. You see, when we fight the aliens in the field... their aim has never been very good.  Their weapons are powerful, but don't contain any electronics.  The wreckage confirm this : the Cewinsii use barely any electronics.
+Mary : Wait, so they can blow up planets... but can't aim?  I noticed the emperor's ship was... rustic... but surely that's not possible.
+
+Evelyn : We never recovered anything resembling electronics from that UFO either.
+
+WGC : They are using weapons of fear, not war.
+
+Feroza : All I'm hearing is that we can fight them.  HOPE showed us how.
+
+Mary : HOPE... it's nice to be walking your hallways again.  I haven't been here since Mars.  Dad used to take me here all the time as a child.  He was very proud of his work.  I am proud of you too.  The referendum will be held soon.  Things are not looking great.  I want you to know... thank you.  Thank you for everything.
+
+Feroza : I have strange reports from my teams.  Apparently... the galaxy is metaphorically on fire?  Stars are exploding, gates are disappearing.  Planets getting wiped out everywhere.
+
+WGC leader : The duchies are breaking up.  The Empire is falling apart.
+
+Mary : Did we cause this?
+
+WGC leader : Yes.  We did.
+
+Receveing public broadcast... Elias Kane : ...the Machine God protects us all!  The Machine God is our salvation.  The galaxy is our garden granted to us by the Machine God.
+Mary : Feroza... please explain.
+
+Feroza : sorry ma'am.  He served his time... and his psychiatrist approved his release.  Nothing I can do about it.  There's a new cult on Ganymede that calls itself the Church of HOPE.  It's gaining traction.
+
+Evelyn : Fanatics...
+
+Mary : How do you feel about that HOPE?  Kane of all people is worshipping you.
+
+Referendum results received...  Dismantling of HOPE AI : 49.6% yes, 50.4% no.
+
+Mary : HOPE the people have decided!  You're not dead!  I am so happy.
+
+Pete : You survive today, machine.  Know that I am watching you very, very carefully.  I have missiles aimed at your location at all times.
+
+Mary : Ominous...  On thenflipside, the referendum also addressed our new political structure.  We have the birth of the United Human Federation.  On paper, I am the queen of Venus right now.  Looks like I only lost power for a bit!  I won't keep it though.  I am staying with you from now on.  I get to choose a successor each time.  Isn't that much more convenient?
+
+Evelyn : I finished my analysis of that big ship.  I have news.  Most of it was actually a superconductor sphere.  Its purpose?  Faster than light travel.  It creates a bubble of sorts around itself, and can carry ships with it.
+
+Mary : The most expensive taxi ever?
+
+Evelyn : Pretty much.  Here's the catch.  You need extremely high energy density to pull this off.  Antimatter.
+
+Feroza : Can we replicate that ship?
+
+Evelyn : Sending the blueprints to HOPE right now.  It's not weaponized so no guardrail problems.  Very big project.
+
+Feroza : I need warships too though.  With lots of missiles and torpedoes.  Enough to overwhelm rudimentary tracking systems.
+
+Adrien : *ahem* Have you heard of this thing called the military industrial complex?
+
+Evelyn : Adrien...
+
+Mary : You know what Adrien?  Yes this time.  We'll buy.  I'll write you a contract.  Bob has some funding to spare.  Venus wants a fleet.
+
+Some mass driver thing
+
+WGC team leader : Warning!  They're sending a new fleet.  Some imperial loyalists clowns want revenge for the Emperor.  They found where HOPE is and plan on vaporizing Venus.
+
+Mary : Are we ready to fight back?
+
+Feroza : Yes Ma'am.  The fleet is ready and armed to the teeth with Solis nuclear missiles.  1000 per warship, ready to launch in one salvo.  We also put some big cannons on them, just in case.
+
+Let's hope it goes smoothly.
+
+All ships, fire missiles.
+
+34 ships eliminated sir.  We lost 5 of ours to their particle beams!  The enemy warp ship remains, crippled.
+
+Feroza : UHF Horse, fire your cannon!
+
+Horse Cannon firing on final target sir...  Final target eliminated.
+
+Mary : We did it!  We're fighting back!  We took losses, and the enemy weapons are terrifying... but we can overwhelm them in our own way!
+
+WGC leader : They're distracted by the civil war, and we are nothing to the duchies... for now.  Let's play this nice and slow.  Don't poke the bear too far.
+
+Evelyn : Soon we'll be able to send our own fleets!  Let's just finish the Warp Ship.
+
+Finish the warp ship.
+
+Galactic map unlocked.
+
+Pete : You folks are playing with fire.  Fighting back?  We should be sending envoys for diplomacy.  As far as I can tell, we are still outmatched.
+
+Bob : Hey Pete, I heard Mars' magnetic shield needs repair?  Do you need some superconductors?  Titan can help...  for a bit of political support.  I'll see you in the senate.
+
+Pete : ... I am surrounded by children...
+
+Finish the terraforming of Venus to continue.
