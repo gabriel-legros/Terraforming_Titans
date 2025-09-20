@@ -109,12 +109,18 @@ describe('SpaceDisposalProject mass driver info', () => {
       project.updateUI();
 
       expect(elements.massDriverInfoSection.style.display).toBe('block');
+      expect(elements.massDriverCountElement).toBeDefined();
+      expect(elements.massDriverCountElement.textContent).toBe('7');
       expect(elements.massDriverInfoElement.textContent).toBe('Active Mass Drivers: 7');
+      expect(elements.massDriverInfoNoteElement).toBeDefined();
+      expect(elements.massDriverInfoNoteElement.textContent).toBe('Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.');
 
       global.buildings.massDriver.active = 12;
       ctx.buildings.massDriver.active = 12;
       project.updateUI();
+      expect(elements.massDriverCountElement.textContent).toBe('12');
       expect(elements.massDriverInfoElement.textContent).toBe('Active Mass Drivers: 12');
+      expect(elements.massDriverInfoNoteElement.textContent).toBe('Launch cadence scales with your launcher network. Each Mass Driver counts as 10 spaceships.');
     } finally {
       if (originalGlobals.document === undefined) {
         delete global.document;
@@ -189,3 +195,4 @@ describe('SpaceDisposalProject mass driver info', () => {
     }
   });
 });
+

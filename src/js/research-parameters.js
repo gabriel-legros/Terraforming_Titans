@@ -1136,9 +1136,9 @@ const researchParameters = {
         ],
       },
       {
-        id: 'mass_driver_foundations',
+        id: 'mass_driver',
         name: 'Mass Driver Foundations',
-        description: 'Unlocks experimental mass driver launch facilities for disposing resources off-world.',
+        description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
         cost: { research: 5_000_000 },
         prerequisites: ['water_electrolysis'],
         requiredFlags: ['massDriverUnlocked'],
@@ -1626,3 +1626,4 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = researchParameters;
 }
   
+
