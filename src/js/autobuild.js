@@ -124,22 +124,37 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
 
     if (typeof building.getEffectiveCost === 'function') {
         const cost = building.getEffectiveCost(requiredAmount) || {};
+        const limitingResources = new Set();
+        let lowestRatio = Infinity;
+        let shortageDetected = false;
+        const ratioTolerance = 1e-9;
         for (const category in cost) {
             if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
             for (const resource in cost[category]) {
                 if (!Object.prototype.hasOwnProperty.call(cost[category], resource)) continue;
                 const resObj = resources?.[category]?.[resource];
                 if (!resObj) continue;
+                const required = cost[category][resource];
+                if (required <= 0) continue;
                 const cap = resObj.cap || 0;
                 const reserve = (reservePercent / 100) * cap;
                 const available = (resObj.value || 0) - reserve;
-                if (available + 1e-9 < cost[category][resource]) {
-                    const res = resources?.[category]?.[resource];
-                    if (res) {
-                        res.autobuildShortage = true;
+                if (available + 1e-9 < required) {
+                    shortageDetected = true;
+                    const ratio = available / required;
+                    if (ratio + ratioTolerance < lowestRatio) {
+                        lowestRatio = ratio;
+                        limitingResources.clear();
+                        limitingResources.add(resObj);
+                    } else if (Math.abs(ratio - lowestRatio) <= ratioTolerance) {
+                        limitingResources.add(resObj);
                     }
                 }
             }
+        }
+        if (!shortageDetected) return;
+        for (const res of limitingResources) {
+            res.autobuildShortage = true;
         }
     }
 }

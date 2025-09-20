@@ -61,6 +61,63 @@ describe('autobuild resource shortage warnings', () => {
     expect(global.resources.colony.metal.autobuildShortage).toBe(false);
   });
 
+  test('only flags the limiting resource when multiple inputs are short', () => {
+    constructionOfficeState.strategicReserve = 0;
+    global.resources = {
+      colony: {
+        colonists: { value: 1000 },
+        metal: { value: 500, cap: 2000 },
+        superconductors: { value: 100, cap: 2000 },
+      },
+      surface: { land: { value: 1000, reserved: 0 } },
+    };
+
+    const building = {
+      displayName: 'Fusion Reactor',
+      autoBuildEnabled: true,
+      autoBuildPercent: 100,
+      autoBuildPriority: false,
+      autoActiveEnabled: false,
+      autoBuildBasis: 'population',
+      count: 0,
+      requiresLand: 0,
+      requiresDeposit: null,
+      getEffectiveCost: jest.fn(count => ({
+        colony: {
+          metal: count,
+          superconductors: count,
+        },
+      })),
+      canAfford: jest.fn((count, reservePercent) => {
+        const { metal, superconductors } = global.resources.colony;
+        const metalReserve = (reservePercent / 100) * (metal.cap || 0);
+        const superReserve = (reservePercent / 100) * (superconductors.cap || 0);
+        return metal.value - metalReserve >= count && superconductors.value - superReserve >= count;
+      }),
+      maxBuildable: jest.fn(reservePercent => {
+        const { metal, superconductors } = global.resources.colony;
+        const metalReserve = (reservePercent / 100) * (metal.cap || 0);
+        const superReserve = (reservePercent / 100) * (superconductors.cap || 0);
+        const availableMetal = metal.value - metalReserve;
+        const availableSuperconductors = superconductors.value - superReserve;
+        return Math.floor(Math.max(Math.min(availableMetal, availableSuperconductors), 0));
+      }),
+      build: jest.fn(() => false),
+    };
+
+    autoBuild({ fusion: building });
+
+    expect(global.resources.colony.superconductors.autobuildShortage).toBe(true);
+    expect(global.resources.colony.metal.autobuildShortage).toBe(false);
+
+    global.resources.colony.superconductors.value = 1500;
+
+    autoBuild({ fusion: building });
+
+    expect(global.resources.colony.superconductors.autobuildShortage).toBe(false);
+    expect(global.resources.colony.metal.autobuildShortage).toBe(true);
+  });
+
   test('respects strategic reserve when flagging shortages', () => {
     constructionOfficeState.strategicReserve = 80;
     global.resources = {
