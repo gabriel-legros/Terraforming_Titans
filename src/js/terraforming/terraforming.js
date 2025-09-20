@@ -903,7 +903,7 @@ class Terraforming extends EffectableEntity{
             // Convert meridional mixing into an energy flux term (conserves energy)
             let windFlux = 0;
             if (dtSeconds > 0 && capacity > 0 && mixingDelta !== 0) {
-                windFlux = (mixingDelta * capacity) / dtSeconds;
+                windFlux = (mixingDelta * capacity) / (10*dtSeconds);
             }
             const combinedFlux = netFlux + windFlux;
 
