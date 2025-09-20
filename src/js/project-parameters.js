@@ -252,6 +252,23 @@ const projectParameters = {
       maxPressure: 75
     }
   },
+  hydrogenSpaceMining: {
+    type: 'SpaceMiningProject',
+    name: "Hydrogen Importation",
+    category :"resources",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to recover hydrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceMining: true,
+      costPerShip: { colony: { metal: 100000, energy: 100000000000 } },
+      resourceGainPerShip: { atmospheric: { hydrogen: 1000000 } },
+      maxPressure: 75
+    }
+  },
   spaceElevator: {
     type: 'Project',
     name: "Space Elevator",
@@ -296,6 +313,14 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'nitrogenSpaceMining',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        },
+        {
+          target : 'project',
+          targetId : 'hydrogenSpaceMining',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
