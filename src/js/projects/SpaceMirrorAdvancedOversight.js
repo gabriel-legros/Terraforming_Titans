@@ -5,6 +5,7 @@ class SpaceMirrorAdvancedOversight {
     if (!settings || !settings.advancedOversight) return;
     if (SpaceMirrorAdvancedOversight.advancedAssignmentInProgress) return;
     SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = true;
+    const baselineAverageTemperature = terraforming?.temperature?.value;
     let snapshot = terraforming.saveTemperatureState();
 
     try {
@@ -12,7 +13,7 @@ class SpaceMirrorAdvancedOversight {
 
       // ---------------- Config knobs (tune as needed) ----------------
       const K_TOL = 0.001;         // Temperature tolerance (K) for zones
-      const WATER_REL_TOL = 0.01; // Relative tol (1%) for water melt target
+      const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
 
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
@@ -187,7 +188,7 @@ class SpaceMirrorAdvancedOversight {
         // Energy to bring ice to 0°C and melt
         const C_P_ICE = 2100;    // J/kg·K
         const L_F_WATER = 334000;// J/kg
-        const deltaT = Math.max(0, 273.15 - (terraforming.temperature?.value || 0));
+        const deltaT = Math.max(0, 273.15 - (baselineAverageTemperature ?? 0));
         const energyPerKg = C_P_ICE * deltaT + L_F_WATER; // J/kg
         if (energyPerKg <= 0) return 0;
 
@@ -214,7 +215,7 @@ class SpaceMirrorAdvancedOversight {
         if (FOCUS_FLAG && (targets.water || 0) > 0) {
           const melt = computeFocusMeltRate();
           const tgt = targets.water || 0;
-          const relErr = (melt >= tgt) ? 0 : (tgt > 0 ? (tgt - melt) / tgt : 0);
+          const relErr = tgt > 0 ? (tgt - melt) / tgt : 0;
           let w = 0;
           if ((prio.focus || 5) <= passLevel) w = weightFor(prio.focus);
           if ((prio.focus || 5) <  passLevel) w *= 32;
@@ -374,17 +375,18 @@ class SpaceMirrorAdvancedOversight {
 
         // Focus water (tons/sec)
         if (FOCUS_FLAG && (targets.water || 0) > 0 && (prio.focus || 5) <= passLevel) {
+          const waterTarget = targets.water || 0;
           const baseMelt = computeFocusMeltRate();
-          const wantMore = baseMelt < (targets.water || 0) * (1 - WATER_REL_TOL);
+          const wantMore = baseMelt < waterTarget * (1 - WATER_REL_TOL);
           if (wantMore) {
             if (mirrorsLeft() > 0) {
-            const k = MIRROR_PROBE_MIN;
+              const k = MIRROR_PROBE_MIN;
               const score = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => computeFocusMeltRate());
               const dMelt = Math.max(0, meltAfter - baseMelt);
               const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil(((targets.water) - baseMelt) / dMeltPerUnit) : 0;
+              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
               unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
               const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
               if (step > 0) cands.push({ kind:'mirror', zone:'focus', reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
@@ -396,10 +398,39 @@ class SpaceMirrorAdvancedOversight {
               const meltAfter = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => computeFocusMeltRate());
               const dMelt = Math.max(0, meltAfter - baseMelt);
               const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil(((targets.water) - baseMelt) / dMeltPerUnit) : 0;
+              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
               unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
               const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), lanternsLeft()));
               if (step > 0) cands.push({ kind:'lantern', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+            }
+          }
+          const wantLess = baseMelt > waterTarget * (1 + WATER_REL_TOL);
+          if (wantLess) {
+            if ((assignM.focus || 0) > 0) {
+              const current = assignM.focus || 0;
+              const k = MIRROR_PROBE_MIN;
+              const score = withTempChange(() => { assignM.focus = current - k; }, () => objective(passLevel));
+              const dPerUnit = (baseScore - score) / k;
+              const meltAfter = withTempChange(() => { assignM.focus = current - k; }, () => computeFocusMeltRate());
+              const dMelt = Math.max(0, baseMelt - meltAfter);
+              const dMeltPerUnit = dMelt / k;
+              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
+              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+              if (step > 0) cands.push({ kind:'mirror-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+            }
+            if ((assignL.focus || 0) > 0) {
+              const current = assignL.focus || 0;
+              const k = LANTERN_PROBE_MIN;
+              const score = withTempChange(() => { assignL.focus = current - k; }, () => objective(passLevel));
+              const dPerUnit = (baseScore - score) / k;
+              const meltAfter = withTempChange(() => { assignL.focus = current - k; }, () => computeFocusMeltRate());
+              const dMelt = Math.max(0, baseMelt - meltAfter);
+              const dMeltPerUnit = dMelt / k;
+              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
+              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+              if (step > 0) cands.push({ kind:'lantern-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
             }
           }
         }

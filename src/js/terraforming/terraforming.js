@@ -795,6 +795,7 @@ class Terraforming extends EffectableEntity{
 
         const pct = getZonePercentage(zone);                       // fraction of surface (0..1)
         const area = (this.celestialParameters.surfaceArea || 0) * pct; // m²
+        const capacityPerArea = Math.max(Cslab + atmosphericHeatCapacity, MIN_SURFACE_HEAT_CAPACITY);
 
         z[zone] = {
         mean:  zTemps.mean,
@@ -804,7 +805,8 @@ class Terraforming extends EffectableEntity{
         albedo: zTemps.albedo,
         frac:  zoneFractions,
         area,
-        Cslab
+        Cslab,
+        capacityPerArea
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
@@ -849,7 +851,7 @@ class Terraforming extends EffectableEntity{
     const W = {};
     const T = {};
     for (const zone of ORDER) {
-        W[zone] = (z[zone].Cslab || 0) * (z[zone].area || 0);
+        W[zone] = (z[zone].capacityPerArea || 0) * (z[zone].area || 0);
         T[zone] = z[zone].mean;
     }
 
@@ -882,10 +884,7 @@ class Terraforming extends EffectableEntity{
 
 
         const previousMean = this.temperature.zones[zone].value;
-        const zoneFractions = calculateZonalSurfaceFractions(this, zone);
-        const rawSlabCapacity = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, zoneFractions, gSurface);
-        const effectiveAtmosphericCapacity = ignoreHeatCapacity ? 0 : atmosphericHeatCapacity;
-        const capacity = Math.max(rawSlabCapacity + effectiveAtmosphericCapacity, MIN_SURFACE_HEAT_CAPACITY);
+        const capacity = z[zone].capacityPerArea;
 
         const absorbedFlux = (1 - z[zone].albedo) * zoneFlux * 0.25;
         const emittedFlux = greenhouseFactor > 0
@@ -895,17 +894,30 @@ class Terraforming extends EffectableEntity{
 
         let newTemp = 0;
         const desiredDelta = T[zone] - previousMean;
-        if(netFlux * desiredDelta > 0){
-            newTemp = previousMean + (netFlux * dtSeconds) / capacity;
-        } else{
-            newTemp = previousMean + desiredDelta * dtSeconds / (10*86400);
+        const mixingDelta = T[zone] - z[zone].mean;
+
+        if(ignoreHeatCapacity){
+          newTemp = T[zone];
+        }
+        else{
+            // Convert meridional mixing into an energy flux term (conserves energy)
+            let windFlux = 0;
+            if (dtSeconds > 0 && capacity > 0 && mixingDelta !== 0) {
+                windFlux = (mixingDelta * capacity) / dtSeconds;
+            }
+            const combinedFlux = netFlux + windFlux;
+
+            if(combinedFlux * desiredDelta > 0){
+                newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
+            } else{
+                newTemp = previousMean + desiredDelta * dtSeconds / (10*86400);
+            }
+
+            if (Math.abs(newTemp - T[zone]) < 0.001) {
+              newTemp = T[zone];
+        }
         }
 
-        newTemp = !ignoreHeatCapacity ? newTemp : T[zone];
-
-        if (Math.abs(newTemp - T[zone]) < 0.001) {
-            newTemp = T[zone];
-        }
 
         this.temperature.zones[zone].value = newTemp;
         this.temperature.zones[zone].day = newTemp + dMean;

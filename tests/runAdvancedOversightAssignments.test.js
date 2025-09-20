@@ -105,6 +105,40 @@ describe('runAdvancedOversightAssignments', () => {
     expect(mirrorOversightSettings.assignments.mirrors.tropical).toBe(0);
     delete global.projectManager;
   });
+
+  test('reallocates mirrors toward focus when it has higher priority', () => {
+    global.projectManager = {
+      isBooleanFlagSet: (flag) => flag === 'spaceMirrorFocusing'
+    };
+    buildings.spaceMirror.active = 3;
+    mirrorOversightSettings.priority = { tropical: 3, temperate: 4, polar: 5, focus: 1 };
+    mirrorOversightSettings.targets = { tropical: 230, temperate: 0, polar: 0, water: 100 };
+    mirrorOversightSettings.assignments.mirrors.tropical = 3;
+    mirrorOversightSettings.assignments.mirrors.focus = 0;
+
+    runAdvancedOversightAssignments(project);
+
+    expect(mirrorOversightSettings.assignments.mirrors.focus).toBeGreaterThan(0);
+    expect(mirrorOversightSettings.assignments.mirrors.tropical).toBeLessThan(3);
+    delete global.projectManager;
+  });
+
+  test('reallocates mirrors away from focus when it has lower priority', () => {
+    global.projectManager = {
+      isBooleanFlagSet: (flag) => flag === 'spaceMirrorFocusing'
+    };
+    buildings.spaceMirror.active = 3;
+    mirrorOversightSettings.priority = { tropical: 1, temperate: 3, polar: 4, focus: 5 };
+    mirrorOversightSettings.targets = { tropical: 230, temperate: 0, polar: 0, water: 100 };
+    mirrorOversightSettings.assignments.mirrors.tropical = 0;
+    mirrorOversightSettings.assignments.mirrors.focus = 3;
+
+    runAdvancedOversightAssignments(project);
+
+    expect(mirrorOversightSettings.assignments.mirrors.tropical).toBeGreaterThan(0);
+    expect(mirrorOversightSettings.assignments.mirrors.focus).toBeLessThan(3);
+    delete global.projectManager;
+  });
   afterAll(() => {
     delete global.Project;
     delete global.projectElements;
