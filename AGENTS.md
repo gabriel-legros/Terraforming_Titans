@@ -184,3 +184,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Milestones subtab remains hidden until Terraforming measurements research is completed.
 - Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
 - Added a hydrogen import special project mirroring nitrogen harvesting to gather atmospheric hydrogen when unlocked.
+- Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.

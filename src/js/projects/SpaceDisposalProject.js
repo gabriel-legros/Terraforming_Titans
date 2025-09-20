@@ -1,4 +1,9 @@
 class SpaceDisposalProject extends SpaceExportBaseProject {
+  constructor(config, name) {
+    super(config, name);
+    this.massDriverEnabled = false;
+  }
+
   createResourceDisposalUI() {
     const section = super.createResourceDisposalUI();
     const detailsGrid = section.querySelector('.project-details-grid');
@@ -14,10 +19,59 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return section;
   }
 
+  renderUI(container) {
+    super.renderUI(container);
+
+    const elements = projectElements[this.name] || {};
+    if (!elements.massDriverInfoSection) {
+      const sectionContainer = document.createElement('div');
+      sectionContainer.classList.add('project-section-container');
+      sectionContainer.style.display = 'none';
+
+      const title = document.createElement('h4');
+      title.classList.add('section-title');
+      title.textContent = 'Mass Drivers';
+      sectionContainer.appendChild(title);
+
+      const infoContent = document.createElement('div');
+      infoContent.id = `${this.name}-mass-driver-info`;
+      sectionContainer.appendChild(infoContent);
+
+      container.appendChild(sectionContainer);
+
+      projectElements[this.name] = {
+        ...elements,
+        massDriverInfoSection: sectionContainer,
+        massDriverInfoElement: infoContent,
+      };
+    }
+  }
+
   updateUI() {
     super.updateUI();
     const elements = projectElements[this.name];
-    if (!elements || !elements.temperatureReductionElement) return;
+    if (!elements) return;
+
+    if (elements.massDriverInfoSection && elements.massDriverInfoElement) {
+      const enabled = this.isBooleanFlagSet('massDriverEnabled');
+      if (enabled) {
+        const buildingData = typeof buildings !== 'undefined' ? buildings?.massDriver : null;
+        const active = buildingData?.active ?? 0;
+        const formatter =
+          typeof formatBuildingCount === 'function'
+            ? formatBuildingCount
+            : (typeof formatBigInteger === 'function'
+              ? formatBigInteger
+              : (value) => value);
+        elements.massDriverInfoElement.textContent =
+          `Active Mass Drivers: ${formatter(active)}`;
+        elements.massDriverInfoSection.style.display = 'block';
+      } else {
+        elements.massDriverInfoSection.style.display = 'none';
+      }
+    }
+
+    if (!elements.temperatureReductionElement) return;
 
     if (this.selectedDisposalResource?.resource === 'greenhouseGas') {
       const reduction = this.calculateTemperatureReduction();

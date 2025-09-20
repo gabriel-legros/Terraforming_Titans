@@ -1121,6 +1121,28 @@ const researchParameters = {
         ],
       },
       {
+        id: 'mass_driver_foundations',
+        name: 'Mass Driver Foundations',
+        description: 'Unlocks experimental mass driver launch facilities for disposing resources off-world.',
+        cost: { research: 5_000_000 },
+        prerequisites: ['water_electrolysis'],
+        requiredFlags: ['massDriverUnlocked'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'massDriver',
+            type: 'enable'
+          },
+          {
+            target: 'project',
+            targetId: 'disposeResources',
+            type: 'booleanFlag',
+            flagId: 'massDriverEnabled',
+            value: true,
+          }
+        ],
+      },
+      {
         id: 'ghg_factory',
         name: 'Greenhouse Gas Factories',
         description: 'Allows the construction of greenhouse gas factories to produce SF6 which is stable, non-toxic and 23500 times more potent than CO2.',
