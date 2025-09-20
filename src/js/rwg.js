@@ -398,8 +398,24 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane","hydrogen","sulfuricAcid"];
   const jittered = {}; let sum = 0;
   for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
-  const gas = {}; if (sum <= 0) { gas.inertGas = { initialValue: totalTons, unlocked: false }; for (const k of mixKeys) if (k !== "inertGas") gas[k] = { initialValue: 0, unlocked: false }; return gas; }
-  let allocated = 0; for (const k of mixKeys) { const frac = (jittered[k] || 0) / sum; const v = frac * totalTons; gas[k] = { initialValue: v, unlocked: false }; allocated += v; }
+  const defaults = globalThis.defaultPlanetParameters?.resources?.atmospheric || {};
+  const makeGasEntry = (key, value) => {
+    const base = defaults[key];
+    const entry = base ? { ...base } : {};
+    entry.initialValue = value;
+    if (entry.unlocked === undefined) entry.unlocked = false;
+    return entry;
+  };
+  const gas = {};
+  if (sum <= 0) {
+    gas.inertGas = makeGasEntry("inertGas", totalTons);
+    for (const k of mixKeys) {
+      if (k === "inertGas") continue;
+      gas[k] = makeGasEntry(k, 0);
+    }
+    return gas;
+  }
+  let allocated = 0; for (const k of mixKeys) { const frac = (jittered[k] || 0) / sum; const v = frac * totalTons; gas[k] = makeGasEntry(k, v); allocated += v; }
   const residue = totalTons - allocated; if (residue > 0 && gas.inertGas) gas.inertGas.initialValue += residue;
   return gas;
 }
