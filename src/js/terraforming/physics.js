@@ -196,7 +196,15 @@ function cloudPropsOnly(pBar, comp = {}) {
   return { cfCloud, aCloud };
 }
 
-function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFractions, g = 9.81, kappaSoil = 7e-7, rhoCSoil = 1.4e6) {
+function autoSlabHeatCapacity(
+  rotationPeriodH,
+  surfacePressureBar,
+  surfaceFractions,
+  g = 9.81,
+  kappaSoil = 7e-7,
+  rhoCSoil = 1.4e6,
+  options = {}
+) {
   const f = surfaceFractions || {};
   const fOcean = f.ocean || 0.0;
   const fIce = f.ice || 0.0;
@@ -207,8 +215,19 @@ function autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, surfaceFracti
   const COcean = 4.2e6 * 50.0;
   const CIce = 1.9e6 * 0.05;
 
-  const cpAir = 850.0;
-  const CAtm = cpAir * (surfacePressureBar * 1e5) / g;
+  const cpOverride = options?.airSpecificHeat;
+  const cpAir = Number.isFinite(cpOverride) ? cpOverride : 850.0;
+  const columnMass = (surfacePressureBar * 1e5) / g;
+
+  let fallbackAtmosphere = cpAir * columnMass;
+  const lapse = options?.lapseFactor;
+  if (Number.isFinite(lapse)) {
+    const denominator = 1 + lapse;
+    fallbackAtmosphere = denominator === 0 ? 0 : fallbackAtmosphere / denominator;
+  }
+
+  const atmCapacity = options?.atmosphereCapacity;
+  const CAtm = Number.isFinite(atmCapacity) ? atmCapacity : fallbackAtmosphere;
 
   return fOther * CSoil + fOcean * COcean + fIce * CIce + CAtm;
 }
@@ -323,11 +342,19 @@ function dayNightTemperaturesModel({
   surfaceFractions = null,
   surfaceAlbedos = null,
   gSurface = 9.81,
-  aerosolsSW = {}
+  aerosolsSW = {},
+  autoSlabOptions = null
 }) {
-  if (slabHeatCapacity === null) {
+  if (slabHeatCapacity == null) {
     slabHeatCapacity = autoSlabHeatCapacity(
-      rotationPeriodH, surfacePressureBar, surfaceFractions, gSurface);
+      rotationPeriodH,
+      surfacePressureBar,
+      surfaceFractions,
+      gSurface,
+      undefined,
+      undefined,
+      autoSlabOptions
+    );
   }
 
   const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);

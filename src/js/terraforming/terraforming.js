@@ -777,7 +777,10 @@ class Terraforming extends EffectableEntity{
     let weightedTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
-    const atmosphericHeatCapacity = (!ignoreHeatCapacity) ? calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface) : 0;
+    const atmosphericHeatCapacity = (!ignoreHeatCapacity)
+      ? calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface)
+      : 0;
+    const slabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -789,18 +792,29 @@ class Terraforming extends EffectableEntity{
         const zTemps = dayNightTemperaturesModel({
         ...baseParams,
         flux: zoneFlux,
-        surfaceFractions: zoneFractions
+        surfaceFractions: zoneFractions,
+        autoSlabOptions: slabOptions
         });
 
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
         const Cslab = (typeof autoSlabHeatCapacity === 'function')
-        ? autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, zoneFractions, gSurface)
+        ? autoSlabHeatCapacity(
+            rotationPeriodH,
+            surfacePressureBar,
+            zoneFractions,
+            gSurface,
+            undefined,
+            undefined,
+            slabOptions
+          )
         : // Fallback: atmosphere only
-            (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6));
+            (Number.isFinite(atmosphericHeatCapacity)
+              ? atmosphericHeatCapacity
+              : (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6)));
 
         const pct = getZonePercentage(zone);                       // fraction of surface (0..1)
         const area = (this.celestialParameters.surfaceArea || 0) * pct; // m²
-        const capacityPerArea = Math.max(Cslab + atmosphericHeatCapacity, MIN_SURFACE_HEAT_CAPACITY);
+        const capacityPerArea = Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY);
 
         z[zone] = {
         mean:  zTemps.mean,
