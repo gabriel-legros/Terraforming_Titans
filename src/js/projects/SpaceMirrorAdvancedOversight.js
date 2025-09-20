@@ -22,8 +22,7 @@ class SpaceMirrorAdvancedOversight {
       const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
 
       // If no resources left, allow reallocation from strictly lower priority zones
-      const REALLOC_PROBE_FRAC = 0.1;     // Try to shift 10% of donor's assignment in one test
-      const REALLOC_MIN = 1000;           // At least this many units in a reallocation probe (mirrors/lanterns)
+      const REALLOC_MIN = 1;           // At least this many units in a reallocation probe (mirrors/lanterns)
 
       // ---------------- Capability / flags ----------------
       const ZONES = ['tropical', 'temperate', 'polar'];
@@ -412,12 +411,14 @@ class SpaceMirrorAdvancedOversight {
               const score = withTempChange(() => { assignM.focus = current - k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignM.focus = current - k; }, () => computeFocusMeltRate());
-              const dMelt = Math.max(0, baseMelt - meltAfter);
-              const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
-              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-              if (step > 0) cands.push({ kind:'mirror-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+              if(meltAfter >= waterTarget){
+                const dMelt = Math.max(0, baseMelt - meltAfter);
+                const dMeltPerUnit = dMelt / k;
+                let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
+                unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+                const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+                if (step > 0) cands.push({ kind:'mirror-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+              }
             }
             if ((assignL.focus || 0) > 0) {
               const current = assignL.focus || 0;
@@ -425,12 +426,14 @@ class SpaceMirrorAdvancedOversight {
               const score = withTempChange(() => { assignL.focus = current - k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignL.focus = current - k; }, () => computeFocusMeltRate());
-              const dMelt = Math.max(0, baseMelt - meltAfter);
-              const dMeltPerUnit = dMelt / k;
-              let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
-              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-              if (step > 0) cands.push({ kind:'lantern-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+              if(meltAfter >= waterTarget){
+                const dMelt = Math.max(0, baseMelt - meltAfter);
+                const dMeltPerUnit = dMelt / k;
+                let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
+                unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
+                const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
+                if (step > 0) cands.push({ kind:'lantern-remove', zone:'focus', kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+              }
             }
           }
         }
@@ -450,7 +453,7 @@ class SpaceMirrorAdvancedOversight {
 
             donors.forEach(dz => receivers.forEach(rz => {
               const donorHas = assignM[dz];
-              const shift = Math.max(1, Math.min(donorHas, Math.ceil(Math.max(REALLOC_MIN, donorHas * REALLOC_PROBE_FRAC))));
+              const shift = Math.max(1, Math.min(donorHas, REALLOC_MIN));
               const cand = withTempChange(() => {
                 // Reallocate without changing reversal; baseline alignment governs reversal.
                 assignM[dz] = donorHas - shift;
@@ -476,7 +479,7 @@ class SpaceMirrorAdvancedOversight {
 
             donors.forEach(dz => receivers.forEach(rz => {
               const donorHas = assignL[dz];
-              const shift = Math.max(1, Math.min(donorHas, Math.ceil(Math.max(REALLOC_MIN, donorHas * REALLOC_PROBE_FRAC))));
+              const shift = Math.max(1, Math.min(donorHas, REALLOC_MIN));
               const cand = withTempChange(() => {
                 assignL[dz] = donorHas - shift;
                 assignL[rz] = (assignL[rz]) + shift;
