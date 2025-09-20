@@ -379,7 +379,23 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     const tempInfo = document.createElement('span');
     tempInfo.classList.add('info-tooltip-icon');
-    tempInfo.title = 'Temperature is a critical factor for terraforming. It\'s determined by a complex interplay of factors:\n\n- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere\'s optical depth, and the day-night temperature variation is calculated based on the planet\'s heat capacity and rotation speed.\n- Solar Flux: The base energy received from the star, which can be augmented by structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A high albedo (from ice and clouds) reflects more light, cooling the planet. A low albedo (from oceans and dark rock) absorbs more light, warming it.\n- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere\'s optical depth, which depends on the partial pressures of these gases and the total atmospheric pressure.\n- Rotation Speed: A slower rotation leads to more extreme temperature differences between day and night.\n- Heat Capacity: The planet\'s ability to store and release heat, influenced by its surface composition (rock, ocean, ice) and atmospheric density.\n\nTemperature directly impacts:\n- Water Cycle: Driving evaporation, sublimation, melting, and freezing.\n- Life: Each species has specific temperature ranges for survival and growth.\n- Colonist Comfort: Extreme temperatures increase energy consumption for life support.';
+    tempInfo.title = [
+      "Temperature is a critical factor for terraforming. It's determined by a complex interplay of factors:",
+      "",
+      "- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated based on the planet's heat capacity and rotation speed.",
+      "- Solar Flux: The base energy received from the star, which can be augmented by structures like Space Mirrors.",
+      "- Albedo: The planet's reflectivity. A high albedo (from ice and clouds) reflects more light, cooling the planet. A low albedo (from oceans and dark rock) absorbs more light, warming it.",
+      "- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the partial pressures of these gases and the total atmospheric pressure.",
+      "- Rotation Speed: A slower rotation leads to more extreme temperature differences between day and night.",
+      "- Heat Capacity: The planet's ability to store and release heat, influenced by its surface composition (rock, ocean, ice) and atmospheric density.",
+      "- Meridional Winds: Energy moves between tropical, temperate, and polar zones each tick. The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.",
+      "- Thermal Inertia: The same heat capacity that moderates day/night swings also slows the march toward the trend temperature. Thick air and deep oceans respond sluggishly; thin atmospheres snap toward the trend quickly.",
+      "",
+      "Temperature directly impacts:",
+      "- Water Cycle: Driving evaporation, sublimation, melting, and freezing.",
+      "- Life: Each species has specific temperature ranges for survival and growth.",
+      "- Colonist Comfort: Extreme temperatures increase energy consumption for life support."
+    ].join('\n');
     tempInfo.innerHTML = '&#9432;';
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
@@ -530,7 +546,15 @@ function createTemperatureBox(row) {
     atmosphereBox.id = 'atmosphere-box';
     const atmInfo = document.createElement('span');
     atmInfo.classList.add('info-tooltip-icon');
-    atmInfo.title = 'The atmosphere is the gaseous envelope of the planet, critical for life and climate.\n\n- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.\n- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.\n- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It\'s also necessary to maintain liquid water on the surface and for colonists\' life support.\n- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases.';
+    atmInfo.title = [
+      "The atmosphere is the gaseous envelope of the planet, critical for life and climate.",
+      "",
+      "- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.",
+      "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
+      "- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
+      "- Circulation: Column mass and rotation power the zonal wind solver that shuffles heat between climate bands. Heavier, slower-rotating atmospheres smooth temperature differences faster without creating or destroying energy.",
+      "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
+    ].join('\n');
     atmInfo.innerHTML = '&#9432;';
 
     let innerHTML = `
