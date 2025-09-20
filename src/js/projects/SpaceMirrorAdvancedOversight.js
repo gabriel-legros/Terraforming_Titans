@@ -17,7 +17,7 @@ class SpaceMirrorAdvancedOversight {
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
 
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
-      const MIRROR_PROBE_MIN = 1;      // Minimum mirrors per probe (useful scale for "billions")
+      const MIRROR_PROBE_MIN = 100;      // Minimum mirrors per probe (useful scale for "billions")
       const LANTERN_PROBE_MIN = 1;      // Min lanterns per probe
       const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
 

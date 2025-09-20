@@ -777,9 +777,7 @@ class Terraforming extends EffectableEntity{
     let weightedTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
-    const atmosphericHeatCapacity = (!ignoreHeatCapacity)
-      ? calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface)
-      : 0;
+    const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface);
     const slabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
