@@ -1,6 +1,5 @@
 # Instructions
 - Document major feature updates in this file.
-- Milestones subtab remains hidden until Terraforming measurements research is completed.
 - Keep imports and exports browser friendly for loading via **index.html**.
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
@@ -8,11 +7,6 @@
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
-- Added a fullscreen loading overlay that displays while the game or a save file is loading.
-
-## Updates
-- High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
-- Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -143,6 +137,8 @@ The Random World Generator manager builds procedural planets and moons with lock
 World archetypes now provide tangible bonuses: Titan-like planets shorten nitrogen harvesting, carbon worlds accelerate Carbon Asteroid Mining, icy moons hasten Ice and Water importation, Mars-like colonies gain a global 1 % population bonus, desert worlds boost ore production, desiccated deserts enhance sand quarries, and Super-Earths count as an additional terraformed world. Type dropdowns display friendly names matching these effects. Orbit presets include a new **Very Cold** range (10–100 W/m²), and completing Vega‑2 unlocks hot orbits along with a travel warning that must be acknowledged before departure. The generator logs visited seeds with their parameters and re-renders after travel to respect new locks or story progress.
 The Random World Effects card can collapse to hide the bonus table when players need a cleaner view of other space systems.
 
+When adding new generation to the Random World Generator, place the new generation at the end.  This is to ensure older seeds are still compatible.
+
 # Story and System Utilities
 Story delivery gained a `system-pop-up` event type for immediate alerts, and Save & Settings now includes a Statistics panel that tracks total playtime across every planet. Designers can accelerate local testing with the `setGameSpeed` console command while Vega‑2 travel triggers a confirmation warning before the trip begins. Story projects are locked to their intended worlds and journal reconstruction fills in `$WGC_TEAM_LEADER$` placeholders when loading saves so narrative logs stay accurate.
 
@@ -181,3 +177,8 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 # Planet Visualization
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
+## Updates
+- High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
+- Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
+- Added a fullscreen loading overlay that displays while the game or a save file is loading.
+- Milestones subtab remains hidden until Terraforming measurements research is completed.
