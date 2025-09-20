@@ -507,7 +507,7 @@ class SpaceMirrorAdvancedOversight {
         }
         if (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= passLevel) {
           const melt = computeFocusMeltRate();
-          if (melt < (targets.water) * (1 - WATER_REL_TOL)) return false;
+          if (melt < (targets.water) || melt > (targets.water * (1 + WATER_REL_TOL))) return false;
         }
         return true;
       };
