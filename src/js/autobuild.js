@@ -115,29 +115,6 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
             }
         }
     }
-
-    if (building.requiresDeposit && building.requiresDeposit.underground) {
-        for (const deposit in building.requiresDeposit.underground) {
-            if (!Object.prototype.hasOwnProperty.call(building.requiresDeposit.underground, deposit)) continue;
-            const requiredPerUnit = building.requiresDeposit.underground[deposit];
-            if (requiredPerUnit <= 0) continue;
-            const resObj = resources?.underground?.[deposit];
-            const available = (resObj?.value || 0) - (resObj?.reserved || 0);
-            if (available + 1e-9 < requiredPerUnit * requiredAmount) {
-                applyFlag('underground', deposit);
-            }
-        }
-    }
-
-    if (building.requiresLand) {
-        const land = resources?.surface?.land;
-        if (land) {
-            const available = (land.value || 0) - (land.reserved || 0);
-            if (available + 1e-9 < building.requiresLand * requiredAmount) {
-                applyFlag('surface', 'land');
-            }
-        }
-    }
 }
 
 // Construction Office state and UI
