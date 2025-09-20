@@ -9,6 +9,7 @@ let _rwgEffectsLastKey = '';
 // Friendly labels for projects and buildings
 const RWG_PROJECT_NAMES = {
   nitrogenSpaceMining: 'Nitrogen Importation',
+  hydrogenSpaceMining: 'Hydrogen Importation',
   carbonSpaceMining: 'Carbon Importation',
   waterSpaceMining: 'Water Importation',
 };

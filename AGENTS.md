@@ -182,3 +182,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Milestones subtab remains hidden until Terraforming measurements research is completed.
+- Added a hydrogen import special project mirroring nitrogen harvesting to gather atmospheric hydrogen when unlocked.
