@@ -241,8 +241,7 @@ class CargoRocketProject extends Project {
         if (typeof category !== 'string' || typeof resource !== 'string') {
           return;
         }
-        const raw = input.value;
-        const quantity = typeof raw === 'string' ? parseInt(raw, 10) : 0;
+        const quantity = parseSelectionQuantity(input.value);
         if (quantity > 0) {
           selectedResources.push({ category, resource, quantity });
         }
@@ -315,7 +314,7 @@ class CargoRocketProject extends Project {
 
   applyOneTimeStart(effect) {
     console.log('Getting one time cargo rocket');
-    this.pendingResourceGains = effect.pendingResourceGains;
+    this.pendingResourceGains = normalizeSelectionEntries(effect.pendingResourceGains);
     this.isActive = true;
     this.remainingTime = 20000;
 
@@ -327,7 +326,7 @@ class CargoRocketProject extends Project {
         (input) => input.dataset.resource === resource
       );
       if (inputElement) {
-        inputElement.value = quantity;
+        inputElement.value = parseSelectionQuantity(quantity);
       }
     });
 
@@ -526,7 +525,7 @@ class CargoRocketProject extends Project {
   loadState(state) {
     super.loadState(state);
     this.selectedResources = this.autoStart && state.selectedResources
-      ? state.selectedResources
+      ? normalizeSelectionEntries(state.selectedResources)
       : [];
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
     this.selectionIncrement = state.selectionIncrement || 1;
@@ -603,6 +602,36 @@ class CargoRocketProject extends Project {
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
   }
+}
+
+function parseSelectionQuantity(value) {
+  if (Number.isFinite(value)) {
+    if (value <= 0) return 0;
+    return Math.floor(value);
+  }
+  const text = `${value ?? ''}`.trim();
+  if (text === '') return 0;
+  const parsed = Number.parseInt(text, 10);
+  if (!Number.isFinite(parsed)) return 0;
+  return parsed > 0 ? parsed : 0;
+}
+
+function normalizeSelectionEntries(entries) {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+  return entries
+    .map((entry) => {
+      if (!entry) return null;
+      const category = entry.category;
+      const resource = entry.resource;
+      const quantity = parseSelectionQuantity(entry.quantity);
+      if (!category || !resource || quantity <= 0) {
+        return null;
+      }
+      return { category, resource, quantity };
+    })
+    .filter(Boolean);
 }
 
 function invalidateCargoSelectionCache(project) {

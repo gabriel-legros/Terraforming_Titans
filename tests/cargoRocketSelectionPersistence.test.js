@@ -88,4 +88,21 @@ describe('CargoRocketProject selection persistence', () => {
     expect(project2.selectedResources).toEqual([]);
     expect(input.value).toBe('0');
   });
+
+  test('loadState defaults invalid quantities to zero', () => {
+    const { ctx } = setup();
+    const project = ctx.projectManager.projects.cargo_rocket;
+    project.autoStart = true;
+    const state = project.saveState();
+    state.selectedResources = [{ category: 'colony', resource: 'metal', quantity: 'abc' }];
+
+    project.loadState(state);
+    ctx.createProjectItem(project);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+    const input = ctx.projectElements.cargo_rocket.resourceSelectionContainer
+      .querySelector('.resource-selection-cargo_rocket[data-resource="metal"]');
+
+    expect(project.selectedResources).toEqual([]);
+    expect(input.value).toBe('0');
+  });
 });

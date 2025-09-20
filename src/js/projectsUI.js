@@ -484,7 +484,10 @@ function updateTotalCostDisplay(project) {
       return;
     }
     const raw = input.value;
-    const quantity = typeof raw === 'string' ? parseInt(raw, 10) : 0;
+    const parsed = Number.isFinite(raw)
+      ? raw
+      : Number.parseInt(`${raw ?? ''}`, 10);
+    const quantity = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
     const basePrice = project.attributes.resourceChoiceGainCost?.[category]?.[resource];
     if (typeof basePrice !== 'number') return;
     if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
