@@ -78,6 +78,13 @@
     margin-left: 2px;
   }
 
+  .resource-autobuild-warning {
+    color: orange;
+    margin-left: 4px;
+    font-weight: bold;
+    display: none;
+  }
+
 .resource-wrapper {
   background-color: #f4f4f4;
   padding-right: 5px;

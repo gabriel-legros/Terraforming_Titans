@@ -29,6 +29,7 @@ class Resource extends EffectableEntity {
     this.rateHistory = []; // Keep history of recent net rates
     this.marginTop = resourceData.marginTop || 0;
     this.marginBottom = resourceData.marginBottom || 0;
+    this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
   }
 
   // Method to initialize configurable properties

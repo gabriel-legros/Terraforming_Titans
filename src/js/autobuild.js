@@ -71,6 +71,75 @@ function resetAutoBuildPartialFlags(structures) {
     }
 }
 
+function resetAutoBuildResourceShortages(resourceCollection) {
+    if (!resourceCollection) return;
+    for (const category in resourceCollection) {
+        if (!Object.prototype.hasOwnProperty.call(resourceCollection, category)) continue;
+        const categoryResources = resourceCollection[category];
+        if (!categoryResources) continue;
+        for (const resourceName in categoryResources) {
+            if (!Object.prototype.hasOwnProperty.call(categoryResources, resourceName)) continue;
+            const resource = categoryResources[resourceName];
+            if (resource) {
+                resource.autobuildShortage = false;
+            }
+        }
+    }
+}
+
+function markAutoBuildShortages(building, requiredAmount, reservePercent) {
+    if (!building || requiredAmount <= 0) return;
+    if (typeof resources === 'undefined' || !resources) return;
+
+    const applyFlag = (category, name) => {
+        const res = resources?.[category]?.[name];
+        if (res) {
+            res.autobuildShortage = true;
+        }
+    };
+
+    if (typeof building.getEffectiveCost === 'function') {
+        const cost = building.getEffectiveCost(requiredAmount) || {};
+        for (const category in cost) {
+            if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
+            for (const resource in cost[category]) {
+                if (!Object.prototype.hasOwnProperty.call(cost[category], resource)) continue;
+                const resObj = resources?.[category]?.[resource];
+                if (!resObj) continue;
+                const cap = resObj.cap || 0;
+                const reserve = (reservePercent / 100) * cap;
+                const available = (resObj.value || 0) - reserve;
+                if (available + 1e-9 < cost[category][resource]) {
+                    applyFlag(category, resource);
+                }
+            }
+        }
+    }
+
+    if (building.requiresDeposit && building.requiresDeposit.underground) {
+        for (const deposit in building.requiresDeposit.underground) {
+            if (!Object.prototype.hasOwnProperty.call(building.requiresDeposit.underground, deposit)) continue;
+            const requiredPerUnit = building.requiresDeposit.underground[deposit];
+            if (requiredPerUnit <= 0) continue;
+            const resObj = resources?.underground?.[deposit];
+            const available = (resObj?.value || 0) - (resObj?.reserved || 0);
+            if (available + 1e-9 < requiredPerUnit * requiredAmount) {
+                applyFlag('underground', deposit);
+            }
+        }
+    }
+
+    if (building.requiresLand) {
+        const land = resources?.surface?.land;
+        if (land) {
+            const available = (land.value || 0) - (land.reserved || 0);
+            if (available + 1e-9 < building.requiresLand * requiredAmount) {
+                applyFlag('surface', 'land');
+            }
+        }
+    }
+}
+
 // Construction Office state and UI
 const constructionOfficeState = {
     autobuilderActive: true,
@@ -247,6 +316,7 @@ function restoreAutoBuildSettings(structures) {
 
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
+    resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
     if (typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive) {
         return;
     }
@@ -294,6 +364,7 @@ function autoBuild(buildings, delta = 0) {
         const canBuildFull = building.canAfford(requiredAmount, reserve);
         if (!canBuildFull) {
             building.autoBuildPartial = true;
+            markAutoBuildShortages(building, requiredAmount, reserve);
         }
         if (canBuildFull) {
             buildCount = requiredAmount;

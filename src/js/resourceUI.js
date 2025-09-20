@@ -545,7 +545,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${['biomass', 'androids'].includes(resourceName) ? ` <span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -563,7 +563,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong></div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span></div>
         <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -589,7 +589,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong>${['biomass', 'androids'].includes(resourceName) ? ` <span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -670,6 +670,7 @@ function updateResourceDisplay(resources) {
       const entry = resourceUICache.resources[resourceName] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
       const resourceNameElement = entry ? entry.nameEl : null;
+      const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
 
       const showResource = resourceObj.unlocked && (!resourceObj.hideWhenSmall || resourceObj.value >= 1e-4);
 
@@ -685,7 +686,17 @@ function updateResourceDisplay(resources) {
       } else if (resourceNameElement) {
         resourceNameElement.classList.remove('resource-festival');
       }
-    
+
+      if (autobuildWarningEl) {
+        if (resourceObj.autobuildShortage) {
+          if (autobuildWarningEl.textContent !== '!') autobuildWarningEl.textContent = '!';
+          if (autobuildWarningEl.style.display !== 'inline') autobuildWarningEl.style.display = 'inline';
+        } else {
+          if (autobuildWarningEl.textContent !== '') autobuildWarningEl.textContent = '';
+          if (autobuildWarningEl.style.display !== 'none') autobuildWarningEl.style.display = 'none';
+        }
+      }
+
       // Check if the resource has the "golden" flag set
       if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
         resourceNameElement.classList.add('sparkling-gold');
@@ -1057,7 +1068,7 @@ function capitalizeFirstLetter(string) {
 
 const resourceUICache = {
   categories: {}, // { [category]: { container, header } }
-  resources: {},  // { [resourceName]: { container, nameEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
+  resources: {},  // { [resourceName]: { container, nameEl, autobuildWarningEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
 };
 
 function cacheResourceCategory(category) {
@@ -1072,6 +1083,7 @@ function cacheSingleResource(category, resourceName) {
   const entry = {
     container: document.getElementById(`${resourceName}-container`),
     nameEl: document.getElementById(`${resourceName}-name`),
+    autobuildWarningEl: document.getElementById(`${resourceName}-autobuild-warning`),
     warningEl: document.getElementById(`${resourceName}-warning`),
     valueEl: document.getElementById(`${resourceName}-resources-container`),
     capEl: document.getElementById(`${resourceName}-cap-resources-container`),
