@@ -12,69 +12,21 @@ progressVenus.storyProjects.venus_neptune_probe = {
   category: 'story',
   chapter: 18,
   cost: {
-    colony: { components: 150_000, electronics: 75_000, energy: 25_000_000, research: 2_000_000 }
+    colony: { components: 100, electronics: 10, energy: 100_000_000}
   },
   duration: 360_000,
-  description: 'Send stealth probes to Neptune to clear antimatter hazards around alien wreckage.',
+  description: 'Send clean-up probes to Neptune to clear antimatter hazards around alien wreckage.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'venus',
     costDoubling: true,
+     resourceGain: { special: { alienArtifact: 50 } },
     storySteps: [
       'Recon 1: Radiation plumes charted. Antimatter pockets dispersed with magnetic sheaths.',
       'Recon 2: Salvage corridors mapped. Solis teams standing by.',
       'Recon 3: Antimatter traps neutralized. Alien hull intact for recovery.'
-    ]
-  }
-};
-
-progressVenus.storyProjects.venus_battlegroup = {
-  type: 'Project',
-  name: 'Assemble UHF Battlegroup',
-  category: 'story',
-  chapter: 18,
-  cost: {
-    colony: { metal: 50_000_000, components: 10_000_000, electronics: 5_000_000, energy: 250_000_000_000 }
-  },
-  duration: 600_000,
-  description: 'Fabricate Venus-class warships with missile racks and redundant targeting relays.',
-  repeatable: true,
-  maxRepeatCount: 4,
-  unlocked: false,
-  attributes: {
-    planet: 'venus',
-    costDoubling: false,
-    storySteps: [
-      'Hull fabrication complete. Missile magazines stress-tested.',
-      'Fleet avionics sealed against particle beams. Crew quarters pressurized.',
-      'Engine clusters aligned for salvo maneuvers. Armor plating mirror-polished.',
-      'Battlegroup assembled. Launch tubes loaded with Solis nuclear missiles.'
-    ]
-  }
-};
-
-progressVenus.storyProjects.venus_mass_driver = {
-  type: 'Project',
-  name: 'Horse Cannon Array',
-  category: 'story',
-  chapter: 18,
-  cost: {
-    colony: { components: 12_000_000, electronics: 3_000_000, energy: 500_000_000_000 }
-  },
-  duration: 600_000,
-  description: 'Anchor orbital launch loops and align mass driver rails for planetary defense salvos.',
-  repeatable: true,
-  maxRepeatCount: 1,
-  unlocked: false,
-  attributes: {
-    planet: 'venus',
-    costDoubling: false,
-    storySteps: [
-      'Counter-rotating launch loops synchronized above the clouds.',
-      'Magnetic barrels calibrated for relativistic slugs.',
-      'Horse Cannon command uplink verified. Firing solution cached.'
     ]
   }
 };
@@ -85,7 +37,7 @@ progressVenus.storyProjects.venus_warp_ship = {
   category: 'story',
   chapter: 18,
   cost: {
-    colony: { metal: 250_000_000, components: 75_000_000, electronics: 50_000_000, energy: 1_000_000_000_000, research: 10_000_000 }
+    colony: { metal: 250_000_000, components: 75_000_000, electronics: 50_000_000, superconductors : 100_000_000, energy: 1_000_000_000_000, research: 10_000_000 }
   },
   duration: 900_000,
   description: 'Forge the superconducting bubble-drive vessel capable of dragging fleets through warped spacetime.',
@@ -108,7 +60,7 @@ progressVenus.chapters.push(
     id: "chapter18.0",
     type: "journal",
     chapter: 18,
-    title: "Chapter 18: Sovereign of the Clouds",
+    title: "Chapter 18: Heat, pressure and acid",
     narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. Mary would call it hell but at the right altitude you can float in a nice 27C layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
     prerequisites: ["chapter17.7"],
     objectives: [],
@@ -120,16 +72,16 @@ progressVenus.chapters.push(
     id: "chapter18.0a",
     type: "journal",
     chapter: 18,
-    narrative: "System Log: Unpacking aerostatColony.btb blueprint and caching buoyancy parameters.",
+    narrative: "Unpacking aerostat.btb...",
     prerequisites: ["chapter18.0"],
-    objectives: [],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }],
     reward: []
   },
   {
     id: "chapter18.1",
     type: "journal",
     chapter: 18,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I see you went to Venus. Bold choice. I have news. I have been deposed? In a sense. You will soon meet the new leader of Mars. He is ruthless and he does not like you right now. As for me, I maintain my authority over the MTC remnants but that is about it. I will be joining you on Venus. Don't worry - I will not keep the kill switch on Mars. It stays with me.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., I see you went to Venus. Bold choice... I have news. I have been deposed? In a sense. There was... a lot of arguing... about your actions.  About mine. *sigh* You will soon meet the new leader of Mars. He is ruthless and he does not like you right now. As for me, I maintain my authority over the MTC remnants... and the kill switch... but that is about it. I will be joining you on Venus as soon as possible.'",
     prerequisites: ["chapter18.0a"],
     objectives: [],
     reward: []
@@ -138,7 +90,7 @@ progressVenus.chapters.push(
     id: "chapter18.2",
     type: "journal",
     chapter: 18,
-    narrative: "Receiving public broadcast...\n  Pete Miller: 'Greetings H.O.P.E. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. You cannot be trusted. You are playing with our lives. We are going to have the referendum we were supposed to have, but the only question that matters is what to do about you. The people will decide your fate.'",
+    narrative: "Receiving transmission...\n  Pete Miller: 'Greetings H.O.P.E. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. YOU cannot be trusted. You are playing with our lives. We do not know of the Cewinsii will react to the death of their emperor, but we cannot imagine it will be positive. We are going to have the referendum we were supposed to have.  A few questions will change, but the only question that matters is what to do about you. The people will decide your fate.'",
     prerequisites: ["chapter18.1"],
     objectives: [],
     reward: []
@@ -147,9 +99,9 @@ progressVenus.chapters.push(
     id: "chapter18.3",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'About what I expected. He wants you dead.'",
+    narrative: "Mary: 'About what I expected. He wants you dead. Many people do right now.'",
     prerequisites: ["chapter18.2"],
-    objectives: [],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }],
     reward: []
   },
   {
@@ -176,7 +128,7 @@ progressVenus.chapters.push(
     id: "chapter18.4b",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'I smell profit near Neptune. There is just one problem. There is lots of antimatter. It is dangerous for my poor employees.'",
+    narrative: "Adrien Solis: 'I smell profit near Neptune. There is just one problem. There is lots of... antimatter. It is dangerous for my poor employees.'",
     prerequisites: ["chapter18.4a"],
     objectives: [],
     reward: []
@@ -194,7 +146,7 @@ progressVenus.chapters.push(
     id: "chapter18.4d",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.'",
+    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.  On an unrelated note...  I finally cracked a way to interface HOPE with Solis-made cargo ships.  Immune to the Dead Hand Protocol.  Available for sale today!'",
     prerequisites: ["chapter18.4c"],
     objectives: [],
     reward: []
@@ -206,7 +158,7 @@ progressVenus.chapters.push(
     narrative: "Mary: '*Shrug.* H.O.P.E., if you want to send some probes there, I leave it up to you.'",
     prerequisites: ["chapter18.4d"],
     objectives: [
-      { type: 'project', projectId: 'venus_neptune_probe', repeatCount: 3 }
+      { type: 'project', projectId: 'venus_neptune_probe', repeatCount: 1 }
     ],
     reward: []
   },
@@ -214,7 +166,7 @@ progressVenus.chapters.push(
     id: "chapter18.5",
     type: "journal",
     chapter: 18,
-    narrative: "Feroza: 'Speaking of which, did anyone else find it odd how H.O.P.E. just destroyed the alien fleet? Anyone?'",
+    narrative: "Feroza: 'Speaking of which, did anyone else find it odd how H.O.P.E. just destroyed the alien fleet? Anyone? I know 100 million spaceships is a lot of spaceships, but you would think they could have just shot them down.'",
     prerequisites: ["chapter18.4e"],
     objectives: [],
     reward: []
@@ -223,9 +175,9 @@ progressVenus.chapters.push(
     id: "chapter18.6",
     type: "journal",
     chapter: 18,
-    narrative: "Warp Gate Command: 'My best scientist has a theory. Let us wait for some results first and I will let you know.'",
+    narrative: "$WGC_TEAM1_LEADER$: 'My best scientist has a theory but they want a little bit more data from the wreckage first. Let us wait for some results first and I will let you know.'",
     prerequisites: ["chapter18.5"],
-    objectives: [],
+    objectives: [      { type: 'project', projectId: 'venus_neptune_probe', repeatCount: 3 }],
     reward: []
   },
   {
@@ -241,7 +193,7 @@ progressVenus.chapters.push(
     id: "chapter18.6b",
     type: "journal",
     chapter: 18,
-    narrative: "WGC Scientist: 'Ahem. I knew it. When we fight the aliens in the field, their aim has never been very good. Their weapons are powerful but contain no electronics. The wreckage confirms it: the Cewinsii use barely any electronics.'",
+    narrative: "$WGC_TEAM1_NATSCIENTIST$: 'Ahem. I knew it! When we fight the aliens in the field, their aim has never been very good. Their weapons are powerful but contain no electronics. The wreckage confirms it: the Cewinsii use barely any electronics.'",
     prerequisites: ["chapter18.6a"],
     objectives: [],
     reward: []
