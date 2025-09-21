@@ -18,6 +18,66 @@ let rwgTypeEl;
 let rwgOrbitEl;
 let rwgResultEl;
 
+if (!globalThis.__rwgGravityHelpers) {
+  globalThis.__rwgGravityHelpers = {};
+}
+
+var rwgGravityHelpers = globalThis.__rwgGravityHelpers;
+
+if (!rwgGravityHelpers.constants) {
+  rwgGravityHelpers.constants = {
+    linearThreshold: 10,
+    linearRate: 0.1,
+    exponentialThreshold: 20,
+    exponentialInterval: 10
+  };
+}
+
+if (!rwgGravityHelpers.roundTo) {
+  rwgGravityHelpers.roundTo = (value, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return Math.round(value * factor) / factor;
+  };
+}
+
+if (!rwgGravityHelpers.calculateGravityCostMultiplier) {
+  rwgGravityHelpers.calculateGravityCostMultiplier = (gravity) => {
+    if (!Number.isFinite(gravity)) return 1;
+    const constants = rwgGravityHelpers.constants;
+    const linearExcess = Math.max(0, gravity - constants.linearThreshold);
+    const linearIncrease = linearExcess * constants.linearRate;
+    let exponentialIncrease = 0;
+    if (gravity > constants.exponentialThreshold) {
+      const exponent = (gravity - constants.exponentialThreshold) / constants.exponentialInterval;
+      exponentialIncrease = Math.pow(2, exponent) - 1;
+    }
+    return 1 + linearIncrease + exponentialIncrease;
+  };
+}
+
+if (!rwgGravityHelpers.createGravityWarning) {
+  rwgGravityHelpers.createGravityWarning = (gravity, fmt, options = {}) => {
+    const constants = rwgGravityHelpers.constants;
+    if (!Number.isFinite(gravity) || gravity <= constants.linearThreshold) return '';
+    const { includeFlavor = false } = options;
+    const happinessPenalty = Math.min((gravity - constants.linearThreshold) * 5, 100);
+    const costMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier(gravity);
+    const costIncrease = Math.max(0, (costMultiplier - 1) * 100);
+    const flavor = includeFlavor ? 'Humans and their bodies are very sensitive to high gravity. ' : '';
+    const happinessLine = `${flavor}Every m/s² above 10 reduces happiness by 5%, up to a 100% reduction.`;
+    const costLine = gravity > constants.exponentialThreshold
+      ? 'Construction costs climb 10% per m/s² above 10 and gain an exponential surcharge that doubles every additional 10 m/s² beyond 20.'
+      : 'Construction costs climb 10% per m/s² above 10.';
+    const happinessText = fmt(rwgGravityHelpers.roundTo(happinessPenalty, 2), false, 2);
+    const costText = fmt(rwgGravityHelpers.roundTo(costIncrease, 2), false, 2);
+    const penaltyLine = `This world imposes a ${happinessText}% happiness penalty and adds ${costText}% to all building and colony costs.`;
+    return `<span class="info-tooltip-icon" title="${happinessLine} ${costLine} ${penaltyLine}">⚠</span>`;
+  };
+}
+
+var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier;
+var createGravityWarning = rwgGravityHelpers.createGravityWarning;
+
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
   const ty = opts.type ?? 'auto';
@@ -482,10 +542,7 @@ function renderPlanetCard(p, index) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = p.merged?.celestialParameters || {};
   const cls = p.classification || p.merged?.classification;
-  const gPenalty = c.gravity > 10 ? Math.min((c.gravity - 10) * 5, 100) : 0;
-  const gWarn = gPenalty > 0
-    ? `<span class="info-tooltip-icon" title="Every value of gravity above 10 reduces happiness by 5%, for a maximum of a 100% reduction. This world imposes a ${fmt(gPenalty)}% happiness penalty">⚠</span>`
-    : '';
+  const gWarn = createGravityWarning(c.gravity, fmt);
   return `
     <div class="rwg-planet-card">
       <div class="rwg-planet-title">${p.name || p.merged?.name || 'Planet ' + (index + 1)}</div>
@@ -560,10 +617,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
     : (alreadyTerraformed
       ? 'This world has already been terraformed.'
       : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
-  const gPenalty = c.gravity > 10 ? Math.min((c.gravity - 10) * 5, 100) : 0;
-  const gWarn = gPenalty > 0
-    ? `<span class="info-tooltip-icon" title="Humans and their bodies are very sensitive to high gravity.  Every value of gravity above 10 reduces happiness by 5% of its value, for a maximum of a 100% reduction. This world imposes a ${fmt(gPenalty)}% happiness penalty">⚠</span>`
-    : '';
+  const gWarn = createGravityWarning(c.gravity, fmt, { includeFlavor: true });
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
