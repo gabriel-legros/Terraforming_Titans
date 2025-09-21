@@ -148,6 +148,22 @@
         const night = z.tropical.night * weights.tropical + z.temperate.night * weights.temperate + z.polar.night * weights.polar;
         out.finalTemps = { mean: terra.temperature.value, day, night };
       }
+      if (terra?.temperature?.zones) {
+        const prev = out.zonalTemperatures || {};
+        const zonalTemps = {};
+        const zones = ['tropical', 'temperate', 'polar'];
+        for (const zone of zones) {
+          const src = terra.temperature.zones[zone];
+          if (!src && !prev[zone]) continue;
+          const mean = (src && (src.value ?? src.initial)) ?? prev[zone]?.value;
+          const day = (src && (src.day ?? src.value ?? src.initial)) ?? prev[zone]?.day ?? mean;
+          const night = (src && (src.night ?? src.value ?? src.initial)) ?? prev[zone]?.night ?? mean;
+          zonalTemps[zone] = { value: mean, day, night };
+        }
+        if (Object.keys(zonalTemps).length > 0) {
+          out.zonalTemperatures = { ...prev, ...zonalTemps };
+        }
+      }
     }
     return out;
   }
