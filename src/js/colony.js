@@ -278,7 +278,7 @@ class Colony extends Building {
     // Calculate total luxury happiness
     let totalLuxuryHappiness = 0;
     for (const resource in this.filledNeeds) {
-      if (['food', 'energy'].includes(resource)) continue;
+      if (['food', 'energy', 'components'].includes(resource)) continue;
       const need = this.filledNeeds[resource] || 0;
       totalLuxuryHappiness += need * 10;
     }
