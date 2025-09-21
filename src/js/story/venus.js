@@ -211,7 +211,7 @@ progressVenus.chapters.push(
     id: "chapter18.7a",
     type: "journal",
     chapter: 18,
-    narrative: "Dr. Evelyn Hart: 'We never recovered anything resembling electronics from that UFO on Titan either. The cloaking engine was too damaged for us to make sense of it... but I had a hunch on it too.  Finally, Kane's neural interface on Ganymede... it seemed to have been a *replacement* for electronics of sorts.'",
+    narrative: "Dr. Evelyn Hart: 'We never recovered anything resembling electronics from that UFO on Titan either. The cloaking engine was too damaged for us to make sense of it... but I had a hunch on it too.  Finally, Kane's neural interface on Ganymede... it seemed to have been a *replacement* for electronics of sorts.  And after what we learned on Vega-2... It all adds up.'",
     prerequisites: ["chapter18.7"],
     objectives: [],
     reward: []
