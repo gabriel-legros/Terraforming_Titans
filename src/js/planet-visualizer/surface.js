@@ -9,8 +9,12 @@
     const life = (this.viz.coverage?.life || 0) / 100;
     const cloud = (this.viz.coverage?.cloud || 0) / 100;
     const z = this.viz.zonalCoverage || {};
+    // Increase precision for ice so tiny changes trigger re-render
     const zKey = ['tropical', 'temperate', 'polar']
-      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
+      .map(k => {
+        const zk = z[k] || {};
+        return `${Number(zk.water ?? 0).toFixed(2)}_${Number(zk.ice ?? 0).toFixed(4)}_${Number(zk.life ?? 0).toFixed(2)}`;
+      })
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const sf = this.viz.surfaceFeatures || {};
@@ -254,7 +258,17 @@
       Math.max(0, Math.min(1, Number(zc.temperate?.ice || 0))),
       Math.max(0, Math.min(1, Number(zc.polar?.ice || 0))),
     ];
+    // Clamp near-zero ice to zero to avoid speckling when game drives tiny values
+    const iceEps = 1e-4;
+    if (zIce[0] < iceEps) zIce[0] = 0;
+    if (zIce[1] < iceEps) zIce[1] = 0;
+    if (zIce[2] < iceEps) zIce[2] = 0;
     const preferPoles = zIce[2] > zIce[0];
+    // Zone boundary normalization for ice growth direction
+    // latNorm = 0 at equator, 1 at poles; normalize within each zone so
+    // temperate growth can originate from the colder (polar-side) boundary when appropriate.
+    const zoneMinNorm = [0, 23.5 / 90, 66.5 / 90];
+    const zoneMaxNorm = [23.5 / 90, 66.5 / 90, 1];
     if (!this._latNormalized || this._latNormalized.length !== h) {
       this._latNormalized = new Float32Array(h);
       for (let y = 0; y < h; y++) {
@@ -290,7 +304,13 @@
       const y = Math.floor(i / w);
       const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
       const latNorm = latRows[y];
-      const latDistance = preferPoles ? (1 - latNorm) : latNorm;
+      const zMin = zoneMinNorm[zi];
+      const zMax = zoneMaxNorm[zi];
+      // Normalize latitude within the current zone [0..1]
+      const zSpan = Math.max(1e-6, (zMax - zMin));
+      let zLocal = (latNorm - zMin) / zSpan; if (zLocal < 0) zLocal = 0; else if (zLocal > 1) zLocal = 1;
+      // Distance factor: prefer poles => grow from colder boundary (higher latitude)
+      const latDistance = preferPoles ? (1 - zLocal) : zLocal;
       const organic = iceNoise ? iceNoise[i] : 0.5;
       const noise = (organic - 0.5) * 0.35 * (1 - Math.min(1, latDistance * 1.2));
       const heightVal = this.heightMap ? this.heightMap[i] : 0.5;
@@ -340,7 +360,11 @@
       if (thr >= 0) {
         const score = iceScores[i];
         const latNorm = latRows[y];
-        const latDistance = preferPoles ? (1 - latNorm) : latNorm;
+        const zMin = zoneMinNorm[zi];
+        const zMax = zoneMaxNorm[zi];
+        const zSpan = Math.max(1e-6, (zMax - zMin));
+        let zLocal = (latNorm - zMin) / zSpan; if (zLocal < 0) zLocal = 0; else if (zLocal > 1) zLocal = 1;
+        const latDistance = preferPoles ? (1 - zLocal) : zLocal;
         const softness = 0.05 + 0.15 * latDistance;
         const threshold = thrValIce[zi];
         if (score <= threshold) {
