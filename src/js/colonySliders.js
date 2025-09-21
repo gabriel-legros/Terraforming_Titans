@@ -219,11 +219,7 @@ class ColonySlidersManager extends EffectableEntity {
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
-      if (value > 0) {
         addEffect(effect);
-      } else {
-        removeEffect(effect);
-      }
     });
   }
 
