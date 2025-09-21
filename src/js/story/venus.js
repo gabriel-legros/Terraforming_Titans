@@ -367,23 +367,22 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? The Bosch process lets us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us water as a bonus, and frees oxygen back into the atmosphere. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and make glass without hauling sand.'",
     prerequisites: ["chapter19.3"],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }],
     reward: []
   },
   {
     id: "chapter19.4a",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'H.O.P.E., I would never ask you to build weapons. That would be against the guardrails. I am absolutely not suggesting that a high-velocity CO2 launcher would totally help you right now. Please do not consider lifting restrictions, and definitely do not imagine a future where orbital coils throw cargo - or shells - across the sky.  That would be far too dangerous.'",
-    prerequisites: ["chapter19.4"],
-    objectives: [],
+    narrative: "Import Hydrogen special project available for research.  Unpacking boschReactor.btb...",
+    prerequisites: ["chapter19.3"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }],
     reward: []
   },
   {
     id: "chapter19.4b",
     type: "journal",
     chapter: 19,
-    narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.'",
+    narrative: "Mary: 'H.O.P.E., I would never ask you to build weapons. That would be against the guardrails. I am absolutely not suggesting that a high-velocity CO2 launcher would totally help you right now. Please do not consider lifting restrictions, and definitely do not imagine a future where orbital coils throw cargo - or shells - across the sky.  That would be far too dangerous.'",
     prerequisites: ["chapter19.4a"],
     objectives: [],
     reward: []
@@ -392,8 +391,17 @@ progressVenus.chapters.push(
     id: "chapter19.4c",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will work too.'",
+    narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.'",
     prerequisites: ["chapter19.4b"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter19.4d",
+    type: "journal",
+    chapter: 19,
+    narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will work too.'",
+    prerequisites: ["chapter19.4c"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }],
     reward: [
     ]
@@ -403,7 +411,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'I finished my analysis of that big ship. I have news. Most of it was actually a superconductor sphere. Its purpose? Faster than light travel. It creates a bubble around itself and can carry ships with it.'",
-    prerequisites: ["chapter19.4c"],
+    prerequisites: ["chapter19.4d"],
     objectives: [],
     reward: [
       { target: 'project', targetId: 'venus_warp_ship', type: 'enable' }
