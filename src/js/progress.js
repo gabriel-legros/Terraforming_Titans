@@ -9,23 +9,38 @@ function joinLines(text) {
     return Array.isArray(text) ? text.join('\n') : text;
 }
 
+function formatWGCTeamMemberName(member, fallback) {
+    const parts = [member?.firstName, member?.lastName].filter(Boolean);
+    const name = parts.join(' ');
+    return name || fallback;
+}
+
 function getWGCTeamLeaderName(index) {
     try {
         const leader = warpGateCommand.teams[index][0];
-        const first = leader.firstName;
-        const last = leader.lastName ? ` ${leader.lastName}` : '';
-        const name = first ? first + last : '';
-        return name || `Team Leader ${index + 1}`;
+        return formatWGCTeamMemberName(leader, `Team Leader ${index + 1}`);
     } catch {
         return `Team Leader ${index + 1}`;
     }
 }
 
+function getWGCTeamNaturalScientistName(index) {
+    try {
+        const team = warpGateCommand.teams[index] || [];
+        const scientist = team.find(member => member?.classType === 'Natural Scientist');
+        return formatWGCTeamMemberName(scientist, 'Sam');
+    } catch {
+        return 'Sam';
+    }
+}
+
 function resolveStoryPlaceholders(text) {
     const leaderName = getWGCTeamLeaderName(0);
+    const scientistName = getWGCTeamNaturalScientistName(0);
     return text
         .replace(/\$WGC_TEAM1_LEADER\$/g, leaderName)
-        .replace(/\$WGC_TEAM_LEADER\$/g, leaderName);
+        .replace(/\$WGC_TEAM_LEADER\$/g, leaderName)
+        .replace(/\$WGC_TEAM1_NATSCIENTIST\$/g, scientistName);
 }
 
 function compareValues(current, target, comparison = 'gte') {
