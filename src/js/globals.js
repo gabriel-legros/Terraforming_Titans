@@ -51,6 +51,18 @@ let gameSettings = {
   planetVisualizerDebugEnabled: false,
 };
 
+Object.defineProperty(globalThis, 'gameSettings', {
+  get: () => gameSettings,
+  set: (value) => {
+    if (Object(value) !== value) {
+      return;
+    }
+    gameSettings = value;
+    globalThis.planetVisualizerDebugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
+  },
+  configurable: true,
+});
+
 globalThis.planetVisualizerDebugEnabled = gameSettings.planetVisualizerDebugEnabled;
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
