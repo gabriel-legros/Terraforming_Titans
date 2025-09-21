@@ -917,18 +917,14 @@ class Terraforming extends EffectableEntity{
           newTemp = T[zone];
         }
         else{
-            // Convert meridional mixing into an energy flux term (conserves energy)
-            let windFlux = 0;
-            if (dtSeconds > 0 && capacity > 0 && mixingDelta !== 0) {
-                windFlux = (mixingDelta * capacity) / (10*dtSeconds);
-            }
-            const combinedFlux = netFlux + windFlux;
+            // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
+            const emittedFluxTarget = greenhouseFactor > 0
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
+                : 0;
+            const windFlux = mixingDelta !== 0 ? emittedFlux - emittedFluxTarget : 0;
+            const combinedFlux = netFlux - windFlux;
 
-            if(combinedFlux * desiredDelta > 0){
-                newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
-            } else{
-                newTemp = previousMean + desiredDelta * dtSeconds / (10*86400);
-            }
+            newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
 
             if (Math.abs(newTemp - T[zone]) < 0.001) {
               newTemp = T[zone];
