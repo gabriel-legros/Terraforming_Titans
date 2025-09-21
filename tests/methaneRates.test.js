@@ -95,8 +95,9 @@ describe('methane atmospheric rate tracking', () => {
     expect(labels).toContain('Rain');
     expect(labels).toContain('Snow');
 
-    const totalPrecipitation = terra.totalRainfallRate + terra.totalSnowfallRate;
-    expect(totalPrecipitation).toBeGreaterThan(0);
+    const methaneRainRate = terra.totalMethaneMethaneRainRate ?? terra.totalMethaneRainRate ?? 0;
+    const methaneSnowRate = terra.totalMethaneMethaneSnowRate ?? terra.totalMethaneSnowRate ?? 0;
+    expect(methaneRainRate + methaneSnowRate).toBeGreaterThan(0);
   });
 });
 
