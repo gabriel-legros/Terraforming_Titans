@@ -193,7 +193,7 @@ progressVenus.chapters.push(
     id: "chapter18.6b",
     type: "journal",
     chapter: 18,
-    narrative: "$WGC_TEAM1_NATSCIENTIST$: 'Ahem. I knew it! When we fight the aliens in the field, their aim has never been very good. Their weapons are powerful but contain no electronics. The wreckage confirms it: the Cewinsii use barely any electronics.'",
+    narrative: "$WGC_TEAM1_NATSCIENTIST$: 'Ahem. I knew it! When we fight the aliens in the field, their aim has never been very good. Their weapons are powerful but contain no electronics. The wreckage confirms it: the Cewinsii use barely any electronics.  Furthermore, since they use antimatter as primary weaponry, their ships are poorly armored and have some fairly crippling weak points... the antimatter storage tanks that is.'",
     prerequisites: ["chapter18.6a"],
     objectives: [],
     reward: []
