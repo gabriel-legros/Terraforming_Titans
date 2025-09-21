@@ -606,6 +606,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     fundingRate: Math.round(randRange(mulberry32(seed ^ 0xB00B), 5, 15)),
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
+    gravityPenaltyEnabled: true,
     celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
