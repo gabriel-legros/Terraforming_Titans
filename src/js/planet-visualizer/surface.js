@@ -101,6 +101,10 @@
       const b2 = Math.round(ab + (bb - ab) * t);
       return `rgb(${r},${g},${b2})`;
     };
+    const smoothstep = (e0, e1, x) => {
+      const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
+      return t * t * (3 - 2 * t);
+    };
     const waterT = (this.viz.coverage?.water || 0) / 100;
     const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const topCol = mix(baseHex, '#ffffff', 0.2);
@@ -148,11 +152,6 @@
       const fContrast = Math.max(0, Number(feat.contrast || 1.2));
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
-
-      const smoothstep = (e0, e1, x) => {
-        const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
-        return t * t * (3 - 2 * t);
-      };
 
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
