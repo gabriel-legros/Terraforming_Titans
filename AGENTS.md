@@ -188,3 +188,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
 - Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
