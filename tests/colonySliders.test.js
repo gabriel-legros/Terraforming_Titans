@@ -140,12 +140,17 @@ describe('colony sliders', () => {
     setMechanicalAssistance(-1);
     expect(colonySliderSettings.mechanicalAssistance).toBe(0);
     researchColonies.forEach(colonyId => {
-      expect(removeEffect).toHaveBeenCalledWith(expect.objectContaining({
+      expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',
         targetId: colonyId,
+        type: 'addResourceConsumption',
+        resourceCategory: 'colony',
+        resourceId: 'components',
+        amount: 0,
         effectId: 'mechanicalAssistanceComponents'
       }));
     });
+    expect(removeEffect).not.toHaveBeenCalled();
 
     addEffect.mockClear();
     setMechanicalAssistance(5);
