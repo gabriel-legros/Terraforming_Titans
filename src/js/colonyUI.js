@@ -132,6 +132,12 @@ function updateGrowthRateDisplay(){
 
 // Create the colony-specific details display
 
+function shouldDisplayNeedBox(needKey, structure) {
+  if (needKey !== 'components') return true;
+  const entry = structure.consumption?.colony?.[needKey];
+  return entry !== undefined && structure.getConsumptionResource('colony', needKey).amount > 0;
+}
+
 function createColonyDetails(structure) {
   const colonyDetails = document.createElement('div');
   colonyDetails.classList.add('colony-details');
@@ -149,6 +155,7 @@ function createColonyDetails(structure) {
 
   // Add need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
+    if (!shouldDisplayNeedBox(need, structure)) continue;
     const isLuxury = luxuryResources[need];
     const displayName = resources.colony[need].displayName;
     const needBox = createNeedBox(need, displayName, structure.filledNeeds[need], isLuxury, structure);
@@ -175,6 +182,14 @@ function updateColonyDetailsDisplay(structureRow, structure) {
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {
+    if (!shouldDisplayNeedBox(need, structure)) {
+      const cacheEntry = structure.needBoxCache[need];
+      if (cacheEntry) {
+        cacheEntry.box.remove();
+        delete structure.needBoxCache[need];
+      }
+      continue;
+    }
     const isLuxury = luxuryResources[need];
     updateNeedBox(structure.needBoxCache[need], resources.colony[need].displayName, need, structure.filledNeeds[need], isLuxury, structure);
   }
