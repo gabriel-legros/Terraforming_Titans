@@ -1,5 +1,7 @@
 // Colony sliders manager
 
+const colonyIds = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
+
 class ColonySlidersManager extends EffectableEntity {
   constructor() {
     super({ description: 'Manages colony sliders' });
@@ -13,29 +15,7 @@ class ColonySlidersManager extends EffectableEntity {
   setWorkforceRatio(value) {
     value = Math.min(0.9, Math.max(0.25, value));
     this.workerRatio = value;
-    const researchMultiplier = (1 - value) / 0.5;
-
-    addEffect({
-      target: 'population',
-      type: 'workerRatio',
-      value: value,
-      effectId: 'workforceRatio',
-      sourceId: 'workforceRatio'
-    });
-
-    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
-    researchColonies.forEach(colonyId => {
-      addEffect({
-        target: 'colony',
-        targetId: colonyId,
-        type: 'resourceProductionMultiplier',
-        resourceCategory: 'colony',
-        resourceTarget: 'research',
-        value: researchMultiplier,
-        effectId: 'researchSlider',
-        sourceId: 'researchSlider'
-      });
-    });
+    this.applyWorkforceRatioEffects(value);
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('workforce-slider');
@@ -54,29 +34,7 @@ class ColonySlidersManager extends EffectableEntity {
   setFoodConsumptionMultiplier(value) {
     value = Math.min(6, Math.max(1, value));
     this.foodConsumption = value;
-    const growth = 1 + (value - 1) * 0.02;
-
-    addEffect({
-      target: 'population',
-      type: 'growthMultiplier',
-      value: growth,
-      effectId: 'foodGrowth',
-      sourceId: 'foodGrowth'
-    });
-
-    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
-    researchColonies.forEach(colonyId => {
-      addEffect({
-        target: 'colony',
-        targetId: colonyId,
-        type: 'resourceConsumptionMultiplier',
-        resourceCategory: 'colony',
-        resourceTarget: 'food',
-        value: value,
-        effectId: 'foodConsumption',
-        sourceId: 'foodConsumption'
-      });
-    });
+    this.applyFoodConsumptionEffects(value);
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('food-slider');
@@ -95,29 +53,7 @@ class ColonySlidersManager extends EffectableEntity {
   setLuxuryWaterMultiplier(value) {
     value = Math.min(6, Math.max(1, value));
     this.luxuryWater = value;
-    const growth = 1 + (value - 1) * 0.01;
-
-    addEffect({
-      target: 'population',
-      type: 'growthMultiplier',
-      value: growth,
-      effectId: 'waterGrowth',
-      sourceId: 'waterGrowth'
-    });
-
-    const researchColonies = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
-    researchColonies.forEach(colonyId => {
-      addEffect({
-        target: 'colony',
-        targetId: colonyId,
-        type: 'maintenanceCostMultiplier',
-        resourceCategory: 'colony',
-        resourceId: 'water',
-        value: value,
-        effectId: 'luxuryWaterMaintenance',
-        sourceId: 'luxuryWaterMaintenance'
-      });
-    });
+    this.applyLuxuryWaterEffects(value);
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('water-slider');
@@ -136,26 +72,7 @@ class ColonySlidersManager extends EffectableEntity {
   setOreMineWorkerAssist(value) {
     value = Math.min(10, Math.max(0, value));
     this.oreMineWorkers = value;
-
-    addEffect({
-      target: 'building',
-      targetId: 'oreMine',
-      type: 'addedWorkerNeed',
-      value: value * 10,
-      effectId: 'oreMineWorkerNeed',
-      sourceId: 'oreMineWorkers'
-    });
-
-    const multiplier = value === 0 ? 1 : 1 + value;
-
-    addEffect({
-      target: 'building',
-      targetId: 'oreMine',
-      type: 'productionMultiplier',
-      value: multiplier,
-      effectId: 'oreMineProductionBoost',
-      sourceId: 'oreMineWorkers'
-    });
+    this.applyOreMineWorkerEffects(value);
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('ore-worker-slider');
@@ -175,9 +92,120 @@ class ColonySlidersManager extends EffectableEntity {
   setMechanicalAssistance(value) {
     value = Math.min(2, Math.max(0, value));
     this.mechanicalAssistance = value;
+    this.applyMechanicalAssistanceEffects(value);
 
-    const allColonies = ['aerostat_colony','t1_colony','t2_colony','t3_colony','t4_colony','t5_colony','t6_colony','t7_colony'];
-    allColonies.forEach(colonyId => {
+    if (typeof document !== 'undefined') {
+      const input = document.getElementById('mechanical-assistance-slider');
+      if (input) input.value = value.toString();
+      const valueSpan = document.getElementById('mechanical-assistance-slider-value');
+      const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
+      if (valueSpan && effectSpan) {
+        valueSpan.textContent = `${value.toFixed(1)}x`;
+        const mitigation = Math.round(value * 25);
+        effectSpan.textContent = `Mitigation: -${mitigation}%`;
+      }
+    }
+  }
+
+  applyWorkforceRatioEffects(value = this.workerRatio) {
+    const researchMultiplier = (1 - value) / 0.5;
+
+    addEffect({
+      target: 'population',
+      type: 'workerRatio',
+      value: value,
+      effectId: 'workforceRatio',
+      sourceId: 'workforceRatio'
+    });
+
+    colonyIds.forEach(colonyId => {
+      addEffect({
+        target: 'colony',
+        targetId: colonyId,
+        type: 'resourceProductionMultiplier',
+        resourceCategory: 'colony',
+        resourceTarget: 'research',
+        value: researchMultiplier,
+        effectId: 'researchSlider',
+        sourceId: 'researchSlider'
+      });
+    });
+  }
+
+  applyFoodConsumptionEffects(value = this.foodConsumption) {
+    const growth = 1 + (value - 1) * 0.02;
+
+    addEffect({
+      target: 'population',
+      type: 'growthMultiplier',
+      value: growth,
+      effectId: 'foodGrowth',
+      sourceId: 'foodGrowth'
+    });
+
+    colonyIds.forEach(colonyId => {
+      addEffect({
+        target: 'colony',
+        targetId: colonyId,
+        type: 'resourceConsumptionMultiplier',
+        resourceCategory: 'colony',
+        resourceTarget: 'food',
+        value: value,
+        effectId: 'foodConsumption',
+        sourceId: 'foodConsumption'
+      });
+    });
+  }
+
+  applyLuxuryWaterEffects(value = this.luxuryWater) {
+    const growth = 1 + (value - 1) * 0.01;
+
+    addEffect({
+      target: 'population',
+      type: 'growthMultiplier',
+      value: growth,
+      effectId: 'waterGrowth',
+      sourceId: 'waterGrowth'
+    });
+
+    colonyIds.forEach(colonyId => {
+      addEffect({
+        target: 'colony',
+        targetId: colonyId,
+        type: 'maintenanceCostMultiplier',
+        resourceCategory: 'colony',
+        resourceId: 'water',
+        value: value,
+        effectId: 'luxuryWaterMaintenance',
+        sourceId: 'luxuryWaterMaintenance'
+      });
+    });
+  }
+
+  applyOreMineWorkerEffects(value = this.oreMineWorkers) {
+    addEffect({
+      target: 'building',
+      targetId: 'oreMine',
+      type: 'addedWorkerNeed',
+      value: value * 10,
+      effectId: 'oreMineWorkerNeed',
+      sourceId: 'oreMineWorkers'
+    });
+
+    const multiplier = value === 0 ? 1 : 1 + value;
+
+    addEffect({
+      target: 'building',
+      targetId: 'oreMine',
+      type: 'productionMultiplier',
+      value: multiplier,
+      effectId: 'oreMineProductionBoost',
+      sourceId: 'oreMineWorkers'
+    });
+  }
+
+  applyMechanicalAssistanceEffects(value = this.mechanicalAssistance) {
+    colonyIds.forEach(colonyId => {
       const tierMatch = colonyId.match(/^t(\d)_colony$/);
       const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
       const scaledAmount = value * Math.pow(10, tier - 3);
@@ -197,18 +225,14 @@ class ColonySlidersManager extends EffectableEntity {
         removeEffect(effect);
       }
     });
+  }
 
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('mechanical-assistance-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('mechanical-assistance-slider-value');
-      const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
-      if (valueSpan && effectSpan) {
-        valueSpan.textContent = `${value.toFixed(1)}x`;
-        const mitigation = Math.round(value * 25);
-        effectSpan.textContent = `Mitigation: -${mitigation}%`;
-      }
-    }
+  updateColonySlidersEffect() {
+    this.applyWorkforceRatioEffects();
+    this.applyFoodConsumptionEffects();
+    this.applyLuxuryWaterEffects();
+    this.applyOreMineWorkerEffects();
+    this.applyMechanicalAssistanceEffects();
   }
 
   saveState() {
@@ -267,6 +291,10 @@ function setMechanicalAssistance(value) {
   colonySliderSettings.setMechanicalAssistance(value);
 }
 
+function updateColonySlidersEffect() {
+  colonySliderSettings.updateColonySlidersEffect();
+}
+
 function resetColonySliders() {
   colonySliderSettings.reset();
 }
@@ -280,6 +308,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setLuxuryWaterMultiplier,
     setOreMineWorkerAssist,
     setMechanicalAssistance,
+    updateColonySlidersEffect,
     resetColonySliders
   };
 }

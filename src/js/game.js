@@ -376,8 +376,10 @@ function updateLogic(delta) {
   totalPlayTimeSeconds += increment;
   dayNightCycle.update(delta);
 
+  colonySliderSettings.updateColonySlidersEffect();
+
   const allStructures = {...buildings, ...colonies};
-  
+
   produceResources(delta, allStructures);
 
   // Update happiness for each colony
