@@ -505,6 +505,14 @@ function loadGame(slotOrCustomString) {
       if(toggle){
         toggle.checked = gameSettings.useCelsius;
       }
+      const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
+      if (typeof globalThis !== 'undefined') {
+        globalThis.planetVisualizerDebugEnabled = debugEnabled;
+      }
+      const pv = globalThis && globalThis.planetVisualizer;
+      if (pv && pv.setDebugMode) {
+        pv.setDebugMode(debugEnabled, { skipPersist: true });
+      }
       const silenceToggle = document.getElementById('solis-silence-toggle');
       if(silenceToggle){
         silenceToggle.checked = gameSettings.silenceSolisAlert;

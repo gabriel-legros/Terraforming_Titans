@@ -193,6 +193,7 @@
     this.updateDebugControlState();
     this.elements.container.insertAdjacentElement('afterend', host);
     this.debug.container = host;
+    this.updateDebugVisibility();
   };
 
   PlanetVisualizer.prototype.updateSliderValueLabels = function updateSliderValueLabels() {
@@ -546,4 +547,77 @@
     } catch (e) {
     }
   };
+})();
+
+(function () {
+  function getGlobalScope() {
+    return (typeof globalThis !== 'undefined') ? globalThis : window;
+  }
+
+  function readPersistedDebugState() {
+    const scope = getGlobalScope();
+    if (!scope) return false;
+    if (scope.gameSettings && scope.gameSettings.planetVisualizerDebugEnabled != null) {
+      return !!scope.gameSettings.planetVisualizerDebugEnabled;
+    }
+    if (scope.planetVisualizerDebugEnabled != null) {
+      return !!scope.planetVisualizerDebugEnabled;
+    }
+    return false;
+  }
+
+  function persistDebugState(enabled) {
+    const scope = getGlobalScope();
+    if (!scope) return;
+    if (!scope.gameSettings) {
+      scope.gameSettings = {};
+    }
+    scope.gameSettings.planetVisualizerDebugEnabled = enabled;
+    scope.planetVisualizerDebugEnabled = enabled;
+  }
+
+  function parseRequestedState(value, current) {
+    if (value === undefined) {
+      return current;
+    }
+    if (value === true || value === false) {
+      return value;
+    }
+    const str = value != null && value.toString ? value.toString().trim().toLowerCase() : '';
+    if (!str) {
+      return !!value;
+    }
+    if (str === 'toggle') {
+      return !current;
+    }
+    if (str === 'true' || str === '1' || str === 'on' || str === 'enable' || str === 'enabled') {
+      return true;
+    }
+    if (str === 'false' || str === '0' || str === 'off' || str === 'disable' || str === 'disabled') {
+      return false;
+    }
+    return !!value;
+  }
+
+  function debug_mode(value) {
+    const current = readPersistedDebugState();
+    if (value === undefined) {
+      return current;
+    }
+    const next = parseRequestedState(value, current);
+    const scope = getGlobalScope();
+    const viz = scope && scope.planetVisualizer;
+    if (viz && viz.setDebugMode) {
+      viz.setDebugMode(next);
+    } else {
+      persistDebugState(next);
+    }
+    return next;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports.debug_mode = debug_mode;
+  } else {
+    getGlobalScope().debug_mode = debug_mode;
+  }
 })();

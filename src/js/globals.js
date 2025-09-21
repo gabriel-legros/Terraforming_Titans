@@ -48,7 +48,10 @@ let gameSettings = {
   disableDayNightCycle: false,
   preserveProjectAutoStart: false,
   autobuildAlsoSetsActive: true,
+  planetVisualizerDebugEnabled: false,
 };
+
+globalThis.planetVisualizerDebugEnabled = gameSettings.planetVisualizerDebugEnabled;
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;

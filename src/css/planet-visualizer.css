@@ -36,6 +36,10 @@
   margin-right: auto;
 }
 
+.planet-visualizer-debug--hidden {
+  display: none;
+}
+
 .pv-grid {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr) 110px;
