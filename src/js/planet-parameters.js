@@ -87,6 +87,11 @@ const defaultPlanetParameters = {
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
   },
+  zonalTemperatures: {
+    tropical: { value: 223.15, day: 238.15, night: 208.15 },
+    temperate: { value: 213.15, day: 226.15, night: 200.15 },
+    polar: { value: 193.15, day: 198.15, night: 188.15 }
+  },
   buildingParameters: {
     maintenanceFraction: 0.001
   },
@@ -190,6 +195,23 @@ const marsOverrides = {
       "ice": 1412059551109.7017
     }
   },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 231.2286503392303,
+      "day": 249.55911944105176,
+      "night": 212.89818123740886
+    },
+    "temperate": {
+      "value": 214.7863554832772,
+      "day": 230.0295607413293,
+      "night": 199.54315022522508
+    },
+    "polar": {
+      "value": 137.52938473264217,
+      "day": 143.54430122284998,
+      "night": 131.51446824243436
+    }
+  },
   fundingRate: 10,
   visualization: {
     baseColor: '#8a2a2a',
@@ -286,6 +308,26 @@ const titanOverrides = {
       "ice": 3341.6839783054147
     }
   },
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 94,
+      "value": 94,
+      "day": 95.5,
+      "night": 92.5
+    },
+    "temperate": {
+      "initial": 91,
+      "value": 91,
+      "day": 92.5,
+      "night": 89.5
+    },
+    "polar": {
+      "initial": 88,
+      "value": 88,
+      "day": 89,
+      "night": 87
+    }
+  },
   celestialParameters : { // Override all celestial parameters
     distanceFromSun: 9.58,
     gravity: 1.35,
@@ -372,6 +414,26 @@ const callistoOverrides = {
     "tropical": { "liquid": 0, "ice": 9081.029927055873 },
     "temperate": { "liquid": 0, "ice": 15854.44191563618 },
     "polar": { "liquid": 0, "ice": 6866.857802233041 }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 130,
+      "value": 130,
+      "day": 136,
+      "night": 124
+    },
+    "temperate": {
+      "initial": 120,
+      "value": 120,
+      "day": 125,
+      "night": 115
+    },
+    "polar": {
+      "initial": 110,
+      "value": 110,
+      "day": 113,
+      "night": 107
+    }
   },
   "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
@@ -488,6 +550,26 @@ const ganymedeOverrides = {
     "temperate": { "liquid": 0, "ice": 19713.531275243768 },
     "polar": { "liquid": 0, "ice": 8514.76025965708 }
   },
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 135,
+      "value": 135,
+      "day": 144,
+      "night": 126
+    },
+    "temperate": {
+      "initial": 125,
+      "value": 125,
+      "day": 132,
+      "night": 118
+    },
+    "polar": {
+      "initial": 115,
+      "value": 115,
+      "day": 119,
+      "night": 111
+    }
+  },
   "zonalSurface": { "tropical": {}, "temperate": {}, "polar": {} },
   "zonalHydrocarbons": {
     "tropical": {
@@ -578,6 +660,11 @@ const vega2Overrides = {
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
   },
+  zonalTemperatures: {
+    tropical: { initial: 735, value: 735, day: 745, night: 725 },
+    temperate: { initial: 720, value: 720, day: 730, night: 710 },
+    polar: { initial: 700, value: 700, day: 707, night: 693 }
+  },
   zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {
     tropical: { liquid: 0, ice: 0 },
@@ -662,6 +749,11 @@ const venusOverrides = {
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
   },
+  zonalTemperatures: {
+    tropical: { initial: 737, value: 737, day: 744, night: 730 },
+    temperate: { initial: 730, value: 730, day: 737, night: 723 },
+    polar: { initial: 715, value: 715, day: 721, night: 709 }
+  },
   zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {
     tropical: { liquid: 0, ice: 0 },
@@ -737,3 +829,21 @@ const planetParameters = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { getPlanetParameters, planetParameters, defaultPlanetParameters, planetOverrides };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

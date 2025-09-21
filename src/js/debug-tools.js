@@ -74,6 +74,7 @@
       buriedIce: 0
     };
     const zonalVals = {};
+    const zonalTemps = {};
     if (typeof ZONES !== 'undefined' && terraforming) {
       ZONES.forEach(zone => {
         const bIce = terraforming.zonalWater[zone]?.buriedIce || 0;
@@ -89,9 +90,15 @@
           hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
           buriedHydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.buriedIce || 0
         };
+        zonalTemps[zone] = {
+          initial: terraforming.temperature?.zones?.[zone]?.initial || 0,
+          value: terraforming.temperature?.zones?.[zone]?.value || 0,
+          day: terraforming.temperature?.zones?.[zone]?.day || 0,
+          night: terraforming.temperature?.zones?.[zone]?.night || 0
+        };
       });
     }
-    return { global: globalVals, zones: zonalVals };
+    return { global: globalVals, zones: zonalVals, temperatures: zonalTemps };
   }
 
   function isStable(prev, cur, threshold) {
@@ -127,6 +134,7 @@
     const zonalSurface = {};
     const zonalHydrocarbons = {};
     const zonalCO2 = {};
+    const zonalTemperatures = {};
     for (const zone in values.zones) {
       zonalWater[zone] = {
         liquid: values.zones[zone].liquidWater,
@@ -144,17 +152,43 @@
         liquid: values.zones[zone].liquidCO2,
         ice: values.zones[zone].dryIce
       };
+      const zoneTemps = (values.temperatures && values.temperatures[zone]) || {};
+      zonalTemperatures[zone] = {
+        initial: zoneTemps.initial || 0,
+        value: zoneTemps.value || 0,
+        day: zoneTemps.day || 0,
+        night: zoneTemps.night || 0
+      };
     }
-    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons, zonalCO2 };
+    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons, zonalCO2, zonalTemperatures };
   }
 
   function generateOverrideSnippet(values) {
     return JSON.stringify(buildOverrideObject(values), null, 2);
   }
+  function formatZonalTemperatureSnippet(temperatures) {
+    const zonesList = typeof ZONES !== 'undefined' ? ZONES : ['tropical', 'temperate', 'polar'];
+    const source = temperatures || {};
+    const lines = ['  "zonalTemperatures": {'];
+    zonesList.forEach((zone, index) => {
+      const zoneTemps = source[zone] || {};
+      const closing = index === zonesList.length - 1 ? '' : ',';
+      lines.push(`    "${zone}": {`);
+      lines.push(`      "initial": ${zoneTemps.initial ?? 0},`);
+      lines.push(`      "value": ${zoneTemps.value ?? 0},`);
+      lines.push(`      "day": ${zoneTemps.day ?? 0},`);
+      lines.push(`      "night": ${zoneTemps.night ?? 0}`);
+      lines.push(`    }${closing}`);
+    });
+    lines.push('  }');
+    return lines.join('\n');
+  }
 
   function logTerraformingOverride() {
-    const snippet = generateOverrideSnippet(captureValues());
+    const values = captureValues();
+    const snippet = generateOverrideSnippet(values);
     console.log('Override snippet:\n' + snippet);
+    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(values.temperatures || {}));
     return snippet;
   }
 
@@ -436,4 +470,16 @@
     };
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -423,12 +423,16 @@ class Terraforming extends EffectableEntity{
 
 
   calculateInitialValues(planetParameters = currentPlanetParameters) {
-      // Store initial zonal temperatures
-      for (const zone of ['tropical', 'temperate', 'polar']) {
-          this.temperature.zones[zone].initial = this.temperature.zones[zone].value;
+      const zones = ZONES;
+      const zonalTemperatureDefaults = planetParameters.zonalTemperatures;
+      const hasZonalTemperatureDefaults = !!zonalTemperatureDefaults;
+
+      if (!hasZonalTemperatureDefaults) {
+          for (const zone of zones) {
+              this.temperature.zones[zone].initial = this.temperature.zones[zone].value;
+          }
       }
       // This code block belongs inside calculateInitialValues
-      const zones = ZONES;
       // Get initial amounts directly from provided planetParameters
       const initialLiquidWater = planetParameters.resources.surface.liquidWater?.initialValue || 0;
       const initialIce = planetParameters.resources.surface.ice?.initialValue || 0;
@@ -518,9 +522,30 @@ class Terraforming extends EffectableEntity{
       this.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
 
       this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
-      this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
-      this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
-      this.temperature.zones.polar.initial = this.temperature.zones.polar.value;
+
+      if (hasZonalTemperatureDefaults) {
+          let weightedTemperature = 0;
+          zones.forEach(zone => {
+              const zoneDefaults = zonalTemperatureDefaults[zone] || {};
+              const meanValue = zoneDefaults.value ?? this.temperature.zones[zone].value;
+              const dayValue = zoneDefaults.day ?? meanValue;
+              const nightValue = zoneDefaults.night ?? meanValue;
+
+              this.temperature.zones[zone].initial = meanValue;
+              this.temperature.zones[zone].value = meanValue;
+              this.temperature.zones[zone].day = dayValue;
+              this.temperature.zones[zone].night = nightValue;
+              this.temperature.zones[zone].trendValue = meanValue;
+
+              weightedTemperature += meanValue * getZonePercentage(zone);
+          });
+          this.temperature.value = weightedTemperature;
+          this.temperature.equilibriumTemperature = weightedTemperature;
+      } else {
+          this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
+          this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
+          this.temperature.zones.polar.initial = this.temperature.zones.polar.value;
+      }
       // Mark initial values as calculated
       this.initialValuesCalculated = true;
     } // Correct closing brace for calculateInitialValues
@@ -918,17 +943,22 @@ class Terraforming extends EffectableEntity{
         }
         else{
             // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
+            const targetTemp = T[zone];
             const emittedFluxTarget = greenhouseFactor > 0
-                ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
                 : 0;
             const windFlux = mixingDelta !== 0 ? emittedFlux - emittedFluxTarget : 0;
             const combinedFlux = netFlux - windFlux;
 
             newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
 
-            if (Math.abs(newTemp - T[zone]) < 0.001) {
-              newTemp = T[zone];
-        }
+            const crossesTarget =
+                (previousMean < targetTemp && newTemp > targetTemp) ||
+                (previousMean > targetTemp && newTemp < targetTemp);
+
+            if (crossesTarget || Math.abs(newTemp - targetTemp) < 0.001) {
+              newTemp = targetTemp;
+            }
         }
 
 
@@ -1902,4 +1932,7 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
 }
+
+
+
 
