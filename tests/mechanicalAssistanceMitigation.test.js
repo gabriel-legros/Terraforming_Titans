@@ -48,7 +48,13 @@ describe('Mechanical Assistance mitigation', () => {
     colony.updateHappiness(1000);
     const withMit = colony.happiness;
 
+    const baseTotalHappiness = Math.min(colony.filledNeeds.food || 0, colony.filledNeeds.energy || 0) * 50;
+    const basePenalty = 1 - (noMit * 100) / baseTotalHappiness;
+    const mitigationFactor = 1 - ctx.colonySliderSettings.mechanicalAssistance * (colony.filledNeeds.components || 0) * 0.25;
+    const expectedMitigated = (baseTotalHappiness * (1 - basePenalty * mitigationFactor)) / 100;
+
     expect(noMit).toBeCloseTo(0.3);
-      expect(withMit).toBeCloseTo(0.384);
+    expect(withMit).toBeCloseTo(expectedMitigated);
+    expect(withMit).toBeGreaterThan(noMit);
   });
 });
