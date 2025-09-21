@@ -367,7 +367,20 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? The Bosch process lets us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us water as a bonus, and frees oxygen back into the atmosphere. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and make glass without hauling sand.'",
     prerequisites: ["chapter19.3"],
-    reward: []
+    reward: [
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'importHydrogenUnlocked',
+        value: true
+      },
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'boschReactorUnlocked',
+        value: true
+      }
+    ]
   },
   {
     id: "chapter19.4a",
@@ -394,7 +407,14 @@ progressVenus.chapters.push(
     narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.'",
     prerequisites: ["chapter19.4b"],
     objectives: [],
-    reward: []
+    reward: [
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'massDriverUnlocked',
+        value: true
+      }
+    ]
   },
   {
     id: "chapter19.4d",
