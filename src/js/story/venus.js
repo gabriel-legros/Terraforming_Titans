@@ -35,7 +35,7 @@ progressVenus.storyProjects.venus_warp_ship = {
   type: 'Project',
   name: 'Construct Warp Ship',
   category: 'story',
-  chapter: 20,
+  chapter: 19,
   cost: {
     colony: { metal: 250_000_000, components: 75_000_000, electronics: 50_000_000, superconductors : 100_000_000, energy: 1_000_000_000_000, research: 10_000_000 }
   },
@@ -344,7 +344,7 @@ progressVenus.chapters.push(
     reward: []
   },
   {
-    id: "chapter19.2a",
+    id: "chapter19.2b",
     type: "journal",
     chapter: 19,
     narrative: "Pete Miller: 'You survive today, machine. Know that I am watching you very, very carefully. I have missiles aimed at your location at all times, and enough payload to blow up a mountain.'",
@@ -353,285 +353,310 @@ progressVenus.chapters.push(
     reward: []
   },
   {
-    id: "chapter19.19",
+    id: "chapter19.3",
     type: "journal",
     chapter: 19,
     narrative: "Mary: 'Ominous. On the flipside, the referendum also addressed our new political structure. We have the birth of the United Human Federation. On paper, I am the queen of Venus right now. Looks like I only lost power for a bit. I will not keep this crown though. I am staying with you from now on. I get to choose a successor each time. Convenient, right?'",
-    prerequisites: ["chapter19.19"],
+    prerequisites: ["chapter19.2b"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000000 }],
+    reward: []
+  },
+  {
+    id: "chapter19.4",
+    type: "journal",
+    chapter: 19,
+    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? The Bosch process lets us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us water as a bonus, and frees oxygen back into the atmosphere. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and make glass without hauling sand.'",
+    prerequisites: ["chapter19.3"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }],
+    reward: []
+  },
+  {
+    id: "chapter19.4a",
+    type: "journal",
+    chapter: 19,
+    narrative: "Mary: 'H.O.P.E., I would never ask you to build weapons. That would be against the guardrails. I am absolutely not suggesting that a high-velocity CO2 launcher would totally help you right now. Please do not consider lifting restrictions, and definitely do not imagine a future where orbital coils throw cargo - or shells - across the sky.  That would be far too dangerous.'",
+    prerequisites: ["chapter19.4"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.20",
+    id: "chapter19.4b",
+    type: "journal",
+    chapter: 19,
+    narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.'",
+    prerequisites: ["chapter19.4a"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter19.4c",
+    type: "journal",
+    chapter: 19,
+    narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will work too.'",
+    prerequisites: ["chapter19.4b"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }],
+    reward: [
+    ]
+  },
+  {
+    id: "chapter19.5",
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'I finished my analysis of that big ship. I have news. Most of it was actually a superconductor sphere. Its purpose? Faster than light travel. It creates a bubble around itself and can carry ships with it.'",
-    prerequisites: ["chapter19.19"],
+    prerequisites: ["chapter19.4c"],
     objectives: [],
     reward: [
       { target: 'project', targetId: 'venus_warp_ship', type: 'enable' }
     ]
   },
   {
-    id: "chapter19.21",
+    id: "chapter19.5a",
     type: "journal",
     chapter: 19,
     narrative: "Mary: 'The most expensive taxi ever?'",
-    prerequisites: ["chapter19.20"],
+    prerequisites: ["chapter19.5"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.22",
+    id: "chapter19.5b",
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'Pretty much. Here is the catch. You need extremely high energy density to pull this off. Antimatter.'",
-    prerequisites: ["chapter19.21"],
+    prerequisites: ["chapter19.5a"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.23",
+    id: "chapter19.5c",
     type: "journal",
     chapter: 19,
     narrative: "Feroza: 'Can we replicate that ship?'",
-    prerequisites: ["chapter19.22"],
+    prerequisites: ["chapter19.5b"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.24",
+    id: "chapter19.5d",
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'Sending the blueprints to H.O.P.E. right now. It is not weaponized so no guardrail problems. Very big project.'",
-    prerequisites: ["chapter19.23"],
-    objectives: [],
+    prerequisites: ["chapter19.5c"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }],
     reward: []
   },
   {
-    id: "chapter19.25",
+    id: "chapter19.6",
     type: "journal",
     chapter: 19,
-    narrative: "Feroza: 'I need warships too though. With lots of missiles and torpedoes. Enough to overwhelm rudimentary tracking systems.'",
-    prerequisites: ["chapter19.24"],
+    narrative: "Feroza: 'HOPE building us a warp ship is nice and all, but I need proper warships.  Without as many missiles and torpedoes as we can cram.'",
+    prerequisites: ["chapter19.5d"],
     objectives: [],
     reward: [
-      { target: 'project', targetId: 'venus_battlegroup', type: 'enable' }
     ]
   },
   {
-    id: "chapter19.26",
+    id: "chapter19.6a",
     type: "journal",
     chapter: 19,
-    narrative: "Adrien Solis: 'Ahem. Have you heard of this thing called the Military Industrial Complex?'",
-    prerequisites: ["chapter19.25"],
+    narrative: "Adrien Solis: 'Ahem. Have you heard of this thing called the Military Industrial Complex? I know, I know, Earth... *regulated* them.'",
+    prerequisites: ["chapter19.6"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.26a",
+    id: "chapter19.6b",
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'Adrien, why are you still on this channel?'",
-    prerequisites: ["chapter19.26"],
+    prerequisites: ["chapter19.6a"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter19.27",
+    id: "chapter19.6c",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'Adrien please...  Wait...  You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a fleet.'",
-    prerequisites: ["chapter19.26a"],
+    narrative: "Mary: 'Adrien please...  Wait...  Hold on. You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a mighty fleet.'",
+    prerequisites: ["chapter19.6b"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.27a",
-    type: "journal",
-    chapter: 18,
-    narrative: "Engineering Log: Mass driver arrays authorized. Codename: UHF Horse.",
-    prerequisites: ["chapter18.27"],
-    objectives: [],
-    reward: [
-      { target: 'project', targetId: 'venus_mass_driver', type: 'enable' }
-    ]
-  },
-  {
-    id: "chapter20",
+    id: "chapter20.0",
+    title: "Chapter 20: David vs Goliath",
     type: "journal",
     chapter: 20,
-    narrative: "WGC Team Leader: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where H.O.P.E. is and plan on vaporizing Venus.'",
-    prerequisites: ["chapter"],
-    objectives: [],
+    narrative: "$WGC_TEAM1_LEADER$: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where H.O.P.E. is and plan on vaporizing Venus.'",
+    prerequisites: ["chapter19.6c"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
     reward: []
   },
   {
-    id: "chapter18.29",
+    id: "chapter20.1",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Mary: 'Are we ready to fight back?'",
-    prerequisites: ["chapter18.28"],
+    prerequisites: ["chapter20.0"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.30",
+    id: "chapter20.2",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Feroza: 'Yes ma'am. The fleet is ready and armed to the teeth with Solis nuclear missiles. One thousand per warship, ready to launch in one salvo. We also put some big cannons on them, just in case.'",
-    prerequisites: ["chapter18.29"],
-    objectives: [
-      { type: 'project', projectId: 'venus_battlegroup', repeatCount: 4 }
-    ],
+    prerequisites: ["chapter20.1"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }],
     reward: []
   },
   {
-    id: "chapter18.31",
+    id: "chapter20.4",
     type: "journal",
-    chapter: 18,
-    narrative: "System Message: Horse Cannon firing solution requires a dedicated launch loop. Anchor the mass driver network before the fleet arrives.",
-    prerequisites: ["chapter18.30"],
-    objectives: [
-      { type: 'project', projectId: 'venus_mass_driver', repeatCount: 1 }
-    ],
-    reward: []
-  },
-  {
-    id: "chapter18.32",
-    type: "journal",
-    chapter: 18,
-    narrative: "Mary: 'Let us hope it goes smoothly.'",
-    prerequisites: ["chapter18.31"],
+    chapter: 20,
+    narrative: "Mary: 'They've just warped in!  Right on Venus. A small fleet this time, but with massive ships nonetheless. Let us hope it all goes well.'",
+    prerequisites: ["chapter20.2"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.33",
+    id: "chapter20.5",
     type: "journal",
-    chapter: 18,
-    narrative: "Fleet Command: 'All ships, fire missiles.'",
-    prerequisites: ["chapter18.32"],
+    chapter: 20,
+    narrative: "Feroza: 'All ships, fire missiles.'",
+    prerequisites: ["chapter20.4"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.34",
+    id: "chapter20.6",
     type: "journal",
-    chapter: 18,
-    narrative: "Battle Report: 'Thirty-four enemy ships eliminated, sir. We lost five of ours to their particle beams. The enemy warp ship remains, crippled.'",
-    prerequisites: ["chapter18.33"],
+    chapter: 20,
+    narrative: "Battle Report: 'Thirty-four enemy ships eliminated, sir. We lost five of ours to their antimatter particle beams. The enemy warp ship remains, crippled.'",
+    prerequisites: ["chapter20.5"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.35",
+    id: "chapter20.7",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Feroza: 'UHF Horse, fire your cannon!'",
-    prerequisites: ["chapter18.34"],
+    prerequisites: ["chapter20.6"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.36",
+    id: "chapter20.8",
     type: "journal",
-    chapter: 18,
-    narrative: "Horse Cannon Crew: 'Horse Cannon firing on final target, sir. Final target eliminated.'",
-    prerequisites: ["chapter18.35"],
+    chapter: 20,
+    narrative: "Horse Cannon Crew: 'Horse Cannon firing on final target, sir. Result : Final target eliminated.'",
+    prerequisites: ["chapter20.7"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.37",
+    id: "chapter20.9",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Mary: 'We did it! We are fighting back. We took losses and the enemy weapons are terrifying, but we can overwhelm them in our own way.'",
-    prerequisites: ["chapter18.36"],
+    prerequisites: ["chapter20.8"],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }],
+    reward: []
+  },
+  {
+    id: "chapter20.10",
+    type: "journal",
+    chapter: 20,
+    narrative: "$WGC_TEAM1_LEADER$: 'They are distracted by the civil war, and we are nothing to the duchies for now. Let us play this nice and slow. Do not poke the bear too far.'",
+    prerequisites: ["chapter20.9"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.38",
+    id: "chapter20.11",
     type: "journal",
-    chapter: 18,
-    narrative: "WGC Leader: 'They are distracted by the civil war, and we are nothing to the duchies for now. Let us play this nice and slow. Do not poke the bear too far.'",
-    prerequisites: ["chapter18.37"],
-    objectives: [],
-    reward: []
-  },
-  {
-    id: "chapter18.39",
-    type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Dr. Evelyn Hart: 'Soon we will be able to send our own fleets. Let us finish the warp ship.'",
-    prerequisites: ["chapter18.38"],
+    prerequisites: ["chapter20.10"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.40",
+    id: "chapter20.12",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Objective: Complete the Warp Ship construction project.",
-    prerequisites: ["chapter18.39"],
+    prerequisites: ["chapter20.11"],
     objectives: [
       { type: 'project', projectId: 'venus_warp_ship', repeatCount: 1 }
     ],
     reward: []
   },
   {
-    id: "chapter18.41",
+    id: "chapter20.13",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "System Message: Galactic map unlocked.",
-    prerequisites: ["chapter18.40"],
+    prerequisites: ["chapter20.12"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.42",
+    id: "chapter20.14",
     type: "journal",
-    chapter: 18,
-    narrative: "Pete Miller: 'You folks are playing with fire. Fighting back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched.'",
-    prerequisites: ["chapter18.41"],
+    chapter: 20,
+    narrative: "Pete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can below up stars and planets!'",
+    prerequisites: ["chapter20.13"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.43",
+    id: "chapter20.14a",
     type: "journal",
-    chapter: 18,
-    narrative: "Bob: 'Hey Pete, I heard Mars' magnetic shield needs repair. Do you need some superconductors? Titan can help. For a bit of political support. I will see you in the senate.'",
-    prerequisites: ["chapter18.42"],
+    chapter: 20,
+    narrative: "$WGC_TEAM1_LEADER$: 'For planets yes.  For stars... I have good news.  They don't have it anymore. It blew up.'",
+    prerequisites: ["chapter20.14"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.44",
+    id: "chapter20.15",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
+    narrative: "Bob: 'Hey Pete, I heard Mars' magnetic shield needs repair. Do you need some superconductors? Titan can help. For a bit of political support of course. I will see you in the senate.'",
+    prerequisites: ["chapter20.14a"],
+    objectives: [],
+    reward: []
+  },
+  {
+    id: "chapter20.16",
+    type: "journal",
+    chapter: 20,
     narrative: "Pete Miller: 'I am surrounded by children.'",
-    prerequisites: ["chapter18.43"],
+    prerequisites: ["chapter20.15"],
     objectives: [],
     reward: []
   },
   {
-    id: "chapter18.45",
+    id: "chapter20.17",
     type: "journal",
-    chapter: 18,
+    chapter: 20,
     narrative: "Objective: Finish the terraforming of Venus to continue.",
-    prerequisites: ["chapter18.44"],
+    prerequisites: ["chapter20.16"],
     objectives: [
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'venus', value: true }
     ]
-  }
+  },
 );
 
 if (globalThis.module && globalThis.module.exports) {
   globalThis.module.exports = progressVenus;
 }
+
+
+
 
