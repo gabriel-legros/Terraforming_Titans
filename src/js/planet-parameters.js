@@ -98,6 +98,7 @@ const defaultPlanetParameters = {
   populationParameters: {
     workerRatio: 0.5
   },
+  gravityPenaltyEnabled: false,
   fundingRate: 0, // Default
   // Default host star information (for Solar System worlds)
   star: {

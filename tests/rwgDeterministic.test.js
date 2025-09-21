@@ -28,6 +28,7 @@ describe('Random World Generator determinism and UI', () => {
     for (let i = 0; i < a.planets.length; i++) {
       expect(a.planets[i].name).toBe(b.planets[i].name);
       expect(a.planets[i].orbitAU).toBeCloseTo(b.planets[i].orbitAU, 10);
+      expect(a.planets[i].merged.gravityPenaltyEnabled).toBe(true);
     }
   });
 
