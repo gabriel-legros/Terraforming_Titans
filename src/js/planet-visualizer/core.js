@@ -78,14 +78,15 @@
       this.refreshGameModeSliderDisplays = this.refreshGameModeSliderDisplays.bind(this);
 
       // Debug controls cache
+      const globalScope = (typeof globalThis !== 'undefined') ? globalThis : window;
+      const persistedDebug = !!(globalScope && globalScope.planetVisualizerDebugEnabled);
       this.debug = {
-        enabled: (function () {
-          return !(window['debug_planet-visualizer'] === false);
-        })(),
+        enabled: persistedDebug,
         container: null,
         rows: {},
         mode: 'game',
         modeSelect: null,
+        presetSelect: null,
       };
 
       // Visualizer-local state (does not affect game)
@@ -185,6 +186,46 @@
       }
     }
 
+    updateDebugVisibility() {
+      const container = this.debug?.container;
+      if (!container) return;
+      if (this.debug.enabled) {
+        container.classList.remove('planet-visualizer-debug--hidden');
+      } else {
+        container.classList.add('planet-visualizer-debug--hidden');
+      }
+    }
+
+    persistDebugModeState(enabled) {
+      const scope = (typeof globalThis !== 'undefined') ? globalThis : window;
+      if (!scope) return;
+      if (!scope.gameSettings) {
+        scope.gameSettings = {};
+      }
+      scope.gameSettings.planetVisualizerDebugEnabled = enabled;
+      scope.planetVisualizerDebugEnabled = enabled;
+    }
+
+    setDebugMode(enabled, options = {}) {
+      const bool = !!enabled;
+      this.debug.enabled = bool;
+      if (bool && !this.debug.container && this.buildDebugControls) {
+        this.buildDebugControls();
+      }
+      const hasRows = !!(this.debug?.rows && this.debug.rows.illum);
+      if (bool && this.debug.mode === 'game' && this.syncSlidersFromGame && hasRows) {
+        this.syncSlidersFromGame();
+      }
+      this.updateDebugVisibility();
+      if (this.updateDebugControlState) {
+        this.updateDebugControlState();
+      }
+      if (!options.skipPersist) {
+        this.persistDebugModeState(bool);
+      }
+      return this.debug.enabled;
+    }
+
     init() {
       const container = document.getElementById('planet-visualizer');
       const overlay = document.getElementById('planet-visualizer-overlay');
@@ -253,10 +294,7 @@
 
       window.addEventListener('resize', this.onResize);
 
-      if (this.debug.enabled) {
-        this.buildDebugControls();
-        this.syncSlidersFromGame();
-      }
+      this.setDebugMode(this.debug.enabled, { skipPersist: true });
 
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
