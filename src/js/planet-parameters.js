@@ -238,13 +238,13 @@ const titanOverrides = {
       inertGas: { initialValue: 9e15 }, // Override name and value
       oxygen: { initialValue: 1e9 },
       "carbonDioxide": {
-        "initialValue": 96102.5286469488
+        "initialValue": 25550.287796755383
       },
       "atmosphericWater": {
-        "initialValue": 2.967141554253866e-8
+        "initialValue": 2.022364940602119e-12
       },
       "atmosphericMethane": {
-        "initialValue": 432808181235630.1
+        "initialValue": 430148695769603.3
       },
     },
     special: {
@@ -252,7 +252,7 @@ const titanOverrides = {
       whiteDust: { baseCap: 83000000000000 }
     }
   },
- "zonalWater": {
+  "zonalWater": {
     "tropical": {
       "liquid": 0,
       "ice": 3791.2409230205194,
@@ -282,50 +282,50 @@ const titanOverrides = {
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 877849153888.3359,
+      "liquid": 1044167465202.7002,
       "ice": 0
     },
     "temperate": {
-      "liquid": 1147035443948.0461,
+      "liquid": 1366203373559.9941,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 8686653782239.314
+      "ice": 10960653007419.424
     }
   },
   "zonalCO2": {
     "tropical": {
       "liquid": 0,
-      "ice": 229.8198502474763
+      "ice": 205.47679346160334
     },
     "temperate": {
       "liquid": 0,
-      "ice": 325.9675279328853
+      "ice": 319.91799357123915
     },
     "polar": {
       "liquid": 0,
-      "ice": 3341.6839783054147
+      "ice": 73924.31741986355
     }
   },
   "zonalTemperatures": {
     "tropical": {
       "initial": 94,
-      "value": 94,
-      "day": 95.5,
-      "night": 92.5
+      "value": 96.80908862695146,
+      "day": 97.15084838927193,
+      "night": 96.467328864631
     },
     "temperate": {
       "initial": 91,
-      "value": 91,
-      "day": 92.5,
-      "night": 89.5
+      "value": 91.32188533895379,
+      "day": 91.60608506063775,
+      "night": 91.03768561726983
     },
     "polar": {
       "initial": 88,
-      "value": 88,
-      "day": 89,
-      "night": 87
+      "value": 75.36018728154527,
+      "day": 75.46348725779306,
+      "night": 75.25688730529747
     }
   },
   celestialParameters : { // Override all celestial parameters

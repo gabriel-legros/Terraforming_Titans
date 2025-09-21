@@ -131,11 +131,11 @@ function opticalDepth(comp, pBar, gSurface) {
     let tau_i;
 
     if (k === 'ch4') {
-      const saturationThreshold = 0.0003;
+      const saturationThreshold = 0.00020;
       if (R <= saturationThreshold) {
         tau_i = G * Math.pow(R, BETA);
       } else {
-        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.28*Math.pow(R - saturationThreshold,0.9));
+        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.24*Math.pow(R - saturationThreshold,0.9));
       }
     } else if (k === 'co2') {
       const saturationThreshold = 0.0003;
