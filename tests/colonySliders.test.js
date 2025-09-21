@@ -6,6 +6,7 @@ const {
   setLuxuryWaterMultiplier,
   setOreMineWorkerAssist,
   setMechanicalAssistance,
+  updateColonySlidersEffect,
   resetColonySliders,
   colonySliderSettings,
   ColonySlidersManager
@@ -159,6 +160,56 @@ describe('colony sliders', () => {
         amount: expectedAmount
       }));
     });
+  });
+
+  test('updateColonySlidersEffect reapplies current slider modifiers', () => {
+    setWorkforceRatio(0.6);
+    setFoodConsumptionMultiplier(2);
+    setLuxuryWaterMultiplier(3);
+    setOreMineWorkerAssist(2);
+    setMechanicalAssistance(1);
+
+    addEffect.mockClear();
+    removeEffect.mockClear();
+
+    updateColonySlidersEffect();
+
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'workforceRatio',
+      value: 0.6
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'researchSlider',
+      value: (1 - 0.6) / 0.5
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'foodGrowth',
+      value: 1.02
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'foodConsumption',
+      value: 2
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'waterGrowth',
+      value: 1.02
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'luxuryWaterMaintenance',
+      value: 3
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'oreMineWorkerNeed',
+      value: 20
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'oreMineProductionBoost',
+      value: 3
+    }));
+    expect(addEffect).toHaveBeenCalledWith(expect.objectContaining({
+      effectId: 'mechanicalAssistanceComponents'
+    }));
+    expect(removeEffect).not.toHaveBeenCalled();
   });
 
   test('resetColonySliders resets to default', () => {
