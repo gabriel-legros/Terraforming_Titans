@@ -82,9 +82,6 @@ class Colony extends Building {
     super.applyAddResourceConsumption(effect);
     if (effect.resourceCategory === 'colony') {
       this.rebuildFilledNeeds();
-      if (typeof invalidateColonyNeedCache === 'function') {
-        invalidateColonyNeedCache();
-      }
     }
   }
 
