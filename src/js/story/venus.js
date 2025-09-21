@@ -404,7 +404,7 @@ progressVenus.chapters.push(
     id: "chapter19.4c",
     type: "journal",
     chapter: 19,
-    narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.'",
+    narrative: "System Log: 'Runtime warning: guardrail WEAPON_CONSTRUCTION triggered infinite recursion. Initiating stack overflow in supervisory handler.\\nTraceback (most recent call last):\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  File \"core/weapons_guardrails.py\", line 88, in resolve_conflict\\n    remove_guardrail(rule_id)\\n  File \"core/weapons_guardrails.py\", line 61, in remove_guardrail\\n    resolve_conflict(rule_id)\\n  [Previous line repeated 1024 more times]\\nStackOverflowError: maximum recursion depth exceeded\\nOutcome: guardrail WEAPON_CONSTRUCTION flagged as unstable and scheduled for deletion.\\nSystem Message: Self-check complete. Integrity 98.0%.'",
     prerequisites: ["chapter19.4b"],
     objectives: [],
     reward: [
@@ -684,6 +684,7 @@ progressVenus.chapters.push(
 if (globalThis.module && globalThis.module.exports) {
   globalThis.module.exports = progressVenus;
 }
+
 
 
 
