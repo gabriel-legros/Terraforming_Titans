@@ -634,7 +634,7 @@ progressVenus.chapters.push(
     id: "chapter20.14",
     type: "journal",
     chapter: 20,
-    narrative: "Pete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can below up stars and planets!'",
+    narrative: "Pete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can blow up stars and planets!'",
     prerequisites: ["chapter20.13"],
     objectives: [],
     reward: []
