@@ -202,7 +202,7 @@ progressVenus.chapters.push(
     id: "chapter18.7",
     type: "journal",
     chapter: 18,
-    narrative: "Mary: 'Wait! so they can blow up planets but don't have computers? They can't aim? I noticed the emperor's ship was rustic, but surely that is not possible.'",
+    narrative: "Mary: 'Wait! So they can blow up planets but don't have computers? They can't aim? I noticed the emperor's ship was rustic, but surely that is not possible.'",
     prerequisites: ["chapter18.6b"],
     objectives: [],
     reward: []
