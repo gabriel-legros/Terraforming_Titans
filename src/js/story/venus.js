@@ -146,10 +146,13 @@ progressVenus.chapters.push(
     id: "chapter18.4d",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.  On an unrelated note...  I finally cracked a way to interface HOPE with Solis-made cargo ships.  Immune to the Dead Hand Protocol.  Available for sale today!'",
+    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty. And because I value initiative, Solis Upgrade Two now lets you pre-order my Dead Hand-proof cargo ships—one fresh hull for every 100 Solis points.'",
     prerequisites: ["chapter18.4c"],
     objectives: [],
-    reward: []
+    reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisUpgrade2', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
+    ]
   },
   {
     id: "chapter18.4e",

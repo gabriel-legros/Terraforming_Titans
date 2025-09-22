@@ -51,6 +51,7 @@ class SolisManager extends EffectableEntity {
       water: { baseCost: 1, purchases: 0 },
       androids: { baseCost: 10, purchases: 0 },
       colonistRocket: { baseCost: 1, purchases: 0 },
+      startingShips: { baseCost: 100, purchases: 0 },
       research: { baseCost: 10, purchases: 0 },
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
       researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length }
@@ -167,6 +168,12 @@ class SolisManager extends EffectableEntity {
     }
     const cost = this.getUpgradeCost(key);
     if (this.solisPoints < cost) return false;
+    const shipsResource = key === 'startingShips'
+      ? resources?.special?.spaceships
+      : null;
+    if (key === 'startingShips' && !shipsResource) {
+      return false;
+    }
     this.solisPoints -= cost;
     up.purchases += 1;
     if (key === 'funding' && typeof addEffect === 'function') {
@@ -200,6 +207,20 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAdvancedOversight',
         sourceId: 'solisShop'
       });
+    } else if (key === 'startingShips') {
+      if (!shipsResource.unlocked) {
+        if (shipsResource.enable) {
+          shipsResource.enable();
+        } else {
+          shipsResource.unlocked = true;
+        }
+      }
+      if (shipsResource.increase) {
+        shipsResource.increase(1);
+      } else {
+        const currentValue = Number.isFinite(shipsResource.value) ? shipsResource.value : 0;
+        shipsResource.value = currentValue + 1;
+      }
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
@@ -284,6 +305,28 @@ class SolisManager extends EffectableEntity {
     }
 
     this.applyResearchUpgrade();
+
+    const startingShipsUpgrade = this.shopUpgrades.startingShips;
+    if (startingShipsUpgrade && startingShipsUpgrade.purchases > 0) {
+      const ships = resources?.special?.spaceships;
+      if (ships) {
+        if (!ships.unlocked) {
+          if (ships.enable) {
+            ships.enable();
+          } else {
+            ships.unlocked = true;
+          }
+        }
+        if (!globalGameIsLoadingFromSave) {
+          if (ships.increase) {
+            ships.increase(startingShipsUpgrade.purchases);
+          } else {
+            const currentValue = Number.isFinite(ships.value) ? ships.value : 0;
+            ships.value = currentValue + startingShipsUpgrade.purchases;
+          }
+        }
+      }
+    }
 
     for (const key in RESOURCE_UPGRADE_AMOUNTS) {
       const upgrade = this.shopUpgrades[key];

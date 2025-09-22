@@ -11,6 +11,7 @@ const shopDescriptions = {
   water: 'Increase starting water and base storage by 1M',
   androids: 'Increase starting androids and base storage by 100',
   colonistRocket: 'Increase colonists per import rocket by 1',
+  startingShips: 'Add one Solis-built cargo ship to your starting fleet (base cost: 100)',
   research: 'Increase starting research points by 100',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
@@ -169,7 +170,9 @@ function initializeSolisUI() {
     });
   }
 
-  const solis1 = typeof solisManager !== 'undefined' && solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
+  const managerRef = globalThis.solisManager;
+  const solis1 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade1'));
+  const solis2 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade2'));
   const container = document.getElementById('solis-shop-items');
   if (container) {
     const shopContainer = container.parentElement;
@@ -180,7 +183,13 @@ function initializeSolisUI() {
     shopContainer.insertBefore(title, container);
 
     const baseKeys = ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket'];
-    const keys = solis1 ? baseKeys.concat(['research']) : baseKeys;
+    const keys = baseKeys.slice();
+    if (solis2) {
+      keys.push('startingShips');
+    }
+    if (solis1) {
+      keys.push('research');
+    }
     keys.forEach(key => {
       const item = createShopItem(key);
       container.appendChild(item);
@@ -311,7 +320,9 @@ function updateSolisUI() {
   if (donationSection) donationSection.classList.toggle('hidden', !flag);
   if (researchShop) researchShop.classList.toggle('hidden', !flag);
 
-  const solis1 = typeof solisManager !== 'undefined' && solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisUpgrade1');
+  const managerRef = globalThis.solisManager;
+  const solis1 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade1'));
+  const solis2 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade2'));
   ['research'].forEach(k => {
     const record = shopElements[k];
     if (solis1) {
@@ -327,6 +338,19 @@ function updateSolisUI() {
       delete shopElements[k];
     }
   });
+  const startingShipsRecord = shopElements.startingShips;
+  if (solis2) {
+    if (!startingShipsRecord) {
+      const container = document.getElementById('solis-shop-items');
+      if (container) {
+        const item = createShopItem('startingShips');
+        container.appendChild(item);
+      }
+    }
+  } else if (startingShipsRecord) {
+    startingShipsRecord.item.remove();
+    delete shopElements.startingShips;
+  }
   const advRecord = shopElements.advancedOversight;
   if (solis1) {
     if (!advRecord && researchShopItems) {
