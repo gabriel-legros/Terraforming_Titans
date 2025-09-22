@@ -188,3 +188,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
 - Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
