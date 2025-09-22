@@ -91,7 +91,7 @@ const researchParameters = {
             type: 'resourceProductionMultiplier',
             resourceCategory: 'atmospheric',
             resourceTarget : 'atmosphericWater',
-            value : 0.2
+            value : 0
           },
         ],
       },
