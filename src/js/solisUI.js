@@ -320,7 +320,7 @@ function updateSolisUI() {
   if (donationSection) donationSection.classList.toggle('hidden', !flag);
   if (researchShop) researchShop.classList.toggle('hidden', !flag);
 
-  const managerRef = globalThis.solisManager;
+  const managerRef = solisManager;
   const solis1 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade1'));
   const solis2 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade2'));
   ['research'].forEach(k => {
