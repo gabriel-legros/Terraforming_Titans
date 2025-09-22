@@ -215,12 +215,6 @@ class SolisManager extends EffectableEntity {
           shipsResource.unlocked = true;
         }
       }
-      if (shipsResource.increase) {
-        shipsResource.increase(1);
-      } else {
-        const currentValue = Number.isFinite(shipsResource.value) ? shipsResource.value : 0;
-        shipsResource.value = currentValue + 1;
-      }
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;

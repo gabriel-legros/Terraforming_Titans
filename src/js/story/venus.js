@@ -146,12 +146,10 @@ progressVenus.chapters.push(
     id: "chapter18.4d",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty. And because I value initiative, Solis Upgrade Two now lets you pre-order my Dead Hand-proof cargo ships—one fresh hull for every 100 Solis points.'",
+    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.'",
     prerequisites: ["chapter18.4c"],
     objectives: [],
     reward: [
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisUpgrade2', value: true },
-      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
     ]
   },
   {
