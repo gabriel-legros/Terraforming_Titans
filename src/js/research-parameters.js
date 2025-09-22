@@ -73,7 +73,7 @@ const researchParameters = {
       {
         id: 'fission_plant1_upgrade',
         name: 'Closed loop water cycle',
-        description: 'Reduces the water consumption of nuclear reactors by 80%.',
+        description: 'Eliminates the water consumption of nuclear reactors.',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -83,7 +83,7 @@ const researchParameters = {
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget : 'water',
-            value : 0.2
+            value : 0
           },
           {
             target: 'building',
