@@ -75,7 +75,7 @@ try {
 const RWG_WORLD_TYPES = {
   "mars-like": { displayName: "Mars-like" },
   "cold-desert": { displayName: "Desert" },
-  "icy-moon": { displayName: "Icy" },
+  "icy-moon": { displayName: "Water-rich" },
   "titan-like": { displayName: "Titan-like" },
   "carbon-planet": { displayName: "Carbon" },
   "desiccated-desert": { displayName: "Desiccated Desert" },
