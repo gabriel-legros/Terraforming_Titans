@@ -750,10 +750,25 @@ const venusOverrides = {
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
   },
-  zonalTemperatures: {
-    tropical: { initial: 737, value: 737, day: 744, night: 730 },
-    temperate: { initial: 730, value: 730, day: 737, night: 723 },
-    polar: { initial: 715, value: 715, day: 721, night: 709 }
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 737,
+      "value": 737.2438569505996,
+      "day": 738.4830854135885,
+      "night": 736.0046284876107
+    },
+    "temperate": {
+      "initial": 737,
+      "value": 737.2337473365843,
+      "day": 738.2642618159972,
+      "night": 736.2032328571714
+    },
+    "polar": {
+      "initial": 737,
+      "value": 737.23131092994,
+      "day": 737.7853397110447,
+      "night": 736.6772821488354
+    }
   },
   zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {

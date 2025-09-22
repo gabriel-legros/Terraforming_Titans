@@ -951,10 +951,13 @@ class Terraforming extends EffectableEntity{
         else{
             // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
             const targetTemp = T[zone];
+            const emittedFluxPreTarget = greenhouseFactor > 0
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
+                : 0;
             const emittedFluxTarget = greenhouseFactor > 0
                 ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
                 : 0;
-            const windFlux = mixingDelta !== 0 ? emittedFlux - emittedFluxTarget : 0;
+            const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
             const combinedFlux = netFlux - windFlux;
 
             newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
