@@ -674,13 +674,9 @@ class StoryManager {
         });
 
         // ... (rest of loadState for effects) ...
-         this.appliedEffects = savedState.appliedEffects || [];
+         this.appliedEffects = [];
          // Re-applying effects logic remains...
          const uniqueEffectsToApply = new Map();
-         this.appliedEffects.forEach(effect => {
-             const effectKey = JSON.stringify(effect);
-             if (!effect.oneTimeFlag) { uniqueEffectsToApply.set(effectKey, effect); }
-         });
 
          // Ensure completed chapter rewards are applied even if not saved
          this.completedEventIds.forEach(eventId => {
