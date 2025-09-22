@@ -61,11 +61,11 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 18,
     title: "Chapter 18: Heat, pressure and acid",
-    narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. Mary would call it hell but at the right altitude you can float in a nice 27C layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
+    narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. All your buildings are going to require around five times more maintenance, and ground colonies will require extra reinforcement. Mary would call it hell but at the right altitude you can float in a nice 27C layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
     prerequisites: ["chapter17.7"],
     objectives: [],
     reward: [
-      { target: 'building', targetId: 'aerostat_colony', type: 'enable' }
+      { target: 'colony', targetId: 'aerostat_colony', type: 'enable' }
     ]
   },
   {

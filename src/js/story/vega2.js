@@ -538,6 +538,18 @@ progressVega2.chapters.push(
         type: 'enable'
       }]
     },
+    {
+        id: "chapter17.7",
+        type: "journal",
+        chapter: 17,
+        narrative: "Travel to Venus to continue.",
+        prerequisites: ["chapter17.6"],
+        objectives: [
+        { type: 'currentPlanet', planetId: 'venus' }
+        ],
+        reward: [
+        ]
+    }
 );
 if (typeof module !== 'undefined') {
   module.exports = progressVega2;
