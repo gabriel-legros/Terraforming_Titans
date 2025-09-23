@@ -528,38 +528,48 @@ function produceResources(deltaTime, buildings) {
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
         const zones = ['tropical', 'temperate', 'polar'];
-        const warmZones = zones.filter(z => (terraforming.temperature?.zones?.[z]?.value || 0) > 273.15);
+        const zoneTemp = zone => terraforming.temperature?.zones?.[zone]?.value ?? 0;
+        const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
         const targetZones = warmZones.length > 0 ? warmZones : zones;
-        const warmArea = warmZones.reduce((sum, z) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0) || 1;
+        const warmArea = warmZones.reduce((sum, zone) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length), 0) || 1;
+        const seconds = deltaTime / 1000;
+        const rate = seconds > 0 ? overflow / seconds : 0;
+        const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
         let liquidRate = 0;
         let iceRate = 0;
+        let atmosphericRate = 0;
 
-        targetZones.forEach(zone => {
-          const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
-          const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
-          const amount = overflow * proportion;
+        if (allZonesHot && resources.atmospheric?.atmosphericWater) {
+          resources.atmospheric.atmosphericWater.value += overflow;
+          atmosphericRate = rate;
+        } else {
+          targetZones.forEach(zone => {
+            const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+            const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
+            const amount = overflow * proportion;
 
-          if (warmZones.length > 0) {
-            terraforming.zonalWater[zone].liquid += amount;
-            resources.surface.liquidWater.value += amount;
-            liquidRate += amount / (deltaTime / 1000);
-          } else {
-            terraforming.zonalWater[zone].ice += amount;
-            resources.surface.ice.value += amount;
-            iceRate += amount / (deltaTime / 1000);
-          }
-        });
+            if (warmZones.length > 0) {
+              terraforming.zonalWater[zone].liquid += amount;
+              resources.surface.liquidWater.value += amount;
+              liquidRate += seconds > 0 ? amount / seconds : 0;
+            } else {
+              terraforming.zonalWater[zone].ice += amount;
+              resources.surface.ice.value += amount;
+              iceRate += seconds > 0 ? amount / seconds : 0;
+            }
+          });
+        }
 
         // Record overflow separately for tooltip display without affecting totals
-        const rate = overflow / (deltaTime / 1000);
-        if (typeof resource.modifyRate === 'function') {
-          resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+        resource.modifyRate?.(-rate, 'Overflow (not summed)', 'overflow');
+        if (liquidRate > 0) {
+          resources.surface?.liquidWater?.modifyRate?.(liquidRate, 'Overflow', 'overflow');
         }
-        if (liquidRate > 0 && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow', 'overflow');
+        if (iceRate > 0) {
+          resources.surface?.ice?.modifyRate?.(iceRate, 'Overflow', 'overflow');
         }
-        if (iceRate > 0 && resources.surface?.ice) {
-          resources.surface.ice.modifyRate(iceRate, 'Overflow', 'overflow');
+        if (atmosphericRate > 0) {
+          resources.atmospheric?.atmosphericWater?.modifyRate?.(atmosphericRate, 'Overflow', 'overflow');
         }
       }
     }

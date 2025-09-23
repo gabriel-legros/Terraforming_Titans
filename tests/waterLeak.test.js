@@ -70,7 +70,7 @@ describe('water leaks when colony storage full', () => {
         water: { name: 'water', ...stubResource(100, 100) }
       },
       surface: { liquidWater: stubResource(), ice: stubResource() },
-      atmospheric: {},
+      atmospheric: { atmosphericWater: stubResource() },
       underground: {},
       special: { albedoUpgrades: stubResource() }
     };
@@ -149,5 +149,24 @@ describe('water leaks when colony storage full', () => {
     expect(ctx.resources.colony.water.value).toBe(100);
     expect(ctx.resources.colony.water.consumptionRateBySource['Overflow (not summed)']).toBeCloseTo(10);
     expect(ctx.resources.surface.ice.productionRateBySource.Overflow).toBeCloseTo(10);
+  });
+
+  test('vents into atmosphere when all zones exceed 100C', () => {
+    const ctx = createContext(true);
+    Object.keys(ctx.terraforming.temperature.zones).forEach(zone => {
+      ctx.terraforming.temperature.zones[zone].value = 380;
+    });
+    const b = makeBuilding();
+    ctx.b = b;
+    vm.runInContext('produceResources(1000, {b})', ctx, { filename: 'vm' });
+    expect(ctx.terraforming.zonalWater.tropical.liquid).toBe(0);
+    expect(ctx.terraforming.zonalWater.temperate.liquid).toBe(0);
+    expect(ctx.terraforming.zonalWater.polar.liquid).toBe(0);
+    expect(ctx.resources.surface.liquidWater.productionRateBySource.Overflow).toBeUndefined();
+    expect(ctx.resources.surface.ice.productionRateBySource.Overflow).toBeUndefined();
+    expect(ctx.resources.atmospheric.atmosphericWater.value).toBeCloseTo(10);
+    expect(ctx.resources.atmospheric.atmosphericWater.productionRateBySource.Overflow).toBeCloseTo(10);
+    expect(ctx.resources.colony.water.value).toBe(100);
+    expect(ctx.resources.colony.water.consumptionRateBySource['Overflow (not summed)']).toBeCloseTo(10);
   });
 });
