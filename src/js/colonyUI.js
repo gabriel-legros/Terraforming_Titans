@@ -148,7 +148,7 @@ function createColonyDetails(structure) {
 
   // Add comfort and happiness boxes
   const happinessBox = createNeedBox('happiness', 'Happiness', structure.happiness, false, structure);
-  const comfortBox = createNeedBox('comfort', 'Comfort', structure.baseComfort, false, structure);
+  const comfortBox = createNeedBox('comfort', 'Comfort', structure.getComfort(), false, structure);
 
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
@@ -178,7 +178,7 @@ function updateColonyDetailsDisplay(structureRow, structure) {
 
   // Update comfort and happiness boxes
   updateNeedBox(structure.needBoxCache.happiness, 'Happiness', 'happiness', structure.happiness, false, structure);
-  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.baseComfort, false, structure);
+  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.getComfort(), false, structure);
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {

@@ -22,7 +22,10 @@ describe('colony need box cache', () => {
       happiness: 0.5,
       baseComfort: 0.6,
       filledNeeds: { energy: 0.8 },
-      luxuryResourcesEnabled: { electronics: true }
+      luxuryResourcesEnabled: { electronics: true },
+      getComfort() {
+        return this.baseComfort;
+      }
     };
 
     const row = dom.window.document.createElement('div');

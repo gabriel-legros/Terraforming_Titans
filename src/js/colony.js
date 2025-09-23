@@ -132,6 +132,10 @@ class Colony extends Building {
     this.rebuildFilledNeeds();
   }
 
+  getComfort() {
+    return this.baseComfort;
+  }
+
   getConsumptionRatio(){
     // Calculate minRatio based on colonist availability
     const colonists = resources.colony.colonists.value;
@@ -270,7 +274,7 @@ class Colony extends Building {
     const nonLuxuryHappiness = Math.min(foodNeed, energyNeed) * 50;
   
     // Calculate happiness from comfort
-    const comfortHappiness = this.baseComfort * 20;
+    const comfortHappiness = this.getComfort() * 20;
   
     // Calculate total luxury happiness
     let totalLuxuryHappiness = 0;
