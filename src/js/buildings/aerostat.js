@@ -629,7 +629,7 @@ function updateAerostatBuoyancySection(structure) {
 
   if (ui.mitigationInfo) {
     let mitigationTitle =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.';
+      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.  The reduction is equal to the total workers demand from factories divided by total colonist capacity from aerostats.';
     if (mitigationShare === null) {
       mitigationTitle += '\nMitigation data unavailable.';
     } else {
