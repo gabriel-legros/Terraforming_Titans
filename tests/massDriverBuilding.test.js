@@ -10,7 +10,7 @@ const { MassDriver } = require('../src/js/buildings/MassDriver.js');
 global.initializeBuildingTabs = () => {};
 
 describe('Mass Driver building', () => {
-  test('Mass Driver costs 10x an oxygen factory and is locked by default', () => {
+  test('Mass Driver requires superconductors and is locked by default', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildings-parameters.js'), 'utf8');
     const ctx = {};
     vm.createContext(ctx);
@@ -22,10 +22,12 @@ describe('Mass Driver building', () => {
     expect(oxygenFactory).toBeDefined();
     expect(massDriver.unlocked).toBe(false);
 
-    const expectedCost = {};
-    for (const [resource, amount] of Object.entries(oxygenFactory.cost.colony)) {
-      expectedCost[resource] = amount * 10;
-    }
+    const expectedCost = {
+      metal: oxygenFactory.cost.colony.metal * 10,
+      components: oxygenFactory.cost.colony.components * 10,
+      superconductors: 100
+    };
+
     expect(massDriver.cost.colony).toEqual(expectedCost);
   });
 
