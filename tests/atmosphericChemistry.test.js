@@ -6,6 +6,12 @@ const {
   SULFURIC_ACID_RAIN_THRESHOLD_K,
   SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
   SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
+  HYDROGEN_ESCAPE_GRAVITY_THRESHOLD,
+  HYDROGEN_HALF_LIFE_MIN_SECONDS,
+  HYDROGEN_HALF_LIFE_MAX_SECONDS,
+  HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER,
+  HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX,
+  HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION,
 } = require('../src/js/terraforming/atmospheric-chemistry.js');
 
 describe('atmospheric chemistry', () => {
@@ -66,6 +72,84 @@ describe('atmospheric chemistry', () => {
     expect(result.rates.acidRain).toBeCloseTo((initial / 2) / acidHalfLifeSeconds, 5);
   });
 
+  test('hydrogen decays with a gravity-dependent half-life', () => {
+    const initial = 1000;
+    const gravity = 0;
+    const halfLife =
+      HYDROGEN_HALF_LIFE_MIN_SECONDS +
+      (HYDROGEN_HALF_LIFE_MAX_SECONDS - HYDROGEN_HALF_LIFE_MIN_SECONDS) * (gravity / HYDROGEN_ESCAPE_GRAVITY_THRESHOLD);
+    const resources = { atmospheric: { hydrogen: { value: initial } } };
+    const params = {
+      globalOxygenPressurePa: 0,
+      globalMethanePressurePa: 0,
+      availableGlobalMethaneGas: 0,
+      availableGlobalOxygenGas: 0,
+      realSeconds: halfLife,
+      durationSeconds: halfLife,
+      surfaceArea: 1,
+      surfaceTemperatureK: SULFURIC_ACID_RAIN_THRESHOLD_K,
+      gravity,
+      solarFlux: 0,
+    };
+    const result = runAtmosphericChemistry(resources, params);
+    expect(result.changes.hydrogen).toBeCloseTo(-initial / 2, 5);
+    expect(result.rates.hydrogen).toBeCloseTo((initial / 2) / halfLife, 5);
+  });
+
+  test('high gravity prevents hydrogen escape', () => {
+    const initial = 500;
+    const gravity = HYDROGEN_ESCAPE_GRAVITY_THRESHOLD + 1;
+    const resources = { atmospheric: { hydrogen: { value: initial } } };
+    const params = {
+      globalOxygenPressurePa: 0,
+      globalMethanePressurePa: 0,
+      availableGlobalMethaneGas: 0,
+      availableGlobalOxygenGas: 0,
+      realSeconds: 1e6,
+      durationSeconds: 1e6,
+      surfaceArea: 1,
+      surfaceTemperatureK: SULFURIC_ACID_RAIN_THRESHOLD_K,
+      gravity,
+      solarFlux: 1000,
+    };
+    const result = runAtmosphericChemistry(resources, params);
+    expect(result.changes.hydrogen).toBeCloseTo(0, 10);
+    expect(result.rates.hydrogen).toBeCloseTo(0, 10);
+  });
+
+  test('photodissociation accelerates hydrogen loss', () => {
+    const initial = 800;
+    const gravity = HYDROGEN_ESCAPE_GRAVITY_THRESHOLD / 2;
+    const createResources = () => ({ atmospheric: { hydrogen: { value: initial } } });
+    const baseParams = {
+      globalOxygenPressurePa: 0,
+      globalMethanePressurePa: 0,
+      availableGlobalMethaneGas: 0,
+      availableGlobalOxygenGas: 0,
+      realSeconds: HYDROGEN_HALF_LIFE_MAX_SECONDS,
+      durationSeconds: HYDROGEN_HALF_LIFE_MAX_SECONDS,
+      surfaceArea: 1,
+      surfaceTemperatureK: SULFURIC_ACID_RAIN_THRESHOLD_K,
+      gravity,
+    };
+    const noFluxResult = runAtmosphericChemistry(createResources(), {
+      ...baseParams,
+      solarFlux: 0,
+    });
+    const intenseFlux = HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX * 5;
+    const highFluxResult = runAtmosphericChemistry(createResources(), {
+      ...baseParams,
+      solarFlux: intenseFlux,
+    });
+
+    expect(Math.abs(highFluxResult.changes.hydrogen)).toBeGreaterThan(Math.abs(noFluxResult.changes.hydrogen));
+
+    const solarFluxRatio = intenseFlux / (intenseFlux + HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX);
+    const expectedAtomicFraction = solarFluxRatio * HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION;
+    expect(expectedAtomicFraction).toBeGreaterThan(0);
+    expect(HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER).toBeLessThan(1);
+  });
+
   test('assigns combustion and decay rates to resources', () => {
     const createRes = (value = 0) => ({ value, modifyRate: jest.fn() });
     const resources = {
@@ -76,6 +160,7 @@ describe('atmospheric chemistry', () => {
         oxygen: createRes(),
         calciteAerosol: createRes(),
         sulfuricAcid: createRes(10),
+        hydrogen: createRes(),
       },
     };
     const params = {
@@ -87,6 +172,8 @@ describe('atmospheric chemistry', () => {
       durationSeconds: 1,
       surfaceArea: 1e16,
       surfaceTemperatureK: SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
+      gravity: 0,
+      solarFlux: 0,
     };
     const result = runAtmosphericChemistry(resources, params);
     expect(resources.atmospheric.atmosphericWater.modifyRate).toHaveBeenCalledWith(
@@ -117,6 +204,11 @@ describe('atmospheric chemistry', () => {
     expect(resources.atmospheric.sulfuricAcid.modifyRate).toHaveBeenCalledWith(
       -result.rates.acidRain,
       'Acid rain',
+      'terraforming'
+    );
+    expect(resources.atmospheric.hydrogen.modifyRate).toHaveBeenCalledWith(
+      -result.rates.hydrogen,
+      'Hydrogen Escape',
       'terraforming'
     );
   });
