@@ -966,6 +966,36 @@ function updateResourceRateDisplay(resource){
       }
     }
 
+    if (resource.name === 'hydrogen') {
+      const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
+      const atomicMultiplier = globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER || 1;
+      const atomicSpeedup = Math.round(1 / atomicMultiplier);
+      const photodissociationFraction = Math.round(
+        (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
+      );
+      let hydrogenMessage = `Hydrogen slowly escapes to space on worlds with surface gravity below ${formatNumber(gravityThreshold, false, 2)} m/s².`;
+      hydrogenMessage += ` Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`;
+
+      const gravity = globalThis.terraforming?.celestialParameters?.gravity;
+      if (Number.isFinite(gravity)) {
+        const relationText = gravity < gravityThreshold
+          ? ', so expect ongoing decay.'
+          : ', so the atmosphere can retain hydrogen.';
+        hydrogenMessage += ` Current gravity is ${formatNumber(gravity, false, 2)} m/s²${relationText}`;
+      }
+
+      const solarFlux = globalThis.terraforming?.luminosity?.solarFlux;
+      const referenceFlux = globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX || 0;
+      if (Number.isFinite(solarFlux)) {
+        const fluxText = solarFlux > referenceFlux
+          ? 'accelerating the photodissociation that feeds this loss'
+          : 'keeping most hydrogen molecular and slowing the loss';
+        hydrogenMessage += ` Solar flux is ${formatNumber(solarFlux, false, 0)} W/m², ${fluxText}.`;
+      }
+
+      warningMessages.push(hydrogenMessage);
+    }
+
     if (resource.name === 'biomass' && typeof terraforming !== 'undefined') {
       const zones = terraforming.biomassDyingZones || {};
       const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
