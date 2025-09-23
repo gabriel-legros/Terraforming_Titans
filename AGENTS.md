@@ -189,3 +189,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
 - Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
 - Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
+- Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.

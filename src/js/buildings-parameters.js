@@ -523,10 +523,10 @@ const buildingsParameters = {
   oxygenFactory: {
     name: 'Oxygen Factory',
     category: 'terraforming',
-    description: 'Extracts oxygen from liquid water via electrolysis.',
+    description: 'Extracts oxygen from liquid water via electrolysis, venting hydrogen as a byproduct.',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
     consumption: { colony: { energy: 24000000, water: 100} },
-    production: { atmospheric: { oxygen: 88.89} },
+    production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
