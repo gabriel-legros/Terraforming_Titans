@@ -99,6 +99,28 @@ const terraformingUICache = {
   luminosity: {}
 };
 
+function getTemperatureMaintenanceImmuneTooltip() {
+  const buildingMap = globalThis?.buildings ?? {};
+  const immuneNames = [];
+
+  for (const key in buildingMap) {
+    const building = buildingMap[key];
+    if (building?.temperatureMaintenanceImmune) {
+      const displayName = building.displayName || building.name || key;
+      if (displayName && !immuneNames.includes(displayName)) {
+        immuneNames.push(displayName);
+      }
+    }
+  }
+
+  if (immuneNames.length === 0) {
+    return 'No buildings are immune to this penalty.';
+  }
+
+  immuneNames.sort((a, b) => a.localeCompare(b));
+  return `Buildings immune to this effect: ${immuneNames.join(', ')}.`;
+}
+
 function resetTerraformingUI() {
   terraformingSummaryInitialized = false;
   terraformingTabsInitialized = false;
@@ -453,6 +475,17 @@ function createTemperatureBox(row) {
     const maintenancePenaltySpan = document.createElement('p');
     maintenancePenaltySpan.id = 'temperature-maintenance-penalty';
     maintenancePenaltySpan.style.display = 'none';
+    maintenancePenaltySpan.textContent = 'Maintenance cost multiplier from temperature : ';
+    const maintenancePenaltyValue = document.createElement('span');
+    maintenancePenaltyValue.id = 'temperature-maintenance-penalty-value';
+    maintenancePenaltySpan.appendChild(maintenancePenaltyValue);
+    maintenancePenaltySpan.appendChild(document.createTextNode(' '));
+    const maintenancePenaltyInfo = document.createElement('span');
+    maintenancePenaltyInfo.id = 'temperature-maintenance-penalty-info';
+    maintenancePenaltyInfo.classList.add('info-tooltip-icon');
+    maintenancePenaltyInfo.innerHTML = '&#9432;';
+    maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+    maintenancePenaltySpan.appendChild(maintenancePenaltyInfo);
     temperatureBox.appendChild(maintenancePenaltySpan);
 
     const targetSpan = document.createElement('span');
@@ -485,7 +518,9 @@ function createTemperatureBox(row) {
       polarDay: temperatureBox.querySelector('#polar-day'),
       polarNight: temperatureBox.querySelector('#polar-night'),
       energyPenalty: temperatureBox.querySelector('#temperature-energy-penalty'),
-      maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty')
+      maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty'),
+      maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
+      maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info')
     };
   }
 
@@ -533,7 +568,14 @@ function createTemperatureBox(row) {
       const penalty = terraforming.calculateMaintenancePenalty();
       if (penalty > 1) {
         els.maintenancePenalty.style.display = '';
-        els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+        if (els.maintenancePenaltyValue) {
+          els.maintenancePenaltyValue.textContent = penalty.toFixed(2);
+        } else {
+          els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+        }
+        if (els.maintenancePenaltyInfo) {
+          els.maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+        }
       } else {
         els.maintenancePenalty.style.display = 'none';
       }
