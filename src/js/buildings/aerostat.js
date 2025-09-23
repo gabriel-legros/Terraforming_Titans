@@ -482,7 +482,7 @@ function attachAerostatBuoyancySection(container, structure) {
     mitigationInfo.classList.add('info-tooltip-icon');
     mitigationInfo.innerHTML = '&#9432;';
     mitigationInfo.title =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.';
+      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.  The reduction is equal to the total workers demand from factories divided by total colonist capacity from aerostats.';
     mitigationRow.appendChild(mitigationInfo);
 
     body.appendChild(mitigationRow);
