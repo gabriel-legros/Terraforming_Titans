@@ -15,7 +15,7 @@ describe('Bosch Reactor research', () => {
     const research = terraformingResearch.find((entry) => entry.id === 'bosch_reactor');
 
     expect(research).toBeDefined();
-    expect(research.cost.research).toBe(150000);
+    expect(research.cost.research).toBe(500000);
     expect(research.prerequisites).toEqual([]);
     expect(research.requiredFlags).toContain('boschReactorUnlocked');
 

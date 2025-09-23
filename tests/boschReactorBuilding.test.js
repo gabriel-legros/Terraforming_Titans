@@ -19,9 +19,14 @@ describe('Bosch Reactor building', () => {
 
     expect(boschReactor.unlocked).toBe(false);
     expect(boschReactor.category).toBe('terraforming');
-    expect(boschReactor.cost.colony).toEqual(oxygenFactory.cost.colony);
+    expect(boschReactor.cost.colony).toEqual({
+      metal: 100,
+      glass: 10,
+      components: 2,
+      electronics: 1,
+    });
 
-    expect(boschReactor.consumption.colony.energy).toBe(24000000);
+    expect(boschReactor.consumption.colony.energy).toBe(2_400_000);
     expect(boschReactor.consumption.atmospheric).toMatchObject({
       carbonDioxide: 100,
       hydrogen: 9.09,
