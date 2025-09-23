@@ -278,7 +278,7 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "$WGC_TEAM1_LEADER$: 'Yes. We did.'",
     prerequisites: ["chapter19.0b"],
-    objectives: [],
+    objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100000 }],
     reward: []
   },
   {
@@ -287,7 +287,7 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Receiving public broadcast...\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden!'",
     prerequisites: ["chapter19.0c"],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100000 }],
+    objectives: [      ],
     reward: []
   },
   {
@@ -304,7 +304,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 19,
     narrative: "Feroza: 'Sorry ma'am. He served his time and his psychiatrist approved his release. Life sentence have been made illegal everywhere ever since PANDORA made us all young forever. Nothing I can do about it. There is a new cult on Ganymede that calls itself the Church of H.O.P.E. It is gaining traction.'",
-    prerequisites: ["chapter19.1c"],
+    prerequisites: ["chapter19.1a"],
     objectives: [],
     reward: []
   },
