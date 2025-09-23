@@ -126,6 +126,9 @@ class EffectableEntity {
             this.applyAddResourceConsumption(effect);
           }
           break;
+        case 'addComfort':
+          this.applyAddComfort?.(effect);
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
