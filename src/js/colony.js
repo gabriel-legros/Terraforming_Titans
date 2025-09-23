@@ -98,7 +98,6 @@ class Colony extends Building {
     const base = super.saveState();
     return {
       ...base,
-      baseComfort: this.baseComfort,
       filledNeeds: { ...this.filledNeeds },
       luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
       obsolete: this.obsolete,
@@ -113,9 +112,6 @@ class Colony extends Building {
       return;
     }
 
-    if ('baseComfort' in state) {
-      this.baseComfort = state.baseComfort;
-    }
     if (state.filledNeeds) {
       this.filledNeeds = { ...state.filledNeeds };
     } else {
