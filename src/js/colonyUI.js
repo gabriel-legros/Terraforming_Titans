@@ -171,9 +171,20 @@ function createColonyDetails(structure) {
 function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
 
-  if (!structure.needBoxCache) {
-    structureRow.querySelector('.colony-details')?.remove();
-    structureRow.appendChild(createColonyDetails(structure));
+  const colonyConsumption = structure.consumption?.colony || {};
+  let needsMissing = false;
+  if (structure.needBoxCache) {
+    for (const need in colonyConsumption) {
+      if (!shouldDisplayNeedBox(need, structure)) continue;
+      if (!structure.needBoxCache[need]) {
+        needsMissing = true;
+        break;
+      }
+    }
+  }
+
+  if (!structure.needBoxCache || needsMissing) {
+    rebuildColonyNeedCache(structureRow, structure);
   }
 
   // Update comfort and happiness boxes
