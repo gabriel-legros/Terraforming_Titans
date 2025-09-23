@@ -946,7 +946,7 @@ function registerProjectUnlockAlert(subtabId) {
   updateProjectAlert();
   const activeTab = document.getElementById('special-projects-tab');
   const activeId = projectsSubtabManager
-    ? projectsSubtabManager.activeId
+    ? projectsSubtabManager.getActiveId()
     : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
   if (activeTab && activeTab.classList.contains('active') && activeId === subtabId) {
     markProjectSubtabViewed(subtabId);
@@ -970,7 +970,7 @@ function updateProjectAlert() {
 
 function markProjectsViewed() {
   const activeId = projectsSubtabManager
-    ? projectsSubtabManager.activeId
+    ? projectsSubtabManager.getActiveId()
     : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
   if (activeId && typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(activeId);
