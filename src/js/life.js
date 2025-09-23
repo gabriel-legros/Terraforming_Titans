@@ -51,8 +51,6 @@ class LifeAttribute {
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'radiationTolerance':
         return this.value * 4 + '%';
-      case 'toxicityTolerance':
-        return this.value * 10 + '%';
       case 'invasiveness':
         return this.value;
       case 'spaceEfficiency':
@@ -71,11 +69,11 @@ class LifeAttribute {
 }
 
 class LifeDesign {
-  constructor(minTemperatureTolerance,
+  constructor(
+    minTemperatureTolerance,
     maxTemperatureTolerance,
     photosynthesisEfficiency,
     radiationTolerance,
-    toxicityTolerance,
     invasiveness,
     spaceEfficiency, // Added new attribute
     geologicalBurial, // Added Geological Burial
@@ -93,7 +91,6 @@ class LifeDesign {
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
-    this.toxicityTolerance = new LifeAttribute('toxicityTolerance', toxicityTolerance, 'Toxicity Tolerance', 'Resistance to environmental toxins.', 10);
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', 100);
     this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', 50);
@@ -149,7 +146,6 @@ class LifeDesign {
       growthTemperatureTolerance: this.growthTemperatureTolerance.value,
       photosynthesisEfficiency: this.photosynthesisEfficiency.value,
       radiationTolerance: this.radiationTolerance.value,
-      toxicityTolerance: this.toxicityTolerance.value,
       invasiveness: this.invasiveness.value,
       spaceEfficiency: this.spaceEfficiency.value, // Added for saving
       geologicalBurial: this.geologicalBurial.value // Added Geological Burial
@@ -163,7 +159,6 @@ class LifeDesign {
       data.maxTemperatureTolerance,
       data.photosynthesisEfficiency,
       data.radiationTolerance,
-      data.toxicityTolerance,
       data.invasiveness,
       data.spaceEfficiency ?? 0, // Added for loading, default to 0 if missing in save
       data.geologicalBurial ?? 0, // Added Geological Burial, default 0
@@ -294,14 +289,6 @@ class LifeDesign {
       return Math.max(dayPen, nightPen);
   }
 
-  // Checks toxicity tolerance (currently a simple global check)
-  toxicityCheck() {
-      // Placeholder - Add actual toxicity check logic if/when implemented
-      const isToxic = false; // Assume not toxic for now
-      const pass = !isToxic || this.toxicityTolerance.value >= 5; // Example threshold
-      return { pass: pass, reason: pass ? null : "High toxicity" };
-  }
-
     // Checks radiation tolerance against magnetosphere status
     radiationCheck() {
         const hasShield = terraforming.getMagnetosphereStatus();
@@ -322,7 +309,7 @@ class LifeDesign {
     }
 
   // Checks if the lifeform can survive in at least one zone based on temperature
-  // TODO: Incorporate global radiation/toxicity checks?
+  // TODO: Incorporate global radiation checks?
   canSurviveAnywhere() {
       const tempResults = this.temperatureSurvivalCheck();
       // Check if any zone passed the temperature check
@@ -469,8 +456,8 @@ class LifeDesigner extends EffectableEntity {
     maxTemperatureTolerance,
     photosynthesisEfficiency,
     radiationTolerance,
-    toxicityTolerance,
     invasiveness,
+    spaceEfficiency,
     geologicalBurial,
     growthTemperatureTolerance = 0
   ) {
@@ -479,9 +466,8 @@ class LifeDesigner extends EffectableEntity {
       maxTemperatureTolerance,
       photosynthesisEfficiency,
       radiationTolerance,
-      toxicityTolerance,
       invasiveness,
-      0, // Default spaceEfficiency for new design
+      spaceEfficiency,
       geologicalBurial, // Pass geologicalBurial
       growthTemperatureTolerance
     );
