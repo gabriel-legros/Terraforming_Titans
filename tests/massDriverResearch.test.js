@@ -15,7 +15,7 @@ describe('Mass Driver research', () => {
     const research = terraformingResearch.find(entry => entry.id === 'mass_driver');
 
     expect(research).toBeDefined();
-    expect(research.cost.research).toBe(5000000);
+    expect(research.cost.research).toBe(1_000_000_000);
     expect(research.prerequisites).not.toContain('water_electrolysis');
     expect(research.requiredFlags).toContain('massDriverUnlocked');
 
