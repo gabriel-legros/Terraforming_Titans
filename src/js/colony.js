@@ -85,6 +85,10 @@ class Colony extends Building {
     }
   }
 
+  applyAddComfort() {
+    globalThis.invalidateColonyNeedCache?.();
+  }
+
   initializeFromConfig(config, colonyName) {
     super.initializeFromConfig(config, colonyName);
     this.baseComfort = config.baseComfort;
@@ -132,8 +136,23 @@ class Colony extends Building {
     this.rebuildFilledNeeds();
   }
 
+  calculateEffectiveComfort() {
+    const baseComfort = Number.isFinite(this.baseComfort) ? this.baseComfort : 0;
+    let totalComfort = baseComfort;
+    const comfortEffects = Array.isArray(this.activeEffects) ? this.activeEffects : [];
+
+    comfortEffects.forEach((effect) => {
+      if (effect.type === 'addComfort') {
+        const bonus = Number.isFinite(effect.value) ? effect.value : 0;
+        totalComfort += bonus;
+      }
+    });
+
+    return totalComfort;
+  }
+
   getComfort() {
-    return this.baseComfort;
+    return this.calculateEffectiveComfort();
   }
 
   getConsumptionRatio(){

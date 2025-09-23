@@ -685,6 +685,12 @@ const researchParameters = {
             targetId: 't2_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 10,
+          },
         ],
       },
       {
@@ -738,6 +744,12 @@ const researchParameters = {
             resourceCategory: 'colony',
             resourceId: 'electronics',
             amount: 0.01,
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 10,
           },
         ],
       },
@@ -812,6 +824,12 @@ const researchParameters = {
             resourceId: 'androids',
             amount: 0.0001,
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 10,
+          },
         ],
       },
       {
@@ -853,8 +871,14 @@ const researchParameters = {
             targetId: 't5_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 10,
+          },
         ],
-      },   
+      },
       {
         id: 't6_colony',
         name: 'Metropolis',
@@ -866,6 +890,12 @@ const researchParameters = {
             target: 'colony',
             targetId: 't6_colony',
             type: 'enable',
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 10,
           },
         ],
       },
