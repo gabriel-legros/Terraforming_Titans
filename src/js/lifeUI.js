@@ -55,7 +55,6 @@ const lifeUICache = {
     tempMultiplier: {},
     moisture: {},
     radiation: {},
-    toxicity: {},
     maxDensity: {},
     biomassAmount: {},
     biomassDensity: {},
@@ -86,7 +85,6 @@ function cacheLifeStatusTableElements() {
     lifeUICache.cells.tempMultiplier[zone] = document.getElementById(`temp-multiplier-${zone}-status`);
     lifeUICache.cells.moisture[zone] = document.getElementById(`moisture-${zone}-status`);
     lifeUICache.cells.radiation[zone] = document.getElementById(`radiation-${zone}-status`);
-    lifeUICache.cells.toxicity[zone] = document.getElementById(`toxicity-${zone}-status`);
     lifeUICache.cells.maxDensity[zone] = document.getElementById(`max-density-${zone}-status`);
     lifeUICache.cells.biomassAmount[zone] = document.getElementById(`biomass-amount-${zone}-status`);
     lifeUICache.cells.biomassDensity[zone] = document.getElementById(`biomass-density-${zone}-status`);
@@ -130,7 +128,7 @@ function cacheLifeAttributeCells() {
     'minTemperatureTolerance', 'maxTemperatureTolerance',
     'optimalGrowthTemperature', 'growthTemperatureTolerance',
     'photosynthesisEfficiency',
-    'radiationTolerance', 'toxicityTolerance',
+    'radiationTolerance',
     'invasiveness', 'spaceEfficiency', 'geologicalBurial'
   ];
   lifeUICache.attributeCells = {};
@@ -258,13 +256,6 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="radiation-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="radiation-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
-                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Toxicity</td>
-                        <td id="toxicity-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                    </tr>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Biomass Amount (tons)</td>
                         <td id="biomass-amount-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -325,7 +316,7 @@ function initializeLifeTerraformingDesignerUI() {
           'minTemperatureTolerance', 'maxTemperatureTolerance',
           'optimalGrowthTemperature', 'growthTemperatureTolerance',
           'photosynthesisEfficiency',
-          'radiationTolerance', 'toxicityTolerance',
+          'radiationTolerance',
           'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
       ];
 
@@ -361,7 +352,7 @@ function initializeLifeTerraformingDesignerUI() {
     }
     // Event listener for the "Create New Design" button
     newDesignBtn.addEventListener('click', () => {
-      lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+      lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0);
       lifeDesigner.tentativeDesign.copyFrom(lifeDesigner.currentDesign);
       document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
       updateLifeUI();
@@ -624,7 +615,7 @@ function updateLifeUI() {
            'minTemperatureTolerance', 'maxTemperatureTolerance',
            'optimalGrowthTemperature', 'growthTemperatureTolerance',
            'photosynthesisEfficiency',
-           'radiationTolerance', 'toxicityTolerance',
+           'radiationTolerance',
            'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
         ];
 
@@ -721,7 +712,6 @@ function updateLifeStatusTable() {
     const survivalTempResults = designToCheck.temperatureSurvivalCheck();
     const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
     const radiationResult = designToCheck.radiationCheck(); // Global check
-    const toxicityResult = designToCheck.toxicityCheck();   // Global check
     // Calculate max density based on space efficiency
     const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
     const densityMultiplier = 1 + (spaceEfficiencyAttr?.value || 0);
@@ -839,7 +829,6 @@ function updateLifeStatusTable() {
 
         updateStatusCell(lifeUICache.cells.moisture[zone], moistureResults[zone]);
         updateStatusCell(lifeUICache.cells.radiation[zone], radiationResult, zone === 'global');
-        updateStatusCell(lifeUICache.cells.toxicity[zone], toxicityResult);
 
         const maxDensityCell = lifeUICache.cells.maxDensity[zone];
         if (maxDensityCell) {
