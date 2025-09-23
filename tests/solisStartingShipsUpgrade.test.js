@@ -31,13 +31,13 @@ describe('Solis starting ships upgrade', () => {
     delete global.globalGameIsLoadingFromSave;
   });
 
-  test('purchase adds ships and deducts Solis points', () => {
+  test('purchase unlocks ships without immediately granting any and deducts Solis points', () => {
     manager.solisPoints = 150;
     expect(manager.getUpgradeCost('startingShips')).toBe(100);
 
     expect(manager.purchaseUpgrade('startingShips')).toBe(true);
     expect(manager.shopUpgrades.startingShips.purchases).toBe(1);
-    expect(global.resources.special.spaceships.value).toBe(1);
+    expect(global.resources.special.spaceships.value).toBe(0);
     expect(global.resources.special.spaceships.unlocked).toBe(true);
     expect(manager.solisPoints).toBe(50);
 
@@ -46,7 +46,7 @@ describe('Solis starting ships upgrade', () => {
 
     expect(manager.purchaseUpgrade('startingShips')).toBe(true);
     expect(manager.shopUpgrades.startingShips.purchases).toBe(2);
-    expect(global.resources.special.spaceships.value).toBe(2);
+    expect(global.resources.special.spaceships.value).toBe(0);
     expect(manager.solisPoints).toBe(50);
   });
 
