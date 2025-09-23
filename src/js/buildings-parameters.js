@@ -539,7 +539,7 @@ const buildingsParameters = {
     name: 'Bosch Reactor',
     category: 'terraforming',
     description: 'Consumes hydrogen and carbon dioxide in the Bosch reaction to produce water.  The graphite is dropped on the ground.',
-    cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
+    cost: { colony: { metal: 1000, glass : 10, components: 5, electronics: 5 } },
     consumption: {
       colony: { energy: 2400000 },
       atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
