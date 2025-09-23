@@ -184,13 +184,14 @@ describe('Building save/load methods', () => {
     colony.luxuryResourcesEnabled.electronics = false;
 
     const saved = colony.saveState();
+    expect(saved.baseComfort).toBeUndefined();
     const restored = new ctx.Colony(config, 'settlement');
     restored.loadState(saved);
 
     expect(restored.count).toBe(4);
     expect(restored.active).toBe(2);
     expect(restored.productivity).toBeCloseTo(0.6);
-    expect(restored.baseComfort).toBe(12);
+    expect(restored.baseComfort).toBe(config.baseComfort);
     expect(restored.happiness).toBeCloseTo(0.8);
     expect(restored.obsolete).toBe(true);
     expect(restored.filledNeeds.energy).toBeCloseTo(0.5);
