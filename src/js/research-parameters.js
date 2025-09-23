@@ -1124,7 +1124,7 @@ const researchParameters = {
         id: 'bosch_reactor',
         name: 'Bosch Reactor',
         description: 'Unlocks reactors that combine carbon dioxide and hydrogen into water via the Bosch reaction.',
-        cost: { research: 150000 },
+        cost: { research: 50_000_000 },
         prerequisites: [],
         requiredFlags: ['boschReactorUnlocked'],
         effects: [
@@ -1286,7 +1286,7 @@ const researchParameters = {
         id: 'hydrogenImport',
         name: 'Hydrogen Importation',
         description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
-        cost: { research: 10000000000 },
+        cost: { research: 50_000_000 },
         prerequisites: [],
         requiredFlags: ['importHydrogenUnlocked'],
         effects: [
