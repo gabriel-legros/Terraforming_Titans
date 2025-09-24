@@ -451,7 +451,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 19,
     narrative: "Dr. Evelyn Hart: 'I finished my analysis of that big ship. I have news. Most of it was actually a superconductor sphere. Its purpose? Faster than light travel. It creates a bubble around itself and can carry ships with it.'",
-    prerequisites: ["chapter19.4d"],
+    prerequisites: ["chapter19.4e"],
     objectives: [],
     reward: [
       { target: 'project', targetId: 'venus_warp_ship', type: 'enable' }
