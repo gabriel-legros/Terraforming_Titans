@@ -12,7 +12,7 @@ describe('Chemical Reactor research', () => {
     vm.runInContext(code + '; this.researchParameters = researchParameters;', ctx);
 
     const terraformingResearch = ctx.researchParameters.terraforming;
-    const research = terraformingResearch.find((entry) => entry.id === 'bosch_reactor');
+    const research = terraformingResearch.find((entry) => entry.id === 'chemical_reactor');
 
     expect(research).toBeDefined();
     expect(research.cost.research).toBe(500000);
