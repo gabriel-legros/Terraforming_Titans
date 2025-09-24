@@ -423,7 +423,7 @@ progressVenus.chapters.push(
     id: "chapter19.4d",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will work too.'",
+    narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will be faster and easier.  You still need water though, and Evelyn's solution is more efficient than importing water directly.'",
     prerequisites: ["chapter19.4c"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }],
     reward: [
