@@ -119,6 +119,7 @@ function showTravelWarningPopup(warningData, onConfirm) {
         travelWarningHintBodyEl.className = 'travel-warning-hint-body';
         travelWarningHintBodyEl.style.marginTop = '8px';
         travelWarningHintBodyEl.style.display = 'none';
+        travelWarningHintBodyEl.style.whiteSpace = 'pre-line';
 
         travelWarningHintToggle.setAttribute('aria-expanded', 'false');
         travelWarningHintToggle.setAttribute('aria-controls', travelWarningHintBodyEl.id);
