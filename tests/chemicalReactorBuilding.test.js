@@ -32,7 +32,7 @@ describe('Chemical Reactor building', () => {
     expect(recipes).toBeDefined();
 
     const primaryRecipe = recipes.recipe1;
-    expect(primaryRecipe.shortName).toBe('Chemical Reactor');
+    expect(primaryRecipe.shortName).toBe('Bosch Reaction');
     expect(primaryRecipe.consumption.atmospheric).toMatchObject({
       carbonDioxide: 100,
       hydrogen: 9.09,

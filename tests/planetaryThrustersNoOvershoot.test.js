@@ -18,9 +18,13 @@ describe('Planetary Thrusters target clamping', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1 } };
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    const celestial = { mass: 1e22, radius: 1000, rotationPeriod: 24, distanceFromSun: 1, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+    global.resources = ctx.resources;
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -64,6 +68,12 @@ describe('Planetary Thrusters target clamping', () => {
     project.applyCostAndGain(1000, null, 1);
     expect(p.distanceFromSun).toBeCloseTo(project.tgtAU, 10);
     expect(project.motionInvest).toBe(false);
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });
 
