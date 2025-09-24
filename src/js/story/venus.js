@@ -48,9 +48,7 @@ progressVenus.storyProjects.venus_warp_ship = {
     planet: 'venus',
     costDoubling: false,
     storySteps: [
-      'Superconductor sphere forged. Containment seams inspected.',
-      'Antimatter caskets slotted into armored vaults.',
-      'Warp field generators spun up in drydock. Bubble integrity confirmed.'
+      'Warp Ship operational.',
     ]
   }
 };
