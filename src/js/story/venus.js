@@ -581,7 +581,7 @@ progressVenus.chapters.push(
     id: "chapter20.8",
     type: "journal",
     chapter: 20,
-    narrative: "Horse Cannon Crew: 'Horse Cannon firing on final target, sir. Result : Final target eliminated.'",
+    narrative: "UHFS Horse Cannon Crew: 'Horse Cannon firing on final target, sir. Result : Final target eliminated.'",
     prerequisites: ["chapter20.7"],
     objectives: [],
     reward: []
