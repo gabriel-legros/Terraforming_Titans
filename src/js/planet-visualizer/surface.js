@@ -9,8 +9,12 @@
     const life = (this.viz.coverage?.life || 0) / 100;
     const cloud = (this.viz.coverage?.cloud || 0) / 100;
     const z = this.viz.zonalCoverage || {};
+    // Increase precision for ice so tiny changes trigger re-render
     const zKey = ['tropical', 'temperate', 'polar']
-      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
+      .map(k => {
+        const zk = z[k] || {};
+        return `${Number(zk.water ?? 0).toFixed(2)}_${Number(zk.ice ?? 0).toFixed(4)}_${Number(zk.life ?? 0).toFixed(2)}`;
+      })
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const sf = this.viz.surfaceFeatures || {};
@@ -249,26 +253,132 @@
     const ictx = iceCanvas.getContext('2d');
     const iimg = ictx.createImageData(w, h);
     const idata = iimg.data;
+    const zIce = [
+      Math.max(0, Math.min(1, Number(zc.tropical?.ice || 0))),
+      Math.max(0, Math.min(1, Number(zc.temperate?.ice || 0))),
+      Math.max(0, Math.min(1, Number(zc.polar?.ice || 0))),
+    ];
+    // Clamp near-zero ice to zero to avoid speckling when game drives tiny values
+    const iceEps = 1e-4;
+    if (zIce[0] < iceEps) zIce[0] = 0;
+    if (zIce[1] < iceEps) zIce[1] = 0;
+    if (zIce[2] < iceEps) zIce[2] = 0;
+    const preferPoles = zIce[2] > zIce[0];
+    // Zone boundary normalization for ice growth direction
+    // latNorm = 0 at equator, 1 at poles; normalize within each zone so
+    // temperate growth can originate from the colder (polar-side) boundary when appropriate.
+    const zoneMinNorm = [0, 23.5 / 90, 66.5 / 90];
+    const zoneMaxNorm = [23.5 / 90, 66.5 / 90, 1];
+    if (!this._latNormalized || this._latNormalized.length !== h) {
+      this._latNormalized = new Float32Array(h);
+      for (let y = 0; y < h; y++) {
+        const v = y / (h - 1);
+        const latRad = (0.5 - v) * Math.PI;
+        const norm = Math.abs(latRad) / (Math.PI / 2);
+        this._latNormalized[y] = Math.max(0, Math.min(1, norm));
+      }
+    }
+    if (!this.iceOrganicMask || this.iceOrganicMask.length !== w * h) {
+      this.iceOrganicMask = this.generateWaterMask(w, h);
+    }
+    if (!this._iceScoreCache || this._iceScoreCache.length !== w * h) {
+      this._iceScoreCache = new Float32Array(w * h);
+    }
+    if (!this._iceHist || this._iceHist.length !== 3) {
+      this._iceHist = [
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+      ];
+    } else {
+      for (let zi = 0; zi < 3; zi++) {
+        this._iceHist[zi].counts.fill(0);
+        this._iceHist[zi].total = 0;
+      }
+    }
+    const iceScores = this._iceScoreCache;
+    const latRows = this._latNormalized;
+    const iceNoise = this.iceOrganicMask;
+    const iceHist = this._iceHist;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
       const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
-      const iceFrac = [
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.ice || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.ice || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.ice || 0))),
-      ][zi];
-      const waterFrac = [
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.water || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.water || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.water || 0))),
-      ][zi];
-      const land = Math.max(0, 1 - waterFrac);
+      const latNorm = latRows[y];
+      const zMin = zoneMinNorm[zi];
+      const zMax = zoneMaxNorm[zi];
+      // Normalize latitude within the current zone [0..1]
+      const zSpan = Math.max(1e-6, (zMax - zMin));
+      let zLocal = (latNorm - zMin) / zSpan; if (zLocal < 0) zLocal = 0; else if (zLocal > 1) zLocal = 1;
+      // Distance factor: prefer poles => grow from colder boundary (higher latitude)
+      const latDistance = preferPoles ? (1 - zLocal) : zLocal;
+      const organic = iceNoise ? iceNoise[i] : 0.5;
+      const noise = (organic - 0.5) * 0.35 * (1 - Math.min(1, latDistance * 1.2));
+      const heightVal = this.heightMap ? this.heightMap[i] : 0.5;
+      const relief = (0.5 - heightVal) * 0.15 * (1 - latDistance);
+      let score = latDistance + noise + relief;
+      if (score < 0) score = 0; else if (score > 1) score = 1;
+      iceScores[i] = score;
+      const hist = iceHist[zi];
+      const bin = Math.max(0, Math.min(255, Math.floor(score * 255)));
+      hist.counts[bin]++;
+      hist.total++;
+    }
+    const thrIdxIce = [-1, -1, -1];
+    const thrValIce = [0, 0, 0];
+    for (let zi = 0; zi < 3; zi++) {
+      const hist = iceHist[zi];
+      const total = hist.total;
+      const target = Math.max(0, Math.min(1, zIce[zi])) * total;
+      if (target > 0 && total > 0) {
+        let acc = 0; let k = 0;
+        for (; k <= 255; k++) {
+          acc += hist.counts[k];
+          if (acc >= target) {
+            const count = hist.counts[k];
+            const excess = acc - target;
+            const partial = count > 0 ? 1 - Math.min(1, excess / count) : 1;
+            thrIdxIce[zi] = k;
+            thrValIce[zi] = (k + Math.max(0, Math.min(1, partial))) / 255;
+            break;
+          }
+        }
+        if (thrIdxIce[zi] < 0) {
+          thrIdxIce[zi] = 255;
+          thrValIce[zi] = 1;
+        }
+      }
+    }
+    for (let i = 0; i < w * h; i++) {
       const idx = i * 4;
-      const r = 200, g = 220, b = 255;
-      idata[idx] = r;
-      idata[idx + 1] = g;
-      idata[idx + 2] = b;
-      idata[idx + 3] = Math.floor(Math.max(0, Math.min(1, iceFrac * land)) * 255);
+      idata[idx] = 200;
+      idata[idx + 1] = 220;
+      idata[idx + 2] = 255;
+      let alpha = 0;
+      const y = Math.floor(i / w);
+      const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+      const thr = thrIdxIce[zi];
+      if (thr >= 0) {
+        const score = iceScores[i];
+        const latNorm = latRows[y];
+        const zMin = zoneMinNorm[zi];
+        const zMax = zoneMaxNorm[zi];
+        const zSpan = Math.max(1e-6, (zMax - zMin));
+        let zLocal = (latNorm - zMin) / zSpan; if (zLocal < 0) zLocal = 0; else if (zLocal > 1) zLocal = 1;
+        const latDistance = preferPoles ? (1 - zLocal) : zLocal;
+        const softness = 0.05 + 0.15 * latDistance;
+        const threshold = thrValIce[zi];
+        if (score <= threshold) {
+          alpha = 1;
+        } else if (score < threshold + softness) {
+          alpha = 1 - ((score - threshold) / Math.max(softness, 1e-6));
+        }
+        if (alpha > 0 && alpha < 1) {
+          const blend = preferPoles ? 1.35 : 1.2;
+          alpha = Math.pow(alpha, blend);
+        }
+      }
+      if (alpha < 0) alpha = 0; else if (alpha > 1) alpha = 1;
+      idata[idx + 3] = Math.floor(alpha * 255);
     }
     ictx.putImageData(iimg, 0, 0);
     ctx.drawImage(iceCanvas, 0, 0);
