@@ -502,7 +502,7 @@ class PlanetaryThrustersProject extends Project{
       this.lastActiveTime = 0;
       return;
     }
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
     const fraction = Math.min(1, activeTime / deltaTime);
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
