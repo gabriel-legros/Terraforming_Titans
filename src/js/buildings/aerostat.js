@@ -12,7 +12,7 @@ const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ?? 0.2;
 const AEROSTAT_MAX_LAND_SHARE = 0.2;
 const AEROSTAT_BUOYANCY_NOTES =
-  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.';
+  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 20% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 

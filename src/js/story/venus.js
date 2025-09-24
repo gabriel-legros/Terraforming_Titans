@@ -478,7 +478,7 @@ progressVenus.chapters.push(
     id: "chapter19.6",
     type: "journal",
     chapter: 19,
-    narrative: "Feroza: 'HOPE building us a warp ship is nice and all, but I need proper warships.  Without as many missiles and torpedoes as we can cram.'",
+    narrative: "Feroza: 'HOPE building us a warp ship is nice and all, but I need proper warships, not warpships.  With as many missiles and torpedoes as we can cram.'",
     prerequisites: ["chapter19.5d"],
     objectives: [],
     reward: [
@@ -508,7 +508,7 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Mary: 'Adrien please...  Wait...  Hold on. You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a mighty fleet.'",
     prerequisites: ["chapter19.6b"],
-    objectives: [],
+    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
     reward: []
   },
   {
@@ -518,7 +518,7 @@ progressVenus.chapters.push(
     chapter: 20,
     narrative: "$WGC_TEAM1_LEADER$: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where H.O.P.E. is and plan on vaporizing Venus.'",
     prerequisites: ["chapter19.6c"],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
+    objectives: [],
     reward: []
   },
   {
