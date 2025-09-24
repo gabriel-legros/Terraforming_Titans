@@ -53,7 +53,7 @@ describe('Chemical Reactor building', () => {
       carbonDioxide: 100,
       hydrogen: 18.18,
     });
-    expect(methane.production.atmospheric).toMatchObject({ methane: 36.36 });
+    expect(methane.production.atmospheric).toMatchObject({ atmosphericMethane: 36.36 });
     expect(methane.production.colony).toMatchObject({ water: 81.82 });
   });
 });
