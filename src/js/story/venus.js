@@ -294,7 +294,7 @@ progressVenus.chapters.push(
     id: "chapter19.1",
     type: "journal",
     chapter: 19,
-    narrative: "Receiving public broadcast...\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden!'",
+    narrative: "Receiving public broadcast...\\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden! I hear copper angels screaming lullabies through the void! Drink the starlight before it curdles and you will taste perfection!'",
     prerequisites: ["chapter19.0d"],
     objectives: [],
     reward: []
