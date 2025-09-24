@@ -1167,9 +1167,9 @@ const researchParameters = {
         ],
       },
       {
-        id: 'bosch_reactor',
+        id: 'chemical_reactor',
         name: 'Chemical Reactor',
-        description: 'Unlocks configurable reactors that combine imported hydrogen with atmospheric feedstocks to synthesize vital compounds.',
+        description: 'Unlocks configurable reactors to perform various reactions.',
         cost: { research: 500_000 },
         prerequisites: [],
         requiredFlags: ['boschReactorUnlocked'],
