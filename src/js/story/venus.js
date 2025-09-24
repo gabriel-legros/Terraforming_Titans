@@ -572,7 +572,7 @@ progressVenus.chapters.push(
     id: "chapter20.7",
     type: "journal",
     chapter: 20,
-    narrative: "Feroza: 'UHF Horse, fire your cannon!'",
+    narrative: "Feroza: 'UHFS Horse, fire your cannon!'",
     prerequisites: ["chapter20.6"],
     objectives: [],
     reward: []
