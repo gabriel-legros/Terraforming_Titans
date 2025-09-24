@@ -24,6 +24,10 @@ class SpaceshipProject extends Project {
     return baseLabel;
   }
 
+  getCostRateLabel() {
+    return 'Spaceship Cost';
+  }
+
  assignSpaceships(count) {
     const wasContinuous = this.isContinuous();
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
@@ -652,7 +656,7 @@ class SpaceshipProject extends Project {
               if (applyRates) {
                 resources[category][resource].modifyRate(
                   -rateValue,
-                  'Spaceship Cost',
+                  this.getCostRateLabel(),
                   'project'
                 );
               }
@@ -733,7 +737,7 @@ class SpaceshipProject extends Project {
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Cost',
+                this.getCostRateLabel(),
                 'project'
               );
             }
