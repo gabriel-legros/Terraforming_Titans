@@ -20,10 +20,6 @@ let spaceSubtabManager = null;
 let lastWorldKey = null;
 let lastWorldSeed = null;
 
-function getSpaceSubtabManager() {
-    return spaceSubtabManager;
-}
-
 // Cached travel warning popup elements
 let travelWarningOverlay = null;
 let travelWarningMessageEl = null;
@@ -403,5 +399,3 @@ function updateCurrentWorldUI() {
         }
     }
 }
-
-globalThis.window && (globalThis.window.getSpaceSubtabManager = getSpaceSubtabManager);

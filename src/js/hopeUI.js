@@ -7,10 +7,6 @@ if (typeof SubtabManager === 'undefined') {
 }
 let hopeSubtabManager = null;
 
-function getHopeSubtabManager() {
-    return hopeSubtabManager;
-}
-
 function initializeHopeTabs() {
     if (typeof SubtabManager !== 'function') return;
     hopeSubtabManager = new SubtabManager('.hope-subtab', '.hope-subtab-content', true);
@@ -77,6 +73,4 @@ function updateHopeUI() {
     }
     updateHopeAlert();
 }
-
-globalThis.window && (globalThis.window.hopeSubtabManager = getHopeSubtabManager);
 
