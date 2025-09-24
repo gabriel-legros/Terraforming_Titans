@@ -705,7 +705,7 @@ const venusOverrides = {
   travelWarning: {
     message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly it easier.',
     hint: {
-      title: 'Terraforming Hint',
+      title: 'Hint',
       body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable. \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.'
     }
   },
