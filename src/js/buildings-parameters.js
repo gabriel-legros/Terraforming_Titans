@@ -556,7 +556,7 @@ const buildingsParameters = {
   massDriver: {
     name: 'Mass Driver',
     category: 'terraforming',
-    description: 'Electromagnetic launcher prototype awaiting future upgrades.',
+    description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.',
     cost: { colony: { metal: 10000, components: 100, superconductors:100 } },
     consumption: {},
     production: {},
