@@ -37,7 +37,7 @@ progressVenus.storyProjects.venus_warp_ship = {
   category: 'story',
   chapter: 19,
   cost: {
-    colony: { metal: 250_000_000, components: 75_000_000, electronics: 50_000_000, superconductors : 100_000_000, energy: 1_000_000_000_000, research: 10_000_000 }
+    colony: { metal: 250_000_000_000_000, components: 10_000_000_000_000, electronics: 100_000_000_000, superconductors : 100_000_000_000, energy: 1_000_000_000_000_000_000, research: 1_000_000_000_000 }
   },
   duration: 900_000,
   description: 'Forge the superconducting bubble-drive vessel capable of dragging fleets through warped spacetime.',
