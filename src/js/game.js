@@ -540,6 +540,37 @@ function updateRender(force = false) {
   updateMilestonesUI();
 }
 
+const tabSubtabGetters = {
+  buildings: () => globalThis.buildingSubtabManager?.(),
+  'special-projects': () => globalThis.projectsSubtabManager?.(),
+  research: () => globalThis.researchSubtabManager?.(),
+  terraforming: () => globalThis.getTerraformingSubtabManager?.(),
+  space: () => globalThis.getSpaceSubtabManager?.(),
+  hope: () => globalThis.hopeSubtabManager?.()
+};
+
+const defaultSubtabs = {
+  buildings: 'resource-buildings',
+  'special-projects': 'resources-projects',
+  research: 'energy-research',
+  terraforming: 'world-terraforming',
+  space: 'space-story',
+  hope: 'awakening-hope'
+};
+
+function renderTabImmediately(tabId) {
+  const suffix = '-tab';
+  const normalizedId = tabId && tabId.endsWith(suffix) ? tabId.slice(0, -suffix.length) : tabId;
+  updateRender();
+  const managerGetter = normalizedId ? tabSubtabGetters[normalizedId] : null;
+  const manager = managerGetter?.();
+  const activeId = manager?.getActiveId?.() || manager?.activeId || null;
+  const targetId = activeId || (normalizedId ? defaultSubtabs[normalizedId] : null);
+  targetId && manager?.activate?.(targetId);
+}
+
+globalThis.renderTabImmediately = renderTabImmediately;
+
 function update(time, delta) {
   const speed = (typeof gameSpeed !== 'undefined') ? gameSpeed : 1;
   const scaledDelta = delta * speed;
