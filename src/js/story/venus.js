@@ -366,7 +366,7 @@ progressVenus.chapters.push(
     id: "chapter19.4",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? The Bosch process lets us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us colony water as a bonus, and frees oxygen back into the atmosphere. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and make glass without hauling sand.'",
+    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? The Bosch process lets us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and make glass without hauling sand.'",
     prerequisites: ["chapter19.3"],
     reward: [
       {
