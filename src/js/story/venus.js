@@ -599,7 +599,7 @@ progressVenus.chapters.push(
     id: "chapter20.10",
     type: "journal",
     chapter: 20,
-    narrative: "$WGC_TEAM1_LEADER$: 'They are distracted by the civil war, and we are nothing to the duchies for now. Let us play this nice and slow. Do not poke the bear too far.'",
+    narrative: "Dr. Evelyn Hart: 'Soon we will be able to send our own fleets. Let us finish the warp ship.'",
     prerequisites: ["chapter20.9"],
     objectives: [],
     reward: []
@@ -608,7 +608,7 @@ progressVenus.chapters.push(
     id: "chapter20.11",
     type: "journal",
     chapter: 20,
-    narrative: "Dr. Evelyn Hart: 'Soon we will be able to send our own fleets. Let us finish the warp ship.'",
+    narrative: "$WGC_TEAM1_LEADER$: 'They are distracted by the civil war, and we are nothing to the duchies for now. Let us play this nice and slow. Do not poke the bear too far.'",
     prerequisites: ["chapter20.10"],
     objectives: [],
     reward: []

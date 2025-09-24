@@ -541,7 +541,7 @@ const buildingsParameters = {
     description: 'Consumes hydrogen and carbon dioxide in the Bosch reaction to produce water.  The graphite is dropped on the ground.',
     cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
     consumption: {
-      colony: { energy: 2400000 },
+      colony: { energy: 1_000_000 },
       atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
     },
     production: { colony: { water: 81.82 } },
