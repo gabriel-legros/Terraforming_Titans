@@ -432,6 +432,16 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Mary: 'Knew it. Mass drivers are on the table too.  A less elegant solution than Evelyn's, but it will be faster and easier.  You still need water though, and Evelyn's solution is more efficient than importing water directly.'",
     prerequisites: ["chapter19.4c"],
+    objectives: [],
+    reward: [
+    ]
+  },
+  {
+    id: "chapter19.4e",
+    type: "journal",
+    chapter: 19,
+    narrative: "Dr. Evelyn Hart: 'I owe you lunch Mary.  Listen, H.O.P.E., there is one more thing.  On Venus, the days and nights are extremely long.  When it finally cools, you should expect extreme day and night differences.  Water can help... spinning the planet if you can... but if you have to, you should probably heat up the days more than usual.'",
+    prerequisites: ["chapter19.4d"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }],
     reward: [
     ]
