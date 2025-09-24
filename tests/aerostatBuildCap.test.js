@@ -99,12 +99,12 @@ describe('Aerostat build cap', () => {
     }
   });
 
-  test('build enforces 0.2 per initial land cap', () => {
+  test('build enforces 0.25 per initial land cap', () => {
     const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
     expect(aerostat.build(30)).toBe(true);
-    expect(aerostat.count).toBe(20);
+    expect(aerostat.count).toBe(25);
     expect(aerostat.build(1)).toBe(false);
-    expect(aerostat.count).toBe(20);
+    expect(aerostat.count).toBe(25);
   });
 
   test('maxBuildable respects resource limits and cap', () => {
@@ -125,9 +125,9 @@ describe('Aerostat build cap', () => {
     const aerostat = new Aerostat(configWithCost, 'aerostat_colony');
     expect(aerostat.maxBuildable()).toBe(15);
     aerostat.count = 12;
-    expect(aerostat.maxBuildable()).toBe(8);
+    expect(aerostat.maxBuildable()).toBe(13);
     aerostat.count = 20;
-    expect(aerostat.maxBuildable()).toBe(0);
+    expect(aerostat.maxBuildable()).toBe(5);
   });
 
   test('build fails when atmospheric lift is below the operational threshold', () => {
