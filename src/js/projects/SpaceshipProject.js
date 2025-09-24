@@ -20,6 +20,10 @@ class SpaceshipProject extends Project {
     return this.getActiveShipCount() > 100;
   }
 
+  getExportRateLabel(baseLabel) {
+    return baseLabel;
+  }
+
  assignSpaceships(count) {
     const wasContinuous = this.isContinuous();
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
@@ -661,10 +665,11 @@ class SpaceshipProject extends Project {
           if (capacity && this.selectedDisposalResource) {
             const { category, resource } = this.selectedDisposalResource;
             const rateValue = capacity * activeShips * factor * (applyRates ? productivity : 1);
+            const exportLabel = this.getExportRateLabel('Spaceship Export');
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Export',
+                exportLabel,
                 'project'
               );
             }
@@ -676,7 +681,7 @@ class SpaceshipProject extends Project {
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
-                  'Spaceship Export',
+                  exportLabel,
                   'project'
                 );
               }
@@ -695,7 +700,8 @@ class SpaceshipProject extends Project {
               gainPerShip.colony.metal = Math.max(0, gainPerShip.colony.metal - metalCost);
             }
           }
-          const label = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+          const baseLabel = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+          const label = this.getExportRateLabel(baseLabel);
           for (const category in gainPerShip) {
             if (!totals.gain[category]) totals.gain[category] = {};
             for (const resource in gainPerShip[category]) {
@@ -737,6 +743,7 @@ class SpaceshipProject extends Project {
         }
 
         const totalDisposal = this.calculateSpaceshipTotalDisposal();
+        const exportLabel = this.getExportRateLabel('Spaceship Export');
         for (const category in totalDisposal) {
           if (!totals.cost[category]) totals.cost[category] = {};
           for (const resource in totalDisposal[category]) {
@@ -744,7 +751,7 @@ class SpaceshipProject extends Project {
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Export',
+                exportLabel,
                 'project'
               );
             }
@@ -757,7 +764,7 @@ class SpaceshipProject extends Project {
         if (this.applyMetalCostPenalty) {
           this.applyMetalCostPenalty(totalGain);
         }
-        const label = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+        const label = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
         for (const category in totalGain) {
           if (!totals.gain[category]) totals.gain[category] = {};
           for (const resource in totalGain[category]) {
