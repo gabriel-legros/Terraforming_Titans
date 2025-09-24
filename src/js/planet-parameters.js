@@ -703,10 +703,10 @@ const vega2Overrides = {
 const venusOverrides = {
   name: 'Venus',
   travelWarning: {
-    message: 'Venus begins with crushing pressure and furnace-like heat.',
+    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly it easier.',
     hint: {
       title: 'Terraforming Hint',
-      body: 'Deploy solar shades early to ease cooling and scrub sulfuric acid so condensers survive the opening years.'
+      body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable. \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.'
     }
   },
 
