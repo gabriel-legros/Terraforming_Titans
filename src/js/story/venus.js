@@ -282,12 +282,21 @@ progressVenus.chapters.push(
     reward: []
   },
   {
+    id: "chapter19.0d",
+    type: "journal",
+    chapter: 19,
+    narrative: "Mary: 'I am bolting a personal life support bubble for myself inside your core, H.O.P.E.  This way, I'll be ready to travel with you wherever we go.'",
+    prerequisites: ["chapter19.0c"],
+    objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 200_000 }],
+    reward: []
+  },
+  {
     id: "chapter19.1",
     type: "journal",
     chapter: 19,
     narrative: "Receiving public broadcast...\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden!'",
-    prerequisites: ["chapter19.0c"],
-    objectives: [      ],
+    prerequisites: ["chapter19.0d"],
+    objectives: [],
     reward: []
   },
   {
@@ -512,12 +521,21 @@ progressVenus.chapters.push(
     reward: []
   },
   {
+    id: "chapter19.7",
+    type: "journal",
+    chapter: 19,
+    narrative: "Receiving public broadcast...\n  Elias Kane: 'The Machine God commands a glorious crusade across the galaxy! We will weld every frontier into its choir. Steel wings, plasma psalms, no planet spared from our benevolent gears!'",
+    prerequisites: ["chapter19.6c"],
+    objectives: [{ type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }],
+    reward: []
+  },
+  {
     id: "chapter20.0",
     title: "Chapter 20: David vs Goliath",
     type: "journal",
     chapter: 20,
     narrative: "$WGC_TEAM1_LEADER$: 'Warning! They are sending a new fleet. Some imperial loyalist clowns want revenge for the Emperor. They found where H.O.P.E. is and plan on vaporizing Venus.'",
-    prerequisites: ["chapter19.6c"],
+    prerequisites: ["chapter19.7"],
     objectives: [],
     reward: []
   },
