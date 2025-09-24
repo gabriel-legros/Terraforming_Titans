@@ -504,11 +504,28 @@ class PlanetaryThrustersProject extends Project{
       resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
     const dt = deltaTime / 1000;
+    const colonyEnergy = resources?.colony?.energy;
+    const requestedEnergy = this.power * dt * productivity;
     let energyUsed = 0;
+
     if(accumulatedChanges){
       if(!accumulatedChanges.colony) accumulatedChanges.colony = {};
-      energyUsed = Math.min(this.power * dt * productivity, Math.max(accumulatedChanges.colony.energy + resources.colony.energy.value, 0));
-      accumulatedChanges.colony.energy = (accumulatedChanges.colony.energy || 0) - energyUsed;
+      const pendingEnergy = accumulatedChanges.colony.energy ?? 0;
+      const availableEnergy = (colonyEnergy?.value ?? 0) + pendingEnergy;
+      energyUsed = Math.min(requestedEnergy, Math.max(availableEnergy, 0));
+      accumulatedChanges.colony.energy = pendingEnergy - energyUsed;
+    }else if(colonyEnergy){
+      energyUsed = Math.min(requestedEnergy, Math.max(colonyEnergy.value ?? 0, 0));
+      if(colonyEnergy.decrease){
+        colonyEnergy.decrease(energyUsed);
+      }else{
+        colonyEnergy.value = (colonyEnergy.value ?? 0) - energyUsed;
+      }
+    }
+
+    if(energyUsed <= 0){
+      this.lastActiveTime = 0;
+      return;
     }
     const energySpent = energyUsed * 86400;
     if(this.spinInvest){ this.energySpentSpin += energySpent; }
