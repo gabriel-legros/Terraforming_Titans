@@ -191,3 +191,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
 - Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
+- Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.

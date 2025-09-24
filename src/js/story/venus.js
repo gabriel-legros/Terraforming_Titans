@@ -150,6 +150,8 @@ progressVenus.chapters.push(
     prerequisites: ["chapter18.4c"],
     objectives: [],
     reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisTerraformingMeasurements', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
     ]
   },
   {
