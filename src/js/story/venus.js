@@ -146,10 +146,12 @@ progressVenus.chapters.push(
     id: "chapter18.4d",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.'",
+    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.  On a related note, I have a small new upgrade available for you in my store HOPE.'",
     prerequisites: ["chapter18.4c"],
     objectives: [],
     reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisTerraformingMeasurements', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
     ]
   },
   {
@@ -506,7 +508,7 @@ progressVenus.chapters.push(
     id: "chapter19.6c",
     type: "journal",
     chapter: 19,
-    narrative: "Mary: 'Adrien please...  Wait...  Hold on. You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a mighty fleet.'",
+    narrative: "Mary: 'Adrien please get out...  Wait...  Hold on. You know what, Adrien? Yes this time. We will buy. I will write you a contract. Bob has some funding to spare. Venus wants a mighty fleet.'",
     prerequisites: ["chapter19.6b"],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }],
     reward: []

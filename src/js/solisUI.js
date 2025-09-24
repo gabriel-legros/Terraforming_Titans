@@ -13,6 +13,7 @@ const shopDescriptions = {
   colonistRocket: 'Increase colonists per import rocket by 1',
   startingShips: 'Add one Solis-built cargo ship to your starting fleet (base cost: 100)',
   research: 'Increase starting research points by 100',
+  terraformingMeasurements: 'Permanently unlock Terraforming measurements research across colonies',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
 };
@@ -250,6 +251,9 @@ function initializeSolisUI() {
     title.textContent = 'Research Upgrades';
     parent.insertBefore(title, researchShopItems);
     researchShopItems.appendChild(createShopItem('researchUpgrade'));
+    if (managerRef?.isBooleanFlagSet?.('solisTerraformingMeasurements')) {
+      researchShopItems.appendChild(createShopItem('terraformingMeasurements'));
+    }
     if (solis1) {
       researchShopItems.appendChild(createShopItem('advancedOversight'));
     }
@@ -323,6 +327,7 @@ function updateSolisUI() {
   const managerRef = solisManager;
   const solis1 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade1'));
   const solis2 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade2'));
+  const terraformingFlag = Boolean(managerRef?.isBooleanFlagSet?.('solisTerraformingMeasurements'));
   ['research'].forEach(k => {
     const record = shopElements[k];
     if (solis1) {
@@ -359,6 +364,15 @@ function updateSolisUI() {
   } else if (advRecord) {
     advRecord.item.remove();
     delete shopElements.advancedOversight;
+  }
+  const terraformingRecord = shopElements.terraformingMeasurements;
+  if (terraformingFlag) {
+    if (!terraformingRecord && researchShopItems) {
+      researchShopItems.appendChild(createShopItem('terraformingMeasurements'));
+    }
+  } else if (terraformingRecord) {
+    terraformingRecord.item.remove();
+    delete shopElements.terraformingMeasurements;
   }
 
   if (pointsSpan) {
