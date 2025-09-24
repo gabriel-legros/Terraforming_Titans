@@ -501,7 +501,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
-    requiresWorker: 100,
+    requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
     // Reversal feature wiring (disabled by default; can be enabled by effects)
