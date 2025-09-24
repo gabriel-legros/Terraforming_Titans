@@ -31,13 +31,13 @@ describe('Chemical Reactor building', () => {
     const { recipes } = chemicalReactor;
     expect(recipes).toBeDefined();
 
-    const bosch = recipes.recipe1;
-    expect(bosch.shortName).toBe('Bosch Reaction');
-    expect(bosch.consumption.atmospheric).toMatchObject({
+    const primaryRecipe = recipes.recipe1;
+    expect(primaryRecipe.shortName).toBe('Chemical Reactor');
+    expect(primaryRecipe.consumption.atmospheric).toMatchObject({
       carbonDioxide: 100,
       hydrogen: 9.09,
     });
-    expect(bosch.production.colony).toMatchObject({ water: 81.82 });
+    expect(primaryRecipe.production.colony).toMatchObject({ water: 81.82 });
 
     const waterSynthesis = recipes.recipe2;
     expect(waterSynthesis.shortName).toBe('Water Synthesis');
@@ -53,7 +53,7 @@ describe('Chemical Reactor building', () => {
       carbonDioxide: 100,
       hydrogen: 18.18,
     });
-    expect(methane.production.atmospheric).toMatchObject({ methane: 36.36 });
+    expect(methane.production.atmospheric).toMatchObject({ atmosphericMethane: 36.36 });
     expect(methane.production.colony).toMatchObject({ water: 81.82 });
   });
 });
