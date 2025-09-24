@@ -495,18 +495,15 @@ class PlanetaryThrustersProject extends Project{
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
-    const activeTime = this.lastActiveTime || 0;
-    if(!this.isCompleted || activeTime<=0 || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
-      this.lastActiveTime = 0;
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
       return;
     }
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
-    const fraction = Math.min(1, activeTime / deltaTime);
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
-      resources.colony.energy.modifyRate(-this.power * fraction * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
-    const dt = activeTime / 1000;
+    const dt = deltaTime / 1000;
     const energyUsed = this.power * dt * productivity;
     if(accumulatedChanges){
       if(!accumulatedChanges.colony) accumulatedChanges.colony = {};
