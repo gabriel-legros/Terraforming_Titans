@@ -129,8 +129,9 @@ const tabParameters = {
   
     // Activate a tab
     activateTab(tabId) {
-      const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
-      const tabContentElement = document.getElementById(tabId);
+      const normalizedId = extractTabId(tabId);
+      const tabElement = document.querySelector(`[data-tab="${normalizedId}"]`);
+      const tabContentElement = document.getElementById(normalizedId);
 
       if (tabElement && tabContentElement) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -138,6 +139,7 @@ const tabParameters = {
 
         tabElement.classList.add('active');
         tabContentElement.classList.add('active');
+        globalThis.renderTabImmediately?.(normalizedId);
       }
     }
   }
