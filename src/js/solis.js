@@ -53,6 +53,7 @@ class SolisManager extends EffectableEntity {
       colonistRocket: { baseCost: 1, purchases: 0 },
       startingShips: { baseCost: 100, purchases: 0 },
       research: { baseCost: 10, purchases: 0 },
+      terraformingMeasurements: { baseCost: 300, purchases: 0, max: 1 },
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
       researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length }
     };
@@ -197,6 +198,8 @@ class SolisManager extends EffectableEntity {
       });
     } else if (key === 'researchUpgrade') {
       this.applyResearchUpgrade();
+    } else if (key === 'terraformingMeasurements') {
+      this.applyTerraformingMeasurementUpgrade();
     } else if (key === 'advancedOversight' && typeof addEffect === 'function') {
       addEffect({
         target: 'project',
@@ -244,6 +247,17 @@ class SolisManager extends EffectableEntity {
     for (let i = 0; i < upgrade.purchases && i < RESEARCH_UPGRADE_ORDER.length; i++) {
       researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i]);
     }
+  }
+
+  applyTerraformingMeasurementUpgrade() {
+    const upgrade = this.shopUpgrades.terraformingMeasurements;
+    if (!upgrade || upgrade.purchases <= 0) {
+      return;
+    }
+    if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') {
+      return;
+    }
+    researchManager.completeResearchInstant('terraforming_sensor');
   }
 
   donateArtifacts(count) {
@@ -299,6 +313,7 @@ class SolisManager extends EffectableEntity {
     }
 
     this.applyResearchUpgrade();
+    this.applyTerraformingMeasurementUpgrade();
 
     const startingShipsUpgrade = this.shopUpgrades.startingShips;
     if (startingShipsUpgrade && startingShipsUpgrade.purchases > 0) {
