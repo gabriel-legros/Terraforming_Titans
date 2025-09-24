@@ -146,7 +146,7 @@ progressVenus.chapters.push(
     id: "chapter18.4d",
     type: "journal",
     chapter: 18,
-    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.'",
+    narrative: "Adrien Solis: 'Yes, so how about we share? Clear the way, and I salvage. We split fifty-fifty.  On a related note, I have a small new upgrade available for you in my store HOPE.'",
     prerequisites: ["chapter18.4c"],
     objectives: [],
     reward: [
