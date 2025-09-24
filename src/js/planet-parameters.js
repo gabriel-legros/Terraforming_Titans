@@ -616,7 +616,9 @@ const ganymedeOverrides = {
 // A completely dry, Venus-sized world with a pure inert atmosphere (>0.5 atm)
 const vega2Overrides = {
   name: 'Vega-2',
-  travelWarning: 'This world has no water.  Solis can help.',
+  travelWarning: {
+    message: 'This world has no water.  Solis can help.'
+  },
 
   resources: {
     surface: {
@@ -700,6 +702,13 @@ const vega2Overrides = {
 /* ---------- VENUS OVERRIDES ---------- */
 const venusOverrides = {
   name: 'Venus',
+  travelWarning: {
+    message: 'Venus begins with crushing pressure and furnace-like heat.',
+    hint: {
+      title: 'Terraforming Hint',
+      body: 'Deploy solar shades early to ease cooling and scrub sulfuric acid so condensers survive the opening years.'
+    }
+  },
 
   resources: {
     surface: {

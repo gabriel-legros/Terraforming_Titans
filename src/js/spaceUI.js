@@ -25,6 +25,22 @@ let travelWarningOverlay = null;
 let travelWarningMessageEl = null;
 let travelWarningConfirmBtn = null;
 let travelWarningCancelBtn = null;
+let travelWarningHintContainer = null;
+let travelWarningHintToggle = null;
+let travelWarningHintTitleEl = null;
+let travelWarningHintBodyEl = null;
+
+function setTravelWarningHintVisibility(isOpen) {
+    if (!travelWarningHintContainer) return;
+    travelWarningHintContainer.dataset.open = isOpen ? 'true' : 'false';
+    if (travelWarningHintBodyEl) {
+        travelWarningHintBodyEl.style.display = isOpen ? 'block' : 'none';
+    }
+    if (travelWarningHintToggle) {
+        travelWarningHintToggle.textContent = isOpen ? 'Hide Hint' : 'Show Hint';
+        travelWarningHintToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+}
 
 function showSpaceRandomTab() {
     spaceRandomTabVisible = true;
@@ -50,7 +66,7 @@ function hideSpaceRandomTab() {
     }
 }
 
-function showTravelWarningPopup(message, onConfirm) {
+function showTravelWarningPopup(warningData, onConfirm) {
     if (!travelWarningOverlay) {
         travelWarningOverlay = document.createElement('div');
         travelWarningOverlay.id = 'travel-warning-popup';
@@ -77,6 +93,45 @@ function showTravelWarningPopup(message, onConfirm) {
         travelWarningMessageEl.style.marginBottom = '12px';
         win.appendChild(travelWarningMessageEl);
 
+        travelWarningHintContainer = document.createElement('div');
+        travelWarningHintContainer.className = 'travel-warning-hint';
+        travelWarningHintContainer.style.marginBottom = '12px';
+        travelWarningHintContainer.style.textAlign = 'left';
+        travelWarningHintContainer.style.display = 'none';
+
+        const hintHeader = document.createElement('div');
+        hintHeader.style.display = 'flex';
+        hintHeader.style.justifyContent = 'space-between';
+        hintHeader.style.alignItems = 'center';
+
+        travelWarningHintTitleEl = document.createElement('span');
+        travelWarningHintTitleEl.className = 'travel-warning-hint-title';
+        travelWarningHintTitleEl.textContent = 'Hint';
+        hintHeader.appendChild(travelWarningHintTitleEl);
+
+        travelWarningHintToggle = document.createElement('button');
+        travelWarningHintToggle.type = 'button';
+        travelWarningHintToggle.className = 'travel-warning-hint-toggle';
+        travelWarningHintToggle.textContent = 'Show Hint';
+
+        travelWarningHintBodyEl = document.createElement('div');
+        travelWarningHintBodyEl.id = 'travel-warning-hint-body';
+        travelWarningHintBodyEl.className = 'travel-warning-hint-body';
+        travelWarningHintBodyEl.style.marginTop = '8px';
+        travelWarningHintBodyEl.style.display = 'none';
+
+        travelWarningHintToggle.setAttribute('aria-expanded', 'false');
+        travelWarningHintToggle.setAttribute('aria-controls', travelWarningHintBodyEl.id);
+        travelWarningHintToggle.addEventListener('click', () => {
+            const currentState = travelWarningHintContainer.dataset.open === 'true';
+            setTravelWarningHintVisibility(!currentState);
+        });
+
+        hintHeader.appendChild(travelWarningHintToggle);
+        travelWarningHintContainer.appendChild(hintHeader);
+        travelWarningHintContainer.appendChild(travelWarningHintBodyEl);
+        win.appendChild(travelWarningHintContainer);
+
         const btnRow = document.createElement('div');
         btnRow.style.display = 'flex';
         btnRow.style.gap = '8px';
@@ -96,7 +151,19 @@ function showTravelWarningPopup(message, onConfirm) {
         travelWarningOverlay.appendChild(win);
         document.body.appendChild(travelWarningOverlay);
     }
-    travelWarningMessageEl.textContent = message;
+    const warning = warningData || { message: '' };
+    travelWarningMessageEl.textContent = warning.message || '';
+
+    if (warning.hint && warning.hint.body) {
+        travelWarningHintContainer.style.display = 'block';
+        travelWarningHintTitleEl.textContent = warning.hint.title || 'Hint';
+        travelWarningHintBodyEl.textContent = warning.hint.body;
+        setTravelWarningHintVisibility(false);
+    } else if (travelWarningHintContainer) {
+        travelWarningHintContainer.style.display = 'none';
+        travelWarningHintBodyEl.textContent = '';
+        travelWarningHintContainer.dataset.open = 'false';
+    }
     travelWarningConfirmBtn.onclick = () => {
         travelWarningOverlay.style.display = 'none';
         onConfirm();
