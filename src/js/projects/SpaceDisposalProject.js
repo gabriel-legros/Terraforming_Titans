@@ -9,6 +9,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return 'Resource Disposal';
   }
 
+  getCostRateLabel() {
+    return 'Resource Disposal';
+  }
+
   createResourceDisposalUI() {
     const section = super.createResourceDisposalUI();
     const detailsGrid = section.querySelector('.project-details-grid');
