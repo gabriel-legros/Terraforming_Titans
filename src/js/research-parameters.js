@@ -1168,8 +1168,8 @@ const researchParameters = {
       },
       {
         id: 'bosch_reactor',
-        name: 'Bosch Reactor',
-        description: 'Unlocks reactors that combine carbon dioxide and hydrogen into water via the Bosch reaction.',
+        name: 'Chemical Reactor',
+        description: 'Unlocks configurable reactors that combine imported hydrogen with atmospheric feedstocks to synthesize vital compounds.',
         cost: { research: 500_000 },
         prerequisites: [],
         requiredFlags: ['boschReactorUnlocked'],
