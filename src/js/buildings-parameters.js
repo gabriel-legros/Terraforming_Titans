@@ -554,7 +554,7 @@ const buildingsParameters = {
     defaultRecipe: 'recipe1',
     recipes: {
       recipe1: {
-        shortName: 'Chemical Reactor',
+        shortName: 'Bosch Reaction',
         consumption: {
           atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
         },
