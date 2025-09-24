@@ -573,7 +573,7 @@ const buildingsParameters = {
           atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
         },
         production: {
-          atmospheric: { methane: 36.36 },
+          atmospheric: { atmosphericMethane: 36.36 },
           colony: { water: 81.82 }
         }
       }
