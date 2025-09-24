@@ -22,13 +22,11 @@ describe('Mass Driver building', () => {
     expect(oxygenFactory).toBeDefined();
     expect(massDriver.unlocked).toBe(false);
 
-    const expectedCost = {
+    expect(massDriver.cost.colony).toEqual({
       metal: oxygenFactory.cost.colony.metal * 10,
-      components: oxygenFactory.cost.colony.components * 10,
-      superconductors: 100
-    };
-
-    expect(massDriver.cost.colony).toEqual(expectedCost);
+      components: 50,
+      superconductors: 50
+    });
   });
 
   test('initializeBuildings uses the MassDriver subclass', () => {

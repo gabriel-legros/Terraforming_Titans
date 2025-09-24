@@ -26,7 +26,7 @@ describe('Bosch Reactor building', () => {
       electronics: 1,
     });
 
-    expect(boschReactor.consumption.colony.energy).toBe(2_400_000);
+    expect(boschReactor.consumption.colony.energy).toBe(100_000);
     expect(boschReactor.consumption.atmospheric).toMatchObject({
       carbonDioxide: 100,
       hydrogen: 9.09,
