@@ -5,7 +5,7 @@ const vm = require('vm');
 const researchPath = path.join(__dirname, '..', 'src/js', 'research-parameters.js');
 const code = fs.readFileSync(researchPath, 'utf8');
 
-describe('Bosch Reactor research', () => {
+describe('Chemical Reactor research', () => {
   test('requires boschReactorUnlocked flag and unlocks the building', () => {
     const ctx = {};
     vm.createContext(ctx);

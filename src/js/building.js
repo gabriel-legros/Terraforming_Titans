@@ -830,7 +830,8 @@ const constructors = {
   massDriver: 'MassDriver',
   biodome: 'Biodome',
   dysonReceiver: 'dysonReceiver',
-  solarPanel: 'solarPanel'
+  solarPanel: 'solarPanel',
+  boschReactor: 'MultiRecipesBuilding'
 };
 
 function loadConstructor(name) {

@@ -262,6 +262,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   leftContainer.appendChild(hideButton);
   cached.hideButton = hideButton;
 
+  if (typeof structure.initializeCustomUI === 'function') {
+    structure.initializeCustomUI({
+      leftContainer,
+      hideButton,
+      cachedElements: cached
+    });
+  }
+
   // Reverse button to the right of Hide
   const reverseInlineBtn = document.createElement('button');
   reverseInlineBtn.classList.add('reverse-button');

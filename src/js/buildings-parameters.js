@@ -536,22 +536,48 @@ const buildingsParameters = {
     unlocked: false
   },
   boschReactor: {
-    name: 'Bosch Reactor',
+    name: 'Chemical Reactor',
     category: 'terraforming',
-    description: 'Consumes hydrogen and carbon dioxide in the exothermic Bosch reaction to produce water.  The graphite is dropped on the ground.',
+    description: 'Configurable reactors that combine imported hydrogen with atmospheric feedstocks to synthesize vital compounds.',
     cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
     consumption: {
-      colony: { energy: 100_000 },
-      atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+      colony: { energy: 100_000 }
     },
-    production: { colony: { water: 81.82 } },
+    production: {},
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'recipe1',
+    recipes: {
+      recipe1: {
+        shortName: 'Bosch Reaction',
+        consumption: {
+          atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+        },
+        production: { colony: { water: 81.82 } }
+      },
+      recipe2: {
+        shortName: 'Water Synthesis',
+        consumption: {
+          atmospheric: { oxygen: 72.73, hydrogen: 9.09 }
+        },
+        production: { colony: { water: 81.82 } }
+      },
+      recipe3: {
+        shortName: 'Methane Synthesis',
+        consumption: {
+          atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
+        },
+        production: {
+          atmospheric: { methane: 36.36 },
+          colony: { water: 81.82 }
+        }
+      }
+    }
   },
   massDriver: {
     name: 'Mass Driver',
