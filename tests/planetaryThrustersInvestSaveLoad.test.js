@@ -18,8 +18,13 @@ describe('Planetary Thrusters invest persistence', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    const celestial = { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+    global.resources = ctx.resources;
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
@@ -67,5 +72,11 @@ describe('Planetary Thrusters invest persistence', () => {
     expect(loaded.el.rotCb.checked).toBe(false);
     expect(parseFloat(loaded.el.rotTarget.value)).toBeCloseTo(1.2);
     expect(parseFloat(loaded.el.distTarget.value)).toBeCloseTo(3);
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });

@@ -25,9 +25,13 @@ describe('Planetary Thrusters day-night cycle', () => {
     ctx.dayNightCycle.elapsedTime = ctx.dayNightCycle.dayDuration * 5.25;
     ctx.dayNightCycle.update(0);
     const initialProgress = ctx.dayNightCycle.getDayProgress();
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 20, distanceFromSun: 1 } };
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    const celestial = { mass: 1e22, radius: 1000, rotationPeriod: 20, distanceFromSun: 1, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+    global.resources = ctx.resources;
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
@@ -55,6 +59,12 @@ describe('Planetary Thrusters day-night cycle', () => {
     expect(ctx.dayNightCycle.dayDuration).not.toBe(initialDuration);
     expect(ctx.dayNightCycle.dayDuration).toBeCloseTo(rotationPeriodToDuration(newPeriod), 5);
     expect(ctx.dayNightCycle.getDayProgress()).toBeCloseTo(initialProgress, 5);
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });
 

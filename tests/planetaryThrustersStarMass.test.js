@@ -26,11 +26,16 @@ describe('Planetary Thrusters star mass', () => {
     const G = 6.67430e-11;
     const AU_IN_METERS = 1.496e11;
     const starMass = 2 * 1.989e30;
+    const celestial = { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1, starMass };
     ctx.currentPlanetParameters = {
-      celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1, starMass }
+      celestialParameters: celestial,
+      star: { massSolar: 2 }
     };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
+    global.resources = ctx.resources;
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
@@ -46,6 +51,12 @@ describe('Planetary Thrusters star mass', () => {
     const expected = Math.abs(Math.sqrt(G*starMass/(1*AU_IN_METERS)) - Math.sqrt(G*starMass/(2*AU_IN_METERS)));
 
     expect(actual).toBeCloseTo(expected, 3);
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });
 
