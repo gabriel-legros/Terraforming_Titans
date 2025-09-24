@@ -1022,8 +1022,6 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 }
 
-globalThis.window && (globalThis.window.projectsSubtabManager = () => projectsSubtabManager);
-
 
 function toggleProjectCollapse(projectCard) {
   projectCard.classList.toggle('collapsed');

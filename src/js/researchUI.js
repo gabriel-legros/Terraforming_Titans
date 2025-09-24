@@ -375,5 +375,3 @@ if (typeof module !== 'undefined' && module.exports) {
         researchSubtabManager: () => researchSubtabManager
     };
 }
-
-globalThis.window && (globalThis.window.researchSubtabManager = () => researchSubtabManager);
