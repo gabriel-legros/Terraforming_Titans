@@ -208,11 +208,55 @@ class Building extends EffectableEntity {
   }
 
   applyAddResourceConsumption(effect) {
-    const { resourceCategory, resourceId, amount } = effect;
-    if (!this.consumption[resourceCategory]) {
-      this.consumption[resourceCategory] = {};
+    // Consumption effects are now incorporated dynamically when queried.
+    // Subclasses can override this hook to update cached state.
+    return effect;
+  }
+
+  getConsumption() {
+    const combined = {};
+    const baseConsumption = this.consumption || {};
+
+    for (const category in baseConsumption) {
+      combined[category] = {};
+      const categoryMap = baseConsumption[category] || {};
+      for (const resource in categoryMap) {
+        const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
+        combined[category][resource] = ignoreProductivity
+          ? { amount, ignoreProductivity: true }
+          : amount;
+      }
     }
-    this.consumption[resourceCategory][resourceId] = amount;
+
+    this.activeEffects.forEach(effect => {
+      if (effect.type !== 'addResourceConsumption') {
+        return;
+      }
+
+      const { resourceCategory, resourceId } = effect;
+      if (!resourceCategory || !resourceId) {
+        return;
+      }
+
+      if (combined[resourceCategory] && combined[resourceCategory][resourceId] !== undefined) {
+        return;
+      }
+
+      const { amount, ignoreProductivity } = this.getConsumptionResource(resourceCategory, resourceId);
+      if (amount === 0) {
+        return;
+      }
+
+      if (!combined[resourceCategory]) {
+        combined[resourceCategory] = {};
+      }
+
+      combined[resourceCategory][resourceId] = ignoreProductivity
+        ? { amount, ignoreProductivity: true }
+        : amount;
+    });
+
+    return combined;
   }
 
   // Method to get the effective production multiplier
@@ -307,14 +351,32 @@ class Building extends EffectableEntity {
 
   // Helper to extract consumption amount and flags
   getConsumptionResource(category, resource) {
-    const entry = this.consumption[category][resource];
-    if (typeof entry === 'object') {
-      return {
-        amount: entry.amount || 0,
-        ignoreProductivity: !!entry.ignoreProductivity
-      };
+    const categoryMap = (this.consumption && this.consumption[category]) || {};
+    const entry = categoryMap[resource];
+    let amount = 0;
+    let ignoreProductivity = false;
+
+    if (typeof entry === 'object' && entry !== null) {
+      amount = Number(entry.amount) || 0;
+      ignoreProductivity = !!entry.ignoreProductivity;
+    } else if (typeof entry === 'number') {
+      amount = entry;
     }
-    return { amount: entry, ignoreProductivity: false };
+
+    this.activeEffects.forEach(effect => {
+      if (effect.type !== 'addResourceConsumption') {
+        return;
+      }
+      if (effect.resourceCategory !== category || effect.resourceId !== resource) {
+        return;
+      }
+      amount += Number(effect.amount) || 0;
+      if (effect.ignoreProductivity) {
+        ignoreProductivity = true;
+      }
+    });
+
+    return { amount, ignoreProductivity };
   }
 
   // Get modified production values based on effective multipliers
@@ -336,10 +398,11 @@ class Building extends EffectableEntity {
   // Get modified consumption values based on effective multipliers
   getModifiedConsumption() {
     const modifiedConsumption = {};
+    const consumption = this.getConsumption();
 
-    for (const category in this.consumption) {
+    for (const category in consumption) {
       modifiedConsumption[category] = {};
-      for (const resource in this.consumption[category]) {
+      for (const resource in consumption[category]) {
         const { amount } = this.getConsumptionResource(category, resource);
         const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         modifiedConsumption[category][resource] = amount * consumptionMultiplier;
@@ -564,13 +627,14 @@ class Building extends EffectableEntity {
     let minRatio = Infinity;
 
     // Calculate minRatio based on resource consumption
-    for (const category in this.consumption) {
-      for (const resource in this.consumption[category]) {
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
+      for (const resource in consumption[category]) {
         const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
         if (requiredAmount === 0) continue;
-        const availableAmount = resources[category][resource].value + resources[category][resource].productionRate*(deltaTime / 1000);
+        const availableAmount = resources[category][resource].value + resources[category][resource].productionRate * (deltaTime / 1000);
         if (availableAmount < requiredAmount) {
-          minRatio = Math.min(minRatio, Math.max(availableAmount / requiredAmount,0));
+          minRatio = Math.min(minRatio, Math.max(availableAmount / requiredAmount, 0));
         } else {
           minRatio = Math.min(minRatio, 1);
         }
@@ -723,12 +787,13 @@ class Building extends EffectableEntity {
     }
 
     // Calculate consumption and accumulate changes
-    for (const category in this.consumption) {
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
       if (!this.currentConsumption[category]) {
         this.currentConsumption[category] = {};
       }
 
-      for (const resource in this.consumption[category]) {
+      for (const resource in consumption[category]) {
         const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
         const baseConsumption = this.active * amount * effectiveConsumptionMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const productFactor = ignoreProductivity ? 1 : this.productivity;

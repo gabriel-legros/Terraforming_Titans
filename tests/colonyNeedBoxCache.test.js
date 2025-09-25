@@ -27,6 +27,13 @@ describe('colony need box cache', () => {
       getComfort() {
         return this.baseComfort;
       },
+      getConsumption() {
+        const clone = {};
+        for (const category in this.consumption || {}) {
+          clone[category] = { ...this.consumption[category] };
+        }
+        return clone;
+      },
       getConsumptionResource(category, resource) {
         return this.consumption?.[category]?.[resource] || { amount: 0 };
       }

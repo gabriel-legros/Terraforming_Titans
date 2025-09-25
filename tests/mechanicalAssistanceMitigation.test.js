@@ -16,6 +16,13 @@ describe('Mechanical Assistance mitigation', () => {
           this.happiness = 0;
         }
         initializeFromConfig() {}
+        getConsumption() {
+          const clone = {};
+          for (const category in this.consumption || {}) {
+            clone[category] = { ...this.consumption[category] };
+          }
+          return clone;
+        }
         getConsumptionResource(cat, res) { return { amount: this.consumption?.[cat]?.[res] || 0 }; }
         getEffectiveConsumptionMultiplier() { return 1; }
         getEffectiveResourceConsumptionMultiplier() { return 1; }
