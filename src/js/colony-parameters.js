@@ -3,7 +3,7 @@ const colonyParameters = {
       name: 'Aerostat Colony',
       category: 'Colony',
       description: 'A floating habitat that avoids surface pressure and temperature extremes.',
-      cost: { colony: { metal: 80, components: 15, electronics: 5, water: 50, glass: 100 } },
+      cost: { colony: { metal: 80, components: 15, electronics: 5, water: 50, glass: 20 } },
       consumption: { colony: { energy: 50000, food: 1 } },
       production: { colony: { research: 1 } },
       storage: { colony: { colonists: 10 } },
