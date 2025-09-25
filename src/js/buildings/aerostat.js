@@ -16,7 +16,7 @@ const AEROSTAT_BUOYANCY_NOTES =
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
-  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Buildings with an Aerostat Support value (aerostatReduction) also benefit; each active aerostat covers that many structures before penalties apply.';
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.';
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
