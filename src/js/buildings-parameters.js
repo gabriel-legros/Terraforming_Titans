@@ -410,6 +410,22 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  antimatterBattery: {
+    name: 'Antimatter Battery',
+    category: 'storage',
+    description: 'Stores staggering amounts of energy by containing antimatter safely.',
+    cost: { colony: { metal: 1000, superconductors: 100 } },
+    consumption: {},
+    production: {},
+    storage: { colony: { energy: 1_000_000_000_000_000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 2,
+    unlocked: false
+  },
   androidHousing: {
     name: 'Android Housing',
     category: 'storage',
