@@ -595,9 +595,19 @@ function createTemperatureBox(row) {
       "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
       "- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
       "- Circulation: Column mass and rotation power the zonal wind solver that shuffles heat between climate bands. Heavier, slower-rotating atmospheres smooth temperature differences faster without creating or destroying energy.",
+      "- Cloud Formation: When condensable gases accumulate (water, methane, sulfuric acid), their mixing ratio is compared against a saturation curve. Sufficient vapor builds cloud decks that thicken with pressure up to each species' coverage limit.",
+      "- Cloud Brightness: Each cloud species has a characteristic albedo. Coverage blends together, brightening whatever surface remains darker than the deck. Clouds never darken the planet and plateau once the surface matches the deck brightness.",
+      "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
     atmInfo.innerHTML = '&#9432;';
+    const cloudTooltipText = [
+      "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
+      "",
+      "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
+      "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
+      "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
+    ].join('\\n');
 
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
@@ -1208,7 +1218,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="Sum of albedo increases from haze, calcite aerosols, and clouds.  This value also penalizes solar panel and life growth.">&#9432;</span></td>
+            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="${cloudTooltipText}">&#9432;</span></td>
             <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
             <td></td>
           </tr>
@@ -1669,3 +1679,4 @@ if (typeof window !== 'undefined') {
   window.getTerraformingSubtabManager = getTerraformingSubtabManager;
   window.isTerraformingWorldSubtabActive = isTerraformingWorldSubtabActive;
 }
+
