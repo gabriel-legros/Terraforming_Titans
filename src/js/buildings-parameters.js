@@ -350,6 +350,22 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  antimatterFarm: {
+    name: 'Antimatter Farm',
+    category: 'energy',
+    description: 'Harvests microscopic antimatter using staggering amounts of power.',
+    cost: { colony: { metal: 10000, components: 1000, superconductors: 1000, electronics: 100 } },
+    consumption: { colony: { energy: 2_000_000_000_000_000 } },
+    production: { special: { antimatter: 1 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   battery: {
     name: 'Battery',
     category: 'storage',
