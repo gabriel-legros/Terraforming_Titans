@@ -635,6 +635,25 @@ class LifeManager extends EffectableEntity {
           const secondsMultiplier = deltaTime / 1000;
           terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
 
+          const zonePercentages = {};
+          let totalZonePercentage = 0;
+          for (const zone of ['tropical', 'temperate', 'polar']) {
+              const percentage = getZonePercentage(zone) || 0;
+              zonePercentages[zone] = percentage;
+              totalZonePercentage += percentage;
+          }
+          if (totalZonePercentage <= 0) totalZonePercentage = 1;
+
+          const totalCO2ForGrowth = resources.atmospheric['carbonDioxide']?.value || 0;
+          const totalOxygenForDecay = resources.atmospheric['oxygen']?.value || 0;
+          const co2AvailableByZone = {};
+          const oxygenAvailableByZone = {};
+          for (const zone of ['tropical', 'temperate', 'polar']) {
+              const share = zonePercentages[zone] / totalZonePercentage;
+              co2AvailableByZone[zone] = totalCO2ForGrowth * share;
+              oxygenAvailableByZone[zone] = totalOxygenForDecay * share;
+          }
+
           for (const zoneName of ['tropical', 'temperate', 'polar']) {
             let usedLiquidWater = false;
             terraforming.biomassDyingZones[zoneName] = false;
@@ -675,16 +694,19 @@ class LifeManager extends EffectableEntity {
                 const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
                 const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
 
-                const globalCO2 = resources.atmospheric['carbonDioxide']?.value || 0;
                 const availableLiquidWater = terraforming.zonalWater[zoneName]?.liquid || 0;
                 if (availableLiquidWater > 1e-9) {
                     usedLiquidWater = true;
                     const maxGrowthByLiquidWater = (availableLiquidWater / waterRatio) * biomassRatio;
-                    const maxGrowthByCO2 = (globalCO2 / co2Ratio) * biomassRatio;
+                    const zoneCO2Available = co2AvailableByZone[zoneName] || 0;
+                    const maxGrowthByCO2 = (zoneCO2Available / co2Ratio) * biomassRatio;
                     growthBiomass = Math.min(potentialBiomassIncrease, maxGrowthByCO2, maxGrowthByLiquidWater);
                     growthWater = -(growthBiomass / biomassRatio) * waterRatio;
                     growthCO2 = -(growthBiomass / biomassRatio) * co2Ratio;
                     growthOxygen = (growthBiomass / biomassRatio) * oxygenRatio;
+
+                    const co2Consumed = -growthCO2;
+                    co2AvailableByZone[zoneName] = Math.max(0, zoneCO2Available - co2Consumed);
 
                     if (secondsMultiplier > 0 && growthBiomass > 1e-9) {
                         const growthRateMultiplier = 1 / secondsMultiplier;
@@ -702,8 +724,8 @@ class LifeManager extends EffectableEntity {
                 const minDecayAmount = MINIMUM_BIOMASS_DECAY_RATE * secondsMultiplier * penaltyFraction;
                 const targetDecayAmount = Math.max(percentDecayAmount, minDecayAmount);
 
-                const globalOxygen = resources.atmospheric['oxygen']?.value || 0;
-                const maxDecayByOxygen = (globalOxygen / oxygenRatio) * biomassRatio;
+                const zoneOxygenAvailable = oxygenAvailableByZone[zoneName] || 0;
+                const maxDecayByOxygen = (zoneOxygenAvailable / oxygenRatio) * biomassRatio;
 
                 const totalDecay = Math.min(targetDecayAmount, zonalBiomass);
                 const oxygenDecay = Math.min(maxDecayByOxygen, totalDecay);
@@ -713,6 +735,9 @@ class LifeManager extends EffectableEntity {
                 decayWater = (oxygenDecay / biomassRatio) * waterRatio;
                 decayCO2 = (oxygenDecay / biomassRatio) * co2Ratio;
                 decayOxygen = -(oxygenDecay / biomassRatio) * oxygenRatio;
+
+                const oxygenConsumed = -decayOxygen;
+                oxygenAvailableByZone[zoneName] = Math.max(0, zoneOxygenAvailable - oxygenConsumed);
 
                 if (secondsMultiplier > 0 && totalDecay > 1e-9) {
                     const decayRateMultiplier = 1 / secondsMultiplier;
