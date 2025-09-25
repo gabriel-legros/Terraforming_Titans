@@ -99,6 +99,14 @@ const terraformingUICache = {
   luminosity: {}
 };
 
+const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
+  "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
+  "",
+  "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
+  "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
+  "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
+].join('\n');
+
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
   const immuneNames = [];
@@ -601,14 +609,6 @@ function createTemperatureBox(row) {
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
     atmInfo.innerHTML = '&#9432;';
-    const cloudTooltipText = [
-      "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
-      "",
-      "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
-      "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
-      "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
-    ].join('\\n');
-
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -1218,7 +1218,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="${cloudTooltipText}">&#9432;</span></td>
+            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="${CLOUD_AND_HAZE_TOOLTIP_TEXT}">&#9432;</span></td>
             <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
             <td></td>
           </tr>
