@@ -134,8 +134,8 @@ function updateGrowthRateDisplay(){
 
 function shouldDisplayNeedBox(needKey, structure) {
   if (needKey !== 'components') return true;
-  const entry = structure.consumption?.colony?.[needKey];
-  return entry !== undefined && structure.getConsumptionResource('colony', needKey).amount > 0;
+  const { amount } = structure.getConsumptionResource('colony', needKey);
+  return amount > 0;
 }
 
 function createColonyDetails(structure) {
@@ -171,7 +171,7 @@ function createColonyDetails(structure) {
 function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
 
-  const colonyConsumption = structure.consumption?.colony || {};
+  const colonyConsumption = structure.getConsumption().colony || {};
   let needsMissing = false;
   if (structure.needBoxCache) {
     for (const need in colonyConsumption) {
