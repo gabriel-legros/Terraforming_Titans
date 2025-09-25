@@ -244,7 +244,7 @@ var progressMars = {
         type: "journal",
         chapter: 0,
         narrative: "Objective: Construct an Ore Mine to initiate mineral extraction.",
-        prerequisites: ["chapter1.9"],
+        prerequisites: ["chapter1.10"],
         objectives: [{
             type: 'building',
             buildingName: 'oreMine',
