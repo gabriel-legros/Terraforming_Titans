@@ -1,4 +1,4 @@
-body.dark-mode {
+﻿body.dark-mode {
     background-color: #121212;
     color: #ffffff;
 }
@@ -459,4 +459,12 @@ body.dark-mode {
 .dark-mode #nanocolony-container h4 {
     color: #ffffff;
     border-bottom-color: #444;
+}
+
+.dark-mode .colony-buoyancy-card .card-body {
+    color: #dddddd;
+}
+
+.dark-mode .colony-buoyancy-card .colony-buoyancy-lift-label {
+    color: #ffffff;
 }
