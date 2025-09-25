@@ -394,7 +394,6 @@ const buildingsParameters = {
         metal: 5000,
         silicon: 5000,
         glass: 5000,
-        water: 5000,
         food: 5000,
         components: 500,
         electronics: 200,
@@ -408,6 +407,22 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.1,
+    unlocked: false
+  },
+  waterTank: {
+    name: 'Water Tank',
+    category: 'storage',
+    description: 'Dedicated reservoir that preserves large water reserves with minimal upkeep.',
+    cost: { colony: { metal: 100 } },
+    consumption: {},
+    production: {},
+    storage: { colony: { water: 5000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0.05,
     unlocked: false
   },
   hydrogenBattery: {

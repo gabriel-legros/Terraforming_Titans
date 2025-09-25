@@ -225,6 +225,21 @@ var progressMars = {
         ]
       },
       {
+        id: "chapter1.10",
+        type: "journal",
+        chapter: 0,
+        narrative: "Processing blueprint: waterTank.btb...",
+        prerequisites: ["chapter1.9"],
+        objectives: [
+        ],
+        reward: [{
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'enable'
+        }
+        ]
+      },
+      {
         id: "chapter1.11",
         type: "journal",
         chapter: 0,
