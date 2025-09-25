@@ -15,6 +15,8 @@ const AEROSTAT_BUOYANCY_NOTES =
   'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
+const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Buildings with an Aerostat Support value (aerostatReduction) also benefit; each active aerostat covers that many structures before penalties apply.';
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
@@ -253,7 +255,13 @@ function isBuildingEligibleForFactoryMitigation(id) {
   return FACTORY_MITIGATION_EXCLUDED_BUILDINGS.indexOf(id) === -1;
 }
 
-function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
+function getAerostatMaintenanceMitigation(context = {}) {
+  const result = {
+    workerShare: 0,
+    aerostatCount: 0,
+    buildingCoverage: { list: [], byId: {} }
+  };
+
   const hasProvidedBuildings = Object.prototype.hasOwnProperty.call(
     context,
     'buildings'
@@ -265,46 +273,7 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
       : undefined;
 
   if (!buildingCollection) {
-    return 0;
-  }
-
-  let totalWorkerRequirement = 0;
-
-  for (const id in buildingCollection) {
-    if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
-
-    if (!isBuildingEligibleForFactoryMitigation(id)) continue;
-
-    const building = buildingCollection[id];
-    if (!building) continue;
-
-    const perBuildingNeed =
-      typeof building.getTotalWorkerNeed === 'function'
-        ? building.getTotalWorkerNeed()
-        : building.requiresWorker || 0;
-
-    if (perBuildingNeed <= 0) continue;
-
-    const activeCount =
-      typeof building.active === 'number'
-        ? building.active
-        : typeof building.count === 'number'
-          ? building.count
-          : 0;
-
-    if (activeCount <= 0) continue;
-
-    const workerMultiplier =
-      typeof building.getEffectiveWorkerMultiplier === 'function'
-        ? building.getEffectiveWorkerMultiplier()
-        : 1;
-
-    totalWorkerRequirement +=
-      activeCount * perBuildingNeed * workerMultiplier;
-  }
-
-  if (totalWorkerRequirement <= 0) {
-    return 1;
+    return result;
   }
 
   const hasProvidedColonies = Object.prototype.hasOwnProperty.call(
@@ -317,45 +286,114 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
       ? colonies
       : undefined;
 
-  if (!colonyCollection) {
-    return 0;
-  }
-
-  const aerostat = colonyCollection.aerostat_colony;
-  if (!aerostat) {
-    return 0;
-  }
-
-  const baseCapacity = aerostat?.storage?.colony?.colonists || 0;
-  if (baseCapacity <= 0) {
-    return 0;
-  }
-
-  const storageMultiplier =
-    typeof aerostat.getEffectiveStorageMultiplier === 'function'
-      ? aerostat.getEffectiveStorageMultiplier()
-      : 1;
-
-  const activeAerostats =
-    typeof aerostat.active === 'number'
+  const aerostat = colonyCollection?.aerostat_colony ?? null;
+  const baseCapacity = aerostat?.storage?.colony?.colonists ?? 0;
+  const storageMultiplierValue = aerostat?.getEffectiveStorageMultiplier?.();
+  const storageMultiplier = Number.isFinite(storageMultiplierValue)
+    ? storageMultiplierValue
+    : 1;
+  const activeAerostatsRaw =
+    Number.isFinite(aerostat?.active)
       ? aerostat.active
-      : typeof aerostat.count === 'number'
+      : Number.isFinite(aerostat?.count)
         ? aerostat.count
         : 0;
+  const activeAerostats = Math.max(0, activeAerostatsRaw);
+  result.aerostatCount = activeAerostats;
 
-  if (activeAerostats <= 0) {
-    return 0;
+  let totalWorkerRequirement = 0;
+
+  for (const id in buildingCollection) {
+    if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
+
+    const building = buildingCollection[id];
+    if (!building) continue;
+
+    if (isBuildingEligibleForFactoryMitigation(id)) {
+      const perBuildingNeedValue =
+        building.getTotalWorkerNeed?.() ?? building.requiresWorker ?? 0;
+      const perBuildingNeed = Number.isFinite(perBuildingNeedValue)
+        ? perBuildingNeedValue
+        : 0;
+
+      if (perBuildingNeed > 0) {
+        const activeCountRaw = Number.isFinite(building.active)
+          ? building.active
+          : Number.isFinite(building.count)
+            ? building.count
+            : 0;
+        const activeCount = Math.max(0, activeCountRaw);
+        if (activeCount > 0) {
+          const workerMultiplierValue = building.getEffectiveWorkerMultiplier?.();
+          const workerMultiplier = Number.isFinite(workerMultiplierValue)
+            ? workerMultiplierValue
+            : 1;
+          totalWorkerRequirement +=
+            activeCount * perBuildingNeed * workerMultiplier;
+        }
+      }
+    }
+
+    const reductionValue = building.aerostatReduction ?? 0;
+    const reduction = Number.isFinite(reductionValue) ? reductionValue : 0;
+    if (reduction <= 0) {
+      continue;
+    }
+
+    const activeCountRaw = Number.isFinite(building.active)
+      ? building.active
+      : Number.isFinite(building.count)
+        ? building.count
+        : 0;
+    const activeCount = Math.max(0, activeCountRaw);
+    const maxSupported = Math.max(0, activeAerostats * reduction);
+    const supported = Math.min(activeCount, maxSupported);
+    const coverage = activeCount > 0 ? Math.min(1, supported / activeCount) : 0;
+    const remainingFraction = activeCount > 0 ? 1 - coverage : 1;
+
+    const entry = {
+      id,
+      name: building.displayName || building.name || id,
+      activeCount,
+      perAerostat: reduction,
+      maxSupported,
+      supported,
+      coverage,
+      remainingFraction: Math.max(0, Math.min(1, remainingFraction))
+    };
+
+    result.buildingCoverage.list.push(entry);
+    result.buildingCoverage.byId[id] = entry;
+  }
+
+  result.buildingCoverage.list.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (totalWorkerRequirement <= 0) {
+    result.workerShare = 1;
+    return result;
+  }
+
+  if (!aerostat || baseCapacity <= 0 || activeAerostats <= 0) {
+    result.workerShare = 0;
+    return result;
   }
 
   const aerostatCapacity = activeAerostats * baseCapacity * storageMultiplier;
-
   if (aerostatCapacity <= 0) {
-    return 0;
+    result.workerShare = 0;
+    return result;
   }
 
-  return Math.min(1, aerostatCapacity / totalWorkerRequirement);
+  result.workerShare = Math.min(1, aerostatCapacity / totalWorkerRequirement);
+  return result;
 }
 
+function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
+  const mitigation = getAerostatMaintenanceMitigation(context);
+  return mitigation.workerShare;
+}
+
+Aerostat.getAerostatMaintenanceMitigation = getAerostatMaintenanceMitigation;
 Aerostat.getFactoryTemperatureMaintenancePenaltyReduction =
   getFactoryTemperatureMaintenancePenaltyReduction;
 
@@ -480,9 +518,8 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const mitigationInfo = document.createElement('span');
     mitigationInfo.classList.add('info-tooltip-icon');
-    mitigationInfo.innerHTML = '&#9432;';
-    mitigationInfo.title =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.  The reduction is equal to the total total colonist capacity from aerostats divided by the total workers demand from factories.';
+   mitigationInfo.innerHTML = '&#9432;';
+    mitigationInfo.title = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
     mitigationRow.appendChild(mitigationInfo);
 
     body.appendChild(mitigationRow);
@@ -582,11 +619,19 @@ function updateAerostatBuoyancySection(structure) {
       ? Math.max(0, buildLimit - currentAerostats)
       : null;
 
-  const mitigationShareRaw =
-    Aerostat.getFactoryTemperatureMaintenancePenaltyReduction?.() ?? null;
+  const mitigationDetails = Aerostat.getAerostatMaintenanceMitigation?.() ?? null;
+  const mitigationShareRaw = mitigationDetails?.workerShare ?? null;
   const mitigationShare = Number.isFinite(mitigationShareRaw)
     ? Math.max(0, Math.min(1, mitigationShareRaw))
     : null;
+  const aerostatCount = Number.isFinite(mitigationDetails?.aerostatCount)
+    ? Math.max(0, mitigationDetails.aerostatCount)
+    : 0;
+  const buildingCoverageList = Array.isArray(
+    mitigationDetails?.buildingCoverage?.list
+  )
+    ? mitigationDetails.buildingCoverage.list
+    : [];
 
   if (ui.liftValue) {
     ui.liftValue.textContent =
@@ -628,20 +673,42 @@ function updateAerostatBuoyancySection(structure) {
   }
 
   if (ui.mitigationInfo) {
-    let mitigationTitle =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.  The reduction is equal to the total total colonist capacity from aerostats divided by the total workers demand from factories.';
-    if (mitigationShare === null) {
+    let mitigationTitle = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
+    if (!mitigationDetails) {
       mitigationTitle += '\nMitigation data unavailable.';
     } else {
-      mitigationTitle += `\nMitigation applied: ${formatNumber(
-        mitigationShare * 100,
+      mitigationTitle += `\nActive aerostats: ${formatNumber(
+        aerostatCount,
         false,
         2
-      )}% of the penalty is negated.`;
-      mitigationTitle +=
-        mitigationShare < 1
-          ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
-          : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+      )}.`;
+
+      if (mitigationShare === null) {
+        mitigationTitle += '\nFactory mitigation data unavailable.';
+      } else {
+        mitigationTitle += `\nFactory mitigation applied: ${formatNumber(
+          mitigationShare * 100,
+          false,
+          2
+        )}% of the penalty is negated.`;
+        mitigationTitle +=
+          mitigationShare < 1
+            ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
+            : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+      }
+
+      if (buildingCoverageList.length > 0) {
+        mitigationTitle += '\nAerostat-supported buildings:';
+        buildingCoverageList.forEach(entry => {
+          const activeText = formatNumber(entry.activeCount, false, 2);
+          const supportedText = formatNumber(entry.supported, false, 2);
+          const capacityText = formatNumber(entry.maxSupported, false, 2);
+          const perAerostatText = formatNumber(entry.perAerostat, false, 2);
+          mitigationTitle += `\n• ${entry.name}: ${supportedText} of ${activeText} active covered (can support ${capacityText}; ${perAerostatText} per aerostat).`;
+        });
+      } else {
+        mitigationTitle += '\nNo buildings currently list an Aerostat Support value.';
+      }
     }
     ui.mitigationInfo.title = mitigationTitle;
   }
@@ -671,6 +738,7 @@ Aerostat.updateBuoyancySection = updateAerostatBuoyancySection;
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Aerostat,
+    getAerostatMaintenanceMitigation,
     getFactoryTemperatureMaintenancePenaltyReduction,
     isBuildingEligibleForFactoryMitigation,
     getAerostatLiftContext,
@@ -679,6 +747,8 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 } else {
   globalThis.Aerostat = Aerostat;
+  globalThis.getAerostatMaintenanceMitigation =
+    getAerostatMaintenanceMitigation;
   globalThis.getFactoryTemperatureMaintenancePenaltyReduction =
     getFactoryTemperatureMaintenancePenaltyReduction;
   globalThis.isBuildingEligibleForFactoryMitigation =

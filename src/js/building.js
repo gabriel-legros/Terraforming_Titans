@@ -60,7 +60,8 @@ class Building extends EffectableEntity {
         surfaceArea,
         requiresProductivity,
         requiresLand,
-        temperatureMaintenanceImmune
+        temperatureMaintenanceImmune,
+        aerostatReduction
       } = config;
   
       this.name = buildingName;
@@ -83,6 +84,10 @@ class Building extends EffectableEntity {
       this.requiresLand = requiresLand;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
+      this.aerostatReduction = Math.max(
+        0,
+        Number.isFinite(aerostatReduction) ? aerostatReduction : 0
+      );
 
       this.updateResourceStorage();
     }

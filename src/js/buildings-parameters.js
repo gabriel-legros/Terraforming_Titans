@@ -103,6 +103,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 1,
     unlocked: false
   },
   hydroponicFarm: {
@@ -302,6 +303,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 1,
     unlocked: false
   },
   fusionPowerPlant: {
@@ -317,6 +319,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.02,
     unlocked: false
   },
   dysonReceiver: {
@@ -597,6 +600,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 1,
     unlocked: false,
     defaultRecipe: 'recipe1',
     recipes: {
