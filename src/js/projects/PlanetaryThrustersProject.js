@@ -531,8 +531,10 @@ class PlanetaryThrustersProject extends Project{
     if(this.spinInvest){ this.energySpentSpin += energySpent; }
     else if(this.motionInvest){ this.energySpentMotion += energySpent; }
 
-    const a = energySpent * this.getThrustPowerRatio() / p.mass * productivity;
-    const dvTick = a * dt;
+    const impulse = energySpent * this.getThrustPowerRatio() * productivity;
+    const inertiaCoeff = this.spinInvest ? (p.kInertia || 0.4) : 1;
+    const divisor = (p.mass || 1) * inertiaCoeff;
+    const dvTick = divisor > 0 ? impulse / divisor : 0;
     this.dVdone += dvTick;
 
     if(this.spinInvest){
@@ -578,7 +580,7 @@ class PlanetaryThrustersProject extends Project{
         const starM = getStarMassKgFromCurrent();
         let r = parent.orbitRadius * 1e3;
         const v = Math.sqrt(mu / r);
-        let E = -mu / (2 * r) + v * a * dt;
+        let E = -mu / (2 * r) + v * dvTick;
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
         const a_new = -mu / (2 * E);
         parent.orbitRadius = a_new / 1e3;
@@ -603,7 +605,7 @@ class PlanetaryThrustersProject extends Project{
         let a_sma = p.distanceFromSun * AU_IN_METERS;
         const v = Math.sqrt(mu / a_sma);
         const orientation = this.tgtAU > p.distanceFromSun ? 1 : -1;
-        let E = -mu / (2 * a_sma) + v * a * dt * orientation;
+        let E = -mu / (2 * a_sma) + v * dvTick * orientation;
         a_sma = -mu / (2 * E);
         p.distanceFromSun = a_sma / AU_IN_METERS;
         if((this.tgtAU>this.startAU&&p.distanceFromSun>=this.tgtAU)||
