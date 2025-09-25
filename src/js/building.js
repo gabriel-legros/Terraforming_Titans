@@ -896,7 +896,8 @@ const constructors = {
   biodome: 'Biodome',
   dysonReceiver: 'dysonReceiver',
   solarPanel: 'solarPanel',
-  boschReactor: 'MultiRecipesBuilding'
+  boschReactor: 'MultiRecipesBuilding',
+  waterTank: 'WaterTank'
 };
 
 function loadConstructor(name) {
