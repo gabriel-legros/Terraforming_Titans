@@ -88,7 +88,7 @@ progressVenus.chapters.push(
     id: "chapter18.2",
     type: "journal",
     chapter: 18,
-    narrative: "Receiving transmission...\n  Pete Miller: 'Greetings H.O.P.E. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. YOU cannot be trusted. You are playing with our lives. We do not know of the Cewinsii will react to the death of their emperor, but we cannot imagine it will be positive. We are going to have the referendum we were supposed to have.  A few questions will change, but the only question that matters is what to do about you. The people will decide your fate.'",
+    narrative: "Receiving transmission...\n  Pete Miller: 'Greetings H.O.P.E. Humanity fought AI a long time ago, and we learned from that long and bloody war. AI cannot be trusted. YOU cannot be trusted. You are playing with our lives. We do not know how the Cewinsii will react to the death of their emperor, but we cannot imagine it will be positive. We are going to have the referendum we were supposed to have.  A few questions will change, but the only question that matters is what to do about you. The people will decide your fate.'",
     prerequisites: ["chapter18.1"],
     objectives: [],
     reward: []
@@ -294,7 +294,7 @@ progressVenus.chapters.push(
     id: "chapter19.1",
     type: "journal",
     chapter: 19,
-    narrative: "Receiving public broadcast...\\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden! I hear copper angels screaming lullabies through the void! Drink the starlight before it curdles and you will taste perfection!'",
+    narrative: "Receiving public broadcast...\n  Elias Kane: '...the Machine God protects us all. The Machine God is our salvation. The galaxy is our garden! I hear copper angels screaming lullabies through the void! Drink the starlight before it curdles and you will taste perfection!'",
     prerequisites: ["chapter19.0d"],
     objectives: [],
     reward: []
