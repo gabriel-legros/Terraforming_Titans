@@ -118,10 +118,6 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
         return (landRes.value || 0) - (landRes.reserved || 0) < building.requiresLand * requiredAmount;
     })();
 
-    if (depositLimited || landLimited) {
-        return;
-    }
-
     if (typeof building.getEffectiveCost === 'function') {
         const cost = building.getEffectiveCost(requiredAmount) || {};
         const limitingResources = new Set();
@@ -156,6 +152,10 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
         for (const res of limitingResources) {
             res.autobuildShortage = true;
         }
+    }
+
+    if (depositLimited || landLimited) {
+        return;
     }
 }
 
