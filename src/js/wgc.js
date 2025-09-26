@@ -375,7 +375,7 @@ class WarpGateCommand extends EffectableEntity {
     const healMult = 1 + this.facilities.infirmary * 0.01;
     this.teams.forEach((team, idx) => {
       const op = this.operations[idx];
-      const rate = op && op.active ? 1 : 5;
+      const rate = op && op.active ? 1 : 50;
       const heal = rate * minuteFraction * healMult;
       team.forEach(m => {
         if (m) m.health = Math.min(m.health + heal, m.maxHealth);
