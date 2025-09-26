@@ -1,4 +1,4 @@
-const { autoBuild, setStrategicReserve } = require('../src/js/autobuild.js');
+const { autoBuild, setStrategicReserve, constructionOfficeState } = require('../src/js/autobuild.js');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 global.EffectableEntity = EffectableEntity;
 global.maintenanceFraction = 0;
@@ -47,5 +47,12 @@ describe('autobuild respects strategic reserve', () => {
     autoBuild({ t: b });
     expect(b.count).toBe(1);
     expect(resources.colony.metal.value).toBe(100);
+  });
+
+  test('stores decimal strategic reserve values', () => {
+    setStrategicReserve('12.5');
+    expect(constructionOfficeState.strategicReserve).toBe(12.5);
+    setStrategicReserve('105.75');
+    expect(constructionOfficeState.strategicReserve).toBe(100);
   });
 });
