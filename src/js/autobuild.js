@@ -91,39 +91,29 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
     if (!building || requiredAmount <= 0) return;
     if (typeof resources === 'undefined' || !resources) return;
 
-    const depositLimited = (() => {
-        if (!building.requiresDeposit) return false;
-        if (typeof building.canAffordDeposit === 'function') {
-            return !building.canAffordDeposit(requiredAmount);
-        }
-        const deposits = building.requiresDeposit.underground || {};
-        for (const deposit in deposits) {
-            if (!Object.prototype.hasOwnProperty.call(deposits, deposit)) continue;
-            const res = resources?.underground?.[deposit];
-            const required = deposits[deposit] * requiredAmount;
-            if (!res || (res.value || 0) - (res.reserved || 0) < required) {
-                return true;
+    const ratioTolerance = 1e-9;
+    const ratios = new Map();
+    const shortageMeta = new Map();
+
+    const registerShortage = (resObj, ratio, meta) => {
+        if (!resObj || !Number.isFinite(ratio)) return;
+        const existing = ratios.get(resObj);
+        const shouldReplace = existing === undefined || ratio + ratioTolerance < existing;
+        const isTie = existing !== undefined && Math.abs(ratio - existing) <= ratioTolerance;
+        if (shouldReplace || isTie) {
+            ratios.set(resObj, ratio);
+            if (meta) {
+                shortageMeta.set(resObj, meta);
+            } else if (!shortageMeta.has(resObj)) {
+                shortageMeta.set(resObj, {});
             }
         }
-        return false;
-    })();
+    };
 
-    const landLimited = (() => {
-        if (!building.requiresLand) return false;
-        if (typeof building.canAffordLand === 'function') {
-            return !building.canAffordLand(requiredAmount);
-        }
-        const landRes = resources?.surface?.land;
-        if (!landRes) return false;
-        return (landRes.value || 0) - (landRes.reserved || 0) < building.requiresLand * requiredAmount;
-    })();
+    const seenKeys = new Set();
 
     if (typeof building.getEffectiveCost === 'function') {
         const cost = building.getEffectiveCost(requiredAmount) || {};
-        const limitingResources = new Set();
-        let lowestRatio = Infinity;
-        let shortageDetected = false;
-        const ratioTolerance = 1e-9;
         for (const category in cost) {
             if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
             for (const resource in cost[category]) {
@@ -136,26 +126,100 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
                 const reserve = (reservePercent / 100) * cap;
                 const available = (resObj.value || 0) - reserve;
                 if (available + 1e-9 < required) {
-                    shortageDetected = true;
+                    const depositRequirement = building.requiresDeposit?.underground?.[resource];
+                    const isLandResource = category === 'surface' && resource === 'land' && (building.requiresLand || 0) > 0;
                     const ratio = available / required;
-                    if (ratio + ratioTolerance < lowestRatio) {
-                        lowestRatio = ratio;
-                        limitingResources.clear();
-                        limitingResources.add(resObj);
-                    } else if (Math.abs(ratio - lowestRatio) <= ratioTolerance) {
-                        limitingResources.add(resObj);
+                    const meta = {
+                        type: depositRequirement ? 'deposit' : isLandResource ? 'land' : 'resource',
+                        available,
+                    };
+                    if (meta.type === 'land') {
+                        meta.requiredPerUnit = building.requiresLand;
+                    }
+                    registerShortage(resObj, ratio, meta);
+                }
+                seenKeys.add(`${category}:${resource}`);
+            }
+        }
+    }
+
+    if (building.requiresDeposit?.underground) {
+        for (const deposit in building.requiresDeposit.underground) {
+            if (!Object.prototype.hasOwnProperty.call(building.requiresDeposit.underground, deposit)) continue;
+            if (seenKeys.has(`underground:${deposit}`)) continue;
+            const resObj = resources?.underground?.[deposit];
+            if (!resObj) continue;
+            const required = building.requiresDeposit.underground[deposit] * requiredAmount;
+            if (required <= 0) continue;
+            const available = (resObj.value || 0) - (resObj.reserved || 0);
+            if (available + 1e-9 < required) {
+                const ratio = available / required;
+                registerShortage(resObj, ratio, {
+                    type: 'deposit',
+                    available,
+                });
+            }
+        }
+    }
+
+    if (building.requiresLand) {
+        if (!seenKeys.has('surface:land')) {
+            const landRes = resources?.surface?.land;
+            if (landRes) {
+                const required = building.requiresLand * requiredAmount;
+                if (required > 0) {
+                    const available = (landRes.value || 0) - (landRes.reserved || 0);
+                    if (available + 1e-9 < required) {
+                        const ratio = available / required;
+                        registerShortage(landRes, ratio, {
+                            type: 'land',
+                            available,
+                            requiredPerUnit: building.requiresLand,
+                        });
                     }
                 }
             }
         }
-        if (!shortageDetected) return;
-        for (const res of limitingResources) {
-            res.autobuildShortage = true;
+    }
+
+    if (ratios.size === 0) return;
+
+    const entries = Array.from(ratios.entries()).map(([resObj, ratio]) => ({
+        resObj,
+        ratio,
+        meta: shortageMeta.get(resObj) || {},
+    }));
+
+    const isLandOrDepositException = entry => {
+        if (!entry || !entry.meta) return false;
+        if (entry.meta.type === 'deposit') {
+            return (entry.meta.available || 0) <= ratioTolerance;
+        }
+        if (entry.meta.type === 'land') {
+            const requiredPerUnit = entry.meta.requiredPerUnit || 0;
+            if (requiredPerUnit <= 0) return false;
+            return (entry.meta.available || 0) + ratioTolerance < requiredPerUnit;
+        }
+        return false;
+    };
+
+    const exceptionEntries = entries.filter(isLandOrDepositException);
+
+    if (exceptionEntries.length === entries.length) {
+        return;
+    }
+
+    let lowestRatio = Infinity;
+    for (const { ratio } of entries) {
+        if (ratio + ratioTolerance < lowestRatio) {
+            lowestRatio = ratio;
         }
     }
 
-    if (depositLimited || landLimited) {
-        return;
+    for (const { resObj, ratio } of entries) {
+        if (ratio <= lowestRatio + ratioTolerance) {
+            resObj.autobuildShortage = true;
+        }
     }
 }
 
@@ -182,7 +246,10 @@ function updateConstructionOfficeUI() {
         pauseBtn.textContent = constructionOfficeState.autobuilderActive ? 'Pause' : 'Resume';
     }
     if (reserveInput) {
-        reserveInput.value = constructionOfficeState.strategicReserve;
+        const activeElement = globalThis.document?.activeElement;
+        if (reserveInput !== activeElement) {
+            reserveInput.value = `${constructionOfficeState.strategicReserve}`;
+        }
     }
 }
 
@@ -196,8 +263,10 @@ function toggleAutobuilder() {
 }
 
 function setStrategicReserve(value) {
-    let val = parseInt(value, 10);
-    if (isNaN(val)) val = 0;
+    let val = parseFloat(value);
+    if (Number.isNaN(val)) {
+        val = 0;
+    }
     val = Math.max(0, Math.min(100, val));
     constructionOfficeState.strategicReserve = val;
 }
@@ -281,6 +350,7 @@ function initializeConstructionOfficeUI() {
     reserveInput.type = 'number';
     reserveInput.min = '0';
     reserveInput.max = '100';
+    reserveInput.step = 'any';
     reserveInput.id = 'strategic-reserve-input';
     reserveInput.addEventListener('input', () => {
         setStrategicReserve(reserveInput.value);
