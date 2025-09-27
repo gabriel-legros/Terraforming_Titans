@@ -567,22 +567,51 @@ function getAerostatLiftAlert() {
     typeof aerostat.getCurrentLift === 'function'
       ? aerostat.getCurrentLift()
       : null;
+  const pressure =
+    typeof aerostat.getCurrentSurfacePressure === 'function'
+      ? aerostat.getCurrentSurfacePressure()
+      : null;
+  const minPressure =
+    typeof aerostat.getMinimumOperationalPressure === 'function'
+      ? aerostat.getMinimumOperationalPressure()
+      : 50;
+  const minLift =
+    typeof aerostat.getMinimumOperationalLift === 'function'
+      ? aerostat.getMinimumOperationalLift()
+      : 0.2;
+  const warningLift = minLift + 0.1;
 
-  if (!Number.isFinite(lift)) {
+  if (!Number.isFinite(lift) && !Number.isFinite(pressure)) {
     return { severity: null, message: null, lift: null, active };
   }
 
   let severity = null;
   let message = null;
 
-  if (lift < 0.2) {
+  if (Number.isFinite(pressure) && pressure < minPressure) {
+    severity = 'critical';
+    const pressureText = formatNumber(pressure, false, 1);
+    message = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
+      minPressure,
+      false,
+      0
+    )} kPa minimum needed to stay buoyant.`;
+  } else if (Number.isFinite(lift) && lift < minLift) {
     severity = 'critical';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the 0.20 kg/m³ minimum needed to stay aloft.`;
-  } else if (lift < 0.3) {
+    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
+      minLift,
+      false,
+      2
+    )} kg/m³ minimum needed to stay aloft.`;
+  } else if (Number.isFinite(lift) && lift < warningLift) {
     severity = 'warning';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the 0.30 kg/m³ safety margin.`;
+    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
+      warningLift,
+      false,
+      2
+    )} kg/m³ safety margin.`;
   }
 
   return { severity, message, lift, active };
