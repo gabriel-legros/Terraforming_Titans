@@ -1105,6 +1105,12 @@ const researchParameters = {
             resourceType: 'atmospheric',
             targetId : 'sulfuricAcid',
             type: 'enable'
+          },          
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'hydrogen',
+            type: 'enable'
           }
         ],
       },
