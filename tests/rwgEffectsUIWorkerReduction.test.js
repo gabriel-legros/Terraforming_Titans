@@ -36,7 +36,7 @@ describe('Random World Generator worker reduction effect UI', () => {
     const desc = dom.window.document.querySelector('[data-effect="rwg-venus-workers"] .col-desc small');
     const value = dom.window.document.querySelector('[data-effect="rwg-venus-workers"] .col-effect');
 
-    expect(desc.textContent).toBe('Worker requirements reduced (~1% each)');
+    expect(desc.textContent).toBe('Worker requirements reduced (+1% each)');
     expect(value.textContent).toBe('-1.0%');
   });
 });
