@@ -10,6 +10,7 @@ const originalTerraforming = global.terraforming;
 const originalCalculateMolecularWeight = global.calculateMolecularWeight;
 const originalCalculateSpecificLift = global.calculateSpecificLift;
 const originalMinimumLift = global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+const originalFormatNumber = global.formatNumber;
 
 let currentLift = 0.3;
 
@@ -65,11 +66,21 @@ describe('Aerostat build cap', () => {
       underground: {}
     };
     global.buildings = {};
-    global.terraforming = { initialLand: 100, resources: { atmospheric: {} } };
+    global.terraforming = {
+      initialLand: 100,
+      resources: { atmospheric: {} },
+      calculateTotalPressure: jest.fn(() => 101)
+    };
     currentLift = 0.5;
     global.calculateMolecularWeight = jest.fn(() => 44);
     global.calculateSpecificLift = jest.fn(() => currentLift);
     global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT = 0.2;
+    global.formatNumber = (value, _useSuffix = false, decimals = 0) => {
+      if (!Number.isFinite(value)) {
+        return `${value}`;
+      }
+      return Number(value).toFixed(decimals);
+    };
   });
 
   afterEach(() => {
@@ -96,6 +107,11 @@ describe('Aerostat build cap', () => {
       delete global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
     } else {
       global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT = originalMinimumLift;
+    }
+    if (typeof originalFormatNumber === 'undefined') {
+      delete global.formatNumber;
+    } else {
+      global.formatNumber = originalFormatNumber;
     }
   });
 
@@ -141,6 +157,14 @@ describe('Aerostat build cap', () => {
     currentLift = 0.05;
     const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
     expect(aerostat.maxBuildable()).toBe(0);
+  });
+
+  test('aerostats cannot build when surface pressure is below the buoyancy requirement', () => {
+    global.terraforming.calculateTotalPressure.mockReturnValue(40);
+    const aerostat = new Aerostat(baseConfig, 'aerostat_colony');
+    expect(aerostat.build(1)).toBe(false);
+    expect(aerostat.maxBuildable()).toBe(0);
+    expect(aerostat.getBuoyancySummary()).toContain('50 kPa minimum needed for aerostat buoyancy');
   });
 
   test('buoyancy summary warns about insufficient lift preventing construction', () => {

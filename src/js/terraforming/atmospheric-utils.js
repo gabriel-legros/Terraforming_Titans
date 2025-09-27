@@ -2,6 +2,13 @@
 
 const isNodeAtmos = (typeof module !== 'undefined' && module.exports);
 
+let calculateAtmosphericPressureFn;
+if (isNodeAtmos) {
+  ({ calculateAtmosphericPressure: calculateAtmosphericPressureFn } = require('./physics.js'));
+} else {
+  calculateAtmosphericPressureFn = globalThis.calculateAtmosphericPressure;
+}
+
 // Common molecular weights in g/mol
 const MOLECULAR_WEIGHTS = {
   N2: 28.0134,
@@ -285,6 +292,45 @@ function calculateAtmosphericHeatProperties(composition, options) {
   return { specificHeatCapacity, meanMolecularWeight, gasConstant, kappa };
 }
 
+function getTotalSurfacePressureKPa(terraformingState) {
+  const terra = terraformingState || globalThis.terraforming || null;
+
+  const totalPressureCalculator = terra?.calculateTotalPressure;
+  if (totalPressureCalculator) {
+    const pressure = totalPressureCalculator.call(terra);
+    if (Number.isFinite(pressure) && pressure >= 0) {
+      return pressure;
+    }
+  }
+
+  const atmospheric =
+    terra?.resources?.atmospheric ||
+    globalThis.resources?.atmospheric ||
+    null;
+  const gravity = terra?.celestialParameters?.gravity;
+  const radius = terra?.celestialParameters?.radius;
+
+  if (!atmospheric || !calculateAtmosphericPressureFn) {
+    return null;
+  }
+
+  if (!Number.isFinite(gravity) || !Number.isFinite(radius)) {
+    return null;
+  }
+
+  let totalPressurePa = 0;
+  for (const key of Object.keys(atmospheric)) {
+    const amount = atmospheric[key]?.value ?? 0;
+    totalPressurePa += calculateAtmosphericPressureFn(amount, gravity, radius);
+  }
+
+  if (!Number.isFinite(totalPressurePa) || totalPressurePa < 0) {
+    return null;
+  }
+
+  return totalPressurePa / 1000;
+}
+
 if (!isNodeAtmos) {
   globalThis.MOLECULAR_WEIGHTS = MOLECULAR_WEIGHTS;
   globalThis.SPECIFIC_HEAT_CAPACITIES = SPECIFIC_HEAT_CAPACITIES;
@@ -293,6 +339,7 @@ if (!isNodeAtmos) {
   globalThis.approximateSpecificLift = approximateSpecificLift;
   globalThis.calculateEffectiveAtmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacity;
   globalThis.calculateAtmosphericHeatProperties = calculateAtmosphericHeatProperties;
+  globalThis.getTotalSurfacePressureKPa = getTotalSurfacePressureKPa;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -303,7 +350,8 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateSpecificLift,
     approximateSpecificLift,
     calculateEffectiveAtmosphericHeatCapacity,
-    calculateAtmosphericHeatProperties
+    calculateAtmosphericHeatProperties,
+    getTotalSurfacePressureKPa
   };
 }
 

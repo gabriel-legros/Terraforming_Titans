@@ -10,9 +10,11 @@ const AEROSTAT_INTERNAL_AIR_MOL_WEIGHT =
   globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ?? 29;
 const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ?? 0.2;
+const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
+  globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
 const AEROSTAT_BUOYANCY_NOTES =
-  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.';
+  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
@@ -23,12 +25,22 @@ globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
 globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ??= AEROSTAT_INTERNAL_AIR_MOL_WEIGHT;
 globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ??=
   AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ??=
+  AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+
+let getTotalSurfacePressureKPaHelper = null;
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getTotalSurfacePressureKPa: getTotalSurfacePressureKPaHelper } = require('../terraforming/atmospheric-utils.js'));
+} else {
+  getTotalSurfacePressureKPaHelper = globalThis.getTotalSurfacePressureKPa;
+}
 
 class Aerostat extends BaseColony {
   constructor(config, colonyName) {
     super(config, colonyName);
     this._liftDisableAccumulator = 0;
     this._liftBelowThreshold = false;
+    this._pressureBelowThreshold = false;
     this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
   }
 
@@ -72,7 +84,8 @@ class Aerostat extends BaseColony {
     }
 
     const lift = this.getCurrentLift();
-    if (this.isLiftBelowThreshold(lift)) {
+    const pressure = this.getCurrentSurfacePressure();
+    if (this.isLiftBelowThreshold(lift, pressure)) {
       return false;
     }
 
@@ -90,7 +103,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    if (this.isLiftBelowThreshold()) {
+    if (this.isLiftBelowThreshold(undefined, this.getCurrentSurfacePressure())) {
       return 0;
     }
 
@@ -109,15 +122,47 @@ class Aerostat extends BaseColony {
   getBuoyancySummary() {
     let summary = this.buoyancyNotes;
     const lift = this.getCurrentLift();
-    if (this.isLiftBelowThreshold(lift)) {
+    const pressure = this.getCurrentSurfacePressure();
+    const { pressureBelow, liftBelow } = this._evaluateBuoyancy(
+      lift,
+      pressure
+    );
+
+    if (pressureBelow) {
+      const minPressure = this.getMinimumOperationalPressure();
+      if (Number.isFinite(pressure)) {
+        summary += ` Current atmospheric pressure is ${formatNumber(
+          pressure,
+          false,
+          1
+        )} kPa, below the ${formatNumber(
+          minPressure,
+          false,
+          0
+        )} kPa minimum needed for aerostat buoyancy.`;
+      } else {
+        summary += ` Atmospheric pressure is below the ${formatNumber(
+          minPressure,
+          false,
+          0
+        )} kPa minimum needed for aerostat buoyancy.`;
+      }
+    }
+
+    if (liftBelow) {
       summary +=
         ' Current lift is below the minimum operational requirement, preventing aerostat activation and construction.';
     }
+
     return summary;
   }
 
   getMinimumOperationalLift() {
     return AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+  }
+
+  getMinimumOperationalPressure() {
+    return AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
   }
 
   getAtmosphericComposition() {
@@ -153,15 +198,48 @@ class Aerostat extends BaseColony {
     return lift;
   }
 
-  isLiftBelowThreshold(liftValue) {
-    const lift = liftValue ?? this.getCurrentLift();
-    if (lift === null) {
-      this._liftBelowThreshold = false;
-      return false;
+  getCurrentSurfacePressure() {
+    const computePressure =
+      getTotalSurfacePressureKPaHelper || globalThis.getTotalSurfacePressureKPa;
+    if (!computePressure) {
+      return null;
     }
-    const below = lift < this.getMinimumOperationalLift();
-    this._liftBelowThreshold = below;
-    return below;
+
+    const pressure = computePressure(globalThis.terraforming);
+    if (!Number.isFinite(pressure) || pressure < 0) {
+      return null;
+    }
+
+    return pressure;
+  }
+
+  _evaluateBuoyancy(liftValue, pressureValue) {
+    const lift = Number.isFinite(liftValue) ? liftValue : null;
+    const pressure = Number.isFinite(pressureValue) ? pressureValue : null;
+
+    const minPressure = this.getMinimumOperationalPressure();
+    const pressureBelow = pressure !== null && pressure < minPressure;
+    this._pressureBelowThreshold = pressureBelow;
+
+    const minLift = this.getMinimumOperationalLift();
+    const liftBelow = lift !== null && lift < minLift;
+
+    const insufficient = pressureBelow || liftBelow;
+    this._liftBelowThreshold = insufficient;
+
+    return { lift, pressure, pressureBelow, liftBelow, insufficient };
+  }
+
+  isLiftBelowThreshold(liftValue, pressureValue) {
+    const lift =
+      liftValue === undefined ? this.getCurrentLift() : liftValue;
+    const pressure =
+      pressureValue === undefined
+        ? this.getCurrentSurfacePressure()
+        : pressureValue;
+
+    const { insufficient } = this._evaluateBuoyancy(lift, pressure);
+    return insufficient;
   }
 
   filterActivationChange(change) {
@@ -182,7 +260,8 @@ class Aerostat extends BaseColony {
     }
 
     const lift = this.getCurrentLift();
-    const belowThreshold = this.isLiftBelowThreshold(lift);
+    const pressure = this.getCurrentSurfacePressure();
+    const belowThreshold = this.isLiftBelowThreshold(lift, pressure);
 
     if (!belowThreshold) {
       this._liftDisableAccumulator = 0;
@@ -662,6 +741,14 @@ function updateAerostatBuoyancySection(structure) {
       false,
       3
     )} kg/m³.`;
+    const minPressure =
+      structure.getMinimumOperationalPressure?.() ??
+      AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+    title += `\nAerostats require at least ${formatNumber(
+      minPressure,
+      false,
+      0
+    )} kPa of surface pressure to remain buoyant.`;
     ui.liftInfo.title = title;
   }
 
