@@ -112,7 +112,7 @@ function _computeRWGEffectsSummary() {
         const percent = raw * 100;
         const decimals = percent >= 10 ? 0 : 1;
         const eachPercent = (eff.factor ?? 0.01) * 100;
-        descr = descr || `Worker requirements reduced (~${eachPercent.toFixed(0)}% each)`;
+        descr = descr || `Worker requirements reduced (+${eachPercent.toFixed(0)}% each)`;
         display = percent > 0 ? `-${percent.toFixed(decimals)}%` : '0%';
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
