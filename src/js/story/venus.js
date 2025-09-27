@@ -705,7 +705,8 @@ progressVenus.chapters.push(
       { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: [
-      { target: 'spaceManager', type: 'setRwgLock', targetId: 'venus', value: true }
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'venus', value: true },
+      { target: 'rwgManager', type: 'unlockType', targetId: 'venus-like' }
     ]
   },
 );
