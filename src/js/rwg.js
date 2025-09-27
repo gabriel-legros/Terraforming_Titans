@@ -701,6 +701,10 @@ class RwgManager extends EffectableEntity {
       this.unlockOrbit(effect.targetId);
     } else if (effect.type === 'lockOrbit') {
       this.lockOrbit(effect.targetId);
+    } else if (effect.type === 'unlockType') {
+      this.unlockType(effect.targetId);
+    } else if (effect.type === 'lockType') {
+      this.lockType(effect.targetId);
     } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
       // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
