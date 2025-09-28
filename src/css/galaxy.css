@@ -1,20 +1,313 @@
 #space-galaxy {
   padding: 16px;
+  color: #e4f2ff;
 }
 
-.galaxy-placeholder-message {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #d0e4ff;
-  background: rgba(24, 32, 48, 0.6);
-  border: 1px solid rgba(64, 128, 192, 0.4);
-  border-radius: 8px;
+.galaxy-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.galaxy-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+
+
+.galaxy-row--secondary,
+.galaxy-row--tertiary {
+  min-height: 220px;
+}
+
+.galaxy-section {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 144, 208, 0.18);
+  background: linear-gradient(155deg, rgba(18, 28, 48, 0.92), rgba(8, 12, 22, 0.92));
+  box-shadow: 0 8px 20px rgba(4, 10, 22, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.galaxy-section--sector {
+  flex: 0 1 20%;
+  min-width: 220px;
+  max-width: 360px;
+  background: linear-gradient(160deg, rgba(16, 28, 46, 0.95), rgba(6, 10, 20, 0.95));
+}
+
+.galaxy-section--overview {
+  flex: 1 1 0;
+  background: linear-gradient(160deg, rgba(26, 42, 72, 0.95), rgba(10, 16, 28, 0.95));
+}
+
+.galaxy-section--operations,
+.galaxy-section--attacks,
+.galaxy-section--logistics,
+.galaxy-section--upgrades {
+  background: linear-gradient(150deg, rgba(18, 30, 52, 0.94), rgba(10, 16, 28, 0.94));
+}
+
+.galaxy-section__header {
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9cd3ff;
+}
+
+.galaxy-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(8, 14, 24, 0.5);
+  border: 1px solid rgba(76, 120, 184, 0.25);
+  border-radius: 12px;
+  padding: 14px;
+  flex: 1 1 auto;
+}
+
+.galaxy-section__description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #b9d6f2;
+}
+
+.galaxy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  color: #b9d6f2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.galaxy-list__placeholder {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  color: #90acd2;
+  font-style: italic;
+  background: rgba(12, 22, 38, 0.45);
+  border-radius: 10px;
+  border: 1px dashed rgba(120, 164, 228, 0.32);
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.galaxy-map-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  min-height: 200px;
+  background: radial-gradient(circle at top, rgba(36, 60, 96, 0.65), rgba(8, 12, 20, 0.9));
+  border-radius: 16px;
+  border: 1px solid rgba(70, 120, 190, 0.3);
+  overflow: hidden;
+  touch-action: none;
+}
+
+.galaxy-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  color: #c8e6ff;
+  user-select: none;
+  background: repeating-conic-gradient(from 45deg, rgba(52, 88, 140, 0.12) 0deg 30deg, transparent 30deg 60deg);
+  touch-action: none;
+}
+
+.galaxy-map.is-panning {
+  cursor: grabbing;
+}
+
+.galaxy-map.is-disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.galaxy-map-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  will-change: transform;
+  z-index: 1;
+}
+
+.galaxy-map-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  font-size: 1.05rem;
+  color: #cbe4ff;
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.72), rgba(8, 14, 24, 0.52));
+  pointer-events: none;
+  transition: opacity 220ms ease;
+  opacity: 0;
+  z-index: 3;
+}
+
+.galaxy-map-overlay.is-visible {
+  display: flex;
+  opacity: 1;
+}
+
+.galaxy-map-zoom {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 2;
+}
+
+.galaxy-map-zoom__button {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(136, 188, 252, 0.4);
+  background: rgba(12, 22, 36, 0.7);
+  color: #e4f2ff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(4, 12, 22, 0.3);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.galaxy-map-zoom__button:hover {
+  transform: translateY(-1px);
+  background: rgba(20, 36, 56, 0.82);
+}
+
+.galaxy-map-zoom__button:active {
+  transform: translateY(1px);
+}
+
+.galaxy-hex {
+  position: absolute;
+  border: 1px solid rgba(120, 180, 248, 0.4);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
+  clip-path: polygon(50% 0%, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e4f2ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  pointer-events: auto;
+  outline: none;
+}
+
+.galaxy-hex:hover {
+  box-shadow: 0 0 12px rgba(120, 208, 255, 0.35);
+  background: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
+  transform: translateZ(0) scale(1.05);
+}
+
+.galaxy-hex:focus-visible {
+  box-shadow: 0 0 14px rgba(140, 220, 255, 0.45);
+}
+
+.galaxy-hex__label {
+  pointer-events: none;
+}
+
+.galaxy-attack-panel,
+.galaxy-sector-panel {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   padding: 16px;
-  max-width: 420px;
+  border-radius: 12px;
+  background: rgba(12, 20, 32, 0.6);
+  border: 1px solid rgba(82, 130, 194, 0.28);
+  color: #d7e8ff;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
-.dark-mode .galaxy-placeholder-message {
-  color: #f0f6ff;
-  background: rgba(12, 20, 32, 0.7);
-  border-color: rgba(96, 160, 224, 0.6);
+.galaxy-attack-panel {
+  box-shadow: inset 0 0 12px rgba(212, 104, 104, 0.15);
+}
+
+.galaxy-sector-panel {
+  box-shadow: inset 0 0 12px rgba(124, 184, 255, 0.18);
+}
+
+@media (max-width: 1100px) {
+  .galaxy-row {
+    flex-wrap: wrap;
+  }
+
+  .galaxy-section--sector {
+    flex: 1 1 280px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 880px) {
+  .galaxy-row {
+    flex-direction: column;
+  }
+
+  .galaxy-row--primary {
+    min-height: 0;
+  }
+
+  .galaxy-map-wrapper {
+    aspect-ratio: auto;
+    min-height: 200px;
+  }
+}
+
+.dark-mode #space-galaxy {
+  color: #f2f7ff;
+}
+
+.dark-mode .galaxy-section {
+  background: linear-gradient(160deg, rgba(12, 22, 38, 0.92), rgba(4, 8, 16, 0.92));
+  border-color: rgba(112, 168, 228, 0.22);
+}
+
+.dark-mode .galaxy-section--overview {
+  background: linear-gradient(160deg, rgba(20, 36, 56, 0.95), rgba(4, 8, 16, 0.95));
+}
+
+.dark-mode .galaxy-section__body {
+  background: rgba(6, 12, 24, 0.6);
+  border-color: rgba(96, 150, 220, 0.24);
+}
+
+.dark-mode .galaxy-map-wrapper {
+  background: radial-gradient(circle at top, rgba(24, 52, 90, 0.7), rgba(2, 6, 14, 0.92));
+  border-color: rgba(104, 160, 232, 0.35);
 }
