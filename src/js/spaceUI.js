@@ -15,10 +15,13 @@ if (typeof SubtabManager === 'undefined') {
 let spaceUIInitialized = false;
 // Track visibility of the Random subtab
 let spaceRandomTabVisible = false;
+let spaceGalaxyTabVisible = false;
 let spaceSubtabManager = null;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
+
+const galaxyTabElements = { button: null, content: null };
 
 // Cached travel warning popup elements
 let travelWarningOverlay = null;
@@ -62,6 +65,53 @@ function hideSpaceRandomTab() {
         const tab = document.querySelector('[data-subtab="space-random"]');
         const content = document.getElementById('space-random');
         if (tab) tab.classList.add('hidden');
+        if (content) content.classList.add('hidden');
+    }
+}
+
+function cacheGalaxyTabElements() {
+    if (typeof document === 'undefined') {
+        return galaxyTabElements;
+    }
+    if (!galaxyTabElements.button || !galaxyTabElements.button.isConnected) {
+        const button = document.querySelector('[data-subtab="space-galaxy"]');
+        if (button) {
+            galaxyTabElements.button = button;
+        }
+    }
+    if (!galaxyTabElements.content || !galaxyTabElements.content.isConnected) {
+        const content = document.getElementById('space-galaxy');
+        if (content) {
+            galaxyTabElements.content = content;
+        }
+    }
+    return galaxyTabElements;
+}
+
+function showSpaceGalaxyTab() {
+    spaceGalaxyTabVisible = true;
+    const { button, content } = cacheGalaxyTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.show('space-galaxy');
+    } else {
+        if (button) button.classList.remove('hidden');
+        if (content) content.classList.remove('hidden');
+    }
+    if (typeof initializeGalaxyUI === 'function') {
+        initializeGalaxyUI();
+    }
+    if (typeof updateGalaxyUI === 'function') {
+        updateGalaxyUI();
+    }
+}
+
+function hideSpaceGalaxyTab() {
+    spaceGalaxyTabVisible = false;
+    const { button, content } = cacheGalaxyTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.hide('space-galaxy');
+    } else {
+        if (button) button.classList.add('hidden');
         if (content) content.classList.add('hidden');
     }
 }
@@ -218,6 +268,12 @@ function initializeSpaceUI(spaceManager) {
     console.log("Initializing Space UI with SpaceManager reference.");
     initializeSpaceTabs();
     hideSpaceRandomTab();
+    cacheGalaxyTabElements();
+    if (typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled) {
+        showSpaceGalaxyTab();
+    } else {
+        hideSpaceGalaxyTab();
+    }
 
     // If the UI has already been generated, just update with the new instance
     if (spaceUIInitialized) {

@@ -1,0 +1,20 @@
+#space-galaxy {
+  padding: 16px;
+}
+
+.galaxy-placeholder-message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #d0e4ff;
+  background: rgba(24, 32, 48, 0.6);
+  border: 1px solid rgba(64, 128, 192, 0.4);
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 420px;
+}
+
+.dark-mode .galaxy-placeholder-message {
+  color: #f0f6ff;
+  background: rgba(12, 20, 32, 0.7);
+  border-color: rgba(96, 160, 224, 0.6);
+}

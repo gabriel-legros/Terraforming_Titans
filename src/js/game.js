@@ -118,8 +118,12 @@ function create() {
   createMilestonesUI();
 
   spaceManager = new SpaceManager(planetParameters);
+  galaxyManager = new GalaxyManager();
   initializeHopeUI();
   initializeSpaceUI(spaceManager);
+  if (typeof galaxyManager.initialize === 'function') {
+    galaxyManager.initialize();
+  }
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
     initializeGameState();
@@ -315,6 +319,12 @@ function initializeGameState(options = {}) {
   lifeManager = new LifeManager();
 
   milestonesManager = new MilestonesManager();
+  if (!preserveManagers || !galaxyManager) {
+    galaxyManager = new GalaxyManager();
+  }
+  if (typeof galaxyManager.initialize === 'function') {
+    galaxyManager.initialize();
+  }
   if (!preserveManagers) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
@@ -349,6 +359,11 @@ function initializeGameState(options = {}) {
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
     initializeSpaceUI(spaceManager);
   }
+  if (typeof galaxyManager?.refreshUIVisibility === 'function') {
+    galaxyManager.refreshUIVisibility();
+  } else if (typeof updateGalaxyUI === 'function') {
+    updateGalaxyUI();
+  }
 
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.
@@ -377,6 +392,10 @@ function updateLogic(delta) {
   dayNightCycle.update(delta);
 
   colonySliderSettings.updateColonySlidersEffect();
+
+  if (galaxyManager && typeof galaxyManager.update === 'function') {
+    galaxyManager.update(delta);
+  }
 
   const allStructures = {...buildings, ...colonies};
 
@@ -512,6 +531,7 @@ function updateRender(force = false) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
+      if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
       if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
@@ -534,6 +554,7 @@ function updateRender(force = false) {
     updateStatisticsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
+    if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
   }
 
   // Milestones often affect multiple views; keep updated

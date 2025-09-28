@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="src/css/milestones.css">
     <!-- Add CSS for the new Space tab if needed -->
     <link rel="stylesheet" href="src/css/space.css">
+    <link rel="stylesheet" href="src/css/galaxy.css">
     <link rel="stylesheet" href="src/css/rwg.css">
     <!-- Add CSS for the new HOPE tab -->
     <link rel="stylesheet" href="src/css/skillsUI.css">
@@ -152,6 +153,8 @@
     <script src="src/js/gold-asteroid.js"></script>
     <script src="src/js/space.js"></script>
     <script src="src/js/spaceUI.js"></script>
+    <script src="src/js/galaxy/galaxy.js"></script>
+    <script src="src/js/galaxy/galaxyUI.js"></script>
     <script src="src/js/rwgUI.js"></script>
     <script src="src/js/warning.js"></script>
     <script src="src/js/game-effects.js"></script>
@@ -412,6 +415,7 @@
             <div class="space-subtabs">
                 <div class="space-subtab active" data-subtab="space-story">Story</div>
                 <div class="space-subtab hidden" data-subtab="space-random">Random</div>
+                <div class="space-subtab hidden" data-subtab="space-galaxy">Galaxy</div>
             </div>
             <div class="space-subtab-content-wrapper">
                 <div id="space-story" class="space-subtab-content active">
@@ -432,6 +436,9 @@
                 </div>
                 <div id="space-random" class="space-subtab-content hidden">
                     <!-- Random events will appear here -->
+                </div>
+                <div id="space-galaxy" class="space-subtab-content hidden">
+                    <!-- Galaxy overview placeholder -->
                 </div>
             </div>
         </div>
