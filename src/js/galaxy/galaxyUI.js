@@ -37,7 +37,7 @@ function updateGalaxyUI() {
     const enabled = !!(manager && manager.enabled);
     if (galaxyUICache && galaxyUICache.placeholder) {
         galaxyUICache.placeholder.textContent = enabled
-            ? 'Work in progress.'
+            ? 'Enabled but Work in progress.'
             : 'Work in progress.';
     }
 }
