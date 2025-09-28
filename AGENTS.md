@@ -199,3 +199,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
   lly without mutating base data.
 - Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
+
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.

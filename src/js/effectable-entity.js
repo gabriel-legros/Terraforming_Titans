@@ -614,6 +614,7 @@ function addOrRemoveEffect(effect, action) {
     'warpGateCommand' : warpGateCommand,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
+    'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
 

@@ -657,7 +657,19 @@ progressVenus.chapters.push(
     narrative: "System Message: Galactic map unlocked.",
     prerequisites: ["chapter20.12"],
     objectives: [],
-    reward: []
+    reward: [
+      { target: 'galaxyManager', type: 'enable', targetId: 'space-galaxy', onLoad: false },
+      { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'space-subtab',
+        contentClass: 'space-subtab-content',
+        targetId: 'space-galaxy',
+        unhide: true,
+        onLoad: false
+      }
+    ]
   },
   {
     id: "chapter20.14",
