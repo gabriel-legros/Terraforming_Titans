@@ -37,8 +37,8 @@ function updateGalaxyUI() {
     const enabled = !!(manager && manager.enabled);
     if (galaxyUICache && galaxyUICache.placeholder) {
         galaxyUICache.placeholder.textContent = enabled
-            ? 'Starlanes calibrating. Future missions will chart this expanse.'
-            : 'The galaxy awaits further updates.';
+            ? 'Work in progress.'
+            : 'Work in progress.';
     }
 }
 
