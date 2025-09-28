@@ -24,9 +24,6 @@ class GalaxyManager extends EffectableEntity {
         }
         this.enabled = true;
         this.refreshUIVisibility();
-        if (autoSwitch) {
-            this.focusOnGalaxy();
-        }
     }
 
     refreshUIVisibility() {
@@ -42,15 +39,6 @@ class GalaxyManager extends EffectableEntity {
             }
         } else if (typeof hideSpaceGalaxyTab === 'function') {
             hideSpaceGalaxyTab();
-        }
-    }
-
-    focusOnGalaxy() {
-        if (typeof tabManager !== 'undefined' && tabManager && typeof tabManager.activateTab === 'function') {
-            tabManager.activateTab('space');
-        }
-        if (typeof activateSpaceSubtab === 'function') {
-            activateSpaceSubtab('space-galaxy');
         }
     }
 
