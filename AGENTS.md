@@ -215,3 +215,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
 - Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.
 - Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
+- Galaxy sectors now store their original controller and factions keep running counts of controlled and original sectors.

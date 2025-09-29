@@ -17,6 +17,9 @@ class GalaxyFaction {
         }
         this.fleetCapacity = 0;
         this.fleetPower = 0;
+        this.controlledSectorCount = 0;
+        this.originalControlledSectorCount = 0;
+        this.originalSectorCount = 0;
     }
 
     getStartingSectors() {
@@ -138,7 +141,10 @@ class GalaxyFaction {
     toJSON() {
         return {
             id: this.id,
-            fleetPower: this.fleetPower
+            fleetPower: this.fleetPower,
+            controlledSectorCount: this.controlledSectorCount,
+            originalControlledSectorCount: this.originalControlledSectorCount,
+            originalSectorCount: this.originalSectorCount
         };
     }
 

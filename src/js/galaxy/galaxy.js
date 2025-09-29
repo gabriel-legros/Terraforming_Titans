@@ -165,7 +165,7 @@ class GalaxyManager extends EffectableEntity {
         }
         if (state && Array.isArray(state.sectors)) {
             this.sectors.forEach((sector) => {
-                sector.replaceControl({});
+                sector.replaceControl({}, { suppressNotification: true });
             });
             this.#applyFactionStartingControl();
             state.sectors.forEach((sectorData) => {
@@ -173,11 +173,15 @@ class GalaxyManager extends EffectableEntity {
                 if (!sector) {
                     return;
                 }
-                sector.replaceControl(sectorData.control);
+                sector.replaceControl(sectorData.control, { suppressNotification: true });
                 if (Number.isFinite(sectorData?.value)) {
                     sector.setValue(sectorData.value);
                 }
+                if (Object.prototype.hasOwnProperty.call(sectorData || {}, 'originalController')) {
+                    sector.setOriginalController(sectorData.originalController, { overwrite: true });
+                }
             });
+            this.#recalculateFactionControlStats();
         }
         const factionStateMap = new Map();
         if (state && Array.isArray(state.factions)) {
@@ -248,6 +252,9 @@ class GalaxyManager extends EffectableEntity {
         const coordinates = generateSectorCoordinates(this.radius);
         coordinates.forEach(({ q, r }) => {
             const sector = new GalaxySectorClass({ q, r });
+            sector.setControlChangeHandler((changedSector) => {
+                this.#handleSectorControlChanged(changedSector);
+            });
             this.sectors.set(sector.key, sector);
         });
     }
@@ -273,7 +280,7 @@ class GalaxyManager extends EffectableEntity {
 
     #applyFactionStartingControl() {
         this.sectors.forEach((sector) => {
-            sector.replaceControl({});
+            sector.replaceControl({}, { suppressNotification: true });
         });
         this.factions.forEach((faction) => {
             faction.getStartingSectors().forEach((sectorKey) => {
@@ -281,7 +288,7 @@ class GalaxyManager extends EffectableEntity {
                 if (!sector) {
                     return;
                 }
-                sector.setControl(faction.id, 100);
+                sector.setControl(faction.id, 100, { suppressNotification: true });
             });
         });
         Object.entries(galaxySectorControlOverridesConfig).forEach(([sectorKey, controlMap]) => {
@@ -304,10 +311,45 @@ class GalaxyManager extends EffectableEntity {
             if (!sanitized.length) {
                 return;
             }
-            sector.replaceControl({});
+            sector.replaceControl({}, { suppressNotification: true });
             sanitized.forEach(([factionId, numericValue]) => {
-                sector.setControl(factionId, numericValue);
+                sector.setControl(factionId, numericValue, { suppressNotification: true });
             });
+        });
+        this.sectors.forEach((sector) => {
+            const dominant = sector.getDominantController();
+            sector.setOriginalController(dominant ? dominant.factionId : null, { overwrite: true });
+        });
+        this.#recalculateFactionControlStats();
+    }
+
+    #handleSectorControlChanged() {
+        this.#recalculateFactionControlStats();
+    }
+
+    #recalculateFactionControlStats() {
+        if (!this.factions.size) {
+            return;
+        }
+        this.factions.forEach((faction) => {
+            faction.controlledSectorCount = 0;
+            faction.originalControlledSectorCount = 0;
+            faction.originalSectorCount = 0;
+        });
+        this.sectors.forEach((sector) => {
+            const dominant = sector?.getDominantController?.();
+            if (dominant && this.factions.has(dominant.factionId)) {
+                const controllingFaction = this.factions.get(dominant.factionId);
+                controllingFaction.controlledSectorCount += 1;
+            }
+            const originalId = sector?.getOriginalController?.();
+            if (originalId && this.factions.has(originalId)) {
+                const originalFaction = this.factions.get(originalId);
+                originalFaction.originalSectorCount += 1;
+                if (dominant && dominant.factionId === originalId) {
+                    originalFaction.originalControlledSectorCount += 1;
+                }
+            }
         });
     }
 
