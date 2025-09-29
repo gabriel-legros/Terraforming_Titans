@@ -213,10 +213,11 @@
   --galaxy-hex-background-hover: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
   --galaxy-hex-border: rgba(120, 180, 248, 0.4);
   position: absolute;
-  border: 1px solid var(--galaxy-hex-border);
+  border: 0;
   border-radius: 12px;
-  background: var(--galaxy-hex-background);
-  clip-path: polygon(50% 0%, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow: inset 0 0 0 1px rgba(32, 56, 92, 0.6), inset 0 0 18px rgba(12, 20, 32, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,8 +230,8 @@
 }
 
 .galaxy-hex:hover {
-  box-shadow: 0 0 12px rgba(120, 208, 255, 0.35);
-  background: var(--galaxy-hex-background-hover);
+  box-shadow: inset 0 0 0 1px rgba(64, 128, 200, 0.65), inset 0 0 18px rgba(12, 24, 40, 0.4), 0 0 12px rgba(120, 208, 255, 0.35);
+  background: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
   transform: translateZ(0) scale(1.05);
 }
 
@@ -239,7 +240,7 @@
 }
 
 .galaxy-hex:focus-visible {
-  box-shadow: 0 0 14px rgba(140, 220, 255, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(120, 200, 255, 0.75), inset 0 0 18px rgba(12, 24, 40, 0.45), 0 0 14px rgba(140, 220, 255, 0.55);
 }
 
 .galaxy-hex__label {
