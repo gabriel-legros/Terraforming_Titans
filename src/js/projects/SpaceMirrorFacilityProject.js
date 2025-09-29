@@ -616,7 +616,7 @@ function initializeMirrorOversightUI(container) {
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
-        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0" style="font-size:12px; width:75px;">
+        <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:75px;">
         <select id="adv-target-water-scale" class="stat-value" style="font-size:12px; width:50px;">
           <option value="1000">k</option>
           <option value="1000000">M</option>
