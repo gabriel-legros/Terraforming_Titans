@@ -101,6 +101,7 @@ class GalaxyManager extends EffectableEntity {
         this.#initializeSectors();
         this.#initializeFactions();
         this.#applyFactionStartingControl();
+        this.#initializeFactionFleets();
         this.refreshUIVisibility();
     }
 
@@ -152,7 +153,8 @@ class GalaxyManager extends EffectableEntity {
         const sectors = Array.from(this.sectors.values()).map((sector) => sector.toJSON());
         return {
             enabled: this.enabled,
-            sectors
+            sectors,
+            factions: this.getFactions().map((faction) => faction.toJSON())
         };
     }
 
@@ -172,13 +174,36 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 sector.replaceControl(sectorData.control);
+                if (Number.isFinite(sectorData?.value)) {
+                    sector.setValue(sectorData.value);
+                }
             });
         }
+        const factionStateMap = new Map();
+        if (state && Array.isArray(state.factions)) {
+            state.factions.forEach((entry) => {
+                if (!entry || !entry.id) {
+                    return;
+                }
+                factionStateMap.set(entry.id, entry);
+            });
+        }
+        this.#initializeFactionFleets();
+        this.factions.forEach((faction) => {
+            const factionState = factionStateMap.get(faction.id);
+            if (factionState) {
+                faction.loadState(factionState, this);
+            }
+        });
         this.refreshUIVisibility();
     }
 
     getSector(q, r) {
         return this.sectors.get(GalaxySectorClass.createKey(q, r)) || null;
+    }
+
+    getSectors() {
+        return Array.from(this.sectors.values());
     }
 
     getSectorController(q, r) {
@@ -205,6 +230,10 @@ class GalaxyManager extends EffectableEntity {
         return Array.from(this.factions.values());
     }
 
+    getTerraformedWorldCount() {
+        return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+    }
+
     #initializeSectors() {
         this.sectors.clear();
         const coordinates = generateSectorCoordinates(this.radius);
@@ -224,6 +253,12 @@ class GalaxyManager extends EffectableEntity {
                 startingSectors
             });
             this.factions.set(faction.id, faction);
+        });
+    }
+
+    #initializeFactionFleets() {
+        this.factions.forEach((faction) => {
+            faction.initializeFleetPower(this);
         });
     }
 
