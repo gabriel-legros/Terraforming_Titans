@@ -94,9 +94,17 @@ const galaxyFactionParameters = [
     }
 ];
 
+const galaxySectorControlOverrides = {
+    [createKey(4, -5)]: {
+        uhf: 0.1,
+        helian: 0.9
+    }
+};
+
 if (typeof window !== 'undefined') {
     window.galaxyFactionParameters = galaxyFactionParameters;
+    window.galaxySectorControlOverrides = galaxySectorControlOverrides;
 }
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { galaxyFactionParameters };
+    module.exports = { galaxyFactionParameters, galaxySectorControlOverrides };
 }
