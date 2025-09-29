@@ -213,7 +213,7 @@
   border: 1px solid rgba(120, 180, 248, 0.4);
   border-radius: 12px;
   background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
-  clip-path: polygon(50% 0%, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
   align-items: center;
   justify-content: center;
