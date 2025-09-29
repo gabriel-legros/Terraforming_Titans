@@ -106,6 +106,12 @@ class StoryManager {
     initializeStory(){ // Keep this as is
         clearJournal();
 
+        if (debugMode) {
+            this.completeAllJournalEventsForDebug({ applyRewards: true });
+            this.updateCurrentObjectiveUI();
+            return;
+        }
+
         const initialEvent = this.findEventById("chapter0.1");
         if(initialEvent && !this.completedEventIds.has(initialEvent.id) && !this.activeEventIds.has(initialEvent.id)){
              this.activateEvent(initialEvent);
@@ -655,12 +661,15 @@ class StoryManager {
         return state;
     }
 
-    completeAllJournalEventsForDebug() {
+    completeAllJournalEventsForDebug(options = {}) {
+        const { applyRewards = false } = options;
         console.warn('Debug mode active: completing all journal events on load.');
         this.activeEventIds = new Set();
         this.completedEventIds = new Set();
         this.appliedEffects = [];
         this.waitingForJournalEventId = null;
+
+        const collectedEffects = [];
 
         this.allEvents.forEach(event => {
             if (event.type !== 'journal') {
@@ -670,7 +679,20 @@ class StoryManager {
             if (!Array.isArray(event.reward)) {
                 return;
             }
+            event.reward.forEach(effect => {
+                if (!effect || !effect.type) {
+                    return;
+                }
+                if (!effect.oneTimeFlag) {
+                    collectedEffects.push(effect);
+                }
+                if (applyRewards) {
+                    addEffect(effect);
+                }
+            });
         });
+
+        this.appliedEffects = collectedEffects;
 
         this.currentChapter = this.progressData.chapters.reduce((max, config) => {
             if (config.type !== 'journal') {
