@@ -80,3 +80,9 @@ let galaxyManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
 let gameSpeed = 1;
+
+Object.defineProperty(globalThis, 'galaxyManager', {
+  get: () => galaxyManager,
+  set: (value) => { galaxyManager = value; },
+  configurable: true,
+});
