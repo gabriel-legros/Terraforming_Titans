@@ -10,8 +10,6 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
-const DEFAULT_SECTOR_LABEL = 'R5-07';
-
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();
     return text || DEFAULT_SECTOR_LABEL;
