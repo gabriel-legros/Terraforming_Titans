@@ -182,6 +182,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
+- Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Milestones subtab remains hidden until Terraforming measurements research is completed.
 - Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
