@@ -907,7 +907,8 @@ const researchParameters = {
         prerequisites: [],
         requiredFlags: ['superalloyResearchUnlocked'],
         effects: [
-          { target: 'colony', targetId: 't7_colony', type: 'enable' }
+          { target: 'colony', targetId: 't7_colony', type: 'enable' },
+          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ],
       },
       {
