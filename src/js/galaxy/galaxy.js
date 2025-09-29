@@ -177,6 +177,15 @@ class GalaxyManager extends EffectableEntity {
         this.refreshUIVisibility();
     }
 
+    resetGalaxy() {
+        this.initialized = false;
+        this.radius = GALAXY_RADIUS;
+        this.factions.clear();
+        this.sectors.clear();
+        this.initialize();
+        this.enable();
+    }
+
     getSector(q, r) {
         return this.sectors.get(GalaxySectorClass.createKey(q, r)) || null;
     }
