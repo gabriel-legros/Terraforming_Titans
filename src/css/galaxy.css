@@ -209,10 +209,13 @@
 }
 
 .galaxy-hex {
+  --galaxy-hex-background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
+  --galaxy-hex-background-hover: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
+  --galaxy-hex-border: rgba(120, 180, 248, 0.4);
   position: absolute;
-  border: 1px solid rgba(120, 180, 248, 0.4);
+  border: 1px solid var(--galaxy-hex-border);
   border-radius: 12px;
-  background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
+  background: var(--galaxy-hex-background);
   clip-path: polygon(50% 0%, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%);
   display: flex;
   align-items: center;
@@ -227,8 +230,12 @@
 
 .galaxy-hex:hover {
   box-shadow: 0 0 12px rgba(120, 208, 255, 0.35);
-  background: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
+  background: var(--galaxy-hex-background-hover);
   transform: translateZ(0) scale(1.05);
+}
+
+.galaxy-hex.is-controlled {
+  box-shadow: 0 0 10px rgba(8, 12, 18, 0.38);
 }
 
 .galaxy-hex:focus-visible {

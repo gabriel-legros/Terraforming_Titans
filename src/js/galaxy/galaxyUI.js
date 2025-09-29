@@ -142,6 +142,50 @@ function buildGalaxyHexMap(doc) {
     };
 }
 
+function resetGalaxyHexStyles(cache) {
+    if (!cache || !cache.hexElements) {
+        return;
+    }
+    cache.hexElements.forEach((hex) => {
+        hex.style.removeProperty('--galaxy-hex-background');
+        hex.style.removeProperty('--galaxy-hex-background-hover');
+        hex.style.removeProperty('--galaxy-hex-border');
+        hex.classList.remove('is-controlled');
+        hex.dataset.controller = '';
+        hex.dataset.controllerName = '';
+    });
+}
+
+function updateGalaxyHexControlColors(manager, cache) {
+    if (!manager || !cache || !cache.hexElements) {
+        return;
+    }
+    cache.hexElements.forEach((hex) => {
+        const q = Number(hex.dataset.q);
+        const r = Number(hex.dataset.r);
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return;
+        }
+        const controller = manager.getSectorController(q, r);
+        if (!controller) {
+            hex.style.removeProperty('--galaxy-hex-background');
+            hex.style.removeProperty('--galaxy-hex-background-hover');
+            hex.style.removeProperty('--galaxy-hex-border');
+            hex.classList.remove('is-controlled');
+            hex.dataset.controller = '';
+            hex.dataset.controllerName = '';
+            return;
+        }
+        const { faction } = controller;
+        hex.style.setProperty('--galaxy-hex-background', faction.getMapBackground());
+        hex.style.setProperty('--galaxy-hex-background-hover', faction.getHoverBackground());
+        hex.style.setProperty('--galaxy-hex-border', faction.getBorderColor());
+        hex.classList.add('is-controlled');
+        hex.dataset.controller = faction.id;
+        hex.dataset.controllerName = faction.name;
+    });
+}
+
 function updateGalaxyMapTransform(cache) {
     if (!cache || !cache.mapContent) {
         return;
@@ -409,6 +453,7 @@ function cacheGalaxyElements() {
     mapContent.style.width = `${hexBuild.contentWidth}px`;
     mapContent.style.height = `${hexBuild.contentHeight}px`;
     mapContent.appendChild(hexBuild.fragment);
+    const hexElements = Array.from(mapContent.querySelectorAll('.galaxy-hex'));
 
     const mapOverlay = doc.createElement('div');
     mapOverlay.className = 'galaxy-map-overlay';
@@ -568,7 +613,8 @@ function cacheGalaxyElements() {
         upgradesList,
         upgradesPlaceholder,
         attackContent,
-        sectorContent
+        sectorContent,
+        hexElements
     };
 
     refreshEmptyStates();
@@ -645,6 +691,7 @@ function updateGalaxyUI() {
             globalThis.clearTimeout(cache.mapState.overlayHideTimeout);
             cache.mapState.overlayHideTimeout = null;
         }
+        resetGalaxyHexStyles(cache);
         refreshEmptyStates();
         return;
     }
@@ -669,6 +716,7 @@ function updateGalaxyUI() {
         cache.mapOverlay.textContent = '';
     }
 
+    updateGalaxyHexControlColors(manager, cache);
     refreshEmptyStates();
 }
 
