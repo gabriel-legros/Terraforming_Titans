@@ -655,6 +655,42 @@ class StoryManager {
         return state;
     }
 
+    completeAllJournalEventsForDebug() {
+        console.warn('Debug mode active: completing all journal events on load.');
+        this.activeEventIds = new Set();
+        this.completedEventIds = new Set();
+        this.appliedEffects = [];
+        this.waitingForJournalEventId = null;
+
+        this.allEvents.forEach(event => {
+            if (event.type !== 'journal') {
+                return;
+            }
+            this.completedEventIds.add(event.id);
+            if (!Array.isArray(event.reward)) {
+                return;
+            }
+            event.reward.forEach(effect => {
+                if (!effect || !effect.type) {
+                    return;
+                }
+                if (!effect.oneTimeFlag) {
+                    this.appliedEffects.push(effect);
+                }
+                addEffect(effect);
+            });
+        });
+
+        this.currentChapter = this.progressData.chapters.reduce((max, config) => {
+            if (config.type !== 'journal') {
+                return max;
+            }
+            return config.chapter > max ? config.chapter : max;
+        }, 0);
+
+        this.updateCurrentObjectiveUI();
+    }
+
     loadState(savedState) { // Add loading for waiting state
         console.log("StoryManager.loadState received:", savedState);
         if (!savedState) {
@@ -666,6 +702,11 @@ class StoryManager {
         this.completedEventIds = new Set(savedState.completedEventIds || []);
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
+
+        if (globalThis.debugMode) {
+            this.completeAllJournalEventsForDebug();
+            return;
+        }
 
         const activePlanets = savedState.activeEventPlanets || {};
         Object.keys(activePlanets).forEach(id => {

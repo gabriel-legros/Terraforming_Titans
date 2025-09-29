@@ -14,6 +14,14 @@ Object.defineProperty(globalThis, 'resources', {
   set: (v) => { resources = v; },
   configurable: true,
 });
+let debugMode = false;
+Object.defineProperty(globalThis, 'debugMode', {
+  get: () => debugMode,
+  set: (value) => {
+    debugMode = !!value;
+  },
+  configurable: true,
+});
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
 let shipEfficiency = 1;
 let dayNightCycle;
