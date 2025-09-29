@@ -172,6 +172,15 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 sector.replaceControl(sectorData.control);
+                if (Object.prototype.hasOwnProperty.call(sectorData, 'originalController')) {
+                    const stored = sectorData.originalController;
+                    if (stored === null || stored === undefined) {
+                        sector.originalController = null;
+                    } else {
+                        const value = `${stored}`;
+                        sector.originalController = value ? value : null;
+                    }
+                }
             });
         }
         this.refreshUIVisibility();

@@ -1,9 +1,14 @@
 class GalaxySector {
-    constructor({ q, r, control } = {}) {
+    constructor({ q, r, control, originalController } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
         this.ring = GalaxySector.computeRing(this.q, this.r);
+        this.originalController = null;
+        if (originalController || originalController === 0) {
+            const value = `${originalController}`;
+            this.originalController = value ? value : null;
+        }
         this.control = {};
         if (control) {
             this.replaceControl(control);
@@ -39,6 +44,9 @@ class GalaxySector {
             return;
         }
         this.control[factionId] = value;
+        if (!this.originalController) {
+            this.originalController = `${factionId}`;
+        }
     }
 
     clearControl(factionId) {
@@ -119,7 +127,8 @@ class GalaxySector {
         return {
             q: this.q,
             r: this.r,
-            control: { ...this.control }
+            control: { ...this.control },
+            originalController: this.originalController
         };
     }
 }
