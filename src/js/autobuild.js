@@ -60,6 +60,58 @@ const autobuildCostTracker = {
     }
 };
 
+function addCostToPrioritizedReserve(reserve, cost) {
+    if (!cost) return;
+    for (const category in cost) {
+        if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
+        if (!reserve[category]) reserve[category] = {};
+        const categoryReserve = reserve[category];
+        const categoryCost = cost[category];
+        for (const resource in categoryCost) {
+            if (!Object.prototype.hasOwnProperty.call(categoryCost, resource)) continue;
+            categoryReserve[resource] = (categoryReserve[resource] || 0) + categoryCost[resource];
+        }
+    }
+}
+
+function subtractCostFromPrioritizedReserve(reserve, cost) {
+    if (!cost) return;
+    for (const category in cost) {
+        if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
+        const categoryReserve = reserve[category];
+        if (!categoryReserve) continue;
+        const categoryCost = cost[category];
+        for (const resource in categoryCost) {
+            if (!Object.prototype.hasOwnProperty.call(categoryCost, resource)) continue;
+            if (!Object.prototype.hasOwnProperty.call(categoryReserve, resource)) continue;
+            const nextValue = categoryReserve[resource] - categoryCost[resource];
+            if (nextValue > 0) {
+                categoryReserve[resource] = nextValue;
+            } else {
+                delete categoryReserve[resource];
+            }
+        }
+        if (Object.keys(categoryReserve).length === 0) {
+            delete reserve[category];
+        }
+    }
+}
+
+function cloneCostObject(cost) {
+    if (!cost) return {};
+    const clone = {};
+    for (const category in cost) {
+        if (!Object.prototype.hasOwnProperty.call(cost, category)) continue;
+        clone[category] = {};
+        const categoryCost = cost[category];
+        for (const resource in categoryCost) {
+            if (!Object.prototype.hasOwnProperty.call(categoryCost, resource)) continue;
+            clone[category][resource] = categoryCost[resource];
+        }
+    }
+    return clone;
+}
+
 function resetAutoBuildPartialFlags(structures) {
     if (!structures) return;
     for (const name in structures) {
@@ -87,7 +139,7 @@ function resetAutoBuildResourceShortages(resourceCollection) {
     }
 }
 
-function markAutoBuildShortages(building, requiredAmount, reservePercent) {
+function markAutoBuildShortages(building, requiredAmount, reservePercent, extraReserves = null) {
     if (!building || requiredAmount <= 0) return;
     if (typeof resources === 'undefined' || !resources) return;
 
@@ -124,7 +176,8 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent) {
                 if (required <= 0) continue;
                 const cap = resObj.cap || 0;
                 const reserve = (reservePercent / 100) * cap;
-                const available = (resObj.value || 0) - reserve;
+                const prioritizedReserve = extraReserves?.[category]?.[resource] || 0;
+                const available = (resObj.value || 0) - reserve - prioritizedReserve;
                 if (available + 1e-9 < required) {
                     const depositRequirement = building.requiresDeposit?.underground?.[resource];
                     const isLandResource = category === 'surface' && resource === 'land' && (building.requiresLand || 0) > 0;
@@ -439,6 +492,13 @@ function autoBuild(buildings, delta = 0) {
         }
     }
 
+    const prioritizedReserve = {};
+    buildableBuildings.forEach(entry => {
+        if (!entry.building.autoBuildPriority) return;
+        const totalCost = entry.building.getEffectiveCost?.(entry.requiredAmount);
+        addCostToPrioritizedReserve(prioritizedReserve, totalCost);
+    });
+
     // Step 2: Sort buildable buildings by priority then current ratio (ascending)
     buildableBuildings.sort((a, b) => {
         if (a.building.autoBuildPriority && !b.building.autoBuildPriority) return -1;
@@ -450,15 +510,16 @@ function autoBuild(buildings, delta = 0) {
     buildableBuildings.forEach(({ building, requiredAmount }) => {
         let buildCount = 0;
         const reserve = constructionOfficeState.strategicReserve;
-        const canBuildFull = building.canAfford(requiredAmount, reserve);
+        const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
+        const canBuildFull = building.canAfford(requiredAmount, reserve, extraReserves);
         if (!canBuildFull) {
             building.autoBuildPartial = true;
-            markAutoBuildShortages(building, requiredAmount, reserve);
+            markAutoBuildShortages(building, requiredAmount, reserve, extraReserves);
         }
         if (canBuildFull) {
             buildCount = requiredAmount;
         } else {
-            let maxBuildable = building.maxBuildable(reserve);
+            let maxBuildable = building.maxBuildable(reserve, extraReserves);
 
             if (building.requiresLand && typeof building.landAffordCount === 'function') {
                 maxBuildable = Math.min(maxBuildable, building.landAffordCount());
@@ -470,7 +531,8 @@ function autoBuild(buildings, delta = 0) {
         }
 
         if (buildCount > 0) {
-            const cost = building.getEffectiveCost ? building.getEffectiveCost(buildCount) : {};
+            const baseCost = building.getEffectiveCost ? building.getEffectiveCost(buildCount) : {};
+            const cost = cloneCostObject(baseCost);
             if (building.requiresDeposit) {
                 for (const dep in building.requiresDeposit.underground) {
                     cost.underground = cost.underground || {};
@@ -488,6 +550,9 @@ function autoBuild(buildings, delta = 0) {
             }
             if (built) {
                 autobuildCostTracker.recordCost(building.displayName, cost);
+                if (building.autoBuildPriority) {
+                    subtractCostFromPrioritizedReserve(prioritizedReserve, baseCost);
+                }
             }
         }
         // Skip incremental building as it significantly impacts performance

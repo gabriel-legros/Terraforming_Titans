@@ -486,7 +486,7 @@ class Building extends EffectableEntity {
   }
 
   // Adjusted canAfford method to use effective cost and an optional strategic reserve
-  canAfford(buildCount = 1, reservePercent = 0) {
+  canAfford(buildCount = 1, reservePercent = 0, additionalReserves = null) {
     const effectiveCost = this.getEffectiveCost(buildCount);
 
     for (const category in effectiveCost) {
@@ -494,7 +494,8 @@ class Building extends EffectableEntity {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
         const reserve = (reservePercent / 100) * cap;
-        if (resObj.value - reserve < effectiveCost[category][resource]) {
+        const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
+        if (resObj.value - reserve - prioritizedReserve < effectiveCost[category][resource]) {
           return false;
         }
       }
@@ -540,7 +541,7 @@ class Building extends EffectableEntity {
     }
   }
 
-  maxBuildable(reservePercent = 0) {
+  maxBuildable(reservePercent = 0, additionalReserves = null) {
     let maxByResource = Infinity;
 
     // Check effective cost resources
@@ -550,7 +551,8 @@ class Building extends EffectableEntity {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
         const reserve = (reservePercent / 100) * cap;
-        const available = Math.max(resObj.value - reserve, 0);
+        const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
+        const available = Math.max(resObj.value - reserve - prioritizedReserve, 0);
         const costPerUnit = costObj[category][resource];
 
         if (costPerUnit > 0) {
