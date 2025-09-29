@@ -612,7 +612,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const nightTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}`
     : '—';
-  const galaxy = globalThis?.galaxyManager;
+  const galaxy = galaxyManager || globalThis?.galaxyManager;
   const galaxyEnabled = Boolean(galaxy?.enabled);
   const sectorChip = (galaxyEnabled && c.sector)
     ? `<div class="rwg-chip"><div class="label">Sector</div><div class="value">${c.sector}</div></div>`
