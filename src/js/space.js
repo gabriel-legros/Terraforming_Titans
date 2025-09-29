@@ -10,9 +10,11 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
+
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();
-    return text || DEFAULT_SECTOR_LABEL;
+    return text || SPACE_DEFAULT_SECTOR_LABEL;
 }
 
 function resolveSectorFromSources(...sources) {
@@ -39,7 +41,7 @@ function resolveSectorFromSources(...sources) {
             }
         }
     }
-    return DEFAULT_SECTOR_LABEL;
+    return SPACE_DEFAULT_SECTOR_LABEL;
 }
 
 function hasSuperEarthArchetype(...sources) {
@@ -94,7 +96,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
         this.extraTerraformedWorlds = 0;
-        this.rwgSectorLock = DEFAULT_SECTOR_LABEL;
+        this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -192,15 +195,21 @@ class SpaceManager extends EffectableEntity {
 
     setRwgSectorLock(sectorLabel) {
         if (sectorLabel == null) {
-            this.rwgSectorLock = null;
+            this.clearRwgSectorLock();
             return;
         }
         const text = String(sectorLabel).trim();
-        this.rwgSectorLock = text ? text : null;
+        if (!text) {
+            this.clearRwgSectorLock();
+            return;
+        }
+        this.rwgSectorLock = text;
+        this.rwgSectorLockManual = true;
     }
 
     clearRwgSectorLock() {
         this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
     }
 
     getWorldCountPerSector(sectorLabel) {
@@ -668,7 +677,8 @@ class SpaceManager extends EffectableEntity {
             currentRandomName: this.currentRandomName,
             randomWorldStatuses: this.randomWorldStatuses,
             randomTabEnabled: this.randomTabEnabled,
-            rwgSectorLock: this.rwgSectorLock
+            rwgSectorLock: this.rwgSectorLock,
+            rwgSectorLockManual: this.rwgSectorLockManual
         };
     }
 
@@ -679,7 +689,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {};
         this.randomTabEnabled = false;
-        this.rwgSectorLock = DEFAULT_SECTOR_LABEL;
+        this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
@@ -757,7 +768,22 @@ class SpaceManager extends EffectableEntity {
         }
 
         if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
-            this.setRwgSectorLock(savedData.rwgSectorLock);
+            const hasManualFlag = Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLockManual');
+            const manual = hasManualFlag ? !!savedData.rwgSectorLockManual : null;
+            if (manual === false) {
+                this.clearRwgSectorLock();
+            } else if (manual === true) {
+                this.setRwgSectorLock(savedData.rwgSectorLock);
+            } else {
+                const text = String(savedData.rwgSectorLock ?? '').trim();
+                if (text && text !== SPACE_DEFAULT_SECTOR_LABEL) {
+                    this.setRwgSectorLock(text);
+                } else {
+                    this.clearRwgSectorLock();
+                }
+            }
+        } else {
+            this.clearRwgSectorLock();
         }
 
         if (typeof savedData.randomTabEnabled === 'boolean') {

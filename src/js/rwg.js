@@ -36,6 +36,7 @@ const toTons = (kg) => kg / 1000;
 function isObject(item) { return item && typeof item === "object" && !Array.isArray(item); }
 
 const DEFAULT_SECTOR_LABEL = 'R5-07';
+const RWG_UHF_FACTION_ID = globalThis?.UHF_FACTION_ID || 'uhf';
 const SECTOR_DIRECTIONS = [
   { q: 0, r: -1 },
   { q: -1, r: 0 },
@@ -88,6 +89,22 @@ function formatSectorLabelFromCoords(q, r) {
   return `R${ring}-${String(index + 1).padStart(digits, '0')}`;
 }
 
+function getSectorUhfControlValue(sector) {
+  if (!sector) {
+    return 0;
+  }
+  const direct = sector.getControlValue?.(RWG_UHF_FACTION_ID);
+  if (Number.isFinite(direct) && direct > 0) {
+    return direct;
+  }
+  const fallback = sector.control?.[RWG_UHF_FACTION_ID];
+  const numericFallback = Number(fallback);
+  if (Number.isFinite(numericFallback) && numericFallback > 0) {
+    return numericFallback;
+  }
+  return 0;
+}
+
 function pickLabelFromRadius(rng, radius) {
   const numericRadius = Number.isFinite(radius) && radius >= 0 ? Math.floor(radius) : 6;
   let total = 0;
@@ -126,9 +143,13 @@ function selectSectorLabel(seed) {
   }
   const manager = globalThis?.galaxyManager;
   const sectors = manager?.getSectors?.();
-  if (Array.isArray(sectors) && sectors.length > 0) {
-    const index = Math.floor(rng() * sectors.length);
-    const sector = sectors[index];
+  let candidates = Array.isArray(sectors) ? sectors.filter((sector) => getSectorUhfControlValue(sector) > 0) : [];
+  if (!candidates.length && Array.isArray(sectors)) {
+    candidates = sectors;
+  }
+  if (candidates.length > 0) {
+    const index = Math.floor(rng() * candidates.length);
+    const sector = candidates[index];
     const display = sector?.getDisplayName?.() || formatSectorLabelFromCoords(sector?.q, sector?.r);
     if (display) {
       return display;
@@ -1053,6 +1074,7 @@ if (typeof globalThis !== "undefined") {
   globalThis.generateRandomPlanet = generateRandomPlanet;
   globalThis.generateSystem = generateSystem;
   globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS;
+  globalThis.DEFAULT_SECTOR_LABEL = DEFAULT_SECTOR_LABEL;
   globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
   globalThis.RWG_TYPE_BASE_COLORS = RWG_TYPE_BASE_COLORS;
 }
