@@ -209,6 +209,9 @@
 }
 
 .galaxy-hex {
+  --galaxy-hex-background: linear-gradient(160deg, rgba(32, 56, 92, 0.72), rgba(12, 24, 40, 0.8));
+  --galaxy-hex-background-hover: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
+  --galaxy-hex-border: rgba(120, 180, 248, 0.4);
   position: absolute;
   border: 0;
   border-radius: 12px;
@@ -230,6 +233,10 @@
   box-shadow: inset 0 0 0 1px rgba(64, 128, 200, 0.65), inset 0 0 18px rgba(12, 24, 40, 0.4), 0 0 12px rgba(120, 208, 255, 0.35);
   background: linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92));
   transform: translateZ(0) scale(1.05);
+}
+
+.galaxy-hex.is-controlled {
+  box-shadow: 0 0 10px rgba(8, 12, 18, 0.38);
 }
 
 .galaxy-hex:focus-visible {
