@@ -28,7 +28,7 @@ describe('space mirror water target multiplier', () => {
     select.value = '1000000';
     select.dispatchEvent(new dom.window.Event('change'));
     input.value = '2';
-    input.dispatchEvent(new dom.window.Event('change'));
+    input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     expect(project.mirrorOversightSettings.targets.water).toBe(2000000);
 
     delete global.document;
