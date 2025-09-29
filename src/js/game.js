@@ -126,10 +126,6 @@ function create() {
   }
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
-    loadDebugSave().then((loadedDebug) => {
-      if (loadedDebug) {
-        return;
-      }
       initializeGameState();
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
@@ -137,36 +133,8 @@ function create() {
       if (typeof hideLoadingOverlay === 'function') {
         hideLoadingOverlay();
       }
-    });
+    }
     return;
-  }
-  if (typeof hideLoadingOverlay === 'function') {
-    hideLoadingOverlay();
-  }
-}
-
-function loadDebugSave() {
-  try {
-    return fetch('debug_save/debug1.json', { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch debug save: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then((saveData) => {
-        console.log('Loaded debug save from debug_save/debug1.json.');
-        loadGame(saveData);
-        return true;
-      })
-      .catch((error) => {
-        console.warn('Unable to load debug save debug1.json.', error);
-        return false;
-      });
-  } catch (error) {
-    console.warn('Failed to initiate debug save load for debug1.json.', error);
-    return Promise.resolve(false);
-  }
 }
 
 function initializeGameState(options = {}) {
