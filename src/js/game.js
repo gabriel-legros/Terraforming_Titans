@@ -118,6 +118,7 @@ function create() {
   createMilestonesUI();
 
   spaceManager = new SpaceManager(planetParameters);
+  globalThis.spaceManager = spaceManager;
   galaxyManager = new GalaxyManager();
   initializeHopeUI();
   initializeSpaceUI(spaceManager);
@@ -331,6 +332,7 @@ function initializeGameState(options = {}) {
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
       spaceManager = new SpaceManager(planetParameters);
+      globalThis.spaceManager = spaceManager;
     }
   }
 
