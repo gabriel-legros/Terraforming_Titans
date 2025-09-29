@@ -670,15 +670,6 @@ class StoryManager {
             if (!Array.isArray(event.reward)) {
                 return;
             }
-            event.reward.forEach(effect => {
-                if (!effect || !effect.type) {
-                    return;
-                }
-                if (!effect.oneTimeFlag) {
-                    this.appliedEffects.push(effect);
-                }
-                addEffect(effect);
-            });
         });
 
         this.currentChapter = this.progressData.chapters.reduce((max, config) => {
@@ -688,7 +679,6 @@ class StoryManager {
             return config.chapter > max ? config.chapter : max;
         }, 0);
 
-        this.updateCurrentObjectiveUI();
     }
 
     loadState(savedState) { // Add loading for waiting state
@@ -705,7 +695,6 @@ class StoryManager {
 
         if (globalThis.debugMode) {
             this.completeAllJournalEventsForDebug();
-            return;
         }
 
         const activePlanets = savedState.activeEventPlanets || {};
