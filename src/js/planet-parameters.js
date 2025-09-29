@@ -80,7 +80,7 @@ const defaultPlanetParameters = {
       whiteDust: { name: 'White Dust', hasCap: true, baseCap: 144800000000000, initialValue: 0, unlocked: false, hideWhenSmall: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
-      antimatter: { name: 'Antimatter', hasCap: false, initialValue: 0, unlocked: false }
+      antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false }
     }
   },
   zonalCO2: {

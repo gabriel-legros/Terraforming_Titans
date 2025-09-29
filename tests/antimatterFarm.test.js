@@ -19,7 +19,8 @@ describe('Antimatter Farm integrations', () => {
 
     expect(antimatter).toBeDefined();
     expect(antimatter.unlocked).toBe(false);
-    expect(antimatter.hasCap).toBe(false);
+    expect(antimatter.hasCap).toBe(true);
+    expect(antimatter.baseCap).toBe(0);
     expect(antimatter.initialValue).toBe(0);
   });
 

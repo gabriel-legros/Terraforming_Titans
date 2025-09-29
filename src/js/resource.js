@@ -1,3 +1,13 @@
+let produceAntimatterHelper = globalThis.produceAntimatter || null;
+let updateAntimatterStorageCapHelper = globalThis.updateAntimatterStorageCap || null;
+
+if (typeof module !== 'undefined' && module.exports) {
+  ({
+    produceAntimatter: produceAntimatterHelper,
+    updateAntimatterStorageCap: updateAntimatterStorageCapHelper,
+  } = require('./special/antimatter.js'));
+}
+
 // Resource Class and Core Logic
 class Resource extends EffectableEntity {
   constructor(resourceData) {
@@ -351,6 +361,10 @@ function produceResources(deltaTime, buildings) {
 
   calculateProductionRates(deltaTime, buildings);
 
+  if (updateAntimatterStorageCapHelper) {
+    updateAntimatterStorageCapHelper(resources);
+  }
+
   // Update storage cap for all resources except workers
   for (const category in resources) {
     for (const resourceName in resources[category]) {
@@ -466,6 +480,10 @@ function produceResources(deltaTime, buildings) {
 
   if (typeof updateAndroidResearch === 'function') {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
+  }
+
+  if (produceAntimatterHelper) {
+    produceAntimatterHelper(deltaTime, resources, accumulatedChanges);
   }
 
   if (projectManager) {
