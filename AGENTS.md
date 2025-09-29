@@ -7,6 +7,7 @@
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
+- If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -176,9 +177,6 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 
 # Planet Visualization
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
-
-# Screenshots
-If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
 
 ## Updates
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
