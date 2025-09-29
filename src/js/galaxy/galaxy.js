@@ -346,7 +346,7 @@ class GalaxyManager extends EffectableEntity {
         if (existing && existing.status === 'running') {
             return existing;
         }
-        const hasStronghold = this.#hasUhfNeighboringStronghold(sector);
+        const hasStronghold = this.#hasNeighboringStronghold(sector, galaxyUhfId);
         const hasPresence = this.#hasUhfPresence(sector);
         if (!hasStronghold && !hasPresence) {
             return null;
@@ -513,15 +513,19 @@ class GalaxyManager extends EffectableEntity {
         return this.successfulOperations;
     }
 
-    hasUhfNeighboringStronghold(q, r) {
-        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+    hasNeighboringStronghold(factionId, q, r) {
+        if (!factionId || !Number.isFinite(q) || !Number.isFinite(r)) {
             return false;
         }
         const sector = this.getSector(q, r);
         if (!sector) {
             return false;
         }
-        return this.#hasUhfNeighboringStronghold(sector);
+        return this.#hasNeighboringStronghold(sector, factionId);
+    }
+
+    hasUhfNeighboringStronghold(q, r) {
+        return this.hasNeighboringStronghold(galaxyUhfId, q, r);
     }
 
     #initializeSectors() {
@@ -855,30 +859,30 @@ class GalaxyManager extends EffectableEntity {
         });
     }
 
-    #hasUhfNeighboringStronghold(sector) {
-        if (!sector) {
+    #hasNeighboringStronghold(sector, factionId) {
+        if (!sector || !factionId) {
             return false;
         }
         for (let index = 0; index < HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
             const direction = HEX_NEIGHBOR_DIRECTIONS[index];
             const neighbor = this.getSector(sector.q + direction.q, sector.r + direction.r);
-            if (this.#isUhfFullControlSector(neighbor)) {
+            if (this.#isFactionFullControlSector(neighbor, factionId)) {
                 return true;
             }
         }
         return false;
     }
 
-    #isUhfFullControlSector(sector) {
-        if (!sector) {
+    #isFactionFullControlSector(sector, factionId) {
+        if (!sector || !factionId) {
             return false;
         }
         const totalControl = sector.getTotalControlValue?.();
         if (!(totalControl > 0)) {
             return false;
         }
-        const uhfControl = sector.getControlValue?.(galaxyUhfId) || 0;
-        return Math.abs(uhfControl - totalControl) <= FULL_CONTROL_EPSILON;
+        const factionControl = sector.getControlValue?.(factionId) || 0;
+        return Math.abs(factionControl - totalControl) <= FULL_CONTROL_EPSILON;
     }
 
     #hasUhfPresence(sector) {
