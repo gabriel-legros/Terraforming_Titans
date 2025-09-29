@@ -667,6 +667,39 @@ function handleFleetUpgradePurchase(event) {
     updateGalaxyUI();
 }
 
+function handleSectorLockToggle() {
+    const details = galaxyUICache?.sectorDetails;
+    if (!details) {
+        return;
+    }
+    const lockInput = details.lockInput;
+    const managerRef = globalThis.spaceManager;
+    const currentSelection = galaxyUICache?.selectedSector?.displayName || '';
+    const label = String(currentSelection).trim();
+
+    if (!managerRef || !label) {
+        if (managerRef?.clearRwgSectorLock) {
+            managerRef.clearRwgSectorLock();
+        } else {
+            managerRef?.setRwgSectorLock?.(null);
+        }
+        renderSelectedSectorDetails();
+        return;
+    }
+
+    if (lockInput.checked) {
+        managerRef.setRwgSectorLock?.(label);
+    } else if (managerRef.getRwgSectorLock?.() === label) {
+        if (managerRef.clearRwgSectorLock) {
+            managerRef.clearRwgSectorLock();
+        } else {
+            managerRef.setRwgSectorLock?.(null);
+        }
+    }
+
+    renderSelectedSectorDetails();
+}
+
 function renderSelectedSectorDetails() {
     if (!galaxyUICache) {
         return;
@@ -713,113 +746,130 @@ function renderSelectedSectorDetails() {
         return b.value - a.value;
     });
 
-    const fragment = doc.createDocumentFragment();
-
-    const title = doc.createElement('div');
-    title.className = 'galaxy-sector-panel__title';
-    title.textContent = selection.displayName === 'Core'
-        ? 'Core Sector'
-        : `Sector ${selection.displayName}`;
-    fragment.appendChild(title);
-
-    const powerContainer = doc.createElement('div');
-    powerContainer.className = 'galaxy-sector-panel__stat';
-
-    const powerLabel = doc.createElement('span');
-    powerLabel.className = 'galaxy-sector-panel__stat-label';
-    powerLabel.textContent = 'Power';
-    powerContainer.appendChild(powerLabel);
-
-    const numberFormatter = globalThis.formatNumber || ((value) => value);
-    const sectorPower = sector.getValue();
-    const powerValue = doc.createElement('span');
-    powerValue.className = 'galaxy-sector-panel__stat-value';
-    powerValue.textContent = numberFormatter(sectorPower, true);
-    powerContainer.appendChild(powerValue);
-
-    fragment.appendChild(powerContainer);
-
-    const spaceManagerInstance = globalThis.spaceManager;
-    const worldCountContainer = doc.createElement('div');
-    worldCountContainer.className = 'galaxy-sector-panel__stat';
-
-    const worldCountLabel = doc.createElement('span');
-    worldCountLabel.className = 'galaxy-sector-panel__stat-label';
-    worldCountLabel.textContent = 'Terraformations';
-    worldCountContainer.appendChild(worldCountLabel);
-
-    const worldCountValue = doc.createElement('span');
-    worldCountValue.className = 'galaxy-sector-panel__stat-value';
     const selectionLabel = String(selection.displayName || '').trim();
-    const worldCount = spaceManagerInstance?.getWorldCountPerSector
-        ? spaceManagerInstance.getWorldCountPerSector(selectionLabel)
-        : 0;
-    worldCountValue.textContent = numberFormatter(worldCount, true, 0);
-    worldCountContainer.appendChild(worldCountValue);
+    let details = galaxyUICache.sectorDetails;
+    if (!details) {
+        const container = doc.createElement('div');
+        container.className = 'galaxy-sector-panel__details';
 
-    fragment.appendChild(worldCountContainer);
+        const title = doc.createElement('div');
+        title.className = 'galaxy-sector-panel__title';
+        container.appendChild(title);
 
-    if (spaceManagerInstance?.setRwgSectorLock) {
-        const lockLabel = doc.createElement('label');
-        lockLabel.className = 'galaxy-sector-panel__lock-option';
+        const powerContainer = doc.createElement('div');
+        powerContainer.className = 'galaxy-sector-panel__stat';
+
+        const powerLabel = doc.createElement('span');
+        powerLabel.className = 'galaxy-sector-panel__stat-label';
+        powerLabel.textContent = 'Power';
+        powerContainer.appendChild(powerLabel);
+
+        const powerValue = doc.createElement('span');
+        powerValue.className = 'galaxy-sector-panel__stat-value';
+        powerContainer.appendChild(powerValue);
+
+        container.appendChild(powerContainer);
+
+        const worldCountContainer = doc.createElement('div');
+        worldCountContainer.className = 'galaxy-sector-panel__stat';
+
+        const worldCountLabel = doc.createElement('span');
+        worldCountLabel.className = 'galaxy-sector-panel__stat-label';
+        worldCountLabel.textContent = 'Worlds';
+        worldCountContainer.appendChild(worldCountLabel);
+
+        const worldCountValue = doc.createElement('span');
+        worldCountValue.className = 'galaxy-sector-panel__stat-value';
+        worldCountContainer.appendChild(worldCountValue);
+
+        container.appendChild(worldCountContainer);
+
+        const lockOption = doc.createElement('label');
+        lockOption.className = 'galaxy-sector-panel__lock-option';
 
         const lockInput = doc.createElement('input');
         lockInput.type = 'checkbox';
         lockInput.className = 'galaxy-sector-panel__lock-checkbox';
-        const lockedValue = spaceManagerInstance.getRwgSectorLock?.() || '';
-        const normalizedLocked = String(lockedValue).trim();
-        lockInput.checked = normalizedLocked !== '' && normalizedLocked === selectionLabel;
-
-        lockInput.addEventListener('change', () => {
-            const managerRef = globalThis.spaceManager;
-            const currentSelection = galaxyUICache?.selectedSector?.displayName || '';
-            const label = String(currentSelection).trim();
-            if (!managerRef || !label) {
-                managerRef?.clearRwgSectorLock?.();
-                renderSelectedSectorDetails();
-                return;
-            }
-            if (lockInput.checked) {
-                managerRef.setRwgSectorLock?.(label);
-            } else if (managerRef.getRwgSectorLock?.() === label) {
-                if (managerRef.clearRwgSectorLock) {
-                    managerRef.clearRwgSectorLock();
-                } else {
-                    managerRef.setRwgSectorLock?.(null);
-                }
-            }
-            renderSelectedSectorDetails();
-        });
+        lockInput.addEventListener('change', handleSectorLockToggle);
 
         const lockText = doc.createElement('span');
         lockText.className = 'galaxy-sector-panel__lock-label';
         lockText.textContent = 'Limit RWG to this sector';
 
-        lockLabel.appendChild(lockInput);
-        lockLabel.appendChild(lockText);
+        lockOption.appendChild(lockInput);
+        lockOption.appendChild(lockText);
 
-        fragment.appendChild(lockLabel);
-    }
+        container.appendChild(lockOption);
 
-    if (breakdown.length === 0) {
-        const empty = doc.createElement('p');
-        empty.className = 'galaxy-sector-panel__empty';
-        empty.textContent = 'No factions currently control this sector.';
-        fragment.appendChild(empty);
-    } else {
         const subtitle = doc.createElement('div');
         subtitle.className = 'galaxy-sector-panel__subtitle';
         subtitle.textContent = 'Faction Control';
-        fragment.appendChild(subtitle);
+        container.appendChild(subtitle);
 
         const list = doc.createElement('ul');
         list.className = 'galaxy-sector-panel__control-list';
+        container.appendChild(list);
 
+        const empty = doc.createElement('p');
+        empty.className = 'galaxy-sector-panel__empty';
+        empty.textContent = 'No factions currently control this sector.';
+        container.appendChild(empty);
+
+        panel.replaceChildren(container);
+
+        details = {
+            container,
+            title,
+            powerValue,
+            worldCountValue,
+            lockOption,
+            lockInput,
+            subtitle,
+            list,
+            empty
+        };
+        galaxyUICache.sectorDetails = details;
+    } else if (!panel.contains(details.container)) {
+        panel.replaceChildren(details.container);
+    }
+
+    const numberFormatter = globalThis.formatNumber || ((value) => value);
+    const sectorPower = sector.getValue();
+    details.title.textContent = selection.displayName === 'Core'
+        ? 'Core Sector'
+        : `Sector ${selection.displayName}`;
+    details.powerValue.textContent = numberFormatter(sectorPower, true);
+
+    const spaceManagerInstance = globalThis.spaceManager;
+    const worldCount = spaceManagerInstance?.getWorldCountPerSector
+        ? spaceManagerInstance.getWorldCountPerSector(selectionLabel)
+        : 0;
+    details.worldCountValue.textContent = numberFormatter(worldCount, true, 0);
+
+    const lockAvailable = !!spaceManagerInstance?.setRwgSectorLock;
+    details.lockOption.classList.toggle('is-hidden', !lockAvailable);
+    if (lockAvailable) {
+        const lockedValue = spaceManagerInstance.getRwgSectorLock?.() || '';
+        const normalizedLocked = String(lockedValue).trim();
+        details.lockInput.checked = normalizedLocked !== '' && normalizedLocked === selectionLabel;
+        details.lockInput.disabled = selectionLabel === '';
+    } else {
+        details.lockInput.checked = false;
+        details.lockInput.disabled = true;
+    }
+
+    if (breakdown.length === 0) {
+        details.subtitle.classList.add('is-hidden');
+        details.list.replaceChildren();
+        details.list.classList.add('is-hidden');
+        details.empty.classList.remove('is-hidden');
+    } else {
         let total = 0;
         for (let index = 0; index < breakdown.length; index += 1) {
             total += breakdown[index].value;
         }
 
+        const fragment = doc.createDocumentFragment();
         breakdown.forEach((entry) => {
             const item = doc.createElement('li');
             item.className = 'galaxy-sector-panel__control-item';
@@ -835,14 +885,16 @@ function renderSelectedSectorDetails() {
             value.textContent = `${percent}%`;
             item.appendChild(value);
 
-            list.appendChild(item);
+            fragment.appendChild(item);
         });
 
-        fragment.appendChild(list);
+        details.list.replaceChildren(fragment);
+        details.subtitle.classList.remove('is-hidden');
+        details.list.classList.remove('is-hidden');
+        details.empty.classList.add('is-hidden');
     }
 
     panel.classList.add('is-populated');
-    panel.replaceChildren(fragment);
 
     updateOperationsPanel();
 }
@@ -1946,6 +1998,7 @@ function cacheGalaxyElements() {
         },
         attackContent,
         sectorContent,
+        sectorDetails: null,
         hexElements,
         selectedHex: null,
         selectedSector: null
