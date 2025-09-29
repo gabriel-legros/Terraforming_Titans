@@ -796,6 +796,12 @@ class StoryEvent {
     trigger() { // Modified to skip journal entries for outdated chapters
         switch (this.type) {
             case "pop-up":
+                if (globalThis.debugMode) {
+                    if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
+                        window.storyManager.processEventCompletion(this.id);
+                    }
+                    break;
+                }
                 createPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),
@@ -803,6 +809,12 @@ class StoryEvent {
                 );
                 break;
             case "system-pop-up":
+                if (globalThis.debugMode) {
+                    if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
+                        window.storyManager.processEventCompletion(this.id);
+                    }
+                    break;
+                }
                 createSystemPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),
