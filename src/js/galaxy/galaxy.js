@@ -58,17 +58,6 @@ function generateSectorCoordinates(radius) {
     return coordinates;
 }
 
-function sortSectorKeys(keys) {
-    return keys.slice().sort((left, right) => {
-        const [lq, lr] = left.split(',').map((value) => Number(value));
-        const [rq, rr] = right.split(',').map((value) => Number(value));
-        if (lq === rq) {
-            return lr - rr;
-        }
-        return lq - rq;
-    });
-}
-
 class GalaxyManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages the galactic view.' });
@@ -230,13 +219,35 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #getSectorKeysForRing(targetRing) {
+        if (!Number.isFinite(targetRing) || targetRing < 0) {
+            return [];
+        }
+        if (targetRing === 0) {
+            const centerKey = GalaxySectorClass.createKey(0, 0);
+            return this.sectors.has(centerKey) ? [centerKey] : [];
+        }
         const keys = [];
-        this.sectors.forEach((sector, key) => {
-            if (sector.ring === targetRing) {
-                keys.push(key);
+        const directions = [
+            { q: 0, r: -1 },
+            { q: -1, r: 0 },
+            { q: -1, r: 1 },
+            { q: 0, r: 1 },
+            { q: 1, r: 0 },
+            { q: 1, r: -1 }
+        ];
+        let currentQ = targetRing;
+        let currentR = 0;
+        directions.forEach(({ q: dq, r: dr }) => {
+            for (let step = 0; step < targetRing; step += 1) {
+                const key = GalaxySectorClass.createKey(currentQ, currentR);
+                if (this.sectors.has(key)) {
+                    keys.push(key);
+                }
+                currentQ += dq;
+                currentR += dr;
             }
         });
-        return sortSectorKeys(keys);
+        return keys;
     }
 
     #resolveStartingSectors(definition, ringCache) {
@@ -268,10 +279,13 @@ class GalaxyManager extends EffectableEntity {
                 if (!keys || !keys.length) {
                     return;
                 }
-                const begin = Number.isFinite(start) ? Math.max(0, Math.min(keys.length, start)) : 0;
-                const final = Number.isFinite(end) ? Math.max(begin, Math.min(keys.length, end)) : keys.length;
-                for (let index = begin; index < final; index += 1) {
-                    resolved.add(keys[index]);
+                const total = keys.length;
+                const rawStart = Number.isFinite(start) ? Math.floor(start) : NaN;
+                const rawEnd = Number.isFinite(end) ? Math.floor(end) : NaN;
+                const beginPosition = Number.isFinite(rawStart) ? Math.max(1, Math.min(total, rawStart)) : 1;
+                const endPosition = Number.isFinite(rawEnd) ? Math.max(beginPosition, Math.min(total, rawEnd)) : total;
+                for (let position = beginPosition; position <= endPosition; position += 1) {
+                    resolved.add(keys[position - 1]);
                 }
             });
         }
