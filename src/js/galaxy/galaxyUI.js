@@ -12,12 +12,25 @@ const HEX_STRIPE_ANGLE = 135;
 const HEX_STRIPE_BASE_LIGHTEN = 0.14;
 const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
 const HEX_BORDER_LIGHTEN = 0.32;
+const GALAXY_UHF_FACTION_ID = 'uhf';
+const FLEET_VALUE_FORMATTER = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+});
 const PAN_ACTIVATION_DISTANCE = 6;
 const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
 let legacyPanAttached = false;
+
+function formatFleetValue(value) {
+    if (!Number.isFinite(value)) {
+        return '0';
+    }
+    const normalized = value < 0 ? 0 : value;
+    return FLEET_VALUE_FORMATTER.format(normalized);
+}
 
 function normalizeHexColor(color) {
     if (!color) {
@@ -968,16 +981,33 @@ function cacheGalaxyElements() {
     const thirdRow = doc.createElement('div');
     thirdRow.className = 'galaxy-row galaxy-row--tertiary';
 
-    const logistics = createGalaxySection(doc, 'Logistics', 'Coordinate supply lines, gate calibrations, and strategic reserves.');
+    const logistics = createGalaxySection(doc, 'Logistics');
     logistics.section.classList.add('galaxy-section--logistics');
-    const logisticsList = doc.createElement('ul');
-    logisticsList.className = 'galaxy-list galaxy-list--logistics';
-    logisticsList.dataset.emptyMessage = 'Logistics queue idle.';
-    const logisticsPlaceholder = doc.createElement('li');
-    logisticsPlaceholder.className = 'galaxy-list__placeholder';
-    logisticsPlaceholder.textContent = logisticsList.dataset.emptyMessage;
-    logisticsList.appendChild(logisticsPlaceholder);
-    logistics.body.appendChild(logisticsList);
+    const logisticsStats = doc.createElement('div');
+    logisticsStats.className = 'galaxy-logistics-stats';
+    const logisticsPowerRow = doc.createElement('div');
+    logisticsPowerRow.className = 'galaxy-logistics-stat';
+    const logisticsPowerLabel = doc.createElement('span');
+    logisticsPowerLabel.className = 'galaxy-logistics-stat__label';
+    logisticsPowerLabel.textContent = 'Fleet Power';
+    const logisticsPowerValue = doc.createElement('span');
+    logisticsPowerValue.className = 'galaxy-logistics-stat__value';
+    logisticsPowerValue.textContent = '0';
+    logisticsPowerRow.appendChild(logisticsPowerLabel);
+    logisticsPowerRow.appendChild(logisticsPowerValue);
+    const logisticsCapacityRow = doc.createElement('div');
+    logisticsCapacityRow.className = 'galaxy-logistics-stat';
+    const logisticsCapacityLabel = doc.createElement('span');
+    logisticsCapacityLabel.className = 'galaxy-logistics-stat__label';
+    logisticsCapacityLabel.textContent = 'Fleet Capacity';
+    const logisticsCapacityValue = doc.createElement('span');
+    logisticsCapacityValue.className = 'galaxy-logistics-stat__value';
+    logisticsCapacityValue.textContent = '0';
+    logisticsCapacityRow.appendChild(logisticsCapacityLabel);
+    logisticsCapacityRow.appendChild(logisticsCapacityValue);
+    logisticsStats.appendChild(logisticsPowerRow);
+    logisticsStats.appendChild(logisticsCapacityRow);
+    logistics.body.appendChild(logisticsStats);
 
     const upgrades = createGalaxySection(doc, 'Upgrades', 'Enhance Warp Gate Command with new tech and facilities.');
     upgrades.section.classList.add('galaxy-section--upgrades');
@@ -1011,8 +1041,9 @@ function cacheGalaxyElements() {
         zoomOut,
         operationsList,
         operationsPlaceholder,
-        logisticsList,
-        logisticsPlaceholder,
+        logisticsStats,
+        logisticsPowerValue,
+        logisticsCapacityValue,
         upgradesList,
         upgradesPlaceholder,
         attackContent,
@@ -1037,7 +1068,6 @@ function refreshEmptyStates() {
 
     const listData = [
         [galaxyUICache.operationsList, galaxyUICache.operationsPlaceholder],
-        [galaxyUICache.logisticsList, galaxyUICache.logisticsPlaceholder],
         [galaxyUICache.upgradesList, galaxyUICache.upgradesPlaceholder]
     ];
     listData.forEach(([list, placeholder]) => {
@@ -1063,6 +1093,22 @@ function refreshEmptyStates() {
             panel.textContent = panel.dataset.emptyMessage || 'Stand by.';
         }
     });
+}
+
+function updateLogisticsDisplay(manager, cache) {
+    if (!cache) {
+        return;
+    }
+    const powerNode = cache.logisticsPowerValue;
+    const capacityNode = cache.logisticsCapacityValue;
+    if (!powerNode || !capacityNode) {
+        return;
+    }
+    const faction = manager?.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
+    const power = Number.isFinite(faction?.fleetPower) ? faction.fleetPower : 0;
+    const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
+    powerNode.textContent = formatFleetValue(power);
+    capacityNode.textContent = formatFleetValue(capacity);
 }
 
 function initializeGalaxyUI() {
@@ -1100,6 +1146,7 @@ function updateGalaxyUI() {
             cache.mapState.overlayHideTimeout = null;
         }
         resetGalaxyHexStyles(cache);
+        updateLogisticsDisplay(null, cache);
         refreshEmptyStates();
         return;
     }
@@ -1126,6 +1173,7 @@ function updateGalaxyUI() {
         cache.mapOverlay.textContent = '';
     }
 
+    updateLogisticsDisplay(manager, cache);
     updateGalaxyHexControlColors(manager, cache);
     renderSelectedSectorDetails();
     refreshEmptyStates();
