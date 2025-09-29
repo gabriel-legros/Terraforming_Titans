@@ -205,12 +205,14 @@ const globalScope = (() => {
 if (globalScope) {
     globalScope.GalaxyFaction = GalaxyFaction;
     globalScope.updateFactions = updateFactions;
+    globalScope.UHF_FACTION_ID = UHF_FACTION_ID;
 }
 
 try {
     module.exports = {
         GalaxyFaction,
-        updateFactions
+        updateFactions,
+        UHF_FACTION_ID
     };
 } catch (error) {
     // Ignore module resolution issues outside CommonJS environments.

@@ -289,6 +289,31 @@
   color: #8fb6f9;
 }
 
+.galaxy-sector-panel__stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(22, 40, 68, 0.52);
+  border: 1px solid rgba(96, 150, 220, 0.25);
+  font-size: 0.85rem;
+}
+
+.galaxy-sector-panel__stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8fb6f9;
+  font-size: 0.72rem;
+}
+
+.galaxy-sector-panel__stat-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #f5f9ff;
+}
+
 .galaxy-sector-panel__control-list {
   list-style: none;
   margin: 0;
@@ -329,6 +354,211 @@
 
 .galaxy-sector-panel {
   box-shadow: inset 0 0 12px rgba(124, 184, 255, 0.18);
+}
+
+.galaxy-operations-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(14, 24, 38, 0.64);
+  border: 1px solid rgba(92, 140, 208, 0.32);
+  box-shadow: inset 0 0 12px rgba(84, 140, 216, 0.18);
+  color: #dbe9ff;
+  min-height: 200px;
+}
+
+.galaxy-operations-panel__empty {
+  margin: 0;
+  text-align: center;
+  color: #95b3ef;
+  font-style: italic;
+}
+
+.galaxy-operations-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.galaxy-operations-form__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.galaxy-operations-form__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.galaxy-operations-form__available {
+  font-size: 0.85rem;
+  color: #9fc3ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.galaxy-operations-form__input {
+  flex: 1 1 140px;
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 176, 244, 0.4);
+  background: rgba(10, 18, 30, 0.85);
+  color: #f0f7ff;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-form__input:disabled {
+  opacity: 0.6;
+}
+
+.galaxy-operations-form__buttons {
+  flex: 1 1 220px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+  gap: 8px;
+}
+
+.galaxy-operations-form__button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(112, 160, 232, 0.35);
+  background: linear-gradient(160deg, rgba(36, 64, 110, 0.65), rgba(20, 36, 60, 0.85));
+  color: #deebff;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.galaxy-operations-form__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.galaxy-operations-launch {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.galaxy-operations-launch__button {
+  align-self: flex-start;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 182, 252, 0.5);
+  background: linear-gradient(160deg, rgba(66, 112, 184, 0.85), rgba(42, 78, 138, 0.85));
+  color: #f8fbff;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.galaxy-operations-launch__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.galaxy-operations-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(24, 42, 70, 0.7);
+  border: 1px solid rgba(116, 162, 232, 0.32);
+}
+
+.galaxy-operations-progress__track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(18, 30, 48, 0.6);
+  border: 1px solid rgba(112, 160, 232, 0.35);
+  overflow: hidden;
+}
+
+.galaxy-operations-progress__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(160deg, rgba(123, 182, 255, 0.95), rgba(76, 130, 210, 0.95));
+}
+
+.galaxy-operations-progress__label {
+  font-size: 0.82rem;
+  color: #a9c7ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-form__cost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #bed4ff;
+}
+
+.galaxy-operations-form__cost-label {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: #8fb6f9;
+}
+
+.galaxy-operations-form__cost-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #f5f9ff;
+}
+
+.galaxy-operations-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.galaxy-operations-summary__item {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(18, 32, 52, 0.7);
+  border: 1px solid rgba(110, 156, 232, 0.28);
+}
+
+.galaxy-operations-summary__label {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: #8fb6f9;
+}
+
+.galaxy-operations-summary__value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f5f9ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-form__status {
+  min-height: 18px;
+  font-size: 0.85rem;
+  color: #a5c4f5;
 }
 
 @media (max-width: 1100px) {
