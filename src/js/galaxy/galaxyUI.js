@@ -202,8 +202,8 @@ function centerGalaxyMap(cache) {
     }
     const { mapWrapper, mapState } = cache;
     mapState.scale = 1;
-    mapState.offsetX = -120;
-    mapState.offsetY = -220;
+    mapState.offsetX = -223;
+    mapState.offsetY = 123;
     updateGalaxyMapTransform(cache);
 }
 
