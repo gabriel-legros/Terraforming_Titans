@@ -177,6 +177,9 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 # Planet Visualization
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
+# Screenshots
+If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
+
 ## Updates
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
