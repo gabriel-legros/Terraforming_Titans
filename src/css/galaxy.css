@@ -55,6 +55,37 @@
   background: linear-gradient(150deg, rgba(18, 30, 52, 0.94), rgba(10, 16, 28, 0.94));
 }
 
+.galaxy-logistics-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.galaxy-logistics-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(12, 22, 38, 0.52);
+  border: 1px solid rgba(120, 164, 228, 0.26);
+  box-shadow: inset 0 1px 0 rgba(160, 204, 252, 0.1);
+}
+
+.galaxy-logistics-stat__label {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: #9fc8ff;
+  text-transform: uppercase;
+}
+
+.galaxy-logistics-stat__value {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #e4f2ff;
+  text-shadow: 0 0 14px rgba(108, 168, 255, 0.45);
+}
+
 .galaxy-section__header {
   font-size: 1.12rem;
   font-weight: 600;
