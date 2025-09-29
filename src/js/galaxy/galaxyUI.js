@@ -375,9 +375,7 @@ function renderSelectedSectorDetails() {
             const value = doc.createElement('span');
             value.className = 'galaxy-sector-panel__control-value';
             const percent = total > 0 ? Math.round((entry.value / total) * 100) : 0;
-            value.textContent = total > 0
-                ? `${percent}% (${entry.value.toLocaleString()})`
-                : entry.value.toLocaleString();
+            value.textContent = `${percent}%`;
             item.appendChild(value);
 
             list.appendChild(item);
