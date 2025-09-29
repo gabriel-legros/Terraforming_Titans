@@ -177,6 +177,9 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 # Planet Visualization
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
+# Screenshots
+If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
+
 ## Updates
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
@@ -199,7 +202,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
   lly without mutating base data.
 - Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
-
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
 - Galaxy sector panels now show the selected sector name alongside a descending list of faction control shares.
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.

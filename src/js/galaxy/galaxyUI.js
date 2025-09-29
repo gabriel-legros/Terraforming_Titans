@@ -5,6 +5,7 @@ const HEX_MIN_SCALE = 0.3;
 const HEX_MAX_SCALE = 2.5;
 const HEX_SCALE_STEP = 1.25;
 const SQRT3 = Math.sqrt(3);
+const INITIAL_FOCUS_SECTOR = 'R5-07';
 
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
@@ -98,7 +99,7 @@ function createHexGridData(radius, size) {
     };
 }
 
-function createGalaxyHex(doc, { q, r, x, y }, size, offsets) {
+function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     const scaledSize = size * HEX_TILE_SCALE;
     const { width: displayWidth, height: displayHeight } = getHexDimensions(scaledSize);
     const hex = doc.createElement('button');
@@ -106,9 +107,9 @@ function createGalaxyHex(doc, { q, r, x, y }, size, offsets) {
     hex.type = 'button';
     hex.dataset.q = q;
     hex.dataset.r = r;
-    const displayName = formatSectorName(q, r);
-    hex.setAttribute('aria-label', displayName === 'Core' ? 'Core sector' : `Sector ${displayName}`);
-    hex.dataset.displayName = displayName;
+    const sectorName = displayName || formatSectorName(q, r);
+    hex.setAttribute('aria-label', sectorName === 'Core' ? 'Core sector' : `Sector ${sectorName}`);
+    hex.dataset.displayName = sectorName;
     hex.style.width = `${displayWidth}px`;
     hex.style.height = `${displayHeight}px`;
     const left = Math.round(x + offsets.x - (displayWidth / 2));
@@ -118,7 +119,7 @@ function createGalaxyHex(doc, { q, r, x, y }, size, offsets) {
 
     const label = doc.createElement('span');
     label.className = 'galaxy-hex__label';
-    label.textContent = displayName;
+    label.textContent = sectorName;
     hex.appendChild(label);
 
     return hex;
@@ -299,14 +300,23 @@ function buildGalaxyHexMap(doc) {
         y: -grid.minY + (dimensions.height / 2)
     };
     const fragment = doc.createDocumentFragment();
+    let initialFocus = null;
     grid.hexes.forEach((hexData) => {
-        const hex = createGalaxyHex(doc, hexData, baseSize, offsets);
+        const displayName = formatSectorName(hexData.q, hexData.r);
+        const hex = createGalaxyHex(doc, { ...hexData, displayName }, baseSize, offsets);
+        if (!initialFocus && displayName === INITIAL_FOCUS_SECTOR) {
+            initialFocus = {
+                x: hexData.x + offsets.x,
+                y: hexData.y + offsets.y
+            };
+        }
         fragment.appendChild(hex);
     });
     return {
         fragment,
         contentWidth: grid.width,
-        contentHeight: grid.height
+        contentHeight: grid.height,
+        initialFocus
     };
 }
 
@@ -359,18 +369,76 @@ function updateGalaxyMapTransform(cache) {
         return;
     }
     const { mapContent, mapState } = cache;
-    mapContent.style.transform = `translate(${mapState.offsetX}px, ${mapState.offsetY}px) scale(${mapState.scale})`;
+    const offsetX = Number.isFinite(mapState.offsetX) ? mapState.offsetX : 0;
+    const offsetY = Number.isFinite(mapState.offsetY) ? mapState.offsetY : 0;
+    const scale = Number.isFinite(mapState.scale) && mapState.scale > 0 ? mapState.scale : 1;
+    mapContent.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
 function centerGalaxyMap(cache) {
-    if (!cache || !cache.mapWrapper) {
+    if (!cache || !cache.mapCanvas) {
+        return false;
+    }
+    const { mapCanvas, mapWrapper, mapState } = cache;
+    const canvasRect = mapCanvas.getBoundingClientRect();
+    let viewWidth = canvasRect.width;
+    let viewHeight = canvasRect.height;
+    if (!(viewWidth > 0 || viewHeight > 0) && mapWrapper) {
+        const wrapperRect = mapWrapper.getBoundingClientRect();
+        if (wrapperRect.width > 0) {
+            viewWidth = wrapperRect.width;
+        }
+        if (wrapperRect.height > 0) {
+            viewHeight = wrapperRect.height;
+        }
+    }
+    if (!(viewWidth > 0 && viewHeight > 0)) {
+        if (mapState.lastViewWidth > 0 && mapState.lastViewHeight > 0) {
+            viewWidth = mapState.lastViewWidth;
+            viewHeight = mapState.lastViewHeight;
+        } else {
+            return false;
+        }
+    }
+
+    mapState.lastViewWidth = viewWidth;
+    mapState.lastViewHeight = viewHeight;
+    mapState.scale = 1;
+
+    const focus = mapState.initialFocus || {
+        x: mapState.contentWidth * 0.5,
+        y: mapState.contentHeight * 0.5
+    };
+    mapState.offsetX = (viewWidth * 0.5) - focus.x;
+    mapState.offsetY = (viewHeight * 0.5) - focus.y;
+    mapState.deferredCenter = false;
+    updateGalaxyMapTransform(cache);
+    return true;
+}
+
+function scheduleGalaxyMapCenter(cache) {
+    if (!cache || !cache.mapState) {
         return;
     }
-    const { mapWrapper, mapState } = cache;
-    mapState.scale = 1;
-    mapState.offsetX = -120;
-    mapState.offsetY = -220;
-    updateGalaxyMapTransform(cache);
+    const { mapState } = cache;
+    if (mapState.pendingCenterRequest) {
+        return;
+    }
+    if (!cache.mapWrapper || !cache.mapWrapper.offsetParent) {
+        mapState.deferredCenter = true;
+        return;
+    }
+    const scheduler = (globalThis && globalThis.requestAnimationFrame) || ((callback) => globalThis.setTimeout(callback, 16));
+    mapState.pendingCenterRequest = scheduler(() => {
+        mapState.pendingCenterRequest = null;
+        if (!cache.mapWrapper || !cache.mapWrapper.offsetParent) {
+            mapState.deferredCenter = true;
+            return;
+        }
+        if (!centerGalaxyMap(cache)) {
+            scheduleGalaxyMapCenter(cache);
+        }
+    });
 }
 
 function clampScale(scale) {
@@ -622,6 +690,10 @@ function cacheGalaxyElements() {
     const mapContent = doc.createElement('div');
     mapContent.className = 'galaxy-map-content';
     const hexBuild = buildGalaxyHexMap(doc);
+    const initialFocus = hexBuild.initialFocus || {
+        x: hexBuild.contentWidth * 0.5,
+        y: hexBuild.contentHeight * 0.5
+    };
     mapContent.style.width = `${hexBuild.contentWidth}px`;
     mapContent.style.height = `${hexBuild.contentHeight}px`;
     mapContent.appendChild(hexBuild.fragment);
@@ -672,7 +744,12 @@ function cacheGalaxyElements() {
         startOffsetX: 0,
         startOffsetY: 0,
         overlayHideTimeout: null,
-        initialized: false
+        initialized: false,
+        initialFocus,
+        pendingCenterRequest: null,
+        deferredCenter: false,
+        lastViewWidth: 0,
+        lastViewHeight: 0
     };
 
     if (supportsPointerEvents) {
@@ -796,7 +873,9 @@ function cacheGalaxyElements() {
     };
 
     refreshEmptyStates();
-    centerGalaxyMap(galaxyUICache);
+    if (!centerGalaxyMap(galaxyUICache)) {
+        scheduleGalaxyMapCenter(galaxyUICache);
+    }
 
     return galaxyUICache;
 }
@@ -881,7 +960,9 @@ function updateGalaxyUI() {
         cache.mapCanvas.dataset.ready = 'true';
         cache.mapOverlay.textContent = 'Initializing galactic coordinates...';
         cache.mapOverlay.classList.add('is-visible');
-        centerGalaxyMap(cache);
+        if (!centerGalaxyMap(cache)) {
+            scheduleGalaxyMapCenter(cache);
+        }
         if (cache.mapState.overlayHideTimeout) {
             globalThis.clearTimeout(cache.mapState.overlayHideTimeout);
         }
@@ -898,6 +979,9 @@ function updateGalaxyUI() {
     updateGalaxyHexControlColors(manager, cache);
     renderSelectedSectorDetails();
     refreshEmptyStates();
+    if (cache.mapState.deferredCenter && cache.mapWrapper && cache.mapWrapper.offsetParent) {
+        scheduleGalaxyMapCenter(cache);
+    }
 }
 
 if (typeof window !== 'undefined') {
