@@ -125,6 +125,172 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     return hex;
 }
 
+function handleGalaxyHexClick(event) {
+    const hex = event.currentTarget;
+    if (!hex) {
+        return;
+    }
+    const q = Number(hex.dataset.q);
+    const r = Number(hex.dataset.r);
+    if (!Number.isFinite(q) || !Number.isFinite(r)) {
+        return;
+    }
+    selectGalaxySector({ q, r, hex });
+}
+
+function selectGalaxySector({ q, r, hex }) {
+    if (!galaxyUICache) {
+        return;
+    }
+    const manager = galaxyManager;
+    if (!manager || !manager.enabled) {
+        clearSelectedGalaxySector();
+        return;
+    }
+    const sector = manager.getSector(q, r);
+    if (!sector) {
+        return;
+    }
+
+    if (galaxyUICache.selectedHex && galaxyUICache.selectedHex !== hex) {
+        galaxyUICache.selectedHex.classList.remove('is-selected');
+    }
+    if (hex) {
+        hex.classList.add('is-selected');
+    }
+
+    galaxyUICache.selectedHex = hex || null;
+    galaxyUICache.selectedSector = {
+        q,
+        r,
+        key: `${q},${r}`,
+        displayName: hex && hex.dataset.displayName ? hex.dataset.displayName : formatSectorName(q, r)
+    };
+
+    renderSelectedSectorDetails();
+}
+
+function clearSelectedGalaxySector() {
+    if (!galaxyUICache) {
+        return;
+    }
+    if (galaxyUICache.selectedHex) {
+        galaxyUICache.selectedHex.classList.remove('is-selected');
+    }
+    galaxyUICache.selectedHex = null;
+    galaxyUICache.selectedSector = null;
+
+    const panel = galaxyUICache.sectorContent;
+    if (!panel) {
+        return;
+    }
+    const message = panel.dataset.emptyMessage || 'No sector selected.';
+    panel.classList.remove('is-populated');
+    panel.replaceChildren();
+    panel.textContent = message;
+}
+
+function renderSelectedSectorDetails() {
+    if (!galaxyUICache) {
+        return;
+    }
+    const panel = galaxyUICache.sectorContent;
+    if (!panel) {
+        return;
+    }
+    const selection = galaxyUICache.selectedSector;
+    const manager = galaxyManager;
+    if (!selection || !manager || !manager.enabled) {
+        clearSelectedGalaxySector();
+        return;
+    }
+
+    const sector = manager.getSector(selection.q, selection.r);
+    if (!sector) {
+        clearSelectedGalaxySector();
+        return;
+    }
+
+    const doc = panel.ownerDocument || globalThis.document;
+    if (!doc) {
+        return;
+    }
+
+    const breakdown = [];
+    const entries = Object.entries(sector.control);
+    for (let index = 0; index < entries.length; index += 1) {
+        const [factionId, rawValue] = entries[index];
+        const value = Number(rawValue);
+        if (!Number.isFinite(value) || value <= 0) {
+            continue;
+        }
+        const faction = manager.getFaction(factionId);
+        const name = faction && faction.name ? faction.name : factionId;
+        breakdown.push({ factionId, name, value });
+    }
+
+    breakdown.sort((a, b) => {
+        if (a.value === b.value) {
+            return a.name.localeCompare(b.name);
+        }
+        return b.value - a.value;
+    });
+
+    const fragment = doc.createDocumentFragment();
+
+    const title = doc.createElement('div');
+    title.className = 'galaxy-sector-panel__title';
+    title.textContent = selection.displayName === 'Core'
+        ? 'Core Sector'
+        : `Sector ${selection.displayName}`;
+    fragment.appendChild(title);
+
+    if (breakdown.length === 0) {
+        const empty = doc.createElement('p');
+        empty.className = 'galaxy-sector-panel__empty';
+        empty.textContent = 'No factions currently control this sector.';
+        fragment.appendChild(empty);
+    } else {
+        const subtitle = doc.createElement('div');
+        subtitle.className = 'galaxy-sector-panel__subtitle';
+        subtitle.textContent = 'Faction Control';
+        fragment.appendChild(subtitle);
+
+        const list = doc.createElement('ul');
+        list.className = 'galaxy-sector-panel__control-list';
+
+        let total = 0;
+        for (let index = 0; index < breakdown.length; index += 1) {
+            total += breakdown[index].value;
+        }
+
+        breakdown.forEach((entry) => {
+            const item = doc.createElement('li');
+            item.className = 'galaxy-sector-panel__control-item';
+
+            const name = doc.createElement('span');
+            name.className = 'galaxy-sector-panel__control-name';
+            name.textContent = entry.name;
+            item.appendChild(name);
+
+            const value = doc.createElement('span');
+            value.className = 'galaxy-sector-panel__control-value';
+            const percent = total > 0 ? Math.round((entry.value / total) * 100) : 0;
+            value.textContent = total > 0
+                ? `${percent}% (${entry.value.toLocaleString()})`
+                : entry.value.toLocaleString();
+            item.appendChild(value);
+
+            list.appendChild(item);
+        });
+
+        fragment.appendChild(list);
+    }
+
+    panel.classList.add('is-populated');
+    panel.replaceChildren(fragment);
+}
+
 function buildGalaxyHexMap(doc) {
     const baseSize = HEX_BASE_SIZE;
     const dimensions = getHexDimensions(baseSize);
@@ -318,7 +484,11 @@ function startGalaxyMapPan(event) {
     if (!supportsPointerEvents && event.type === 'mousedown' && event.button !== 0) {
         return;
     }
-    if (event.target && event.target.closest('.galaxy-map-zoom')) {
+    const target = event.target;
+    if (target && target.closest('.galaxy-map-zoom')) {
+        return;
+    }
+    if (target && target.closest('.galaxy-hex')) {
         return;
     }
 
@@ -529,6 +699,10 @@ function cacheGalaxyElements() {
     mapContent.appendChild(hexBuild.fragment);
     const hexElements = Array.from(mapContent.querySelectorAll('.galaxy-hex'));
 
+    hexElements.forEach((hex) => {
+        hex.addEventListener('click', handleGalaxyHexClick);
+    });
+
     const mapOverlay = doc.createElement('div');
     mapOverlay.className = 'galaxy-map-overlay';
     mapOverlay.textContent = '';
@@ -693,7 +867,9 @@ function cacheGalaxyElements() {
         upgradesPlaceholder,
         attackContent,
         sectorContent,
-        hexElements
+        hexElements,
+        selectedHex: null,
+        selectedSector: null
     };
 
     refreshEmptyStates();
@@ -757,6 +933,7 @@ function updateGalaxyUI() {
     const enabled = !!(manager && manager.enabled);
 
     if (!enabled) {
+        clearSelectedGalaxySector();
         cache.mapCanvas.dataset.ready = '';
         cache.mapOverlay.textContent = '';
         cache.mapOverlay.classList.remove('is-visible');
@@ -800,6 +977,7 @@ function updateGalaxyUI() {
     }
 
     updateGalaxyHexControlColors(manager, cache);
+    renderSelectedSectorDetails();
     refreshEmptyStates();
     if (cache.mapState.deferredCenter && cache.mapWrapper && cache.mapWrapper.offsetParent) {
         scheduleGalaxyMapCenter(cache);
