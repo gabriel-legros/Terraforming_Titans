@@ -6,7 +6,7 @@ function getAntimatterResource(resources) {
 }
 
 function getTerraformedWorldCount() {
-  return globalThis.spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+  return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
 }
 
 function produceAntimatter(deltaTime, resources, accumulatedChanges) {

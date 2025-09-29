@@ -12,6 +12,8 @@ const HEX_STRIPE_ANGLE = 135;
 const HEX_STRIPE_BASE_LIGHTEN = 0.14;
 const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
 const HEX_BORDER_LIGHTEN = 0.32;
+const PAN_ACTIVATION_DISTANCE = 6;
+const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
@@ -213,6 +215,16 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
 }
 
 function handleGalaxyHexClick(event) {
+    if (galaxyUICache && galaxyUICache.mapState && galaxyUICache.mapState.preventNextClick) {
+        galaxyUICache.mapState.preventNextClick = false;
+        if (event && event.preventDefault) {
+            event.preventDefault();
+        }
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
+        }
+        return;
+    }
     const hex = event.currentTarget;
     if (!hex) {
         return;
@@ -611,9 +623,6 @@ function startGalaxyMapPan(event) {
     if (target && target.closest('.galaxy-map-zoom')) {
         return;
     }
-    if (target && target.closest('.galaxy-hex')) {
-        return;
-    }
 
     const coords = extractClientCoordinates(event);
     if (!coords) {
@@ -621,27 +630,22 @@ function startGalaxyMapPan(event) {
     }
 
     const pointerId = getPointerId(event);
-    cache.mapState.isPanning = true;
+    cache.mapState.isPointerDown = true;
+    cache.mapState.isPanning = false;
     cache.mapState.pointerId = pointerId;
     cache.mapState.panStartX = coords.x;
     cache.mapState.panStartY = coords.y;
     cache.mapState.startOffsetX = cache.mapState.offsetX;
     cache.mapState.startOffsetY = cache.mapState.offsetY;
+    cache.mapState.preventNextClick = false;
 
-    if (supportsPointerEvents && typeof event.pointerId === 'number') {
-        canvas.setPointerCapture(event.pointerId);
-    } else {
+    if (!supportsPointerEvents) {
         attachDocumentPanListeners();
-    }
-
-    canvas.classList.add('is-panning');
-    if (event.cancelable) {
-        event.preventDefault();
     }
 }
 
 function moveGalaxyMapPan(event) {
-    if (!galaxyUICache || !galaxyUICache.mapState || !galaxyUICache.mapState.isPanning) {
+    if (!galaxyUICache || !galaxyUICache.mapState || !galaxyUICache.mapState.isPointerDown) {
         return;
     }
     const pointerId = getPointerId(event);
@@ -654,9 +658,27 @@ function moveGalaxyMapPan(event) {
         return;
     }
 
+    const rawDeltaX = coords.x - cache.mapState.panStartX;
+    const rawDeltaY = coords.y - cache.mapState.panStartY;
+
+    if (!cache.mapState.isPanning) {
+        const distanceSquared = (rawDeltaX * rawDeltaX) + (rawDeltaY * rawDeltaY);
+        if (distanceSquared < PAN_ACTIVATION_DISTANCE_SQUARED) {
+            return;
+        }
+        cache.mapState.isPanning = true;
+        cache.mapState.preventNextClick = true;
+        if (supportsPointerEvents && typeof event.pointerId === 'number') {
+            cache.mapCanvas.setPointerCapture(event.pointerId);
+        } else {
+            attachDocumentPanListeners();
+        }
+        cache.mapCanvas.classList.add('is-panning');
+    }
+
     const scale = cache.mapState.scale || 1;
-    const deltaX = (coords.x - cache.mapState.panStartX) / scale;
-    const deltaY = (coords.y - cache.mapState.panStartY) / scale;
+    const deltaX = rawDeltaX / scale;
+    const deltaY = rawDeltaY / scale;
     cache.mapState.offsetX = cache.mapState.startOffsetX + deltaX;
     cache.mapState.offsetY = cache.mapState.startOffsetY + deltaY;
     updateGalaxyMapTransform(cache);
@@ -667,7 +689,7 @@ function moveGalaxyMapPan(event) {
 }
 
 function endGalaxyMapPan(event) {
-    if (!galaxyUICache || !galaxyUICache.mapState || !galaxyUICache.mapState.isPanning) {
+    if (!galaxyUICache || !galaxyUICache.mapState || !galaxyUICache.mapState.isPointerDown) {
         return;
     }
     const pointerId = getPointerId(event);
@@ -675,17 +697,22 @@ function endGalaxyMapPan(event) {
         return;
     }
 
+    const wasPanning = galaxyUICache.mapState.isPanning;
+    galaxyUICache.mapState.isPointerDown = false;
     galaxyUICache.mapState.isPanning = false;
     galaxyUICache.mapState.pointerId = null;
+    galaxyUICache.mapState.preventNextClick = wasPanning;
 
     const canvas = galaxyUICache.mapCanvas;
     if (supportsPointerEvents && canvas && typeof event.pointerId === 'number' && canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
     }
     detachDocumentPanListeners();
-    canvas.classList.remove('is-panning');
+    if (canvas) {
+        canvas.classList.remove('is-panning');
+    }
 
-    if (event.cancelable) {
+    if (event.cancelable && wasPanning) {
         event.preventDefault();
     }
 }
@@ -872,7 +899,9 @@ function cacheGalaxyElements() {
         pendingCenterRequest: null,
         deferredCenter: false,
         lastViewWidth: 0,
-        lastViewHeight: 0
+        lastViewHeight: 0,
+        isPointerDown: false,
+        preventNextClick: false
     };
 
     if (supportsPointerEvents) {
