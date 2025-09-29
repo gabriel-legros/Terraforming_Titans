@@ -1,9 +1,10 @@
 class GalaxySector {
-    constructor({ q, r, control } = {}) {
+    constructor({ q, r, control, value } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
         this.ring = GalaxySector.computeRing(this.q, this.r);
+        this.value = this.#sanitizeValue(value);
         this.control = {};
         if (control) {
             this.replaceControl(control);
@@ -27,6 +28,14 @@ class GalaxySector {
         Object.entries(controlMap).forEach(([factionId, value]) => {
             this.setControl(factionId, value);
         });
+    }
+
+    setValue(rawValue) {
+        this.value = this.#sanitizeValue(rawValue);
+    }
+
+    getValue() {
+        return this.value;
     }
 
     setControl(factionId, rawValue) {
@@ -115,11 +124,30 @@ class GalaxySector {
         return breakdown.slice(0, numericLimit);
     }
 
+    getTotalControlValue() {
+        return Object.values(this.control).reduce((total, value) => {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                return total;
+            }
+            return total + numericValue;
+        }, 0);
+    }
+
+    #sanitizeValue(rawValue) {
+        const numericValue = Number(rawValue);
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            return 100;
+        }
+        return numericValue;
+    }
+
     toJSON() {
         return {
             q: this.q,
             r: this.r,
-            control: { ...this.control }
+            control: { ...this.control },
+            value: this.value
         };
     }
 }
