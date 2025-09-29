@@ -36,11 +36,11 @@ const galaxyFactionParameters = [
         name: 'Helian',
         color: '#facc15',
         ringSlices: [
-            { ring: 2, start: 2, end: 3 },
-            { ring: 3, start: 1, end: 5 },
-            { ring: 4, start: 1, end: 6 },
-            { ring: 5, start: 1, end: 8 },
-            { ring: 6, start: 1, end: 9 }
+            { ring: 2, start: 1, end: 3 },
+            { ring: 3, start: 2, end: 5 },
+            { ring: 4, start: 3, end: 6 },
+            { ring: 5, start: 3, end: 8 },
+            { ring: 6, start: 4, end: 9 }
         ]
     },
     {
@@ -84,12 +84,16 @@ const galaxyFactionParameters = [
         name: 'Okoth',
         color: 'red',
         ringSlices: [
-            { ring: 2, start: 1, end: 1 },
             { ring: 2, start: 11, end: 12 },
+            { ring: 3, start: 1, end: 1 },
             { ring: 3, start: 16, end: 18 },
             { ring: 4, start: 20, end: 24 },
+            { ring: 4, start: 1, end: 2 },
             { ring: 5, start: 25, end: 30 },
-            { ring: 6, start: 31, end: 36 }
+            { ring: 5, start: 1, end: 2 },
+            { ring: 6, start: 31, end: 36 },
+            { ring: 6, start: 1, end: 3 },
+
         ]
     }
 ];
