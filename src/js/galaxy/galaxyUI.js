@@ -819,7 +819,7 @@ function cacheGalaxyElements() {
     const firstRow = doc.createElement('div');
     firstRow.className = 'galaxy-row galaxy-row--primary';
 
-    const sectorDetails = createGalaxySection(doc, 'Sector Details', 'Select a sector on the map to view control, bonuses, and ongoing effects.');
+    const sectorDetails = createGalaxySection(doc, 'Sector Details', '');
     sectorDetails.section.classList.add('galaxy-section--sector');
     const sectorContent = doc.createElement('div');
     sectorContent.className = 'galaxy-sector-panel';
