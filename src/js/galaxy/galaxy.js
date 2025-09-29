@@ -1,15 +1,20 @@
 let GalaxySectorClass;
 let GalaxyFactionClass;
 let galaxyFactionParametersConfig;
+let galaxySectorControlOverridesConfig;
 
 if (typeof module !== 'undefined' && module.exports) {
     ({ GalaxySector: GalaxySectorClass } = require('./sector'));
     ({ GalaxyFaction: GalaxyFactionClass } = require('./faction'));
-    ({ galaxyFactionParameters: galaxyFactionParametersConfig } = require('./factions-parameters'));
+    ({
+        galaxyFactionParameters: galaxyFactionParametersConfig,
+        galaxySectorControlOverrides: galaxySectorControlOverridesConfig
+    } = require('./factions-parameters'));
 } else if (typeof window !== 'undefined') {
     GalaxySectorClass = window.GalaxySector;
     GalaxyFactionClass = window.GalaxyFaction;
     galaxyFactionParametersConfig = window.galaxyFactionParameters;
+    galaxySectorControlOverridesConfig = window.galaxySectorControlOverrides;
 }
 
 if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof globalThis !== 'undefined') {
@@ -22,6 +27,9 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     if ((!galaxyFactionParametersConfig || !Array.isArray(galaxyFactionParametersConfig)) && globalThis.galaxyFactionParameters) {
         galaxyFactionParametersConfig = globalThis.galaxyFactionParameters;
     }
+    if (!galaxySectorControlOverridesConfig && globalThis.galaxySectorControlOverrides) {
+        galaxySectorControlOverridesConfig = globalThis.galaxySectorControlOverrides;
+    }
 }
 
 if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof require === 'function') {
@@ -33,7 +41,10 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
             ({ GalaxyFaction: GalaxyFactionClass } = require('./faction'));
         }
         if (!Array.isArray(galaxyFactionParametersConfig)) {
-            ({ galaxyFactionParameters: galaxyFactionParametersConfig } = require('./factions-parameters'));
+            ({
+                galaxyFactionParameters: galaxyFactionParametersConfig,
+                galaxySectorControlOverrides: galaxySectorControlOverridesConfig
+            } = require('./factions-parameters'));
         }
     } catch (error) {
         // Ignore resolution errors in browser contexts.
@@ -43,6 +54,7 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
 if (!Array.isArray(galaxyFactionParametersConfig)) {
     galaxyFactionParametersConfig = [];
 }
+galaxySectorControlOverridesConfig = galaxySectorControlOverridesConfig || {};
 
 const GALAXY_RADIUS = 6;
 
@@ -214,6 +226,31 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 sector.setControl(faction.id, 100);
+            });
+        });
+        Object.entries(galaxySectorControlOverridesConfig).forEach(([sectorKey, controlMap]) => {
+            const sector = this.sectors.get(sectorKey);
+            if (!sector) {
+                return;
+            }
+            const entries = Object.entries(controlMap || {});
+            const sanitized = [];
+            entries.forEach(([factionId, value]) => {
+                if (!factionId || !this.factions.has(factionId)) {
+                    return;
+                }
+                const numericValue = Number(value);
+                if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                    return;
+                }
+                sanitized.push([factionId, numericValue]);
+            });
+            if (!sanitized.length) {
+                return;
+            }
+            sector.replaceControl({});
+            sanitized.forEach(([factionId, numericValue]) => {
+                sector.setControl(factionId, numericValue);
             });
         });
     }
