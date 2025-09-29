@@ -116,6 +116,14 @@ function pickLabelFromRadius(rng, radius) {
 function selectSectorLabel(seed) {
   const numericSeed = Number.isFinite(seed) ? (seed >>> 0) : hashStringToInt(String(seed ?? ''));
   const rng = mulberry32(numericSeed ^ 0x5EC7);
+  const spaceManagerInstance = globalThis?.spaceManager;
+  const lockedSector = spaceManagerInstance?.getRwgSectorLock?.();
+  if (lockedSector) {
+    const text = String(lockedSector).trim();
+    if (text) {
+      return text;
+    }
+  }
   const manager = globalThis?.galaxyManager;
   const sectors = manager?.getSectors?.();
   if (Array.isArray(sectors) && sectors.length > 0) {
@@ -126,7 +134,9 @@ function selectSectorLabel(seed) {
       return display;
     }
   }
-  return pickLabelFromRadius(rng, manager?.radius);
+  return Array.isArray(sectors) && sectors.length > 0
+    ? pickLabelFromRadius(rng, manager?.radius)
+    : DEFAULT_SECTOR_LABEL;
 }
 
 // Deep merge shim

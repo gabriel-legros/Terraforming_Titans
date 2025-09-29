@@ -10,6 +10,66 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+const DEFAULT_SECTOR_LABEL = 'R5-07';
+
+function normalizeSectorLabel(value) {
+    const text = value == null ? '' : String(value).trim();
+    return text || DEFAULT_SECTOR_LABEL;
+}
+
+function resolveSectorFromSources(...sources) {
+    for (let index = 0; index < sources.length; index += 1) {
+        const source = sources[index];
+        if (!source) {
+            continue;
+        }
+        const candidates = [
+            source.celestialParameters?.sector,
+            source.override?.celestialParameters?.sector,
+            source.merged?.celestialParameters?.sector,
+            source.original?.celestialParameters?.sector,
+            source.sector
+        ];
+        for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+            const candidate = candidates[candidateIndex];
+            if (candidate == null) {
+                continue;
+            }
+            const normalized = normalizeSectorLabel(candidate);
+            if (normalized) {
+                return normalized;
+            }
+        }
+    }
+    return DEFAULT_SECTOR_LABEL;
+}
+
+function hasSuperEarthArchetype(...sources) {
+    for (let index = 0; index < sources.length; index += 1) {
+        const source = sources[index];
+        if (!source) {
+            continue;
+        }
+        const candidates = [
+            source.classification?.archetype,
+            source.override?.classification?.archetype,
+            source.merged?.classification?.archetype,
+            source.original?.classification?.archetype,
+            source.archetype
+        ];
+        for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+            const candidate = candidates[candidateIndex];
+            if (!candidate) {
+                continue;
+            }
+            if (String(candidate).trim().toLowerCase() === 'super-earth') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
 if (typeof module !== 'undefined' && module.exports) {
     ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -36,6 +96,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
         this.extraTerraformedWorlds = 0;
+        this.rwgSectorLock = DEFAULT_SECTOR_LABEL;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -125,6 +186,69 @@ class SpaceManager extends EffectableEntity {
      */
     getAllPlanetStatuses() {
         return { ...this.planetStatuses, ...this.randomWorldStatuses };
+    }
+
+    getRwgSectorLock() {
+        return this.rwgSectorLock;
+    }
+
+    setRwgSectorLock(sectorLabel) {
+        if (sectorLabel == null) {
+            this.rwgSectorLock = null;
+            return;
+        }
+        const text = String(sectorLabel).trim();
+        this.rwgSectorLock = text ? text : null;
+    }
+
+    clearRwgSectorLock() {
+        this.rwgSectorLock = null;
+    }
+
+    getWorldCountPerSector(sectorLabel) {
+        const target = normalizeSectorLabel(sectorLabel);
+        let total = 0;
+        const overridesLookup = globalThis?.planetOverrides || null;
+
+        Object.keys(this.planetStatuses).forEach((key) => {
+            const status = this.planetStatuses[key];
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const planetData = this.allPlanetsData[key] || null;
+            const override = overridesLookup ? overridesLookup[key] : null;
+            const sector = resolveSectorFromSources(override, planetData);
+            if (sector !== target) {
+                return;
+            }
+            total += 1;
+            if (status.orbitalRing) {
+                total += 1;
+            }
+            if (hasSuperEarthArchetype(override, planetData)) {
+                total += 1;
+            }
+        });
+
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const original = status.original || null;
+            const sector = resolveSectorFromSources(original);
+            if (sector !== target) {
+                return;
+            }
+            total += 1;
+            if (status.orbitalRing) {
+                total += 1;
+            }
+            if (hasSuperEarthArchetype(original)) {
+                total += 1;
+            }
+        });
+
+        return total;
     }
 
     currentWorldHasOrbitalRing() {
@@ -545,7 +669,8 @@ class SpaceManager extends EffectableEntity {
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
             randomWorldStatuses: this.randomWorldStatuses,
-            randomTabEnabled: this.randomTabEnabled
+            randomTabEnabled: this.randomTabEnabled,
+            rwgSectorLock: this.rwgSectorLock
         };
     }
 
@@ -556,6 +681,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {};
         this.randomTabEnabled = false;
+        this.rwgSectorLock = DEFAULT_SECTOR_LABEL;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
@@ -630,6 +756,10 @@ class SpaceManager extends EffectableEntity {
                     }
                 });
             }
+        }
+
+        if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
+            this.setRwgSectorLock(savedData.rwgSectorLock);
         }
 
         if (typeof savedData.randomTabEnabled === 'boolean') {
