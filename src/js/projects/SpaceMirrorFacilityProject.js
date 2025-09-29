@@ -664,20 +664,24 @@ function initializeMirrorOversightUI(container) {
     if (k === 'water') {
       const scale = mirrorOversightSettings.waterMultiplier || 1000;
       el.value = Number((mirrorOversightSettings.targets[k] || 0) / scale);
-      el.addEventListener('change', () => {
+      const handleWaterInput = () => {
         const raw = Number(el.value);
         const mul = mirrorOversightSettings.waterMultiplier || 1000;
         mirrorOversightSettings.targets.water = isNaN(raw) ? 0 : raw * mul;
-      });
+      };
+      el.addEventListener('input', handleWaterInput);
+      el.addEventListener('change', handleWaterInput);
     } else {
       const base = (mirrorOversightSettings.targets[k] || 293.15);
       el.value = toDisp(base).toFixed(2);
-      el.addEventListener('change', () => {
+      const handleTempInput = () => {
         let raw = Number(el.value);
         const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
         if (useC) raw = raw + 273.15; // convert back to Kelvin
         mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
-      });
+      };
+      el.addEventListener('input', handleTempInput);
+      el.addEventListener('change', handleTempInput);
     }
   });
   if (waterScaleSelect) {
