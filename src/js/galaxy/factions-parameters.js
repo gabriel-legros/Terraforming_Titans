@@ -16,13 +16,13 @@ function createKey(q, r) {
 const galaxyFactionParameters = [
     {
         id: 'uhf',
-        name: 'United Human Federation',
+        name: 'UHF',
         color: '#3b82f6',
         startingSectors: []
     },
     {
         id: 'cewinsii',
-        name: 'Cewinsii Empire',
+        name: 'Cewinsii',
         color: '#f97316',
         startingSectors: [
             createKey(0, 0)
@@ -33,7 +33,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'helian',
-        name: 'Helian Ascendancy',
+        name: 'Helian',
         color: '#facc15',
         ringSlices: [
             { ring: 2, start: 1, end: 3 },
@@ -46,7 +46,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'virellan',
-        name: 'Virellan Enclave',
+        name: 'Virellan',
         color: '#10b981',
         ringSlices: [
             { ring: 2, start: 4, end: 5 },
@@ -58,7 +58,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'karthid',
-        name: 'Karthid Dominion',
+        name: 'Karthid',
         color: '#8b5cf6',
         ringSlices: [
             { ring: 2, start: 6, end: 8 },
@@ -70,7 +70,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'neran',
-        name: 'Neran Coalition',
+        name: 'Neran',
         color: '#ec4899',
         ringSlices: [
             { ring: 2, start: 9, end: 10 },
@@ -82,7 +82,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'okoth',
-        name: 'Okoth Shroud',
+        name: 'Okoth',
         color: '#0ea5e9',
         ringSlices: [
             { ring: 2, start: 11, end: 12 },

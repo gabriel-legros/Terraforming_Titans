@@ -207,3 +207,12 @@ If trying to take a screenshot, you should set debugMode to true first, to skip 
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
+  lly without mutating base data.
+- Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Galaxy sector panels now show the selected sector name alongside a descending list of faction control shares.
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.

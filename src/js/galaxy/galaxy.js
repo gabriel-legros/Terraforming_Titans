@@ -2,10 +2,12 @@ let GalaxySectorClass;
 let GalaxyFactionClass;
 let galaxyFactionParametersConfig;
 let galaxySectorControlOverridesConfig;
+const defaultUpdateFactions = () => {};
+let updateFactionsFunction = defaultUpdateFactions;
 
 if (typeof module !== 'undefined' && module.exports) {
     ({ GalaxySector: GalaxySectorClass } = require('./sector'));
-    ({ GalaxyFaction: GalaxyFactionClass } = require('./faction'));
+    ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction } = require('./faction'));
     ({
         galaxyFactionParameters: galaxyFactionParametersConfig,
         galaxySectorControlOverrides: galaxySectorControlOverridesConfig
@@ -15,6 +17,9 @@ if (typeof module !== 'undefined' && module.exports) {
     GalaxyFactionClass = window.GalaxyFaction;
     galaxyFactionParametersConfig = window.galaxyFactionParameters;
     galaxySectorControlOverridesConfig = window.galaxySectorControlOverrides;
+    if (typeof window.updateFactions === 'function') {
+        updateFactionsFunction = window.updateFactions;
+    }
 }
 
 if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof globalThis !== 'undefined') {
@@ -30,6 +35,9 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     if (!galaxySectorControlOverridesConfig && globalThis.galaxySectorControlOverrides) {
         galaxySectorControlOverridesConfig = globalThis.galaxySectorControlOverrides;
     }
+    if (typeof updateFactionsFunction !== 'function' && typeof globalThis.updateFactions === 'function') {
+        updateFactionsFunction = globalThis.updateFactions;
+    }
 }
 
 if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionParametersConfig)) && typeof require === 'function') {
@@ -37,8 +45,8 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
         if (!GalaxySectorClass) {
             ({ GalaxySector: GalaxySectorClass } = require('./sector'));
         }
-        if (!GalaxyFactionClass) {
-            ({ GalaxyFaction: GalaxyFactionClass } = require('./faction'));
+        if (!GalaxyFactionClass || updateFactionsFunction === defaultUpdateFactions) {
+            ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction } = require('./faction'));
         }
         if (!Array.isArray(galaxyFactionParametersConfig)) {
             ({
@@ -49,6 +57,10 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     } catch (error) {
         // Ignore resolution errors in browser contexts.
     }
+}
+
+if (typeof updateFactionsFunction !== 'function') {
+    updateFactionsFunction = defaultUpdateFactions;
 }
 
 if (!Array.isArray(galaxyFactionParametersConfig)) {
@@ -92,8 +104,8 @@ class GalaxyManager extends EffectableEntity {
         this.refreshUIVisibility();
     }
 
-    update(deltaMs) { // Placeholder for future logic
-        void deltaMs;
+    update(deltaMs) {
+        updateFactionsFunction.call(this, deltaMs);
     }
 
     enable(targetId, { autoSwitch = true } = {}) {
