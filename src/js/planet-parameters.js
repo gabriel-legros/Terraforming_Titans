@@ -118,6 +118,7 @@ const defaultPlanetParameters = {
     albedo: 0.21, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
+    sector: 'R5-07',
   },
   visualization: {
     baseColor: '#8a2a2a',

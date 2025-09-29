@@ -35,6 +35,100 @@ const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const toTons = (kg) => kg / 1000;
 function isObject(item) { return item && typeof item === "object" && !Array.isArray(item); }
 
+const DEFAULT_SECTOR_LABEL = 'R5-07';
+const SECTOR_DIRECTIONS = [
+  { q: 0, r: -1 },
+  { q: -1, r: 0 },
+  { q: -1, r: 1 },
+  { q: 0, r: 1 },
+  { q: 1, r: 0 },
+  { q: 1, r: -1 }
+];
+
+function computeSectorRing(q, r) {
+  const s = -q - r;
+  return Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
+}
+
+function computeSectorIndex(q, r, ring) {
+  if (ring === 0) {
+    return 0;
+  }
+  let currentQ = ring;
+  let currentR = 0;
+  let index = 0;
+  if (currentQ === q && currentR === r) {
+    return index;
+  }
+  for (let side = 0; side < SECTOR_DIRECTIONS.length; side += 1) {
+    const dir = SECTOR_DIRECTIONS[side];
+    for (let step = 0; step < ring; step += 1) {
+      currentQ += dir.q;
+      currentR += dir.r;
+      index += 1;
+      if (currentQ === q && currentR === r) {
+        return index;
+      }
+    }
+  }
+  return index % (ring * 6);
+}
+
+function formatSectorLabelFromCoords(q, r) {
+  if (!Number.isFinite(q) || !Number.isFinite(r)) {
+    return null;
+  }
+  const ring = computeSectorRing(q, r);
+  if (ring === 0) {
+    return 'Core';
+  }
+  const index = computeSectorIndex(q, r, ring);
+  const ringSize = ring * 6;
+  const digits = Math.max(2, String(ringSize).length);
+  return `R${ring}-${String(index + 1).padStart(digits, '0')}`;
+}
+
+function pickLabelFromRadius(rng, radius) {
+  const numericRadius = Number.isFinite(radius) && radius >= 0 ? Math.floor(radius) : 6;
+  let total = 0;
+  for (let ring = 0; ring <= numericRadius; ring += 1) {
+    total += ring === 0 ? 1 : ring * 6;
+  }
+  if (total <= 0) {
+    return DEFAULT_SECTOR_LABEL;
+  }
+  const roll = Math.floor(rng() * total);
+  let offset = roll;
+  for (let ring = 0; ring <= numericRadius; ring += 1) {
+    const count = ring === 0 ? 1 : ring * 6;
+    if (offset < count) {
+      if (ring === 0) {
+        return 'Core';
+      }
+      const digits = Math.max(2, String(count).length);
+      return `R${ring}-${String(offset + 1).padStart(digits, '0')}`;
+    }
+    offset -= count;
+  }
+  return DEFAULT_SECTOR_LABEL;
+}
+
+function selectSectorLabel(seed) {
+  const numericSeed = Number.isFinite(seed) ? (seed >>> 0) : hashStringToInt(String(seed ?? ''));
+  const rng = mulberry32(numericSeed ^ 0x5EC7);
+  const manager = globalThis?.galaxyManager;
+  const sectors = manager?.getSectors?.();
+  if (Array.isArray(sectors) && sectors.length > 0) {
+    const index = Math.floor(rng() * sectors.length);
+    const sector = sectors[index];
+    const display = sector?.getDisplayName?.() || formatSectorLabelFromCoords(sector?.q, sector?.r);
+    if (display) {
+      return display;
+    }
+  }
+  return pickLabelFromRadius(rng, manager?.radius);
+}
+
 // Deep merge shim
 if (typeof globalThis.deepMerge === "undefined") {
   globalThis.deepMerge = function deepMerge(target, source) {
@@ -695,6 +789,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   };
 
   const baseColor = pickBaseColorForType(classification?.type || type);
+  const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -705,7 +800,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
+    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },

@@ -219,3 +219,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
 - Logistics & Statistics now reports UHF threat coverage and lifetime successful operations with a placeholder tooltip while final copy is pending.
 - Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.
+- Celestial parameters now store a galaxy sector identifier, and random worlds roll a sector assignment that appears when the Galaxy Manager is active.

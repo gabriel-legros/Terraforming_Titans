@@ -20,6 +20,56 @@ class GalaxySector {
         return Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
     }
 
+    static #directions() {
+        return [
+            { q: 0, r: -1 },
+            { q: -1, r: 0 },
+            { q: -1, r: 1 },
+            { q: 0, r: 1 },
+            { q: 1, r: 0 },
+            { q: 1, r: -1 }
+        ];
+    }
+
+    static #computeRingIndex(q, r, ring) {
+        if (ring === 0) {
+            return 0;
+        }
+        let currentQ = ring;
+        let currentR = 0;
+        let index = 0;
+        if (currentQ === q && currentR === r) {
+            return index;
+        }
+        const directions = GalaxySector.#directions();
+        for (let side = 0; side < directions.length; side += 1) {
+            const dir = directions[side];
+            for (let step = 0; step < ring; step += 1) {
+                currentQ += dir.q;
+                currentR += dir.r;
+                index += 1;
+                if (currentQ === q && currentR === r) {
+                    return index;
+                }
+            }
+        }
+        return index % (ring * 6);
+    }
+
+    static formatDisplayName(q, r) {
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return null;
+        }
+        const ring = GalaxySector.computeRing(q, r);
+        if (ring === 0) {
+            return 'Core';
+        }
+        const index = GalaxySector.#computeRingIndex(q, r, ring);
+        const ringSize = ring * 6;
+        const digits = Math.max(2, String(ringSize).length);
+        return `R${ring}-${String(index + 1).padStart(digits, '0')}`;
+    }
+
     replaceControl(controlMap) {
         this.control = {};
         if (!controlMap) {
@@ -28,6 +78,10 @@ class GalaxySector {
         Object.entries(controlMap).forEach(([factionId, value]) => {
             this.setControl(factionId, value);
         });
+    }
+
+    getDisplayName() {
+        return GalaxySector.formatDisplayName(this.q, this.r);
     }
 
     setValue(rawValue) {

@@ -612,6 +612,10 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const nightTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.night)))} ${tempUnit}`
     : '—';
+  const galaxyEnabled = Boolean(globalThis?.galaxyManager?.enabled);
+  const sectorChip = (galaxyEnabled && c.sector)
+    ? `<div class="rwg-chip"><div class="label">Sector</div><div class="value">${c.sector}</div></div>`
+    : '';
   const warningMsg = lockedByStory
     ? 'You must complete the story for the current world first'
     : (alreadyTerraformed
@@ -642,6 +646,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Mean T</div><div class="value">${meanTVal}</div></div>
         <div class="rwg-chip"><div class="label">Day T</div><div class="value">${dayTVal}</div></div>
         <div class="rwg-chip"><div class="label">Night T</div><div class="value">${nightTVal}</div></div>
+        ${sectorChip}
       </div>
       <div class="rwg-columns" style="margin-top:10px;">
         <div>
