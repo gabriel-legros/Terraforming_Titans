@@ -739,6 +739,68 @@ function renderSelectedSectorDetails() {
 
     fragment.appendChild(powerContainer);
 
+    const spaceManagerInstance = globalThis.spaceManager;
+    const worldCountContainer = doc.createElement('div');
+    worldCountContainer.className = 'galaxy-sector-panel__stat';
+
+    const worldCountLabel = doc.createElement('span');
+    worldCountLabel.className = 'galaxy-sector-panel__stat-label';
+    worldCountLabel.textContent = 'Terraformations';
+    worldCountContainer.appendChild(worldCountLabel);
+
+    const worldCountValue = doc.createElement('span');
+    worldCountValue.className = 'galaxy-sector-panel__stat-value';
+    const selectionLabel = String(selection.displayName || '').trim();
+    const worldCount = spaceManagerInstance?.getWorldCountPerSector
+        ? spaceManagerInstance.getWorldCountPerSector(selectionLabel)
+        : 0;
+    worldCountValue.textContent = numberFormatter(worldCount, true, 0);
+    worldCountContainer.appendChild(worldCountValue);
+
+    fragment.appendChild(worldCountContainer);
+
+    if (spaceManagerInstance?.setRwgSectorLock) {
+        const lockLabel = doc.createElement('label');
+        lockLabel.className = 'galaxy-sector-panel__lock-option';
+
+        const lockInput = doc.createElement('input');
+        lockInput.type = 'checkbox';
+        lockInput.className = 'galaxy-sector-panel__lock-checkbox';
+        const lockedValue = spaceManagerInstance.getRwgSectorLock?.() || '';
+        const normalizedLocked = String(lockedValue).trim();
+        lockInput.checked = normalizedLocked !== '' && normalizedLocked === selectionLabel;
+
+        lockInput.addEventListener('change', () => {
+            const managerRef = globalThis.spaceManager;
+            const currentSelection = galaxyUICache?.selectedSector?.displayName || '';
+            const label = String(currentSelection).trim();
+            if (!managerRef || !label) {
+                managerRef?.clearRwgSectorLock?.();
+                renderSelectedSectorDetails();
+                return;
+            }
+            if (lockInput.checked) {
+                managerRef.setRwgSectorLock?.(label);
+            } else if (managerRef.getRwgSectorLock?.() === label) {
+                if (managerRef.clearRwgSectorLock) {
+                    managerRef.clearRwgSectorLock();
+                } else {
+                    managerRef.setRwgSectorLock?.(null);
+                }
+            }
+            renderSelectedSectorDetails();
+        });
+
+        const lockText = doc.createElement('span');
+        lockText.className = 'galaxy-sector-panel__lock-label';
+        lockText.textContent = 'Limit RWG to this sector';
+
+        lockLabel.appendChild(lockInput);
+        lockLabel.appendChild(lockText);
+
+        fragment.appendChild(lockLabel);
+    }
+
     if (breakdown.length === 0) {
         const empty = doc.createElement('p');
         empty.className = 'galaxy-sector-panel__empty';
