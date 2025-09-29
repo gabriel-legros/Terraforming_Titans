@@ -268,11 +268,127 @@ class SpaceManager extends EffectableEntity {
     setCurrentWorldHasOrbitalRing(value) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
-            if (!this.randomWorldStatuses[seed]) return;
-            this.randomWorldStatuses[seed].orbitalRing = value;
-        } else if (this.planetStatuses[this.currentPlanetKey]) {
-            this.planetStatuses[this.currentPlanetKey].orbitalRing = value;
+            this.setRandomWorldHasOrbitalRing(seed, value);
+        } else {
+            this.setStoryWorldHasOrbitalRing(this.currentPlanetKey, value);
         }
+    }
+
+    setStoryWorldHasOrbitalRing(planetKey, value) {
+        const status = this.planetStatuses[planetKey];
+        if (!status) {
+            return;
+        }
+        status.orbitalRing = !!value;
+    }
+
+    _ensureRandomWorldStatus(seed) {
+        const key = String(seed);
+        if (!this.randomWorldStatuses[key]) {
+            this.randomWorldStatuses[key] = {
+                name: `Seed ${key}`,
+                terraformed: false,
+                colonists: 0,
+                original: null,
+                visited: false,
+                orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0
+            };
+        }
+        return this.randomWorldStatuses[key];
+    }
+
+    setRandomWorldHasOrbitalRing(seed, value) {
+        const status = this._ensureRandomWorldStatus(seed);
+        status.orbitalRing = !!value;
+    }
+
+    isCurrentWorldTerraformed() {
+        if (this.currentRandomSeed !== null) {
+            return this.isSeedTerraformed(String(this.currentRandomSeed));
+        }
+        return this.isPlanetTerraformed(this.currentPlanetKey);
+    }
+
+    countOrbitalRings() {
+        let total = 0;
+        Object.values(this.planetStatuses).forEach(status => {
+            if (status?.orbitalRing) {
+                total += 1;
+            }
+        });
+        Object.values(this.randomWorldStatuses).forEach(status => {
+            if (status?.orbitalRing) {
+                total += 1;
+            }
+        });
+        return total;
+    }
+
+    assignOrbitalRings(totalRings, options = {}) {
+        const { preferCurrentWorld = false } = options;
+        const normalizedTotal = Math.max(0, Number.isFinite(totalRings) ? Math.floor(totalRings) : 0);
+        const ordered = [];
+        const seen = new Set();
+
+        const addCandidate = (type, key, status, force = false) => {
+            if (!status) {
+                return;
+            }
+            const id = `${type}:${key}`;
+            if (seen.has(id)) {
+                return;
+            }
+            if (!force && !status.terraformed) {
+                return;
+            }
+            ordered.push({ type, key, status });
+            seen.add(id);
+        };
+
+        const currentDescriptor = this.currentRandomSeed !== null
+            ? { type: 'random', key: String(this.currentRandomSeed), status: this.randomWorldStatuses[String(this.currentRandomSeed)] }
+            : { type: 'story', key: this.currentPlanetKey, status: this.planetStatuses[this.currentPlanetKey] };
+
+        if (preferCurrentWorld && currentDescriptor.status) {
+            addCandidate(currentDescriptor.type, currentDescriptor.key, currentDescriptor.status, true);
+        }
+
+        Object.keys(this.planetStatuses).forEach(key => {
+            const status = this.planetStatuses[key];
+            if (status?.orbitalRing) {
+                addCandidate('story', key, status, true);
+            }
+        });
+
+        Object.keys(this.randomWorldStatuses).forEach(seed => {
+            const status = this.randomWorldStatuses[seed];
+            if (status?.orbitalRing) {
+                addCandidate('random', seed, status, true);
+            }
+        });
+
+        Object.keys(this.allPlanetsData).forEach(key => {
+            addCandidate('story', key, this.planetStatuses[key]);
+        });
+
+        Object.keys(this.randomWorldStatuses)
+            .sort((a, b) => String(a).localeCompare(String(b)))
+            .forEach(seed => {
+                addCandidate('random', seed, this.randomWorldStatuses[seed]);
+            });
+
+        let assigned = 0;
+        ordered.forEach(entry => {
+            const shouldAssign = assigned < normalizedTotal;
+            entry.status.orbitalRing = shouldAssign;
+            if (shouldAssign) {
+                assigned += 1;
+            }
+        });
+
+        return assigned;
     }
 
     /**

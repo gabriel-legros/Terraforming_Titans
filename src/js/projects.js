@@ -870,6 +870,21 @@ class ProjectManager extends EffectableEntity {
       }
     }
 
+    const manager = typeof globalThis !== 'undefined' ? globalThis.spaceManager : (typeof spaceManager !== 'undefined' ? spaceManager : null);
+    const ringProject = this.projects?.orbitalRing;
+    if (ringProject && manager) {
+      const expected = ringProject.ringCount || 0;
+      if (typeof manager.countOrbitalRings === 'function' && typeof manager.assignOrbitalRings === 'function') {
+        const existing = manager.countOrbitalRings();
+        if (existing !== expected) {
+          manager.assignOrbitalRings(expected);
+        }
+      }
+      if (typeof manager.currentWorldHasOrbitalRing === 'function') {
+        ringProject.currentWorldHasRing = manager.currentWorldHasOrbitalRing();
+      }
+    }
+
     if (typeof initializeProjectsUI === 'function') {
       initializeProjectsUI();
     }
