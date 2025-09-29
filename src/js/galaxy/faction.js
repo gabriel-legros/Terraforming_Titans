@@ -156,7 +156,13 @@ class GalaxyFaction {
             if (!Number.isFinite(terraformedWorlds) || terraformedWorlds <= 0) {
                 return 0;
             }
-            return terraformedWorlds * DEFAULT_SECTOR_VALUE;
+            const baseCapacity = terraformedWorlds * DEFAULT_SECTOR_VALUE;
+            if (!(baseCapacity > 0)) {
+                return 0;
+            }
+            const multiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
+            const sanitizedMultiplier = multiplier > 0 ? multiplier : 1;
+            return baseCapacity * sanitizedMultiplier;
         }
         const sectors = manager?.getSectors?.();
         if (!Array.isArray(sectors) || sectors.length === 0) {

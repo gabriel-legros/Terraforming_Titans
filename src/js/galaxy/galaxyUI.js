@@ -24,6 +24,35 @@ const OPERATION_DURATION_FALLBACK_MS = 10000;
 const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
     ? globalThis.UHF_FACTION_ID
     : 'uhf';
+const GALAXY_UI_FLEET_UPGRADE_INCREMENT = (typeof globalThis !== 'undefined' && typeof globalThis.GALAXY_FLEET_UPGRADE_INCREMENT === 'number')
+    ? globalThis.GALAXY_FLEET_UPGRADE_INCREMENT
+    : 0.1;
+const FLEET_UPGRADE_FALLBACKS = [
+    {
+        key: 'militaryResearch',
+        label: 'Military R&D',
+        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        costLabel: 'Advanced Research'
+    },
+    {
+        key: 'micOutsource',
+        label: 'MIC Outsource',
+        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        costLabel: 'Solis Points'
+    },
+    {
+        key: 'enemyLessons',
+        label: 'Reverse Engineering',
+        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        costLabel: 'Alien Artifacts'
+    },
+    {
+        key: 'pandoraBox',
+        label: "PANDORA'S Box",
+        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        costLabel: 'Skill Points'
+    }
+];
 
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
@@ -38,6 +67,25 @@ function formatFleetValue(value) {
     }
     const normalized = value < 0 ? 0 : value;
     return FLEET_VALUE_FORMATTER.format(normalized);
+}
+
+function formatFleetMultiplier(value) {
+    if (!Number.isFinite(value) || value <= 0) {
+        return '1.00';
+    }
+    const rounded = Math.round(value * 100) / 100;
+    return rounded.toFixed(2);
+}
+
+function formatFleetUpgradeCost(value) {
+    if (!Number.isFinite(value) || value <= 0) {
+        return '0';
+    }
+    const formatter = globalThis?.formatNumber;
+    if (formatter) {
+        return formatter(value, true, value < 1000 ? 2 : 0);
+    }
+    return value.toLocaleString('en-US');
 }
 
 function normalizeHexColor(color) {
@@ -604,6 +652,19 @@ function handleOperationsLaunch() {
     operation.launchCost = cost;
     setStoredAllocation(sectorKey, assignment);
     updateOperationsPanel();
+}
+
+function handleFleetUpgradePurchase(event) {
+    const button = event?.currentTarget;
+    const upgradeKey = button?.dataset?.upgrade;
+    const manager = galaxyManager;
+    if (!upgradeKey || !manager?.purchaseFleetUpgrade) {
+        return;
+    }
+    if (!manager.purchaseFleetUpgrade(upgradeKey)) {
+        return;
+    }
+    updateGalaxyUI();
 }
 
 function renderSelectedSectorDetails() {
@@ -1669,16 +1730,97 @@ function cacheGalaxyElements() {
     logisticsStats.appendChild(logisticsCapacityRow);
     logistics.body.appendChild(logisticsStats);
 
-    const upgrades = createGalaxySection(doc, 'Upgrades', 'Enhance Warp Gate Command with new tech and facilities.');
+    const upgrades = createGalaxySection(doc, 'Upgrades', '');
     upgrades.section.classList.add('galaxy-section--upgrades');
-    const upgradesList = doc.createElement('ul');
-    upgradesList.className = 'galaxy-list galaxy-list--upgrades';
-    upgradesList.dataset.emptyMessage = 'No upgrades unlocked yet.';
-    const upgradesPlaceholder = doc.createElement('li');
-    upgradesPlaceholder.className = 'galaxy-list__placeholder';
-    upgradesPlaceholder.textContent = upgradesList.dataset.emptyMessage;
-    upgradesList.appendChild(upgradesPlaceholder);
-    upgrades.body.appendChild(upgradesList);
+
+    const upgradesShop = doc.createElement('div');
+    upgradesShop.className = 'galaxy-upgrades-shop';
+
+    const shopHeader = doc.createElement('div');
+    shopHeader.className = 'galaxy-upgrades-shop__header';
+    const shopTitle = doc.createElement('span');
+    shopTitle.className = 'galaxy-upgrades-shop__title';
+    shopTitle.textContent = 'Fleet Logistics Shop';
+    const shopTotal = doc.createElement('span');
+    shopTotal.className = 'galaxy-upgrades-shop__total';
+    shopTotal.textContent = 'Total Multiplier';
+    const shopTotalValue = doc.createElement('span');
+    shopTotalValue.className = 'galaxy-upgrades-shop__total-value';
+    shopTotalValue.textContent = `${formatFleetMultiplier(1)}x`;
+    shopTotal.appendChild(shopTotalValue);
+    shopHeader.appendChild(shopTitle);
+    shopHeader.appendChild(shopTotal);
+
+    const shopGrid = doc.createElement('div');
+    shopGrid.className = 'galaxy-upgrades-shop__grid';
+    const managerForShop = galaxyManager;
+    const shopSummaries = managerForShop?.getFleetUpgradeSummaries?.();
+    const upgradeEntries = Array.isArray(shopSummaries) && shopSummaries.length > 0
+        ? shopSummaries
+        : FLEET_UPGRADE_FALLBACKS;
+    const fleetShopItems = {};
+    const incrementText = `+${GALAXY_UI_FLEET_UPGRADE_INCREMENT.toFixed(2)}x Capacity`;
+    upgradeEntries.forEach((entry) => {
+        const item = doc.createElement('div');
+        item.className = 'galaxy-upgrades-shop__item';
+
+        const labelRow = doc.createElement('div');
+        labelRow.className = 'galaxy-upgrades-shop__label-row';
+        const label = doc.createElement('span');
+        label.className = 'galaxy-upgrades-shop__label';
+        label.textContent = entry.label;
+        labelRow.appendChild(label);
+
+        const statsRow = doc.createElement('div');
+        statsRow.className = 'galaxy-upgrades-shop__stats';
+        const multiplierValue = doc.createElement('span');
+        multiplierValue.className = 'galaxy-upgrades-shop__multiplier';
+        multiplierValue.textContent = `${formatFleetMultiplier(1)}x`;
+        const purchasesValue = doc.createElement('span');
+        purchasesValue.className = 'galaxy-upgrades-shop__purchases';
+        purchasesValue.textContent = '0 purchases';
+        statsRow.appendChild(multiplierValue);
+        statsRow.appendChild(purchasesValue);
+
+        const button = doc.createElement('button');
+        button.type = 'button';
+        button.className = 'galaxy-upgrades-shop__button';
+        button.dataset.upgrade = entry.key;
+        button.textContent = incrementText;
+        button.addEventListener('click', handleFleetUpgradePurchase);
+
+        const costRow = doc.createElement('div');
+        costRow.className = 'galaxy-upgrades-shop__cost';
+        const costLabel = doc.createElement('span');
+        costLabel.className = 'galaxy-upgrades-shop__cost-label';
+        costLabel.textContent = 'Cost';
+        const costValue = doc.createElement('span');
+        costValue.className = 'galaxy-upgrades-shop__cost-value';
+        costValue.textContent = '0';
+        const costUnit = doc.createElement('span');
+        costUnit.className = 'galaxy-upgrades-shop__cost-unit';
+        costUnit.textContent = entry.costLabel || '';
+        costRow.appendChild(costLabel);
+        costRow.appendChild(costValue);
+        costRow.appendChild(costUnit);
+
+        item.appendChild(labelRow);
+        item.appendChild(statsRow);
+        item.appendChild(button);
+        item.appendChild(costRow);
+        shopGrid.appendChild(item);
+
+        fleetShopItems[entry.key] = {
+            multiplier: multiplierValue,
+            purchases: purchasesValue,
+            button,
+            costValue
+        };
+    });
+
+    upgradesShop.appendChild(shopHeader);
+    upgradesShop.appendChild(shopGrid);
+    upgrades.body.appendChild(upgradesShop);
 
     thirdRow.appendChild(logistics.section);
     thirdRow.appendChild(upgrades.section);
@@ -1715,8 +1857,11 @@ function cacheGalaxyElements() {
         logisticsStats,
         logisticsPowerValue,
         logisticsCapacityValue,
-        upgradesList,
-        upgradesPlaceholder,
+        fleetShop: {
+            container: upgradesShop,
+            totalValue: shopTotalValue,
+            items: fleetShopItems
+        },
         attackContent,
         sectorContent,
         hexElements,
@@ -1739,8 +1884,7 @@ function refreshEmptyStates() {
 
     const listData = [
         [galaxyUICache.logisticsList, galaxyUICache.logisticsPlaceholder],
-        [galaxyUICache.operationsList, galaxyUICache.operationsPlaceholder],
-        [galaxyUICache.upgradesList, galaxyUICache.upgradesPlaceholder]
+        [galaxyUICache.operationsList, galaxyUICache.operationsPlaceholder]
     ];
     listData.forEach(([list, placeholder]) => {
         if (!list || !placeholder) {
@@ -1763,6 +1907,41 @@ function refreshEmptyStates() {
         }
         if (!panel.textContent) {
             panel.textContent = panel.dataset.emptyMessage || 'Stand by.';
+        }
+    });
+}
+
+function updateFleetShopDisplay(manager, cache) {
+    const shop = cache?.fleetShop;
+    if (!shop) {
+        return;
+    }
+    const totalMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
+    if (shop.totalValue) {
+        shop.totalValue.textContent = `${formatFleetMultiplier(totalMultiplier)}x`;
+    }
+    const summaries = manager?.getFleetUpgradeSummaries?.();
+    const entries = Array.isArray(summaries) ? summaries : [];
+    const lookup = new Map();
+    entries.forEach((entry) => {
+        lookup.set(entry.key, entry);
+    });
+    Object.entries(shop.items || {}).forEach(([key, nodes]) => {
+        const entry = lookup.get(key) || null;
+        const multiplierValue = entry?.multiplier ?? 1;
+        const purchaseCount = Number(entry?.purchases) || 0;
+        if (nodes.multiplier) {
+            nodes.multiplier.textContent = `${formatFleetMultiplier(multiplierValue)}x`;
+        }
+        if (nodes.purchases) {
+            const suffix = purchaseCount === 1 ? 'purchase' : 'purchases';
+            nodes.purchases.textContent = `${purchaseCount} ${suffix}`;
+        }
+        if (nodes.costValue) {
+            nodes.costValue.textContent = formatFleetUpgradeCost(entry?.cost);
+        }
+        if (nodes.button) {
+            nodes.button.disabled = !(entry?.affordable);
         }
     });
 }
@@ -1819,6 +1998,7 @@ function updateGalaxyUI() {
         }
         resetGalaxyHexStyles(cache);
         updateLogisticsDisplay(null, cache);
+        updateFleetShopDisplay(null, cache);
         refreshEmptyStates();
         return;
     }
@@ -1846,6 +2026,7 @@ function updateGalaxyUI() {
     }
 
     updateLogisticsDisplay(manager, cache);
+    updateFleetShopDisplay(manager, cache);
     updateGalaxyHexControlColors(manager, cache);
     renderSelectedSectorDetails();
     refreshEmptyStates();

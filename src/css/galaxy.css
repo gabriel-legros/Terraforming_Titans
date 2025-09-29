@@ -86,6 +86,140 @@
   text-shadow: 0 0 14px rgba(108, 168, 255, 0.45);
 }
 
+.galaxy-upgrades-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(110, 156, 224, 0.32);
+  background: linear-gradient(160deg, rgba(10, 18, 32, 0.85), rgba(4, 10, 20, 0.85));
+  box-shadow: inset 0 1px 0 rgba(120, 176, 240, 0.16);
+}
+
+.galaxy-upgrades-shop__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.galaxy-upgrades-shop__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9fc8ff;
+}
+
+.galaxy-upgrades-shop__total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #bed4ff;
+}
+
+.galaxy-upgrades-shop__total-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f5f9ff;
+  text-shadow: 0 0 14px rgba(120, 184, 252, 0.45);
+}
+
+.galaxy-upgrades-shop__grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.galaxy-upgrades-shop__item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(8, 14, 26, 0.9);
+  border: 1px solid rgba(92, 140, 208, 0.3);
+  box-shadow: inset 0 1px 0 rgba(100, 152, 220, 0.18);
+}
+
+.galaxy-upgrades-shop__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #e0ecff;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.galaxy-upgrades-shop__label-row .info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #63a6ff;
+}
+
+.galaxy-upgrades-shop__stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: #9fc8ff;
+}
+
+.galaxy-upgrades-shop__multiplier {
+  font-weight: 600;
+  color: #f0f6ff;
+}
+
+.galaxy-upgrades-shop__purchases {
+  color: #8ab3e7;
+}
+
+.galaxy-upgrades-shop__button {
+  align-self: flex-start;
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: 1px solid rgba(118, 170, 236, 0.4);
+  background: linear-gradient(155deg, rgba(64, 112, 188, 0.85), rgba(42, 78, 136, 0.85));
+  color: #f8fbff;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.galaxy-upgrades-shop__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.galaxy-upgrades-shop__cost {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #bed4ff;
+}
+
+.galaxy-upgrades-shop__cost-label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: #8fb6f9;
+}
+
+.galaxy-upgrades-shop__cost-value {
+  font-weight: 600;
+  color: #f5f9ff;
+}
+
+.galaxy-upgrades-shop__cost-unit {
+  color: #9fc8ff;
+}
+
 .galaxy-section__header {
   font-size: 1.12rem;
   font-weight: 600;

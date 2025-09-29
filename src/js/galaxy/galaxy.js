@@ -91,6 +91,44 @@ const HEX_NEIGHBOR_DIRECTIONS = [
     { q: 0, r: 1 }
 ];
 const FULL_CONTROL_EPSILON = 1e-6;
+const FLEET_UPGRADE_INCREMENT = 0.1;
+const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
+    militaryResearch: {
+        key: 'militaryResearch',
+        label: 'Military R&D',
+        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        baseCost: 100000,
+        costType: 'resource',
+        resourceCategory: 'colony',
+        resourceId: 'advancedResearch',
+        costLabel: 'Advanced Research'
+    },
+    micOutsource: {
+        key: 'micOutsource',
+        label: 'MIC Outsourcing',
+        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        baseCost: 1000,
+        costType: 'solis',
+        costLabel: 'Solis Points'
+    },
+    enemyLessons: {
+        key: 'enemyLessons',
+        label: 'Reverse Engineering',
+        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        baseCost: 100,
+        costType: 'artifact',
+        costLabel: 'Alien Artifacts'
+    },
+    pandoraBox: {
+        key: 'pandoraBox',
+        label: "PANDORA'S Box",
+        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        baseCost: 1,
+        costType: 'skill',
+        costLabel: 'Skill Points'
+    }
+};
+const GALAXY_FLEET_UPGRADE_KEYS = Object.keys(GALAXY_FLEET_UPGRADE_DEFINITIONS);
 
 function generateSectorCoordinates(radius) {
     const coordinates = [];
@@ -113,6 +151,10 @@ class GalaxyManager extends EffectableEntity {
         this.factions = new Map();
         this.sectors = new Map();
         this.operations = new Map();
+        this.fleetUpgradePurchases = {};
+        GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
+            this.fleetUpgradePurchases[key] = 0;
+        });
     }
 
     initialize() {
@@ -180,7 +222,8 @@ class GalaxyManager extends EffectableEntity {
             enabled: this.enabled,
             sectors,
             factions: this.getFactions().map((faction) => faction.toJSON()),
-            operations
+            operations,
+            fleetUpgrades: this.#serializeFleetUpgrades()
         };
     }
 
@@ -227,6 +270,12 @@ class GalaxyManager extends EffectableEntity {
                 this.#restoreOperation(operationState);
             });
         }
+        if (state && Array.isArray(state.fleetUpgrades)) {
+            this.#loadFleetUpgrades(state.fleetUpgrades);
+        }
+        this.factions.forEach((faction) => {
+            faction.updateFleetCapacity(this);
+        });
         this.refreshUIVisibility();
     }
 
@@ -324,6 +373,118 @@ class GalaxyManager extends EffectableEntity {
 
     getTerraformedWorldCount() {
         return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+    }
+
+    getFleetUpgradeCount(key) {
+        const count = this.fleetUpgradePurchases[key];
+        if (!Number.isFinite(count) || count <= 0) {
+            return 0;
+        }
+        return count;
+    }
+
+    getFleetUpgradeMultiplier(key) {
+        const base = 1 + (this.getFleetUpgradeCount(key) * FLEET_UPGRADE_INCREMENT);
+        return base > 0 ? base : 1;
+    }
+
+    getFleetCapacityMultiplier() {
+        return GALAXY_FLEET_UPGRADE_KEYS.reduce((total, key) => total * this.getFleetUpgradeMultiplier(key), 1);
+    }
+
+    getFleetUpgradeCost(key) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        if (!definition) {
+            return 0;
+        }
+        const count = this.getFleetUpgradeCount(key);
+        const nextIndex = count + 1;
+        return definition.baseCost * nextIndex;
+    }
+
+    canPurchaseFleetUpgrade(key) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        if (!definition) {
+            return false;
+        }
+        const cost = this.getFleetUpgradeCost(key);
+        if (!(cost > 0)) {
+            return false;
+        }
+        if (definition.costType === 'resource') {
+            const resource = resources?.[definition.resourceCategory]?.[definition.resourceId];
+            return !!resource && resource.value >= cost;
+        }
+        if (definition.costType === 'solis') {
+            return !!solisManager && solisManager.solisPoints >= cost;
+        }
+        if (definition.costType === 'artifact') {
+            const artifactResource = resources?.special?.alienArtifact;
+            return !!artifactResource && artifactResource.value >= cost;
+        }
+        if (definition.costType === 'skill') {
+            return !!skillManager && skillManager.skillPoints >= cost;
+        }
+        return false;
+    }
+
+    purchaseFleetUpgrade(key) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        if (!definition) {
+            return false;
+        }
+        if (!this.canPurchaseFleetUpgrade(key)) {
+            return false;
+        }
+        const cost = this.getFleetUpgradeCost(key);
+        if (!(cost > 0)) {
+            return false;
+        }
+        if (definition.costType === 'resource') {
+            const resource = resources?.[definition.resourceCategory]?.[definition.resourceId];
+            if (!resource) {
+                return false;
+            }
+            resource.decrease(cost);
+        } else if (definition.costType === 'solis') {
+            solisManager.solisPoints -= cost;
+        } else if (definition.costType === 'artifact') {
+            const artifactResource = resources?.special?.alienArtifact;
+            if (!artifactResource) {
+                return false;
+            }
+            artifactResource.decrease(cost);
+        } else if (definition.costType === 'skill') {
+            skillManager.skillPoints -= cost;
+        } else {
+            return false;
+        }
+        const nextCount = this.getFleetUpgradeCount(key) + 1;
+        this.fleetUpgradePurchases[key] = nextCount;
+        const faction = this.getFaction(galaxyUhfId);
+        if (faction) {
+            faction.updateFleetCapacity(this);
+        }
+        return true;
+    }
+
+    getFleetUpgradeSummaries() {
+        return GALAXY_FLEET_UPGRADE_KEYS.map((key) => {
+            const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+            const purchases = this.getFleetUpgradeCount(key);
+            const multiplier = this.getFleetUpgradeMultiplier(key);
+            const cost = this.getFleetUpgradeCost(key);
+            return {
+                key,
+                label: definition.label,
+                description: definition.description,
+                purchases,
+                multiplier,
+                cost,
+                costLabel: definition.costLabel,
+                affordable: this.canPurchaseFleetUpgrade(key)
+            };
+        });
     }
 
     hasUhfNeighboringStronghold(q, r) {
@@ -639,6 +800,34 @@ class GalaxyManager extends EffectableEntity {
         sector.setControl(galaxyUhfId, newUhfValue);
     }
 
+    #serializeFleetUpgrades() {
+        const entries = [];
+        GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
+            const purchases = this.getFleetUpgradeCount(key);
+            if (purchases > 0) {
+                entries.push({ key, purchases });
+            }
+        });
+        return entries;
+    }
+
+    #loadFleetUpgrades(entries) {
+        GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
+            this.fleetUpgradePurchases[key] = 0;
+        });
+        entries.forEach((entry) => {
+            const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[entry?.key];
+            if (!definition) {
+                return;
+            }
+            const count = Number(entry.purchases);
+            if (!Number.isFinite(count) || count <= 0) {
+                return;
+            }
+            this.fleetUpgradePurchases[entry.key] = count;
+        });
+    }
+
     #hasUhfNeighboringStronghold(sector) {
         if (!sector) {
             return false;
@@ -679,7 +868,13 @@ if (typeof window !== 'undefined') {
 }
 if (typeof globalThis !== 'undefined') {
     globalThis.GalaxyManager = GalaxyManager;
+    globalThis.GALAXY_FLEET_UPGRADE_INCREMENT = FLEET_UPGRADE_INCREMENT;
+    globalThis.GALAXY_FLEET_UPGRADE_DEFINITIONS = GALAXY_FLEET_UPGRADE_DEFINITIONS;
 }
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { GalaxyManager };
+    module.exports = {
+        GalaxyManager,
+        GALAXY_FLEET_UPGRADE_INCREMENT: FLEET_UPGRADE_INCREMENT,
+        GALAXY_FLEET_UPGRADE_DEFINITIONS
+    };
 }

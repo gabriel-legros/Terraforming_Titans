@@ -216,4 +216,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
 - Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.
 - Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
+- The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
 - Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.
