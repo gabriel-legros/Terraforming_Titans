@@ -483,8 +483,15 @@
   gap: 12px;
 }
 
+.galaxy-operations-launch__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .galaxy-operations-launch__button {
-  align-self: flex-start;
+  align-self: center;
   padding: 12px 24px;
   border-radius: 10px;
   border: 1px solid rgba(126, 182, 252, 0.5);
@@ -553,6 +560,12 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: #f5f9ff;
+}
+
+.galaxy-operations-form__cost .info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .galaxy-operations-summary {

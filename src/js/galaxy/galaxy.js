@@ -82,6 +82,15 @@ galaxySectorControlOverridesConfig = galaxySectorControlOverridesConfig || {};
 
 const GALAXY_RADIUS = 6;
 const GALAXY_OPERATION_DURATION_MS = 10000;
+const HEX_NEIGHBOR_DIRECTIONS = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 }
+];
+const FULL_CONTROL_EPSILON = 1e-6;
 
 function generateSectorCoordinates(radius) {
     const coordinates = [];
@@ -275,9 +284,18 @@ class GalaxyManager extends EffectableEntity {
             return null;
         }
         const key = sectorKey;
+        const sector = this.sectors.get(key);
+        if (!sector) {
+            return null;
+        }
         const existing = this.operations.get(key);
         if (existing && existing.status === 'running') {
             return existing;
+        }
+        const hasStronghold = this.#hasUhfNeighboringStronghold(sector);
+        const hasPresence = this.#hasUhfPresence(sector);
+        if (!hasStronghold && !hasPresence) {
+            return null;
         }
         const faction = this.getFaction(galaxyUhfId);
         if (!faction) {
@@ -306,6 +324,17 @@ class GalaxyManager extends EffectableEntity {
 
     getTerraformedWorldCount() {
         return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+    }
+
+    hasUhfNeighboringStronghold(q, r) {
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return false;
+        }
+        const sector = this.getSector(q, r);
+        if (!sector) {
+            return false;
+        }
+        return this.#hasUhfNeighboringStronghold(sector);
     }
 
     #initializeSectors() {
@@ -608,6 +637,40 @@ class GalaxyManager extends EffectableEntity {
         const appliedGain = gain - Math.max(0, remainingReduction);
         const newUhfValue = currentUhf + appliedGain;
         sector.setControl(galaxyUhfId, newUhfValue);
+    }
+
+    #hasUhfNeighboringStronghold(sector) {
+        if (!sector) {
+            return false;
+        }
+        for (let index = 0; index < HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+            const direction = HEX_NEIGHBOR_DIRECTIONS[index];
+            const neighbor = this.getSector(sector.q + direction.q, sector.r + direction.r);
+            if (this.#isUhfFullControlSector(neighbor)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    #isUhfFullControlSector(sector) {
+        if (!sector) {
+            return false;
+        }
+        const totalControl = sector.getTotalControlValue?.();
+        if (!(totalControl > 0)) {
+            return false;
+        }
+        const uhfControl = sector.getControlValue?.(galaxyUhfId) || 0;
+        return Math.abs(uhfControl - totalControl) <= FULL_CONTROL_EPSILON;
+    }
+
+    #hasUhfPresence(sector) {
+        if (!sector) {
+            return false;
+        }
+        const uhfControl = sector.getControlValue?.(galaxyUhfId) || 0;
+        return uhfControl > FULL_CONTROL_EPSILON;
     }
 }
 

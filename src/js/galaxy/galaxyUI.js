@@ -26,6 +26,7 @@ const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.
     : 'uhf';
 
 const operationsAllocations = new Map();
+const operationsStepSizes = new Map();
 
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
@@ -350,6 +351,110 @@ function setStoredAllocation(key, value) {
     operationsAllocations.set(key, value);
 }
 
+function getStoredStep(key) {
+    if (!key || !operationsStepSizes.has(key)) {
+        return 1;
+    }
+    const value = operationsStepSizes.get(key);
+    if (!Number.isFinite(value) || value <= 0) {
+        return 1;
+    }
+    return value;
+}
+
+function setStoredStep(key, value) {
+    if (!key) {
+        return;
+    }
+    if (!Number.isFinite(value) || value <= 0) {
+        operationsStepSizes.delete(key);
+        return;
+    }
+    operationsStepSizes.set(key, value);
+}
+
+function updateOperationsStepDisplay(step, formatter) {
+    if (!galaxyUICache || !galaxyUICache.operationsButtons) {
+        return;
+    }
+    const formatted = formatter ? formatter(step, true, 0) : step;
+    const buttons = galaxyUICache.operationsButtons;
+    if (buttons.decrement) {
+        buttons.decrement.textContent = `-${formatted}`;
+    }
+    if (buttons.increment) {
+        buttons.increment.textContent = `+${formatted}`;
+    }
+}
+
+function getHexNeighborDirections() {
+    if (typeof globalThis !== 'undefined' && Array.isArray(globalThis.__galaxyNeighborDirections)) {
+        return globalThis.__galaxyNeighborDirections;
+    }
+    const directions = Object.freeze([
+        { q: 1, r: 0 },
+        { q: 1, r: -1 },
+        { q: 0, r: -1 },
+        { q: -1, r: 0 },
+        { q: -1, r: 1 },
+        { q: 0, r: 1 }
+    ]);
+    if (typeof globalThis !== 'undefined') {
+        globalThis.__galaxyNeighborDirections = directions;
+    }
+    return directions;
+}
+
+function isUhfFullControlSector(sector) {
+    if (!sector) {
+        return false;
+    }
+    const totalControl = typeof sector.getTotalControlValue === 'function'
+        ? sector.getTotalControlValue()
+        : Object.values(sector.control || {}).reduce((sum, value) => {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric <= 0) {
+                return sum;
+            }
+            return sum + numeric;
+        }, 0);
+    if (!(totalControl > 0)) {
+        return false;
+    }
+    let uhfControl = 0;
+    if (typeof sector.getControlValue === 'function') {
+        uhfControl = sector.getControlValue(UHF_FACTION_KEY) || 0;
+    } else if (sector.control && Object.prototype.hasOwnProperty.call(sector.control, UHF_FACTION_KEY)) {
+        uhfControl = Number(sector.control[UHF_FACTION_KEY]) || 0;
+    }
+    const epsilon = 1e-6;
+    return Math.abs(uhfControl - totalControl) <= epsilon;
+}
+
+function hasNeighboringUhfStronghold(manager, q, r) {
+    if (!manager) {
+        return false;
+    }
+    if (typeof manager.hasUhfNeighboringStronghold === 'function') {
+        return manager.hasUhfNeighboringStronghold(q, r);
+    }
+    if (!Number.isFinite(q) || !Number.isFinite(r)) {
+        return false;
+    }
+    if (typeof manager.getSector !== 'function') {
+        return false;
+    }
+    const directions = getHexNeighborDirections();
+    for (let index = 0; index < directions.length; index += 1) {
+        const direction = directions[index];
+        const neighbor = manager.getSector(q + direction.q, r + direction.r);
+        if (isUhfFullControlSector(neighbor)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function clampAssignment(value, maxAssignable) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric) || numeric <= 0) {
@@ -649,6 +754,13 @@ function updateOperationsPanel() {
     const enabled = !!(manager && manager.enabled);
     const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
     const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
+    const selectedKey = enabled && selection ? selection.key : null;
+    const stepSize = getStoredStep(selectedKey);
+
+    operationsStatusMessage.textContent = '';
+
+    operationsInput.step = stepSize;
+    updateOperationsStepDisplay(stepSize, formatter);
 
     const disableAllControls = () => {
         operationsInput.disabled = true;
@@ -714,11 +826,33 @@ function updateOperationsPanel() {
     operationsAvailable.textContent = `Available: ${formatter(availablePower, false, 2)}`;
 
     const sectorPower = sector.getValue ? sector.getValue() : 0;
+    const hasStronghold = hasNeighboringUhfStronghold(manager, selection.q, selection.r);
+    const hasUhfPresence = uhfControl > 0;
     const operation = manager.getOperationForSector(selection.key);
     const operationRunning = operation && operation.status === 'running';
     const assignment = operationRunning
         ? Math.max(0, Number(operation.reservedPower) || 0)
         : clampAssignment(getStoredAllocation(selection.key), availablePower);
+
+    if (!operationRunning && !hasStronghold && !hasUhfPresence) {
+        const assignmentDisplay = assignment > 0 ? Math.round(assignment * 100) / 100 : 0;
+        operationsInput.value = assignmentDisplay;
+        operationsInput.disabled = true;
+        Object.values(operationsButtons).forEach((button) => {
+            button.disabled = true;
+        });
+        operationsLaunchButton.disabled = true;
+        operationsLaunchButton.classList.remove('is-hidden');
+        operationsProgress.classList.add('is-hidden');
+        operationsProgressFill.style.width = '0%';
+        operationsProgressLabel.textContent = '';
+        operationsCostValue.textContent = '0';
+        operationsSummaryItems.success.textContent = '0%';
+        operationsSummaryItems.gain.textContent = '+0%';
+        operationsSummaryItems.loss.textContent = `-${formatter(0, false, 2)} power`;
+        operationsStatusMessage.textContent = 'Establish a neighboring UHF stronghold before launching operations.';
+        return;
+    }
 
     if (!operationRunning) {
         setStoredAllocation(selection.key, assignment);
@@ -1415,24 +1549,15 @@ function cacheGalaxyElements() {
     launchContainer.className = 'galaxy-operations-launch';
     operationsForm.appendChild(launchContainer);
 
+    const launchControls = doc.createElement('div');
+    launchControls.className = 'galaxy-operations-launch__controls';
+    launchContainer.appendChild(launchControls);
+
     const launchButton = doc.createElement('button');
     launchButton.type = 'button';
     launchButton.className = 'galaxy-operations-launch__button';
     launchButton.textContent = 'Launch';
-    launchContainer.appendChild(launchButton);
-
-    const progressContainer = doc.createElement('div');
-    progressContainer.className = 'galaxy-operations-progress is-hidden';
-    const progressTrack = doc.createElement('div');
-    progressTrack.className = 'galaxy-operations-progress__track';
-    const progressFill = doc.createElement('div');
-    progressFill.className = 'galaxy-operations-progress__fill';
-    progressTrack.appendChild(progressFill);
-    const progressLabel = doc.createElement('span');
-    progressLabel.className = 'galaxy-operations-progress__label';
-    progressContainer.appendChild(progressTrack);
-    progressContainer.appendChild(progressLabel);
-    launchContainer.appendChild(progressContainer);
+    launchControls.appendChild(launchButton);
 
     const costRow = doc.createElement('div');
     costRow.className = 'galaxy-operations-form__cost';
@@ -1449,7 +1574,20 @@ function cacheGalaxyElements() {
     costRow.appendChild(costLabel);
     costRow.appendChild(costTooltip);
     costRow.appendChild(costValue);
-    operationsForm.appendChild(costRow);
+    launchControls.appendChild(costRow);
+
+    const progressContainer = doc.createElement('div');
+    progressContainer.className = 'galaxy-operations-progress is-hidden';
+    const progressTrack = doc.createElement('div');
+    progressTrack.className = 'galaxy-operations-progress__track';
+    const progressFill = doc.createElement('div');
+    progressFill.className = 'galaxy-operations-progress__fill';
+    progressTrack.appendChild(progressFill);
+    const progressLabel = doc.createElement('span');
+    progressLabel.className = 'galaxy-operations-progress__label';
+    progressContainer.appendChild(progressTrack);
+    progressContainer.appendChild(progressLabel);
+    launchContainer.appendChild(progressContainer);
 
     const summary = doc.createElement('div');
     summary.className = 'galaxy-operations-summary';
