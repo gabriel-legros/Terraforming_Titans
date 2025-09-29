@@ -81,6 +81,40 @@ class GalaxySector {
         return { factionId: bestId, value: bestValue };
     }
 
+    getControlBreakdown() {
+        const entries = Object.entries(this.control);
+        if (!entries.length) {
+            return [];
+        }
+        const sanitized = [];
+        entries.forEach(([factionId, value]) => {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue <= 0 || !factionId) {
+                return;
+            }
+            sanitized.push({ factionId, value: numericValue });
+        });
+        if (sanitized.length <= 1) {
+            return sanitized;
+        }
+        sanitized.sort((left, right) => {
+            if (right.value === left.value) {
+                return left.factionId.localeCompare(right.factionId);
+            }
+            return right.value - left.value;
+        });
+        return sanitized;
+    }
+
+    getControlLeaders(limit = 2) {
+        const breakdown = this.getControlBreakdown();
+        const numericLimit = Number(limit);
+        if (!Number.isFinite(numericLimit) || numericLimit <= 0 || breakdown.length <= numericLimit) {
+            return breakdown;
+        }
+        return breakdown.slice(0, numericLimit);
+    }
+
     toJSON() {
         return {
             q: this.q,

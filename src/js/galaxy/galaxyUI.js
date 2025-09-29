@@ -6,10 +6,97 @@ const HEX_MAX_SCALE = 2.5;
 const HEX_SCALE_STEP = 1.25;
 const SQRT3 = Math.sqrt(3);
 const INITIAL_FOCUS_SECTOR = 'R5-07';
+const HEX_STRIPE_BASE_WIDTH = 40;
+const HEX_STRIPE_MIN_WIDTH = 4;
+const HEX_STRIPE_ANGLE = 135;
+const HEX_STRIPE_BASE_LIGHTEN = 0.14;
+const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
+const HEX_BORDER_LIGHTEN = 0.32;
 
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
 let legacyPanAttached = false;
+
+function normalizeHexColor(color) {
+    if (!color) {
+        return null;
+    }
+    const trimmed = color.trim();
+    if (!trimmed || trimmed[0] !== '#') {
+        return null;
+    }
+    if (trimmed.length === 4) {
+        return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+    }
+    if (trimmed.length === 7) {
+        return trimmed;
+    }
+    return null;
+}
+
+function hexToRgb(color) {
+    const normalized = normalizeHexColor(color);
+    if (!normalized) {
+        return null;
+    }
+    const red = parseInt(normalized.slice(1, 3), 16);
+    const green = parseInt(normalized.slice(3, 5), 16);
+    const blue = parseInt(normalized.slice(5, 7), 16);
+    if (!Number.isFinite(red) || !Number.isFinite(green) || !Number.isFinite(blue)) {
+        return null;
+    }
+    return { r: red, g: green, b: blue };
+}
+
+function rgbToCss(rgb) {
+    const red = Math.round(rgb.r);
+    const green = Math.round(rgb.g);
+    const blue = Math.round(rgb.b);
+    return `rgb(${red}, ${green}, ${blue})`;
+}
+
+function lightenColor(color, weight) {
+    const rgb = hexToRgb(color);
+    if (!rgb) {
+        return color;
+    }
+    const clamped = Math.max(0, Math.min(1, weight));
+    const blended = {
+        r: rgb.r + ((255 - rgb.r) * clamped),
+        g: rgb.g + ((255 - rgb.g) * clamped),
+        b: rgb.b + ((255 - rgb.b) * clamped)
+    };
+    return rgbToCss(blended);
+}
+
+function createStripeBackground(primaryColor, secondaryColor, primaryValue, secondaryValue, lightenAmount) {
+    const total = primaryValue + secondaryValue;
+    if (!(total > 0) || !(secondaryValue > 0)) {
+        return null;
+    }
+    const secondaryRatio = Math.max(0, Math.min(secondaryValue / total, 0.5));
+    const primaryRatio = 1 - secondaryRatio;
+    const primaryWidth = Math.max(HEX_STRIPE_MIN_WIDTH, Math.round(primaryRatio * HEX_STRIPE_BASE_WIDTH));
+    const secondaryWidth = Math.max(HEX_STRIPE_MIN_WIDTH, Math.round(secondaryRatio * HEX_STRIPE_BASE_WIDTH));
+    const cycleEnd = primaryWidth + secondaryWidth;
+    const primaryShade = lightenColor(primaryColor, lightenAmount);
+    const secondaryShade = lightenColor(secondaryColor, lightenAmount);
+    return `repeating-linear-gradient(${HEX_STRIPE_ANGLE}deg, ${primaryShade} 0px, ${primaryShade} ${primaryWidth}px, ${secondaryShade} ${primaryWidth}px, ${secondaryShade} ${cycleEnd}px)`;
+}
+
+function createFactionStripeStyles(primaryColor, secondaryColor, primaryValue, secondaryValue) {
+    const background = createStripeBackground(primaryColor, secondaryColor, primaryValue, secondaryValue, HEX_STRIPE_BASE_LIGHTEN);
+    if (!background) {
+        return null;
+    }
+    const hoverBackground = createStripeBackground(primaryColor, secondaryColor, primaryValue, secondaryValue, HEX_STRIPE_HOVER_LIGHTEN) || background;
+    const borderColor = lightenColor(primaryColor, HEX_BORDER_LIGHTEN);
+    return {
+        background,
+        hoverBackground,
+        borderColor
+    };
+}
 
 function getHexDimensions(size) {
     return {
@@ -325,13 +412,19 @@ function resetGalaxyHexStyles(cache) {
         return;
     }
     cache.hexElements.forEach((hex) => {
-        hex.style.removeProperty('--galaxy-hex-background');
-        hex.style.removeProperty('--galaxy-hex-background-hover');
-        hex.style.removeProperty('--galaxy-hex-border');
-        hex.classList.remove('is-controlled');
-        hex.dataset.controller = '';
-        hex.dataset.controllerName = '';
+        clearHexControlStyles(hex);
     });
+}
+
+function clearHexControlStyles(hex) {
+    hex.style.removeProperty('--galaxy-hex-background');
+    hex.style.removeProperty('--galaxy-hex-background-hover');
+    hex.style.removeProperty('--galaxy-hex-border');
+    hex.classList.remove('is-controlled');
+    hex.dataset.controller = '';
+    hex.dataset.controllerName = '';
+    hex.dataset.secondaryController = '';
+    hex.dataset.secondaryControllerName = '';
 }
 
 function updateGalaxyHexControlColors(manager, cache) {
@@ -344,23 +437,53 @@ function updateGalaxyHexControlColors(manager, cache) {
         if (!Number.isFinite(q) || !Number.isFinite(r)) {
             return;
         }
-        const controller = manager.getSectorController(q, r);
-        if (!controller) {
-            hex.style.removeProperty('--galaxy-hex-background');
-            hex.style.removeProperty('--galaxy-hex-background-hover');
-            hex.style.removeProperty('--galaxy-hex-border');
-            hex.classList.remove('is-controlled');
-            hex.dataset.controller = '';
-            hex.dataset.controllerName = '';
+        const sector = manager.getSector(q, r);
+        if (!sector) {
+            clearHexControlStyles(hex);
             return;
         }
-        const { faction } = controller;
-        hex.style.setProperty('--galaxy-hex-background', faction.getMapBackground());
-        hex.style.setProperty('--galaxy-hex-background-hover', faction.getHoverBackground());
-        hex.style.setProperty('--galaxy-hex-border', faction.getBorderColor());
+        const leaders = sector.getControlLeaders ? sector.getControlLeaders(2) : [];
+        if (!leaders.length) {
+            clearHexControlStyles(hex);
+            return;
+        }
+        const primaryEntry = leaders[0];
+        const primaryFaction = manager.getFaction(primaryEntry.factionId);
+        if (!primaryFaction) {
+            clearHexControlStyles(hex);
+            return;
+        }
+        const secondaryEntry = leaders.length > 1 ? leaders[1] : null;
+        const hasSecondary = secondaryEntry && secondaryEntry.value > 0;
+        const secondaryFaction = hasSecondary ? manager.getFaction(secondaryEntry.factionId) : null;
+
+        if (hasSecondary && secondaryFaction) {
+            const stripeStyles = createFactionStripeStyles(primaryFaction.color, secondaryFaction.color, primaryEntry.value, secondaryEntry.value);
+            if (stripeStyles) {
+                hex.style.setProperty('--galaxy-hex-background', stripeStyles.background);
+                hex.style.setProperty('--galaxy-hex-background-hover', stripeStyles.hoverBackground);
+                hex.style.setProperty('--galaxy-hex-border', stripeStyles.borderColor || primaryFaction.getBorderColor());
+            } else {
+                hex.style.setProperty('--galaxy-hex-background', primaryFaction.getMapBackground());
+                hex.style.setProperty('--galaxy-hex-background-hover', primaryFaction.getHoverBackground());
+                hex.style.setProperty('--galaxy-hex-border', primaryFaction.getBorderColor());
+            }
+        } else {
+            hex.style.setProperty('--galaxy-hex-background', primaryFaction.getMapBackground());
+            hex.style.setProperty('--galaxy-hex-background-hover', primaryFaction.getHoverBackground());
+            hex.style.setProperty('--galaxy-hex-border', primaryFaction.getBorderColor());
+        }
+
         hex.classList.add('is-controlled');
-        hex.dataset.controller = faction.id;
-        hex.dataset.controllerName = faction.name;
+        hex.dataset.controller = primaryFaction.id;
+        hex.dataset.controllerName = primaryFaction.name;
+        if (secondaryFaction && hasSecondary) {
+            hex.dataset.secondaryController = secondaryFaction.id;
+            hex.dataset.secondaryControllerName = secondaryFaction.name;
+        } else {
+            hex.dataset.secondaryController = '';
+            hex.dataset.secondaryControllerName = '';
+        }
     });
 }
 
