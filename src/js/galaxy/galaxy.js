@@ -155,6 +155,7 @@ class GalaxyManager extends EffectableEntity {
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
         });
+        this.successfulOperations = 0;
     }
 
     initialize() {
@@ -223,7 +224,8 @@ class GalaxyManager extends EffectableEntity {
             sectors,
             factions: this.getFactions().map((faction) => faction.toJSON()),
             operations,
-            fleetUpgrades: this.#serializeFleetUpgrades()
+            fleetUpgrades: this.#serializeFleetUpgrades(),
+            successfulOperations: this.successfulOperations
         };
     }
 
@@ -272,6 +274,9 @@ class GalaxyManager extends EffectableEntity {
         }
         if (state && Array.isArray(state.fleetUpgrades)) {
             this.#loadFleetUpgrades(state.fleetUpgrades);
+        }
+        if (state && Number.isFinite(state.successfulOperations)) {
+            this.successfulOperations = Math.max(0, state.successfulOperations);
         }
         this.factions.forEach((faction) => {
             faction.updateFleetCapacity(this);
@@ -485,6 +490,27 @@ class GalaxyManager extends EffectableEntity {
                 affordable: this.canPurchaseFleetUpgrade(key)
             };
         });
+    }
+
+    getUhfControlRatio() {
+        const sectors = this.getSectors();
+        const total = sectors.length;
+        if (total === 0) {
+            return 0;
+        }
+        let controlled = 0;
+        sectors.forEach((sector) => {
+            const dominant = sector?.getDominantController?.();
+            if (!dominant || dominant.factionId !== galaxyUhfId) {
+                return;
+            }
+            controlled += 1;
+        });
+        return controlled / total;
+    }
+
+    getSuccessfulOperations() {
+        return this.successfulOperations;
     }
 
     hasUhfNeighboringStronghold(q, r) {
@@ -741,6 +767,7 @@ class GalaxyManager extends EffectableEntity {
         const successChance = Math.max(0, Math.min(1, operation.successChance));
         const isSuccessful = successChance >= 1 || (successChance > 0 && Math.random() < successChance);
         if (isSuccessful) {
+            this.successfulOperations += 1;
             this.#applyOperationSuccess(operation);
         }
         operation.losses = losses;

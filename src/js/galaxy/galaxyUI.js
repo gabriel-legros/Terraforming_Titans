@@ -1317,19 +1317,6 @@ function endGalaxyMapPan(event) {
     }
 }
 
-function handleGalaxyMapWheel(event) {
-    if (!galaxyUICache) {
-        return;
-    }
-    event.preventDefault();
-    const direction = event.deltaY > 0 ? 1 / HEX_SCALE_STEP : HEX_SCALE_STEP;
-    const rect = galaxyUICache.mapCanvas.getBoundingClientRect();
-    adjustGalaxyMapScale(direction, {
-        focalX: event.clientX - rect.left,
-        focalY: event.clientY - rect.top
-    });
-}
-
 function extractClientCoordinates(event) {
     if (typeof event.clientX === 'number' && typeof event.clientY === 'number') {
         return { x: event.clientX, y: event.clientY };
@@ -1514,7 +1501,6 @@ function cacheGalaxyElements() {
         mapCanvas.addEventListener('mousedown', startGalaxyMapPan, { passive: false });
         mapCanvas.addEventListener('touchstart', startGalaxyMapPan, { passive: false });
     }
-    mapCanvas.addEventListener('wheel', handleGalaxyMapWheel, { passive: false });
 
     zoomIn.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -1688,7 +1674,7 @@ function cacheGalaxyElements() {
 
     operations.body.appendChild(operationsPanel);
 
-    const incomingAttacks = createGalaxySection(doc, 'Incoming Attack', 'Monitor hostile fleets en route to your sectors.');
+    const incomingAttacks = createGalaxySection(doc, 'Incoming Attacks', 'Monitor hostile fleets en route to your sectors.');
     incomingAttacks.section.classList.add('galaxy-section--attacks');
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
@@ -1702,7 +1688,7 @@ function cacheGalaxyElements() {
     const thirdRow = doc.createElement('div');
     thirdRow.className = 'galaxy-row galaxy-row--tertiary';
 
-    const logistics = createGalaxySection(doc, 'Logistics');
+    const logistics = createGalaxySection(doc, 'Logistics & Statistics');
     logistics.section.classList.add('galaxy-section--logistics');
     const logisticsStats = doc.createElement('div');
     logisticsStats.className = 'galaxy-logistics-stats';
@@ -1728,6 +1714,38 @@ function cacheGalaxyElements() {
     logisticsCapacityRow.appendChild(logisticsCapacityValue);
     logisticsStats.appendChild(logisticsPowerRow);
     logisticsStats.appendChild(logisticsCapacityRow);
+
+    const threatRow = doc.createElement('div');
+    threatRow.className = 'galaxy-logistics-stat';
+    const threatLabel = doc.createElement('span');
+    threatLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
+    const threatLabelText = doc.createElement('span');
+    threatLabelText.textContent = 'Threat Level';
+    const threatTooltip = doc.createElement('span');
+    threatTooltip.className = 'info-tooltip-icon';
+    threatTooltip.innerHTML = '&#9432;';
+    threatTooltip.title = 'placeholder threat level description.';
+    threatLabel.appendChild(threatLabelText);
+    threatLabel.appendChild(threatTooltip);
+    const threatValue = doc.createElement('span');
+    threatValue.className = 'galaxy-logistics-stat__value';
+    threatValue.textContent = '0%';
+    threatRow.appendChild(threatLabel);
+    threatRow.appendChild(threatValue);
+    logisticsStats.appendChild(threatRow);
+
+    const operationsRow = doc.createElement('div');
+    operationsRow.className = 'galaxy-logistics-stat';
+    const operationsLabel = doc.createElement('span');
+    operationsLabel.className = 'galaxy-logistics-stat__label';
+    operationsLabel.textContent = 'Successful Operations';
+    const operationsValue = doc.createElement('span');
+    operationsValue.className = 'galaxy-logistics-stat__value';
+    operationsValue.textContent = '0';
+    operationsRow.appendChild(operationsLabel);
+    operationsRow.appendChild(operationsValue);
+    logisticsStats.appendChild(operationsRow);
+
     logistics.body.appendChild(logisticsStats);
 
     const upgrades = createGalaxySection(doc, 'Upgrades', '');
@@ -1822,8 +1840,8 @@ function cacheGalaxyElements() {
     upgradesShop.appendChild(shopGrid);
     upgrades.body.appendChild(upgradesShop);
 
-    thirdRow.appendChild(logistics.section);
     thirdRow.appendChild(upgrades.section);
+    thirdRow.appendChild(logistics.section);
 
     layout.appendChild(firstRow);
     layout.appendChild(secondRow);
@@ -1857,6 +1875,8 @@ function cacheGalaxyElements() {
         logisticsStats,
         logisticsPowerValue,
         logisticsCapacityValue,
+        logisticsThreatValue: threatValue,
+        logisticsOperationsValue: operationsValue,
         fleetShop: {
             container: upgradesShop,
             totalValue: shopTotalValue,
@@ -1952,6 +1972,8 @@ function updateLogisticsDisplay(manager, cache) {
     }
     const powerNode = cache.logisticsPowerValue;
     const capacityNode = cache.logisticsCapacityValue;
+    const threatNode = cache.logisticsThreatValue;
+    const operationsNode = cache.logisticsOperationsValue;
     if (!powerNode || !capacityNode) {
         return;
     }
@@ -1960,6 +1982,14 @@ function updateLogisticsDisplay(manager, cache) {
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
     powerNode.textContent = formatFleetValue(power);
     capacityNode.textContent = formatFleetValue(capacity);
+    if (threatNode) {
+        const ratio = manager?.getUhfControlRatio?.() ?? 0;
+        threatNode.textContent = formatPercentDisplay(ratio);
+    }
+    if (operationsNode) {
+        const successes = manager?.getSuccessfulOperations?.() ?? 0;
+        operationsNode.textContent = formatFleetValue(successes);
+    }
 }
 
 function initializeGalaxyUI() {

@@ -217,4 +217,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.
 - Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
 - The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
+- Logistics & Statistics now reports UHF threat coverage and lifetime successful operations with a placeholder tooltip while final copy is pending.
 - Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.

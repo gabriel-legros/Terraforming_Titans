@@ -86,6 +86,17 @@
   text-shadow: 0 0 14px rgba(108, 168, 255, 0.45);
 }
 
+.galaxy-logistics-stat__label--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.galaxy-logistics-stat__label--with-icon .info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
 .galaxy-upgrades-shop {
   display: flex;
   flex-direction: column;
