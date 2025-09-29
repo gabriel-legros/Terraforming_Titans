@@ -407,29 +407,43 @@ function adjustAllocationByAction(action) {
     const faction = manager.getFaction(UHF_FACTION_KEY);
     const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
     let current = getStoredAllocation(key);
+    let step = getStoredStep(key);
+    let shouldUpdateAllocation = true;
     switch (action) {
     case 'zero':
         current = 0;
         break;
     case 'decrement':
-        current = Math.max(0, current - 1);
+        current = Math.max(0, current - step);
         break;
     case 'increment':
-        current += 1;
+        current += step;
         break;
     case 'max':
         current = availablePower;
         break;
     case 'divide':
-        current = current > 0 ? current / 10 : 0;
+        if (step > 1) {
+            const reduced = step / 10;
+            step = reduced >= 1 ? Math.floor(reduced) : 1;
+        } else {
+            step = 1;
+        }
+        setStoredStep(key, step);
+        shouldUpdateAllocation = false;
         break;
     case 'multiply':
-        current *= 10;
+        step *= 10;
+        setStoredStep(key, step);
+        shouldUpdateAllocation = false;
         break;
     default:
         break;
     }
-    setStoredAllocation(key, Math.max(0, current));
+    if (shouldUpdateAllocation) {
+        const clamped = clampAssignment(current, availablePower);
+        setStoredAllocation(key, clamped);
+    }
     updateOperationsPanel();
 }
 
@@ -1547,7 +1561,6 @@ function cacheGalaxyElements() {
         mapState,
         zoomIn,
         zoomOut,
-<<<<<<< HEAD
         operationsPanel,
         operationsEmpty,
         operationsForm,
@@ -1561,15 +1574,9 @@ function cacheGalaxyElements() {
         operationsAvailable: powerAvailable,
         operationsSummaryItems: summaryItems,
         operationsStatusMessage: statusMessage,
-        logisticsList,
-        logisticsPlaceholder,
-=======
-        operationsList,
-        operationsPlaceholder,
         logisticsStats,
         logisticsPowerValue,
         logisticsCapacityValue,
->>>>>>> 3ce49934f6ac9dcda327215f754711e5390fd2d9
         upgradesList,
         upgradesPlaceholder,
         attackContent,
@@ -1593,11 +1600,8 @@ function refreshEmptyStates() {
     }
 
     const listData = [
-<<<<<<< HEAD
         [galaxyUICache.logisticsList, galaxyUICache.logisticsPlaceholder],
-=======
         [galaxyUICache.operationsList, galaxyUICache.operationsPlaceholder],
->>>>>>> 3ce49934f6ac9dcda327215f754711e5390fd2d9
         [galaxyUICache.upgradesList, galaxyUICache.upgradesPlaceholder]
     ];
     listData.forEach(([list, placeholder]) => {
