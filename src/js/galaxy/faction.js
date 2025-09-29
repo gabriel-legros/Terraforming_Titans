@@ -65,9 +65,35 @@ class GalaxyFaction {
     }
 }
 
-if (typeof window !== 'undefined') {
-    window.GalaxyFaction = GalaxyFaction;
+function updateFactions(deltaTime) {
+    const manager = this || null;
+    const factions = manager?.getFactions?.();
+    if (!Array.isArray(factions) || factions.length === 0) {
+        return;
+    }
+    factions.forEach((faction) => {
+        faction?.update?.(deltaTime, manager);
+    });
 }
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { GalaxyFaction };
+
+const globalScope = (() => {
+    try {
+        return globalThis;
+    } catch (error) {
+        return undefined;
+    }
+})();
+
+if (globalScope) {
+    globalScope.GalaxyFaction = GalaxyFaction;
+    globalScope.updateFactions = updateFactions;
+}
+
+try {
+    module.exports = {
+        GalaxyFaction,
+        updateFactions
+    };
+} catch (error) {
+    // Ignore module resolution issues outside CommonJS environments.
 }
