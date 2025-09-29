@@ -1,3 +1,7 @@
+const UHF_FACTION_ID = 'uhf';
+const DEFAULT_SECTOR_VALUE = 100;
+const REPLACEMENT_SECONDS = 3600;
+
 class GalaxyFaction {
     constructor({ id, name, color, startingSectors } = {}) {
         this.id = id || '';
@@ -11,6 +15,8 @@ class GalaxyFaction {
                 }
             });
         }
+        this.fleetCapacity = 0;
+        this.fleetPower = 0;
     }
 
     getStartingSectors() {
@@ -62,6 +68,118 @@ class GalaxyFaction {
         }
         const clampedAlpha = Math.max(0, Math.min(1, alpha));
         return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
+    }
+
+    initializeFleetPower(manager) {
+        this.updateFleetCapacity(manager);
+        if (this.id === UHF_FACTION_ID) {
+            this.fleetPower = 0;
+            return;
+        }
+        this.fleetPower = this.fleetCapacity;
+    }
+
+    setFleetPower(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+            return;
+        }
+        const clamped = Math.max(0, Math.min(this.fleetCapacity, numericValue));
+        this.fleetPower = clamped;
+    }
+
+    updateFleetCapacity(manager) {
+        const capacity = this.#computeFleetCapacity(manager);
+        this.fleetCapacity = capacity;
+        if (this.fleetPower > capacity) {
+            this.fleetPower = capacity;
+        }
+        if (this.fleetPower < 0) {
+            this.fleetPower = 0;
+        }
+    }
+
+    update(deltaTime, manager) {
+        this.updateFleetCapacity(manager);
+        if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
+            return;
+        }
+        const capacity = this.fleetCapacity;
+        if (capacity <= 0) {
+            this.fleetPower = 0;
+            return;
+        }
+        const currentPower = Math.max(0, Math.min(capacity, this.fleetPower));
+        if (currentPower === capacity) {
+            this.fleetPower = capacity;
+            return;
+        }
+        const seconds = deltaTime / 1000;
+        if (!Number.isFinite(seconds) || seconds <= 0) {
+            return;
+        }
+        const deficit = capacity - currentPower;
+        const baseChange = (deficit * seconds) / REPLACEMENT_SECONDS;
+        if (baseChange === 0) {
+            this.fleetPower = currentPower;
+            return;
+        }
+        const halfCapacity = capacity * 0.5;
+        let penalty = 0;
+        if (currentPower > halfCapacity && halfCapacity > 0) {
+            penalty = Math.min(1, (currentPower - halfCapacity) / halfCapacity);
+        }
+        const multiplier = 1 - penalty;
+        const delta = baseChange * multiplier;
+        const nextPower = currentPower + delta;
+        this.fleetPower = Math.max(0, Math.min(capacity, nextPower));
+    }
+
+    toJSON() {
+        return {
+            id: this.id,
+            fleetPower: this.fleetPower
+        };
+    }
+
+    loadState(state, manager) {
+        this.updateFleetCapacity(manager);
+        if (!state || state.id !== this.id) {
+            return;
+        }
+        this.setFleetPower(state.fleetPower);
+    }
+
+    #computeFleetCapacity(manager) {
+        if (this.id === UHF_FACTION_ID) {
+            const terraformedWorlds = manager?.getTerraformedWorldCount?.() ?? 0;
+            if (!Number.isFinite(terraformedWorlds) || terraformedWorlds <= 0) {
+                return 0;
+            }
+            return terraformedWorlds * DEFAULT_SECTOR_VALUE;
+        }
+        const sectors = manager?.getSectors?.();
+        if (!Array.isArray(sectors) || sectors.length === 0) {
+            return 0;
+        }
+        let total = 0;
+        sectors.forEach((sector) => {
+            const controlValue = sector?.getControlValue?.(this.id);
+            const totalControl = sector?.getTotalControlValue?.();
+            if (!Number.isFinite(controlValue) || controlValue <= 0) {
+                return;
+            }
+            if (!Number.isFinite(totalControl) || totalControl <= 0) {
+                return;
+            }
+            const sectorValue = sector?.getValue?.();
+            const numericSectorValue = Number.isFinite(sectorValue) ? sectorValue : DEFAULT_SECTOR_VALUE;
+            if (numericSectorValue <= 0) {
+                return;
+            }
+            total += numericSectorValue * (controlValue / totalControl);
+        });
+        return total;
     }
 }
 
