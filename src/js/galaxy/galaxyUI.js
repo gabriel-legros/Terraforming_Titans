@@ -88,6 +88,22 @@ function formatFleetUpgradeCost(value) {
     return value.toLocaleString('en-US');
 }
 
+function getSectorUhfControl(sector) {
+    if (!sector) {
+        return 0;
+    }
+    const direct = sector.getControlValue?.(UHF_FACTION_KEY);
+    if (Number.isFinite(direct) && direct > 0) {
+        return direct;
+    }
+    const fallback = sector.control?.[UHF_FACTION_KEY];
+    const numericFallback = Number(fallback);
+    if (Number.isFinite(numericFallback) && numericFallback > 0) {
+        return numericFallback;
+    }
+    return 0;
+}
+
 function normalizeHexColor(color) {
     if (!color) {
         return null;
@@ -676,8 +692,15 @@ function handleSectorLockToggle() {
     const managerRef = globalThis.spaceManager;
     const currentSelection = galaxyUICache?.selectedSector?.displayName || '';
     const label = String(currentSelection).trim();
+    const manager = galaxyManager;
+    const selection = galaxyUICache?.selectedSector || null;
+    const sector = selection && manager ? manager.getSector(selection.q, selection.r) : null;
+    const uhfControl = getSectorUhfControl(sector);
 
-    if (!managerRef || !label) {
+    if (!managerRef || !label || uhfControl <= 0) {
+        if (lockInput.checked && uhfControl <= 0) {
+            lockInput.checked = false;
+        }
         if (managerRef?.clearRwgSectorLock) {
             managerRef.clearRwgSectorLock();
         } else {
@@ -851,8 +874,22 @@ function renderSelectedSectorDetails() {
     if (lockAvailable) {
         const lockedValue = spaceManagerInstance.getRwgSectorLock?.() || '';
         const normalizedLocked = String(lockedValue).trim();
-        details.lockInput.checked = normalizedLocked !== '' && normalizedLocked === selectionLabel;
-        details.lockInput.disabled = selectionLabel === '';
+        const uhfControl = getSectorUhfControl(sector);
+        const lockable = selectionLabel !== '' && uhfControl > 0;
+        if (!lockable && normalizedLocked !== '') {
+            const matchesSelection = normalizedLocked === selectionLabel;
+            if (matchesSelection) {
+                if (spaceManagerInstance.clearRwgSectorLock) {
+                    spaceManagerInstance.clearRwgSectorLock();
+                } else {
+                    spaceManagerInstance.setRwgSectorLock?.(null);
+                }
+            }
+        }
+        const updatedLockedValue = spaceManagerInstance.getRwgSectorLock?.() || '';
+        const normalizedUpdated = String(updatedLockedValue).trim();
+        details.lockInput.checked = lockable && normalizedUpdated !== '' && normalizedUpdated === selectionLabel;
+        details.lockInput.disabled = !lockable;
     } else {
         details.lockInput.checked = false;
         details.lockInput.disabled = true;
