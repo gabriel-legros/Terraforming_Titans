@@ -1,5 +1,6 @@
 const HEX_RADIUS = 6;
 const HEX_BASE_SIZE = 44;
+const HEX_TILE_SCALE = 0.94;
 const HEX_MIN_SCALE = 0.3;
 const HEX_MAX_SCALE = 2.5;
 const HEX_SCALE_STEP = 1.25;
@@ -98,7 +99,8 @@ function createHexGridData(radius, size) {
 }
 
 function createGalaxyHex(doc, { q, r, x, y }, size, offsets) {
-    const { width: hexWidth, height: hexHeight } = getHexDimensions(size);
+    const scaledSize = size * HEX_TILE_SCALE;
+    const { width: displayWidth, height: displayHeight } = getHexDimensions(scaledSize);
     const hex = doc.createElement('button');
     hex.className = 'galaxy-hex';
     hex.type = 'button';
@@ -107,12 +109,12 @@ function createGalaxyHex(doc, { q, r, x, y }, size, offsets) {
     const displayName = formatSectorName(q, r);
     hex.setAttribute('aria-label', displayName === 'Core' ? 'Core sector' : `Sector ${displayName}`);
     hex.dataset.displayName = displayName;
-
-    hex.style.width = `${hexWidth}px`;
-    hex.style.height = `${hexHeight}px`;
-    const left = x + offsets.x - (hexWidth / 2);
-    const top = y + offsets.y - (hexHeight / 2);
-    hex.style.transform = `translate(${left}px, ${top}px)`;
+    hex.style.width = `${displayWidth}px`;
+    hex.style.height = `${displayHeight}px`;
+    const left = Math.round(x + offsets.x - (displayWidth / 2));
+    const top = Math.round(y + offsets.y - (displayHeight / 2));
+    hex.style.left = `${left}px`;
+    hex.style.top = `${top}px`;
 
     const label = doc.createElement('span');
     label.className = 'galaxy-hex__label';
