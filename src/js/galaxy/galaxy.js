@@ -3,6 +3,8 @@ let GalaxyFactionClass;
 let GalaxyFactionAIClass;
 let galaxyFactionParametersConfig;
 let galaxySectorControlOverridesConfig;
+let galaxySectorParametersConfig;
+let defaultSectorValue = 100;
 const defaultUpdateFactions = () => {};
 let updateFactionsFunction = defaultUpdateFactions;
 const DEFAULT_UHF_FACTION_ID = 'uhf';
@@ -20,6 +22,12 @@ if (typeof module !== 'undefined' && module.exports) {
         galaxyFactionParameters: galaxyFactionParametersConfig,
         galaxySectorControlOverrides: galaxySectorControlOverridesConfig
     } = require('./factions-parameters'));
+    const sectorParametersModule = require('./sector-parameters');
+    galaxySectorParametersConfig = sectorParametersModule.galaxySectorParameters;
+    defaultSectorValue = sectorParametersModule.DEFAULT_SECTOR_VALUE;
+    if (sectorParametersModule.getDefaultSectorValue) {
+        defaultSectorValue = sectorParametersModule.getDefaultSectorValue();
+    }
 } else if (typeof window !== 'undefined') {
     GalaxySectorClass = window.GalaxySector;
     GalaxyFactionClass = window.GalaxyFaction;
@@ -28,6 +36,12 @@ if (typeof module !== 'undefined' && module.exports) {
     }
     galaxyFactionParametersConfig = window.galaxyFactionParameters;
     galaxySectorControlOverridesConfig = window.galaxySectorControlOverrides;
+    galaxySectorParametersConfig = window.galaxySectorParameters;
+    if (window.getGalaxySectorDefaultValue) {
+        defaultSectorValue = window.getGalaxySectorDefaultValue();
+    } else {
+        defaultSectorValue = window.galaxySectorDefaultValue;
+    }
     if (typeof window.updateFactions === 'function') {
         updateFactionsFunction = window.updateFactions;
     }
@@ -51,6 +65,17 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     }
     if (!galaxySectorControlOverridesConfig && globalThis.galaxySectorControlOverrides) {
         galaxySectorControlOverridesConfig = globalThis.galaxySectorControlOverrides;
+    }
+    if (!galaxySectorParametersConfig && globalThis.galaxySectorParameters) {
+        galaxySectorParametersConfig = globalThis.galaxySectorParameters;
+    }
+    if (globalThis.getGalaxySectorDefaultValue) {
+        defaultSectorValue = globalThis.getGalaxySectorDefaultValue();
+    } else {
+        const globalDefaultSectorValue = globalThis.galaxySectorDefaultValue;
+        if (Number.isFinite(globalDefaultSectorValue) && globalDefaultSectorValue > 0) {
+            defaultSectorValue = globalDefaultSectorValue;
+        }
     }
     if (typeof updateFactionsFunction !== 'function' && typeof globalThis.updateFactions === 'function') {
         updateFactionsFunction = globalThis.updateFactions;
@@ -77,6 +102,14 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
                 galaxySectorControlOverrides: galaxySectorControlOverridesConfig
             } = require('./factions-parameters'));
         }
+        if (!galaxySectorParametersConfig) {
+            const sectorParametersModule = require('./sector-parameters');
+            galaxySectorParametersConfig = sectorParametersModule.galaxySectorParameters;
+            defaultSectorValue = sectorParametersModule.DEFAULT_SECTOR_VALUE;
+            if (sectorParametersModule.getDefaultSectorValue) {
+                defaultSectorValue = sectorParametersModule.getDefaultSectorValue();
+            }
+        }
     } catch (error) {
         // Ignore resolution errors in browser contexts.
     }
@@ -94,6 +127,35 @@ if (!Array.isArray(galaxyFactionParametersConfig)) {
     galaxyFactionParametersConfig = [];
 }
 galaxySectorControlOverridesConfig = galaxySectorControlOverridesConfig || {};
+if (!galaxySectorParametersConfig) {
+    galaxySectorParametersConfig = {};
+}
+if (!Number.isFinite(defaultSectorValue) || defaultSectorValue <= 0) {
+    defaultSectorValue = 100;
+}
+
+function resolveDefaultSectorValue() {
+    return defaultSectorValue;
+}
+
+function resolveSectorOverrideValue(sectorKey) {
+    if (!sectorKey) {
+        return null;
+    }
+    const overrides = galaxySectorParametersConfig.overrides;
+    if (!overrides) {
+        return null;
+    }
+    const override = overrides[sectorKey];
+    if (!override) {
+        return null;
+    }
+    const overrideValue = override.value;
+    if (!Number.isFinite(overrideValue) || overrideValue <= 0) {
+        return null;
+    }
+    return overrideValue;
+}
 
 const GALAXY_RADIUS = 6;
 const GALAXY_OPERATION_DURATION_MS = 10000;
@@ -588,8 +650,12 @@ class GalaxyManager extends EffectableEntity {
     #initializeSectors() {
         this.sectors.clear();
         const coordinates = generateSectorCoordinates(this.radius);
+        const defaultValue = resolveDefaultSectorValue();
         coordinates.forEach(({ q, r }) => {
-            const sector = new GalaxySectorClass({ q, r });
+            const sectorKey = GalaxySectorClass.createKey(q, r);
+            const overrideValue = resolveSectorOverrideValue(sectorKey);
+            const initialValue = overrideValue ?? defaultValue;
+            const sector = new GalaxySectorClass({ q, r, value: initialValue, defaultValue });
             this.sectors.set(sector.key, sector);
         });
     }
