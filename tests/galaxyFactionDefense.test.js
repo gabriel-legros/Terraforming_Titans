@@ -197,4 +197,43 @@ describe('GalaxyFaction defense calculations', () => {
         expect(refreshedContestedKeys).not.toContain(contested.key);
         expect(getSectorsCalls).toBe(3);
     });
+
+    it('rebuilds contested caches during update when marked dirty', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+
+        const home = new GalaxySector({ q: 0, r: 0 });
+        home.setControl('uhf', 100);
+
+        const contested = new GalaxySector({ q: 1, r: 0 });
+        contested.setControl('uhf', 40);
+        contested.setControl('ally', 60);
+
+        const enemyNeighbor = new GalaxySector({ q: 0, r: 1 });
+        enemyNeighbor.setControl('ally', 100);
+
+        const sectors = [home, contested, enemyNeighbor];
+        const sectorMap = new Map(sectors.map((sector) => [sector.key, sector]));
+        let getSectorsCalls = 0;
+
+        const manager = {
+            getSectors: () => {
+                getSectorsCalls += 1;
+                return sectors;
+            },
+            getSector: (q, r) => sectorMap.get(GalaxySector.createKey(q, r)) || null,
+            getTerraformedWorldCount: () => 0,
+            getFleetCapacityMultiplier: () => 1
+        };
+
+        faction.markBorderDirty();
+        expect(faction.contestedCacheDirty).toBe(true);
+
+        faction.update(1000, manager);
+
+        expect(getSectorsCalls).toBeGreaterThan(0);
+        expect(faction.contestedCacheDirty).toBe(false);
+        expect(faction.neighborEnemyCacheDirty).toBe(false);
+        expect(faction.contestedSectors).toContain(contested.key);
+        expect(faction.neighborEnemySectors).toContain(enemyNeighbor.key);
+    });
 });

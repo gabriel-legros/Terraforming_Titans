@@ -154,6 +154,11 @@ class GalaxyFaction {
 
     update(deltaTime, manager) {
         this.updateFleetCapacity(manager);
+        if ((this.contestedCacheDirty || this.neighborEnemyCacheDirty)
+            && manager
+            && typeof manager.getSectors === 'function') {
+            this.#rebuildConflictCaches(manager);
+        }
         if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
             return;
         }
