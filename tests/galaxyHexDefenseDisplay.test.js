@@ -8,6 +8,11 @@ describe('Galaxy map defense display', () => {
     let updateGalaxyUI;
     let GalaxyManager;
     let dom;
+    let coreSector;
+    let borderSector;
+    let alienFaction;
+    let coreAssignment;
+    let borderAssignment;
 
     beforeEach(() => {
         jest.resetModules();
@@ -60,12 +65,12 @@ describe('Galaxy map defense display', () => {
         manager.initialize();
         manager.enabled = true;
 
-        const coreSector = manager.getSector(0, 0);
+        coreSector = manager.getSector(0, 0);
         coreSector.setValue(120);
         coreSector.setControl('uhf', 60);
         coreSector.setControl('cewinsii', 40);
 
-        const borderSector = manager.getSector(1, 0);
+        borderSector = manager.getSector(1, 0);
         borderSector.setValue(120);
         borderSector.setControl('cewinsii', 100);
 
@@ -74,8 +79,18 @@ describe('Galaxy map defense display', () => {
         uhfFaction.resetControlCache?.();
         uhfFaction.markControlDirty?.();
 
-        const alienFaction = manager.getFaction('cewinsii');
-        alienFaction.getBorderFleetAssignment = jest.fn((key) => (key === borderSector.key ? 300 : (key === coreSector.key ? 200 : 0)));
+        borderAssignment = 300;
+        coreAssignment = 200;
+        alienFaction = manager.getFaction('cewinsii');
+        alienFaction.getBorderFleetAssignment = jest.fn((key) => {
+            if (key === borderSector.key) {
+                return borderAssignment;
+            }
+            if (key === coreSector.key) {
+                return coreAssignment;
+            }
+            return 0;
+        });
         alienFaction.resetControlCache?.();
         alienFaction.markControlDirty?.();
 
@@ -125,7 +140,9 @@ describe('Galaxy map defense display', () => {
         const contestedIcon = contestedEntry.querySelector('.galaxy-hex__defense-icon').textContent;
         const contestedValue = contestedEntry.querySelector('.galaxy-hex__defense-text').textContent;
         expect(contestedIcon).toBe(ALIEN_ICON);
-        expect(contestedValue).toBe('320');
+        const formatDefense = (value) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value));
+        const expectedContestedValue = formatDefense(coreSector.getValue() + coreAssignment);
+        expect(contestedValue).toBe(expectedContestedValue);
 
         const labelNode = coreHex.querySelector('.galaxy-hex__label');
         expect(labelNode.textContent).toBe('Core');
@@ -140,6 +157,7 @@ describe('Galaxy map defense display', () => {
         const alienIcon = alienEntry.querySelector('.galaxy-hex__defense-icon').textContent;
         const alienValue = alienEntry.querySelector('.galaxy-hex__defense-text').textContent;
         expect(alienIcon).toBe(ALIEN_ICON);
-        expect(alienValue).toBe('420');
+        const expectedBorderValue = formatDefense(borderSector.getValue() + borderAssignment);
+        expect(alienValue).toBe(expectedBorderValue);
     });
 });
