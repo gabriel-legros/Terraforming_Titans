@@ -603,6 +603,12 @@ class GalaxyManager extends EffectableEntity {
         faction?.markControlDirty?.();
     }
 
+    #markAllFactionBorderCachesDirty() {
+        this.factions.forEach((faction) => {
+            faction?.markBorderDirty?.();
+        });
+    }
+
     #setSectorControlValue(sector, factionId, value) {
         if (!sector || !factionId) {
             return;
@@ -616,6 +622,7 @@ class GalaxyManager extends EffectableEntity {
         sector.setControl(factionId, numericValue);
         if (previous !== numericValue) {
             this.#markFactionControlDirty(factionId);
+            this.#markAllFactionBorderCachesDirty();
         }
     }
 
@@ -627,6 +634,7 @@ class GalaxyManager extends EffectableEntity {
         sector.clearControl(factionId);
         if (previous > 0) {
             this.#markFactionControlDirty(factionId);
+            this.#markAllFactionBorderCachesDirty();
         }
     }
 

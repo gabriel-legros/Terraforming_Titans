@@ -1,6 +1,15 @@
 const UHF_FACTION_ID = 'uhf';
 const DEFAULT_SECTOR_VALUE = 100;
 const REPLACEMENT_SECONDS = 3600;
+const BORDER_CONTROL_EPSILON = 1e-6;
+const BORDER_HEX_NEIGHBOR_DIRECTIONS = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 }
+];
 
 class GalaxyFaction {
     constructor({ id, name, color, startingSectors } = {}) {
@@ -19,6 +28,9 @@ class GalaxyFaction {
         this.fleetPower = 0;
         this.controlledSectors = [];
         this.controlCacheDirty = true;
+        this.borderSectors = [];
+        this.borderSectorLookup = new Set();
+        this.borderCacheDirty = true;
     }
 
     getStartingSectors() {
@@ -139,11 +151,19 @@ class GalaxyFaction {
 
     markControlDirty() {
         this.controlCacheDirty = true;
+        this.borderCacheDirty = true;
     }
 
     resetControlCache() {
         this.controlledSectors = [];
         this.controlCacheDirty = true;
+        this.borderSectors = [];
+        this.borderSectorLookup = new Set();
+        this.borderCacheDirty = true;
+    }
+
+    markBorderDirty() {
+        this.borderCacheDirty = true;
     }
 
     getControlledSectorKeys(manager) {
@@ -168,6 +188,58 @@ class GalaxyFaction {
         return this.controlledSectors;
     }
 
+    getBorderSectorKeys(manager) {
+        if (!this.borderCacheDirty && Array.isArray(this.borderSectors)) {
+            return this.borderSectors;
+        }
+        const sectors = manager?.getSectors?.();
+        if (!Array.isArray(sectors) || sectors.length === 0) {
+            this.borderSectors = [];
+            this.borderSectorLookup = new Set();
+            this.borderCacheDirty = false;
+            return this.borderSectors;
+        }
+        const borderSet = new Set();
+        sectors.forEach((sector) => {
+            const controlValue = sector?.getControlValue?.(this.id) ?? 0;
+            if (!(controlValue > BORDER_CONTROL_EPSILON)) {
+                return;
+            }
+            const totalControl = sector?.getTotalControlValue?.() ?? 0;
+            if (totalControl - controlValue > BORDER_CONTROL_EPSILON) {
+                borderSet.add(sector.key);
+                return;
+            }
+            if (!manager || typeof manager.getSector !== 'function') {
+                return;
+            }
+            for (let index = 0; index < BORDER_HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+                const direction = BORDER_HEX_NEIGHBOR_DIRECTIONS[index];
+                const neighbor = manager.getSector(sector.q + direction.q, sector.r + direction.r);
+                if (!neighbor) {
+                    continue;
+                }
+                const neighborTotal = neighbor?.getTotalControlValue?.() ?? 0;
+                if (!(neighborTotal > 0)) {
+                    continue;
+                }
+                const dominant = neighbor?.getDominantController?.();
+                if (!dominant || dominant.factionId === this.id) {
+                    continue;
+                }
+                const dominantControl = neighbor.getControlValue?.(dominant.factionId) ?? 0;
+                if (Math.abs(dominantControl - neighborTotal) <= BORDER_CONTROL_EPSILON) {
+                    borderSet.add(sector.key);
+                    break;
+                }
+            }
+        });
+        this.borderSectors = Array.from(borderSet);
+        this.borderSectorLookup = borderSet;
+        this.borderCacheDirty = false;
+        return this.borderSectors;
+    }
+
     getSectorDefense(sector, manager) {
         const controlValue = sector?.getControlValue?.(this.id) ?? 0;
         if (!(controlValue > 0)) {
@@ -185,9 +257,12 @@ class GalaxyFaction {
         const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
         const sanitizedMultiplier = capacityMultiplier > 0 ? capacityMultiplier : 1;
         const upgradedDefense = baseDefense * sanitizedMultiplier;
-        const controlledKeys = this.getControlledSectorKeys(manager);
-        const sectorCount = controlledKeys.length;
-        const distributedFleet = sectorCount > 0 ? (Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) / sectorCount : 0) : 0;
+        const borderKeys = this.getBorderSectorKeys(manager);
+        const borderCount = borderKeys.length;
+        const hasBorderPresence = borderCount > 0 && this.borderSectorLookup?.has?.(sector.key);
+        const distributedFleet = hasBorderPresence && borderCount > 0
+            ? (Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) / borderCount : 0)
+            : 0;
         const totalDefense = upgradedDefense + distributedFleet;
         return Number.isFinite(totalDefense) && totalDefense > 0 ? totalDefense : 0;
     }
