@@ -924,8 +924,13 @@ class GalaxyManager extends EffectableEntity {
         if (operation.status !== 'running') {
             operation.status = 'completed';
         }
+        const sector = this.sectors.get(operation.sectorKey);
+        const attackerId = operation.factionId || galaxyUhfId;
         const offensePower = Math.max(0, Math.min(operation.offensePower ?? operation.reservedPower, operation.reservedPower));
-        const defensePower = Math.max(0, operation.defensePower ?? 0);
+        let defensePower = this.#computeDefensePower(sector, attackerId);
+        if (!Number.isFinite(defensePower) || defensePower < 0) {
+            defensePower = Math.max(0, operation.defensePower ?? 0);
+        }
         const successChance = this.#calculateSuccessChance(offensePower, defensePower);
         const failureChance = Math.max(0, Math.min(1, 1 - successChance));
         let losses;
