@@ -1,11 +1,3 @@
-const globalScope = (() => {
-    try {
-        return globalThis;
-    } catch (error) {
-        return undefined;
-    }
-})();
-
 let GalaxyFactionBaseClass = globalScope?.GalaxyFaction;
 let uhfFactionId = globalScope?.UHF_FACTION_ID ?? 'uhf';
 
