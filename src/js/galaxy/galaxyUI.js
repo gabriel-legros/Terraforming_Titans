@@ -552,24 +552,20 @@ function clampAssignment(value, maxAssignable) {
     return numeric;
 }
 
-function computeSuccessfulLoss(assignedPower, defensePower) {
-    const offense = Number(assignedPower);
-    const defense = Number(defensePower);
-    if (!Number.isFinite(offense) || offense <= 0) {
-        return 0;
-    }
-    if (!Number.isFinite(defense) || defense <= 0) {
-        return 0;
-    }
-    return Math.min(offense, (defense * defense) / (offense + defense));
-}
-
 function formatPercentDisplay(value) {
     const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
     return `${percent}%`;
 }
 
-function resolveOperationSuccessChance(manager, sectorKey, assignedPower) {
+function resolveOperationSuccessChance(manager, sectorKey, assignedPower, lossEstimate) {
+    const estimate = lossEstimate || manager?.getOperationLossEstimate?.({
+        sectorKey,
+        factionId: UHF_FACTION_KEY,
+        assignedPower
+    });
+    if (estimate && Number.isFinite(estimate.successChance)) {
+        return Math.max(0, Math.min(1, estimate.successChance));
+    }
     if (!manager?.getOperationSuccessChance) {
         return 0;
     }
@@ -1192,19 +1188,51 @@ function updateOperationsPanel() {
     const cost = operationRunning && Number.isFinite(operation.launchCost) ? operation.launchCost : baseCost;
     operationsCostValue.textContent = formatter(cost, true);
 
-    const successChance = resolveOperationSuccessChance(manager, selection.key, assignment);
-    const failureChance = Math.max(0, 1 - successChance);
-    const successLoss = computeSuccessfulLoss(assignment, defensePower);
-    const expectedLoss = (failureChance * assignment) + (successChance * successLoss);
+    const lossEstimate = manager?.getOperationLossEstimate?.({
+        sectorKey: selection.key,
+        factionId: UHF_FACTION_KEY,
+        assignedPower: assignment,
+        reservedPower: assignment,
+        defensePower
+    }) || null;
+    const successChance = resolveOperationSuccessChance(manager, selection.key, assignment, lossEstimate);
+    const failureChance = lossEstimate && Number.isFinite(lossEstimate.failureChance)
+        ? Math.max(0, Math.min(1, lossEstimate.failureChance))
+        : Math.max(0, 1 - successChance);
+    let successLoss = 0;
+    let failureLoss = assignment;
+    if (lossEstimate) {
+        const reserved = Number.isFinite(lossEstimate.reservedPower)
+            ? Math.max(0, lossEstimate.reservedPower)
+            : Math.max(0, assignment);
+        const clampLimit = reserved > 0 ? reserved : Math.max(0, assignment);
+        if (Number.isFinite(lossEstimate.successLoss) && lossEstimate.successLoss > 0) {
+            successLoss = Math.min(clampLimit, lossEstimate.successLoss);
+        }
+        if (Number.isFinite(lossEstimate.failureLoss) && lossEstimate.failureLoss >= 0) {
+            failureLoss = Math.min(clampLimit, lossEstimate.failureLoss);
+        } else {
+            failureLoss = clampLimit;
+        }
+    } else {
+        const offense = Number(assignment);
+        const defense = Number(defensePower);
+        if (Number.isFinite(offense) && offense > 0 && Number.isFinite(defense) && defense > 0) {
+            successLoss = Math.min(offense, (defense * defense) / (offense + defense));
+        }
+        failureLoss = Math.max(0, offense);
+    }
+    const expectedLoss = (failureChance * failureLoss) + (successChance * successLoss);
 
     const otherTotal = Math.max(0, totalControl - uhfControl);
     const potentialGain = totalControl > 0 ? totalControl * 0.1 : sectorPower * 0.1;
     const actualGainControl = Math.min(otherTotal, potentialGain);
     const gainPercent = totalControl > 0 ? (actualGainControl / totalControl) * 100 : 10;
 
+    const lossDisplay = Number.isFinite(expectedLoss) ? expectedLoss : 0;
     operationsSummaryItems.success.textContent = formatPercentDisplay(successChance);
     operationsSummaryItems.gain.textContent = `+${Math.max(0, Math.round(gainPercent * 10) / 10)}%`;
-    operationsSummaryItems.loss.textContent = `-${formatter(expectedLoss, false, 2)} power`;
+    operationsSummaryItems.loss.textContent = `-${formatter(lossDisplay, false, 2)} power`;
 
     if (operationRunning) {
         operationsInput.disabled = true;
