@@ -235,16 +235,13 @@ class GalaxyManager extends EffectableEntity {
             this.enabled = state.enabled;
         }
         if (state && Array.isArray(state.sectors)) {
-            this.sectors.forEach((sector) => {
-                sector.replaceControl({});
-            });
             this.#applyFactionStartingControl();
             state.sectors.forEach((sectorData) => {
                 const sector = this.getSector(sectorData.q, sectorData.r);
                 if (!sector) {
                     return;
                 }
-                sector.replaceControl(sectorData.control);
+                this.#applyControlMapToSector(sector, sectorData.control);
                 if (Number.isFinite(sectorData?.value)) {
                     sector.setValue(sectorData.value);
                 }
@@ -378,6 +375,18 @@ class GalaxyManager extends EffectableEntity {
 
     getTerraformedWorldCount() {
         return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+    }
+
+    getTerraformedWorldCountForSector(sector) {
+        const label = sector?.getDisplayName?.();
+        if (!label) {
+            return 0;
+        }
+        const count = spaceManager?.getWorldCountPerSector?.(label);
+        if (!Number.isFinite(count) || count <= 0) {
+            return 0;
+        }
+        return count;
     }
 
     getFleetUpgradeCount(key) {
@@ -556,9 +565,70 @@ class GalaxyManager extends EffectableEntity {
         });
     }
 
+    #markFactionControlDirty(factionId) {
+        const faction = this.factions.get(factionId);
+        faction?.markControlDirty?.();
+    }
+
+    #setSectorControlValue(sector, factionId, value) {
+        if (!sector || !factionId) {
+            return;
+        }
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            this.#clearSectorControlValue(sector, factionId);
+            return;
+        }
+        const previous = sector.getControlValue?.(factionId) ?? 0;
+        sector.setControl(factionId, numericValue);
+        if (previous !== numericValue) {
+            this.#markFactionControlDirty(factionId);
+        }
+    }
+
+    #clearSectorControlValue(sector, factionId) {
+        if (!sector || !factionId) {
+            return;
+        }
+        const previous = sector.getControlValue?.(factionId) ?? 0;
+        sector.clearControl(factionId);
+        if (previous > 0) {
+            this.#markFactionControlDirty(factionId);
+        }
+    }
+
+    #resetSectorControl(sector) {
+        if (!sector) {
+            return;
+        }
+        const factionIds = Object.keys(sector.control);
+        factionIds.forEach((factionId) => {
+            this.#clearSectorControlValue(sector, factionId);
+        });
+    }
+
+    #applyControlMapToSector(sector, controlMap) {
+        if (!sector) {
+            return;
+        }
+        this.#resetSectorControl(sector);
+        if (!controlMap) {
+            return;
+        }
+        Object.entries(controlMap).forEach(([factionId, rawValue]) => {
+            if (!this.factions.has(factionId)) {
+                return;
+            }
+            this.#setSectorControlValue(sector, factionId, rawValue);
+        });
+    }
+
     #applyFactionStartingControl() {
         this.sectors.forEach((sector) => {
-            sector.replaceControl({});
+            this.#resetSectorControl(sector);
+        });
+        this.factions.forEach((faction) => {
+            faction.resetControlCache?.();
         });
         this.factions.forEach((faction) => {
             faction.getStartingSectors().forEach((sectorKey) => {
@@ -566,7 +636,7 @@ class GalaxyManager extends EffectableEntity {
                 if (!sector) {
                     return;
                 }
-                sector.setControl(faction.id, 100);
+                this.#setSectorControlValue(sector, faction.id, 100);
             });
         });
         Object.entries(galaxySectorControlOverridesConfig).forEach(([sectorKey, controlMap]) => {
@@ -574,25 +644,7 @@ class GalaxyManager extends EffectableEntity {
             if (!sector) {
                 return;
             }
-            const entries = Object.entries(controlMap || {});
-            const sanitized = [];
-            entries.forEach(([factionId, value]) => {
-                if (!factionId || !this.factions.has(factionId)) {
-                    return;
-                }
-                const numericValue = Number(value);
-                if (!Number.isFinite(numericValue) || numericValue <= 0) {
-                    return;
-                }
-                sanitized.push([factionId, numericValue]);
-            });
-            if (!sanitized.length) {
-                return;
-            }
-            sector.replaceControl({});
-            sanitized.forEach(([factionId, numericValue]) => {
-                sector.setControl(factionId, numericValue);
-            });
+            this.#applyControlMapToSector(sector, controlMap);
         });
     }
 
@@ -812,7 +864,7 @@ class GalaxyManager extends EffectableEntity {
             }
             const numericValue = Number(value);
             if (!Number.isFinite(numericValue) || numericValue <= 0) {
-                sector.clearControl(factionId);
+                this.#clearSectorControlValue(sector, factionId);
                 return;
             }
             const factionsRemaining = entries.length - index;
@@ -821,14 +873,14 @@ class GalaxyManager extends EffectableEntity {
             const nextValue = numericValue - reduction;
             remainingReduction -= reduction;
             if (nextValue > 0) {
-                sector.setControl(factionId, nextValue);
+                this.#setSectorControlValue(sector, factionId, nextValue);
             } else {
-                sector.clearControl(factionId);
+                this.#clearSectorControlValue(sector, factionId);
             }
         });
         const appliedGain = gain - Math.max(0, remainingReduction);
         const newUhfValue = currentUhf + appliedGain;
-        sector.setControl(galaxyUhfId, newUhfValue);
+        this.#setSectorControlValue(sector, galaxyUhfId, newUhfValue);
     }
 
     #serializeFleetUpgrades() {

@@ -13,10 +13,14 @@ const HEX_STRIPE_BASE_LIGHTEN = 0.14;
 const HEX_STRIPE_HOVER_LIGHTEN = 0.26;
 const HEX_BORDER_LIGHTEN = 0.32;
 const GALAXY_UHF_FACTION_ID = 'uhf';
+const GALAXY_DEFENSE_ICON = '\u{1F6E1}\u{FE0F}';
 const FLEET_VALUE_FORMATTER = new Intl.NumberFormat('en-US', {
     notation: 'compact',
     maximumFractionDigits: 1
 });
+const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
+    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
+    : null;
 const PAN_ACTIVATION_DISTANCE = 6;
 const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 const OPERATION_COST_PER_POWER = 1000;
@@ -290,6 +294,11 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     const top = Math.round(y + offsets.y - (displayHeight / 2));
     hex.style.left = `${left}px`;
     hex.style.top = `${top}px`;
+
+    const defense = doc.createElement('span');
+    defense.className = 'galaxy-hex__defense';
+    hex.appendChild(defense);
+    hex.galaxyDefenseElement = defense;
 
     const label = doc.createElement('span');
     label.className = 'galaxy-hex__label';
@@ -856,7 +865,14 @@ function renderSelectedSectorDetails() {
         panel.replaceChildren(details.container);
     }
 
-    const numberFormatter = globalThis.formatNumber || ((value) => value);
+    const numberFormatter = globalThis.formatNumber || ((value) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) {
+            return '0';
+        }
+        return Math.round(numeric * 100) / 100;
+    });
+
     const sectorPower = sector.getValue();
     details.title.textContent = selection.displayName === 'Core'
         ? 'Core Sector'
@@ -1188,12 +1204,35 @@ function clearHexControlStyles(hex) {
     hex.dataset.controllerName = '';
     hex.dataset.secondaryController = '';
     hex.dataset.secondaryControllerName = '';
+    if (hex.galaxyDefenseElement) {
+        hex.galaxyDefenseElement.textContent = '';
+    }
+}
+
+function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
+    const defenseNode = hex?.galaxyDefenseElement;
+    if (!defenseNode) {
+        return;
+    }
+    let text = '';
+    if (sector && uhfFaction) {
+        const defenseValue = uhfFaction.getSectorDefense?.(sector, manager) ?? 0;
+        if (Number.isFinite(defenseValue) && defenseValue > 0) {
+            const rounded = Math.round(defenseValue);
+            const formatted = GALAXY_DEFENSE_INT_FORMATTER
+                ? GALAXY_DEFENSE_INT_FORMATTER.format(rounded)
+                : String(rounded);
+            text = `${GALAXY_DEFENSE_ICON} ${formatted}`;
+        }
+    }
+    defenseNode.textContent = text;
 }
 
 function updateGalaxyHexControlColors(manager, cache) {
     if (!manager || !cache || !cache.hexElements) {
         return;
     }
+    const uhfFaction = manager.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
     cache.hexElements.forEach((hex) => {
         const q = Number(hex.dataset.q);
         const r = Number(hex.dataset.r);
@@ -1203,17 +1242,20 @@ function updateGalaxyHexControlColors(manager, cache) {
         const sector = manager.getSector(q, r);
         if (!sector) {
             clearHexControlStyles(hex);
+            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
             return;
         }
         const leaders = sector.getControlLeaders ? sector.getControlLeaders(2) : [];
         if (!leaders.length) {
             clearHexControlStyles(hex);
+            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
             return;
         }
         const primaryEntry = leaders[0];
         const primaryFaction = manager.getFaction(primaryEntry.factionId);
         if (!primaryFaction) {
             clearHexControlStyles(hex);
+            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
             return;
         }
         const secondaryEntry = leaders.length > 1 ? leaders[1] : null;
@@ -1247,6 +1289,7 @@ function updateGalaxyHexControlColors(manager, cache) {
             hex.dataset.secondaryController = '';
             hex.dataset.secondaryControllerName = '';
         }
+        updateHexDefenseDisplay(hex, sector, manager, uhfFaction);
     });
 }
 

@@ -17,6 +17,8 @@ class GalaxyFaction {
         }
         this.fleetCapacity = 0;
         this.fleetPower = 0;
+        this.controlledSectors = [];
+        this.controlCacheDirty = true;
     }
 
     getStartingSectors() {
@@ -133,6 +135,57 @@ class GalaxyFaction {
         const delta = baseChange * multiplier;
         const nextPower = currentPower + delta;
         this.fleetPower = Math.max(0, Math.min(capacity, nextPower));
+    }
+
+    markControlDirty() {
+        this.controlCacheDirty = true;
+    }
+
+    resetControlCache() {
+        this.controlledSectors = [];
+        this.controlCacheDirty = true;
+    }
+
+    getControlledSectorKeys(manager) {
+        if (!this.controlCacheDirty && Array.isArray(this.controlledSectors)) {
+            return this.controlledSectors;
+        }
+        const sectors = manager?.getSectors?.();
+        if (!Array.isArray(sectors) || sectors.length === 0) {
+            this.controlledSectors = [];
+            this.controlCacheDirty = false;
+            return this.controlledSectors;
+        }
+        const keys = [];
+        sectors.forEach((sector) => {
+            const controlValue = sector?.getControlValue?.(this.id) ?? 0;
+            if (controlValue > 0) {
+                keys.push(sector.key);
+            }
+        });
+        this.controlledSectors = keys;
+        this.controlCacheDirty = false;
+        return this.controlledSectors;
+    }
+
+    getSectorDefense(sector, manager) {
+        const controlValue = sector?.getControlValue?.(this.id) ?? 0;
+        if (!(controlValue > 0)) {
+            return 0;
+        }
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const worldCount = manager?.getTerraformedWorldCountForSector?.(sector) ?? 0;
+        const baseDefense = worldCount > 0 ? 100 * worldCount : 0;
+        const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
+        const sanitizedMultiplier = capacityMultiplier > 0 ? capacityMultiplier : 1;
+        const upgradedDefense = baseDefense * sanitizedMultiplier;
+        const controlledKeys = this.getControlledSectorKeys(manager);
+        const sectorCount = controlledKeys.length;
+        const distributedFleet = sectorCount > 0 ? (Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) / sectorCount : 0) : 0;
+        const totalDefense = upgradedDefense + distributedFleet;
+        return Number.isFinite(totalDefense) && totalDefense > 0 ? totalDefense : 0;
     }
 
     toJSON() {

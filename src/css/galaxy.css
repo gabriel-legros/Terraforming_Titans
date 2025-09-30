@@ -400,6 +400,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 4px;
   color: #e4f2ff;
   font-size: 0.72rem;
   letter-spacing: 0.02em;
@@ -431,6 +433,28 @@
   pointer-events: none;
 }
 
+.galaxy-hex__defense {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #f5f9ff;
+  background: linear-gradient(140deg, rgba(220, 232, 255, 0.45), rgba(92, 124, 176, 0.45));
+  border: 1px solid rgba(184, 212, 255, 0.6);
+  box-shadow: 0 0 8px rgba(12, 24, 40, 0.45);
+  text-shadow: 0 0 6px rgba(12, 24, 40, 0.85);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.galaxy-hex__defense:empty {
+  display: none;
+}
+
 .galaxy-attack-panel,
 .galaxy-sector-panel {
   min-height: 160px;
@@ -454,6 +478,7 @@
   text-align: left;
   gap: 12px;
 }
+
 
 .galaxy-sector-panel__title {
   font-size: 1.05rem;
