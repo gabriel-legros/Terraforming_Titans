@@ -552,22 +552,6 @@ function clampAssignment(value, maxAssignable) {
     return numeric;
 }
 
-function computeSuccessChance(assignedPower, defensePower) {
-    const offense = Number(assignedPower);
-    if (!Number.isFinite(offense) || offense <= 0) {
-        return 0;
-    }
-    const defense = Number(defensePower);
-    if (!Number.isFinite(defense) || defense <= 0) {
-        return 1;
-    }
-    const total = offense + defense;
-    if (!(total > 0)) {
-        return 0;
-    }
-    return Math.max(0, Math.min(1, offense / total));
-}
-
 function computeSuccessfulLoss(assignedPower, defensePower) {
     const offense = Number(assignedPower);
     const defense = Number(defensePower);
@@ -583,6 +567,21 @@ function computeSuccessfulLoss(assignedPower, defensePower) {
 function formatPercentDisplay(value) {
     const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
     return `${percent}%`;
+}
+
+function resolveOperationSuccessChance(manager, sectorKey, assignedPower) {
+    if (!manager?.getOperationSuccessChance) {
+        return 0;
+    }
+    const chance = manager.getOperationSuccessChance({
+        sectorKey,
+        factionId: UHF_FACTION_KEY,
+        assignedPower
+    });
+    if (!Number.isFinite(chance)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(1, chance));
 }
 
 function handleOperationsInputChange(event) {
@@ -680,7 +679,7 @@ function handleOperationsLaunch() {
     const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
     const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
     const defensePower = manager.getSectorDefensePower(sectorKey, UHF_FACTION_KEY);
-    const successChance = computeSuccessChance(assignment, defensePower);
+    const successChance = resolveOperationSuccessChance(manager, sectorKey, assignment);
     const cost = assignment * OPERATION_COST_PER_POWER;
     if (!antimatterResource || antimatterValue < cost) {
         return;
@@ -1193,7 +1192,7 @@ function updateOperationsPanel() {
     const cost = operationRunning && Number.isFinite(operation.launchCost) ? operation.launchCost : baseCost;
     operationsCostValue.textContent = formatter(cost, true);
 
-    const successChance = computeSuccessChance(assignment, defensePower);
+    const successChance = resolveOperationSuccessChance(manager, selection.key, assignment);
     const failureChance = Math.max(0, 1 - successChance);
     const successLoss = computeSuccessfulLoss(assignment, defensePower);
     const expectedLoss = (failureChance * assignment) + (successChance * successLoss);
