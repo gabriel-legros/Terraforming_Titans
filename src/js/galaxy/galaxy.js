@@ -499,6 +499,9 @@ class GalaxyManager extends EffectableEntity {
         }
         const existing = this.operations.get(key);
         if (existing && existing.status === 'running') {
+            if (!existing.originHex) {
+                existing.originHex = this.#selectOperationOrigin(sector, existing.factionId || factionId || galaxyUhfId);
+            }
             return existing;
         }
         const attackerId = factionId || galaxyUhfId;
@@ -519,6 +522,7 @@ class GalaxyManager extends EffectableEntity {
         const offensePower = Math.max(0, assignedPower);
         const defensePower = this.#computeDefensePower(sector, attackerId);
         const sanitizedSuccess = this.#calculateSuccessChance(offensePower, defensePower);
+        const originHex = this.#selectOperationOrigin(sector, attackerId);
         const operation = {
             sectorKey: key,
             factionId: attackerId,
@@ -530,7 +534,8 @@ class GalaxyManager extends EffectableEntity {
             failureChance: Math.max(0, Math.min(1, 1 - sanitizedSuccess)),
             defensePower,
             offensePower,
-            status: 'running'
+            status: 'running',
+            originHex
         };
         faction.setFleetPower(availablePower - offensePower);
         this.operations.set(key, operation);
@@ -971,7 +976,8 @@ class GalaxyManager extends EffectableEntity {
             offensePower: operation.offensePower,
             status: operation.status,
             result: operation.result,
-            losses: operation.losses
+            losses: operation.losses,
+            originHex: this.#serializeOperationOrigin(operation.originHex)
         };
     }
 
@@ -1004,6 +1010,8 @@ class GalaxyManager extends EffectableEntity {
         const computedSuccess = this.#calculateSuccessChance(offensePower, defensePower);
         const sanitizedSuccess = Math.max(0, Math.min(1, computedSuccess));
         const sanitizedFailure = Math.max(0, Math.min(1, 1 - sanitizedSuccess));
+        const originHex = this.#sanitizeOperationOrigin(state.originHex)
+            || this.#selectOperationOrigin(sector, attackerId);
         const operation = {
             sectorKey: state.sectorKey,
             factionId: attackerId,
@@ -1017,7 +1025,8 @@ class GalaxyManager extends EffectableEntity {
             offensePower,
             status: state.status === 'running' && elapsed < duration ? 'running' : 'completed',
             result: state.result,
-            losses: Number.isFinite(Number(state.losses)) ? Number(state.losses) : undefined
+            losses: Number.isFinite(Number(state.losses)) ? Number(state.losses) : undefined,
+            originHex
         };
 
         this.operations.set(operation.sectorKey, operation);
@@ -1286,6 +1295,63 @@ class GalaxyManager extends EffectableEntity {
 
     #hasUhfPresence(sector) {
         return this.#hasFactionPresence(sector, galaxyUhfId);
+    }
+
+    #selectOperationOrigin(sector, factionId) {
+        if (!sector || !factionId) {
+            return null;
+        }
+        let bestSector = null;
+        let bestValue = -Infinity;
+        for (let index = 0; index < HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+            const direction = HEX_NEIGHBOR_DIRECTIONS[index];
+            const neighbor = this.getSector(sector.q + direction.q, sector.r + direction.r);
+            if (!this.#isFactionFullControlSector(neighbor, factionId)) {
+                continue;
+            }
+            const controlValue = neighbor?.getControlValue?.(factionId) || 0;
+            if (controlValue > bestValue) {
+                bestValue = controlValue;
+                bestSector = neighbor;
+                continue;
+            }
+            if (controlValue === bestValue && bestSector && neighbor?.key && bestSector.key) {
+                if (neighbor.key.localeCompare(bestSector.key) < 0) {
+                    bestSector = neighbor;
+                }
+            }
+        }
+        if (bestSector) {
+            return { q: bestSector.q, r: bestSector.r };
+        }
+        if (this.#hasFactionPresence(sector, factionId)) {
+            return { q: sector.q, r: sector.r };
+        }
+        return null;
+    }
+
+    #serializeOperationOrigin(origin) {
+        if (!origin) {
+            return null;
+        }
+        const q = Number(origin.q);
+        const r = Number(origin.r);
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return null;
+        }
+        return { q, r };
+    }
+
+    #sanitizeOperationOrigin(origin) {
+        if (!origin) {
+            return null;
+        }
+        const q = Number(origin.q);
+        const r = Number(origin.r);
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return null;
+        }
+        return { q, r };
     }
 }
 
