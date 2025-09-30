@@ -480,6 +480,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.galaxy-sector-panel__management,
+.galaxy-sector-panel__enemy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.galaxy-sector-panel__management.is-hidden {
+  display: none;
+}
+
 .galaxy-attack-panel,
 .galaxy-sector-panel {
   min-height: 160px;

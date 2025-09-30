@@ -23,6 +23,14 @@ const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl
     : null;
 const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
 const GALAXY_CONTROL_EPSILON = 1e-6;
+const HEX_NEIGHBOR_OFFSETS = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 }
+];
 const PAN_ACTIVATION_DISTANCE = 6;
 const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 const OPERATION_COST_PER_POWER = 1000;
@@ -804,51 +812,6 @@ function renderSelectedSectorDetails() {
         title.className = 'galaxy-sector-panel__title';
         container.appendChild(title);
 
-        const powerContainer = doc.createElement('div');
-        powerContainer.className = 'galaxy-sector-panel__stat';
-
-        const powerLabel = doc.createElement('span');
-        powerLabel.className = 'galaxy-sector-panel__stat-label';
-        powerLabel.textContent = 'Power';
-        powerContainer.appendChild(powerLabel);
-
-        const powerValue = doc.createElement('span');
-        powerValue.className = 'galaxy-sector-panel__stat-value';
-        powerContainer.appendChild(powerValue);
-
-        container.appendChild(powerContainer);
-
-        const worldCountContainer = doc.createElement('div');
-        worldCountContainer.className = 'galaxy-sector-panel__stat';
-
-        const worldCountLabel = doc.createElement('span');
-        worldCountLabel.className = 'galaxy-sector-panel__stat-label';
-        worldCountLabel.textContent = 'Worlds';
-        worldCountContainer.appendChild(worldCountLabel);
-
-        const worldCountValue = doc.createElement('span');
-        worldCountValue.className = 'galaxy-sector-panel__stat-value';
-        worldCountContainer.appendChild(worldCountValue);
-
-        container.appendChild(worldCountContainer);
-
-        const lockOption = doc.createElement('label');
-        lockOption.className = 'galaxy-sector-panel__lock-option';
-
-        const lockInput = doc.createElement('input');
-        lockInput.type = 'checkbox';
-        lockInput.className = 'galaxy-sector-panel__lock-checkbox';
-        lockInput.addEventListener('change', handleSectorLockToggle);
-
-        const lockText = doc.createElement('span');
-        lockText.className = 'galaxy-sector-panel__lock-label';
-        lockText.textContent = 'Limit RWG to this sector';
-
-        lockOption.appendChild(lockInput);
-        lockOption.appendChild(lockText);
-
-        container.appendChild(lockOption);
-
         const subtitle = doc.createElement('div');
         subtitle.className = 'galaxy-sector-panel__subtitle';
         subtitle.textContent = 'Faction Control';
@@ -863,13 +826,83 @@ function renderSelectedSectorDetails() {
         empty.textContent = 'No factions currently control this sector.';
         container.appendChild(empty);
 
+        const managementSection = doc.createElement('div');
+        managementSection.className = 'galaxy-sector-panel__management';
+
+        const managementSubtitle = doc.createElement('div');
+        managementSubtitle.className = 'galaxy-sector-panel__subtitle';
+        managementSubtitle.textContent = 'Sector Management';
+        managementSection.appendChild(managementSubtitle);
+
+        const createStatRow = (label) => {
+            const stat = doc.createElement('div');
+            stat.className = 'galaxy-sector-panel__stat';
+            const statLabel = doc.createElement('span');
+            statLabel.className = 'galaxy-sector-panel__stat-label';
+            statLabel.textContent = label;
+            const statValue = doc.createElement('span');
+            statValue.className = 'galaxy-sector-panel__stat-value';
+            stat.append(statLabel, statValue);
+            return { stat, statValue };
+        };
+
+        const worldRow = createStatRow('Worlds');
+        const fleetDefenseRow = createStatRow('Fleet Defense');
+        const totalDefenseRow = createStatRow('Total Defense');
+
+        managementSection.append(worldRow.stat, fleetDefenseRow.stat, totalDefenseRow.stat);
+
+        const lockOption = doc.createElement('label');
+        lockOption.className = 'galaxy-sector-panel__lock-option';
+
+        const lockInput = doc.createElement('input');
+        lockInput.type = 'checkbox';
+        lockInput.className = 'galaxy-sector-panel__lock-checkbox';
+        lockInput.addEventListener('change', handleSectorLockToggle);
+
+        const lockText = doc.createElement('span');
+        lockText.className = 'galaxy-sector-panel__lock-label';
+        lockText.textContent = 'Restrict RWG here';
+
+        lockOption.appendChild(lockInput);
+        lockOption.appendChild(lockText);
+
+        managementSection.appendChild(lockOption);
+
+        container.appendChild(managementSection);
+
+        const enemySection = doc.createElement('div');
+        enemySection.className = 'galaxy-sector-panel__enemy';
+
+        const enemySubtitle = doc.createElement('div');
+        enemySubtitle.className = 'galaxy-sector-panel__subtitle';
+        enemySubtitle.textContent = 'Enemy Strength';
+        enemySection.appendChild(enemySubtitle);
+
+        const enemySectorRow = createStatRow('Sector Defense');
+        const enemyFleetRow = createStatRow('Fleet Defense');
+        const enemyTotalRow = createStatRow('Total Defense');
+
+        enemySection.append(enemySectorRow.stat, enemyFleetRow.stat, enemyTotalRow.stat);
+
+        container.appendChild(enemySection);
+
         panel.replaceChildren(container);
 
         details = {
             container,
             title,
-            powerValue,
-            worldCountValue,
+            managementSection,
+            management: {
+                worldsValue: worldRow.statValue,
+                fleetDefenseValue: fleetDefenseRow.statValue,
+                totalDefenseValue: totalDefenseRow.statValue
+            },
+            enemy: {
+                sectorValue: enemySectorRow.statValue,
+                fleetValue: enemyFleetRow.statValue,
+                totalValue: enemyTotalRow.statValue
+            },
             lockOption,
             lockInput,
             subtitle,
@@ -881,25 +914,75 @@ function renderSelectedSectorDetails() {
         panel.replaceChildren(details.container);
     }
 
-    const numberFormatter = globalThis.formatNumber || ((value) => {
-        const numeric = Number(value);
-        if (!Number.isFinite(numeric)) {
-            return '0';
-        }
-        return Math.round(numeric * 100) / 100;
-    });
-
-    const sectorPower = sector.getValue();
     details.title.textContent = selection.displayName === 'Core'
         ? 'Core Sector'
         : `Sector ${selection.displayName}`;
-    details.powerValue.textContent = numberFormatter(sectorPower, true);
 
     const spaceManagerInstance = globalThis.spaceManager;
     const worldCount = spaceManagerInstance?.getWorldCountPerSector
         ? spaceManagerInstance.getWorldCountPerSector(selectionLabel)
         : 0;
-    details.worldCountValue.textContent = numberFormatter(worldCount, true, 0);
+
+    const uhfFaction = manager.getFaction?.(UHF_FACTION_KEY) || null;
+    const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
+    const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0;
+    const sectorPowerValue = Number(sector?.getValue?.()) || 0;
+
+    const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
+        && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
+
+    const hasEnemyControl = (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0;
+    const baseEnemySectorDefense = hasEnemyControl ? (sectorPowerValue > 0 ? sectorPowerValue : 0) : 0;
+    let strongestAssignment = 0;
+    if ((totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0 || bordersUhf) {
+        for (let index = 0; index < breakdown.length; index += 1) {
+            const entry = breakdown[index];
+            if (!entry || entry.factionId === UHF_FACTION_KEY) {
+                continue;
+            }
+            const faction = manager.getFaction?.(entry.factionId);
+            if (!faction) {
+                continue;
+            }
+            const assignmentValue = Number(faction.getBorderFleetAssignment?.(sector.key)) || 0;
+            if (assignmentValue > strongestAssignment) {
+                strongestAssignment = assignmentValue;
+            }
+        }
+    }
+
+    let enemyTotalDefense = 0;
+    if (strongestAssignment > 0) {
+        enemyTotalDefense = strongestAssignment + baseEnemySectorDefense;
+    } else if (baseEnemySectorDefense > 0 && (bordersUhf || hasEnemyControl)) {
+        enemyTotalDefense = baseEnemySectorDefense;
+    }
+
+    details.enemy.sectorValue.textContent = formatDefenseInteger(baseEnemySectorDefense);
+    details.enemy.fleetValue.textContent = formatDefenseInteger(strongestAssignment);
+    details.enemy.totalValue.textContent = enemyTotalDefense > 0 ? formatDefenseInteger(enemyTotalDefense) : '0';
+
+    const multiplier = manager.getFleetCapacityMultiplier?.() ?? 1;
+    const baseWorldDefense = worldCount > 0 ? worldCount * 100 * multiplier : 0;
+    const uhfDefense = isFinite(Number(uhfFaction?.getSectorDefense?.(sector, manager)))
+        ? Number(uhfFaction.getSectorDefense(sector, manager))
+        : 0;
+    const fleetDefense = Math.max(0, uhfDefense - baseWorldDefense);
+    const totalDefense = baseWorldDefense + fleetDefense;
+
+    const managementVisible = uhfControl > GALAXY_CONTROL_EPSILON;
+    if (details.managementSection) {
+        details.managementSection.classList.toggle('is-hidden', !managementVisible);
+    }
+    if (managementVisible) {
+        details.management.worldsValue.textContent = String(Math.max(0, Math.round(worldCount)));
+        details.management.fleetDefenseValue.textContent = formatDefenseInteger(fleetDefense);
+        details.management.totalDefenseValue.textContent = formatDefenseInteger(totalDefense);
+    } else {
+        details.management.worldsValue.textContent = '0';
+        details.management.fleetDefenseValue.textContent = '0';
+        details.management.totalDefenseValue.textContent = '0';
+    }
 
     const lockAvailable = !!spaceManagerInstance?.setRwgSectorLock;
     details.lockOption.classList.toggle('is-hidden', !lockAvailable);
@@ -1260,9 +1343,33 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
     const isUhfControlled = uhfControl > 0;
     const contestedWithUhf = isUhfControlled && (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON;
 
-    if (isUhfControlled && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
+    const hasEnemyNeighbor = (() => {
+        if (!manager || typeof manager.getSector !== 'function') {
+            return false;
+        }
+        for (let index = 0; index < HEX_NEIGHBOR_OFFSETS.length; index += 1) {
+            const offset = HEX_NEIGHBOR_OFFSETS[index];
+            const neighbor = manager.getSector(sector.q + offset.q, sector.r + offset.r);
+            if (!neighbor) {
+                continue;
+            }
+            const neighborTotal = Number(neighbor.getTotalControlValue?.()) || 0;
+            if (!(neighborTotal > 0)) {
+                continue;
+            }
+            const neighborUhf = Number(neighbor.getControlValue?.(UHF_FACTION_KEY)) || 0;
+            if ((neighborTotal - neighborUhf) > GALAXY_CONTROL_EPSILON) {
+                return true;
+            }
+        }
+        return false;
+    })();
+
+    const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor);
+
+    if (shouldShowUhf && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
         const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
-        const total = Math.max(0, defenseValue + sectorPower);
+        const total = Math.max(0, defenseValue);
         if (total > 0) {
             entries.push({ icon: GALAXY_DEFENSE_ICON, total, modifier: 'uhf' });
         }

@@ -218,6 +218,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
 - The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
 - Galaxy faction control caches only rebuild when sector ownership changes, and the galaxy map now displays shield badges on UHF sectors plus skull badges on contested or bordering alien sectors with sector power folded into each total.
+- Sector details gained a Sector Management block (shown only when the UHF has control) summarising worlds, fleet defense, and combined strength alongside an Enemy Strength section that breaks out sector and fleet contributions to match the skull badge total.
 - Logistics & Statistics now reports UHF threat coverage and lifetime successful operations with a placeholder tooltip while final copy is pending.
 - Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.
 - Celestial parameters now store a galaxy sector identifier, and random worlds roll a sector assignment that appears when the Galaxy Manager is active.

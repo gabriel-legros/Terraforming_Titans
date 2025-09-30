@@ -119,7 +119,7 @@ describe('Galaxy map defense display', () => {
         const uhfIcon = uhfEntry.querySelector('.galaxy-hex__defense-icon').textContent;
         const uhfValue = uhfEntry.querySelector('.galaxy-hex__defense-text').textContent;
         expect(uhfIcon).toBe(UHF_ICON);
-        expect(uhfValue).toBe('570');
+        expect(uhfValue).toBe('450');
 
         const contestedEntry = coreEntries[1];
         const contestedIcon = contestedEntry.querySelector('.galaxy-hex__defense-icon').textContent;
