@@ -17,6 +17,7 @@ class Resource extends EffectableEntity {
     this.category = resourceData.category;
     this.displayName = resourceData.displayName || resourceData.name || '';
     this.unit = resourceData.unit || null;
+    this.initialValue = resourceData.initialValue || 0;
     this.value = resourceData.initialValue || 0;
     this.hasCap = resourceData.hasCap || false;
     this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
@@ -44,6 +45,10 @@ class Resource extends EffectableEntity {
 
   // Method to initialize configurable properties
   initializeFromConfig(name, config) {
+    if (config.initialValue !== undefined) {
+      this.initialValue = config.initialValue;
+    }
+
     if (config.displayName !== undefined) {
       this.displayName = config.displayName || config.name || this.displayName;
     }
@@ -87,7 +92,7 @@ class Resource extends EffectableEntity {
     if (this.name === 'land' && config.initialValue !== undefined) {
       this.value = Math.max(this.value, config.initialValue);
     }
-  } 
+  }
 
   increase(amount) {
     if(amount > 0){
@@ -285,6 +290,88 @@ function createResources(resourcesData) {
   return resources;
 }
 
+function reconcileLandResourceValue() {
+  const landResource = resources?.surface?.land;
+  if (!landResource) {
+    return;
+  }
+
+  const tf = typeof terraforming !== 'undefined' ? terraforming : (typeof globalThis !== 'undefined' ? globalThis.terraforming : null);
+  const params = typeof currentPlanetParameters !== 'undefined'
+    ? currentPlanetParameters
+    : (typeof globalThis !== 'undefined' ? globalThis.currentPlanetParameters : null);
+
+  const baseCandidates = [
+    tf?.initialLand,
+    landResource.initialValue,
+    params?.resources?.surface?.land?.initialValue,
+  ];
+
+  let baseLand = 0;
+  for (const candidate of baseCandidates) {
+    if (typeof candidate === 'number' && isFinite(candidate) && candidate > 0) {
+      baseLand = candidate;
+      break;
+    }
+  }
+
+  if (!(baseLand > 0)) {
+    const reserved = Math.max(0, landResource.reserved || 0);
+    landResource.value = Math.max(landResource.value, reserved);
+    return;
+  }
+
+  let totalLand = baseLand;
+
+  const manager =
+    typeof spaceManager !== 'undefined'
+      ? spaceManager
+      : (typeof globalThis !== 'undefined' ? globalThis.spaceManager : null);
+  const projectMgr =
+    typeof projectManager !== 'undefined'
+      ? projectManager
+      : (typeof globalThis !== 'undefined' ? globalThis.projectManager : null);
+  const ringProject = projectMgr?.projects?.orbitalRing;
+  const hasRingFromManager = typeof manager?.currentWorldHasOrbitalRing === 'function'
+    ? manager.currentWorldHasOrbitalRing()
+    : false;
+  const hasRing = hasRingFromManager || !!(ringProject && ringProject.currentWorldHasRing);
+  if (hasRing) {
+    totalLand += baseLand;
+  }
+
+  const undergroundProject = projectMgr?.projects?.undergroundExpansion;
+  if (undergroundProject) {
+    const perCompletion = baseLand / 10000;
+    if (perCompletion > 0) {
+      const maxRepeats = Number.isFinite(undergroundProject.maxRepeatCount)
+        ? undergroundProject.maxRepeatCount
+        : Infinity;
+      let completions = Math.max(0, undergroundProject.repeatCount || 0);
+      if (undergroundProject.isActive && undergroundProject.startingDuration) {
+        const duration = undergroundProject.startingDuration;
+        if (duration > 0) {
+          const remaining = Math.max(0, undergroundProject.remainingTime ?? duration);
+          const ratio = Math.max(0, Math.min(1, remaining / duration));
+          completions += 1 - ratio;
+        }
+      }
+      if (Number.isFinite(maxRepeats)) {
+        completions = Math.min(completions, maxRepeats);
+      }
+      const extraLand = Math.min(completions * perCompletion, baseLand);
+      totalLand += extraLand;
+    }
+  }
+
+  const reserved = Math.max(0, landResource.reserved || 0);
+  landResource.value = Math.max(totalLand, reserved);
+}
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
+}
+
 function calculateProductionRates(deltaTime, buildings) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
@@ -358,6 +445,8 @@ function calculateProductionRates(deltaTime, buildings) {
 
 function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
+
+  reconcileLandResourceValue();
 
   calculateProductionRates(deltaTime, buildings);
 
@@ -686,6 +775,7 @@ if (typeof module !== 'undefined' && module.exports) {
     produceResources,
     calculateProjectProductivities,
     recalculateTotalRates,
+    reconcileLandResourceValue,
   };
 }
 
