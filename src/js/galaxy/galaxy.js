@@ -1,5 +1,6 @@
 let GalaxySectorClass;
 let GalaxyFactionClass;
+let GalaxyFactionAIClass;
 let galaxyFactionParametersConfig;
 let galaxySectorControlOverridesConfig;
 const defaultUpdateFactions = () => {};
@@ -10,6 +11,11 @@ let galaxyUhfId = DEFAULT_UHF_FACTION_ID;
 if (typeof module !== 'undefined' && module.exports) {
     ({ GalaxySector: GalaxySectorClass } = require('./sector'));
     ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction, UHF_FACTION_ID: galaxyUhfId } = require('./faction'));
+    try {
+        ({ GalaxyFactionAI: GalaxyFactionAIClass } = require('./factionAI'));
+    } catch (error) {
+        GalaxyFactionAIClass = undefined;
+    }
     ({
         galaxyFactionParameters: galaxyFactionParametersConfig,
         galaxySectorControlOverrides: galaxySectorControlOverridesConfig
@@ -17,6 +23,9 @@ if (typeof module !== 'undefined' && module.exports) {
 } else if (typeof window !== 'undefined') {
     GalaxySectorClass = window.GalaxySector;
     GalaxyFactionClass = window.GalaxyFaction;
+    if (window.GalaxyFactionAI) {
+        GalaxyFactionAIClass = window.GalaxyFactionAI;
+    }
     galaxyFactionParametersConfig = window.galaxyFactionParameters;
     galaxySectorControlOverridesConfig = window.galaxySectorControlOverrides;
     if (typeof window.updateFactions === 'function') {
@@ -33,6 +42,9 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
     }
     if (!GalaxyFactionClass && globalThis.GalaxyFaction) {
         GalaxyFactionClass = globalThis.GalaxyFaction;
+    }
+    if (!GalaxyFactionAIClass && globalThis.GalaxyFactionAI) {
+        GalaxyFactionAIClass = globalThis.GalaxyFactionAI;
     }
     if ((!galaxyFactionParametersConfig || !Array.isArray(galaxyFactionParametersConfig)) && globalThis.galaxyFactionParameters) {
         galaxyFactionParametersConfig = globalThis.galaxyFactionParameters;
@@ -55,6 +67,9 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
         }
         if (!GalaxyFactionClass || updateFactionsFunction === defaultUpdateFactions) {
             ({ GalaxyFaction: GalaxyFactionClass, updateFactions: updateFactionsFunction, UHF_FACTION_ID: galaxyUhfId } = require('./faction'));
+        }
+        if (!GalaxyFactionAIClass) {
+            ({ GalaxyFactionAI: GalaxyFactionAIClass } = require('./factionAI'));
         }
         if (!Array.isArray(galaxyFactionParametersConfig)) {
             ({
@@ -584,7 +599,10 @@ class GalaxyManager extends EffectableEntity {
         const ringCache = new Map();
         galaxyFactionParametersConfig.forEach((definition) => {
             const startingSectors = this.#resolveStartingSectors(definition, ringCache);
-            const faction = new GalaxyFactionClass({
+            const FactionCtor = definition.id === galaxyUhfId || !GalaxyFactionAIClass
+                ? GalaxyFactionClass
+                : GalaxyFactionAIClass;
+            const faction = new FactionCtor({
                 ...definition,
                 startingSectors
             });
