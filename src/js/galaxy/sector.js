@@ -1,10 +1,11 @@
 class GalaxySector {
-    constructor({ q, r, control, value } = {}) {
+    constructor({ q, r, control, value, defaultValue } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
         this.ring = GalaxySector.computeRing(this.q, this.r);
-        this.value = this.#sanitizeValue(value);
+        this.defaultValue = this.#sanitizeValue(defaultValue);
+        this.value = this.#sanitizeValue(value, this.defaultValue);
         this.control = {};
         if (control) {
             this.replaceControl(control);
@@ -85,7 +86,7 @@ class GalaxySector {
     }
 
     setValue(rawValue) {
-        this.value = this.#sanitizeValue(rawValue);
+        this.value = this.#sanitizeValue(rawValue, this.defaultValue);
     }
 
     getValue() {
@@ -188,9 +189,12 @@ class GalaxySector {
         }, 0);
     }
 
-    #sanitizeValue(rawValue) {
+    #sanitizeValue(rawValue, fallback = 100) {
         const numericValue = Number(rawValue);
         if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            if (Number.isFinite(fallback) && fallback > 0) {
+                return fallback;
+            }
             return 100;
         }
         return numericValue;

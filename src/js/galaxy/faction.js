@@ -1,5 +1,5 @@
 const UHF_FACTION_ID = 'uhf';
-const DEFAULT_SECTOR_VALUE = 100;
+let factionDefaultSectorValue = 100;
 const REPLACEMENT_SECONDS = 3600;
 const BORDER_CONTROL_EPSILON = 1e-6;
 const BORDER_HEX_NEIGHBOR_DIRECTIONS = [
@@ -10,6 +10,39 @@ const BORDER_HEX_NEIGHBOR_DIRECTIONS = [
     { q: -1, r: 1 },
     { q: 0, r: 1 }
 ];
+
+if (typeof module !== 'undefined' && module.exports) {
+    const sectorParametersModule = require('./sector-parameters');
+    if (sectorParametersModule.getDefaultSectorValue) {
+        factionDefaultSectorValue = sectorParametersModule.getDefaultSectorValue();
+    } else if (Number.isFinite(sectorParametersModule.DEFAULT_SECTOR_VALUE) && sectorParametersModule.DEFAULT_SECTOR_VALUE > 0) {
+        factionDefaultSectorValue = sectorParametersModule.DEFAULT_SECTOR_VALUE;
+    }
+}
+
+if (typeof window !== 'undefined') {
+    if (window.getGalaxySectorDefaultValue) {
+        factionDefaultSectorValue = window.getGalaxySectorDefaultValue();
+    } else if (Number.isFinite(window.galaxySectorDefaultValue) && window.galaxySectorDefaultValue > 0) {
+        factionDefaultSectorValue = window.galaxySectorDefaultValue;
+    }
+}
+
+if (typeof globalThis !== 'undefined') {
+    if (globalThis.getGalaxySectorDefaultValue) {
+        factionDefaultSectorValue = globalThis.getGalaxySectorDefaultValue();
+    } else if (Number.isFinite(globalThis.galaxySectorDefaultValue) && globalThis.galaxySectorDefaultValue > 0) {
+        factionDefaultSectorValue = globalThis.galaxySectorDefaultValue;
+    }
+}
+
+if (!Number.isFinite(factionDefaultSectorValue) || factionDefaultSectorValue <= 0) {
+    factionDefaultSectorValue = 100;
+}
+
+function getDefaultSectorValue() {
+    return factionDefaultSectorValue;
+}
 
 class GalaxyFaction {
     constructor({ id, name, color, startingSectors } = {}) {
@@ -250,7 +283,7 @@ class GalaxyFaction {
             if (Number.isFinite(baseValue) && baseValue > 0) {
                 return baseValue;
             }
-            return DEFAULT_SECTOR_VALUE;
+            return getDefaultSectorValue();
         }
         const worldCount = manager?.getTerraformedWorldCountForSector?.(sector) ?? 0;
         const baseDefense = worldCount > 0 ? 100 * worldCount : 0;
@@ -288,7 +321,7 @@ class GalaxyFaction {
             if (!Number.isFinite(terraformedWorlds) || terraformedWorlds <= 0) {
                 return 0;
             }
-            const baseCapacity = terraformedWorlds * DEFAULT_SECTOR_VALUE;
+            const baseCapacity = terraformedWorlds * getDefaultSectorValue();
             if (!(baseCapacity > 0)) {
                 return 0;
             }
@@ -311,7 +344,7 @@ class GalaxyFaction {
                 return;
             }
             const sectorValue = sector?.getValue?.();
-            const numericSectorValue = Number.isFinite(sectorValue) ? sectorValue : DEFAULT_SECTOR_VALUE;
+            const numericSectorValue = Number.isFinite(sectorValue) ? sectorValue : getDefaultSectorValue();
             if (numericSectorValue <= 0) {
                 return;
             }

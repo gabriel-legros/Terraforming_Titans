@@ -222,3 +222,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Logistics & Statistics now reports UHF threat coverage and lifetime successful operations with a placeholder tooltip while final copy is pending.
 - Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.
 - Celestial parameters now store a galaxy sector identifier, and random worlds roll a sector assignment that appears when the Galaxy Manager is active.
+- Galaxy sector base power values are configurable via `sector-parameters.js`, including a 1000 power core sector override.

@@ -18,7 +18,8 @@ const galaxyFactionParameters = [
         id: 'uhf',
         name: 'UHF',
         color: '#3b82f6',
-        startingSectors: []
+        startingSectors: [],
+        defensiveness: null
     },
     {
         id: 'cewinsii',
@@ -29,12 +30,14 @@ const galaxyFactionParameters = [
         ],
         ringSlices: [
             { ring: 1 }
-        ]
+        ],
+        defensiveness: 0.9
     },
     {
         id: 'helian',
         name: 'Helian',
         color: '#facc15',
+        defensiveness: 0.5,
         ringSlices: [
             { ring: 2, start: 1, end: 3 },
             { ring: 3, start: 2, end: 5 },
@@ -47,6 +50,7 @@ const galaxyFactionParameters = [
         id: 'virellan',
         name: 'Virellan',
         color: '#10b981',
+        defensiveness: 0.5,
         ringSlices: [
             { ring: 2, start: 4, end: 5 },
             { ring: 3, start: 6, end: 8 },
@@ -59,6 +63,7 @@ const galaxyFactionParameters = [
         id: 'karthid',
         name: 'Karthid',
         color: '#8b5cf6',
+        defensiveness: 0.5,
         ringSlices: [
             { ring: 2, start: 6, end: 8 },
             { ring: 3, start: 9, end: 11 },
@@ -71,6 +76,7 @@ const galaxyFactionParameters = [
         id: 'neran',
         name: 'Neran',
         color: '#ec4899',
+        defensiveness: 0.5,
         ringSlices: [
             { ring: 2, start: 9, end: 10 },
             { ring: 3, start: 12, end: 15 },
@@ -83,6 +89,7 @@ const galaxyFactionParameters = [
         id: 'okoth',
         name: 'Okoth',
         color: 'red',
+        defensiveness: 0.5,
         ringSlices: [
             { ring: 2, start: 11, end: 12 },
             { ring: 3, start: 1, end: 1 },
