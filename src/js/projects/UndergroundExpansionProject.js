@@ -1,3 +1,30 @@
+var cachedLandReconciler;
+
+function getLandReconciler() {
+  if (typeof cachedLandReconciler === 'function') {
+    return cachedLandReconciler;
+  }
+  const scope = typeof globalThis !== 'undefined'
+    ? globalThis
+    : (typeof global !== 'undefined' ? global : undefined);
+  if (scope && typeof scope.reconcileLandResourceValue === 'function') {
+    cachedLandReconciler = scope.reconcileLandResourceValue;
+    return cachedLandReconciler;
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    try {
+      const resourceModule = require('../resource.js');
+      if (resourceModule && typeof resourceModule.reconcileLandResourceValue === 'function') {
+        cachedLandReconciler = resourceModule.reconcileLandResourceValue;
+        return cachedLandReconciler;
+      }
+    } catch (error) {
+      cachedLandReconciler = null;
+    }
+  }
+  return cachedLandReconciler;
+}
+
 class UndergroundExpansionProject extends AndroidProject {
   getScaledCost() {
     const cost = super.getScaledCost();
@@ -48,9 +75,9 @@ class UndergroundExpansionProject extends AndroidProject {
 
   complete() {
     super.complete();
-    if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
-      const increase = (terraforming.initialLand || 0) / 10000
-      resources.surface.land.value += increase;
+    const reconcile = getLandReconciler();
+    if (typeof reconcile === 'function') {
+      reconcile();
     }
   }
 }

@@ -16,9 +16,12 @@ describe('Underground Land Expansion project', () => {
     ctx.buildings = { oreMine: { count: 1 } };
     ctx.terraforming = { initialLand: 1000 };
     vm.createContext(ctx);
+    ctx.globalThis = ctx;
     vm.runInContext(fs.readFileSync(projectsPath, 'utf8') + '; this.Project = Project;', ctx);
     vm.runInContext(fs.readFileSync(androidPath, 'utf8') + '; this.AndroidProject = AndroidProject;', ctx);
     vm.runInContext(fs.readFileSync(ugPath, 'utf8') + '; this.UndergroundExpansionProject = UndergroundExpansionProject;', ctx);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resource.js')), ctx);
+    ctx.reconcileLandResourceValue = ctx.reconcileLandResourceValue || ctx.globalThis.reconcileLandResourceValue;
     return ctx;
   }
 
@@ -37,6 +40,8 @@ describe('Underground Land Expansion project', () => {
     vm.runInContext(fs.readFileSync(projectsPath, 'utf8') + '; this.Project = Project;', ctx);
     vm.runInContext(fs.readFileSync(androidPath, 'utf8') + '; this.AndroidProject = AndroidProject;', ctx);
     vm.runInContext(fs.readFileSync(ugPath, 'utf8') + '; this.UndergroundExpansionProject = UndergroundExpansionProject;', ctx);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src/js', 'resource.js')), ctx);
+    ctx.reconcileLandResourceValue = ctx.reconcileLandResourceValue || ctx.globalThis.reconcileLandResourceValue;
     return { ctx, container: dom.window.document.getElementById('container') };
   }
 
@@ -53,7 +58,9 @@ describe('Underground Land Expansion project', () => {
     const ctx = createContext();
     const config = { name: 'undergroundExpansion', category: 'infrastructure', cost: {}, duration: 1, description: '', repeatable: true, maxRepeatCount: 1000, unlocked: true, attributes: {} };
     const project = new ctx.UndergroundExpansionProject(config, 'undergroundExpansion');
+    ctx.projectManager = { projects: { undergroundExpansion: project } };
     project.complete();
+    ctx.reconcileLandResourceValue();
     expect(ctx.resources.surface.land.value).toBeCloseTo(1000.1, 5);
     expect(project.repeatCount).toBe(1);
   });
