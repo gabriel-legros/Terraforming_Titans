@@ -775,10 +775,6 @@ class GalaxyManager extends EffectableEntity {
         if (!sector) {
             return 0;
         }
-        const totalControl = sector.getTotalControlValue?.() ?? 0;
-        if (!(totalControl > 0)) {
-            return 0;
-        }
         let defensePower = 0;
         Object.entries(sector.control).forEach(([factionId, value]) => {
             if (!factionId || factionId === attackerId) {
@@ -786,10 +782,6 @@ class GalaxyManager extends EffectableEntity {
             }
             const controlValue = Number(value);
             if (!Number.isFinite(controlValue) || controlValue <= 0) {
-                return;
-            }
-            const proportion = controlValue / totalControl;
-            if (!(proportion > 0)) {
                 return;
             }
             const faction = this.getFaction(factionId);
@@ -806,7 +798,7 @@ class GalaxyManager extends EffectableEntity {
             if (!(individualPower > 0)) {
                 return;
             }
-            defensePower += proportion * individualPower;
+            defensePower += individualPower;
         });
         return defensePower;
     }
