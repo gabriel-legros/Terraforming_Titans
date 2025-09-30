@@ -654,8 +654,13 @@ class GalaxyManager extends EffectableEntity {
         coordinates.forEach(({ q, r }) => {
             const sectorKey = GalaxySectorClass.createKey(q, r);
             const overrideValue = resolveSectorOverrideValue(sectorKey);
-            const initialValue = overrideValue ?? defaultValue;
-            const sector = new GalaxySectorClass({ q, r, value: initialValue, defaultValue });
+            const sectorDefaultValue = overrideValue ?? defaultValue;
+            const sector = new GalaxySectorClass({
+                q,
+                r,
+                value: sectorDefaultValue,
+                defaultValue: sectorDefaultValue
+            });
             this.sectors.set(sector.key, sector);
         });
     }

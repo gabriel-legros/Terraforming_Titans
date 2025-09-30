@@ -197,6 +197,9 @@ class GalaxySector {
             }
             return 100;
         }
+        if (Number.isFinite(fallback) && fallback > 0 && numericValue < fallback) {
+            return fallback;
+        }
         return numericValue;
     }
 
