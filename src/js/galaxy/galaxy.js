@@ -434,6 +434,60 @@ class GalaxyManager extends EffectableEntity {
         return this.#calculateSuccessChance(offensePower, defensePower);
     }
 
+    getOperationLossEstimate({
+        sectorKey,
+        factionId,
+        assignedPower,
+        reservedPower,
+        offensePower,
+        defensePower
+    }) {
+        if (!sectorKey) {
+            return null;
+        }
+        const sector = this.sectors.get(sectorKey);
+        if (!sector) {
+            return null;
+        }
+        const attackerId = factionId || galaxyUhfId;
+        const assigned = Number(assignedPower);
+        const baseAssigned = Number.isFinite(assigned) && assigned > 0 ? assigned : 0;
+        const providedReserved = Number(reservedPower);
+        const reserved = Number.isFinite(providedReserved) && providedReserved > 0
+            ? providedReserved
+            : baseAssigned;
+        const providedOffense = Number(offensePower);
+        const offenseBase = Number.isFinite(providedOffense) && providedOffense > 0
+            ? providedOffense
+            : baseAssigned;
+        const resolvedReserved = Math.max(0, reserved);
+        const resolvedOffense = Math.max(0, Math.min(offenseBase, resolvedReserved));
+        const providedDefense = Number(defensePower);
+        const resolvedDefense = Number.isFinite(providedDefense) && providedDefense >= 0
+            ? providedDefense
+            : this.#computeDefensePower(sector, attackerId);
+        const defense = Math.max(0, resolvedDefense);
+        const successChance = this.#calculateSuccessChance(resolvedOffense, defense);
+        const failureChance = Math.max(0, Math.min(1, 1 - successChance));
+        let successLoss = 0;
+        if (successChance < 1 && defense > 0 && resolvedOffense > 0) {
+            successLoss = Math.min(
+                resolvedReserved,
+                (defense * defense) / (resolvedOffense + defense)
+            );
+        }
+        const failureLoss = Math.max(0, Math.min(resolvedReserved, resolvedOffense));
+        return {
+            offensePower: resolvedOffense,
+            defensePower: defense,
+            reservedPower: resolvedReserved,
+            successChance,
+            failureChance,
+            successLoss,
+            failureLoss
+        };
+    }
+
     startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance }) {
         if (!sectorKey || !Number.isFinite(assignedPower) || assignedPower <= 0) {
             return null;
@@ -1015,28 +1069,75 @@ class GalaxyManager extends EffectableEntity {
         }
         const sector = this.sectors.get(operation.sectorKey);
         const attackerId = operation.factionId || galaxyUhfId;
-        const offensePower = Math.max(0, Math.min(operation.offensePower ?? operation.reservedPower, operation.reservedPower));
-        let defensePower = this.#computeDefensePower(sector, attackerId);
-        if (!Number.isFinite(defensePower) || defensePower < 0) {
-            defensePower = Math.max(0, operation.defensePower ?? 0);
-        }
-        const successChance = this.#calculateSuccessChance(offensePower, defensePower);
-        const failureChance = Math.max(0, Math.min(1, 1 - successChance));
-        let losses;
-        if (successChance >= 1) {
-            losses = 0;
+        const estimate = this.getOperationLossEstimate({
+            sectorKey: operation.sectorKey,
+            factionId: attackerId,
+            assignedPower: operation.assignedPower,
+            reservedPower: operation.reservedPower,
+            offensePower: operation.offensePower,
+            defensePower: operation.defensePower
+        });
+        const fallbackReserved = Number(operation.reservedPower);
+        const baseReserved = Number.isFinite(fallbackReserved) && fallbackReserved > 0 ? fallbackReserved : 0;
+        let defensePower;
+        let successChance;
+        let failureChance;
+        let reservedPower;
+        let offensePower;
+        if (estimate) {
+            reservedPower = Number.isFinite(estimate.reservedPower) && estimate.reservedPower > 0
+                ? estimate.reservedPower
+                : baseReserved;
+            offensePower = Number.isFinite(estimate.offensePower) && estimate.offensePower > 0
+                ? Math.min(estimate.offensePower, reservedPower)
+                : Math.max(0, Math.min(operation.offensePower ?? baseReserved, baseReserved));
+            defensePower = Number.isFinite(estimate.defensePower) && estimate.defensePower >= 0
+                ? estimate.defensePower
+                : this.#computeDefensePower(sector, attackerId);
+            successChance = Number.isFinite(estimate.successChance)
+                ? Math.max(0, Math.min(1, estimate.successChance))
+                : this.#calculateSuccessChance(offensePower, defensePower);
+            failureChance = Number.isFinite(estimate.failureChance)
+                ? Math.max(0, Math.min(1, estimate.failureChance))
+                : Math.max(0, Math.min(1, 1 - successChance));
         } else {
-            const successLoss = defensePower > 0 && offensePower > 0
-                ? Math.min(operation.reservedPower, (defensePower * defensePower) / (offensePower + defensePower))
-                : 0;
-            losses = successLoss;
+            reservedPower = baseReserved;
+            offensePower = Math.max(0, Math.min(operation.offensePower ?? reservedPower, reservedPower));
+            defensePower = this.#computeDefensePower(sector, attackerId);
+            if (!Number.isFinite(defensePower) || defensePower < 0) {
+                defensePower = Math.max(0, operation.defensePower ?? 0);
+            }
+            successChance = this.#calculateSuccessChance(offensePower, defensePower);
+            failureChance = Math.max(0, Math.min(1, 1 - successChance));
         }
+        reservedPower = Math.max(0, reservedPower);
+        offensePower = Math.max(0, Math.min(offensePower, reservedPower));
+        if (!Number.isFinite(defensePower) || defensePower < 0) {
+            defensePower = 0;
+        }
+        let successLoss;
+        if (estimate && Number.isFinite(estimate.successLoss)) {
+            successLoss = Math.max(0, Math.min(reservedPower, estimate.successLoss));
+        } else if (successChance >= 1) {
+            successLoss = 0;
+        } else {
+            successLoss = defensePower > 0 && offensePower > 0
+                ? Math.min(reservedPower, (defensePower * defensePower) / (offensePower + defensePower))
+                : 0;
+        }
+        let failureLoss;
+        if (estimate && Number.isFinite(estimate.failureLoss)) {
+            failureLoss = Math.max(0, Math.min(reservedPower, estimate.failureLoss));
+        } else {
+            failureLoss = Math.max(0, Math.min(reservedPower, offensePower));
+        }
+        let losses = successLoss;
         const isSuccessful = successChance >= 1 || (successChance > 0 && Math.random() < successChance);
         if (!isSuccessful) {
-            losses = Math.min(operation.reservedPower, offensePower);
+            losses = failureLoss;
         }
-        losses = Math.max(0, Math.min(operation.reservedPower, losses));
-        const returningPower = Math.max(0, operation.reservedPower - losses);
+        losses = Math.max(0, Math.min(reservedPower, losses));
+        const returningPower = Math.max(0, reservedPower - losses);
         if (faction) {
             const nextPower = Math.max(0, faction.fleetPower + returningPower);
             faction.setFleetPower(nextPower);
@@ -1048,6 +1149,7 @@ class GalaxyManager extends EffectableEntity {
             }
             this.#applyOperationSuccess(operation);
         }
+        operation.reservedPower = reservedPower;
         operation.offensePower = offensePower;
         operation.defensePower = defensePower;
         operation.successChance = successChance;
