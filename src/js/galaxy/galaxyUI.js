@@ -542,19 +542,32 @@ function clampAssignment(value, maxAssignable) {
     return numeric;
 }
 
-function computeSuccessChance(assignedPower, sectorPower) {
-    const power = Number(assignedPower);
-    const difficulty = Number(sectorPower);
-    if (!Number.isFinite(power) || power <= 0 || !Number.isFinite(difficulty) || difficulty <= 0) {
+function computeSuccessChance(assignedPower, defensePower) {
+    const offense = Number(assignedPower);
+    if (!Number.isFinite(offense) || offense <= 0) {
         return 0;
     }
-    if (power <= difficulty) {
-        return 0;
-    }
-    if (power >= difficulty * 2) {
+    const defense = Number(defensePower);
+    if (!Number.isFinite(defense) || defense <= 0) {
         return 1;
     }
-    return (power - difficulty) / difficulty;
+    const total = offense + defense;
+    if (!(total > 0)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(1, offense / total));
+}
+
+function computeSuccessfulLoss(assignedPower, defensePower) {
+    const offense = Number(assignedPower);
+    const defense = Number(defensePower);
+    if (!Number.isFinite(offense) || offense <= 0) {
+        return 0;
+    }
+    if (!Number.isFinite(defense) || defense <= 0) {
+        return 0;
+    }
+    return Math.min(offense, (defense * defense) / (offense + defense));
 }
 
 function formatPercentDisplay(value) {
@@ -656,14 +669,15 @@ function handleOperationsLaunch() {
     }
     const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
     const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
-    const sectorPower = sector.getValue ? sector.getValue() : 0;
-    const successChance = computeSuccessChance(assignment, sectorPower);
+    const defensePower = manager.getSectorDefensePower(sectorKey, UHF_FACTION_KEY);
+    const successChance = computeSuccessChance(assignment, defensePower);
     const cost = assignment * OPERATION_COST_PER_POWER;
     if (!antimatterResource || antimatterValue < cost) {
         return;
     }
     const operation = manager.startOperation({
         sectorKey,
+        factionId: UHF_FACTION_KEY,
         assignedPower: assignment,
         successChance,
         durationMs: OPERATION_DURATION_FALLBACK_MS
@@ -1054,6 +1068,7 @@ function updateOperationsPanel() {
     operationsAvailable.textContent = `Available: ${formatter(availablePower, false, 2)}`;
 
     const sectorPower = sector.getValue ? sector.getValue() : 0;
+    const defensePower = manager.getSectorDefensePower(selection.key, UHF_FACTION_KEY);
     const hasStronghold = hasNeighboringUhfStronghold(manager, selection.q, selection.r);
     const hasUhfPresence = uhfControl > 0;
     const operation = manager.getOperationForSector(selection.key);
@@ -1093,9 +1108,10 @@ function updateOperationsPanel() {
     const cost = operationRunning && Number.isFinite(operation.launchCost) ? operation.launchCost : baseCost;
     operationsCostValue.textContent = formatter(cost, true);
 
-    const successChance = computeSuccessChance(assignment, sectorPower);
+    const successChance = computeSuccessChance(assignment, defensePower);
     const failureChance = Math.max(0, 1 - successChance);
-    const expectedLoss = assignment * failureChance;
+    const successLoss = computeSuccessfulLoss(assignment, defensePower);
+    const expectedLoss = (failureChance * assignment) + (successChance * successLoss);
 
     const otherTotal = Math.max(0, totalControl - uhfControl);
     const potentialGain = totalControl > 0 ? totalControl * 0.1 : sectorPower * 0.1;

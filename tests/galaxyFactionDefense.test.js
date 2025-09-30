@@ -69,7 +69,7 @@ describe('GalaxyFaction defense calculations', () => {
         expect(neutralDefense).toBe(0);
     });
 
-    it('returns zero defense for non-UHF factions even with control', () => {
+    it('uses sector base value as defense for non-UHF factions', () => {
         const faction = new GalaxyFaction({ id: 'ally', name: 'Ally Fleet' });
         const contested = new GalaxySector({ q: 2, r: -2 });
         contested.setControl('ally', 40);
@@ -82,6 +82,7 @@ describe('GalaxyFaction defense calculations', () => {
 
         faction.markControlDirty();
 
-        expect(faction.getSectorDefense(contested, manager)).toBe(0);
+        const baseValue = contested.getValue();
+        expect(faction.getSectorDefense(contested, manager)).toBe(baseValue);
     });
 });
