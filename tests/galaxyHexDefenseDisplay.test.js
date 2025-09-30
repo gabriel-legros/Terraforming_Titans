@@ -1,5 +1,8 @@
 const { JSDOM } = require('jsdom');
 
+const UHF_ICON = '\u{1F6E1}\u{FE0F}';
+const ALIEN_ICON = '\u2620\uFE0F';
+
 describe('Galaxy map defense display', () => {
     let initializeGalaxyUI;
     let updateGalaxyUI;
@@ -58,10 +61,27 @@ describe('Galaxy map defense display', () => {
         manager.enabled = true;
 
         const coreSector = manager.getSector(0, 0);
-        coreSector.setControl('uhf', 100);
+        coreSector.setValue(120);
+        coreSector.setControl('uhf', 60);
+        coreSector.setControl('cewinsii', 40);
+
+        const borderSector = manager.getSector(1, 0);
+        borderSector.setValue(120);
+        borderSector.setControl('cewinsii', 100);
+
         const uhfFaction = manager.getFaction('uhf');
-        uhfFaction.setFleetPower(900);
-        uhfFaction.markControlDirty();
+        uhfFaction.getSectorDefense = jest.fn(() => 450);
+        uhfFaction.resetControlCache?.();
+        uhfFaction.markControlDirty?.();
+
+        const alienFaction = manager.getFaction('cewinsii');
+        alienFaction.getBorderFleetAssignment = jest.fn((key) => (key === borderSector.key ? 300 : (key === coreSector.key ? 200 : 0)));
+        alienFaction.resetControlCache?.();
+        alienFaction.markControlDirty?.();
+
+        jest.spyOn(manager, 'hasUhfNeighboringStronghold').mockImplementation((q, r) => {
+            return q === 1 && r === 0;
+        });
 
         global.galaxyManager = manager;
 
@@ -92,20 +112,34 @@ describe('Galaxy map defense display', () => {
         expect(coreHex).not.toBeNull();
         const defenseNode = coreHex.querySelector('.galaxy-hex__defense');
         expect(defenseNode).not.toBeNull();
-        const manager = global.galaxyManager;
-        const faction = manager.getFaction('uhf');
-        const sector = manager.getSector(0, 0);
-        const defenseValue = faction.getSectorDefense(sector, manager);
-        const rounded = Math.round(defenseValue);
-        const formatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-        const renderedText = defenseNode.textContent;
-        if (rounded > 0) {
-            const expected = `\u{1F6E1}\u{FE0F} ${formatter.format(rounded)}`;
-            expect(renderedText).toBe(expected);
-        } else {
-            expect(renderedText).toBe('');
-        }
+        const coreEntries = defenseNode.querySelectorAll('.galaxy-hex__defense-entry');
+        expect(coreEntries.length).toBe(2);
+
+        const uhfEntry = coreEntries[0];
+        const uhfIcon = uhfEntry.querySelector('.galaxy-hex__defense-icon').textContent;
+        const uhfValue = uhfEntry.querySelector('.galaxy-hex__defense-text').textContent;
+        expect(uhfIcon).toBe(UHF_ICON);
+        expect(uhfValue).toBe('570');
+
+        const contestedEntry = coreEntries[1];
+        const contestedIcon = contestedEntry.querySelector('.galaxy-hex__defense-icon').textContent;
+        const contestedValue = contestedEntry.querySelector('.galaxy-hex__defense-text').textContent;
+        expect(contestedIcon).toBe(ALIEN_ICON);
+        expect(contestedValue).toBe('320');
+
         const labelNode = coreHex.querySelector('.galaxy-hex__label');
         expect(labelNode.textContent).toBe('Core');
+
+        const borderHex = document.querySelector('.galaxy-hex[data-q="1"][data-r="0"]');
+        expect(borderHex).not.toBeNull();
+        const borderDefense = borderHex.querySelector('.galaxy-hex__defense');
+        expect(borderDefense).not.toBeNull();
+        const borderEntries = borderDefense.querySelectorAll('.galaxy-hex__defense-entry');
+        expect(borderEntries.length).toBe(1);
+        const alienEntry = borderEntries[0];
+        const alienIcon = alienEntry.querySelector('.galaxy-hex__defense-icon').textContent;
+        const alienValue = alienEntry.querySelector('.galaxy-hex__defense-text').textContent;
+        expect(alienIcon).toBe(ALIEN_ICON);
+        expect(alienValue).toBe('420');
     });
 });

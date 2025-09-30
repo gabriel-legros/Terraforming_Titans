@@ -435,24 +435,49 @@
 
 .galaxy-hex__defense {
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: #f5f9ff;
-  background: linear-gradient(140deg, rgba(220, 232, 255, 0.45), rgba(92, 124, 176, 0.45));
-  border: 1px solid rgba(184, 212, 255, 0.6);
-  box-shadow: 0 0 8px rgba(12, 24, 40, 0.45);
-  text-shadow: 0 0 6px rgba(12, 24, 40, 0.85);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0;
   pointer-events: none;
-  white-space: nowrap;
 }
 
 .galaxy-hex__defense:empty {
   display: none;
+}
+
+.galaxy-hex__defense-entry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.galaxy-hex__defense-entry--uhf {
+  color: #f5f9ff;
+  background: rgba(18, 36, 64, 0.78);
+  border-color: rgba(124, 182, 255, 0.4);
+}
+
+.galaxy-hex__defense-entry--alien {
+  color: #ffe1e1;
+  background: rgba(76, 10, 10, 0.78);
+  border-color: rgba(255, 150, 150, 0.4);
+}
+
+.galaxy-hex__defense-icon {
+  font-size: 0.66rem;
+}
+
+.galaxy-hex__defense-text {
+  font-variant-numeric: tabular-nums;
 }
 
 .galaxy-attack-panel,

@@ -21,6 +21,8 @@ const FLEET_VALUE_FORMATTER = new Intl.NumberFormat('en-US', {
 const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl.NumberFormat === 'function')
     ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
     : null;
+const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
+const GALAXY_CONTROL_EPSILON = 1e-6;
 const PAN_ACTIVATION_DISTANCE = 6;
 const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 const OPERATION_COST_PER_POWER = 1000;
@@ -1225,23 +1227,88 @@ function clearHexControlStyles(hex) {
     }
 }
 
+function formatDefenseInteger(value) {
+    const numeric = Number(value);
+    const rounded = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+    if (GALAXY_DEFENSE_INT_FORMATTER) {
+        return GALAXY_DEFENSE_INT_FORMATTER.format(rounded);
+    }
+    return String(rounded);
+}
+
 function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
     const defenseNode = hex?.galaxyDefenseElement;
     if (!defenseNode) {
         return;
     }
-    let text = '';
-    if (sector && uhfFaction) {
-        const defenseValue = uhfFaction.getSectorDefense?.(sector, manager) ?? 0;
-        if (Number.isFinite(defenseValue) && defenseValue > 0) {
-            const rounded = Math.round(defenseValue);
-            const formatted = GALAXY_DEFENSE_INT_FORMATTER
-                ? GALAXY_DEFENSE_INT_FORMATTER.format(rounded)
-                : String(rounded);
-            text = `${GALAXY_DEFENSE_ICON} ${formatted}`;
+    const doc = defenseNode.ownerDocument || globalThis.document;
+    if (!doc) {
+        return;
+    }
+
+    defenseNode.replaceChildren();
+
+    if (!sector || !manager) {
+        return;
+    }
+
+    const entries = [];
+    const sectorPowerValue = Number(sector?.getValue?.()) || 0;
+    const sectorPower = sectorPowerValue > 0 ? sectorPowerValue : 0;
+    const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0;
+    const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
+    const isUhfControlled = uhfControl > 0;
+    const contestedWithUhf = isUhfControlled && (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON;
+
+    if (isUhfControlled && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
+        const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
+        const total = Math.max(0, defenseValue + sectorPower);
+        if (total > 0) {
+            entries.push({ icon: GALAXY_DEFENSE_ICON, total, modifier: 'uhf' });
         }
     }
-    defenseNode.textContent = text;
+
+    const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
+        && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
+    if (contestedWithUhf || bordersUhf) {
+        const breakdown = sector.getControlBreakdown?.() || [];
+        for (let index = 0; index < breakdown.length; index += 1) {
+            const entry = breakdown[index];
+            if (!entry || entry.factionId === UHF_FACTION_KEY) {
+                continue;
+            }
+            const faction = manager.getFaction?.(entry.factionId);
+            if (!faction) {
+                continue;
+            }
+            const assignmentValue = Number(faction.getBorderFleetAssignment?.(sector.key)) || 0;
+            const total = Math.max(0, assignmentValue + sectorPower);
+            if (total > 0) {
+                entries.push({ icon: GALAXY_ALIEN_ICON, total, modifier: 'alien' });
+            }
+            break;
+        }
+    }
+
+    if (!entries.length) {
+        return;
+    }
+
+    entries.forEach(({ icon, total, modifier }) => {
+        const entryNode = doc.createElement('span');
+        entryNode.className = 'galaxy-hex__defense-entry';
+        if (modifier) {
+            entryNode.classList.add(`galaxy-hex__defense-entry--${modifier}`);
+        }
+        const iconNode = doc.createElement('span');
+        iconNode.className = 'galaxy-hex__defense-icon';
+        iconNode.textContent = icon;
+        const valueNode = doc.createElement('span');
+        valueNode.className = 'galaxy-hex__defense-text';
+        valueNode.textContent = formatDefenseInteger(total);
+        entryNode.append(iconNode, valueNode);
+        defenseNode.appendChild(entryNode);
+    });
 }
 
 function updateGalaxyHexControlColors(manager, cache) {
