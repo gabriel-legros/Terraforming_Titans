@@ -64,6 +64,12 @@ class GalaxyFaction {
         this.borderSectors = [];
         this.borderSectorLookup = new Set();
         this.borderCacheDirty = true;
+        this.neighborEnemySectors = [];
+        this.neighborEnemyLookup = new Set();
+        this.neighborEnemyCacheDirty = true;
+        this.contestedSectors = [];
+        this.contestedSectorLookup = new Set();
+        this.contestedCacheDirty = true;
     }
 
     getStartingSectors() {
@@ -185,6 +191,8 @@ class GalaxyFaction {
     markControlDirty() {
         this.controlCacheDirty = true;
         this.borderCacheDirty = true;
+        this.neighborEnemyCacheDirty = true;
+        this.contestedCacheDirty = true;
     }
 
     resetControlCache() {
@@ -193,10 +201,18 @@ class GalaxyFaction {
         this.borderSectors = [];
         this.borderSectorLookup = new Set();
         this.borderCacheDirty = true;
+        this.neighborEnemySectors = [];
+        this.neighborEnemyLookup = new Set();
+        this.neighborEnemyCacheDirty = true;
+        this.contestedSectors = [];
+        this.contestedSectorLookup = new Set();
+        this.contestedCacheDirty = true;
     }
 
     markBorderDirty() {
         this.borderCacheDirty = true;
+        this.neighborEnemyCacheDirty = true;
+        this.contestedCacheDirty = true;
     }
 
     getControlledSectorKeys(manager) {
@@ -273,6 +289,22 @@ class GalaxyFaction {
         return this.borderSectors;
     }
 
+    getContestedSectorKeys(manager) {
+        if (!this.contestedCacheDirty && Array.isArray(this.contestedSectors)) {
+            return this.contestedSectors;
+        }
+        this.#rebuildConflictCaches(manager);
+        return this.contestedSectors;
+    }
+
+    getNeighborEnemySectorKeys(manager) {
+        if (!this.neighborEnemyCacheDirty && Array.isArray(this.neighborEnemySectors)) {
+            return this.neighborEnemySectors;
+        }
+        this.#rebuildConflictCaches(manager);
+        return this.neighborEnemySectors;
+    }
+
     getSectorDefense(sector, manager) {
         const controlValue = sector?.getControlValue?.(this.id) ?? 0;
         if (!(controlValue > 0)) {
@@ -313,6 +345,71 @@ class GalaxyFaction {
             return;
         }
         this.setFleetPower(state.fleetPower);
+    }
+
+    #rebuildConflictCaches(manager) {
+        const sectors = manager?.getSectors?.();
+        if (!Array.isArray(sectors) || sectors.length === 0) {
+            this.contestedSectors = [];
+            this.contestedSectorLookup = new Set();
+            this.contestedCacheDirty = false;
+            this.neighborEnemySectors = [];
+            this.neighborEnemyLookup = new Set();
+            this.neighborEnemyCacheDirty = false;
+            return;
+        }
+        const contestedSet = new Set();
+        const neighborSet = new Set();
+        const sectorLookup = manager?.getSector;
+        sectors.forEach((sector) => {
+            const controlValue = sector?.getControlValue?.(this.id) ?? 0;
+            if (!(controlValue > BORDER_CONTROL_EPSILON)) {
+                return;
+            }
+            const totalControl = sector?.getTotalControlValue?.() ?? 0;
+            if (totalControl - controlValue > BORDER_CONTROL_EPSILON) {
+                contestedSet.add(sector.key);
+            }
+            if (!sectorLookup) {
+                return;
+            }
+            BORDER_HEX_NEIGHBOR_DIRECTIONS.forEach((direction) => {
+                const neighbor = sectorLookup.call(manager, sector.q + direction.q, sector.r + direction.r);
+                if (!neighbor) {
+                    return;
+                }
+                const neighborTotal = neighbor?.getTotalControlValue?.() ?? 0;
+                if (!(neighborTotal > BORDER_CONTROL_EPSILON)) {
+                    return;
+                }
+                const dominant = neighbor?.getDominantController?.();
+                if (dominant && dominant.factionId !== this.id) {
+                    neighborSet.add(neighbor.key);
+                    return;
+                }
+                const ownNeighborControl = neighbor?.getControlValue?.(this.id) ?? 0;
+                if (ownNeighborControl > BORDER_CONTROL_EPSILON && Math.abs(ownNeighborControl - neighborTotal) <= BORDER_CONTROL_EPSILON) {
+                    return;
+                }
+                if (ownNeighborControl > BORDER_CONTROL_EPSILON) {
+                    contestedSet.add(neighbor.key);
+                }
+                const breakdown = neighbor?.getControlBreakdown?.();
+                if (!Array.isArray(breakdown)) {
+                    return;
+                }
+                const hasEnemyPresence = breakdown.some((entry) => entry?.factionId && entry.factionId !== this.id && entry.value > BORDER_CONTROL_EPSILON);
+                if (hasEnemyPresence) {
+                    neighborSet.add(neighbor.key);
+                }
+            });
+        });
+        this.contestedSectors = Array.from(contestedSet);
+        this.contestedSectorLookup = contestedSet;
+        this.contestedCacheDirty = false;
+        this.neighborEnemySectors = Array.from(neighborSet);
+        this.neighborEnemyLookup = neighborSet;
+        this.neighborEnemyCacheDirty = false;
     }
 
     #computeFleetCapacity(manager) {
