@@ -1,30 +1,3 @@
-var cachedLandReconciler;
-
-function getLandReconciler() {
-  if (typeof cachedLandReconciler === 'function') {
-    return cachedLandReconciler;
-  }
-  const scope = typeof globalThis !== 'undefined'
-    ? globalThis
-    : (typeof global !== 'undefined' ? global : undefined);
-  if (scope && typeof scope.reconcileLandResourceValue === 'function') {
-    cachedLandReconciler = scope.reconcileLandResourceValue;
-    return cachedLandReconciler;
-  }
-  if (typeof module !== 'undefined' && module.exports) {
-    try {
-      const resourceModule = require('../resource.js');
-      if (resourceModule && typeof resourceModule.reconcileLandResourceValue === 'function') {
-        cachedLandReconciler = resourceModule.reconcileLandResourceValue;
-        return cachedLandReconciler;
-      }
-    } catch (error) {
-      cachedLandReconciler = null;
-    }
-  }
-  return cachedLandReconciler;
-}
-
 class OrbitalRingProject extends TerraformingDurationProject {
   constructor(config, name) {
     super(config, name);
@@ -75,12 +48,6 @@ class OrbitalRingProject extends TerraformingDurationProject {
       ? reportedRingState
       : (hadRingBefore || !!canPreferCurrent);
     this.currentWorldHasRing = !!hasRingAfter;
-
-    const reconcile = getLandReconciler();
-    if (typeof reconcile === 'function') {
-      reconcile();
-    }
-
   }
 
   saveState() {
