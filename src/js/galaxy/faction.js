@@ -340,11 +340,14 @@ class GalaxyFaction {
     }
 
     loadState(state, manager) {
+        this.resetControlCache();
         this.updateFleetCapacity(manager);
         if (!state || state.id !== this.id) {
+            this.markControlDirty();
             return;
         }
         this.setFleetPower(state.fleetPower);
+        this.markControlDirty();
     }
 
     #rebuildConflictCaches(manager) {
