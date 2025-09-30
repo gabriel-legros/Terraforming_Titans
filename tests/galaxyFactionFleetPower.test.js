@@ -29,7 +29,7 @@ describe('GalaxyFaction fleet power and capacity', () => {
 
         faction.initializeFleetPower(manager);
 
-        const expectedCapacity = (150 * (60 / 100)) + (80 * (20 / 100));
+        const expectedCapacity = (primarySector.getValue() * (60 / 100)) + (frontierSector.getValue() * (20 / 100));
         expect(faction.fleetCapacity).toBeCloseTo(expectedCapacity);
         expect(faction.fleetPower).toBeCloseTo(expectedCapacity);
     });
