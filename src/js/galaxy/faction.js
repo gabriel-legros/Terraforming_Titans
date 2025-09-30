@@ -174,7 +174,11 @@ class GalaxyFaction {
             return 0;
         }
         if (this.id !== UHF_FACTION_ID) {
-            return 0;
+            const baseValue = sector?.getValue?.();
+            if (Number.isFinite(baseValue) && baseValue > 0) {
+                return baseValue;
+            }
+            return DEFAULT_SECTOR_VALUE;
         }
         const worldCount = manager?.getTerraformedWorldCountForSector?.(sector) ?? 0;
         const baseDefense = worldCount > 0 ? 100 * worldCount : 0;
