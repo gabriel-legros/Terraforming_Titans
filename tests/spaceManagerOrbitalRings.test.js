@@ -29,6 +29,8 @@ function createProjectContext(spaceManager, resources, terraforming) {
   vm.runInContext(`${tdpCode}; this.TerraformingDurationProject = TerraformingDurationProject;`, ctx);
   const orbCode = fs.readFileSync(path.join(baseDir, 'projects', 'OrbitalRingProject.js'), 'utf8');
   vm.runInContext(`${orbCode}; this.OrbitalRingProject = OrbitalRingProject;`, ctx);
+  const resourceCode = fs.readFileSync(path.join(baseDir, 'resource.js'), 'utf8');
+  vm.runInContext(`${resourceCode}; this.reconcileLandResourceValue = reconcileLandResourceValue;`, ctx);
 
   return ctx;
 }
@@ -62,17 +64,18 @@ describe('Orbital ring assignments', () => {
     const spaceManager = createSpaceManager();
     spaceManager.planetStatuses.mars.terraformed = true;
     spaceManager.currentPlanetKey = 'mars';
-    const resources = { surface: { land: { value: 0 } }, colony: {} };
+    const resources = { surface: { land: { value: 50 } }, colony: {} };
     const terraforming = { initialLand: 50 };
     const ctx = createProjectContext(spaceManager, resources, terraforming);
     const project = new ctx.OrbitalRingProject(projectConfig, 'orbitalRing');
 
     project.complete();
+    ctx.reconcileLandResourceValue();
 
     expect(spaceManager.planetStatuses.mars.orbitalRing).toBe(true);
     expect(project.ringCount).toBe(1);
     expect(project.currentWorldHasRing).toBe(true);
-    expect(resources.surface.land.value).toBe(50);
+    expect(resources.surface.land.value).toBe(100);
   });
 
   test('assigns additional ring to other terraformed story world', () => {
@@ -81,7 +84,7 @@ describe('Orbital ring assignments', () => {
     spaceManager.planetStatuses.venus.terraformed = true;
     spaceManager.planetStatuses.mars.orbitalRing = true;
     spaceManager.currentPlanetKey = 'mars';
-    const resources = { surface: { land: { value: 0 } }, colony: {} };
+    const resources = { surface: { land: { value: 200 } }, colony: {} };
     const terraforming = { initialLand: 100 };
     const ctx = createProjectContext(spaceManager, resources, terraforming);
     const project = new ctx.OrbitalRingProject(projectConfig, 'orbitalRing');
@@ -89,10 +92,11 @@ describe('Orbital ring assignments', () => {
     project.currentWorldHasRing = true;
 
     project.complete();
+    ctx.reconcileLandResourceValue();
 
     expect(spaceManager.planetStatuses.mars.orbitalRing).toBe(true);
     expect(spaceManager.planetStatuses.venus.orbitalRing).toBe(true);
-    expect(resources.surface.land.value).toBe(0);
+    expect(resources.surface.land.value).toBe(200);
   });
 
   test('assigns rings to random worlds after story worlds', () => {
@@ -113,18 +117,19 @@ describe('Orbital ring assignments', () => {
     };
     spaceManager.currentRandomSeed = seed;
     spaceManager.currentPlanetKey = seed;
-    const resources = { surface: { land: { value: 0 } }, colony: {} };
+    const resources = { surface: { land: { value: 20 } }, colony: {} };
     const terraforming = { initialLand: 20 };
     const ctx = createProjectContext(spaceManager, resources, terraforming);
     const project = new ctx.OrbitalRingProject(projectConfig, 'orbitalRing');
     project.ringCount = 1;
 
     project.complete();
+    ctx.reconcileLandResourceValue();
 
     expect(spaceManager.randomWorldStatuses[seed].orbitalRing).toBe(true);
     expect(project.ringCount).toBe(2);
     expect(project.currentWorldHasRing).toBe(true);
-    expect(resources.surface.land.value).toBe(20);
+    expect(resources.surface.land.value).toBe(40);
   });
 
   test('reconciles assignments when loading project state', () => {
