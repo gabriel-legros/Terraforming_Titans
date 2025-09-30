@@ -340,7 +340,10 @@ class SpaceManager extends EffectableEntity {
             if (seen.has(id)) {
                 return;
             }
-            if (!force && !status.terraformed) {
+            if (!status.terraformed) {
+                if (force && status.orbitalRing) {
+                    status.orbitalRing = false;
+                }
                 return;
             }
             ordered.push({ type, key, status });
