@@ -57,6 +57,8 @@ class GalaxyFaction {
         this.contestedSectors = [];
         this.contestedSectorLookup = new Set();
         this.contestedCacheDirty = true;
+        this.neighborThreatLevels = new Map();
+        this.contestedThreatLevels = new Map();
     }
 
     getStartingSectors() {
@@ -185,6 +187,8 @@ class GalaxyFaction {
         this.borderCacheDirty = true;
         this.neighborEnemyCacheDirty = true;
         this.contestedCacheDirty = true;
+        this.neighborThreatLevels = new Map();
+        this.contestedThreatLevels = new Map();
     }
 
     resetControlCache() {
@@ -199,12 +203,16 @@ class GalaxyFaction {
         this.contestedSectors = [];
         this.contestedSectorLookup = new Set();
         this.contestedCacheDirty = true;
+        this.neighborThreatLevels = new Map();
+        this.contestedThreatLevels = new Map();
     }
 
     markBorderDirty() {
         this.borderCacheDirty = true;
         this.neighborEnemyCacheDirty = true;
         this.contestedCacheDirty = true;
+        this.neighborThreatLevels = new Map();
+        this.contestedThreatLevels = new Map();
     }
 
     getControlledSectorKeys(manager) {
@@ -297,6 +305,28 @@ class GalaxyFaction {
         return this.neighborEnemySectors;
     }
 
+    getNeighborThreatLevel(sectorKey) {
+        if (!sectorKey) {
+            return 0;
+        }
+        const threat = this.neighborThreatLevels?.get?.(sectorKey);
+        if (!Number.isFinite(threat) || threat <= 0) {
+            return 0;
+        }
+        return threat;
+    }
+
+    getContestedThreatLevel(sectorKey) {
+        if (!sectorKey) {
+            return 0;
+        }
+        const threat = this.contestedThreatLevels?.get?.(sectorKey);
+        if (!Number.isFinite(threat) || threat <= 0) {
+            return 0;
+        }
+        return threat;
+    }
+
     getSectorDefense(sector, manager) {
         const controlValue = sector?.getControlValue?.(this.id) ?? 0;
         if (!(controlValue > 0)) {
@@ -351,10 +381,38 @@ class GalaxyFaction {
             this.neighborEnemySectors = [];
             this.neighborEnemyLookup = new Set();
             this.neighborEnemyCacheDirty = false;
+            this.neighborThreatLevels = new Map();
+            this.contestedThreatLevels = new Map();
             return;
         }
         const contestedSet = new Set();
         const neighborSet = new Set();
+        const neighborThreatMap = new Map();
+        const contestedThreatMap = new Map();
+        const factionThreatCache = new Map();
+        const resolveFactionThreat = (factionId) => {
+            if (!factionId || factionId === this.id) {
+                return 0;
+            }
+            if (factionThreatCache.has(factionId)) {
+                return factionThreatCache.get(factionId);
+            }
+            const faction = manager?.getFaction?.(factionId) || null;
+            const controlledKeys = faction?.getControlledSectorKeys?.(manager);
+            const threatValue = Array.isArray(controlledKeys) ? controlledKeys.length : 0;
+            const sanitizedThreat = Number.isFinite(threatValue) && threatValue > 0 ? threatValue : 0;
+            factionThreatCache.set(factionId, sanitizedThreat);
+            return sanitizedThreat;
+        };
+        const registerThreat = (map, key, threat) => {
+            if (!key || !(threat > 0)) {
+                return;
+            }
+            const current = map.get(key) || 0;
+            if (threat > current) {
+                map.set(key, threat);
+            }
+        };
         const sectorLookup = manager?.getSector;
         sectors.forEach((sector) => {
             const controlValue = sector?.getControlValue?.(this.id) ?? 0;
@@ -362,6 +420,23 @@ class GalaxyFaction {
                 return;
             }
             const totalControl = sector?.getTotalControlValue?.() ?? 0;
+            const sectorBreakdown = sector?.getControlBreakdown?.();
+            if (Array.isArray(sectorBreakdown)) {
+                let highestThreat = 0;
+                sectorBreakdown.forEach((entry) => {
+                    if (!entry || !Number.isFinite(entry.value) || entry.factionId === this.id) {
+                        return;
+                    }
+                    if (!(entry.value > BORDER_CONTROL_EPSILON)) {
+                        return;
+                    }
+                    const threat = resolveFactionThreat(entry.factionId);
+                    if (threat > highestThreat) {
+                        highestThreat = threat;
+                    }
+                });
+                registerThreat(contestedThreatMap, sector.key, highestThreat);
+            }
             if (totalControl - controlValue > BORDER_CONTROL_EPSILON) {
                 contestedSet.add(sector.key);
             }
@@ -377,6 +452,26 @@ class GalaxyFaction {
                 if (!(neighborTotal > BORDER_CONTROL_EPSILON)) {
                     return;
                 }
+                const neighborBreakdown = neighbor?.getControlBreakdown?.();
+                if (Array.isArray(neighborBreakdown)) {
+                    let neighborThreat = 0;
+                    neighborBreakdown.forEach((entry) => {
+                        if (!entry || !Number.isFinite(entry.value) || entry.factionId === this.id) {
+                            return;
+                        }
+                        if (!(entry.value > BORDER_CONTROL_EPSILON)) {
+                            return;
+                        }
+                        const threat = resolveFactionThreat(entry.factionId);
+                        if (threat > neighborThreat) {
+                            neighborThreat = threat;
+                        }
+                    });
+                    registerThreat(neighborThreatMap, neighbor.key, neighborThreat);
+                    if (neighborThreat > 0) {
+                        registerThreat(contestedThreatMap, neighbor.key, neighborThreat);
+                    }
+                }
                 const dominant = neighbor?.getDominantController?.();
                 if (dominant && dominant.factionId !== this.id) {
                     neighborSet.add(neighbor.key);
@@ -389,11 +484,10 @@ class GalaxyFaction {
                 if (ownNeighborControl > BORDER_CONTROL_EPSILON) {
                     contestedSet.add(neighbor.key);
                 }
-                const breakdown = neighbor?.getControlBreakdown?.();
-                if (!Array.isArray(breakdown)) {
+                if (!Array.isArray(neighborBreakdown)) {
                     return;
                 }
-                const hasEnemyPresence = breakdown.some((entry) => entry?.factionId && entry.factionId !== this.id && entry.value > BORDER_CONTROL_EPSILON);
+                const hasEnemyPresence = neighborBreakdown.some((entry) => entry?.factionId && entry.factionId !== this.id && entry.value > BORDER_CONTROL_EPSILON);
                 if (hasEnemyPresence) {
                     neighborSet.add(neighbor.key);
                 }
@@ -405,6 +499,8 @@ class GalaxyFaction {
         this.neighborEnemySectors = Array.from(neighborSet);
         this.neighborEnemyLookup = neighborSet;
         this.neighborEnemyCacheDirty = false;
+        this.neighborThreatLevels = neighborThreatMap;
+        this.contestedThreatLevels = contestedThreatMap;
     }
 
     #computeFleetCapacity(manager) {
