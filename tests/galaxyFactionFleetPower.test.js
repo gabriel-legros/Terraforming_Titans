@@ -1,3 +1,7 @@
+const { loadGalaxyConstants } = require('./helpers/loadGalaxyConstants');
+
+loadGalaxyConstants();
+
 const { GalaxyFaction } = require('../src/js/galaxy/faction');
 const { GalaxySector } = require('../src/js/galaxy/sector');
 
@@ -40,12 +44,12 @@ describe('GalaxyFaction fleet power and capacity', () => {
 
         faction.initializeFleetPower(manager);
 
-        expect(faction.fleetCapacity).toBe(400);
+        expect(faction.fleetCapacity).toBe(4000);
         expect(faction.fleetPower).toBe(0);
 
         faction.update(600000, manager);
 
-        expect(faction.fleetPower).toBeCloseTo(400 * (600 / 3600));
+        expect(faction.fleetPower).toBeCloseTo(4000 * (600 / 3600));
     });
 
     it('applies an asymptotic penalty above half capacity', () => {
@@ -53,11 +57,11 @@ describe('GalaxyFaction fleet power and capacity', () => {
         const manager = createManager({ terraformedWorlds: 5 });
 
         faction.initializeFleetPower(manager);
-        faction.setFleetPower(375);
+        faction.setFleetPower(3750);
 
         faction.update(3600000, manager);
 
-        expect(faction.fleetPower).toBeCloseTo(437.5);
+        expect(faction.fleetPower).toBeCloseTo(4375);
     });
 
     it('clamps fleet power when capacity drops', () => {

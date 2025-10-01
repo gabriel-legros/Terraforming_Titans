@@ -1,3 +1,7 @@
+const { loadGalaxyConstants } = require('./helpers/loadGalaxyConstants');
+
+loadGalaxyConstants();
+
 const { GalaxyFaction } = require('../src/js/galaxy/faction');
 const { GalaxySector } = require('../src/js/galaxy/sector');
 

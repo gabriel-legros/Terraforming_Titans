@@ -1,4 +1,5 @@
 const { JSDOM } = require('jsdom');
+const { loadGalaxyConstants } = require('./helpers/loadGalaxyConstants');
 
 const UHF_ICON = '\u{1F6E1}\u{FE0F}';
 const ALIEN_ICON = '\u2620\uFE0F';
@@ -16,6 +17,8 @@ describe('Galaxy map defense display', () => {
 
     beforeEach(() => {
         jest.resetModules();
+
+        loadGalaxyConstants();
 
         dom = new JSDOM('<!DOCTYPE html><div id="space-galaxy"></div>', { runScripts: 'outside-only' });
         global.window = dom.window;
