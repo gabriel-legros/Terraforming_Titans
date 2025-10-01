@@ -1,5 +1,6 @@
 const AUTO_OPERATION_INTERVAL_MS = 60000;
-const AUTO_OPERATION_POWER = 100;
+const AUTO_OPERATION_MIN_PERCENT = 0.05;
+const AUTO_OPERATION_MAX_PERCENT = 0.15;
 
 let GalaxyFactionBaseClass = globalScope?.GalaxyFaction;
 let uhfFactionId = globalScope?.UHF_FACTION_ID ?? 'uhf';
@@ -13,6 +14,8 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         super(options);
         this.borderFleetAssignments = new Map();
         this.autoOperationTimer = 0;
+        this.defensiveness = this.#sanitizeDefensiveness(options?.defensiveness);
+        this.pendingOperationPower = 0;
     }
 
     update(deltaTime, manager) {
@@ -52,7 +55,13 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (typeof launcher !== 'function') {
             return false;
         }
-        if (!(this.fleetPower >= AUTO_OPERATION_POWER)) {
+        const operationPower = this.#resolveOperationPower();
+        if (!(operationPower > 0)) {
+            return false;
+        }
+        const defensiveFloor = this.#computeDefensiveFloor();
+        const availablePower = Math.max(0, this.fleetPower) - defensiveFloor;
+        if (!(availablePower >= operationPower)) {
             return false;
         }
         const targetKey = this.#pickAutoOperationTarget(manager);
@@ -62,9 +71,13 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         const operation = launcher.call(manager, {
             sectorKey: targetKey,
             factionId: this.id,
-            assignedPower: AUTO_OPERATION_POWER
+            assignedPower: operationPower
         });
-        return !!operation;
+        if (!operation) {
+            return false;
+        }
+        this.pendingOperationPower = 0;
+        return true;
     }
 
     #pickAutoOperationTarget(manager) {
@@ -140,6 +153,58 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             assignments.set(key, perSector);
         });
         this.borderFleetAssignments = assignments;
+    }
+
+    #sanitizeDefensiveness(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue <= 0) {
+            return 0;
+        }
+        if (numericValue >= 1) {
+            return 1;
+        }
+        return numericValue;
+    }
+
+    #computeDefensiveFloor() {
+        const capacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
+        if (!(capacity > 0) || !(this.defensiveness > 0)) {
+            return 0;
+        }
+        return capacity * this.defensiveness;
+    }
+
+    #resolveOperationPower() {
+        const capacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
+        if (!(capacity > 0)) {
+            this.pendingOperationPower = 0;
+            return 0;
+        }
+        const defensiveFloor = this.#computeDefensiveFloor();
+        const maxAssignable = Math.max(0, capacity - defensiveFloor);
+        if (!(maxAssignable > 0)) {
+            this.pendingOperationPower = 0;
+            return 0;
+        }
+        if (!(this.pendingOperationPower > 0) || this.pendingOperationPower > maxAssignable) {
+            this.pendingOperationPower = this.#rollOperationPower(capacity);
+            if (this.pendingOperationPower > maxAssignable) {
+                this.pendingOperationPower = Math.max(1, Math.floor(maxAssignable));
+            }
+        }
+        return Math.max(0, Math.min(this.pendingOperationPower, maxAssignable));
+    }
+
+    #rollOperationPower(capacity) {
+        const minPercent = AUTO_OPERATION_MIN_PERCENT;
+        const maxPercent = AUTO_OPERATION_MAX_PERCENT;
+        const spread = Math.max(0, maxPercent - minPercent);
+        const percent = minPercent + Math.random() * spread;
+        const power = capacity * percent;
+        if (!Number.isFinite(power) || power <= 0) {
+            return 0;
+        }
+        return Math.max(1, Math.round(power));
     }
 }
 
