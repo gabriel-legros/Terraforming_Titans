@@ -45,6 +45,10 @@ const R507_RADIUS_TWO_COORDINATES = [
     { q: 4, r: -3 }
 ];
 const R507_RADIUS_TWO_BASE_VALUE = 500;
+const R507_SECTOR_COORDINATES = [
+    { q: 4, r: -5 }
+];
+const R507_SECTOR_BASE_VALUE = 100;
 
 const overrides = {};
 
@@ -58,6 +62,8 @@ registerOverrides(CORE_COORDINATES, CORE_BASE_VALUE);
 registerOverrides(FIRST_RING_COORDINATES, FIRST_RING_BASE_VALUE);
 registerOverrides(R507_RADIUS_ONE_COORDINATES, R507_RADIUS_ONE_BASE_VALUE);
 registerOverrides(R507_RADIUS_TWO_COORDINATES, R507_RADIUS_TWO_BASE_VALUE);
+registerOverrides(R507_SECTOR_COORDINATES, R507_SECTOR_BASE_VALUE);
+overrides['R5-07'] = { value: R507_SECTOR_BASE_VALUE };
 
 const galaxySectorParameters = {
     defaultValue: DEFAULT_SECTOR_VALUE,
