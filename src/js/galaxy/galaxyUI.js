@@ -68,6 +68,10 @@ const FLEET_UPGRADE_FALLBACKS = [
     }
 ];
 
+const OPERATION_ARROW_LINE_WIDTH = 4;
+const OPERATION_ARROW_MARGIN = 24;
+const OPERATION_ARROW_MIN_LENGTH = 18;
+
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
 
@@ -304,6 +308,13 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     const top = Math.round(y + offsets.y - (displayHeight / 2));
     hex.style.left = `${left}px`;
     hex.style.top = `${top}px`;
+    const centerX = x + offsets.x;
+    const centerY = y + offsets.y;
+    const key = `${q},${r}`;
+    hex.dataset.key = key;
+    hex.galaxyKey = key;
+    hex.galaxyCenterX = centerX;
+    hex.galaxyCenterY = centerY;
 
     const defense = doc.createElement('span');
     defense.className = 'galaxy-hex__defense';
@@ -1074,6 +1085,7 @@ function updateOperationsPanel() {
     const formatter = getNumberFormatter();
     const selection = galaxyUICache.selectedSector;
     const enabled = !!(manager && manager.enabled);
+    updateGalaxyOperationArrows(manager, galaxyUICache);
     const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
     const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
     const selectedKey = enabled && selection ? selection.key : null;
@@ -1510,6 +1522,121 @@ function updateGalaxyHexControlColors(manager, cache) {
     });
 }
 
+function clearOperationArrows(cache) {
+    if (!cache || !cache.operationArrows) {
+        return;
+    }
+    cache.operationArrows.forEach((arrow) => {
+        if (arrow) {
+            arrow.remove();
+        }
+    });
+    cache.operationArrows.clear();
+}
+
+function updateGalaxyOperationArrows(manager, cache) {
+    if (!cache || !cache.mapOperationsLayer || !cache.operationArrows) {
+        return;
+    }
+    if (!manager || !manager.enabled || !manager.getOperationForSector) {
+        clearOperationArrows(cache);
+        return;
+    }
+
+    const layer = cache.mapOperationsLayer;
+    const arrowCache = cache.operationArrows;
+    const doc = layer.ownerDocument || globalThis.document;
+    if (!doc) {
+        return;
+    }
+    const hexLookup = cache.hexLookup || new Map();
+    const activeKeys = new Set();
+
+    cache.hexElements.forEach((targetHex) => {
+        const sectorKey = targetHex.galaxyKey;
+        if (!sectorKey) {
+            return;
+        }
+        const operation = manager.getOperationForSector(sectorKey);
+        if (!operation || operation.status !== 'running') {
+            return;
+        }
+
+        const origin = operation.originHex;
+        const originQ = Number(origin && origin.q);
+        const originR = Number(origin && origin.r);
+        const hasOrigin = Number.isFinite(originQ) && Number.isFinite(originR);
+        const originKey = hasOrigin ? `${originQ},${originR}` : sectorKey;
+        const originHex = hexLookup.get(originKey);
+        if (!originHex) {
+            return;
+        }
+
+        const originX = Number(originHex.galaxyCenterX);
+        const originY = Number(originHex.galaxyCenterY);
+        const targetX = Number(targetHex.galaxyCenterX);
+        const targetY = Number(targetHex.galaxyCenterY);
+        if (!Number.isFinite(originX) || !Number.isFinite(originY) || !Number.isFinite(targetX) || !Number.isFinite(targetY)) {
+            return;
+        }
+
+        const dx = targetX - originX;
+        const dy = targetY - originY;
+        const distance = Math.hypot(dx, dy);
+        if (!(distance > OPERATION_ARROW_MIN_LENGTH)) {
+            return;
+        }
+
+        const startTrim = Math.min(OPERATION_ARROW_MARGIN, distance * 0.5);
+        const endTrim = Math.min(OPERATION_ARROW_MARGIN, distance * 0.5);
+        const usableLength = distance - startTrim - endTrim;
+        if (!(usableLength > OPERATION_ARROW_MIN_LENGTH)) {
+            return;
+        }
+
+        const startRatio = startTrim / distance;
+        const startX = originX + (dx * startRatio);
+        const startY = originY + (dy * startRatio);
+        const angle = Math.atan2(dy, dx);
+
+        const factionId = operation.factionId || GALAXY_UHF_FACTION_ID;
+        const faction = manager.getFaction ? manager.getFaction(factionId) : null;
+        const arrowColor = faction && faction.color ? faction.color : '#8ac6ff';
+
+        const arrowKey = `${factionId}|${sectorKey}`;
+        activeKeys.add(arrowKey);
+
+        let arrow = arrowCache.get(arrowKey);
+        if (!arrow) {
+            arrow = doc.createElement('div');
+            arrow.className = 'galaxy-operation-arrow';
+            layer.appendChild(arrow);
+            arrowCache.set(arrowKey, arrow);
+        }
+
+        arrow.style.left = `${startX}px`;
+        arrow.style.top = `${startY}px`;
+        arrow.style.width = `${usableLength}px`;
+        arrow.style.transform = `translateY(-50%) rotate(${angle}rad)`;
+        arrow.style.setProperty('--operation-arrow-color', arrowColor);
+        arrow.style.setProperty('--operation-arrow-line-width', `${OPERATION_ARROW_LINE_WIDTH}px`);
+    });
+
+    const staleKeys = [];
+    arrowCache.forEach((_, key) => {
+        if (!activeKeys.has(key)) {
+            staleKeys.push(key);
+        }
+    });
+    staleKeys.forEach((key) => {
+        const arrow = arrowCache.get(key);
+        if (arrow) {
+            arrow.remove();
+        }
+        arrowCache.delete(key);
+    });
+}
+
 function updateGalaxyMapTransform(cache) {
     if (!cache || !cache.mapContent) {
         return;
@@ -1845,10 +1972,17 @@ function cacheGalaxyElements() {
     mapContent.style.width = `${hexBuild.contentWidth}px`;
     mapContent.style.height = `${hexBuild.contentHeight}px`;
     mapContent.appendChild(hexBuild.fragment);
+    const operationsLayer = doc.createElement('div');
+    operationsLayer.className = 'galaxy-map-operations-layer';
+    mapContent.appendChild(operationsLayer);
     const hexElements = Array.from(mapContent.querySelectorAll('.galaxy-hex'));
+    const hexLookup = new Map();
 
     hexElements.forEach((hex) => {
         hex.addEventListener('click', handleGalaxyHexClick);
+        if (hex.galaxyKey) {
+            hexLookup.set(hex.galaxyKey, hex);
+        }
     });
 
     const mapOverlay = doc.createElement('div');
@@ -2266,6 +2400,7 @@ function cacheGalaxyElements() {
         mapWrapper,
         mapCanvas,
         mapContent,
+        mapOperationsLayer: operationsLayer,
         mapOverlay,
         mapState,
         zoomIn,
@@ -2297,6 +2432,8 @@ function cacheGalaxyElements() {
         sectorContent,
         sectorDetails: null,
         hexElements,
+        hexLookup,
+        operationArrows: new Map(),
         selectedHex: null,
         selectedSector: null
     };
@@ -2439,6 +2576,7 @@ function updateGalaxyUI() {
             cache.mapState.overlayHideTimeout = null;
         }
         resetGalaxyHexStyles(cache);
+        clearOperationArrows(cache);
         updateLogisticsDisplay(null, cache);
         updateFleetShopDisplay(null, cache);
         refreshEmptyStates();
@@ -2470,6 +2608,7 @@ function updateGalaxyUI() {
     updateLogisticsDisplay(manager, cache);
     updateFleetShopDisplay(manager, cache);
     updateGalaxyHexControlColors(manager, cache);
+    updateGalaxyOperationArrows(manager, cache);
     renderSelectedSectorDetails();
     refreshEmptyStates();
     if (cache.mapState.deferredCenter && cache.mapWrapper && cache.mapWrapper.offsetParent) {
