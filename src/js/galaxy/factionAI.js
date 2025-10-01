@@ -1,6 +1,7 @@
 const AUTO_OPERATION_INTERVAL_MS = 60000;
 const AUTO_OPERATION_MIN_PERCENT = 0.05;
 const AUTO_OPERATION_MAX_PERCENT = 0.15;
+const FULL_CONTROL_EPSILON = 1e-6;
 
 let GalaxyFactionBaseClass = globalScope?.GalaxyFaction;
 let uhfFactionId = globalScope?.UHF_FACTION_ID ?? 'uhf';
@@ -82,32 +83,48 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
     }
 
     #pickAutoOperationTarget(manager) {
-        const contested = this.getContestedSectorKeys(manager);
-        const neighbors = this.getNeighborEnemySectorKeys(manager);
-        const candidates = new Set();
-        if (Array.isArray(contested)) {
-            contested.forEach((key) => {
-                if (key) {
-                    candidates.add(key);
-                }
-            });
-        }
-        if (Array.isArray(neighbors)) {
-            neighbors.forEach((key) => {
-                if (key) {
-                    candidates.add(key);
-                }
-            });
-        }
-        if (!candidates.size) {
+        const candidateMap = this.#gatherTargetCandidates(manager);
+        if (!candidateMap.size) {
             return null;
         }
-        const validTargets = Array.from(candidates).filter((key) => this.#isEnemySectorKey(key, manager));
-        if (!validTargets.length) {
+        const weightedTargets = [];
+        candidateMap.forEach((keys, factionId) => {
+            const threat = this.#computeFactionThreat(factionId, manager);
+            if (!(threat > 0)) {
+                return;
+            }
+            const targetableKeys = Array.from(keys).filter((key) => this.#isEnemySectorKey(key, manager));
+            if (!targetableKeys.length) {
+                return;
+            }
+            weightedTargets.push({ factionId, threat, keys: targetableKeys });
+        });
+        if (!weightedTargets.length) {
             return null;
         }
-        const index = Math.floor(Math.random() * validTargets.length);
-        return validTargets[index] || null;
+        const totalThreat = weightedTargets.reduce((sum, entry) => sum + entry.threat, 0);
+        if (!(totalThreat > 0)) {
+            return null;
+        }
+        let roll = Math.random() * totalThreat;
+        for (let index = 0; index < weightedTargets.length; index += 1) {
+            const entry = weightedTargets[index];
+            roll -= entry.threat;
+            if (roll <= 0) {
+                const candidateKeys = entry.keys;
+                if (!candidateKeys.length) {
+                    continue;
+                }
+                const keyIndex = Math.floor(Math.random() * candidateKeys.length);
+                return candidateKeys[keyIndex] || null;
+            }
+        }
+        const fallback = weightedTargets[weightedTargets.length - 1];
+        if (!fallback || !fallback.keys.length) {
+            return null;
+        }
+        const fallbackIndex = Math.floor(Math.random() * fallback.keys.length);
+        return fallback.keys[fallbackIndex] || null;
     }
 
     #isEnemySectorKey(key, manager) {
@@ -139,6 +156,63 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return null;
         }
         return manager?.getSector?.(q, r) || null;
+    }
+
+    #gatherTargetCandidates(manager) {
+        const candidateMap = new Map();
+        const addCandidate = (factionId, key) => {
+            if (!factionId || factionId === this.id || !key) {
+                return;
+            }
+            let entry = candidateMap.get(factionId);
+            if (!entry) {
+                entry = new Set();
+                candidateMap.set(factionId, entry);
+            }
+            entry.add(key);
+        };
+        const collectFromKeys = (keys) => {
+            if (!Array.isArray(keys)) {
+                return;
+            }
+            keys.forEach((key) => {
+                if (!key || manager?.getOperationForSector?.(key)?.status === 'running') {
+                    return;
+                }
+                const sector = this.#getSectorFromKey(key, manager);
+                if (!sector) {
+                    return;
+                }
+                const breakdown = sector.getControlBreakdown?.();
+                if (!Array.isArray(breakdown)) {
+                    return;
+                }
+                breakdown.forEach((entry) => {
+                    if (!entry || !(entry.value > FULL_CONTROL_EPSILON)) {
+                        return;
+                    }
+                    addCandidate(entry.factionId, key);
+                });
+            });
+        };
+        collectFromKeys(this.getContestedSectorKeys(manager));
+        collectFromKeys(this.getNeighborEnemySectorKeys(manager));
+        return candidateMap;
+    }
+
+    #computeFactionThreat(factionId, manager) {
+        if (!factionId || factionId === this.id) {
+            return 0;
+        }
+        const faction = manager?.getFaction?.(factionId) || null;
+        if (!faction) {
+            return 0;
+        }
+        const controlledKeys = faction.getControlledSectorKeys?.(manager);
+        if (!Array.isArray(controlledKeys)) {
+            return 0;
+        }
+        return controlledKeys.length;
     }
 
     #distributeFleetToBorders(manager) {
