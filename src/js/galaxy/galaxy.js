@@ -157,10 +157,7 @@ function resolveSectorOverrideValue(sectorKey) {
     return overrideValue;
 }
 
-const GALAXY_RADIUS = 6;
-const GALAXY_OPERATION_DURATION_MS = 600000;
-const FULL_CONTROL_EPSILON = 1e-6;
-const FLEET_UPGRADE_INCREMENT = 0.1;
+
 const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
     militaryResearch: {
         key: 'militaryResearch',

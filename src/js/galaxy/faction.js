@@ -1,16 +1,3 @@
-const UHF_FACTION_ID = 'uhf';
-let factionDefaultSectorValue = 100;
-const REPLACEMENT_SECONDS = 3600;
-const BORDER_CONTROL_EPSILON = 1e-6;
-const BORDER_HEX_NEIGHBOR_DIRECTIONS = [
-    { q: 1, r: 0 },
-    { q: 1, r: -1 },
-    { q: 0, r: -1 },
-    { q: -1, r: 0 },
-    { q: -1, r: 1 },
-    { q: 0, r: 1 }
-];
-
 if (typeof module !== 'undefined' && module.exports) {
     const sectorParametersModule = require('./sector-parameters');
     if (sectorParametersModule.getDefaultSectorValue) {
