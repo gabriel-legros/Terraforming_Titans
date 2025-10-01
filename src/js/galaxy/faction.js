@@ -361,12 +361,10 @@ class GalaxyFaction {
         const hasBorderPresence = borderCount > 0 && this.borderSectorLookup?.has?.(sector.key);
         let distributedFleet = 0;
         if (hasBorderPresence && borderCount > 0) {
-            const assigned = this.getBorderFleetAssignment?.(sector.key);
-            if (Number.isFinite(assigned) && assigned > 0) {
-                distributedFleet = assigned;
-            } else {
-                const availablePower = Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) : 0;
-                distributedFleet = availablePower / borderCount;
+            const availablePower = Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) : 0;
+            if (availablePower > 0) {
+                const evenShare = availablePower / borderCount;
+                distributedFleet = Number.isFinite(evenShare) && evenShare > 0 ? evenShare : 0;
             }
         }
         const totalDefense = upgradedDefense + distributedFleet;
