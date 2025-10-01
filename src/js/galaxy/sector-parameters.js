@@ -1,4 +1,4 @@
-const DEFAULT_SECTOR_VALUE = 100;
+const DEFAULT_SECTOR_VALUE = 1000;
 
 function createSectorKey(q, r) {
     if (Number.isFinite(q) && Number.isFinite(r)) {
@@ -10,11 +10,58 @@ function createSectorKey(q, r) {
     return '0,0';
 }
 
+const CORE_COORDINATES = [{ q: 0, r: 0 }];
+const CORE_BASE_VALUE = 50000;
+const FIRST_RING_COORDINATES = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 }
+];
+const FIRST_RING_BASE_VALUE = 10000;
+const R507_RADIUS_ONE_COORDINATES = [
+    { q: 5, r: -5 },
+    { q: 5, r: -6 },
+    { q: 4, r: -6 },
+    { q: 3, r: -5 },
+    { q: 3, r: -4 },
+    { q: 4, r: -4 }
+];
+const R507_RADIUS_ONE_BASE_VALUE = 200;
+const R507_RADIUS_TWO_COORDINATES = [
+    { q: 6, r: -5 },
+    { q: 6, r: -6 },
+    { q: 5, r: -4 },
+    { q: 6, r: -7 },
+    { q: 5, r: -7 },
+    { q: 4, r: -7 },
+    { q: 3, r: -6 },
+    { q: 2, r: -5 },
+    { q: 2, r: -4 },
+    { q: 2, r: -3 },
+    { q: 3, r: -3 },
+    { q: 4, r: -3 }
+];
+const R507_RADIUS_TWO_BASE_VALUE = 500;
+
+const overrides = {};
+
+function registerOverrides(coordinates, value) {
+    coordinates.forEach((coordinate) => {
+        overrides[createSectorKey(coordinate.q, coordinate.r)] = { value };
+    });
+}
+
+registerOverrides(CORE_COORDINATES, CORE_BASE_VALUE);
+registerOverrides(FIRST_RING_COORDINATES, FIRST_RING_BASE_VALUE);
+registerOverrides(R507_RADIUS_ONE_COORDINATES, R507_RADIUS_ONE_BASE_VALUE);
+registerOverrides(R507_RADIUS_TWO_COORDINATES, R507_RADIUS_TWO_BASE_VALUE);
+
 const galaxySectorParameters = {
     defaultValue: DEFAULT_SECTOR_VALUE,
-    overrides: {
-        [createSectorKey(0, 0)]: { value: 1000 }
-    }
+    overrides
 };
 
 function getDefaultSectorValue() {
