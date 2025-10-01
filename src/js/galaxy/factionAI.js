@@ -1,6 +1,8 @@
 const AUTO_OPERATION_INTERVAL_MS = 60000;
 const AUTO_OPERATION_MIN_PERCENT = 0.05;
 const AUTO_OPERATION_MAX_PERCENT = 0.15;
+const CEWINSII_FACTION_ID = 'cewinsii';
+
 const HEX_NEIGHBOR_DIRECTIONS = [
     { q: 1, r: 0 },
     { q: 1, r: -1 },
@@ -24,6 +26,18 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         this.autoOperationTimer = 0;
         this.defensiveness = this.#sanitizeDefensiveness(options?.defensiveness);
         this.pendingOperationPower = 0;
+        const startingCount = Number.isFinite(this.startingSectors?.size)
+            ? this.startingSectors.size
+            : 0;
+        const providedOriginalCount = this.#coerceOriginalCount(options?.originalControlledSectorCount);
+        this.originalControlledSectorCount = providedOriginalCount !== null && providedOriginalCount > startingCount
+            ? providedOriginalCount
+            : Math.max(0, startingCount);
+        const providedAdoption = this.#coerceAdoption(options?.electronicAdoption);
+        this.electronicAdoption = providedAdoption !== null ? providedAdoption : 0;
+        if (this.id === CEWINSII_FACTION_ID) {
+            this.electronicAdoption = 0;
+        }
     }
 
     update(deltaTime, manager) {
@@ -42,6 +56,15 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         }
         const assignment = this.borderFleetAssignments.get(sectorKey);
         return Number.isFinite(assignment) && assignment > 0 ? assignment : 0;
+    }
+
+    getControlledSectorKeys(manager) {
+        const needsUpdate = !!this.controlCacheDirty;
+        const keys = super.getControlledSectorKeys(manager);
+        if (needsUpdate) {
+            this.#handleControlCacheRebuild(keys);
+        }
+        return keys;
     }
 
     #updateAutoOperations(deltaTime, manager) {
@@ -387,6 +410,83 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return 0;
         }
         return Math.max(1, Math.round(power));
+    }
+
+    toJSON() {
+        const baseState = super.toJSON();
+        baseState.electronicAdoption = this.#coerceAdoption(this.electronicAdoption) ?? 0;
+        baseState.originalControlledSectorCount = this.#coerceOriginalCount(this.originalControlledSectorCount) ?? 0;
+        return baseState;
+    }
+
+    loadState(state, manager) {
+        super.loadState(state, manager);
+        const savedOriginalCount = this.#coerceOriginalCount(state?.originalControlledSectorCount);
+        if (savedOriginalCount !== null && savedOriginalCount > this.originalControlledSectorCount) {
+            this.originalControlledSectorCount = savedOriginalCount;
+        }
+        const savedAdoption = this.#coerceAdoption(state?.electronicAdoption);
+        if (this.id === CEWINSII_FACTION_ID) {
+            this.electronicAdoption = 0;
+            return;
+        }
+        if (savedAdoption !== null && savedAdoption > this.electronicAdoption) {
+            this.electronicAdoption = savedAdoption;
+        }
+    }
+
+    #handleControlCacheRebuild(keys) {
+        const currentCount = Array.isArray(keys) ? keys.length : 0;
+        if (!(this.originalControlledSectorCount > 0) || currentCount > this.originalControlledSectorCount) {
+            this.originalControlledSectorCount = Math.max(currentCount, this.originalControlledSectorCount || 0);
+        }
+        if (this.id === CEWINSII_FACTION_ID) {
+            this.electronicAdoption = 0;
+            return;
+        }
+        if (!(this.originalControlledSectorCount > 0)) {
+            this.electronicAdoption = 0;
+            return;
+        }
+        const halfwayPoint = this.originalControlledSectorCount * 0.5;
+        if (currentCount > halfwayPoint) {
+            return;
+        }
+        let adoption;
+        if (currentCount <= 0) {
+            adoption = 1;
+        } else {
+            const difference = (this.originalControlledSectorCount - currentCount) / this.originalControlledSectorCount;
+            adoption = Math.max(0, Math.min(1, difference));
+        }
+        if (adoption > this.electronicAdoption) {
+            this.electronicAdoption = adoption;
+        }
+    }
+
+    #coerceAdoption(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric < 0) {
+            return null;
+        }
+        if (numeric === 0) {
+            return 0;
+        }
+        if (numeric <= 1) {
+            return numeric;
+        }
+        return Math.min(1, numeric / 100);
+    }
+
+    #coerceOriginalCount(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric < 0) {
+            return null;
+        }
+        if (numeric === 0) {
+            return 0;
+        }
+        return Math.floor(numeric);
     }
 }
 
