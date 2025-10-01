@@ -50,6 +50,27 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         this.#distributeFleetToBorders(manager);
     }
 
+    updateFleetCapacity(manager) {
+        super.updateFleetCapacity(manager);
+        const baseCapacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
+        if (!(baseCapacity > 0)) {
+            this.fleetCapacity = 0;
+            return;
+        }
+        const adoption = this.#coerceAdoption(this.electronicAdoption);
+        const sanitizedAdoption = adoption !== null ? adoption : 0;
+        const multiplier = 1 + sanitizedAdoption * 10;
+        if (!(multiplier > 0)) {
+            this.fleetCapacity = baseCapacity;
+            return;
+        }
+        const adjustedCapacity = baseCapacity * multiplier;
+        this.fleetCapacity = adjustedCapacity;
+        if (this.fleetPower > adjustedCapacity) {
+            this.fleetPower = adjustedCapacity;
+        }
+    }
+
     getBorderFleetAssignment(sectorKey) {
         if (!sectorKey) {
             return 0;
