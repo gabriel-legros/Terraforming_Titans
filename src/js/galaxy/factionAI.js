@@ -1,7 +1,6 @@
 const AUTO_OPERATION_INTERVAL_MS = 60000;
 const AUTO_OPERATION_MIN_PERCENT = 0.05;
 const AUTO_OPERATION_MAX_PERCENT = 0.15;
-const FULL_CONTROL_EPSILON = 1e-6;
 
 let GalaxyFactionBaseClass = globalScope?.GalaxyFaction;
 let uhfFactionId = globalScope?.UHF_FACTION_ID ?? 'uhf';
