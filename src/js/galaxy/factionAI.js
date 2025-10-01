@@ -373,9 +373,30 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return;
         }
         const fleetPower = Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) : 0;
-        const perSector = fleetPower / borderKeys.length;
-        borderKeys.forEach((key) => {
-            assignments.set(key, perSector);
+        const weights = borderKeys.map((key) => {
+            const threat = this.getBorderThreatLevel(key);
+            if (!Number.isFinite(threat) || threat <= 0) {
+                return 0;
+            }
+            return threat;
+        });
+        const totalWeight = weights.reduce((sum, value) => sum + value, 0);
+        if (!(totalWeight > 0)) {
+            const fallback = borderKeys.length > 0 ? fleetPower / borderKeys.length : 0;
+            borderKeys.forEach((key) => {
+                assignments.set(key, fallback);
+            });
+            this.borderFleetAssignments = assignments;
+            return;
+        }
+        borderKeys.forEach((key, index) => {
+            const weight = weights[index];
+            if (weight <= 0) {
+                assignments.set(key, 0);
+                return;
+            }
+            const share = (fleetPower * weight) / totalWeight;
+            assignments.set(key, share > 0 ? share : 0);
         });
         this.borderFleetAssignments = assignments;
     }
