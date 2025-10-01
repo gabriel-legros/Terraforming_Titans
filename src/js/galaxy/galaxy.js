@@ -308,9 +308,6 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 this.#applyControlMapToSector(sector, sectorData.control);
-                if (Number.isFinite(sectorData?.value)) {
-                    sector.setValue(sectorData.value);
-                }
             });
         }
         const factionStateMap = new Map();

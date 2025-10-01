@@ -106,6 +106,24 @@ function formatFleetUpgradeCost(value) {
     return value.toLocaleString('en-US');
 }
 
+function formatAttackCountdown(milliseconds) {
+    if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
+        return '00:00';
+    }
+    const totalSeconds = Math.ceil(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSeconds = String(seconds).padStart(2, '0');
+        return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+    }
+    const paddedMinutes = String(minutes).padStart(2, '0');
+    const paddedSeconds = String(seconds).padStart(2, '0');
+    return `${paddedMinutes}:${paddedSeconds}`;
+}
+
 function getSectorUhfControl(sector) {
     if (!sector) {
         return 0;
@@ -2224,7 +2242,13 @@ function cacheGalaxyElements() {
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
     attackContent.dataset.emptyMessage = 'No hostiles detected.';
-    attackContent.textContent = attackContent.dataset.emptyMessage;
+    const attackPlaceholder = doc.createElement('p');
+    attackPlaceholder.className = 'galaxy-attack-panel__placeholder';
+    attackPlaceholder.textContent = attackContent.dataset.emptyMessage;
+    const attackList = doc.createElement('div');
+    attackList.className = 'galaxy-attack-panel__list';
+    attackContent.appendChild(attackPlaceholder);
+    attackContent.appendChild(attackList);
     incomingAttacks.body.appendChild(attackContent);
 
     secondRow.appendChild(operations.section);
@@ -2429,6 +2453,9 @@ function cacheGalaxyElements() {
             items: fleetShopItems
         },
         attackContent,
+        attackPlaceholder,
+        attackList,
+        attackEntries: new Map(),
         sectorContent,
         sectorDetails: null,
         hexElements,
