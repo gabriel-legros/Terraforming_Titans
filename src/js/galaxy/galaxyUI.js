@@ -2496,15 +2496,10 @@ function refreshEmptyStates() {
         placeholder.classList.toggle('is-hidden', hasEntries);
     });
 
-    const panels = [galaxyUICache.attackContent, galaxyUICache.sectorContent];
-    panels.forEach((panel) => {
-        if (!panel) {
-            return;
-        }
-        if (!panel.textContent) {
-            panel.textContent = panel.dataset.emptyMessage || 'Stand by.';
-        }
-    });
+    const sectorPanel = galaxyUICache.sectorContent;
+    if (sectorPanel && !sectorPanel.textContent) {
+        sectorPanel.textContent = sectorPanel.dataset.emptyMessage || 'Stand by.';
+    }
 }
 
 function updateFleetShopDisplay(manager, cache) {
@@ -2540,6 +2535,133 @@ function updateFleetShopDisplay(manager, cache) {
             nodes.button.disabled = !(entry?.affordable);
         }
     });
+}
+
+function clearIncomingAttackPanel(cache) {
+    const list = cache?.attackList;
+    if (list) {
+        while (list.firstChild) {
+            list.removeChild(list.firstChild);
+        }
+    }
+    cache?.attackEntries?.clear?.();
+    const panel = cache?.attackContent;
+    const placeholder = cache?.attackPlaceholder;
+    if (panel) {
+        panel.classList.remove('is-populated');
+    }
+    if (placeholder) {
+        const message = panel?.dataset?.emptyMessage || 'No hostiles detected.';
+        placeholder.textContent = message;
+        placeholder.classList.remove('is-hidden');
+    }
+}
+
+function ensureAttackCard(cache, attack) {
+    const entries = cache.attackEntries;
+    const key = attack.sectorKey || attack.attackerId;
+    if (!entries || !key) {
+        return null;
+    }
+    if (entries.has(key)) {
+        return entries.get(key);
+    }
+    const doc = cache.attackContent?.ownerDocument;
+    if (!doc) {
+        return null;
+    }
+    const card = doc.createElement('div');
+    card.className = 'galaxy-attack-card';
+
+    const header = doc.createElement('div');
+    header.className = 'galaxy-attack-card__header';
+    const factionNode = doc.createElement('span');
+    factionNode.className = 'galaxy-attack-card__faction';
+    const timerNode = doc.createElement('span');
+    timerNode.className = 'galaxy-attack-card__timer';
+    header.appendChild(factionNode);
+    header.appendChild(timerNode);
+
+    const details = doc.createElement('div');
+    details.className = 'galaxy-attack-card__details';
+    const powerNode = doc.createElement('span');
+    powerNode.className = 'galaxy-attack-card__power';
+    const sectorNode = doc.createElement('span');
+    sectorNode.className = 'galaxy-attack-card__sector';
+    details.appendChild(powerNode);
+    details.appendChild(sectorNode);
+
+    card.appendChild(header);
+    card.appendChild(details);
+
+    const entry = {
+        element: card,
+        factionNode,
+        timerNode,
+        powerNode,
+        sectorNode
+    };
+    entries.set(key, entry);
+    return entry;
+}
+
+function updateIncomingAttackPanel(manager, cache) {
+    if (!cache?.attackContent || !cache.attackList) {
+        return;
+    }
+    const getIncomingAttacks = globalThis.GalaxyFactionUI && globalThis.GalaxyFactionUI.getIncomingAttacks;
+    const incomingAttacks = getIncomingAttacks ? getIncomingAttacks(manager) : [];
+    const seen = new Set();
+
+    for (let index = 0; index < incomingAttacks.length; index += 1) {
+        const attack = incomingAttacks[index];
+        const record = ensureAttackCard(cache, attack);
+        if (!record) {
+            continue;
+        }
+        record.factionNode.textContent = attack.attackerName;
+        record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
+        const formattedPower = formatFleetValue(attack.power);
+        record.powerNode.textContent = `Power: ${formattedPower}`;
+        record.sectorNode.textContent = `Target: ${attack.sectorName}`;
+        if (record.element.parentNode !== cache.attackList) {
+            cache.attackList.appendChild(record.element);
+        }
+        seen.add(attack.sectorKey || attack.attackerId);
+    }
+
+    const entries = cache.attackEntries;
+    if (entries) {
+        Array.from(entries.keys()).forEach((key) => {
+            if (seen.has(key)) {
+                const existing = entries.get(key);
+                if (existing && existing.element.parentNode !== cache.attackList) {
+                    cache.attackList.appendChild(existing.element);
+                }
+                return;
+            }
+            const existing = entries.get(key);
+            if (existing?.element?.parentNode) {
+                existing.element.parentNode.removeChild(existing.element);
+            }
+            entries.delete(key);
+        });
+    }
+
+    const hasEntries = incomingAttacks.length > 0;
+    if (cache.attackContent) {
+        cache.attackContent.classList.toggle('is-populated', hasEntries);
+    }
+    if (cache.attackPlaceholder) {
+        if (hasEntries) {
+            cache.attackPlaceholder.textContent = '';
+            cache.attackPlaceholder.classList.add('is-hidden');
+        } else {
+            const message = cache.attackContent?.dataset?.emptyMessage || 'No hostiles detected.';
+            cache.attackPlaceholder.textContent = message;
+            cache.attackPlaceholder.classList.remove('is-hidden');
+        }
+    }
 }
 
 function updateLogisticsDisplay(manager, cache) {
@@ -2606,6 +2728,7 @@ function updateGalaxyUI() {
         clearOperationArrows(cache);
         updateLogisticsDisplay(null, cache);
         updateFleetShopDisplay(null, cache);
+        clearIncomingAttackPanel(cache);
         refreshEmptyStates();
         return;
     }
@@ -2634,6 +2757,7 @@ function updateGalaxyUI() {
 
     updateLogisticsDisplay(manager, cache);
     updateFleetShopDisplay(manager, cache);
+    updateIncomingAttackPanel(manager, cache);
     updateGalaxyHexControlColors(manager, cache);
     updateGalaxyOperationArrows(manager, cache);
     renderSelectedSectorDetails();

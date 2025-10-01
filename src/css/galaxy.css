@@ -624,6 +624,71 @@
   box-shadow: inset 0 0 12px rgba(212, 104, 104, 0.15);
 }
 
+.galaxy-attack-panel.is-populated {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 12px;
+}
+
+.galaxy-attack-panel__placeholder {
+  margin: 0;
+  color: #f0bcbc;
+  font-style: italic;
+}
+
+.galaxy-attack-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.galaxy-attack-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(82, 22, 22, 0.46);
+  border: 1px solid rgba(220, 118, 118, 0.34);
+  box-shadow: inset 0 0 10px rgba(220, 118, 118, 0.16);
+  color: #ffe4e4;
+}
+
+.galaxy-attack-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.galaxy-attack-card__faction {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.galaxy-attack-card__timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #ffd0d0;
+}
+
+.galaxy-attack-card__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #ffdede;
+}
+
+.galaxy-attack-card__power,
+.galaxy-attack-card__sector {
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
 .galaxy-sector-panel {
   box-shadow: inset 0 0 12px rgba(124, 184, 255, 0.18);
 }
