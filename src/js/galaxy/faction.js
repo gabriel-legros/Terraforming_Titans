@@ -506,15 +506,9 @@ class GalaxyFaction {
                 return;
             }
             let highestThreat = 0;
-            for (let index = 0; index < BORDER_HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
-                const direction = BORDER_HEX_NEIGHBOR_DIRECTIONS[index];
-                const neighbor = getNeighbor(sector, direction);
-                if (!neighbor) {
-                    continue;
-                }
-                const breakdown = neighbor.getControlBreakdown?.();
+            const evaluateThreat = (breakdown) => {
                 if (!Array.isArray(breakdown) || breakdown.length === 0) {
-                    continue;
+                    return;
                 }
                 breakdown.forEach((entry) => {
                     if (!entry || entry.factionId === this.id || !(entry.value > BORDER_CONTROL_EPSILON)) {
@@ -525,6 +519,19 @@ class GalaxyFaction {
                         highestThreat = threat;
                     }
                 });
+            };
+            for (let index = 0; index < BORDER_HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+                const direction = BORDER_HEX_NEIGHBOR_DIRECTIONS[index];
+                const neighbor = getNeighbor(sector, direction);
+                if (!neighbor) {
+                    continue;
+                }
+                const breakdown = neighbor.getControlBreakdown?.();
+                evaluateThreat(breakdown);
+            }
+            if (contestedSet.has(key)) {
+                const breakdown = sector.getControlBreakdown?.();
+                evaluateThreat(breakdown);
             }
             if (contestedSet.has(key)) {
                 registerThreat(contestedThreatMap, key, highestThreat);
