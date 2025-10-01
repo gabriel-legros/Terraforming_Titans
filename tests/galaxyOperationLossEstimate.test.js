@@ -1,4 +1,7 @@
+const { loadGalaxyConstants } = require('./helpers/loadGalaxyConstants');
 const EffectableEntity = require('../src/js/effectable-entity');
+
+loadGalaxyConstants();
 
 global.EffectableEntity = EffectableEntity;
 
