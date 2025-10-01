@@ -228,9 +228,21 @@ class GalaxyFaction {
         const keys = [];
         sectors.forEach((sector) => {
             const controlValue = sector?.getControlValue?.(this.id) ?? 0;
-            if (controlValue > 0) {
-                keys.push(sector.key);
+            if (!(controlValue > BORDER_CONTROL_EPSILON)) {
+                return;
             }
+            const totalControl = sector?.getTotalControlValue?.() ?? 0;
+            if (!(totalControl > 0)) {
+                return;
+            }
+            if (totalControl - controlValue > BORDER_CONTROL_EPSILON) {
+                return;
+            }
+            const dominant = sector?.getDominantController?.();
+            if (!dominant || dominant.factionId !== this.id) {
+                return;
+            }
+            keys.push(sector.key);
         });
         this.controlledSectors = keys;
         this.controlCacheDirty = false;
@@ -385,10 +397,15 @@ class GalaxyFaction {
             this.contestedThreatLevels = new Map();
             return;
         }
+        const sectorMap = new Map();
+        sectors.forEach((sector) => {
+            if (sector?.key) {
+                sectorMap.set(sector.key, sector);
+            }
+        });
         const contestedSet = new Set();
         const neighborSet = new Set();
-        const neighborThreatMap = new Map();
-        const contestedThreatMap = new Map();
+        const borderSet = new Set();
         const factionThreatCache = new Map();
         const resolveFactionThreat = (factionId) => {
             if (!factionId || factionId === this.id) {
@@ -413,21 +430,89 @@ class GalaxyFaction {
                 map.set(key, threat);
             }
         };
-        const sectorLookup = manager?.getSector;
+        const neighborThreatMap = new Map();
+        const contestedThreatMap = new Map();
+        const getNeighbor = (sector, direction) => {
+            const neighbor = manager?.getSector?.(sector.q + direction.q, sector.r + direction.r);
+            if (neighbor) {
+                return neighbor;
+            }
+            const key = `${sector.q + direction.q},${sector.r + direction.r}`;
+            return sectorMap.get(key) || null;
+        };
         sectors.forEach((sector) => {
-            const controlValue = sector?.getControlValue?.(this.id) ?? 0;
-            if (!(controlValue > BORDER_CONTROL_EPSILON)) {
+            const ownControl = sector?.getControlValue?.(this.id) ?? 0;
+            if (!(ownControl > BORDER_CONTROL_EPSILON)) {
                 return;
             }
             const totalControl = sector?.getTotalControlValue?.() ?? 0;
-            const sectorBreakdown = sector?.getControlBreakdown?.();
-            if (Array.isArray(sectorBreakdown)) {
-                let highestThreat = 0;
-                sectorBreakdown.forEach((entry) => {
-                    if (!entry || !Number.isFinite(entry.value) || entry.factionId === this.id) {
+            let borderCandidate = false;
+            if (totalControl - ownControl > BORDER_CONTROL_EPSILON) {
+                contestedSet.add(sector.key);
+                borderCandidate = true;
+            }
+            for (let index = 0; index < BORDER_HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+                const direction = BORDER_HEX_NEIGHBOR_DIRECTIONS[index];
+                const neighbor = getNeighbor(sector, direction);
+                if (!neighbor) {
+                    continue;
+                }
+                const neighborTotal = neighbor.getTotalControlValue?.() ?? 0;
+                if (neighborTotal > 0 && !borderCandidate) {
+                    const dominant = neighbor.getDominantController?.();
+                    if (dominant && dominant.factionId !== this.id) {
+                        const dominantControl = neighbor.getControlValue?.(dominant.factionId) ?? 0;
+                        if (Math.abs(dominantControl - neighborTotal) <= BORDER_CONTROL_EPSILON) {
+                            borderCandidate = true;
+                        }
+                    }
+                }
+                const neighborBreakdown = neighbor.getControlBreakdown?.();
+                if (!Array.isArray(neighborBreakdown) || neighborBreakdown.length === 0) {
+                    continue;
+                }
+                const ownNeighborControl = neighbor.getControlValue?.(this.id) ?? 0;
+                if (ownNeighborControl > BORDER_CONTROL_EPSILON
+                    && neighborTotal - ownNeighborControl > BORDER_CONTROL_EPSILON) {
+                    contestedSet.add(neighbor.key);
+                }
+                let hasEnemyPresence = false;
+                neighborBreakdown.forEach((entry) => {
+                    if (!entry || entry.factionId === this.id || !(entry.value > BORDER_CONTROL_EPSILON)) {
                         return;
                     }
-                    if (!(entry.value > BORDER_CONTROL_EPSILON)) {
+                    hasEnemyPresence = true;
+                });
+                if (hasEnemyPresence) {
+                    neighborSet.add(neighbor.key);
+                }
+            }
+            if (borderCandidate) {
+                borderSet.add(sector.key);
+            }
+        });
+        const threatTargets = new Set(borderSet);
+        contestedSet.forEach((key) => {
+            threatTargets.add(key);
+        });
+        threatTargets.forEach((key) => {
+            const sector = sectorMap.get(key);
+            if (!sector) {
+                return;
+            }
+            let highestThreat = 0;
+            for (let index = 0; index < BORDER_HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+                const direction = BORDER_HEX_NEIGHBOR_DIRECTIONS[index];
+                const neighbor = getNeighbor(sector, direction);
+                if (!neighbor) {
+                    continue;
+                }
+                const breakdown = neighbor.getControlBreakdown?.();
+                if (!Array.isArray(breakdown) || breakdown.length === 0) {
+                    continue;
+                }
+                breakdown.forEach((entry) => {
+                    if (!entry || entry.factionId === this.id || !(entry.value > BORDER_CONTROL_EPSILON)) {
                         return;
                     }
                     const threat = resolveFactionThreat(entry.factionId);
@@ -435,63 +520,13 @@ class GalaxyFaction {
                         highestThreat = threat;
                     }
                 });
-                registerThreat(contestedThreatMap, sector.key, highestThreat);
             }
-            if (totalControl - controlValue > BORDER_CONTROL_EPSILON) {
-                contestedSet.add(sector.key);
+            if (contestedSet.has(key)) {
+                registerThreat(contestedThreatMap, key, highestThreat);
             }
-            if (!sectorLookup) {
-                return;
+            if (borderSet.has(key)) {
+                registerThreat(neighborThreatMap, key, highestThreat);
             }
-            BORDER_HEX_NEIGHBOR_DIRECTIONS.forEach((direction) => {
-                const neighbor = sectorLookup.call(manager, sector.q + direction.q, sector.r + direction.r);
-                if (!neighbor) {
-                    return;
-                }
-                const neighborTotal = neighbor?.getTotalControlValue?.() ?? 0;
-                if (!(neighborTotal > BORDER_CONTROL_EPSILON)) {
-                    return;
-                }
-                const neighborBreakdown = neighbor?.getControlBreakdown?.();
-                if (Array.isArray(neighborBreakdown)) {
-                    let neighborThreat = 0;
-                    neighborBreakdown.forEach((entry) => {
-                        if (!entry || !Number.isFinite(entry.value) || entry.factionId === this.id) {
-                            return;
-                        }
-                        if (!(entry.value > BORDER_CONTROL_EPSILON)) {
-                            return;
-                        }
-                        const threat = resolveFactionThreat(entry.factionId);
-                        if (threat > neighborThreat) {
-                            neighborThreat = threat;
-                        }
-                    });
-                    registerThreat(neighborThreatMap, neighbor.key, neighborThreat);
-                    if (neighborThreat > 0) {
-                        registerThreat(contestedThreatMap, neighbor.key, neighborThreat);
-                    }
-                }
-                const dominant = neighbor?.getDominantController?.();
-                if (dominant && dominant.factionId !== this.id) {
-                    neighborSet.add(neighbor.key);
-                    return;
-                }
-                const ownNeighborControl = neighbor?.getControlValue?.(this.id) ?? 0;
-                if (ownNeighborControl > BORDER_CONTROL_EPSILON && Math.abs(ownNeighborControl - neighborTotal) <= BORDER_CONTROL_EPSILON) {
-                    return;
-                }
-                if (ownNeighborControl > BORDER_CONTROL_EPSILON) {
-                    contestedSet.add(neighbor.key);
-                }
-                if (!Array.isArray(neighborBreakdown)) {
-                    return;
-                }
-                const hasEnemyPresence = neighborBreakdown.some((entry) => entry?.factionId && entry.factionId !== this.id && entry.value > BORDER_CONTROL_EPSILON);
-                if (hasEnemyPresence) {
-                    neighborSet.add(neighbor.key);
-                }
-            });
         });
         this.contestedSectors = Array.from(contestedSet);
         this.contestedSectorLookup = contestedSet;

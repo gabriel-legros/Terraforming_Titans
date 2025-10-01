@@ -37,6 +37,24 @@ describe('GalaxyFaction defense calculations', () => {
         expect(sectorCalls).toBe(2);
     });
 
+    it('does not treat contested sectors as controlled', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const home = new GalaxySector({ q: 0, r: 0 });
+        home.setControl('uhf', 100);
+        const contested = new GalaxySector({ q: 1, r: 0 });
+        contested.setControl('uhf', 40);
+        contested.setControl('ally', 60);
+
+        const sectors = [home, contested];
+        const manager = {
+            getSectors: () => sectors
+        };
+
+        const controlledKeys = faction.getControlledSectorKeys(manager);
+        expect(controlledKeys).toContain(home.key);
+        expect(controlledKeys).not.toContain(contested.key);
+    });
+
     it('computes UHF defense from terraformed worlds, upgrades, and fleet distribution', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
         faction.fleetPower = 900;
@@ -250,9 +268,10 @@ describe('GalaxyFaction defense calculations', () => {
         expect(neighborKeys).toContain(allyStronghold.key);
         expect(neighborKeys).toContain(rivalOutpost.key);
 
-        expect(uhfFaction.getContestedThreatLevel(shared.key)).toBe(3);
-        expect(uhfFaction.getNeighborThreatLevel(allyStronghold.key)).toBe(3);
-        expect(uhfFaction.getNeighborThreatLevel(rivalOutpost.key)).toBe(2);
+        expect(uhfFaction.getContestedThreatLevel(shared.key)).toBe(2);
+        expect(uhfFaction.getNeighborThreatLevel(home.key)).toBe(2);
+        expect(uhfFaction.getNeighborThreatLevel(allyStronghold.key)).toBe(0);
+        expect(uhfFaction.getNeighborThreatLevel(rivalOutpost.key)).toBe(0);
         expect(uhfFaction.getContestedThreatLevel(home.key)).toBe(0);
     });
 
