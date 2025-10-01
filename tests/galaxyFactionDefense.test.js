@@ -220,7 +220,7 @@ describe('GalaxyFaction defense calculations', () => {
         expect(getSectorsCalls).toBe(3);
     });
 
-    it('records highest enemy threats when rebuilding conflict caches', () => {
+    it('records highest enemy threats for border hexes when rebuilding conflict caches', () => {
         const uhfFaction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
         const allyFaction = new GalaxyFaction({ id: 'ally', name: 'Ally Fleet' });
         const rivalFaction = new GalaxyFaction({ id: 'rival', name: 'Rival Fleet' });
@@ -269,9 +269,9 @@ describe('GalaxyFaction defense calculations', () => {
         expect(neighborKeys).toContain(rivalOutpost.key);
 
         expect(uhfFaction.getContestedThreatLevel(shared.key)).toBe(2);
-        expect(uhfFaction.getNeighborThreatLevel(home.key)).toBe(2);
-        expect(uhfFaction.getNeighborThreatLevel(allyStronghold.key)).toBe(0);
-        expect(uhfFaction.getNeighborThreatLevel(rivalOutpost.key)).toBe(0);
+        expect(uhfFaction.getBorderThreatLevel(home.key)).toBe(2);
+        expect(uhfFaction.getBorderThreatLevel(allyStronghold.key)).toBe(0);
+        expect(uhfFaction.getBorderThreatLevel(rivalOutpost.key)).toBe(0);
         expect(uhfFaction.getContestedThreatLevel(home.key)).toBe(0);
     });
 
