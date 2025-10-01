@@ -57,7 +57,7 @@ class GalaxyFaction {
         this.contestedSectors = [];
         this.contestedSectorLookup = new Set();
         this.contestedCacheDirty = true;
-        this.neighborThreatLevels = new Map();
+        this.borderThreatLevels = new Map();
         this.contestedThreatLevels = new Map();
     }
 
@@ -187,7 +187,7 @@ class GalaxyFaction {
         this.borderCacheDirty = true;
         this.neighborEnemyCacheDirty = true;
         this.contestedCacheDirty = true;
-        this.neighborThreatLevels = new Map();
+        this.borderThreatLevels = new Map();
         this.contestedThreatLevels = new Map();
     }
 
@@ -203,7 +203,7 @@ class GalaxyFaction {
         this.contestedSectors = [];
         this.contestedSectorLookup = new Set();
         this.contestedCacheDirty = true;
-        this.neighborThreatLevels = new Map();
+        this.borderThreatLevels = new Map();
         this.contestedThreatLevels = new Map();
     }
 
@@ -211,7 +211,7 @@ class GalaxyFaction {
         this.borderCacheDirty = true;
         this.neighborEnemyCacheDirty = true;
         this.contestedCacheDirty = true;
-        this.neighborThreatLevels = new Map();
+        this.borderThreatLevels = new Map();
         this.contestedThreatLevels = new Map();
     }
 
@@ -317,11 +317,11 @@ class GalaxyFaction {
         return this.neighborEnemySectors;
     }
 
-    getNeighborThreatLevel(sectorKey) {
+    getBorderThreatLevel(sectorKey) {
         if (!sectorKey) {
             return 0;
         }
-        const threat = this.neighborThreatLevels?.get?.(sectorKey);
+        const threat = this.borderThreatLevels?.get?.(sectorKey);
         if (!Number.isFinite(threat) || threat <= 0) {
             return 0;
         }
@@ -393,7 +393,7 @@ class GalaxyFaction {
             this.neighborEnemySectors = [];
             this.neighborEnemyLookup = new Set();
             this.neighborEnemyCacheDirty = false;
-            this.neighborThreatLevels = new Map();
+            this.borderThreatLevels = new Map();
             this.contestedThreatLevels = new Map();
             return;
         }
@@ -430,7 +430,7 @@ class GalaxyFaction {
                 map.set(key, threat);
             }
         };
-        const neighborThreatMap = new Map();
+        const borderThreatMap = new Map();
         const contestedThreatMap = new Map();
         const getNeighbor = (sector, direction) => {
             const neighbor = manager?.getSector?.(sector.q + direction.q, sector.r + direction.r);
@@ -525,7 +525,7 @@ class GalaxyFaction {
                 registerThreat(contestedThreatMap, key, highestThreat);
             }
             if (borderSet.has(key)) {
-                registerThreat(neighborThreatMap, key, highestThreat);
+                registerThreat(borderThreatMap, key, highestThreat);
             }
         });
         this.contestedSectors = Array.from(contestedSet);
@@ -534,7 +534,7 @@ class GalaxyFaction {
         this.neighborEnemySectors = Array.from(neighborSet);
         this.neighborEnemyLookup = neighborSet;
         this.neighborEnemyCacheDirty = false;
-        this.neighborThreatLevels = neighborThreatMap;
+        this.borderThreatLevels = borderThreatMap;
         this.contestedThreatLevels = contestedThreatMap;
     }
 
