@@ -47,6 +47,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         while (this.autoOperationTimer >= AUTO_OPERATION_INTERVAL_MS) {
             this.autoOperationTimer -= AUTO_OPERATION_INTERVAL_MS;
             this.#launchAutoOperation(manager);
+            this.pendingOperationPower = this.#rollOperationPower();
         }
     }
 
@@ -186,7 +187,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             this.pendingOperationPower = 0;
             return 0;
         }
-        if (!(this.pendingOperationPower > 0) || this.pendingOperationPower > maxAssignable) {
+        if (!(this.pendingOperationPower > 0)) {
             this.pendingOperationPower = this.#rollOperationPower(capacity);
             if (this.pendingOperationPower > maxAssignable) {
                 this.pendingOperationPower = Math.max(1, Math.floor(maxAssignable));
@@ -195,7 +196,8 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         return Math.max(0, Math.min(this.pendingOperationPower, maxAssignable));
     }
 
-    #rollOperationPower(capacity) {
+    #rollOperationPower() {
+        const capacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
         const minPercent = AUTO_OPERATION_MIN_PERCENT;
         const maxPercent = AUTO_OPERATION_MAX_PERCENT;
         const spread = Math.max(0, maxPercent - minPercent);
