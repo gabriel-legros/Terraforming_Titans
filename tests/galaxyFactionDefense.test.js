@@ -202,6 +202,60 @@ describe('GalaxyFaction defense calculations', () => {
         expect(getSectorsCalls).toBe(3);
     });
 
+    it('records highest enemy threats when rebuilding conflict caches', () => {
+        const uhfFaction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const allyFaction = new GalaxyFaction({ id: 'ally', name: 'Ally Fleet' });
+        const rivalFaction = new GalaxyFaction({ id: 'rival', name: 'Rival Fleet' });
+
+        const home = new GalaxySector({ q: 0, r: 0 });
+        home.setControl('uhf', 80);
+
+        const shared = new GalaxySector({ q: 1, r: 0 });
+        shared.setControl('uhf', 40);
+        shared.setControl('ally', 30);
+        shared.setControl('rival', 30);
+
+        const allyStronghold = new GalaxySector({ q: 0, r: 1 });
+        allyStronghold.setControl('ally', 100);
+
+        const rivalOutpost = new GalaxySector({ q: 1, r: -1 });
+        rivalOutpost.setControl('rival', 100);
+
+        const allyExpansion = new GalaxySector({ q: 2, r: -1 });
+        allyExpansion.setControl('ally', 100);
+
+        const sectors = [home, shared, allyStronghold, rivalOutpost, allyExpansion];
+        const sectorMap = new Map(sectors.map((sector) => [sector.key, sector]));
+        const factionMap = new Map([
+            ['uhf', uhfFaction],
+            ['ally', allyFaction],
+            ['rival', rivalFaction]
+        ]);
+
+        allyFaction.markControlDirty();
+        rivalFaction.markControlDirty();
+
+        const manager = {
+            getSectors: () => sectors,
+            getSector: (q, r) => sectorMap.get(GalaxySector.createKey(q, r)) || null,
+            getFaction: (id) => factionMap.get(id) || null
+        };
+
+        uhfFaction.markBorderDirty();
+
+        const contestedKeys = uhfFaction.getContestedSectorKeys(manager);
+        expect(contestedKeys).toContain(shared.key);
+
+        const neighborKeys = uhfFaction.getNeighborEnemySectorKeys(manager);
+        expect(neighborKeys).toContain(allyStronghold.key);
+        expect(neighborKeys).toContain(rivalOutpost.key);
+
+        expect(uhfFaction.getContestedThreatLevel(shared.key)).toBe(3);
+        expect(uhfFaction.getNeighborThreatLevel(allyStronghold.key)).toBe(3);
+        expect(uhfFaction.getNeighborThreatLevel(rivalOutpost.key)).toBe(2);
+        expect(uhfFaction.getContestedThreatLevel(home.key)).toBe(0);
+    });
+
     it('rebuilds contested caches during update when marked dirty', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
 
