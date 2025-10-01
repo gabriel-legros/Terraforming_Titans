@@ -159,14 +159,6 @@ function resolveSectorOverrideValue(sectorKey) {
 
 const GALAXY_RADIUS = 6;
 const GALAXY_OPERATION_DURATION_MS = 600000;
-const HEX_NEIGHBOR_DIRECTIONS = [
-    { q: 1, r: 0 },
-    { q: 1, r: -1 },
-    { q: 0, r: -1 },
-    { q: -1, r: 0 },
-    { q: -1, r: 1 },
-    { q: 0, r: 1 }
-];
 const FULL_CONTROL_EPSILON = 1e-6;
 const FLEET_UPGRADE_INCREMENT = 0.1;
 const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
