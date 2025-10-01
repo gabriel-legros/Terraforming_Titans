@@ -224,3 +224,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Celestial parameters now store a galaxy sector identifier, and random worlds roll a sector assignment that appears when the Galaxy Manager is active.
 - Galaxy sector base power values are configurable via `sector-parameters.js`, including a 1000 power core sector override.
 - AI-controlled galaxy factions now stockpile surplus strength above a defensiveness threshold and launch randomized 5–15% capacity operations every minute once the reserve is met, still prioritizing contested or neighboring enemy sectors.
+- UHF fleet defense now divides available border strength evenly instead of weighting distribution by threat levels.
