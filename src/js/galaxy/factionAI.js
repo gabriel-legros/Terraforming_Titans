@@ -3,6 +3,15 @@ const AUTO_OPERATION_MIN_PERCENT = 0.05;
 const AUTO_OPERATION_MAX_PERCENT = 0.15;
 const CEWINSII_FACTION_ID = 'cewinsii';
 
+const HEX_NEIGHBOR_DIRECTIONS = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 }
+];
+
 let GalaxyFactionBaseClass = globalScope?.GalaxyFaction;
 let uhfFactionId = globalScope?.UHF_FACTION_ID ?? 'uhf';
 
@@ -132,20 +141,14 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             const entry = weightedTargets[index];
             roll -= entry.threat;
             if (roll <= 0) {
-                const candidateKeys = entry.keys;
-                if (!candidateKeys.length) {
-                    continue;
-                }
-                const keyIndex = Math.floor(Math.random() * candidateKeys.length);
-                return candidateKeys[keyIndex] || null;
+                return this.#selectTargetSectorKey(entry.keys, entry.factionId, manager);
             }
         }
         const fallback = weightedTargets[weightedTargets.length - 1];
         if (!fallback || !fallback.keys.length) {
             return null;
         }
-        const fallbackIndex = Math.floor(Math.random() * fallback.keys.length);
-        return fallback.keys[fallbackIndex] || null;
+        return this.#selectTargetSectorKey(fallback.keys, fallback.factionId, manager);
     }
 
     #isEnemySectorKey(key, manager) {
@@ -219,6 +222,111 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         collectFromKeys(this.getContestedSectorKeys(manager));
         collectFromKeys(this.getNeighborEnemySectorKeys(manager));
         return candidateMap;
+    }
+
+    #selectTargetSectorKey(candidateKeys, targetFactionId, manager) {
+        if (!Array.isArray(candidateKeys) || candidateKeys.length === 0) {
+            return null;
+        }
+        const candidateSet = new Set(candidateKeys);
+        const contestedPick = this.#pickBestCachedSector(
+            this.getContestedSectorKeys(manager),
+            candidateSet,
+            targetFactionId,
+            manager,
+            true
+        );
+        if (contestedPick) {
+            return contestedPick;
+        }
+        return this.#pickBestCachedSector(
+            this.getNeighborEnemySectorKeys(manager),
+            candidateSet,
+            targetFactionId,
+            manager,
+            false
+        );
+    }
+
+    #pickBestCachedSector(keys, candidateSet, targetFactionId, manager, requireOwnControl) {
+        if (!Array.isArray(keys) || keys.length === 0) {
+            return null;
+        }
+        let bestScore = -Infinity;
+        let bestKeys = [];
+        for (let index = 0; index < keys.length; index += 1) {
+            const key = keys[index];
+            if (!candidateSet.has(key)) {
+                continue;
+            }
+            if (manager?.getOperationForSector?.(key)?.status === 'running') {
+                continue;
+            }
+            const sector = this.#getSectorFromKey(key, manager);
+            if (!sector) {
+                continue;
+            }
+            const breakdown = sector.getControlBreakdown?.();
+            if (!Array.isArray(breakdown) || breakdown.length === 0) {
+                continue;
+            }
+            let ownControl = 0;
+            let targetControl = 0;
+            for (let breakdownIndex = 0; breakdownIndex < breakdown.length; breakdownIndex += 1) {
+                const entry = breakdown[breakdownIndex];
+                if (!entry || !Number.isFinite(entry.value)) {
+                    continue;
+                }
+                if (entry.factionId === this.id) {
+                    ownControl = entry.value;
+                } else if (entry.factionId === targetFactionId) {
+                    targetControl = entry.value;
+                }
+            }
+            if (!(targetControl > FULL_CONTROL_EPSILON)) {
+                continue;
+            }
+            if (requireOwnControl && !(ownControl > FULL_CONTROL_EPSILON)) {
+                continue;
+            }
+            const neighborScore = this.#countControlledNeighbors(sector, manager);
+            if (neighborScore > bestScore) {
+                bestScore = neighborScore;
+                bestKeys = [key];
+                continue;
+            }
+            if (neighborScore === bestScore) {
+                bestKeys.push(key);
+            }
+        }
+        if (bestKeys.length === 0) {
+            return null;
+        }
+        const index = Math.floor(Math.random() * bestKeys.length);
+        return bestKeys[index] || null;
+    }
+
+    #countControlledNeighbors(sector, manager) {
+        if (!sector) {
+            return 0;
+        }
+        let count = 0;
+        for (let index = 0; index < HEX_NEIGHBOR_DIRECTIONS.length; index += 1) {
+            const direction = HEX_NEIGHBOR_DIRECTIONS[index];
+            const neighbor = manager?.getSector?.(sector.q + direction.q, sector.r + direction.r);
+            if (!neighbor) {
+                continue;
+            }
+            const totalControl = neighbor.getTotalControlValue?.();
+            if (!(totalControl > 0)) {
+                continue;
+            }
+            const ownControl = neighbor.getControlValue?.(this.id) ?? 0;
+            if (Math.abs(ownControl - totalControl) <= FULL_CONTROL_EPSILON) {
+                count += 1;
+            }
+        }
+        return count;
     }
 
     #computeFactionThreat(factionId, manager) {
