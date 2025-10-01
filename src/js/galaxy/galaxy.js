@@ -158,7 +158,7 @@ function resolveSectorOverrideValue(sectorKey) {
 }
 
 const GALAXY_RADIUS = 6;
-const GALAXY_OPERATION_DURATION_MS = 10000;
+const GALAXY_OPERATION_DURATION_MS = 600000;
 const HEX_NEIGHBOR_DIRECTIONS = [
     { q: 1, r: 0 },
     { q: 1, r: -1 },
