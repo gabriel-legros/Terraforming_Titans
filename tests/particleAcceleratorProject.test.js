@@ -31,10 +31,13 @@ describe('Particle Accelerator project', () => {
   });
 
   test('tracks radius selection, cost scaling, and persistence', () => {
+    const addEffect = jest.fn();
+    const removeEffect = jest.fn();
     const ctx = {
       console,
       EffectableEntity,
-      addEffect: () => {},
+      addEffect,
+      removeEffect,
       globalGameIsLoadingFromSave: false,
       projectElements: {},
       resources: {
@@ -96,6 +99,16 @@ describe('Particle Accelerator project', () => {
     expect(project.repeatCount).toBe(1);
     expect(project.bestRadiusMeters).toBe(EARTH_RADIUS_METERS * 5);
     expect(project.canStart()).toBe(false);
+    const expectedPercent = project.calculateResearchBoost(project.bestRadiusMeters);
+    const expectedMultiplier = 1 + (expectedPercent / 100);
+    expect(addEffect).toHaveBeenLastCalledWith({
+      target: 'researchManager',
+      type: 'advancedResearchBoost',
+      value: expectedMultiplier,
+      effectId: 'particleAccelerator-advancedResearchBoost',
+      sourceId: 'particleAccelerator-advancedResearchBoost',
+      name: 'Particle Accelerator Research Boost'
+    });
 
     project.adjustRadiusBySteps(1);
     expect(project.selectedRadiusMeters).toBe(EARTH_RADIUS_METERS * 5 + 1);
@@ -116,6 +129,7 @@ describe('Particle Accelerator project', () => {
 
     const restored = new ctx.ParticleAcceleratorProject(config, 'particleAccelerator');
     restored.loadState(savedState);
+    expect(addEffect).toHaveBeenCalledTimes(2);
     expect(restored.getCompletedCount()).toBe(1);
     expect(restored.repeatCount).toBe(1);
     expect(restored.bestRadiusMeters).toBe(EARTH_RADIUS_METERS * 5);
@@ -132,11 +146,13 @@ describe('Particle Accelerator project', () => {
 
     const travelled = new ctx.ParticleAcceleratorProject(config, 'particleAccelerator');
     travelled.loadTravelState(travelState);
+    expect(addEffect).toHaveBeenCalledTimes(3);
     expect(travelled.getCompletedCount()).toBe(1);
     expect(travelled.repeatCount).toBe(1);
     expect(travelled.bestRadiusMeters).toBe(EARTH_RADIUS_METERS * 5);
     expect(travelled.selectedRadiusMeters).toBeCloseTo(expectedRadiusAfterStep, 6);
     expect(travelled.radiusStepMeters).toBe(10);
+    expect(removeEffect).not.toHaveBeenCalled();
 
   });
 
@@ -148,6 +164,7 @@ describe('Particle Accelerator project', () => {
       console,
       EffectableEntity,
       addEffect: () => {},
+      removeEffect: () => {},
       globalGameIsLoadingFromSave: false,
       projectElements: {},
       resources: {
