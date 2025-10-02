@@ -2,6 +2,7 @@ const AUTO_OPERATION_INTERVAL_MS = 60000;
 const AUTO_OPERATION_MIN_PERCENT = 0.05;
 const AUTO_OPERATION_MAX_PERCENT = 0.15;
 const CEWINSII_FACTION_ID = 'cewinsii';
+const THREAT_PRIORITY_THRESHOLD = 40;
 
 const HEX_NEIGHBOR_DIRECTIONS = [
     { q: 1, r: 0 },
@@ -156,19 +157,27 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (!weightedTargets.length) {
             return null;
         }
-        const totalThreat = weightedTargets.reduce((sum, entry) => sum + entry.threat, 0);
+        const selfThreat = this.#computeSelfThreat(manager);
+        const highThreatTargets = weightedTargets.filter((entry) => entry.threat > THREAT_PRIORITY_THRESHOLD);
+        const prioritizedTargets = highThreatTargets.length > 0 && !(selfThreat > THREAT_PRIORITY_THRESHOLD)
+            ? highThreatTargets
+            : weightedTargets;
+        if (!prioritizedTargets.length) {
+            return null;
+        }
+        const totalThreat = prioritizedTargets.reduce((sum, entry) => sum + entry.threat, 0);
         if (!(totalThreat > 0)) {
             return null;
         }
         let roll = Math.random() * totalThreat;
-        for (let index = 0; index < weightedTargets.length; index += 1) {
-            const entry = weightedTargets[index];
+        for (let index = 0; index < prioritizedTargets.length; index += 1) {
+            const entry = prioritizedTargets[index];
             roll -= entry.threat;
             if (roll <= 0) {
                 return this.#selectTargetSectorKey(entry.keys, entry.factionId, manager);
             }
         }
-        const fallback = weightedTargets[weightedTargets.length - 1];
+        const fallback = prioritizedTargets[prioritizedTargets.length - 1];
         if (!fallback || !fallback.keys.length) {
             return null;
         }
@@ -372,6 +381,22 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         const originalCount = this.#resolveInitialControlledCount(faction);
         const threatFactionId = faction?.id || factionId;
         if (threatFactionId !== uhfFactionId && originalCount > 0 && controlledCount <= originalCount * 0.5) {
+            return 0;
+        }
+        return controlledCount;
+    }
+
+    #computeSelfThreat(manager) {
+        const controlledKeys = this.getControlledSectorKeys?.(manager);
+        if (!Array.isArray(controlledKeys)) {
+            return 0;
+        }
+        const controlledCount = controlledKeys.length;
+        if (!(controlledCount > 0)) {
+            return 0;
+        }
+        const originalCount = this.#resolveInitialControlledCount(this);
+        if (this.id !== uhfFactionId && originalCount > 0 && controlledCount <= originalCount * 0.5) {
             return 0;
         }
         return controlledCount;
