@@ -678,7 +678,20 @@ progressVenus.chapters.push(
     narrative: "Mary : 'Nice work HOPE!  The Venusian fleet is ready to go as well.  However... the problem of antimatter remains.  I managed to get a bill passed in the senate.  Every world will contribute a certain amount of antimatter for the war effort.  I am forwarding some blueprints so you can produce your own if you want.  Now let's get one thing straight : the warp ship, and your role in this, is that of a taxi service.  You are not to risk it.  If you see any sign of trouble, you must warp out immediately.  Since we are spaceship-limited, our soldiers are all volunteers and are fully aware what they are getting into, so there is no need for you to mention the 2nd Primary Directive there.  We won't allow suicide missions though.  Besides, I have a far more important military job for you : protect Sol at all cost.' \nPete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can blow up stars and planets!'",
     prerequisites: ["chapter20.13"],
     objectives: [],
-    reward: []
+    reward: [
+      {
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'antimatter',
+        type: 'enable'
+      },
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'antimatterUnlocked',
+        value: true
+      }
+    ]
   },
   {
     id: "chapter20.14a",
