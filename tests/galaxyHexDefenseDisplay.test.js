@@ -145,7 +145,8 @@ describe('Galaxy map defense display', () => {
         const contestedValue = contestedEntry.querySelector('.galaxy-hex__defense-text').textContent;
         expect(contestedIcon).toBe(ALIEN_ICON);
         const formatDefense = (value) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value));
-        const expectedContestedValue = formatDefense(coreSector.getValue() + coreAssignment);
+        const sectorDefenseValue = alienFaction.getSectorDefense(coreSector, manager);
+        const expectedContestedValue = formatDefense(sectorDefenseValue + coreAssignment);
         expect(contestedValue).toBe(expectedContestedValue);
 
         const labelNode = coreHex.querySelector('.galaxy-hex__label');
@@ -186,5 +187,10 @@ describe('Galaxy map defense display', () => {
         expect(values[0].textContent).toBe(expectedSectorDefense);
         expect(values[1].textContent).toBe(expectedFleetDefense);
         expect(values[2].textContent).toBe(expectedTotalDefense);
+
+        const summary = manager.getSectorDefenseSummary(coreSector, 'uhf');
+        expect(summary.basePower).toBeCloseTo(sectorDefenseValue, 5);
+        expect(summary.fleetPower).toBeCloseTo(coreAssignment, 5);
+        expect(summary.totalPower).toBeCloseTo(sectorDefenseValue + coreAssignment, 5);
     });
 });

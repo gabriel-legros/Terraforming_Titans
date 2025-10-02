@@ -141,12 +141,25 @@ function getSectorUhfControl(sector) {
 }
 
 function calculateEnemySectorDefense(manager, sector, breakdown) {
-    if (!manager || !sector || !Array.isArray(breakdown) || breakdown.length === 0) {
-        return 0;
+    if (!manager || !sector) {
+        return { base: 0, fleet: 0, total: 0 };
     }
-    let total = 0;
-    for (let index = 0; index < breakdown.length; index += 1) {
-        const entry = breakdown[index];
+    if (typeof manager.getSectorDefenseSummary === 'function') {
+        const summary = manager.getSectorDefenseSummary(sector, UHF_FACTION_KEY);
+        return {
+            base: summary?.basePower > 0 ? summary.basePower : 0,
+            fleet: summary?.fleetPower > 0 ? summary.fleetPower : 0,
+            total: summary?.totalPower > 0 ? summary.totalPower : 0
+        };
+    }
+    const entries = Array.isArray(breakdown) ? breakdown : sector.getControlBreakdown?.() || [];
+    if (!entries.length) {
+        return { base: 0, fleet: 0, total: 0 };
+    }
+    let baseTotal = 0;
+    let fleetTotal = 0;
+    for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index];
         if (!entry || entry.factionId === UHF_FACTION_KEY) {
             continue;
         }
@@ -154,14 +167,20 @@ function calculateEnemySectorDefense(manager, sector, breakdown) {
         if (!faction) {
             continue;
         }
-        const defense = faction.getSectorDefense?.(sector, manager);
-        const numericDefense = Number(defense);
-        if (!Number.isFinite(numericDefense) || numericDefense <= 0) {
-            continue;
+        const defense = Number(faction.getSectorDefense?.(sector, manager));
+        if (Number.isFinite(defense) && defense > 0) {
+            baseTotal += defense;
         }
-        total += numericDefense;
+        const assignment = Number(faction.getBorderFleetAssignment?.(sector.key));
+        if (Number.isFinite(assignment) && assignment > 0) {
+            fleetTotal += assignment;
+        }
     }
-    return total;
+    return {
+        base: baseTotal,
+        fleet: fleetTotal,
+        total: baseTotal + fleetTotal
+    };
 }
 
 function normalizeHexColor(color) {
@@ -1044,36 +1063,17 @@ function renderSelectedSectorDetails() {
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
 
     const hasEnemyControl = (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0;
-    const baseEnemySectorDefense = hasEnemyControl
+    const enemyDefense = hasEnemyControl
         ? calculateEnemySectorDefense(manager, sector, breakdown)
-        : 0;
-    let strongestAssignment = 0;
-    if ((totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0 || bordersUhf) {
-        for (let index = 0; index < breakdown.length; index += 1) {
-            const entry = breakdown[index];
-            if (!entry || entry.factionId === UHF_FACTION_KEY) {
-                continue;
-            }
-            const faction = manager.getFaction?.(entry.factionId);
-            if (!faction) {
-                continue;
-            }
-            const assignmentValue = Number(faction.getBorderFleetAssignment?.(sector.key)) || 0;
-            if (assignmentValue > strongestAssignment) {
-                strongestAssignment = assignmentValue;
-            }
-        }
+        : { base: 0, fleet: 0, total: 0 };
+
+    let enemyTotalDefense = enemyDefense.total;
+    if (!(enemyTotalDefense > 0) && (bordersUhf || hasEnemyControl)) {
+        enemyTotalDefense = Math.max(0, enemyDefense.base + enemyDefense.fleet);
     }
 
-    let enemyTotalDefense = 0;
-    if (strongestAssignment > 0) {
-        enemyTotalDefense = strongestAssignment + baseEnemySectorDefense;
-    } else if (baseEnemySectorDefense > 0 && (bordersUhf || hasEnemyControl)) {
-        enemyTotalDefense = baseEnemySectorDefense;
-    }
-
-    details.enemy.sectorValue.textContent = formatDefenseInteger(baseEnemySectorDefense);
-    details.enemy.fleetValue.textContent = formatDefenseInteger(strongestAssignment);
+    details.enemy.sectorValue.textContent = formatDefenseInteger(enemyDefense.base);
+    details.enemy.fleetValue.textContent = formatDefenseInteger(enemyDefense.fleet);
     details.enemy.totalValue.textContent = enemyTotalDefense > 0 ? formatDefenseInteger(enemyTotalDefense) : '0';
 
     const multiplier = manager.getFleetCapacityMultiplier?.() ?? 1;
@@ -1695,8 +1695,6 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
     }
 
     const entries = [];
-    const sectorPowerValue = Number(sector?.getValue?.()) || 0;
-    const sectorPower = sectorPowerValue > 0 ? sectorPowerValue : 0;
     const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0;
     const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
     const isUhfControlled = uhfControl > 0;
@@ -1730,33 +1728,56 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
 
     const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor || hasManualDefense);
 
-    if (shouldShowUhf && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
-        const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
-        const total = Math.max(0, defenseValue);
-        if (total > 0) {
-            entries.push({ icon: GALAXY_DEFENSE_ICON, total, modifier: 'uhf' });
+    let uhfTotalDefense = 0;
+    if (typeof manager.getSectorDefenseSummary === 'function') {
+        const combinedSummary = manager.getSectorDefenseSummary(sector);
+        const uhfEntry = combinedSummary?.contributions?.find?.((entry) => entry.factionId === UHF_FACTION_KEY);
+        if (uhfEntry && uhfEntry.totalPower > 0) {
+            uhfTotalDefense = uhfEntry.totalPower;
+        }
+    }
+    if (shouldShowUhf) {
+        if (!(uhfTotalDefense > 0) && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
+            const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
+            uhfTotalDefense = Math.max(0, defenseValue);
+        }
+        if (uhfTotalDefense > 0) {
+            entries.push({ icon: GALAXY_DEFENSE_ICON, total: uhfTotalDefense, modifier: 'uhf' });
         }
     }
 
     const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
+    let enemyTotalDefense = 0;
+    if (typeof manager.getSectorDefenseSummary === 'function') {
+        const enemySummary = manager.getSectorDefenseSummary(sector, UHF_FACTION_KEY);
+        if (enemySummary && enemySummary.totalPower > 0) {
+            enemyTotalDefense = enemySummary.totalPower;
+        }
+    }
     if (contestedWithUhf || bordersUhf) {
-        const breakdown = sector.getControlBreakdown?.() || [];
-        for (let index = 0; index < breakdown.length; index += 1) {
-            const entry = breakdown[index];
-            if (!entry || entry.factionId === UHF_FACTION_KEY) {
-                continue;
+        if (!(enemyTotalDefense > 0)) {
+            const breakdown = sector.getControlBreakdown?.() || [];
+            for (let index = 0; index < breakdown.length; index += 1) {
+                const entry = breakdown[index];
+                if (!entry || entry.factionId === UHF_FACTION_KEY) {
+                    continue;
+                }
+                const faction = manager.getFaction?.(entry.factionId);
+                if (!faction) {
+                    continue;
+                }
+                const defense = Number(faction.getSectorDefense?.(sector, manager)) || 0;
+                const assignment = Number(faction.getBorderFleetAssignment?.(sector.key)) || 0;
+                const total = Math.max(0, defense + assignment);
+                if (total > 0) {
+                    enemyTotalDefense = total;
+                    break;
+                }
             }
-            const faction = manager.getFaction?.(entry.factionId);
-            if (!faction) {
-                continue;
-            }
-            const assignmentValue = Number(faction.getBorderFleetAssignment?.(sector.key)) || 0;
-            const total = Math.max(0, assignmentValue + sectorPower);
-            if (total > 0) {
-                entries.push({ icon: GALAXY_ALIEN_ICON, total, modifier: 'alien' });
-            }
-            break;
+        }
+        if (enemyTotalDefense > 0) {
+            entries.push({ icon: GALAXY_ALIEN_ICON, total: enemyTotalDefense, modifier: 'alien' });
         }
     }
 
