@@ -244,6 +244,24 @@ const researchParameters = {
           }
         ]
       },
+      {
+        id: 'antimatter_containment',
+        name: 'Antimatter Containment',
+        description: 'Unlocks antimatter farms and antimatter batteries.',
+        cost: { research: 100000000000 },
+        prerequisites: [],
+        requiredFlags: ['antimatterUnlocked'],
+        effects: [
+          { target: 'building', targetId: 'antimatterFarm', type: 'enable' },
+          { target: 'building', targetId: 'antimatterBattery', type: 'enable' },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId: 'antimatter',
+            type: 'enable'
+          }
+        ]
+      },
     ],
     industry: [
       {
