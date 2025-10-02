@@ -192,6 +192,18 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
 - Chemical Reactors now support multiple selectable recipes, including Bosch water synthesis, direct hydrogen-oxygen combination, and Sabatier methane production.
 - Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
+- Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
+- Added a fullscreen loading overlay that displays while the game or a save file is loading.
+- Milestones subtab remains hidden until Terraforming measurements research is completed.
+- Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
+- Added a hydrogen import special project mirroring nitrogen harvesting to gather atmospheric hydrogen when unlocked.
+- Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
+- Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
+- Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
+- Chemical Reactors now support multiple selectable recipes, including Bosch water synthesis, direct hydrogen-oxygen combination, and Sabatier methane production.
+- Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
 - Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
 - Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
@@ -201,7 +213,6 @@ The planet visualiser has been modularised into files covering core setup, light
 - Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
   lly without mutating base data.
 - Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
-
 - Antimatter is now produced automatically based on terraformed worlds and capped at ten hours of output.
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
