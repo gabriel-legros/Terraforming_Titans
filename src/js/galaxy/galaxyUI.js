@@ -75,6 +75,36 @@ const OPERATION_ARROW_MIN_LENGTH = 18;
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
 
+function getDefaultOperationDurationMs() {
+    const provided = globalThis?.GALAXY_OPERATION_DURATION_MS;
+    if (Number.isFinite(provided) && provided > 0) {
+        return provided;
+    }
+    return OPERATION_DURATION_FALLBACK_MS;
+}
+
+function formatOperationDurationDisplay(milliseconds) {
+    if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
+        return '0s';
+    }
+    const seconds = Math.floor(milliseconds / 1000);
+    const formatted = globalThis?.formatDuration?.(seconds);
+    if (formatted) {
+        return formatted;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `${hours}h ${remainingMinutes}m`;
+    }
+    if (minutes > 0) {
+        return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${seconds}s`;
+}
+
 let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
 let legacyPanAttached = false;
@@ -1184,7 +1214,10 @@ function updateOperationsPanel() {
         operationsCostValue,
         operationsAvailable,
         operationsSummaryItems,
-        operationsStatusMessage
+        operationsStatusMessage,
+        operationsDurationValue,
+        operationsRemainingRow,
+        operationsRemainingValue
     } = galaxyUICache;
 
     if (!operationsPanel || !operationsEmpty || !operationsForm || !operationsInput || !operationsButtons || !operationsLaunchButton || !operationsProgress || !operationsProgressFill || !operationsProgressLabel || !operationsCostValue || !operationsAvailable || !operationsSummaryItems || !operationsStatusMessage) {
@@ -1200,11 +1233,22 @@ function updateOperationsPanel() {
     const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
     const selectedKey = enabled && selection ? selection.key : null;
     const stepSize = getStoredStep(selectedKey);
+    const defaultDurationMs = getDefaultOperationDurationMs();
 
     operationsStatusMessage.textContent = '';
 
     operationsInput.step = stepSize;
     updateOperationsStepDisplay(stepSize, formatter);
+
+    if (operationsDurationValue) {
+        operationsDurationValue.textContent = formatOperationDurationDisplay(defaultDurationMs);
+    }
+    if (operationsRemainingRow) {
+        operationsRemainingRow.classList.add('is-hidden');
+    }
+    if (operationsRemainingValue) {
+        operationsRemainingValue.textContent = '';
+    }
 
     const disableAllControls = () => {
         operationsInput.disabled = true;
@@ -1219,6 +1263,12 @@ function updateOperationsPanel() {
         if (operationsAutoCheckbox) {
             operationsAutoCheckbox.disabled = true;
         }
+        if (operationsRemainingRow) {
+            operationsRemainingRow.classList.add('is-hidden');
+        }
+        if (operationsRemainingValue) {
+            operationsRemainingValue.textContent = '';
+        }
     };
 
     if (!enabled) {
@@ -1227,6 +1277,9 @@ function updateOperationsPanel() {
         operationsForm.classList.add('is-hidden');
         operationsCostValue.textContent = '0';
         operationsStatusMessage.textContent = '';
+        if (operationsDurationValue) {
+            operationsDurationValue.textContent = '—';
+        }
         disableAllControls();
         return;
     }
@@ -1237,6 +1290,9 @@ function updateOperationsPanel() {
         operationsForm.classList.add('is-hidden');
         operationsCostValue.textContent = '0';
         operationsStatusMessage.textContent = '';
+        if (operationsDurationValue) {
+            operationsDurationValue.textContent = '—';
+        }
         disableAllControls();
         return;
     }
@@ -1248,6 +1304,9 @@ function updateOperationsPanel() {
         operationsForm.classList.add('is-hidden');
         operationsCostValue.textContent = '0';
         operationsStatusMessage.textContent = '';
+        if (operationsDurationValue) {
+            operationsDurationValue.textContent = '—';
+        }
         disableAllControls();
         return;
     }
@@ -1261,6 +1320,9 @@ function updateOperationsPanel() {
         operationsForm.classList.add('is-hidden');
         operationsCostValue.textContent = '0';
         operationsStatusMessage.textContent = '';
+        if (operationsDurationValue) {
+            operationsDurationValue.textContent = '—';
+        }
         disableAllControls();
         return;
     }
@@ -1316,6 +1378,15 @@ function updateOperationsPanel() {
     const baseCost = assignment * OPERATION_COST_PER_POWER;
     const cost = operationRunning && Number.isFinite(operation.launchCost) ? operation.launchCost : baseCost;
     operationsCostValue.textContent = formatter(cost, true);
+
+    const resolvedDuration = operationRunning && Number.isFinite(operation.durationMs) && operation.durationMs > 0
+        ? operation.durationMs
+        : Number.isFinite(operation?.durationMs) && operation.durationMs > 0
+            ? operation.durationMs
+            : defaultDurationMs;
+    if (operationsDurationValue) {
+        operationsDurationValue.textContent = formatOperationDurationDisplay(resolvedDuration);
+    }
 
     const lossEstimate = manager?.getOperationLossEstimate?.({
         sectorKey: selection.key,
@@ -1373,12 +1444,20 @@ function updateOperationsPanel() {
         operationsProgress.classList.remove('is-hidden');
         const duration = Number.isFinite(operation.durationMs) && operation.durationMs > 0
             ? operation.durationMs
-            : OPERATION_DURATION_FALLBACK_MS;
+            : defaultDurationMs;
         const elapsed = Math.max(0, Math.min(duration, Number(operation.elapsedMs) || 0));
         const progress = duration > 0 ? elapsed / duration : 1;
         const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
         operationsProgressFill.style.width = `${percent}%`;
-        operationsProgressLabel.textContent = `Launch in progress — ${percent}%`;
+        const remainingMs = Math.max(0, duration - elapsed);
+        const remainingLabel = formatOperationDurationDisplay(remainingMs);
+        if (operationsRemainingRow) {
+            operationsRemainingRow.classList.remove('is-hidden');
+        }
+        if (operationsRemainingValue) {
+            operationsRemainingValue.textContent = remainingLabel;
+        }
+        operationsProgressLabel.textContent = `Launch in progress — ${percent}% (${remainingLabel} remaining)`;
         operationsStatusMessage.textContent = 'Deployment underway. Fleet power returns upon completion.';
         return;
     }
@@ -1387,6 +1466,12 @@ function updateOperationsPanel() {
     operationsProgress.classList.add('is-hidden');
     operationsProgressFill.style.width = '0%';
     operationsProgressLabel.textContent = '';
+    if (operationsRemainingRow) {
+        operationsRemainingRow.classList.add('is-hidden');
+    }
+    if (operationsRemainingValue) {
+        operationsRemainingValue.textContent = '';
+    }
 
     const hasFleetPower = availablePower > 0;
     const hasAssignment = assignment > 0;
@@ -2537,6 +2622,30 @@ function cacheGalaxyElements() {
     costRow.appendChild(costValue);
     launchControls.appendChild(costRow);
 
+    const durationRow = doc.createElement('div');
+    durationRow.className = 'galaxy-operations-form__duration';
+    const durationLabel = doc.createElement('span');
+    durationLabel.className = 'galaxy-operations-form__duration-label';
+    durationLabel.textContent = 'Duration';
+    durationRow.appendChild(durationLabel);
+    const durationValue = doc.createElement('span');
+    durationValue.className = 'galaxy-operations-form__duration-value';
+    durationValue.textContent = formatOperationDurationDisplay(getDefaultOperationDurationMs());
+    durationRow.appendChild(durationValue);
+    launchContainer.appendChild(durationRow);
+
+    const remainingRow = doc.createElement('div');
+    remainingRow.className = 'galaxy-operations-form__duration galaxy-operations-form__duration--remaining is-hidden';
+    const remainingLabel = doc.createElement('span');
+    remainingLabel.className = 'galaxy-operations-form__duration-label';
+    remainingLabel.textContent = 'Time Remaining';
+    remainingRow.appendChild(remainingLabel);
+    const remainingValue = doc.createElement('span');
+    remainingValue.className = 'galaxy-operations-form__duration-value';
+    remainingValue.textContent = '';
+    remainingRow.appendChild(remainingValue);
+    launchContainer.appendChild(remainingRow);
+
     const progressContainer = doc.createElement('div');
     progressContainer.className = 'galaxy-operations-progress is-hidden';
     const progressTrack = doc.createElement('div');
@@ -2887,6 +2996,9 @@ function cacheGalaxyElements() {
         operationsProgressFill: progressFill,
         operationsProgressLabel: progressLabel,
         operationsCostValue: costValue,
+        operationsDurationValue: durationValue,
+        operationsRemainingRow: remainingRow,
+        operationsRemainingValue: remainingValue,
         operationsAvailable: powerAvailable,
         operationsSummaryItems: summaryItems,
         operationsStatusMessage: statusMessage,

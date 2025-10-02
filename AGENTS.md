@@ -238,3 +238,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - AI-controlled galaxy factions now stockpile surplus strength above a defensiveness threshold and launch randomized 5–15% capacity operations every minute once the reserve is met, still prioritizing contested or neighboring enemy sectors.
 - UHF fleet defense now divides available border strength evenly instead of weighting distribution by threat levels.
 - Galaxy operations now feature an Auto launch toggle beside the Launch button that automatically deploys eligible missions, and operations last five minutes by default.
+- Galaxy operations panel now displays total mission duration and real-time remaining launch time to clarify commitments.
