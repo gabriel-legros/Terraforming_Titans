@@ -113,8 +113,11 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return false;
         }
         const defensiveFloor = this.#computeDefensiveFloor();
-        const availablePower = Math.max(0, this.fleetPower) - defensiveFloor;
-        if (!(availablePower >= operationPower)) {
+        const operationalPower = typeof this.getOperationalFleetPower === 'function'
+            ? this.getOperationalFleetPower(manager)
+            : Math.max(0, this.fleetPower);
+        const availablePower = Math.max(0, operationalPower - defensiveFloor);
+        if (availablePower < operationPower) {
             return false;
         }
         const targetKey = this.#pickAutoOperationTarget(manager);

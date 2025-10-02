@@ -10,6 +10,7 @@ function loadGalaxyConstants() {
     global.FULL_CONTROL_EPSILON = 1e-6;
     global.FLEET_UPGRADE_INCREMENT = 0.1;
     global.UHF_FACTION_ID = 'uhf';
+    global.UHF_FLEET_PER_WORLD = 100;
     global.factionDefaultSectorValue = 100;
     global.REPLACEMENT_SECONDS = 3600;
     global.BORDER_CONTROL_EPSILON = 1e-6;

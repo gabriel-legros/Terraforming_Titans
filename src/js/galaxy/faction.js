@@ -59,6 +59,9 @@ class GalaxyFaction {
         this.contestedCacheDirty = true;
         this.borderThreatLevels = new Map();
         this.contestedThreatLevels = new Map();
+        this.defenseAssignments = new Map();
+        this.defenseAssignmentsTotal = 0;
+        this.defenseStepSizes = new Map();
     }
 
     getStartingSectors() {
@@ -139,6 +142,9 @@ class GalaxyFaction {
         if (this.fleetPower < 0) {
             this.fleetPower = 0;
         }
+        if (this.id === UHF_FACTION_ID) {
+            this.#syncDefenseAssignments(manager);
+        }
     }
 
     update(deltaTime, manager) {
@@ -147,6 +153,9 @@ class GalaxyFaction {
             && manager
             && typeof manager.getSectors === 'function') {
             this.#rebuildConflictCaches(manager);
+        }
+        if (this.id === UHF_FACTION_ID) {
+            this.#syncDefenseAssignments(manager);
         }
         if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
             return;
@@ -339,7 +348,147 @@ class GalaxyFaction {
         return threat;
     }
 
+    getDefenseCapacity(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const capacity = Number(this.fleetCapacity);
+        if (!Number.isFinite(capacity) || capacity <= 0) {
+            return 0;
+        }
+        return capacity;
+    }
+
+    getDefenseAssignment(sectorKey) {
+        if (!sectorKey || this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const value = this.defenseAssignments.get(sectorKey);
+        if (!Number.isFinite(value) || value <= 0) {
+            return 0;
+        }
+        return value;
+    }
+
+    getDefenseAssignmentTotal() {
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        return Math.max(0, this.defenseAssignmentsTotal);
+    }
+
+    getDefenseStep(sectorKey) {
+        if (this.id !== UHF_FACTION_ID || !sectorKey) {
+            return 1;
+        }
+        const value = this.defenseStepSizes.get(sectorKey);
+        if (!Number.isFinite(value) || value <= 0) {
+            return 1;
+        }
+        return Math.max(1, Math.floor(value));
+    }
+
+    getDefenseReservation(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const assigned = this.getDefenseAssignmentTotal();
+        if (!(assigned > 0)) {
+            return 0;
+        }
+        const capacity = this.getDefenseCapacity(manager);
+        const reservable = capacity > 0 ? Math.min(assigned, capacity) : assigned;
+        const availableFleet = Number.isFinite(this.fleetPower) && this.fleetPower > 0 ? this.fleetPower : 0;
+        if (!(reservable > 0) || !(availableFleet > 0)) {
+            return 0;
+        }
+        return Math.min(reservable, availableFleet);
+    }
+
+    getDefenseScale(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const assigned = this.getDefenseAssignmentTotal();
+        if (!(assigned > 0)) {
+            return 0;
+        }
+        const reservation = this.getDefenseReservation(manager);
+        if (!(reservation > 0)) {
+            return 0;
+        }
+        const scale = reservation / assigned;
+        if (!Number.isFinite(scale) || scale <= 0) {
+            return 0;
+        }
+        return Math.min(1, scale);
+    }
+
+    getOperationalFleetPower(manager) {
+        const available = Number.isFinite(this.fleetPower) && this.fleetPower > 0 ? this.fleetPower : 0;
+        if (this.id !== UHF_FACTION_ID) {
+            return available;
+        }
+        const reservation = this.getDefenseReservation(manager);
+        if (!(reservation > 0)) {
+            return available;
+        }
+        const remaining = available - reservation;
+        if (!Number.isFinite(remaining) || remaining <= 0) {
+            return 0;
+        }
+        return remaining;
+    }
+
+    setDefenseAssignment(sectorKey, value, manager) {
+        if (this.id !== UHF_FACTION_ID || !sectorKey) {
+            return 0;
+        }
+        const numeric = Number(value);
+        const sanitized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : 0;
+        const existing = this.getDefenseAssignment(sectorKey);
+        const capacity = this.getDefenseCapacity(manager);
+        const remainingCapacity = capacity > 0
+            ? Math.max(0, capacity - Math.max(0, this.defenseAssignmentsTotal - existing))
+            : 0;
+        let applied = sanitized;
+        if (!(capacity > 0)) {
+            applied = 0;
+        } else if (applied > remainingCapacity) {
+            applied = remainingCapacity;
+        }
+        if (!(applied > 0)) {
+            this.defenseAssignments.delete(sectorKey);
+        } else {
+            this.defenseAssignments.set(sectorKey, applied);
+        }
+        this.#syncDefenseAssignments(manager);
+        return this.getDefenseAssignment(sectorKey);
+    }
+
+    adjustDefenseAssignment(sectorKey, delta, manager) {
+        const current = this.getDefenseAssignment(sectorKey);
+        const numericDelta = Number(delta);
+        const adjusted = Number.isFinite(numericDelta) ? current + numericDelta : current;
+        return this.setDefenseAssignment(sectorKey, adjusted, manager);
+    }
+
+    setDefenseStep(sectorKey, value) {
+        if (this.id !== UHF_FACTION_ID || !sectorKey) {
+            return 1;
+        }
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+            this.defenseStepSizes.delete(sectorKey);
+            return 1;
+        }
+        const step = Math.max(1, Math.floor(numeric));
+        this.defenseStepSizes.set(sectorKey, step);
+        return step;
+    }
+
     getSectorDefense(sector, manager) {
+        this.#syncDefenseAssignments(manager);
         const controlValue = sector?.getControlValue?.(this.id) ?? 0;
         if (!(controlValue > 0)) {
             return 0;
@@ -356,26 +505,25 @@ class GalaxyFaction {
         const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
         const sanitizedMultiplier = capacityMultiplier > 0 ? capacityMultiplier : 1;
         const upgradedDefense = baseDefense * sanitizedMultiplier;
-        const borderKeys = this.getBorderSectorKeys(manager);
-        const borderCount = borderKeys.length;
-        const hasBorderPresence = borderCount > 0 && this.borderSectorLookup?.has?.(sector.key);
-        let distributedFleet = 0;
-        if (hasBorderPresence && borderCount > 0) {
-            const availablePower = Number.isFinite(this.fleetPower) ? Math.max(0, this.fleetPower) : 0;
-            if (availablePower > 0) {
-                const evenShare = availablePower / borderCount;
-                distributedFleet = Number.isFinite(evenShare) && evenShare > 0 ? evenShare : 0;
-            }
-        }
-        const totalDefense = upgradedDefense + distributedFleet;
+        const assignment = this.getDefenseAssignment(sector.key);
+        const scale = this.getDefenseScale(manager);
+        const effectiveAssignment = assignment > 0 && scale > 0 ? assignment * scale : 0;
+        const totalDefense = upgradedDefense + effectiveAssignment;
         return Number.isFinite(totalDefense) && totalDefense > 0 ? totalDefense : 0;
     }
 
     toJSON() {
-        return {
+        const state = {
             id: this.id,
             fleetPower: this.fleetPower
         };
+        if (this.id === UHF_FACTION_ID && this.defenseAssignments.size) {
+            state.defenseAssignments = Array.from(this.defenseAssignments.entries()).map(([key, value]) => [key, value]);
+        }
+        if (this.id === UHF_FACTION_ID && this.defenseStepSizes.size) {
+            state.defenseSteps = Array.from(this.defenseStepSizes.entries()).map(([key, value]) => [key, value]);
+        }
+        return state;
     }
 
     loadState(state, manager) {
@@ -386,7 +534,111 @@ class GalaxyFaction {
             return;
         }
         this.setFleetPower(state.fleetPower);
+        if (this.id === UHF_FACTION_ID) {
+            this.defenseAssignments.clear();
+            if (Array.isArray(state?.defenseAssignments)) {
+                state.defenseAssignments.forEach((entry) => {
+                    if (!Array.isArray(entry) || entry.length !== 2) {
+                        return;
+                    }
+                    const [sectorKey, rawValue] = entry;
+                    const numericValue = Number(rawValue);
+                    if (!sectorKey || !Number.isFinite(numericValue) || numericValue <= 0) {
+                        return;
+                    }
+                    this.defenseAssignments.set(String(sectorKey), numericValue);
+                });
+            }
+            this.defenseStepSizes.clear();
+            if (Array.isArray(state?.defenseSteps)) {
+                state.defenseSteps.forEach((entry) => {
+                    if (!Array.isArray(entry) || entry.length !== 2) {
+                        return;
+                    }
+                    const [sectorKey, rawValue] = entry;
+                    const numericValue = Number(rawValue);
+                    if (!sectorKey || !Number.isFinite(numericValue) || numericValue <= 0) {
+                        return;
+                    }
+                    this.defenseStepSizes.set(String(sectorKey), Math.max(1, Math.floor(numericValue)));
+                });
+            }
+            this.#syncDefenseAssignments(manager);
+        }
         this.markControlDirty();
+    }
+
+    #getDefenseSector(sectorKey, manager) {
+        if (!sectorKey || !manager?.getSector) {
+            return null;
+        }
+        const parts = String(sectorKey).split(',');
+        if (parts.length !== 2) {
+            return null;
+        }
+        const q = Number(parts[0]);
+        const r = Number(parts[1]);
+        if (!Number.isFinite(q) || !Number.isFinite(r)) {
+            return null;
+        }
+        return manager.getSector(q, r);
+    }
+
+    #syncDefenseAssignments(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            if (this.defenseAssignments.size > 0) {
+                this.defenseAssignments.clear();
+            }
+            this.defenseAssignmentsTotal = 0;
+            return;
+        }
+        if (this.defenseAssignments.size === 0) {
+            this.defenseAssignmentsTotal = 0;
+            return;
+        }
+        const capacity = this.getDefenseCapacity(manager);
+        const validEntries = [];
+        let total = 0;
+        this.defenseAssignments.forEach((rawValue, key) => {
+            const value = Number(rawValue);
+            if (!Number.isFinite(value) || value <= 0) {
+                this.defenseAssignments.delete(key);
+                return;
+            }
+            if (manager) {
+                const sector = this.#getDefenseSector(key, manager);
+                const control = sector?.getControlValue?.(this.id) ?? 0;
+                if (!(control > 0)) {
+                    this.defenseAssignments.delete(key);
+                    return;
+                }
+            }
+            validEntries.push([key, value]);
+            total += value;
+        });
+        if (!(capacity > 0)) {
+            if (this.defenseAssignments.size > 0) {
+                this.defenseAssignments.clear();
+            }
+            this.defenseAssignmentsTotal = 0;
+            return;
+        }
+        if (total > capacity && total > 0) {
+            const scale = capacity / total;
+            let scaledTotal = 0;
+            validEntries.forEach(([key, value]) => {
+                const scaled = value * scale;
+                if (scaled > 0) {
+                    this.defenseAssignments.set(key, scaled);
+                    scaledTotal += scaled;
+                } else {
+                    this.defenseAssignments.delete(key);
+                }
+            });
+            this.defenseAssignmentsTotal = scaledTotal;
+            return;
+        }
+        this.defenseAssignmentsTotal = total;
     }
 
     #rebuildConflictCaches(manager) {
@@ -556,7 +808,10 @@ class GalaxyFaction {
             if (!Number.isFinite(terraformedWorlds) || terraformedWorlds <= 0) {
                 return 0;
             }
-            const baseCapacity = terraformedWorlds * getDefaultSectorValue();
+            const fleetPerWorld = typeof UHF_FLEET_PER_WORLD === 'number' && UHF_FLEET_PER_WORLD > 0
+                ? UHF_FLEET_PER_WORLD
+                : getDefaultSectorValue();
+            const baseCapacity = terraformedWorlds * fleetPerWorld;
             if (!(baseCapacity > 0)) {
                 return 0;
             }

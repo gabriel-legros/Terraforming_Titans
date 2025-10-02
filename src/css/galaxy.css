@@ -539,6 +539,14 @@
   line-height: 1.4;
 }
 
+.galaxy-attack-panel {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 12px;
+}
+
 .galaxy-sector-panel.is-populated {
   flex-direction: column;
   align-items: stretch;
@@ -624,18 +632,11 @@
   box-shadow: inset 0 0 12px rgba(212, 104, 104, 0.15);
 }
 
-.galaxy-attack-panel.is-populated {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  text-align: left;
-  gap: 12px;
-}
-
 .galaxy-attack-panel__placeholder {
   margin: 0;
   color: #f0bcbc;
   font-style: italic;
+  text-align: center;
 }
 
 .galaxy-attack-panel__list {
@@ -687,6 +688,116 @@
 .galaxy-attack-card__sector {
   flex: 1 1 auto;
   min-width: 140px;
+}
+
+.galaxy-defense-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(212, 104, 104, 0.24);
+}
+
+.galaxy-defense-section__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffdede;
+}
+
+.galaxy-defense-section__warning {
+  margin: 0;
+  color: #f4b1b1;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.galaxy-defense-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(54, 10, 10, 0.38);
+  border: 1px solid rgba(212, 104, 104, 0.28);
+}
+
+.galaxy-defense-form__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #ffe0e0;
+}
+
+.galaxy-defense-form__capacity,
+.galaxy-defense-form__reservation {
+  opacity: 0.85;
+}
+
+.galaxy-defense-form__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #ffe6e6;
+}
+
+.galaxy-defense-form__summary-item {
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-defense-form__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.galaxy-defense-form__input {
+  flex: 0 0 96px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 128, 128, 0.32);
+  background: rgba(28, 8, 8, 0.64);
+  color: #ffeaea;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.galaxy-defense-form__button-column {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.galaxy-defense-form__buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+  gap: 8px;
+}
+
+.galaxy-defense-form__buttons--secondary {
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+}
+
+.galaxy-defense-form__button {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(212, 120, 120, 0.5);
+  background: rgba(132, 32, 32, 0.72);
+  color: #ffe4e4;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.galaxy-defense-form__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .galaxy-sector-panel {

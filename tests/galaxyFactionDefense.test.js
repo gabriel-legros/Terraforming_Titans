@@ -55,40 +55,38 @@ describe('GalaxyFaction defense calculations', () => {
         expect(controlledKeys).not.toContain(contested.key);
     });
 
-    it('computes UHF defense from terraformed worlds, upgrades, and fleet distribution', () => {
+    it('computes UHF defense from terraformed worlds and manual assignments', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
-        faction.fleetPower = 900;
+        faction.fleetPower = 600;
 
         const sectorAlpha = new GalaxySector({ q: 0, r: 0 });
         sectorAlpha.setControl('uhf', 100);
-        const sectorBeta = new GalaxySector({ q: 1, r: 0 });
-        sectorBeta.setControl('uhf', 80);
-        const neutral = new GalaxySector({ q: -1, r: 1 });
 
-        const sectors = [sectorAlpha, sectorBeta, neutral];
+        const sectors = [sectorAlpha];
+        const sectorMap = new Map([[sectorAlpha.key, sectorAlpha]]);
+
         const manager = {
             getSectors: () => sectors,
-            getTerraformedWorldCountForSector: (sector) => {
-                if (sector === sectorAlpha) {
-                    return 3;
-                }
-                if (sector === sectorBeta) {
-                    return 1;
-                }
-                return 0;
-            },
+            getSector: (q, r) => sectorMap.get(GalaxySector.createKey(q, r)) || null,
+            getTerraformedWorldCount: () => 5,
+            getTerraformedWorldCountForSector: (sector) => (sector === sectorAlpha ? 3 : 0),
             getFleetCapacityMultiplier: () => 1.5
         };
 
         faction.markControlDirty();
+        faction.updateFleetCapacity(manager);
+
+        const capacity = faction.getDefenseCapacity(manager);
+        expect(capacity).toBeGreaterThan(300);
+
+        faction.setDefenseAssignment(sectorAlpha.key, 300, manager);
 
         const alphaDefense = faction.getSectorDefense(sectorAlpha, manager);
-        const betaDefense = faction.getSectorDefense(sectorBeta, manager);
-        const neutralDefense = faction.getSectorDefense(neutral, manager);
 
-        expect(alphaDefense).toBeCloseTo(450);
-        expect(betaDefense).toBeCloseTo(150);
-        expect(neutralDefense).toBe(0);
+        const baseDefense = 100 * 3 * 1.5;
+        expect(alphaDefense).toBeCloseTo(baseDefense + 300);
+        const reservation = Math.min(300, capacity, faction.fleetPower);
+        expect(faction.getOperationalFleetPower(manager)).toBeCloseTo(Math.max(0, faction.fleetPower - reservation));
     });
 
     it('uses sector base value as defense for non-UHF factions', () => {
@@ -108,58 +106,68 @@ describe('GalaxyFaction defense calculations', () => {
         expect(faction.getSectorDefense(contested, manager)).toBe(baseValue);
     });
 
-    it('distributes fleet power only to border sectors', () => {
+    it('scales assigned defenses when fleet power is insufficient', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
-        faction.fleetPower = 600;
+        faction.fleetPower = 120;
 
         const alpha = new GalaxySector({ q: 0, r: 0 });
         alpha.setControl('uhf', 100);
 
-        const beta = new GalaxySector({ q: 1, r: 0 });
-        beta.setControl('uhf', 60);
-        beta.setControl('ally', 40);
-
-        const interior = new GalaxySector({ q: 2, r: 0 });
-        interior.setControl('uhf', 90);
-
-        const enemyStronghold = new GalaxySector({ q: 0, r: 1 });
-        enemyStronghold.setControl('ally', 100);
-
-        const sectors = [alpha, beta, interior, enemyStronghold];
-        const sectorMap = new Map(sectors.map((sector) => [sector.key, sector]));
+        const sectors = [alpha];
+        const sectorMap = new Map([[alpha.key, alpha]]);
 
         const manager = {
             getSectors: () => sectors,
             getSector: (q, r) => sectorMap.get(GalaxySector.createKey(q, r)) || null,
-            getTerraformedWorldCountForSector: (sector) => {
-                if (sector === alpha) {
-                    return 2;
-                }
-                if (sector === beta) {
-                    return 1;
-                }
-                if (sector === interior) {
-                    return 3;
-                }
-                return 0;
-            },
+            getTerraformedWorldCount: () => 2,
+            getTerraformedWorldCountForSector: () => 2,
             getFleetCapacityMultiplier: () => 1
         };
 
         faction.markControlDirty();
+        faction.updateFleetCapacity(manager);
 
-        const borderKeys = faction.getBorderSectorKeys(manager);
-        expect(borderKeys).toContain(alpha.key);
-        expect(borderKeys).toContain(beta.key);
-        expect(borderKeys).not.toContain(interior.key);
+        const capacity = faction.getDefenseCapacity(manager);
+        expect(capacity).toBeGreaterThan(0);
+
+        faction.setDefenseAssignment(alpha.key, 180, manager);
 
         const alphaDefense = faction.getSectorDefense(alpha, manager);
-        const betaDefense = faction.getSectorDefense(beta, manager);
-        const interiorDefense = faction.getSectorDefense(interior, manager);
 
-        expect(alphaDefense).toBeCloseTo(500);
-        expect(betaDefense).toBeCloseTo(400);
-        expect(interiorDefense).toBeCloseTo(300);
+        const baseDefense = 100 * 2;
+        const reservation = Math.min(180, capacity, faction.fleetPower);
+        expect(alphaDefense).toBeCloseTo(baseDefense + reservation);
+        expect(faction.getOperationalFleetPower(manager)).toBe(Math.max(0, faction.fleetPower - reservation));
+        expect(faction.getDefenseAssignment(alpha.key)).toBe(180);
+    });
+
+    it('removes defense assignments when sector control is lost', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        faction.fleetPower = 400;
+
+        const alpha = new GalaxySector({ q: 0, r: 0 });
+        alpha.setControl('uhf', 100);
+
+        const sectors = [alpha];
+        const sectorMap = new Map([[alpha.key, alpha]]);
+
+        const manager = {
+            getSectors: () => sectors,
+            getSector: (q, r) => sectorMap.get(GalaxySector.createKey(q, r)) || null,
+            getTerraformedWorldCount: () => 3,
+            getTerraformedWorldCountForSector: () => 3,
+            getFleetCapacityMultiplier: () => 1
+        };
+
+        faction.updateFleetCapacity(manager);
+        faction.setDefenseAssignment(alpha.key, 100, manager);
+
+        alpha.clearControl('uhf');
+
+        // Accessing defense triggers sync
+        expect(faction.getSectorDefense(alpha, manager)).toBe(0);
+        expect(faction.getDefenseAssignment(alpha.key)).toBe(0);
+        expect(faction.getDefenseAssignmentTotal()).toBe(0);
     });
 
     it('caches contested and neighbouring enemy sector keys until marked dirty', () => {

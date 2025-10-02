@@ -222,6 +222,7 @@ class GalaxyManager extends EffectableEntity {
             this.fleetUpgradePurchases[key] = 0;
         });
         this.successfulOperations = 0;
+        this.operationStepSizes = new Map();
     }
 
     initialize() {
@@ -291,7 +292,8 @@ class GalaxyManager extends EffectableEntity {
             factions: this.getFactions().map((faction) => faction.toJSON()),
             operations,
             fleetUpgrades: this.#serializeFleetUpgrades(),
-            successfulOperations: this.successfulOperations
+            successfulOperations: this.successfulOperations,
+            operationSteps: Array.from(this.operationStepSizes.entries())
         };
     }
 
@@ -338,6 +340,20 @@ class GalaxyManager extends EffectableEntity {
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
         }
+        this.operationStepSizes.clear();
+        if (state && Array.isArray(state.operationSteps)) {
+            state.operationSteps.forEach((entry) => {
+                if (!Array.isArray(entry) || entry.length !== 2) {
+                    return;
+                }
+                const [key, rawValue] = entry;
+                const numericValue = Number(rawValue);
+                if (!key || !Number.isFinite(numericValue) || numericValue <= 0) {
+                    return;
+                }
+                this.operationStepSizes.set(String(key), Math.max(1, Math.floor(numericValue)));
+            });
+        }
         this.factions.forEach((faction) => {
             faction.updateFleetCapacity(this);
         });
@@ -350,6 +366,7 @@ class GalaxyManager extends EffectableEntity {
         this.factions.clear();
         this.sectors.clear();
         this.operations.clear();
+        this.operationStepSizes.clear();
         this.initialize();
         this.enable();
     }
@@ -402,6 +419,95 @@ class GalaxyManager extends EffectableEntity {
             return 0;
         }
         return this.#computeDefensePower(sector, attackerId);
+    }
+
+    getDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getDefenseAssignment !== 'function') {
+            return 0;
+        }
+        return faction.getDefenseAssignment(sectorKey);
+    }
+
+    setDefenseAssignment({ factionId = galaxyUhfId, sectorKey, value }) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.setDefenseAssignment !== 'function') {
+            return 0;
+        }
+        return faction.setDefenseAssignment(sectorKey, value, this);
+    }
+
+    adjustDefenseAssignment({ factionId = galaxyUhfId, sectorKey, delta }) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.adjustDefenseAssignment !== 'function') {
+            return 0;
+        }
+        return faction.adjustDefenseAssignment(sectorKey, delta, this);
+    }
+
+    getDefenseCapacity(factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getDefenseCapacity !== 'function') {
+            return 0;
+        }
+        return faction.getDefenseCapacity(this);
+    }
+
+    getDefenseAssignmentTotal(factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getDefenseAssignmentTotal !== 'function') {
+            return 0;
+        }
+        return faction.getDefenseAssignmentTotal();
+    }
+
+    getDefenseReservation(factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getDefenseReservation !== 'function') {
+            return 0;
+        }
+        return faction.getDefenseReservation(this);
+    }
+
+    getDefenseStep(sectorKey, factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getDefenseStep !== 'function') {
+            return 1;
+        }
+        return faction.getDefenseStep(sectorKey);
+    }
+
+    setDefenseStep({ factionId = galaxyUhfId, sectorKey, value }) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.setDefenseStep !== 'function') {
+            return 1;
+        }
+        return faction.setDefenseStep(sectorKey, value);
+    }
+
+    getOperationStep(sectorKey) {
+        if (!sectorKey) {
+            return 1;
+        }
+        const value = this.operationStepSizes.get(sectorKey);
+        if (!Number.isFinite(value) || value <= 0) {
+            return 1;
+        }
+        return Math.max(1, Math.floor(value));
+    }
+
+    setOperationStep({ sectorKey, value }) {
+        if (!sectorKey) {
+            return 1;
+        }
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+            this.operationStepSizes.delete(sectorKey);
+            return 1;
+        }
+        const step = Math.max(1, Math.floor(numeric));
+        this.operationStepSizes.set(sectorKey, step);
+        return step;
     }
 
     getOperationSuccessChance({ sectorKey, factionId, assignedPower }) {
@@ -500,8 +606,11 @@ class GalaxyManager extends EffectableEntity {
         if (!faction) {
             return null;
         }
-        const availablePower = Math.max(0, faction.fleetPower);
-        if (assignedPower > availablePower) {
+        const currentFleetPower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0 ? faction.fleetPower : 0;
+        const operationalPower = typeof faction.getOperationalFleetPower === 'function'
+            ? faction.getOperationalFleetPower(this)
+            : currentFleetPower;
+        if (assignedPower > operationalPower) {
             return null;
         }
         const duration = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : GALAXY_OPERATION_DURATION_MS;
@@ -524,7 +633,7 @@ class GalaxyManager extends EffectableEntity {
             originHex,
             defenderLosses: []
         };
-        faction.setFleetPower(availablePower - offensePower);
+        faction.setFleetPower(currentFleetPower - offensePower);
         this.operations.set(key, operation);
         return operation;
     }
@@ -1121,9 +1230,14 @@ class GalaxyManager extends EffectableEntity {
         if (operation.status === 'running') {
             const faction = this.getFaction(operation.factionId);
             if (faction) {
-                const availablePower = Math.max(0, faction.fleetPower);
-                const reserved = Math.min(operation.reservedPower, availablePower);
-                faction.setFleetPower(availablePower - reserved);
+                const currentFleetPower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
+                    ? faction.fleetPower
+                    : 0;
+                const operationalPower = typeof faction.getOperationalFleetPower === 'function'
+                    ? faction.getOperationalFleetPower(this)
+                    : currentFleetPower;
+                const reserved = Math.min(operation.reservedPower, operationalPower, currentFleetPower);
+                faction.setFleetPower(currentFleetPower - reserved);
                 operation.reservedPower = reserved;
                 operation.assignedPower = Math.min(operation.assignedPower, reserved);
                 operation.offensePower = Math.min(operation.offensePower, reserved);

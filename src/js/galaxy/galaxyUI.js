@@ -418,9 +418,10 @@ function clearSelectedGalaxySector() {
     }
     const message = panel.dataset.emptyMessage || 'No sector selected.';
     panel.classList.remove('is-populated');
-    panel.replaceChildren();
-    panel.textContent = message;
+   panel.replaceChildren();
+   panel.textContent = message;
 
+    updateSectorDefenseSection();
     updateOperationsPanel();
 }
 
@@ -464,14 +465,89 @@ function setStoredAllocation(key, value) {
 }
 
 function getStoredStep(key) {
-    if (!key || !operationsStepSizes.has(key)) {
+    if (!key) {
         return 1;
     }
-    const value = operationsStepSizes.get(key);
-    if (!Number.isFinite(value) || value <= 0) {
+    if (operationsStepSizes.has(key)) {
+        const cached = operationsStepSizes.get(key);
+        if (Number.isFinite(cached) && cached > 0) {
+            return cached;
+        }
+    }
+    const manager = galaxyManager;
+    if (manager?.getOperationStep) {
+        const fetched = manager.getOperationStep(key);
+        const sanitized = Number.isFinite(fetched) && fetched > 0 ? Math.max(1, Math.floor(fetched)) : 1;
+        operationsStepSizes.set(key, sanitized);
+        return sanitized;
+    }
+    return 1;
+}
+
+function setStoredStep(key, value) {
+    if (!key) {
+        return;
+    }
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        operationsStepSizes.delete(key);
+        if (galaxyManager?.setOperationStep) {
+            galaxyManager.setOperationStep({ sectorKey: key, value: 1 });
+        }
+        return;
+    }
+    const sanitized = Math.max(1, Math.floor(numeric));
+    operationsStepSizes.set(key, sanitized);
+    if (galaxyManager?.setOperationStep) {
+        galaxyManager.setOperationStep({ sectorKey: key, value: sanitized });
+    }
+}
+
+function updateDefenseStepDisplay(step) {
+    if (!galaxyUICache || !galaxyUICache.defenseButtons) {
+        return;
+    }
+    const buttons = galaxyUICache.defenseButtons;
+    const sanitized = Number.isFinite(step) && step > 0 ? Math.max(1, Math.floor(step)) : 1;
+    const formatted = formatDefenseInteger(sanitized);
+    if (buttons.decrement) {
+        buttons.decrement.textContent = `-${formatted}`;
+    }
+    if (buttons.increment) {
+        buttons.increment.textContent = `+${formatted}`;
+    }
+    if (buttons.zero) {
+        buttons.zero.textContent = '0';
+    }
+    if (buttons.divide) {
+        buttons.divide.textContent = '/10';
+    }
+    if (buttons.multiply) {
+        buttons.multiply.textContent = 'x10';
+    }
+}
+
+function getDefenseStepForSector(sectorKey) {
+    if (!sectorKey) {
         return 1;
     }
-    return value;
+    const manager = galaxyManager;
+    const faction = manager?.getFaction?.(UHF_FACTION_KEY);
+    if (!faction || typeof faction.getDefenseStep !== 'function') {
+        return 1;
+    }
+    return Math.max(1, Math.floor(faction.getDefenseStep(sectorKey)));
+}
+
+function setDefenseStepForSector(sectorKey, value) {
+    if (!sectorKey) {
+        return;
+    }
+    const manager = galaxyManager;
+    if (!manager?.setDefenseStep) {
+        return;
+    }
+    manager.setDefenseStep({ factionId: UHF_FACTION_KEY, sectorKey, value });
 }
 
 function setStoredStep(key, value) {
@@ -1072,6 +1148,7 @@ function renderSelectedSectorDetails() {
 
     panel.classList.add('is-populated');
 
+    updateSectorDefenseSection();
     updateOperationsPanel();
 }
 
@@ -1174,7 +1251,11 @@ function updateOperationsPanel() {
     operationsForm.classList.remove('is-hidden');
 
     const faction = manager.getFaction(UHF_FACTION_KEY);
-    const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
+    const availablePower = faction?.getOperationalFleetPower
+        ? faction.getOperationalFleetPower(manager)
+        : faction
+            ? Math.max(0, faction.fleetPower)
+            : 0;
     operationsAvailable.textContent = `Available: ${formatter(availablePower, false, 2)}`;
 
     const sectorPower = sector.getValue ? sector.getValue() : 0;
@@ -1315,6 +1396,213 @@ function updateOperationsPanel() {
     operationsLaunchButton.disabled = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
 }
 
+function updateSectorDefenseSection() {
+    const cache = galaxyUICache;
+    if (!cache || !cache.defenseSection) {
+        return;
+    }
+    const section = cache.defenseSection;
+    const manager = galaxyManager;
+    const enabled = !!(manager && manager.enabled);
+    if (!enabled) {
+        section.classList.add('is-hidden');
+        return;
+    }
+    section.classList.remove('is-hidden');
+    const selection = cache.selectedSector;
+    if (!selection) {
+        section.classList.add('is-hidden');
+        return;
+    }
+    const sector = manager?.getSector?.(selection.q, selection.r);
+    if (!sector) {
+        if (cache.defenseWarning) {
+            cache.defenseWarning.textContent = 'Sector data unavailable.';
+            cache.defenseWarning.classList.remove('is-hidden');
+        }
+        if (cache.defenseForm) {
+            cache.defenseForm.classList.add('is-hidden');
+        }
+        return;
+    }
+
+    const faction = manager.getFaction ? manager.getFaction(UHF_FACTION_KEY) : null;
+    const uhfControl = Number(sector.getControlValue ? sector.getControlValue(UHF_FACTION_KEY) : 0);
+    if (!(uhfControl > 0)) {
+        if (cache.defenseWarning) {
+            cache.defenseWarning.textContent = 'UHF must control this sector to station defensive fleets.';
+            cache.defenseWarning.classList.remove('is-hidden');
+        }
+        if (cache.defenseForm) {
+            cache.defenseForm.classList.add('is-hidden');
+        }
+        return;
+    }
+
+    const capacity = manager.getDefenseCapacity ? manager.getDefenseCapacity(UHF_FACTION_KEY) : 0;
+    if (!(capacity > 0)) {
+        if (cache.defenseWarning) {
+            cache.defenseWarning.textContent = 'Expand fleet logistics to unlock defensive deployments.';
+            cache.defenseWarning.classList.remove('is-hidden');
+        }
+        if (cache.defenseForm) {
+            cache.defenseForm.classList.add('is-hidden');
+        }
+        return;
+    }
+
+    if (cache.defenseWarning) {
+        cache.defenseWarning.classList.add('is-hidden');
+    }
+    if (cache.defenseForm) {
+        cache.defenseForm.classList.remove('is-hidden');
+    }
+
+    const sectorName = selection.displayName === 'Core'
+        ? 'Core'
+        : selection.displayName || sector.getDisplayName?.() || sector.key;
+
+    if (cache.defenseSectorLabel) {
+        cache.defenseSectorLabel.textContent = sectorName === 'Core'
+            ? 'Sector: Core'
+            : `Sector: ${sectorName}`;
+    }
+
+    if (cache.defenseCapacityValue) {
+        cache.defenseCapacityValue.textContent = `Defense Pool: ${formatDefenseInteger(capacity)}`;
+    }
+
+    const operational = faction?.getOperationalFleetPower
+        ? faction.getOperationalFleetPower(manager)
+        : Math.max(0, faction?.fleetPower || 0);
+    if (cache.defenseReservationValue) {
+        cache.defenseReservationValue.textContent = `Ops Pool: ${formatDefenseInteger(operational)}`;
+    }
+
+    const assigned = manager.getDefenseAssignment
+        ? manager.getDefenseAssignment(sector.key, UHF_FACTION_KEY)
+        : 0;
+    const scale = faction?.getDefenseScale ? faction.getDefenseScale(manager) : 0;
+    const effective = assigned > 0 && scale > 0 ? assigned * scale : 0;
+    const totalAssigned = manager.getDefenseAssignmentTotal
+        ? manager.getDefenseAssignmentTotal(UHF_FACTION_KEY)
+        : 0;
+    const remaining = Math.max(0, capacity - Math.max(0, totalAssigned));
+    const step = getDefenseStepForSector(sector.key);
+    updateDefenseStepDisplay(step);
+
+    if (cache.defenseAssignedValue) {
+        cache.defenseAssignedValue.textContent = `Assigned: ${formatDefenseInteger(assigned)}`;
+    }
+    if (cache.defenseEffectiveValue) {
+        cache.defenseEffectiveValue.textContent = `Effective: ${formatDefenseInteger(effective)}`;
+    }
+    if (cache.defenseRemainingValue) {
+        cache.defenseRemainingValue.textContent = `Remaining: ${formatDefenseInteger(remaining)}`;
+    }
+
+    if (cache.defenseInput) {
+        cache.defenseInput.value = `${Math.max(0, Math.round(assigned))}`;
+        cache.defenseInput.disabled = false;
+    }
+    if (cache.defenseButtons) {
+        Object.values(cache.defenseButtons).forEach((button) => {
+            if (!button) {
+                return;
+            }
+            button.disabled = false;
+        });
+    }
+}
+
+function handleDefenseInputChange(event) {
+    const cache = galaxyUICache;
+    const manager = galaxyManager;
+    if (!cache || !manager || !manager.enabled) {
+        return;
+    }
+    const selection = cache.selectedSector;
+    if (!selection) {
+        event.target.value = '0';
+        return;
+    }
+    const key = selection.key;
+    const rawValue = event.target.value;
+    if (event.type === 'input' && typeof rawValue === 'string' && rawValue.trim() === '') {
+        return;
+    }
+    const numeric = Number(rawValue);
+    const sanitized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : 0;
+    const applied = manager.setDefenseAssignment({ factionId: UHF_FACTION_KEY, sectorKey: key, value: sanitized });
+    event.target.value = `${Math.max(0, Math.round(applied))}`;
+    renderSelectedSectorDetails();
+}
+
+function handleDefenseButtonClick(event) {
+    event.preventDefault();
+    const action = event.currentTarget?.dataset?.action;
+    const cache = galaxyUICache;
+    const manager = galaxyManager;
+    if (!action || !cache || !manager || !manager.enabled) {
+        return;
+    }
+    const selection = cache.selectedSector;
+    if (!selection) {
+        return;
+    }
+    const key = selection.key;
+    const current = manager.getDefenseAssignment
+        ? manager.getDefenseAssignment(key, UHF_FACTION_KEY)
+        : 0;
+    let target = current;
+    let step = getDefenseStepForSector(key);
+    const capacity = manager.getDefenseCapacity
+        ? manager.getDefenseCapacity(UHF_FACTION_KEY)
+        : Number.POSITIVE_INFINITY;
+
+    switch (action) {
+    case 'zero':
+        target = 0;
+        break;
+    case 'increment':
+        target = current + step;
+        break;
+    case 'decrement':
+        target = current > 0 ? Math.max(0, current - step) : 0;
+        break;
+    case 'divide': {
+        if (step > 1) {
+            const reduced = Math.floor(step / 10);
+            step = reduced >= 1 ? reduced : 1;
+        } else {
+            step = 1;
+        }
+        setDefenseStepForSector(key, step);
+        updateDefenseStepDisplay(step);
+        renderSelectedSectorDetails();
+        return;
+    }
+    case 'multiply': {
+        const multiplied = step * 10;
+        const bounded = Number.isFinite(multiplied) ? multiplied : step;
+        const cap = Number.isFinite(capacity) && capacity > 0 ? Math.floor(capacity) : bounded;
+        step = Math.max(1, Math.min(cap > 0 ? cap : bounded, Math.floor(bounded)));
+        setDefenseStepForSector(key, step);
+        updateDefenseStepDisplay(step);
+        renderSelectedSectorDetails();
+        return;
+    }
+    default:
+        break;
+    }
+
+    const applied = manager.setDefenseAssignment({ factionId: UHF_FACTION_KEY, sectorKey: key, value: target });
+    if (cache.defenseInput) {
+        cache.defenseInput.value = `${Math.max(0, Math.round(applied))}`;
+    }
+    renderSelectedSectorDetails();
+}
+
 function buildGalaxyHexMap(doc) {
     const baseSize = HEX_BASE_SIZE;
     const dimensions = getHexDimensions(baseSize);
@@ -1422,7 +1710,11 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
         return false;
     })();
 
-    const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor);
+    const hasManualDefense = manager.getDefenseAssignment
+        ? manager.getDefenseAssignment(sector.key, UHF_FACTION_KEY) > 0
+        : false;
+
+    const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor || hasManualDefense);
 
     if (shouldShowUhf && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
         const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
@@ -2237,7 +2529,7 @@ function cacheGalaxyElements() {
 
     operations.body.appendChild(operationsPanel);
 
-    const incomingAttacks = createGalaxySection(doc, 'Incoming Attacks', 'Monitor hostile fleets en route to your sectors.');
+    const incomingAttacks = createGalaxySection(doc, 'Incoming Attacks', '');
     incomingAttacks.section.classList.add('galaxy-section--attacks');
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
@@ -2249,7 +2541,100 @@ function cacheGalaxyElements() {
     attackList.className = 'galaxy-attack-panel__list';
     attackContent.appendChild(attackPlaceholder);
     attackContent.appendChild(attackList);
+
+    const defenseSection = doc.createElement('div');
+    defenseSection.className = 'galaxy-defense-section is-hidden';
+    const defenseTitle = doc.createElement('div');
+    defenseTitle.className = 'galaxy-defense-section__title';
+    defenseTitle.textContent = 'Sector Defense';
+    defenseSection.appendChild(defenseTitle);
+
+    const defenseWarning = doc.createElement('p');
+    defenseWarning.className = 'galaxy-defense-section__warning is-hidden';
+    defenseWarning.textContent = 'Select a UHF-controlled sector to allocate defenses.';
+    defenseSection.appendChild(defenseWarning);
+
+    const defenseForm = doc.createElement('div');
+    defenseForm.className = 'galaxy-defense-form is-hidden';
+
+    const defenseMeta = doc.createElement('div');
+    defenseMeta.className = 'galaxy-defense-form__meta';
+    const defenseSectorLabel = doc.createElement('span');
+    defenseSectorLabel.className = 'galaxy-defense-form__sector';
+    defenseSectorLabel.textContent = 'Sector: —';
+    const defenseCapacityValue = doc.createElement('span');
+    defenseCapacityValue.className = 'galaxy-defense-form__capacity';
+    defenseCapacityValue.textContent = 'Defense Pool: 0';
+    const defenseReservationValue = doc.createElement('span');
+    defenseReservationValue.className = 'galaxy-defense-form__reservation';
+    defenseReservationValue.textContent = 'Ops Pool: 0';
+    defenseMeta.append(defenseSectorLabel, defenseCapacityValue, defenseReservationValue);
+
+    const defenseSummary = doc.createElement('div');
+    defenseSummary.className = 'galaxy-defense-form__summary';
+    const defenseAssignedValue = doc.createElement('span');
+    defenseAssignedValue.className = 'galaxy-defense-form__summary-item';
+    defenseAssignedValue.textContent = 'Assigned: 0';
+    const defenseEffectiveValue = doc.createElement('span');
+    defenseEffectiveValue.className = 'galaxy-defense-form__summary-item';
+    defenseEffectiveValue.textContent = 'Effective: 0';
+    const defenseRemainingValue = doc.createElement('span');
+    defenseRemainingValue.className = 'galaxy-defense-form__summary-item';
+    defenseRemainingValue.textContent = 'Remaining: 0';
+    defenseSummary.append(defenseAssignedValue, defenseEffectiveValue, defenseRemainingValue);
+
+    const defenseRow = doc.createElement('div');
+    defenseRow.className = 'galaxy-defense-form__row';
+    const defenseInput = doc.createElement('input');
+    defenseInput.type = 'number';
+    defenseInput.min = '0';
+    defenseInput.step = '1';
+    defenseInput.className = 'galaxy-defense-form__input';
+    defenseRow.appendChild(defenseInput);
+
+    const defenseButtonsPrimary = doc.createElement('div');
+    defenseButtonsPrimary.className = 'galaxy-defense-form__buttons';
+    const defenseButtonsSecondary = doc.createElement('div');
+    defenseButtonsSecondary.className = 'galaxy-defense-form__buttons galaxy-defense-form__buttons--secondary';
+    const defenseButtonsColumn = doc.createElement('div');
+    defenseButtonsColumn.className = 'galaxy-defense-form__button-column';
+
+    const defenseButtons = {};
+    [
+        { key: 'zero', label: '0', group: 'primary' },
+        { key: 'decrement', label: '-1', group: 'primary' },
+        { key: 'increment', label: '+1', group: 'primary' },
+        { key: 'divide', label: '/10', group: 'secondary' },
+        { key: 'multiply', label: 'x10', group: 'secondary' }
+    ].forEach(({ key, label, group }) => {
+        const button = doc.createElement('button');
+        button.type = 'button';
+        button.className = 'galaxy-defense-form__button';
+        button.dataset.action = key;
+        button.textContent = label;
+        if (group === 'secondary') {
+            defenseButtonsSecondary.appendChild(button);
+        } else {
+            defenseButtonsPrimary.appendChild(button);
+        }
+        defenseButtons[key] = button;
+    });
+
+    defenseButtonsColumn.appendChild(defenseButtonsPrimary);
+    defenseButtonsColumn.appendChild(defenseButtonsSecondary);
+    defenseRow.appendChild(defenseButtonsColumn);
+
+    defenseForm.append(defenseMeta, defenseSummary, defenseRow);
+    defenseSection.appendChild(defenseForm);
+    attackContent.appendChild(defenseSection);
     incomingAttacks.body.appendChild(attackContent);
+
+    defenseInput.addEventListener('input', handleDefenseInputChange);
+    defenseInput.addEventListener('change', handleDefenseInputChange);
+    defenseInput.addEventListener('blur', handleDefenseInputChange);
+    Object.values(defenseButtons).forEach((button) => {
+        button.addEventListener('click', handleDefenseButtonClick);
+    });
 
     secondRow.appendChild(operations.section);
     secondRow.appendChild(incomingAttacks.section);
@@ -2456,6 +2841,17 @@ function cacheGalaxyElements() {
         attackPlaceholder,
         attackList,
         attackEntries: new Map(),
+        defenseSection,
+        defenseWarning,
+        defenseForm,
+        defenseSectorLabel,
+        defenseCapacityValue,
+        defenseReservationValue,
+        defenseAssignedValue,
+        defenseEffectiveValue,
+        defenseRemainingValue,
+        defenseInput,
+        defenseButtons,
         sectorContent,
         sectorDetails: null,
         hexElements,
@@ -2649,8 +3045,9 @@ function updateIncomingAttackPanel(manager, cache) {
     }
 
     const hasEntries = incomingAttacks.length > 0;
+    const defenseVisible = cache.defenseForm ? !cache.defenseForm.classList.contains('is-hidden') : false;
     if (cache.attackContent) {
-        cache.attackContent.classList.toggle('is-populated', hasEntries);
+        cache.attackContent.classList.toggle('is-populated', hasEntries || defenseVisible);
     }
     if (cache.attackPlaceholder) {
         if (hasEntries) {
@@ -2758,6 +3155,7 @@ function updateGalaxyUI() {
     updateLogisticsDisplay(manager, cache);
     updateFleetShopDisplay(manager, cache);
     updateIncomingAttackPanel(manager, cache);
+    updateSectorDefenseSection();
     updateGalaxyHexControlColors(manager, cache);
     updateGalaxyOperationArrows(manager, cache);
     renderSelectedSectorDetails();
