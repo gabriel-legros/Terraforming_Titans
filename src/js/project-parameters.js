@@ -482,7 +482,9 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      minimumRadiusEarth: 1
+    }
   },
   disposeResources : {
     type: 'SpaceDisposalProject',
