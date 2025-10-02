@@ -2,6 +2,167 @@
   const PlanetVisualizer = window.PlanetVisualizer;
   if (!PlanetVisualizer) return;
 
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+  const PLANET_TYPE_TEXTURES = {
+    default: {
+      top: { color: '#ffffff', t: 0.2 },
+      bottom: { color: '#000000', t: 0.35 },
+      topJitter: 0.04,
+      bottomJitter: 0.04,
+      heightScale: 1,
+      heightJitter: 0.05,
+      featureMask: 1,
+      shade: 1,
+    },
+    'mars-like': {
+      top: { color: '#f4c9a3', t: 0.32 },
+      bottom: { color: '#2d110f', t: 0.55 },
+      tint: { color: '#c86a42', min: 0.05, max: 0.12 },
+      topJitter: 0.06,
+      bottomJitter: 0.05,
+      heightScale: 1.08,
+      heightJitter: 0.04,
+      featureMask: 1,
+      shade: 1,
+    },
+    'cold-desert': {
+      top: { color: '#f7e6c5', t: 0.38 },
+      bottom: { color: '#3a2717', t: 0.45 },
+      tint: { color: '#d3a86b', min: 0.04, max: 0.1 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.98,
+      heightJitter: 0.05,
+      featureMask: 0.9,
+      shade: 1,
+    },
+    'icy-moon': {
+      top: { color: '#eef6ff', t: 0.62 },
+      bottom: { color: '#1a2e45', t: 0.35 },
+      tint: { color: '#d4e8ff', min: 0.18, max: 0.28 },
+      topJitter: 0.04,
+      bottomJitter: 0.04,
+      heightScale: 0.85,
+      heightJitter: 0.04,
+      featureMask: 0.7,
+      shade: 1.05,
+    },
+    'titan-like': {
+      top: { color: '#f4d79f', t: 0.34 },
+      bottom: { color: '#24160a', t: 0.48 },
+      tint: { color: '#d4a45c', min: 0.06, max: 0.12 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.9,
+      heightJitter: 0.05,
+      featureMask: 1.1,
+      shade: 1,
+    },
+    'carbon-planet': {
+      top: { color: '#bfc1c5', t: 0.2 },
+      bottom: { color: '#050608', t: 0.7 },
+      tint: { color: '#2e2c34', min: 0.12, max: 0.22 },
+      topJitter: 0.03,
+      bottomJitter: 0.06,
+      heightScale: 1.05,
+      heightJitter: 0.04,
+      featureMask: 1.35,
+      shade: 0.92,
+    },
+    'desiccated-desert': {
+      top: { color: '#f5d6a8', t: 0.36 },
+      bottom: { color: '#382413', t: 0.5 },
+      tint: { color: '#d7aa68', min: 0.05, max: 0.11 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 1,
+      heightJitter: 0.05,
+      featureMask: 0.95,
+      shade: 1,
+    },
+    'super-earth': {
+      top: { color: '#d3f0d4', t: 0.26 },
+      bottom: { color: '#18341d', t: 0.56 },
+      tint: { color: '#6fae70', min: 0.08, max: 0.16 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 1.12,
+      heightJitter: 0.06,
+      featureMask: 0.8,
+      shade: 1,
+    },
+    'venus-like': {
+      top: { color: '#f7e6b2', t: 0.38 },
+      bottom: { color: '#3f2c12', t: 0.5 },
+      tint: { color: '#d1b063', min: 0.05, max: 0.1 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.92,
+      heightJitter: 0.05,
+      featureMask: 0.85,
+      shade: 0.98,
+    },
+  };
+
+  function resolvePlanetArchetype(context, baseHex) {
+    let type = null;
+    if (context?.viz?.classification?.archetype) {
+      type = context.viz.classification.archetype;
+    }
+    if (!type && typeof currentPlanetParameters !== 'undefined') {
+      type = currentPlanetParameters?.classification?.archetype || null;
+    }
+    if (!type && typeof window !== 'undefined') {
+      const sm = window.spaceManager;
+      if (sm?.currentWorld?.classification?.archetype) {
+        type = sm.currentWorld.classification.archetype;
+      }
+    }
+    if (!type && typeof RWG_TYPE_BASE_COLORS !== 'undefined' && baseHex) {
+      const match = baseHex.toLowerCase();
+      for (const [key, color] of Object.entries(RWG_TYPE_BASE_COLORS)) {
+        if (typeof color === 'string' && color.toLowerCase() === match) {
+          type = key;
+          break;
+        }
+      }
+    }
+    return type || 'default';
+  }
+
+  function createJitterRandom(seedX, seedY) {
+    const sx = Number.isFinite(seedX) ? seedX : 0.37;
+    const sy = Number.isFinite(seedY) ? seedY : 0.73;
+    let state = Math.floor((sx * 104729)) ^ Math.floor((sy * 130363)) ^ 0x9e3779b9;
+    state >>>= 0;
+    if (state === 0) state = 0x6d2b79f5;
+    return function () {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      return state / 0x100000000;
+    };
+  }
+
+  function mixHexColors(hexA, hexB, t) {
+    const parse = (hex) => {
+      const value = parseInt(hex.slice(1), 16);
+      return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255,
+      };
+    };
+    const a = parse(hexA);
+    const b = parse(hexB);
+    const lerp = (x, y, amt) => Math.round(x + (y - x) * amt);
+    const toHex = (v) => v.toString(16).padStart(2, '0');
+    const amt = clamp01(t);
+    const r = lerp(a.r, b.r, amt);
+    const g = lerp(a.g, b.g, amt);
+    const bl = lerp(a.b, b.b, amt);
+    return `#${toHex(r)}${toHex(g)}${toHex(bl)}`;
+  }
+
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
@@ -13,9 +174,12 @@
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+    // Include planet type in cache key so palette changes (archetype) update texture
+    let typeKey = 'default';
+    try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${fKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${typeKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -107,13 +271,43 @@
     };
     const waterT = (this.viz.coverage?.water || 0) / 100;
     const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
-    const topCol = mix(baseHex, '#ffffff', 0.2);
-    const botCol = mix(baseHex, '#000000', 0.35);
+    const seed = this.hashSeedFromPlanet ? this.hashSeedFromPlanet() : { x: 0.137, y: 0.733 };
+    const planetType = resolvePlanetArchetype(this, baseHex);
+    const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
+    const rand = createJitterRandom(seed.x, seed.y);
+
+    let gradientBase = baseHex;
+    if (palette.tint) {
+      const min = clamp01(palette.tint.min ?? 0);
+      const max = clamp01(palette.tint.max ?? min);
+      const tintAmt = clamp01(min + (max - min) * rand());
+      if (tintAmt > 0) {
+        gradientBase = mixHexColors(baseHex, palette.tint.color, tintAmt);
+      }
+    }
+
+    const topTarget = palette.top?.color || '#ffffff';
+    const bottomTarget = palette.bottom?.color || '#000000';
+    const topBase = palette.top?.t ?? 0.2;
+    const bottomBase = palette.bottom?.t ?? 0.35;
+    const topJitter = palette.topJitter || 0;
+    const bottomJitter = palette.bottomJitter || 0;
+    const topMix = clamp01(topBase + (topJitter ? (rand() - 0.5) * 2 * topJitter : 0));
+    const bottomMix = clamp01(bottomBase + (bottomJitter ? (rand() - 0.5) * 2 * bottomJitter : 0));
+    const topCol = mixHexColors(gradientBase, topTarget, topMix);
+    const botCol = mixHexColors(gradientBase, bottomTarget, bottomMix);
+
     const base = ctx.createLinearGradient(0, 0, 0, h);
     base.addColorStop(0, topCol);
     base.addColorStop(1, botCol);
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, w, h);
+
+    const baseHeightScale = palette.heightScale ?? 1;
+    const heightJitter = palette.heightJitter || 0;
+    const heightScale = Math.max(0.3, baseHeightScale * (1 + (heightJitter ? (rand() - 0.5) * 2 * heightJitter : 0)));
+    const featureMask = Math.max(0, palette.featureMask ?? 1);
+    const shadeBias = palette.shade ?? 1;
 
     if (strength > 0) {
       ctx.globalAlpha = Math.max(0, Math.min(1, strength));
@@ -127,7 +321,6 @@
       const tdata = timg.data;
 
       // Prepare large-scale feature noise (dark regions)
-      const seed = this.hashSeedFromPlanet();
       let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287)) >>> 0;
       const hash = (x, y) => {
         const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.000071) * 43758.5453;
@@ -155,7 +348,7 @@
 
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
-        const heightMul = 0.85 + 0.3 * Math.pow(hgt, 1.2);
+        const heightMul = (0.85 + 0.3 * Math.pow(hgt, 1.2)) * heightScale;
 
         // Large-scale dark regions multiplier
         let featureMul = 1.0;
@@ -170,12 +363,13 @@
           let level = (v - 0.1) / 0.5; // maps 0.1->0 and 0.6->1
           if (level < 0) level = 0; else if (level > 1) level = 1;
           const shaped = Math.pow(level, Math.max(0.0001, fContrast));
-          featureMul = 1 - fStrength * shaped;
+          const maskStrength = Math.max(0, Math.min(1, fStrength * featureMask));
+          featureMul = 1 - maskStrength * shaped;
           if (featureMul < 0) featureMul = 0;
         }
 
         const idx = i * 4;
-        const mul = heightMul * featureMul;
+        const mul = Math.max(0, heightMul * featureMul * shadeBias);
         tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
         tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
         tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
