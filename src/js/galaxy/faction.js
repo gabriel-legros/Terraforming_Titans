@@ -567,11 +567,22 @@ class GalaxyFaction {
             return 0;
         }
         if (this.id !== UHF_FACTION_ID) {
-            const baseValue = sector?.getValue?.();
-            if (Number.isFinite(baseValue) && baseValue > 0) {
-                return baseValue;
+            const totalControl = sector?.getTotalControlValue?.() ?? 0;
+            if (!(totalControl > 0)) {
+                return 0;
             }
-            return getDefaultSectorValue();
+            const share = controlValue / totalControl;
+            if (!(share > 0)) {
+                return 0;
+            }
+            const baseValue = sector?.getValue?.();
+            const sanitizedValue = Number.isFinite(baseValue) && baseValue > 0
+                ? baseValue
+                : getDefaultSectorValue();
+            if (!(sanitizedValue > 0)) {
+                return 0;
+            }
+            return sanitizedValue * share;
         }
         const worldCount = manager?.getTerraformedWorldCountForSector?.(sector) ?? 0;
         const baseDefense = worldCount > 0 ? 100 * worldCount : 0;
