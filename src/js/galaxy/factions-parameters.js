@@ -31,7 +31,7 @@ const galaxyFactionParameters = [
         ringSlices: [
             { ring: 1 }
         ],
-        defensiveness: 0.9
+        defensiveness: 0.8
     },
     {
         id: 'helian',
