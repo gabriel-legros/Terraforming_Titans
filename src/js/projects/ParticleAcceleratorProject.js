@@ -192,6 +192,28 @@ class ParticleAcceleratorProject extends Project {
     return 5 * Math.log10(safeRadius);
   }
 
+  getResearchBoostSourceId() {
+    return `${this.name}-advancedResearchBoost`;
+  }
+
+  applyResearchBoostEffect() {
+    const sourceId = this.getResearchBoostSourceId();
+    const boostPercent = this.bestRadiusMeters > 0 ? this.calculateResearchBoost(this.bestRadiusMeters) : 0;
+    if (boostPercent <= 0) {
+      removeEffect({ target: 'researchManager', sourceId });
+      return;
+    }
+    const multiplier = 1 + (boostPercent / 100);
+    addEffect({
+      target: 'researchManager',
+      type: 'advancedResearchBoost',
+      value: multiplier,
+      effectId: sourceId,
+      sourceId,
+      name: `${this.displayName} Research Boost`
+    });
+  }
+
   getSelectedRadiusMeters() {
     return this.selectedRadiusMeters;
   }
@@ -227,6 +249,7 @@ class ParticleAcceleratorProject extends Project {
     if (this.selectedRadiusMeters > this.bestRadiusMeters) {
       this.bestRadiusMeters = this.selectedRadiusMeters;
     }
+    this.applyResearchBoostEffect();
     this.updateUI();
     globalThis?.updateProjectUI?.(this.name);
   }
@@ -252,6 +275,7 @@ class ParticleAcceleratorProject extends Project {
       this.bestRadiusMeters = 0;
       this.radiusStepMeters = this.defaultStepMeters;
       this.updateUI();
+      this.applyResearchBoostEffect();
       return;
     }
     super.loadState(state);
@@ -275,6 +299,7 @@ class ParticleAcceleratorProject extends Project {
       ? savedStepMeters
       : this.defaultStepMeters;
     this.updateUI();
+    this.applyResearchBoostEffect();
   }
 
   saveTravelState() {
@@ -321,6 +346,7 @@ class ParticleAcceleratorProject extends Project {
       this.startingDuration = state.startingDuration ?? this.getEffectiveDuration();
     }
     this.updateUI();
+    this.applyResearchBoostEffect();
   }
 
   setRadiusEarth(value) {
