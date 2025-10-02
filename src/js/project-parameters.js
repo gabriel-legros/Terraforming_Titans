@@ -482,7 +482,9 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      canUseSpaceStorage: true
+    }
   },
   disposeResources : {
     type: 'SpaceDisposalProject',
