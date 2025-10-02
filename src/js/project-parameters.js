@@ -483,7 +483,8 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
-      minimumRadiusEarth: 1
+      minimumRadiusEarth: 1,
+      canUseSpaceStorage: true
     }
   },
   disposeResources : {
