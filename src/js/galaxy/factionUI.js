@@ -1,7 +1,7 @@
 const GALAXY_FACTION_UI_UHF_KEY = globalThis.UHF_FACTION_ID || 'uhf';
 const GALAXY_FACTION_UI_OPERATION_FALLBACK = Number.isFinite(globalThis.GALAXY_OPERATION_DURATION_MS)
     ? globalThis.GALAXY_OPERATION_DURATION_MS
-    : 600000;
+    : 5 * 60 * 1000;
 
 function sanitizeOperationDuration(operation) {
     const duration = Number(operation?.durationMs);

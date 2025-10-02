@@ -237,3 +237,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Boosted base power to 10000 for sectors R5-29, R5-19, R4-13, R4-09, and R6-05, and set their adjacent sectors to 2000 to reinforce nearby defenses.
 - AI-controlled galaxy factions now stockpile surplus strength above a defensiveness threshold and launch randomized 5–15% capacity operations every minute once the reserve is met, still prioritizing contested or neighboring enemy sectors.
 - UHF fleet defense now divides available border strength evenly instead of weighting distribution by threat levels.
+- Galaxy operations now feature an Auto launch toggle beside the Launch button that automatically deploys eligible missions, and operations last five minutes by default.

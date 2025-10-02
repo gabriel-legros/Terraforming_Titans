@@ -6,7 +6,7 @@ function loadGalaxyConstants() {
     }
 
     global.GALAXY_RADIUS = 6;
-    global.GALAXY_OPERATION_DURATION_MS = 600000;
+    global.GALAXY_OPERATION_DURATION_MS = 5 * 60 * 1000;
     global.FULL_CONTROL_EPSILON = 1e-6;
     global.FLEET_UPGRADE_INCREMENT = 0.1;
     global.UHF_FACTION_ID = 'uhf';

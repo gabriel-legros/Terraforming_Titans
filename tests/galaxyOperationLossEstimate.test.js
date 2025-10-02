@@ -25,7 +25,7 @@ describe('GalaxyManager operation loss estimate', () => {
         expect(estimate.defensePower).toBeCloseTo(60);
         expect(estimate.successChance).toBe(1);
         expect(estimate.failureChance).toBe(0);
-        expect(estimate.successLoss).toBe(0);
+        expect(estimate.successLoss).toBeCloseTo(20);
         expect(estimate.failureLoss).toBeCloseTo(120);
     });
 
@@ -45,7 +45,7 @@ describe('GalaxyManager operation loss estimate', () => {
         expect(estimate.offensePower).toBeCloseTo(80);
         expect(estimate.reservedPower).toBeCloseTo(80);
         expect(estimate.successChance).toBe(1);
-        expect(estimate.successLoss).toBe(0);
+        expect(estimate.successLoss).toBeCloseTo(13.333333333333334);
         expect(estimate.failureLoss).toBeCloseTo(80);
     });
 
