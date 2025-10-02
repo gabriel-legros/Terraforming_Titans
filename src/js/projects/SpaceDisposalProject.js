@@ -5,6 +5,14 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.massDriverShipEquivalency = this.attributes.massDriverShipEquivalency ?? 10;
   }
 
+  getExportRateLabel(baseLabel) {
+    return 'Resource Disposal';
+  }
+
+  getCostRateLabel() {
+    return 'Resource Disposal';
+  }
+
   createResourceDisposalUI() {
     const section = super.createResourceDisposalUI();
     const detailsGrid = section.querySelector('.project-details-grid');

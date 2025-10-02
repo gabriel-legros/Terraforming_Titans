@@ -10,23 +10,37 @@ const AEROSTAT_INTERNAL_AIR_MOL_WEIGHT =
   globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ?? 29;
 const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ?? 0.2;
-const AEROSTAT_MAX_LAND_SHARE = 0.2;
+const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
+  globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
+const AEROSTAT_MAX_LAND_SHARE = 0.25;
 const AEROSTAT_BUOYANCY_NOTES =
-  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.';
+  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
-  'At most 20% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
+  'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
+const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.';
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
 globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ??= AEROSTAT_INTERNAL_AIR_MOL_WEIGHT;
 globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ??=
   AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ??=
+  AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+
+let getTotalSurfacePressureKPaHelper = null;
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getTotalSurfacePressureKPa: getTotalSurfacePressureKPaHelper } = require('../terraforming/atmospheric-utils.js'));
+} else {
+  getTotalSurfacePressureKPaHelper = globalThis.getTotalSurfacePressureKPa;
+}
 
 class Aerostat extends BaseColony {
   constructor(config, colonyName) {
     super(config, colonyName);
     this._liftDisableAccumulator = 0;
     this._liftBelowThreshold = false;
+    this._pressureBelowThreshold = false;
     this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
   }
 
@@ -70,7 +84,8 @@ class Aerostat extends BaseColony {
     }
 
     const lift = this.getCurrentLift();
-    if (this.isLiftBelowThreshold(lift)) {
+    const pressure = this.getCurrentSurfacePressure();
+    if (this.isLiftBelowThreshold(lift, pressure)) {
       return false;
     }
 
@@ -88,7 +103,7 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    if (this.isLiftBelowThreshold()) {
+    if (this.isLiftBelowThreshold(undefined, this.getCurrentSurfacePressure())) {
       return 0;
     }
 
@@ -107,15 +122,47 @@ class Aerostat extends BaseColony {
   getBuoyancySummary() {
     let summary = this.buoyancyNotes;
     const lift = this.getCurrentLift();
-    if (this.isLiftBelowThreshold(lift)) {
+    const pressure = this.getCurrentSurfacePressure();
+    const { pressureBelow, liftBelow } = this._evaluateBuoyancy(
+      lift,
+      pressure
+    );
+
+    if (pressureBelow) {
+      const minPressure = this.getMinimumOperationalPressure();
+      if (Number.isFinite(pressure)) {
+        summary += ` Current atmospheric pressure is ${formatNumber(
+          pressure,
+          false,
+          1
+        )} kPa, below the ${formatNumber(
+          minPressure,
+          false,
+          0
+        )} kPa minimum needed for aerostat buoyancy.`;
+      } else {
+        summary += ` Atmospheric pressure is below the ${formatNumber(
+          minPressure,
+          false,
+          0
+        )} kPa minimum needed for aerostat buoyancy.`;
+      }
+    }
+
+    if (liftBelow) {
       summary +=
         ' Current lift is below the minimum operational requirement, preventing aerostat activation and construction.';
     }
+
     return summary;
   }
 
   getMinimumOperationalLift() {
     return AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+  }
+
+  getMinimumOperationalPressure() {
+    return AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
   }
 
   getAtmosphericComposition() {
@@ -151,15 +198,48 @@ class Aerostat extends BaseColony {
     return lift;
   }
 
-  isLiftBelowThreshold(liftValue) {
-    const lift = liftValue ?? this.getCurrentLift();
-    if (lift === null) {
-      this._liftBelowThreshold = false;
-      return false;
+  getCurrentSurfacePressure() {
+    const computePressure =
+      getTotalSurfacePressureKPaHelper || globalThis.getTotalSurfacePressureKPa;
+    if (!computePressure) {
+      return null;
     }
-    const below = lift < this.getMinimumOperationalLift();
-    this._liftBelowThreshold = below;
-    return below;
+
+    const pressure = computePressure(globalThis.terraforming);
+    if (!Number.isFinite(pressure) || pressure < 0) {
+      return null;
+    }
+
+    return pressure;
+  }
+
+  _evaluateBuoyancy(liftValue, pressureValue) {
+    const lift = Number.isFinite(liftValue) ? liftValue : null;
+    const pressure = Number.isFinite(pressureValue) ? pressureValue : null;
+
+    const minPressure = this.getMinimumOperationalPressure();
+    const pressureBelow = pressure !== null && pressure < minPressure;
+    this._pressureBelowThreshold = pressureBelow;
+
+    const minLift = this.getMinimumOperationalLift();
+    const liftBelow = lift !== null && lift < minLift;
+
+    const insufficient = pressureBelow || liftBelow;
+    this._liftBelowThreshold = insufficient;
+
+    return { lift, pressure, pressureBelow, liftBelow, insufficient };
+  }
+
+  isLiftBelowThreshold(liftValue, pressureValue) {
+    const lift =
+      liftValue === undefined ? this.getCurrentLift() : liftValue;
+    const pressure =
+      pressureValue === undefined
+        ? this.getCurrentSurfacePressure()
+        : pressureValue;
+
+    const { insufficient } = this._evaluateBuoyancy(lift, pressure);
+    return insufficient;
   }
 
   filterActivationChange(change) {
@@ -180,7 +260,8 @@ class Aerostat extends BaseColony {
     }
 
     const lift = this.getCurrentLift();
-    const belowThreshold = this.isLiftBelowThreshold(lift);
+    const pressure = this.getCurrentSurfacePressure();
+    const belowThreshold = this.isLiftBelowThreshold(lift, pressure);
 
     if (!belowThreshold) {
       this._liftDisableAccumulator = 0;
@@ -253,7 +334,13 @@ function isBuildingEligibleForFactoryMitigation(id) {
   return FACTORY_MITIGATION_EXCLUDED_BUILDINGS.indexOf(id) === -1;
 }
 
-function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
+function getAerostatMaintenanceMitigation(context = {}) {
+  const result = {
+    workerShare: 0,
+    aerostatCount: 0,
+    buildingCoverage: { list: [], byId: {} }
+  };
+
   const hasProvidedBuildings = Object.prototype.hasOwnProperty.call(
     context,
     'buildings'
@@ -265,46 +352,7 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
       : undefined;
 
   if (!buildingCollection) {
-    return 0;
-  }
-
-  let totalWorkerRequirement = 0;
-
-  for (const id in buildingCollection) {
-    if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
-
-    if (!isBuildingEligibleForFactoryMitigation(id)) continue;
-
-    const building = buildingCollection[id];
-    if (!building) continue;
-
-    const perBuildingNeed =
-      typeof building.getTotalWorkerNeed === 'function'
-        ? building.getTotalWorkerNeed()
-        : building.requiresWorker || 0;
-
-    if (perBuildingNeed <= 0) continue;
-
-    const activeCount =
-      typeof building.active === 'number'
-        ? building.active
-        : typeof building.count === 'number'
-          ? building.count
-          : 0;
-
-    if (activeCount <= 0) continue;
-
-    const workerMultiplier =
-      typeof building.getEffectiveWorkerMultiplier === 'function'
-        ? building.getEffectiveWorkerMultiplier()
-        : 1;
-
-    totalWorkerRequirement +=
-      activeCount * perBuildingNeed * workerMultiplier;
-  }
-
-  if (totalWorkerRequirement <= 0) {
-    return 1;
+    return result;
   }
 
   const hasProvidedColonies = Object.prototype.hasOwnProperty.call(
@@ -317,45 +365,114 @@ function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
       ? colonies
       : undefined;
 
-  if (!colonyCollection) {
-    return 0;
-  }
-
-  const aerostat = colonyCollection.aerostat_colony;
-  if (!aerostat) {
-    return 0;
-  }
-
-  const baseCapacity = aerostat?.storage?.colony?.colonists || 0;
-  if (baseCapacity <= 0) {
-    return 0;
-  }
-
-  const storageMultiplier =
-    typeof aerostat.getEffectiveStorageMultiplier === 'function'
-      ? aerostat.getEffectiveStorageMultiplier()
-      : 1;
-
-  const activeAerostats =
-    typeof aerostat.active === 'number'
+  const aerostat = colonyCollection?.aerostat_colony ?? null;
+  const baseCapacity = aerostat?.storage?.colony?.colonists ?? 0;
+  const storageMultiplierValue = aerostat?.getEffectiveStorageMultiplier?.();
+  const storageMultiplier = Number.isFinite(storageMultiplierValue)
+    ? storageMultiplierValue
+    : 1;
+  const activeAerostatsRaw =
+    Number.isFinite(aerostat?.active)
       ? aerostat.active
-      : typeof aerostat.count === 'number'
+      : Number.isFinite(aerostat?.count)
         ? aerostat.count
         : 0;
+  const activeAerostats = Math.max(0, activeAerostatsRaw);
+  result.aerostatCount = activeAerostats;
 
-  if (activeAerostats <= 0) {
-    return 0;
+  let totalWorkerRequirement = 0;
+
+  for (const id in buildingCollection) {
+    if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
+
+    const building = buildingCollection[id];
+    if (!building) continue;
+
+    if (isBuildingEligibleForFactoryMitigation(id)) {
+      const perBuildingNeedValue =
+        building.getTotalWorkerNeed?.() ?? building.requiresWorker ?? 0;
+      const perBuildingNeed = Number.isFinite(perBuildingNeedValue)
+        ? perBuildingNeedValue
+        : 0;
+
+      if (perBuildingNeed > 0) {
+        const activeCountRaw = Number.isFinite(building.active)
+          ? building.active
+          : Number.isFinite(building.count)
+            ? building.count
+            : 0;
+        const activeCount = Math.max(0, activeCountRaw);
+        if (activeCount > 0) {
+          const workerMultiplierValue = building.getEffectiveWorkerMultiplier?.();
+          const workerMultiplier = Number.isFinite(workerMultiplierValue)
+            ? workerMultiplierValue
+            : 1;
+          totalWorkerRequirement +=
+            activeCount * perBuildingNeed * workerMultiplier;
+        }
+      }
+    }
+
+    const reductionValue = building.aerostatReduction ?? 0;
+    const reduction = Number.isFinite(reductionValue) ? reductionValue : 0;
+    if (reduction <= 0) {
+      continue;
+    }
+
+    const activeCountRaw = Number.isFinite(building.active)
+      ? building.active
+      : Number.isFinite(building.count)
+        ? building.count
+        : 0;
+    const activeCount = Math.max(0, activeCountRaw);
+    const maxSupported = Math.max(0, activeAerostats * reduction);
+    const supported = Math.min(activeCount, maxSupported);
+    const coverage = activeCount > 0 ? Math.min(1, supported / activeCount) : 0;
+    const remainingFraction = activeCount > 0 ? 1 - coverage : 1;
+
+    const entry = {
+      id,
+      name: building.displayName || building.name || id,
+      activeCount,
+      perAerostat: reduction,
+      maxSupported,
+      supported,
+      coverage,
+      remainingFraction: Math.max(0, Math.min(1, remainingFraction))
+    };
+
+    result.buildingCoverage.list.push(entry);
+    result.buildingCoverage.byId[id] = entry;
+  }
+
+  result.buildingCoverage.list.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (totalWorkerRequirement <= 0) {
+    result.workerShare = 1;
+    return result;
+  }
+
+  if (!aerostat || baseCapacity <= 0 || activeAerostats <= 0) {
+    result.workerShare = 0;
+    return result;
   }
 
   const aerostatCapacity = activeAerostats * baseCapacity * storageMultiplier;
-
   if (aerostatCapacity <= 0) {
-    return 0;
+    result.workerShare = 0;
+    return result;
   }
 
-  return Math.min(1, aerostatCapacity / totalWorkerRequirement);
+  result.workerShare = Math.min(1, aerostatCapacity / totalWorkerRequirement);
+  return result;
 }
 
+function getFactoryTemperatureMaintenancePenaltyReduction(context = {}) {
+  const mitigation = getAerostatMaintenanceMitigation(context);
+  return mitigation.workerShare;
+}
+
+Aerostat.getAerostatMaintenanceMitigation = getAerostatMaintenanceMitigation;
 Aerostat.getFactoryTemperatureMaintenancePenaltyReduction =
   getFactoryTemperatureMaintenancePenaltyReduction;
 
@@ -480,9 +597,8 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const mitigationInfo = document.createElement('span');
     mitigationInfo.classList.add('info-tooltip-icon');
-    mitigationInfo.innerHTML = '&#9432;';
-    mitigationInfo.title =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.  Only applies to buildings with a worker requirement.  Excludes ore mines.';
+   mitigationInfo.innerHTML = '&#9432;';
+    mitigationInfo.title = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
     mitigationRow.appendChild(mitigationInfo);
 
     body.appendChild(mitigationRow);
@@ -582,11 +698,19 @@ function updateAerostatBuoyancySection(structure) {
       ? Math.max(0, buildLimit - currentAerostats)
       : null;
 
-  const mitigationShareRaw =
-    Aerostat.getFactoryTemperatureMaintenancePenaltyReduction?.() ?? null;
+  const mitigationDetails = Aerostat.getAerostatMaintenanceMitigation?.() ?? null;
+  const mitigationShareRaw = mitigationDetails?.workerShare ?? null;
   const mitigationShare = Number.isFinite(mitigationShareRaw)
     ? Math.max(0, Math.min(1, mitigationShareRaw))
     : null;
+  const aerostatCount = Number.isFinite(mitigationDetails?.aerostatCount)
+    ? Math.max(0, mitigationDetails.aerostatCount)
+    : 0;
+  const buildingCoverageList = Array.isArray(
+    mitigationDetails?.buildingCoverage?.list
+  )
+    ? mitigationDetails.buildingCoverage.list
+    : [];
 
   if (ui.liftValue) {
     ui.liftValue.textContent =
@@ -617,6 +741,14 @@ function updateAerostatBuoyancySection(structure) {
       false,
       3
     )} kg/m³.`;
+    const minPressure =
+      structure.getMinimumOperationalPressure?.() ??
+      AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+    title += `\nAerostats require at least ${formatNumber(
+      minPressure,
+      false,
+      0
+    )} kPa of surface pressure to remain buoyant.`;
     ui.liftInfo.title = title;
   }
 
@@ -628,20 +760,42 @@ function updateAerostatBuoyancySection(structure) {
   }
 
   if (ui.mitigationInfo) {
-    let mitigationTitle =
-      'Aerostat colonist capacity reduces the temperature maintenance penalty for staffed buildings.';
-    if (mitigationShare === null) {
+    let mitigationTitle = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
+    if (!mitigationDetails) {
       mitigationTitle += '\nMitigation data unavailable.';
     } else {
-      mitigationTitle += `\nMitigation applied: ${formatNumber(
-        mitigationShare * 100,
+      mitigationTitle += `\nActive aerostats: ${formatNumber(
+        aerostatCount,
         false,
         2
-      )}% of the penalty is negated.`;
-      mitigationTitle +=
-        mitigationShare < 1
-          ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
-          : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+      )}.`;
+
+      if (mitigationShare === null) {
+        mitigationTitle += '\nFactory mitigation data unavailable.';
+      } else {
+        mitigationTitle += `\nFactory mitigation applied: ${formatNumber(
+          mitigationShare * 100,
+          false,
+          2
+        )}% of the penalty is negated.`;
+        mitigationTitle +=
+          mitigationShare < 1
+            ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
+            : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+      }
+
+      if (buildingCoverageList.length > 0) {
+        mitigationTitle += '\nAerostat-supported buildings:';
+        buildingCoverageList.forEach(entry => {
+          const activeText = formatNumber(entry.activeCount, false, 2);
+          const supportedText = formatNumber(entry.supported, false, 2);
+          const capacityText = formatNumber(entry.maxSupported, false, 2);
+          const perAerostatText = formatNumber(entry.perAerostat, false, 2);
+          mitigationTitle += `\n• ${entry.name}: ${supportedText} of ${activeText} active covered (can support ${capacityText}; ${perAerostatText} per aerostat).`;
+        });
+      } else {
+        mitigationTitle += '\nNo buildings currently list an Aerostat Support value.';
+      }
     }
     ui.mitigationInfo.title = mitigationTitle;
   }
@@ -671,6 +825,7 @@ Aerostat.updateBuoyancySection = updateAerostatBuoyancySection;
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Aerostat,
+    getAerostatMaintenanceMitigation,
     getFactoryTemperatureMaintenancePenaltyReduction,
     isBuildingEligibleForFactoryMitigation,
     getAerostatLiftContext,
@@ -679,6 +834,8 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 } else {
   globalThis.Aerostat = Aerostat;
+  globalThis.getAerostatMaintenanceMitigation =
+    getAerostatMaintenanceMitigation;
   globalThis.getFactoryTemperatureMaintenancePenaltyReduction =
     getFactoryTemperatureMaintenancePenaltyReduction;
   globalThis.isBuildingEligibleForFactoryMitigation =

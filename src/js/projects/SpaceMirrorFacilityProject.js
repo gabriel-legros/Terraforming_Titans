@@ -32,6 +32,90 @@ function createDefaultMirrorOversightSettings() {
 
 var mirrorOversightSettings = null;
 
+function formatResourceLabel(resource) {
+  if (!resource) return '';
+  return resource.charAt(0).toUpperCase() + resource.slice(1);
+}
+
+function clearQuickBuildCost(element) {
+  if (!element) return;
+  element.textContent = '';
+  element.dataset.keys = '';
+  element._list = null;
+  element._spans = null;
+}
+
+function updateQuickBuildCostDisplay(element, building, buildCount) {
+  if (!element || !building) {
+    clearQuickBuildCost(element);
+    return;
+  }
+
+  if (!building.getEffectiveCost) {
+    clearQuickBuildCost(element);
+    return;
+  }
+
+  const effectiveCost = building.getEffectiveCost(buildCount);
+  const items = [];
+
+  for (const category in effectiveCost) {
+    const categoryCost = effectiveCost[category];
+    for (const resource in categoryCost) {
+      items.push({
+        key: `${category}.${resource}`,
+        label: formatResourceLabel(resource),
+        required: categoryCost[resource],
+        available: resources?.[category]?.[resource]?.value ?? 0,
+      });
+    }
+  }
+
+  if (!items.length) {
+    clearQuickBuildCost(element);
+    return;
+  }
+
+  const keyString = items.map(item => item.key).sort().join(',');
+  if (element.dataset.keys !== keyString) {
+    element.dataset.keys = keyString;
+    element.textContent = '';
+    let labelNode = element._labelNode;
+    if (!labelNode) {
+      labelNode = document.createElement('strong');
+      element._labelNode = labelNode;
+    }
+    labelNode.textContent = 'Cost:';
+    element.appendChild(labelNode);
+    const list = document.createElement('span');
+    element._list = list;
+    element._spans = new Map();
+    element.appendChild(list);
+    items.forEach((item, idx) => {
+      const span = document.createElement('span');
+      element._spans.set(item.key, span);
+      list.appendChild(span);
+      if (idx < items.length - 1) {
+        list.appendChild(document.createTextNode(', '));
+      }
+    });
+  }
+
+  items.forEach(item => {
+    const span = element._spans.get(item.key);
+    if (!span) return;
+    const text = `${item.label}: ${formatNumber(item.required, true)}`;
+    if (span.textContent !== text) {
+      span.textContent = text;
+    }
+    const hasEnough = item.available >= item.required;
+    const color = hasEnough ? '' : 'red';
+    if (span.style.color !== color) {
+      span.style.color = color;
+    }
+  });
+}
+
 var SpaceMirrorAdvancedOversightModule = (typeof globalThis !== 'undefined' && globalThis.SpaceMirrorAdvancedOversight)
   ? globalThis.SpaceMirrorAdvancedOversight
   : null;
@@ -532,7 +616,7 @@ function initializeMirrorOversightUI(container) {
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
-        <input type="number" id="adv-target-water" class="stat-value" step="0.001" value="0" style="font-size:12px; width:75px;">
+        <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:75px;">
         <select id="adv-target-water-scale" class="stat-value" style="font-size:12px; width:50px;">
           <option value="1000">k</option>
           <option value="1000000">M</option>
@@ -580,20 +664,24 @@ function initializeMirrorOversightUI(container) {
     if (k === 'water') {
       const scale = mirrorOversightSettings.waterMultiplier || 1000;
       el.value = Number((mirrorOversightSettings.targets[k] || 0) / scale);
-      el.addEventListener('change', () => {
+      const handleWaterInput = () => {
         const raw = Number(el.value);
         const mul = mirrorOversightSettings.waterMultiplier || 1000;
         mirrorOversightSettings.targets.water = isNaN(raw) ? 0 : raw * mul;
-      });
+      };
+      el.addEventListener('input', handleWaterInput);
+      el.addEventListener('change', handleWaterInput);
     } else {
       const base = (mirrorOversightSettings.targets[k] || 293.15);
       el.value = toDisp(base).toFixed(2);
-      el.addEventListener('change', () => {
+      const handleTempInput = () => {
         let raw = Number(el.value);
         const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
         if (useC) raw = raw + 273.15; // convert back to Kelvin
         mirrorOversightSettings.targets[k] = isNaN(raw) ? 0 : raw;
-      });
+      };
+      el.addEventListener('input', handleTempInput);
+      el.addEventListener('change', handleTempInput);
     }
   });
   if (waterScaleSelect) {
@@ -1379,9 +1467,9 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorDiv.classList.add('increment-button', 'qb-inc');
     mirrorDiv.textContent = '/10';
     mirrorQuick.appendChild(mirrorDiv);
-    const mirrorFiller = document.createElement('div');
-    mirrorFiller.classList.add('qb-fill');
-    mirrorQuick.appendChild(mirrorFiller);
+    const mirrorCost = document.createElement('span');
+    mirrorCost.classList.add('quick-build-cost');
+    mirrorQuick.appendChild(mirrorCost);
     // Place inside the Mirror Status card body for nicer layout
     const mirrorCardBody = mirrorDetails.querySelector('.card-body');
     if (mirrorCardBody) mirrorCardBody.appendChild(mirrorQuick);
@@ -1443,9 +1531,9 @@ class SpaceMirrorFacilityProject extends Project {
     lanternDiv.classList.add('increment-button', 'qb-inc');
     lanternDiv.textContent = '/10';
     lanternQuick.appendChild(lanternDiv);
-    const lanternFiller = document.createElement('div');
-    lanternFiller.classList.add('qb-fill');
-    lanternQuick.appendChild(lanternFiller);
+    const lanternCost = document.createElement('span');
+    lanternCost.classList.add('quick-build-cost');
+    lanternQuick.appendChild(lanternCost);
     // Place inside the Lantern Status card body
     const lanternCardBody = lanternDetails.querySelector('.card-body');
     if (lanternCardBody) lanternCardBody.appendChild(lanternQuick);
@@ -1471,8 +1559,22 @@ class SpaceMirrorFacilityProject extends Project {
         totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
       },
       quickBuild: {
-        mirror: { container: mirrorQuick, button: mirrorQuickButton, mul: mirrorMul, div: mirrorDiv, count: 1 },
-        lantern: { container: lanternQuick, button: lanternQuickButton, mul: lanternMul, div: lanternDiv, count: 1 },
+        mirror: {
+          container: mirrorQuick,
+          button: mirrorQuickButton,
+          mul: mirrorMul,
+          div: mirrorDiv,
+          cost: mirrorCost,
+          count: 1,
+        },
+        lantern: {
+          container: lanternQuick,
+          button: lanternQuickButton,
+          mul: lanternMul,
+          div: lanternDiv,
+          cost: lanternCost,
+          count: 1,
+        },
       },
     };
 
@@ -1543,6 +1645,11 @@ class SpaceMirrorFacilityProject extends Project {
         } else {
           qb.button.style.color = canAfford ? '' : 'red';
         }
+        if (qb.cost) {
+          updateQuickBuildCostDisplay(qb.cost, building, qb.count);
+        }
+      } else if (qb.cost) {
+        clearQuickBuildCost(qb.cost);
       }
     }
 
@@ -1585,7 +1692,12 @@ class SpaceMirrorFacilityProject extends Project {
           } else {
             qb.button.style.color = canAfford ? '' : 'red';
           }
+          if (qb.cost) {
+            updateQuickBuildCostDisplay(qb.cost, lantern, qb.count);
+          }
         }
+      } else if (elements.quickBuild && elements.quickBuild.lantern && elements.quickBuild.lantern.cost) {
+        clearQuickBuildCost(elements.quickBuild.lantern.cost);
       }
     }
 

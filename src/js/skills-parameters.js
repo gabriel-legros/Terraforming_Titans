@@ -2,7 +2,7 @@ const skillParameters = {
   build_cost: {
     id: 'build_cost',
     name: 'Efficient Architecture',
-    description: 'Reduces Building Costs by 10%',
+    description: 'Reduces Building Costs by 10% (indirectly impacts maintenance)',
     cost: 1,
     maxRank: 5,
     effect: {

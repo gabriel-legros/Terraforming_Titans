@@ -48,10 +48,6 @@ class UndergroundExpansionProject extends AndroidProject {
 
   complete() {
     super.complete();
-    if (typeof terraforming !== 'undefined' && resources?.surface?.land) {
-      const increase = (terraforming.initialLand || 0) / 10000
-      resources.surface.land.value += increase;
-    }
   }
 }
 

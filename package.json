@@ -11,11 +11,17 @@
     "jsdom": "^22.1.0"
   },
   "jest": {
-    "setupFiles": ["<rootDir>/tests/jestSetup.js"],
+    "setupFiles": [
+      "<rootDir>/tests/jestSetup.js"
+    ],
     "resolver": "<rootDir>/tests/jestResolver.js",
     "moduleNameMapper": {
       "^.*[\\/]+lib[\\/]+node_modules[\\/]+jsdom$": "<rootDir>/node_modules/jsdom",
-      "^\\.\\.\/src\/js\/(physics|phase-change-utils|hydrology|condensation-utils|water-cycle|dry-ice-cycle|hydrocarbon-cycle|zones|terraforming-utils|radiation-utils|terraforming)(?:\\.js)?$": "<rootDir>/src/js/terraforming/$1.js"
+      "^\\.\\./src/js/(physics|phase-change-utils|hydrology|condensation-utils|water-cycle|dry-ice-cycle|hydrocarbon-cycle|zones|terraforming-utils|radiation-utils|terraforming)(?:\\.js)?$": "<rootDir>/src/js/terraforming/$1.js"
     }
+  },
+  "dependencies": {
+    "pip": "^0.0.1",
+    "python": "^0.0.4"
   }
 }

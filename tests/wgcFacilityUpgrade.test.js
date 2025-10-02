@@ -18,10 +18,10 @@ describe('WGC facility upgrades', () => {
   test('infirmary boosts healing rate', () => {
     const wgc = new WarpGateCommand();
     const mem = WGCTeamMember.create('A', '', 'Soldier', {});
-    mem.health = 50;
+    mem.health = 5;
     wgc.recruitMember(0,0,mem);
     wgc.facilities.infirmary = 10;
     wgc.update(60000);
-    expect(mem.health).toBeCloseTo(55.5);
+    expect(mem.health).toBeCloseTo(60);
   });
 });

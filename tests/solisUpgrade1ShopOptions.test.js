@@ -47,6 +47,42 @@ describe('solisUpgrade1 shop options', () => {
     expect(dom.window.document.getElementById('solis-shop-items').contains(advButton)).toBe(false);
   });
 
+  test('terraforming measurements upgrade appears with flag', () => {
+    const dom = new JSDOM(`<!DOCTYPE html>
+      <div id="solis-shop-items"></div>
+      <div id="solis-donation-items"></div>
+      <div id="solis-research-shop-items"></div>
+      <div id="solis-quest-text"></div>
+      <div id="solis-cooldown"></div>
+      <div id="solis-donation-section"></div>
+      <div id="solis-research-shop"></div>
+      <button id="solis-refresh-button"></button>
+      <button id="solis-complete-button"></button>
+      <span id="solis-points-value"></span>
+      <span id="solis-reward"></span>
+      <span id="solis-cooldown-text"></span>
+      <div id="solis-cooldown-bar"></div>
+      <span id="solis-donation-count"></span>
+      <input id="solis-donation-input" />
+      <button id="solis-donation-button"></button>
+    `, { runScripts: 'outside-only' });
+    const ctx = dom.getInternalVMContext();
+    ctx.EffectableEntity = EffectableEntity;
+    vm.runInContext(`${solisCode}\n${solisUICode}; this.SolisManager = SolisManager;`, ctx);
+    ctx.solisManager = new ctx.SolisManager();
+    ctx.researchManager = { completeResearchInstant: jest.fn() };
+    ctx.resources = { colony: { research: { value: 0, hasCap: false, increase() {} } }, special: {} };
+    ctx.solisManager.booleanFlags.add('solisTerraformingMeasurements');
+    ctx.initializeSolisUI();
+    ctx.updateSolisUI();
+    const button = dom.window.document.querySelector('#solis-shop-terraformingMeasurements-button');
+    expect(button).not.toBeNull();
+    ctx.solisManager.solisPoints = 300;
+    expect(ctx.solisManager.purchaseUpgrade('terraformingMeasurements')).toBe(true);
+    expect(ctx.researchManager.completeResearchInstant).toHaveBeenCalledWith('terraforming_sensor');
+    expect(ctx.solisManager.purchaseUpgrade('terraformingMeasurements')).toBe(false);
+  });
+
   test('purchase research adds points', () => {
     const { SolisManager } = require('../src/js/solis.js');
     const manager = new SolisManager();
@@ -74,5 +110,17 @@ describe('solisUpgrade1 shop options', () => {
     });
     manager.solisPoints = 2000;
     expect(manager.purchaseUpgrade('advancedOversight')).toBe(false);
+  });
+
+  test('terraforming measurements upgrade completes research permanently', () => {
+    const { SolisManager } = require('../src/js/solis.js');
+    const manager = new SolisManager();
+    manager.solisPoints = 300;
+    global.researchManager = { completeResearchInstant: jest.fn() };
+    expect(manager.purchaseUpgrade('terraformingMeasurements')).toBe(true);
+    expect(global.researchManager.completeResearchInstant).toHaveBeenCalledWith('terraforming_sensor');
+    expect(manager.solisPoints).toBe(0);
+    expect(manager.purchaseUpgrade('terraformingMeasurements')).toBe(false);
+    delete global.researchManager;
   });
 });

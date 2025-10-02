@@ -11,21 +11,34 @@ const thrusterCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'proje
 const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
 
 describe('Planetary Thrusters UI', () => {
-  test('shows default delta v and energy', () => {
+  function buildDomContext(celestialParameters) {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
     const ctx = dom.getInternalVMContext();
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    const celestial = { ...celestialParameters };
+    if (!Number.isFinite(celestial.starMass) || celestial.starMass <= 0) {
+      celestial.starMass = 1.989e30;
+    }
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
     ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
+    global.resources = ctx.resources;
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    return { dom, ctx };
+  }
+
+  test('shows default delta v and energy', () => {
+    const { dom, ctx } = buildDomContext({ mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 });
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
@@ -44,20 +57,7 @@ describe('Planetary Thrusters UI', () => {
   });
 
   test('uses defaults when targets cleared', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
-    const ctx = dom.getInternalVMContext();
-    ctx.document = dom.window.document;
-    ctx.console = console;
-    ctx.formatNumber = numbers.formatNumber;
-    ctx.projectElements = {};
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 30, distanceFromSun: 1.5 } };
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
-    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
-
-    vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
-    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
-    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    const { dom, ctx } = buildDomContext({ mass: 6e24, radius: 6000, rotationPeriod: 30, distanceFromSun: 1.5 });
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
@@ -74,20 +74,7 @@ describe('Planetary Thrusters UI', () => {
   });
 
   test('displays exhaust velocity and thrust to power ratio with tooltip', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
-    const ctx = dom.getInternalVMContext();
-    ctx.document = dom.window.document;
-    ctx.console = console;
-    ctx.formatNumber = numbers.formatNumber;
-    ctx.projectElements = {};
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
-    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
-
-    vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
-    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
-    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    const { dom, ctx } = buildDomContext({ mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 });
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thruster');
@@ -112,20 +99,7 @@ describe('Planetary Thrusters UI', () => {
   });
 
   test('hides target and spiral delta v when moon bound', () => {
-    const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
-    const ctx = dom.getInternalVMContext();
-    ctx.document = dom.window.document;
-    ctx.console = console;
-    ctx.formatNumber = numbers.formatNumber;
-    ctx.projectElements = {};
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 50000, distanceFromSun: 1 } } };
-    global.currentPlanetParameters = ctx.currentPlanetParameters;
-    ctx.resources = { colony: { energy: { value: 0, decrease(){}, updateStorageCap(){} } } };
-
-    vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
-    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
-    vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
-    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+    const { dom, ctx } = buildDomContext({ mass: 1e22, radius: 1000, rotationPeriod: 10, parentBody: { name: 'Planet', mass: 5e24, orbitRadius: 50000, distanceFromSun: 1 }, distanceFromSun: 1 });
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'thrusterMoon');
@@ -139,5 +113,10 @@ describe('Planetary Thrusters UI', () => {
     expect(project.el.distDvRow.style.display).toBe('none');
     expect(project.el.escRow.style.display).toBe('block');
     expect(project.tgtAU).toBe(1);
+  });
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });

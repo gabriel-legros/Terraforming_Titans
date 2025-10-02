@@ -31,16 +31,23 @@ class OrbitalRingProject extends TerraformingDurationProject {
   complete() {
     super.complete();
     this.ringCount += 1;
-    if (!this.currentWorldHasRing && spaceManager?.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())) {
-      this.currentWorldHasRing = true;
-      if (typeof spaceManager !== 'undefined' && typeof spaceManager.setCurrentWorldHasOrbitalRing === 'function') {
-        spaceManager.setCurrentWorldHasOrbitalRing(true);
-      }
-      const initialLand = terraforming.initialLand || 0;
-      if (resources?.surface?.land) {
-        resources.surface.land.value += initialLand;
+    const manager = typeof spaceManager !== 'undefined' ? spaceManager : null;
+    const hadRingBefore = manager?.currentWorldHasOrbitalRing?.() || this.currentWorldHasRing;
+    const canPreferCurrent = !hadRingBefore && manager?.isCurrentWorldTerraformed?.();
+
+    if (manager?.assignOrbitalRings) {
+      manager.assignOrbitalRings(this.ringCount, { preferCurrentWorld: !!canPreferCurrent });
+    } else if (!hadRingBefore && manager?.isPlanetTerraformed && manager?.getCurrentPlanetKey) {
+      if (manager.isPlanetTerraformed(manager.getCurrentPlanetKey())) {
+        manager.setCurrentWorldHasOrbitalRing?.(true);
       }
     }
+
+    const reportedRingState = manager?.currentWorldHasOrbitalRing?.();
+    const hasRingAfter = typeof reportedRingState === 'boolean'
+      ? reportedRingState
+      : (hadRingBefore || !!canPreferCurrent);
+    this.currentWorldHasRing = !!hasRingAfter;
   }
 
   saveState() {
