@@ -14,6 +14,7 @@ describe('Galaxy map defense display', () => {
     let alienFaction;
     let coreAssignment;
     let borderAssignment;
+    let manager;
 
     beforeEach(() => {
         jest.resetModules();
@@ -64,7 +65,7 @@ describe('Galaxy map defense display', () => {
             skillPoints: 5
         };
 
-        const manager = new GalaxyManager();
+        manager = new GalaxyManager();
         manager.initialize();
         manager.enabled = true;
 
@@ -162,5 +163,28 @@ describe('Galaxy map defense display', () => {
         expect(alienIcon).toBe(ALIEN_ICON);
         const expectedBorderValue = formatDefense(borderSector.getValue() + borderAssignment);
         expect(alienValue).toBe(expectedBorderValue);
+    });
+
+    it('shows enemy sector defense scaled by control share in the details panel', () => {
+        const coreHex = document.querySelector('.galaxy-hex[data-q="0"][data-r="0"]');
+        expect(coreHex).not.toBeNull();
+
+        coreHex.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+
+        const enemySection = document.querySelector('.galaxy-sector-panel__enemy');
+        expect(enemySection).not.toBeNull();
+
+        const values = enemySection.querySelectorAll('.galaxy-sector-panel__stat-value');
+        expect(values.length).toBeGreaterThanOrEqual(3);
+
+        const formatDefense = (value) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value));
+        const sectorDefenseValue = alienFaction.getSectorDefense(coreSector, manager);
+        const expectedSectorDefense = formatDefense(sectorDefenseValue);
+        const expectedFleetDefense = formatDefense(coreAssignment);
+        const expectedTotalDefense = formatDefense(sectorDefenseValue + coreAssignment);
+
+        expect(values[0].textContent).toBe(expectedSectorDefense);
+        expect(values[1].textContent).toBe(expectedFleetDefense);
+        expect(values[2].textContent).toBe(expectedTotalDefense);
     });
 });

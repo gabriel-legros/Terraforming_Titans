@@ -140,6 +140,30 @@ function getSectorUhfControl(sector) {
     return 0;
 }
 
+function calculateEnemySectorDefense(manager, sector, breakdown) {
+    if (!manager || !sector || !Array.isArray(breakdown) || breakdown.length === 0) {
+        return 0;
+    }
+    let total = 0;
+    for (let index = 0; index < breakdown.length; index += 1) {
+        const entry = breakdown[index];
+        if (!entry || entry.factionId === UHF_FACTION_KEY) {
+            continue;
+        }
+        const faction = manager.getFaction?.(entry.factionId) || null;
+        if (!faction) {
+            continue;
+        }
+        const defense = faction.getSectorDefense?.(sector, manager);
+        const numericDefense = Number(defense);
+        if (!Number.isFinite(numericDefense) || numericDefense <= 0) {
+            continue;
+        }
+        total += numericDefense;
+    }
+    return total;
+}
+
 function normalizeHexColor(color) {
     if (!color) {
         return null;
@@ -1015,13 +1039,14 @@ function renderSelectedSectorDetails() {
     const uhfFaction = manager.getFaction?.(UHF_FACTION_KEY) || null;
     const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
     const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0;
-    const sectorPowerValue = Number(sector?.getValue?.()) || 0;
 
     const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
 
     const hasEnemyControl = (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0;
-    const baseEnemySectorDefense = hasEnemyControl ? (sectorPowerValue > 0 ? sectorPowerValue : 0) : 0;
+    const baseEnemySectorDefense = hasEnemyControl
+        ? calculateEnemySectorDefense(manager, sector, breakdown)
+        : 0;
     let strongestAssignment = 0;
     if ((totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0 || bordersUhf) {
         for (let index = 0; index < breakdown.length; index += 1) {
