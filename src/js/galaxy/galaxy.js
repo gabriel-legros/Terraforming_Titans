@@ -426,7 +426,45 @@ class GalaxyManager extends EffectableEntity {
         if (!sector) {
             return 0;
         }
-        return this.#computeDefensePower(sector, attackerId);
+        const summary = this.getSectorDefenseSummary(sector, attackerId);
+        return summary.totalPower;
+    }
+
+    getSectorDefenseSummary(sectorOrKey, originFactionId) {
+        const sector = this.#resolveSectorReference(sectorOrKey);
+        if (!sector) {
+            return {
+                basePower: 0,
+                fleetPower: 0,
+                totalPower: 0,
+                contributions: []
+            };
+        }
+        const contributions = this.#collectSectorDefenseEntries(sector, originFactionId);
+        if (!contributions.length) {
+            return {
+                basePower: 0,
+                fleetPower: 0,
+                totalPower: 0,
+                contributions
+            };
+        }
+        let basePower = 0;
+        let fleetPower = 0;
+        contributions.forEach((entry) => {
+            if (entry.basePower > 0) {
+                basePower += entry.basePower;
+            }
+            if (entry.fleetPower > 0) {
+                fleetPower += entry.fleetPower;
+            }
+        });
+        return {
+            basePower,
+            fleetPower,
+            totalPower: basePower + fleetPower,
+            contributions
+        };
     }
 
     getManualDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
@@ -1026,36 +1064,111 @@ class GalaxyManager extends EffectableEntity {
         return Array.from(resolved);
     }
 
-    #getDefenseContributions(sector, attackerId) {
+    #resolveSectorReference(sectorOrKey) {
+        if (!sectorOrKey) {
+            return null;
+        }
+        if (typeof sectorOrKey === 'string') {
+            return this.sectors.get(sectorOrKey) || null;
+        }
+        if (typeof sectorOrKey === 'object') {
+            const key = sectorOrKey.key;
+            if (typeof key === 'string' && key) {
+                return this.sectors.get(key) || sectorOrKey;
+            }
+            if (sectorOrKey.control && typeof sectorOrKey.getTotalControlValue === 'function') {
+                return sectorOrKey;
+            }
+        }
+        return null;
+    }
+
+    #collectSectorDefenseEntries(sector, originFactionId) {
         if (!sector) {
             return [];
         }
-        const contributions = [];
-        Object.entries(sector.control).forEach(([factionId, value]) => {
-            if (!factionId || factionId === attackerId) {
-                return;
+        const controlEntries = Object.entries(sector.control || {});
+        const fallbackTotal = controlEntries.reduce((sum, [, rawValue]) => {
+            const numeric = Number(rawValue);
+            if (!Number.isFinite(numeric) || numeric <= 0) {
+                return sum;
             }
-            const controlValue = Number(value);
-            if (!Number.isFinite(controlValue) || controlValue <= 0) {
+            return sum + numeric;
+        }, 0);
+        const providedTotal = sector.getTotalControlValue?.();
+        const totalControl = Number.isFinite(providedTotal) && providedTotal > 0
+            ? providedTotal
+            : fallbackTotal;
+        const contributions = [];
+        controlEntries.forEach(([factionId, rawValue]) => {
+            if (!factionId || (originFactionId && factionId === originFactionId)) {
                 return;
             }
             const faction = this.getFaction(factionId);
             if (!faction) {
                 return;
             }
-            let individualPower = faction.getSectorDefense?.(sector, this) ?? 0;
-            if (!(individualPower > 0) && factionId !== galaxyUhfId) {
-                const baseValue = sector.getValue?.() ?? 0;
-                if (Number.isFinite(baseValue) && baseValue > 0) {
-                    individualPower = baseValue;
+            const controlValue = Number(rawValue);
+            const sanitizedControl = Number.isFinite(controlValue) && controlValue > 0 ? controlValue : 0;
+            let baseDefense = Number(faction.getSectorDefense?.(sector, this));
+            if (!Number.isFinite(baseDefense)) {
+                baseDefense = 0;
+            }
+            if (factionId !== galaxyUhfId && !(baseDefense > 0)) {
+                if (sanitizedControl > 0 && totalControl > 0) {
+                    const sectorValue = Number(sector.getValue?.());
+                    const sanitizedValue = Number.isFinite(sectorValue) && sectorValue > 0
+                        ? sectorValue
+                        : resolveDefaultSectorValue();
+                    if (sanitizedValue > 0) {
+                        baseDefense = sanitizedValue * (sanitizedControl / totalControl);
+                    }
+                }
+                if (!(baseDefense > 0)) {
+                    const fallbackValue = Number(sector.getValue?.());
+                    if (Number.isFinite(fallbackValue) && fallbackValue > 0) {
+                        baseDefense = fallbackValue;
+                    }
                 }
             }
-            if (!(individualPower > 0)) {
+            if (factionId === galaxyUhfId) {
+                const totalDefense = baseDefense > 0 ? baseDefense : 0;
+                const assignment = Number(faction.getDefenseAssignment?.(sector.key));
+                const scale = Number(faction.getDefenseScale?.(this));
+                const fleetDefense = Number.isFinite(assignment) && assignment > 0 && Number.isFinite(scale) && scale > 0
+                    ? assignment * scale
+                    : 0;
+                const sanitizedFleet = fleetDefense > 0 ? fleetDefense : 0;
+                const cappedFleet = sanitizedFleet > 0 ? Math.min(sanitizedFleet, totalDefense) : 0;
+                const basePower = Math.max(0, totalDefense - cappedFleet);
+                const fleetPower = cappedFleet;
+                const totalPower = basePower + fleetPower;
+                if (totalPower > 0) {
+                    contributions.push({ factionId, basePower, fleetPower, totalPower });
+                }
                 return;
             }
-            contributions.push({ factionId, power: individualPower });
+            const assignment = Number(faction.getBorderFleetAssignment?.(sector.key));
+            const fleetDefense = Number.isFinite(assignment) && assignment > 0 ? assignment : 0;
+            const basePower = baseDefense > 0 ? baseDefense : 0;
+            const fleetPower = fleetDefense > 0 ? fleetDefense : 0;
+            const totalPower = basePower + fleetPower;
+            if (totalPower > 0) {
+                contributions.push({ factionId, basePower, fleetPower, totalPower });
+            }
         });
         return contributions;
+    }
+
+    #getDefenseContributions(sector, attackerId) {
+        const summary = this.getSectorDefenseSummary(sector, attackerId);
+        if (!summary.contributions.length) {
+            return [];
+        }
+        return summary.contributions.map((entry) => ({
+            factionId: entry.factionId,
+            power: entry.totalPower
+        }));
     }
 
     #calculateSuccessChance(offensePower, defensePower) {
@@ -1081,11 +1194,8 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #computeDefensePower(sector, attackerId) {
-        const contributions = this.#getDefenseContributions(sector, attackerId);
-        if (!contributions.length) {
-            return 0;
-        }
-        return contributions.reduce((total, entry) => total + entry.power, 0);
+        const summary = this.getSectorDefenseSummary(sector, attackerId);
+        return summary.totalPower;
     }
 
     #applyDefenderLosses({ sector, attackerId, offensePower, defensePower }) {
