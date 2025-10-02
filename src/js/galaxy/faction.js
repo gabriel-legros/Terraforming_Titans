@@ -412,17 +412,26 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID) {
             return 0;
         }
+        this.#syncDefenseAssignments(manager);
         const assigned = this.getDefenseAssignmentTotal();
         if (!(assigned > 0)) {
             return 0;
         }
         const capacity = this.getDefenseCapacity(manager);
-        const reservable = capacity > 0 ? Math.min(assigned, capacity) : assigned;
         const availableFleet = Number.isFinite(this.fleetPower) && this.fleetPower > 0 ? this.fleetPower : 0;
-        if (!(reservable > 0) || !(availableFleet > 0)) {
+        if (!(availableFleet > 0)) {
             return 0;
         }
-        return Math.min(reservable, availableFleet);
+        const reservableCapacity = capacity > 0 ? Math.min(assigned, capacity) : assigned;
+        if (!(reservableCapacity > 0)) {
+            return 0;
+        }
+        const assignable = capacity > 0 ? Math.min(capacity, availableFleet) : availableFleet;
+        const effectiveAssigned = Math.min(reservableCapacity, assignable);
+        if (!(effectiveAssigned > 0)) {
+            return 0;
+        }
+        return effectiveAssigned;
     }
 
     getDefenseScale(manager) {
@@ -449,15 +458,12 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID) {
             return available;
         }
-        const reservation = this.getDefenseReservation(manager);
-        if (!(reservation > 0)) {
-            return available;
-        }
-        const remaining = available - reservation;
-        if (!Number.isFinite(remaining) || remaining <= 0) {
+        this.#syncDefenseAssignments(manager);
+        if (!(this.autoDefenseTotal > 0)) {
             return 0;
         }
-        return remaining;
+        const pool = Math.min(this.autoDefenseTotal, available);
+        return pool > 0 ? pool : 0;
     }
 
     setDefenseAssignment(sectorKey, value, manager) {
@@ -680,8 +686,12 @@ class GalaxyFaction {
         this.manualDefenseTotal = manualTotal;
         this.autoDefenseAssignments.clear();
         this.autoDefenseTotal = 0;
-        const leftover = capacity - manualTotal;
-        if (leftover > 0) {
+        const availableFleet = Number.isFinite(this.fleetPower) && this.fleetPower > 0 ? this.fleetPower : 0;
+        const assignableCapacity = capacity > 0 ? Math.min(capacity, availableFleet) : availableFleet;
+        const autoPool = assignableCapacity > manualTotal
+            ? assignableCapacity - manualTotal
+            : 0;
+        if (autoPool > 0) {
             const borderKeys = this.getBorderSectorKeys(manager);
             if (Array.isArray(borderKeys) && borderKeys.length > 0) {
                 const eligibleKeys = [];
@@ -701,8 +711,8 @@ class GalaxyFaction {
                 });
                 const count = eligibleKeys.length;
                 if (count > 0) {
-                    const baseShare = leftover / count;
-                    let remaining = leftover;
+                    const baseShare = autoPool / count;
+                    let remaining = autoPool;
                     eligibleKeys.forEach((key, index) => {
                         const isLast = index === count - 1;
                         let allocation = isLast ? remaining : baseShare;
@@ -720,6 +730,9 @@ class GalaxyFaction {
                     });
                 }
             }
+        }
+        if (!(this.autoDefenseTotal > 0)) {
+            this.autoDefenseTotal = 0;
         }
         this.defenseAssignmentsTotal = this.manualDefenseTotal + this.autoDefenseTotal;
     }
