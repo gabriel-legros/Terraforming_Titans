@@ -550,17 +550,6 @@ function setDefenseStepForSector(sectorKey, value) {
     manager.setDefenseStep({ factionId: UHF_FACTION_KEY, sectorKey, value });
 }
 
-function setStoredStep(key, value) {
-    if (!key) {
-        return;
-    }
-    if (!Number.isFinite(value) || value <= 0) {
-        operationsStepSizes.delete(key);
-        return;
-    }
-    operationsStepSizes.set(key, value);
-}
-
 function updateOperationsStepDisplay(step, formatter) {
     if (!galaxyUICache || !galaxyUICache.operationsButtons) {
         return;

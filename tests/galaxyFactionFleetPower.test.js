@@ -5,6 +5,9 @@ loadGalaxyConstants();
 const { GalaxyFaction } = require('../src/js/galaxy/faction');
 const { GalaxySector } = require('../src/js/galaxy/sector');
 
+const CAPACITY_PER_WORLD = global.UHF_FLEET_PER_WORLD || 100;
+const REPLACEMENT_SECONDS_CONST = global.REPLACEMENT_SECONDS || 3600;
+
 function createManager({ sectors = [], terraformedWorlds = 0 } = {}) {
     return {
         getSectors: () => sectors,
@@ -40,28 +43,38 @@ describe('GalaxyFaction fleet power and capacity', () => {
 
     it('calculates UHF capacity from terraformed worlds and regrows with replacement time', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
-        const manager = createManager({ terraformedWorlds: 4 });
+        const worlds = 4;
+        const manager = createManager({ terraformedWorlds: worlds });
 
         faction.initializeFleetPower(manager);
 
-        expect(faction.fleetCapacity).toBe(4000);
+        const expectedCapacity = worlds * CAPACITY_PER_WORLD;
+        expect(faction.fleetCapacity).toBe(expectedCapacity);
         expect(faction.fleetPower).toBe(0);
 
         faction.update(600000, manager);
 
-        expect(faction.fleetPower).toBeCloseTo(4000 * (600 / 3600));
+        expect(faction.fleetPower).toBeCloseTo(expectedCapacity * (600 / REPLACEMENT_SECONDS_CONST));
     });
 
     it('applies an asymptotic penalty above half capacity', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
-        const manager = createManager({ terraformedWorlds: 5 });
+        const worlds = 5;
+        const manager = createManager({ terraformedWorlds: worlds });
 
         faction.initializeFleetPower(manager);
-        faction.setFleetPower(3750);
+        const capacity = worlds * CAPACITY_PER_WORLD;
+        const startingPower = Math.round(capacity * 0.7);
+        faction.setFleetPower(startingPower);
 
         faction.update(3600000, manager);
 
-        expect(faction.fleetPower).toBeCloseTo(4375);
+        const halfCapacity = capacity * 0.5;
+        const penalty = Math.min(1, (startingPower - halfCapacity) / halfCapacity);
+        const deficit = capacity - startingPower;
+        const baseChange = deficit * (3600 / REPLACEMENT_SECONDS_CONST);
+        const expected = Math.min(capacity, startingPower + (baseChange * (1 - penalty)));
+        expect(faction.fleetPower).toBeCloseTo(expected);
     });
 
     it('clamps fleet power when capacity drops', () => {
