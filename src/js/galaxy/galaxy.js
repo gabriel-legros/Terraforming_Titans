@@ -910,42 +910,153 @@ class GalaxyManager extends EffectableEntity {
         });
     }
 
+    #updateSectorControl(sector, mutator) {
+        if (!sector || typeof mutator !== 'function') {
+            return;
+        }
+        const previousControl = { ...sector.control };
+        mutator(sector);
+        this.#normalizeSectorControl(sector, previousControl);
+    }
+
+    #normalizeSectorControl(sector, previousControlSnapshot) {
+        if (!sector) {
+            return;
+        }
+        const previousControl = previousControlSnapshot ? { ...previousControlSnapshot } : {};
+        const MIN_CONTROL_SHARE = 0.001;
+        const positiveEntries = Object.entries(sector.control)
+            .map(([factionId, value]) => {
+                const numericValue = Number(value);
+                if (!Number.isFinite(numericValue) || numericValue <= 0 || !factionId) {
+                    return null;
+                }
+                return { factionId, value: numericValue };
+            })
+            .filter(Boolean);
+        if (!positiveEntries.length) {
+            const hadPreviousControl = Object.values(previousControl).some((value) => Number(value) > 0);
+            if (!hadPreviousControl) {
+                Object.keys(sector.control).forEach((factionId) => {
+                    sector.clearControl(factionId);
+                });
+                return;
+            }
+            this.#applyNormalizedControl(sector, previousControl, {});
+            return;
+        }
+        const total = positiveEntries.reduce((sum, entry) => sum + entry.value, 0);
+        if (!(total > 0)) {
+            this.#applyNormalizedControl(sector, previousControl, {});
+            return;
+        }
+        let shares = positiveEntries.map((entry) => ({
+            factionId: entry.factionId,
+            share: entry.value / total
+        }));
+        shares = shares.filter((entry) => entry.share >= MIN_CONTROL_SHARE);
+        if (!shares.length) {
+            this.#applyNormalizedControl(sector, previousControl, {});
+            return;
+        }
+        const shareTotal = shares.reduce((sum, entry) => sum + entry.share, 0);
+        if (!(shareTotal > 0)) {
+            this.#applyNormalizedControl(sector, previousControl, {});
+            return;
+        }
+        shares.sort((left, right) => left.share - right.share);
+        let runningTotal = 0;
+        const nextControl = {};
+        shares.forEach((entry, index) => {
+            let normalized;
+            if (shares.length === 1) {
+                normalized = 1;
+            } else if (index === shares.length - 1) {
+                normalized = Math.max(0, Math.min(1, 1 - runningTotal));
+            } else {
+                normalized = entry.share / shareTotal;
+                runningTotal += normalized;
+            }
+            nextControl[entry.factionId] = normalized;
+        });
+        const CONTROL_EPSILON = 1e-9;
+        const normalizedTotal = Object.values(nextControl).reduce((sum, value) => sum + value, 0);
+        if (Math.abs(normalizedTotal - 1) > CONTROL_EPSILON) {
+            let adjustmentTarget = null;
+            Object.entries(nextControl).forEach(([factionId, value]) => {
+                if (!adjustmentTarget || value > adjustmentTarget.value) {
+                    adjustmentTarget = { factionId, value };
+                }
+            });
+            if (adjustmentTarget && adjustmentTarget.factionId) {
+                const adjusted = adjustmentTarget.value + (1 - normalizedTotal);
+                nextControl[adjustmentTarget.factionId] = Math.max(0, adjusted);
+            }
+        }
+        this.#applyNormalizedControl(sector, previousControl, nextControl);
+    }
+
+    #applyNormalizedControl(sector, previousControl, nextControl) {
+        const CONTROL_EPSILON = 1e-9;
+        const changedFactions = new Set();
+        Object.entries(nextControl).forEach(([factionId, nextValue]) => {
+            const previousValue = Number(previousControl?.[factionId]) || 0;
+            if (!Number.isFinite(previousValue) || Math.abs(previousValue - nextValue) > CONTROL_EPSILON) {
+                changedFactions.add(factionId);
+            }
+        });
+        Object.entries(previousControl || {}).forEach(([factionId, previousValue]) => {
+            if (!nextControl.hasOwnProperty(factionId) && Number(previousValue) > 0) {
+                changedFactions.add(factionId);
+            }
+        });
+        const existingKeys = Object.keys(sector.control);
+        existingKeys.forEach((factionId) => {
+            if (!nextControl.hasOwnProperty(factionId)) {
+                sector.clearControl(factionId);
+            }
+        });
+        Object.entries(nextControl).forEach(([factionId, value]) => {
+            sector.setControl(factionId, value);
+        });
+        if (changedFactions.size > 0) {
+            changedFactions.forEach((factionId) => this.#markFactionControlDirty(factionId));
+            this.#markAllFactionBorderCachesDirty();
+        }
+    }
+
     #setSectorControlValue(sector, factionId, value) {
         if (!sector || !factionId) {
             return;
         }
-        const numericValue = Number(value);
-        if (!Number.isFinite(numericValue) || numericValue <= 0) {
-            this.#clearSectorControlValue(sector, factionId);
-            return;
-        }
-        const previous = sector.getControlValue?.(factionId) ?? 0;
-        sector.setControl(factionId, numericValue);
-        if (previous !== numericValue) {
-            this.#markFactionControlDirty(factionId);
-            this.#markAllFactionBorderCachesDirty();
-        }
+        this.#updateSectorControl(sector, (target) => {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                target.clearControl(factionId);
+                return;
+            }
+            target.setControl(factionId, numericValue);
+        });
     }
 
     #clearSectorControlValue(sector, factionId) {
         if (!sector || !factionId) {
             return;
         }
-        const previous = sector.getControlValue?.(factionId) ?? 0;
-        sector.clearControl(factionId);
-        if (previous > 0) {
-            this.#markFactionControlDirty(factionId);
-            this.#markAllFactionBorderCachesDirty();
-        }
+        this.#updateSectorControl(sector, (target) => {
+            target.clearControl(factionId);
+        });
     }
 
     #resetSectorControl(sector) {
         if (!sector) {
             return;
         }
-        const factionIds = Object.keys(sector.control);
-        factionIds.forEach((factionId) => {
-            this.#clearSectorControlValue(sector, factionId);
+        this.#updateSectorControl(sector, (target) => {
+            const factionIds = Object.keys(target.control);
+            factionIds.forEach((factionId) => {
+                target.clearControl(factionId);
+            });
         });
     }
 
@@ -953,15 +1064,24 @@ class GalaxyManager extends EffectableEntity {
         if (!sector) {
             return;
         }
-        this.#resetSectorControl(sector);
-        if (!controlMap) {
-            return;
-        }
-        Object.entries(controlMap).forEach(([factionId, rawValue]) => {
-            if (!this.factions.has(factionId)) {
+        this.#updateSectorControl(sector, (target) => {
+            const factionIds = Object.keys(target.control);
+            factionIds.forEach((factionId) => {
+                target.clearControl(factionId);
+            });
+            if (!controlMap) {
                 return;
             }
-            this.#setSectorControlValue(sector, factionId, rawValue);
+            Object.entries(controlMap).forEach(([factionId, rawValue]) => {
+                if (!this.factions.has(factionId)) {
+                    return;
+                }
+                const numericValue = Number(rawValue);
+                if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                    return;
+                }
+                target.setControl(factionId, numericValue);
+            });
         });
     }
 
@@ -1543,33 +1663,40 @@ class GalaxyManager extends EffectableEntity {
             return;
         }
         entries.sort((left, right) => Number(right[1]) - Number(left[1]));
-        let remainingReduction = gain;
-        entries.forEach(([factionId, value], index) => {
-            if (!(remainingReduction > 0)) {
+        this.#updateSectorControl(sector, (target) => {
+            let remainingReduction = gain;
+            entries.forEach(([defenderId, value], index) => {
+                if (!(remainingReduction > 0)) {
+                    return;
+                }
+                const numericValue = Number(value);
+                if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                    target.clearControl(defenderId);
+                    return;
+                }
+                const factionsRemaining = entries.length - index;
+                const share = factionsRemaining > 0 ? remainingReduction / factionsRemaining : remainingReduction;
+                const reduction = Math.min(numericValue, share);
+                const nextValue = numericValue - reduction;
+                remainingReduction -= reduction;
+                if (nextValue > 0) {
+                    target.setControl(defenderId, nextValue);
+                } else {
+                    target.clearControl(defenderId);
+                }
+            });
+            const appliedGain = entries.length ? gain - Math.max(0, remainingReduction) : gain;
+            if (!(appliedGain > 0)) {
                 return;
             }
-            const numericValue = Number(value);
-            if (!Number.isFinite(numericValue) || numericValue <= 0) {
-                this.#clearSectorControlValue(sector, factionId);
-                return;
-            }
-            const factionsRemaining = entries.length - index;
-            const share = factionsRemaining > 0 ? remainingReduction / factionsRemaining : remainingReduction;
-            const reduction = Math.min(numericValue, share);
-            const nextValue = numericValue - reduction;
-            remainingReduction -= reduction;
-            if (nextValue > 0) {
-                this.#setSectorControlValue(sector, factionId, nextValue);
+            const updatedControl = target.getControlValue?.(factionId) ?? 0;
+            const newValue = updatedControl + appliedGain;
+            if (newValue > 0) {
+                target.setControl(factionId, newValue);
             } else {
-                this.#clearSectorControlValue(sector, factionId);
+                target.clearControl(factionId);
             }
         });
-        const appliedGain = entries.length ? gain - Math.max(0, remainingReduction) : gain;
-        if (!(appliedGain > 0)) {
-            return;
-        }
-        const newValue = currentControl + appliedGain;
-        this.#setSectorControlValue(sector, factionId, newValue);
     }
 
     #serializeFleetUpgrades() {
