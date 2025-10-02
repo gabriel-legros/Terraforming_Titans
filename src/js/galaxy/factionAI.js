@@ -370,7 +370,8 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return 0;
         }
         const originalCount = this.#resolveInitialControlledCount(faction);
-        if (originalCount > 0 && controlledCount <= originalCount * 0.5) {
+        const threatFactionId = faction?.id || factionId;
+        if (threatFactionId !== uhfFactionId && originalCount > 0 && controlledCount <= originalCount * 0.5) {
             return 0;
         }
         return controlledCount;
