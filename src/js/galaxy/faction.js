@@ -137,7 +137,43 @@ class GalaxyFaction {
     }
 
     updateFleetCapacity(manager) {
-        const capacity = this.#computeFleetCapacity(manager);
+        let capacity = 0;
+        if (this.id === UHF_FACTION_ID) {
+            const terraformedWorlds = manager?.getTerraformedWorldCount?.() ?? 0;
+            if (Number.isFinite(terraformedWorlds) && terraformedWorlds > 0) {
+                const fleetPerWorld = typeof UHF_FLEET_PER_WORLD === 'number' && UHF_FLEET_PER_WORLD > 0
+                    ? UHF_FLEET_PER_WORLD
+                    : getDefaultSectorValue();
+                const baseCapacity = terraformedWorlds * fleetPerWorld;
+                if (baseCapacity > 0) {
+                    const multiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
+                    const sanitizedMultiplier = multiplier > 0 ? multiplier : 1;
+                    capacity = baseCapacity * sanitizedMultiplier;
+                }
+            }
+        } else {
+            const sectors = manager?.getSectors?.();
+            if (Array.isArray(sectors) && sectors.length > 0) {
+                let total = 0;
+                sectors.forEach((sector) => {
+                    const controlValue = sector?.getControlValue?.(this.id);
+                    const totalControl = sector?.getTotalControlValue?.();
+                    if (!Number.isFinite(controlValue) || controlValue <= 0) {
+                        return;
+                    }
+                    if (!Number.isFinite(totalControl) || totalControl <= 0) {
+                        return;
+                    }
+                    const sectorValue = sector?.getValue?.();
+                    const numericSectorValue = Number.isFinite(sectorValue) ? sectorValue : getDefaultSectorValue();
+                    if (numericSectorValue <= 0) {
+                        return;
+                    }
+                    total += numericSectorValue * (controlValue / totalControl);
+                });
+                capacity = total;
+            }
+        }
         this.fleetCapacity = capacity;
         if (this.fleetPower > capacity) {
             this.fleetPower = capacity;
@@ -898,46 +934,6 @@ class GalaxyFaction {
         this.contestedThreatLevels = contestedThreatMap;
     }
 
-    #computeFleetCapacity(manager) {
-        if (this.id === UHF_FACTION_ID) {
-            const terraformedWorlds = manager?.getTerraformedWorldCount?.() ?? 0;
-            if (!Number.isFinite(terraformedWorlds) || terraformedWorlds <= 0) {
-                return 0;
-            }
-            const fleetPerWorld = typeof UHF_FLEET_PER_WORLD === 'number' && UHF_FLEET_PER_WORLD > 0
-                ? UHF_FLEET_PER_WORLD
-                : getDefaultSectorValue();
-            const baseCapacity = terraformedWorlds * fleetPerWorld;
-            if (!(baseCapacity > 0)) {
-                return 0;
-            }
-            const multiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
-            const sanitizedMultiplier = multiplier > 0 ? multiplier : 1;
-            return baseCapacity * sanitizedMultiplier;
-        }
-        const sectors = manager?.getSectors?.();
-        if (!Array.isArray(sectors) || sectors.length === 0) {
-            return 0;
-        }
-        let total = 0;
-        sectors.forEach((sector) => {
-            const controlValue = sector?.getControlValue?.(this.id);
-            const totalControl = sector?.getTotalControlValue?.();
-            if (!Number.isFinite(controlValue) || controlValue <= 0) {
-                return;
-            }
-            if (!Number.isFinite(totalControl) || totalControl <= 0) {
-                return;
-            }
-            const sectorValue = sector?.getValue?.();
-            const numericSectorValue = Number.isFinite(sectorValue) ? sectorValue : getDefaultSectorValue();
-            if (numericSectorValue <= 0) {
-                return;
-            }
-            total += numericSectorValue * (controlValue / totalControl);
-        });
-        return total;
-    }
 }
 
 function updateFactions(deltaTime) {
