@@ -1,6 +1,6 @@
 const AUTO_OPERATION_INTERVAL_MS = 60000;
-const AUTO_OPERATION_MIN_PERCENT = 0.05;
-const AUTO_OPERATION_MAX_PERCENT = 0.15;
+const DEFAULT_AUTO_OPERATION_MIN_PERCENT = 0.05;
+const DEFAULT_AUTO_OPERATION_MAX_PERCENT = 0.15;
 const CEWINSII_FACTION_ID = 'cewinsii';
 const THREAT_PRIORITY_THRESHOLD = 40;
 
@@ -27,6 +27,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         this.autoOperationTimer = 0;
         this.defensiveness = this.#sanitizeDefensiveness(options?.defensiveness);
         this.pendingOperationPower = 0;
+        this.autoOperationRange = this.#sanitizeOperationRange(options?.autoOperationRange);
         const startingCount = Number.isFinite(this.startingSectors?.size)
             ? this.startingSectors.size
             : 0;
@@ -492,15 +493,34 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
 
     #rollOperationPower() {
         const capacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
-        const minPercent = AUTO_OPERATION_MIN_PERCENT;
-        const maxPercent = AUTO_OPERATION_MAX_PERCENT;
+        const minPercent = this.autoOperationRange.min;
+        const maxPercent = this.autoOperationRange.max;
         const spread = Math.max(0, maxPercent - minPercent);
-        const percent = minPercent + Math.random() * spread;
+        const percent = spread > 0 ? minPercent + Math.random() * spread : minPercent;
         const power = capacity * percent;
         if (!Number.isFinite(power) || power <= 0) {
             return 0;
         }
         return Math.max(1, Math.round(power));
+    }
+
+    #sanitizeOperationRange(range) {
+        const sanitized = {
+            min: DEFAULT_AUTO_OPERATION_MIN_PERCENT,
+            max: DEFAULT_AUTO_OPERATION_MAX_PERCENT
+        };
+        const providedMin = Number(range?.min);
+        if (Number.isFinite(providedMin) && providedMin > 0) {
+            sanitized.min = providedMin;
+        }
+        const providedMax = Number(range?.max);
+        if (Number.isFinite(providedMax) && providedMax > sanitized.min) {
+            sanitized.max = providedMax;
+            return sanitized;
+        }
+        const fallbackMax = Math.max(sanitized.min, DEFAULT_AUTO_OPERATION_MAX_PERCENT);
+        sanitized.max = fallbackMax > sanitized.min ? fallbackMax : sanitized.min;
+        return sanitized;
     }
 
     toJSON() {
