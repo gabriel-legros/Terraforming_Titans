@@ -464,8 +464,27 @@ const projectParameters = {
       spaceStorage: true,
       costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
       transportPerShip: 1_000_000,
-      canUseSpaceStorage: true 
+      canUseSpaceStorage: true
     }
+  },
+  particleAccelerator: {
+    type: 'ParticleAcceleratorProject',
+    name: 'Particle Accelerator',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 5_000_000_000,
+        components: 2_000_000_000,
+        electronics: 500_000_000,
+        superconductors: 100_000_000
+      }
+    },
+    duration: 420000,
+    description: 'Channel staggering amounts of power into an enormous accelerator to open new avenues of high energy experimentation.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {}
   },
   disposeResources : {
     type: 'SpaceDisposalProject',
