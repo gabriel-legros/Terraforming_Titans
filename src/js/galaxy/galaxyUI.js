@@ -34,7 +34,7 @@ const HEX_NEIGHBOR_OFFSETS = [
 const PAN_ACTIVATION_DISTANCE = 6;
 const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION_DISTANCE;
 const OPERATION_COST_PER_POWER = 1000;
-const OPERATION_DURATION_FALLBACK_MS = 10000;
+const OPERATION_DURATION_FALLBACK_MS = 5 * 60 * 1000;
 const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
     ? globalThis.UHF_FACTION_ID
     : 'uhf';
@@ -1177,6 +1177,7 @@ function updateOperationsPanel() {
         operationsInput,
         operationsButtons,
         operationsLaunchButton,
+        operationsAutoCheckbox,
         operationsProgress,
         operationsProgressFill,
         operationsProgressLabel,
@@ -1215,6 +1216,9 @@ function updateOperationsPanel() {
         operationsProgress.classList.add('is-hidden');
         operationsProgressFill.style.width = '0%';
         operationsProgressLabel.textContent = '';
+        if (operationsAutoCheckbox) {
+            operationsAutoCheckbox.disabled = true;
+        }
     };
 
     if (!enabled) {
@@ -1408,6 +1412,12 @@ function updateOperationsPanel() {
     operationsStatusMessage.textContent = statusMessage;
 
     operationsLaunchButton.disabled = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
+    if (operationsAutoCheckbox) {
+        operationsAutoCheckbox.disabled = !enabled || !selection || operationRunning;
+        if (!operationsAutoCheckbox.disabled && operationsAutoCheckbox.checked && !operationsLaunchButton.disabled) {
+            handleOperationsLaunch();
+        }
+    }
 }
 
 function updateSectorDefenseSection() {
@@ -2490,6 +2500,20 @@ function cacheGalaxyElements() {
     launchControls.className = 'galaxy-operations-launch__controls';
     launchContainer.appendChild(launchControls);
 
+    const autoLaunchLabel = doc.createElement('label');
+    autoLaunchLabel.className = 'galaxy-operations-launch__auto';
+
+    const autoLaunchCheckbox = doc.createElement('input');
+    autoLaunchCheckbox.type = 'checkbox';
+    autoLaunchCheckbox.className = 'galaxy-operations-launch__auto-checkbox';
+    autoLaunchLabel.appendChild(autoLaunchCheckbox);
+
+    const autoLaunchText = doc.createElement('span');
+    autoLaunchText.className = 'galaxy-operations-launch__auto-label';
+    autoLaunchText.textContent = 'Auto';
+    autoLaunchLabel.appendChild(autoLaunchText);
+    launchControls.appendChild(autoLaunchLabel);
+
     const launchButton = doc.createElement('button');
     launchButton.type = 'button';
     launchButton.className = 'galaxy-operations-launch__button';
@@ -2561,6 +2585,9 @@ function cacheGalaxyElements() {
         button.addEventListener('click', handleOperationsButtonClick);
     });
     launchButton.addEventListener('click', handleOperationsLaunch);
+    autoLaunchCheckbox.addEventListener('change', () => {
+        updateOperationsPanel();
+    });
 
     operations.body.appendChild(operationsPanel);
 
@@ -2855,6 +2882,7 @@ function cacheGalaxyElements() {
         operationsInput: powerInput,
         operationsButtons,
         operationsLaunchButton: launchButton,
+        operationsAutoCheckbox: autoLaunchCheckbox,
         operationsProgress: progressContainer,
         operationsProgressFill: progressFill,
         operationsProgressLabel: progressLabel,
