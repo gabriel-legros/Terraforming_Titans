@@ -134,6 +134,14 @@ if (!Number.isFinite(defaultSectorValue) || defaultSectorValue <= 0) {
     defaultSectorValue = 100;
 }
 
+const R507_PROTECTED_COORDINATES = { q: 4, r: -5 };
+const R507_PROTECTED_KEY = GalaxySectorClass?.createKey?.(
+    R507_PROTECTED_COORDINATES.q,
+    R507_PROTECTED_COORDINATES.r
+) ?? `${R507_PROTECTED_COORDINATES.q},${R507_PROTECTED_COORDINATES.r}`;
+const R507_PROTECTED_CONTROL_THRESHOLD = 0.1;
+const R507_PROTECTED_CONTROL_TOLERANCE = 1e-6;
+
 function resolveDefaultSectorValue() {
     return defaultSectorValue;
 }
@@ -589,14 +597,17 @@ class GalaxyManager extends EffectableEntity {
         if (!sector) {
             return null;
         }
+        const attackerId = factionId || galaxyUhfId;
         const existing = this.operations.get(key);
         if (existing && existing.status === 'running') {
             if (!existing.originHex) {
-                existing.originHex = this.#selectOperationOrigin(sector, existing.factionId || factionId || galaxyUhfId);
+                existing.originHex = this.#selectOperationOrigin(sector, existing.factionId || attackerId);
             }
             return existing;
         }
-        const attackerId = factionId || galaxyUhfId;
+        if (attackerId !== galaxyUhfId && this.#isSectorTargetingRestricted(sector)) {
+            return null;
+        }
         const hasStronghold = this.#hasNeighboringStronghold(sector, attackerId);
         const hasPresence = this.#hasFactionPresence(sector, attackerId);
         if (!hasStronghold && !hasPresence) {
@@ -1507,6 +1518,14 @@ class GalaxyManager extends EffectableEntity {
 
     #hasUhfPresence(sector) {
         return this.#hasFactionPresence(sector, galaxyUhfId);
+    }
+
+    #isSectorTargetingRestricted(sector) {
+        if (!sector || sector.key !== R507_PROTECTED_KEY) {
+            return false;
+        }
+        const uhfControl = Number(sector.getControlValue?.(galaxyUhfId)) || 0;
+        return uhfControl <= R507_PROTECTED_CONTROL_THRESHOLD + R507_PROTECTED_CONTROL_TOLERANCE;
     }
 
     #selectOperationOrigin(sector, factionId) {
