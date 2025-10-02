@@ -1468,11 +1468,11 @@ function updateSectorDefenseSection() {
         cache.defenseReservationValue.textContent = `Ops Pool: ${formatDefenseInteger(operational)}`;
     }
 
-    const assigned = manager.getDefenseAssignment
-        ? manager.getDefenseAssignment(sector.key, UHF_FACTION_KEY)
+    const manualAssigned = manager.getManualDefenseAssignment
+        ? manager.getManualDefenseAssignment(sector.key, UHF_FACTION_KEY)
         : 0;
     const scale = faction?.getDefenseScale ? faction.getDefenseScale(manager) : 0;
-    const effective = assigned > 0 && scale > 0 ? assigned * scale : 0;
+    const effective = manualAssigned > 0 && scale > 0 ? manualAssigned * scale : 0;
     const totalAssigned = manager.getDefenseAssignmentTotal
         ? manager.getDefenseAssignmentTotal(UHF_FACTION_KEY)
         : 0;
@@ -1481,7 +1481,7 @@ function updateSectorDefenseSection() {
     updateDefenseStepDisplay(step);
 
     if (cache.defenseAssignedValue) {
-        cache.defenseAssignedValue.textContent = `Assigned: ${formatDefenseInteger(assigned)}`;
+        cache.defenseAssignedValue.textContent = `Assigned: ${formatDefenseInteger(manualAssigned)}`;
     }
     if (cache.defenseEffectiveValue) {
         cache.defenseEffectiveValue.textContent = `Effective: ${formatDefenseInteger(effective)}`;
@@ -1491,7 +1491,7 @@ function updateSectorDefenseSection() {
     }
 
     if (cache.defenseInput) {
-        cache.defenseInput.value = `${Math.max(0, Math.round(assigned))}`;
+        cache.defenseInput.value = `${Math.max(0, Math.round(manualAssigned))}`;
         cache.defenseInput.disabled = false;
     }
     if (cache.defenseButtons) {
@@ -1540,8 +1540,8 @@ function handleDefenseButtonClick(event) {
         return;
     }
     const key = selection.key;
-    const current = manager.getDefenseAssignment
-        ? manager.getDefenseAssignment(key, UHF_FACTION_KEY)
+    const current = manager.getManualDefenseAssignment
+        ? manager.getManualDefenseAssignment(key, UHF_FACTION_KEY)
         : 0;
     let target = current;
     let step = getDefenseStepForSector(key);
@@ -1699,8 +1699,8 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
         return false;
     })();
 
-    const hasManualDefense = manager.getDefenseAssignment
-        ? manager.getDefenseAssignment(sector.key, UHF_FACTION_KEY) > 0
+    const hasManualDefense = manager.getManualDefenseAssignment
+        ? manager.getManualDefenseAssignment(sector.key, UHF_FACTION_KEY) > 0
         : false;
 
     const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor || hasManualDefense);
