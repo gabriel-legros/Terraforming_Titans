@@ -365,7 +365,27 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (!Array.isArray(controlledKeys)) {
             return 0;
         }
-        return controlledKeys.length;
+        const controlledCount = controlledKeys.length;
+        if (!(controlledCount > 0)) {
+            return 0;
+        }
+        const originalCount = this.#resolveInitialControlledCount(faction);
+        if (originalCount > 0 && controlledCount <= originalCount * 0.5) {
+            return 0;
+        }
+        return controlledCount;
+    }
+
+    #resolveInitialControlledCount(faction) {
+        const originalCount = this.#coerceOriginalCount(faction?.originalControlledSectorCount);
+        if (originalCount !== null && originalCount > 0) {
+            return originalCount;
+        }
+        const startingSectors = faction?.getStartingSectors?.();
+        if (Array.isArray(startingSectors) && startingSectors.length > 0) {
+            return startingSectors.length;
+        }
+        return 0;
     }
 
     #distributeFleetToBorders(manager) {
