@@ -616,7 +616,7 @@ class GalaxyManager extends EffectableEntity {
         const successChance = this.#calculateSuccessChance(resolvedOffense, defense);
         const failureChance = Math.max(0, Math.min(1, 1 - successChance));
         let successLoss = 0;
-        if (successChance < 1 && defense > 0 && resolvedOffense > 0) {
+        if (defense > 0 && resolvedOffense > 0) {
             successLoss = Math.min(
                 resolvedReserved,
                 (defense * defense) / (resolvedOffense + defense)
@@ -1577,9 +1577,8 @@ class GalaxyManager extends EffectableEntity {
         let successLoss;
         if (estimate && Number.isFinite(estimate.successLoss)) {
             successLoss = Math.max(0, Math.min(reservedPower, estimate.successLoss));
-        } else if (successChance >= 1) {
-            successLoss = 0;
-        } else {
+        } 
+        else {
             successLoss = defensePower > 0 && offensePower > 0
                 ? Math.min(reservedPower, (defensePower * defensePower) / (offensePower + defensePower))
                 : 0;
