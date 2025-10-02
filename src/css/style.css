@@ -309,7 +309,6 @@ body.journal-collapsed .tab-content {
     display: inline-flex;
     align-items: center;
     font-size: 2em;
-    line-height: 1;
 }
 
 .journal.collapsed {
