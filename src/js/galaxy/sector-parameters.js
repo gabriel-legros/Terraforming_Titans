@@ -20,7 +20,7 @@ const FIRST_RING_COORDINATES = [
     { q: -1, r: 1 },
     { q: 0, r: 1 }
 ];
-const FIRST_RING_BASE_VALUE = 10000;
+const FIRST_RING_BASE_VALUE = 5000;
 const R507_RADIUS_ONE_COORDINATES = [
     { q: 5, r: -5 },
     { q: 5, r: -6 },
@@ -57,7 +57,7 @@ const STRATEGIC_SECTOR_COORDINATES = [
     { q: 0, r: -4 },
     { q: 6, r: -4 }
 ];
-const STRATEGIC_SECTOR_BASE_VALUE = 10000;
+const STRATEGIC_SECTOR_BASE_VALUE = 15000;
 const STRATEGIC_NEIGHBOR_COORDINATES = [
     { q: 3, r: 1 },
     { q: 2, r: 2 },
@@ -90,7 +90,7 @@ const STRATEGIC_NEIGHBOR_COORDINATES = [
     { q: 7, r: -4 },
     { q: 7, r: -5 }
 ];
-const STRATEGIC_NEIGHBOR_BASE_VALUE = 2000;
+const STRATEGIC_NEIGHBOR_BASE_VALUE = 2500;
 
 const overrides = {};
 

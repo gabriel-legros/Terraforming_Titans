@@ -61,7 +61,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         }
         const adoption = this.#coerceAdoption(this.electronicAdoption);
         const sanitizedAdoption = adoption !== null ? adoption : 0;
-        const multiplier = 1 + sanitizedAdoption * 10;
+        const multiplier = 1 + sanitizedAdoption * 5;
         if (!(multiplier > 0)) {
             this.fleetCapacity = baseCapacity;
             return;
@@ -567,7 +567,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (currentCount <= 0) {
             adoption = 1;
         } else {
-            const difference = (this.originalControlledSectorCount - currentCount) / this.originalControlledSectorCount;
+            const difference = (this.originalControlledSectorCount*0.5 - currentCount) / (this.originalControlledSectorCount*0.5);
             adoption = Math.max(0, Math.min(1, difference));
         }
         if (adoption > this.electronicAdoption) {
