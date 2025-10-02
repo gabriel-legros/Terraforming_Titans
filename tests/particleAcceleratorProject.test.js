@@ -63,11 +63,21 @@ describe('Particle Accelerator project', () => {
     expect(project.selectedRadiusMeters).toBe(EARTH_RADIUS_METERS);
     expect(project.radiusStepMeters).toBe(1);
 
+    const initialBoostNew = project.calculateResearchBoost(EARTH_RADIUS_METERS);
+    expect(initialBoostNew).toBeCloseTo(5 * Math.log10(EARTH_RADIUS_METERS), 6);
+
     const circumference = 2 * Math.PI * EARTH_RADIUS_METERS;
     const expectedPerMaterial = circumference * 100 * 0.5;
     const baseCost = project.getScaledCost();
     expect(baseCost.colony.superalloys).toBeCloseTo(expectedPerMaterial, 5);
     expect(baseCost.colony.superconductors).toBeCloseTo(expectedPerMaterial, 5);
+
+    const minTest = new ctx.ParticleAcceleratorProject(config, 'particleAccelerator');
+    minTest.unlocked = true;
+    minTest.scaleStepMeters(10);
+    minTest.setRadiusMeters(minTest.minimumRadiusMeters);
+    minTest.adjustRadiusBySteps(1);
+    expect(minTest.selectedRadiusMeters).toBe(10);
 
     project.setRadiusMeters(EARTH_RADIUS_METERS * 2);
     const largerCost = project.getScaledCost();
@@ -111,6 +121,7 @@ describe('Particle Accelerator project', () => {
     expect(restored.bestRadiusMeters).toBe(EARTH_RADIUS_METERS * 5);
     expect(restored.selectedRadiusMeters).toBeCloseTo(expectedRadiusAfterStep, 6);
     expect(restored.radiusStepMeters).toBe(10);
+    expect(restored.calculateResearchBoost(EARTH_RADIUS_METERS * 5)).toBeCloseTo(5 * Math.log10(EARTH_RADIUS_METERS * 5), 6);
 
     const travelState = project.saveTravelState();
     expect(travelState.acceleratorCount).toBe(1);
@@ -126,6 +137,7 @@ describe('Particle Accelerator project', () => {
     expect(travelled.bestRadiusMeters).toBe(EARTH_RADIUS_METERS * 5);
     expect(travelled.selectedRadiusMeters).toBeCloseTo(expectedRadiusAfterStep, 6);
     expect(travelled.radiusStepMeters).toBe(10);
+
   });
 
   test('radius controls update UI and disable during construction', () => {
@@ -166,12 +178,13 @@ describe('Particle Accelerator project', () => {
     const container = document.createElement('div');
     project.renderUI(container);
 
-    const { notice, stepValue, minusButton, plusButton } = project.uiElements;
+    const { notice, minusButton, plusButton, researchBoostValue } = project.uiElements;
     expect(notice.textContent).toBe('');
     const initialStep = formatNumberHelper(1, true);
-    expect(stepValue.textContent).toBe(initialStep);
     expect(minusButton.textContent).toBe(`-${initialStep}`);
     expect(plusButton.textContent).toBe(`+${initialStep}`);
+    const initialResearchBoost = `${formatNumberHelper(5 * Math.log10(EARTH_RADIUS_METERS), false, 2)}% / -`;
+    expect(researchBoostValue.textContent).toBe(initialResearchBoost);
 
     project.setRadiusEarth(2);
     project.complete();
@@ -180,16 +193,18 @@ describe('Particle Accelerator project', () => {
     project.scaleStepEarth(10);
     project.updateUI();
     const increasedStep = formatNumberHelper(10, true);
-    expect(stepValue.textContent).toBe(increasedStep);
     expect(minusButton.textContent).toBe(`-${increasedStep}`);
     expect(plusButton.textContent).toBe(`+${increasedStep}`);
 
     project.scaleStepEarth(1 / 10);
     project.updateUI();
     const reducedStep = formatNumberHelper(1, true);
-    expect(stepValue.textContent).toBe(reducedStep);
     expect(minusButton.textContent).toBe(`-${reducedStep}`);
     expect(plusButton.textContent).toBe(`+${reducedStep}`);
+
+    const expectedNewBoost = `${formatNumberHelper(5 * Math.log10(project.getSelectedRadiusMeters()), false, 2)}%`;
+    const expectedCurrentBoost = `${formatNumberHelper(5 * Math.log10(project.bestRadiusMeters), false, 2)}%`;
+    expect(project.uiElements.researchBoostValue.textContent).toBe(`${expectedNewBoost} / ${expectedCurrentBoost}`);
 
     project.isActive = true;
     project.updateUI();

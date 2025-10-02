@@ -23,7 +23,6 @@ class ParticleAcceleratorProject extends Project {
     this.selectedRadiusMeters = this.defaultRadiusMeters;
     this.bestRadiusMeters = 0;
     this.radiusStepMeters = this.defaultStepMeters;
-    this.researchBoostDisplay = '—';
     this.uiElements = null;
   }
 
@@ -51,41 +50,18 @@ class ParticleAcceleratorProject extends Project {
       const label = document.createElement('span');
       label.classList.add('stat-label');
       label.textContent = labelText;
+      const content = document.createElement('div');
+      content.classList.add('project-summary-content');
       const value = document.createElement('span');
       value.classList.add('stat-value');
-      box.append(label, value);
+      content.appendChild(value);
+      box.append(label, content);
       summaryGrid.appendChild(box);
-      return value;
+      return { box, value, content };
     };
 
-    const radiusValue = createSummaryBox('Target Radius');
-    const bestValue = createSummaryBox('Largest Built');
-    const researchBoostValue = createSummaryBox('Research Boost');
-
-    body.appendChild(summaryGrid);
-
-    const controls = document.createElement('div');
-    controls.classList.add('thruster-power-controls', 'project-control-block');
-
-    const stepRow = document.createElement('div');
-    stepRow.classList.add('project-step-row');
-
-    const stepLabel = document.createElement('span');
-    stepLabel.classList.add('stat-label');
-    stepLabel.textContent = 'Adjustment Step';
-
-    const stepValue = document.createElement('span');
-    stepValue.classList.add('stat-value');
-    const stepInfo = document.createElement('span');
-    stepInfo.classList.add('info-tooltip-icon');
-    stepInfo.innerHTML = '&#9432;';
-    stepInfo.title = 'Adjust how much the radius changes when you use the step buttons.';
-
-    const stepValueWrapper = document.createElement('div');
-    stepValueWrapper.classList.add('project-step-value');
-    stepValueWrapper.append(stepValue, stepInfo);
-
-    stepRow.append(stepLabel, stepValueWrapper);
+    const radiusBox = createSummaryBox('Target Radius');
+    const radiusValue = radiusBox.value;
 
     const buttonRow = document.createElement('div');
     buttonRow.classList.add('main-buttons');
@@ -99,25 +75,25 @@ class ParticleAcceleratorProject extends Project {
     };
 
     const zeroButton = createButton('0', () => this.setRadiusMeters(this.minimumRadiusMeters));
-
     const minusButton = createButton('', () => this.adjustRadiusBySteps(-1));
-
     const plusButton = createButton('', () => this.adjustRadiusBySteps(1));
 
     const multiplierRow = document.createElement('div');
     multiplierRow.classList.add('multiplier-container');
-
     const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
-
     const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
-    const buttonWrapper = document.createElement('div');
-    buttonWrapper.classList.add('project-step-controls');
-    buttonWrapper.append(buttonRow, multiplierRow);
+    const controlsWrapper = document.createElement('div');
+    controlsWrapper.classList.add('project-radius-controls');
+    controlsWrapper.append(buttonRow, multiplierRow);
 
-    controls.append(stepRow, buttonWrapper);
+    radiusBox.content.classList.add('project-summary-flex');
+    radiusBox.content.appendChild(controlsWrapper);
 
-    body.appendChild(controls);
+    const { value: bestValue } = createSummaryBox('Largest Built');
+    const { value: researchBoostValue } = createSummaryBox('Advanced Research Boost (New / Current)');
+
+    body.appendChild(summaryGrid);
 
     const notice = document.createElement('div');
     notice.classList.add('project-warning');
@@ -131,10 +107,9 @@ class ParticleAcceleratorProject extends Project {
       radiusValue,
       bestValue,
       researchBoostValue,
-      stepValue,
       minusButton,
       plusButton,
-      buttons: [zeroButton, minusButton, plusButton, mulButton, divButton],
+      buttons: [zeroButton, minusButton, plusButton, divButton, mulButton],
       notice
     };
 
@@ -159,10 +134,13 @@ class ParticleAcceleratorProject extends Project {
     elements.radiusValue.textContent = radiusDisplay;
     elements.bestValue.textContent = bestText;
     if (elements.researchBoostValue) {
-      const researchDisplay = typeof this.researchBoostDisplay === 'string' ? this.researchBoostDisplay : '—';
-      elements.researchBoostValue.textContent = researchDisplay;
+      const newBoost = this.calculateResearchBoost(radiusMeters);
+      const currentBoost = this.bestRadiusMeters > 0 ? this.calculateResearchBoost(this.bestRadiusMeters) : null;
+      const formatPercent = (value) => `${format(value, false, 2)}%`;
+      const newDisplay = formatPercent(newBoost);
+      const currentDisplay = currentBoost !== null ? formatPercent(currentBoost) : '-';
+      elements.researchBoostValue.textContent = `${newDisplay} / ${currentDisplay}`;
     }
-    elements.stepValue.textContent = stepDisplay;
     elements.minusButton.textContent = `-${stepDisplay}`;
     elements.plusButton.textContent = `+${stepDisplay}`;
 
@@ -188,6 +166,14 @@ class ParticleAcceleratorProject extends Project {
   }
 
   adjustRadiusBySteps(stepCount) {
+    if (
+      stepCount > 0 &&
+      this.selectedRadiusMeters === this.minimumRadiusMeters &&
+      this.radiusStepMeters > MINIMUM_STEP_METERS
+    ) {
+      this.setRadiusMeters(this.radiusStepMeters);
+      return;
+    }
     const adjustment = stepCount * this.radiusStepMeters;
     this.setRadiusMeters(this.selectedRadiusMeters + adjustment);
   }
@@ -199,6 +185,11 @@ class ParticleAcceleratorProject extends Project {
     const nextStep = this.radiusStepMeters * multiplier;
     this.radiusStepMeters = nextStep >= MINIMUM_STEP_METERS ? nextStep : MINIMUM_STEP_METERS;
     this.updateUI();
+  }
+
+  calculateResearchBoost(radiusMeters) {
+    const safeRadius = Math.max(MINIMUM_STEP_METERS, radiusMeters);
+    return 5 * Math.log10(safeRadius);
   }
 
   getSelectedRadiusMeters() {
