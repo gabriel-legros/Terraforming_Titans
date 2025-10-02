@@ -477,7 +477,7 @@ const projectParameters = {
         superconductors: 50
       }
     },
-    duration: 420000,
+    duration: 600000,
     description: 'Physicists can always use a bigger particle accelerator.',
     repeatable: true,
     maxRepeatCount: Infinity,
