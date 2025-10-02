@@ -1,5 +1,5 @@
-const ANTIMATTER_PER_TERRAFORMED_WORLD = 10;
-const STORAGE_DURATION_SECONDS = 10 * 3600;
+const ANTIMATTER_PER_TERRAFORMED_WORLD = 50;
+const STORAGE_DURATION_SECONDS = 50 * 3600;
 
 function getAntimatterResource(resources) {
   return resources?.special?.antimatter || null;
