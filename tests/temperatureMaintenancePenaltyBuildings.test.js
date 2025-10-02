@@ -5,7 +5,8 @@ global.lifeParameters = {};
 
 const Terraforming = require('../src/js/terraforming.js');
 const {
-  getFactoryTemperatureMaintenancePenaltyReduction
+  getFactoryTemperatureMaintenancePenaltyReduction,
+  getAerostatMaintenanceMitigation
 } = require('../src/js/buildings/aerostat.js');
 Terraforming.prototype.updateLuminosity = function(){};
 Terraforming.prototype.updateSurfaceTemperature = function(){};
@@ -242,6 +243,118 @@ describe('temperature maintenance penalty applies to buildings', () => {
       .find(e => e.target === 'building' && e.targetId === 'factory' && e.effectId === 'temperatureMaintenancePenalty');
     expect(buildingPenalty).toBeDefined();
     expect(buildingPenalty.value).toBeCloseTo(1.75);
+
+    global.addEffect = originalAdd;
+  });
+
+  test('applies aerostatReduction to buildings without workers', () => {
+    global.resources = { atmospheric:{}, special:{ albedoUpgrades:{ value:0 } }, surface:{}, colony:{} };
+    const chemical = {
+      active: 400,
+      aerostatReduction: 1,
+      requiresWorker: 0
+    };
+    global.buildings = { chemical };
+    global.colonies = {
+      aerostat_colony: {
+        active: 100,
+        storage: { colony: { colonists: 10 } },
+        getEffectiveStorageMultiplier: () => 1
+      }
+    };
+    global.projectManager = { projects: {}, isBooleanFlagSet: () => false };
+    global.populationModule = {};
+    global.tabManager = {};
+    global.fundingModule = {};
+    global.lifeDesigner = {};
+    global.lifeManager = new EffectableEntity({ description: 'life' });
+    global.oreScanner = {};
+
+    const tf = new Terraforming(global.resources, { distanceFromSun:1, radius:1, gravity:1, albedo:0 });
+    tf.temperature = { value: 473.15 };
+    tf.calculateColonyEnergyPenalty = () => 1;
+    tf.calculateMaintenancePenalty = () => 2;
+    tf.calculateSolarPanelMultiplier = () => 1;
+    tf.calculateWindTurbineMultiplier = () => 1;
+
+    const mitigation = getAerostatMaintenanceMitigation();
+    expect(mitigation.buildingCoverage.byId.chemical).toBeDefined();
+    expect(mitigation.buildingCoverage.byId.chemical.maxSupported).toBe(100);
+    expect(mitigation.buildingCoverage.byId.chemical.remainingFraction).toBeCloseTo(0.75);
+
+    const originalAdd = global.addEffect;
+    const mockAdd = jest.fn();
+    global.addEffect = mockAdd;
+
+    tf.applyTerraformingEffects();
+
+    const buildingPenalty = mockAdd.mock.calls
+      .map(c => c[0])
+      .find(e => e.target === 'building' && e.targetId === 'chemical' && e.effectId === 'temperatureMaintenancePenalty');
+    expect(buildingPenalty).toBeDefined();
+    expect(buildingPenalty.value).toBeCloseTo(1.75);
+
+    global.addEffect = originalAdd;
+  });
+
+  test('fully offsets penalty when aerostatReduction coverage is sufficient', () => {
+    global.resources = { atmospheric:{}, special:{ albedoUpgrades:{ value:0 } }, surface:{}, colony:{} };
+    const chemical = {
+      active: 50,
+      aerostatReduction: 1,
+      requiresWorker: 0
+    };
+    const fusion = {
+      active: 1,
+      aerostatReduction: 0.02,
+      requiresWorker: 0
+    };
+    global.buildings = { chemical, fusion };
+    global.colonies = {
+      aerostat_colony: {
+        active: 200,
+        storage: { colony: { colonists: 10 } },
+        getEffectiveStorageMultiplier: () => 1
+      }
+    };
+    global.projectManager = { projects: {}, isBooleanFlagSet: () => false };
+    global.populationModule = {};
+    global.tabManager = {};
+    global.fundingModule = {};
+    global.lifeDesigner = {};
+    global.lifeManager = new EffectableEntity({ description: 'life' });
+    global.oreScanner = {};
+
+    const tf = new Terraforming(global.resources, { distanceFromSun:1, radius:1, gravity:1, albedo:0 });
+    tf.temperature = { value: 473.15 };
+    tf.calculateColonyEnergyPenalty = () => 1;
+    tf.calculateMaintenancePenalty = () => 2;
+    tf.calculateSolarPanelMultiplier = () => 1;
+    tf.calculateWindTurbineMultiplier = () => 1;
+
+    const mitigation = getAerostatMaintenanceMitigation();
+    expect(mitigation.buildingCoverage.byId.chemical).toBeDefined();
+    expect(mitigation.buildingCoverage.byId.fusion).toBeDefined();
+    expect(mitigation.buildingCoverage.byId.chemical.remainingFraction).toBe(0);
+    expect(mitigation.buildingCoverage.byId.fusion.remainingFraction).toBe(0);
+
+    const originalAdd = global.addEffect;
+    const mockAdd = jest.fn();
+    global.addEffect = mockAdd;
+
+    tf.applyTerraformingEffects();
+
+    const chemicalPenalty = mockAdd.mock.calls
+      .map(c => c[0])
+      .find(e => e.target === 'building' && e.targetId === 'chemical' && e.effectId === 'temperatureMaintenancePenalty');
+    expect(chemicalPenalty).toBeDefined();
+    expect(chemicalPenalty.value).toBe(1);
+
+    const fusionPenalty = mockAdd.mock.calls
+      .map(c => c[0])
+      .find(e => e.target === 'building' && e.targetId === 'fusion' && e.effectId === 'temperatureMaintenancePenalty');
+    expect(fusionPenalty).toBeDefined();
+    expect(fusionPenalty.value).toBe(1);
 
     global.addEffect = originalAdd;
   });

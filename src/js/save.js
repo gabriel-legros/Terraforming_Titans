@@ -155,6 +155,7 @@ function getGameState() {
     milestonesManager: (typeof milestonesManager !== 'undefined' && typeof milestonesManager.saveState === 'function') ? milestonesManager.saveState() : undefined,
     skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
     spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
+    galaxyManager: (typeof galaxyManager !== 'undefined' && typeof galaxyManager.saveState === 'function') ? galaxyManager.saveState() : undefined,
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
@@ -476,6 +477,10 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);
+    }
+
+    if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {
+      galaxyManager.loadState(gameState.galaxyManager);
     }
 
     if(gameState.solisManager){

@@ -41,8 +41,9 @@ class Colony extends Building {
     }
 
     // Initialize filledNeeds based on the consumption defined in the config
-    for (const category in this.consumption) {
-      for (const resource in this.consumption[category]) {
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
+      for (const resource in consumption[category]) {
         this.filledNeeds[resource] = 1;
       }
     }
@@ -52,7 +53,8 @@ class Colony extends Building {
   rebuildFilledNeeds() {
     const previous = this.filledNeeds || {};
     const order = ['energy', 'food', 'components', 'electronics', 'androids'];
-    const colonyConsumption = this.consumption.colony || {};
+    const consumption = this.getConsumption();
+    const colonyConsumption = consumption.colony || {};
     const rebuilt = {};
 
     order.forEach(res => {
@@ -85,6 +87,14 @@ class Colony extends Building {
     }
   }
 
+  applyAddComfort() {
+    globalThis.invalidateColonyNeedCache?.();
+  }
+
+  getConsumption() {
+    return super.getConsumption();
+  }
+
   initializeFromConfig(config, colonyName) {
     super.initializeFromConfig(config, colonyName);
     this.baseComfort = config.baseComfort;
@@ -94,7 +104,6 @@ class Colony extends Building {
     const base = super.saveState();
     return {
       ...base,
-      baseComfort: this.baseComfort,
       filledNeeds: { ...this.filledNeeds },
       luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
       obsolete: this.obsolete,
@@ -109,9 +118,6 @@ class Colony extends Building {
       return;
     }
 
-    if ('baseComfort' in state) {
-      this.baseComfort = state.baseComfort;
-    }
     if (state.filledNeeds) {
       this.filledNeeds = { ...state.filledNeeds };
     } else {
@@ -130,6 +136,25 @@ class Colony extends Building {
     }
 
     this.rebuildFilledNeeds();
+  }
+
+  calculateEffectiveComfort() {
+    const baseComfort = Number.isFinite(this.baseComfort) ? this.baseComfort : 0;
+    let totalComfort = baseComfort;
+    const comfortEffects = Array.isArray(this.activeEffects) ? this.activeEffects : [];
+
+    comfortEffects.forEach((effect) => {
+      if (effect.type === 'addComfort') {
+        const bonus = Number.isFinite(effect.value) ? effect.value : 0;
+        totalComfort += bonus;
+      }
+    });
+
+    return totalComfort;
+  }
+
+  getComfort() {
+    return this.calculateEffectiveComfort();
   }
 
   getConsumptionRatio(){
@@ -158,14 +183,15 @@ class Colony extends Building {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
     const popConsumptionRatio = this.getConsumptionRatio();
   
-    for (const category in this.consumption) {
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
       if (!this.currentConsumption[category]) {
         this.currentConsumption[category] = {};
       }
-  
-      for (const resource in this.consumption[category]) {
+
+      for (const resource in consumption[category]) {
         const isLuxuryResource = luxuryResources[resource] !== undefined;
-  
+
         if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
           // If the luxury resource is not enabled, set the filledNeeds value to 0
           this.filledNeeds[resource] = 0;
@@ -202,12 +228,13 @@ class Colony extends Building {
     this.currentConsumption = {}; // Reset current consumption
   
     // Calculate consumption and accumulate changes
-    for (const category in this.consumption) {
+    const consumption = this.getConsumption();
+    for (const category in consumption) {
       if (!this.currentConsumption[category]) {
         this.currentConsumption[category] = {};
       }
-  
-      for (const resource in this.consumption[category]) {
+
+      for (const resource in consumption[category]) {
         const isLuxuryResource = luxuryResources[resource] !== undefined;
   
         if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
@@ -270,7 +297,7 @@ class Colony extends Building {
     const nonLuxuryHappiness = Math.min(foodNeed, energyNeed) * 50;
   
     // Calculate happiness from comfort
-    const comfortHappiness = this.baseComfort * 20;
+    const comfortHappiness = this.getComfort() * 20;
   
     // Calculate total luxury happiness
     let totalLuxuryHappiness = 0;
@@ -304,9 +331,10 @@ class Colony extends Building {
   calculateBaseMinRatio(resources, deltaTime) {
       let minRatio = Infinity;
 
-      // Calculate minRatio based on NON-LUXURY resource consumption
-      for (const category in this.consumption) {
-          for (const resource in this.consumption[category]) {
+        // Calculate minRatio based on NON-LUXURY resource consumption
+        const consumption = this.getConsumption();
+        for (const category in consumption) {
+            for (const resource in consumption[category]) {
               // Skip luxury resources
               if (luxuryResources[resource]) {
                   continue;

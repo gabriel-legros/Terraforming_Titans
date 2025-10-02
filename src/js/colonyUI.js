@@ -134,8 +134,8 @@ function updateGrowthRateDisplay(){
 
 function shouldDisplayNeedBox(needKey, structure) {
   if (needKey !== 'components') return true;
-  const entry = structure.consumption?.colony?.[needKey];
-  return entry !== undefined && structure.getConsumptionResource('colony', needKey).amount > 0;
+  const { amount } = structure.getConsumptionResource('colony', needKey);
+  return amount > 0;
 }
 
 function createColonyDetails(structure) {
@@ -148,7 +148,7 @@ function createColonyDetails(structure) {
 
   // Add comfort and happiness boxes
   const happinessBox = createNeedBox('happiness', 'Happiness', structure.happiness, false, structure);
-  const comfortBox = createNeedBox('comfort', 'Comfort', structure.baseComfort, false, structure);
+  const comfortBox = createNeedBox('comfort', 'Comfort', structure.getComfort(), false, structure);
 
   colonyDetails.appendChild(happinessBox);
   colonyDetails.appendChild(comfortBox);
@@ -171,14 +171,25 @@ function createColonyDetails(structure) {
 function updateColonyDetailsDisplay(structureRow, structure) {
   updateUnhideButtons();
 
-  if (!structure.needBoxCache) {
-    structureRow.querySelector('.colony-details')?.remove();
-    structureRow.appendChild(createColonyDetails(structure));
+  const colonyConsumption = structure.getConsumption().colony || {};
+  let needsMissing = false;
+  if (structure.needBoxCache) {
+    for (const need in colonyConsumption) {
+      if (!shouldDisplayNeedBox(need, structure)) continue;
+      if (!structure.needBoxCache[need]) {
+        needsMissing = true;
+        break;
+      }
+    }
+  }
+
+  if (!structure.needBoxCache || needsMissing) {
+    rebuildColonyNeedCache(structureRow, structure);
   }
 
   // Update comfort and happiness boxes
   updateNeedBox(structure.needBoxCache.happiness, 'Happiness', 'happiness', structure.happiness, false, structure);
-  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.baseComfort, false, structure);
+  updateNeedBox(structure.needBoxCache.comfort, 'Comfort', 'comfort', structure.getComfort(), false, structure);
 
   // Update need boxes dynamically based on structure.filledNeeds
   for (const need in structure.filledNeeds) {

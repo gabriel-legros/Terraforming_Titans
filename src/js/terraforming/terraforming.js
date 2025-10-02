@@ -35,6 +35,7 @@ const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
+var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
 var calculateEffectiveAtmosphericHeatCapacityHelper;
 if (typeof module !== 'undefined' && module.exports) {
@@ -98,7 +99,8 @@ if (typeof module !== 'undefined' && module.exports) {
 
     ({
       getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper,
-      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper
+      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper,
+      getAerostatMaintenanceMitigation: getAerostatMaintenanceMitigationHelper
     } = require('../buildings/aerostat.js'));
 } else {
     getZonePercentage = globalThis.getZonePercentage;
@@ -114,6 +116,8 @@ if (typeof module !== 'undefined' && module.exports) {
       globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
     isBuildingEligibleForFactoryMitigationHelper =
       globalThis.isBuildingEligibleForFactoryMitigation;
+    getAerostatMaintenanceMitigationHelper =
+      globalThis.getAerostatMaintenanceMitigation;
 }
 
 var getEcumenopolisLandFraction;
@@ -619,6 +623,8 @@ class Terraforming extends EffectableEntity{
             durationSeconds,
             surfaceArea: this.celestialParameters.surfaceArea,
             surfaceTemperatureK: this.temperature.value,
+            gravity,
+            solarFlux: this.luminosity.modifiedSolarFlux,
         });
 
         for (const [key, delta] of Object.entries(chemTotals.changes)) {
@@ -951,10 +957,13 @@ class Terraforming extends EffectableEntity{
         else{
             // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
             const targetTemp = T[zone];
+            const emittedFluxPreTarget = greenhouseFactor > 0
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
+                : 0;
             const emittedFluxTarget = greenhouseFactor > 0
                 ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
                 : 0;
-            const windFlux = mixingDelta !== 0 ? emittedFlux - emittedFluxTarget : 0;
+            const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
             const combinedFlux = netFlux - windFlux;
 
             newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
@@ -971,7 +980,9 @@ class Terraforming extends EffectableEntity{
 
         this.temperature.zones[zone].value = newTemp;
         this.temperature.zones[zone].day = newTemp + dMean;
-        this.temperature.zones[zone].night = newTemp - dMean;
+        const nightTemperature = newTemp - dMean;
+        const minimumNightTemperature = newTemp / 4;
+        this.temperature.zones[zone].night = Math.max(nightTemperature, minimumNightTemperature);
 
         weightedTemp += newTemp*pct;
     }
@@ -1475,7 +1486,17 @@ class Terraforming extends EffectableEntity{
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
       const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
-      const factoryPenaltyReduction = this.getFactoryTemperatureMaintenancePenaltyReduction();
+      const aerostatMitigationDetails =
+        typeof getAerostatMaintenanceMitigationHelper === 'function'
+          ? getAerostatMaintenanceMitigationHelper()
+          : null;
+      const factoryPenaltyReduction =
+        aerostatMitigationDetails &&
+        Number.isFinite(aerostatMitigationDetails.workerShare)
+          ? aerostatMitigationDetails.workerShare
+          : this.getFactoryTemperatureMaintenancePenaltyReduction();
+      const buildingMitigationById =
+        aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
 
       for (let i = 1; i <= 7; i++) {
         const energyPenaltyEffect = {
@@ -1569,13 +1590,29 @@ class Terraforming extends EffectableEntity{
               : b.requiresWorker || 0;
 
           let penaltyValue = maintenancePenalty;
-          if (
-            maintenancePenalty > 1 &&
-            factoryPenaltyReduction > 0 &&
-            workerNeed > 0 &&
-            countsTowardFactoryMitigation
-          ) {
-            penaltyValue = 1 + (maintenancePenalty - 1) * (1 - factoryPenaltyReduction);
+
+          if (maintenancePenalty > 1) {
+            const baseIncrease = maintenancePenalty - 1;
+            let remainingFactor = 1;
+
+            if (
+              factoryPenaltyReduction > 0 &&
+              workerNeed > 0 &&
+              countsTowardFactoryMitigation
+            ) {
+              const clampedFactoryReduction = Math.max(
+                0,
+                Math.min(1, factoryPenaltyReduction)
+              );
+              remainingFactor *= 1 - clampedFactoryReduction;
+            }
+
+            const buildingMitigation = buildingMitigationById[id];
+            if (buildingMitigation) {
+              remainingFactor *= buildingMitigation.remainingFraction;
+            }
+
+            penaltyValue = 1 + baseIncrease * remainingFactor;
           }
 
           addEffect({

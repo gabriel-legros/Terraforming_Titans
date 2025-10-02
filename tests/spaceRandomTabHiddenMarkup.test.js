@@ -7,5 +7,7 @@ describe('Space Random subtab markup', () => {
     const html = fs.readFileSync(htmlPath, 'utf8');
     expect(html).toMatch(/<div class="space-subtab hidden" data-subtab="space-random">/);
     expect(html).toMatch(/<div id="space-random" class="space-subtab-content hidden">/);
+    expect(html).toMatch(/<div class="space-subtab hidden" data-subtab="space-galaxy">/);
+    expect(html).toMatch(/<div id="space-galaxy" class="space-subtab-content hidden">/);
   });
 });

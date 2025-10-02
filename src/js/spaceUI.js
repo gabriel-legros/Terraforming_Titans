@@ -15,16 +15,36 @@ if (typeof SubtabManager === 'undefined') {
 let spaceUIInitialized = false;
 // Track visibility of the Random subtab
 let spaceRandomTabVisible = false;
+let spaceGalaxyTabVisible = false;
 let spaceSubtabManager = null;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
+
+const galaxyTabElements = { button: null, content: null };
+const spaceTabAlertElements = { button: null, warning: null };
 
 // Cached travel warning popup elements
 let travelWarningOverlay = null;
 let travelWarningMessageEl = null;
 let travelWarningConfirmBtn = null;
 let travelWarningCancelBtn = null;
+let travelWarningHintContainer = null;
+let travelWarningHintToggle = null;
+let travelWarningHintTitleEl = null;
+let travelWarningHintBodyEl = null;
+
+function setTravelWarningHintVisibility(isOpen) {
+    if (!travelWarningHintContainer) return;
+    travelWarningHintContainer.dataset.open = isOpen ? 'true' : 'false';
+    if (travelWarningHintBodyEl) {
+        travelWarningHintBodyEl.style.display = isOpen ? 'block' : 'none';
+    }
+    if (travelWarningHintToggle) {
+        travelWarningHintToggle.textContent = isOpen ? 'Hide Hint' : 'Show Hint';
+        travelWarningHintToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+}
 
 function showSpaceRandomTab() {
     spaceRandomTabVisible = true;
@@ -50,7 +70,93 @@ function hideSpaceRandomTab() {
     }
 }
 
-function showTravelWarningPopup(message, onConfirm) {
+function cacheGalaxyTabElements() {
+    if (typeof document === 'undefined') {
+        return galaxyTabElements;
+    }
+    if (!galaxyTabElements.button || !galaxyTabElements.button.isConnected) {
+        const button = document.querySelector('[data-subtab="space-galaxy"]');
+        if (button) {
+            galaxyTabElements.button = button;
+        }
+    }
+    if (!galaxyTabElements.content || !galaxyTabElements.content.isConnected) {
+        const content = document.getElementById('space-galaxy');
+        if (content) {
+            galaxyTabElements.content = content;
+        }
+    }
+    return galaxyTabElements;
+}
+
+function cacheSpaceTabWarningElements(doc) {
+    if (!doc) {
+        return spaceTabAlertElements;
+    }
+    if (!spaceTabAlertElements.button || !spaceTabAlertElements.button.isConnected) {
+        spaceTabAlertElements.button = doc.getElementById('space-tab');
+    }
+    if (!spaceTabAlertElements.warning || !spaceTabAlertElements.warning.isConnected) {
+        spaceTabAlertElements.warning = doc.getElementById('space-attack-warning');
+    }
+    return spaceTabAlertElements;
+}
+
+function setSpaceIncomingAttackWarning(isActive) {
+    const doc = globalThis.document;
+    if (!doc) {
+        return;
+    }
+    const { warning } = cacheSpaceTabWarningElements(doc);
+    if (!warning) {
+        return;
+    }
+    if (isActive) {
+        warning.classList.add('is-visible');
+        warning.setAttribute('aria-hidden', 'false');
+        warning.setAttribute('role', 'img');
+        warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector');
+        warning.title = 'Incoming attack detected in UHF sector';
+        return;
+    }
+    warning.classList.remove('is-visible');
+    warning.setAttribute('aria-hidden', 'true');
+    warning.removeAttribute('role');
+    warning.removeAttribute('aria-label');
+    warning.removeAttribute('title');
+}
+
+globalThis.setSpaceIncomingAttackWarning = setSpaceIncomingAttackWarning;
+
+function showSpaceGalaxyTab() {
+    spaceGalaxyTabVisible = true;
+    const { button, content } = cacheGalaxyTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.show('space-galaxy');
+    } else {
+        if (button) button.classList.remove('hidden');
+        if (content) content.classList.remove('hidden');
+    }
+    if (typeof initializeGalaxyUI === 'function') {
+        initializeGalaxyUI();
+    }
+    if (typeof updateGalaxyUI === 'function') {
+        updateGalaxyUI();
+    }
+}
+
+function hideSpaceGalaxyTab() {
+    spaceGalaxyTabVisible = false;
+    const { button, content } = cacheGalaxyTabElements();
+    if (spaceSubtabManager) {
+        spaceSubtabManager.hide('space-galaxy');
+    } else {
+        if (button) button.classList.add('hidden');
+        if (content) content.classList.add('hidden');
+    }
+}
+
+function showTravelWarningPopup(warningData, onConfirm) {
     if (!travelWarningOverlay) {
         travelWarningOverlay = document.createElement('div');
         travelWarningOverlay.id = 'travel-warning-popup';
@@ -77,6 +183,46 @@ function showTravelWarningPopup(message, onConfirm) {
         travelWarningMessageEl.style.marginBottom = '12px';
         win.appendChild(travelWarningMessageEl);
 
+        travelWarningHintContainer = document.createElement('div');
+        travelWarningHintContainer.className = 'travel-warning-hint';
+        travelWarningHintContainer.style.marginBottom = '12px';
+        travelWarningHintContainer.style.textAlign = 'left';
+        travelWarningHintContainer.style.display = 'none';
+
+        const hintHeader = document.createElement('div');
+        hintHeader.style.display = 'flex';
+        hintHeader.style.justifyContent = 'space-between';
+        hintHeader.style.alignItems = 'center';
+
+        travelWarningHintTitleEl = document.createElement('span');
+        travelWarningHintTitleEl.className = 'travel-warning-hint-title';
+        travelWarningHintTitleEl.textContent = 'Hint';
+        hintHeader.appendChild(travelWarningHintTitleEl);
+
+        travelWarningHintToggle = document.createElement('button');
+        travelWarningHintToggle.type = 'button';
+        travelWarningHintToggle.className = 'travel-warning-hint-toggle';
+        travelWarningHintToggle.textContent = 'Show Hint';
+
+        travelWarningHintBodyEl = document.createElement('div');
+        travelWarningHintBodyEl.id = 'travel-warning-hint-body';
+        travelWarningHintBodyEl.className = 'travel-warning-hint-body';
+        travelWarningHintBodyEl.style.marginTop = '8px';
+        travelWarningHintBodyEl.style.display = 'none';
+        travelWarningHintBodyEl.style.whiteSpace = 'pre-line';
+
+        travelWarningHintToggle.setAttribute('aria-expanded', 'false');
+        travelWarningHintToggle.setAttribute('aria-controls', travelWarningHintBodyEl.id);
+        travelWarningHintToggle.addEventListener('click', () => {
+            const currentState = travelWarningHintContainer.dataset.open === 'true';
+            setTravelWarningHintVisibility(!currentState);
+        });
+
+        hintHeader.appendChild(travelWarningHintToggle);
+        travelWarningHintContainer.appendChild(hintHeader);
+        travelWarningHintContainer.appendChild(travelWarningHintBodyEl);
+        win.appendChild(travelWarningHintContainer);
+
         const btnRow = document.createElement('div');
         btnRow.style.display = 'flex';
         btnRow.style.gap = '8px';
@@ -96,7 +242,19 @@ function showTravelWarningPopup(message, onConfirm) {
         travelWarningOverlay.appendChild(win);
         document.body.appendChild(travelWarningOverlay);
     }
-    travelWarningMessageEl.textContent = message;
+    const warning = warningData || { message: '' };
+    travelWarningMessageEl.textContent = warning.message || '';
+
+    if (warning.hint && warning.hint.body) {
+        travelWarningHintContainer.style.display = 'block';
+        travelWarningHintTitleEl.textContent = warning.hint.title || 'Hint';
+        travelWarningHintBodyEl.textContent = warning.hint.body;
+        setTravelWarningHintVisibility(false);
+    } else if (travelWarningHintContainer) {
+        travelWarningHintContainer.style.display = 'none';
+        travelWarningHintBodyEl.textContent = '';
+        travelWarningHintContainer.dataset.open = 'false';
+    }
     travelWarningConfirmBtn.onclick = () => {
         travelWarningOverlay.style.display = 'none';
         onConfirm();
@@ -150,6 +308,14 @@ function initializeSpaceUI(spaceManager) {
     console.log("Initializing Space UI with SpaceManager reference.");
     initializeSpaceTabs();
     hideSpaceRandomTab();
+    cacheGalaxyTabElements();
+    cacheSpaceTabWarningElements(document);
+    setSpaceIncomingAttackWarning(false);
+    if (typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled) {
+        showSpaceGalaxyTab();
+    } else {
+        hideSpaceGalaxyTab();
+    }
 
     // If the UI has already been generated, just update with the new instance
     if (spaceUIInitialized) {
