@@ -3034,6 +3034,7 @@ function updateIncomingAttackPanel(manager, cache) {
     }
 
     const hasEntries = incomingAttacks.length > 0;
+    globalThis?.setSpaceIncomingAttackWarning?.(hasEntries);
     const defenseVisible = cache.defenseForm ? !cache.defenseForm.classList.contains('is-hidden') : false;
     if (cache.attackContent) {
         cache.attackContent.classList.toggle('is-populated', hasEntries || defenseVisible);

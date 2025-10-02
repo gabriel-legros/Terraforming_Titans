@@ -298,6 +298,17 @@ body.journal-collapsed .tab-content {
     margin-left: 4px;
 }
 
+.space-tab-warning {
+    color: #ff5252;
+    font-weight: bold;
+    display: none;
+    margin-left: 4px;
+}
+
+.space-tab-warning.is-visible {
+    display: inline;
+}
+
 .journal.collapsed {
     display: none;
 }

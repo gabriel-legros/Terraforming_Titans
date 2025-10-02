@@ -22,6 +22,7 @@ let lastWorldKey = null;
 let lastWorldSeed = null;
 
 const galaxyTabElements = { button: null, content: null };
+const spaceTabAlertElements = { button: null, warning: null };
 
 // Cached travel warning popup elements
 let travelWarningOverlay = null;
@@ -87,6 +88,45 @@ function cacheGalaxyTabElements() {
     }
     return galaxyTabElements;
 }
+
+function cacheSpaceTabWarningElements(doc) {
+    if (!doc) {
+        return spaceTabAlertElements;
+    }
+    if (!spaceTabAlertElements.button || !spaceTabAlertElements.button.isConnected) {
+        spaceTabAlertElements.button = doc.getElementById('space-tab');
+    }
+    if (!spaceTabAlertElements.warning || !spaceTabAlertElements.warning.isConnected) {
+        spaceTabAlertElements.warning = doc.getElementById('space-attack-warning');
+    }
+    return spaceTabAlertElements;
+}
+
+function setSpaceIncomingAttackWarning(isActive) {
+    const doc = globalThis.document;
+    if (!doc) {
+        return;
+    }
+    const { warning } = cacheSpaceTabWarningElements(doc);
+    if (!warning) {
+        return;
+    }
+    if (isActive) {
+        warning.classList.add('is-visible');
+        warning.setAttribute('aria-hidden', 'false');
+        warning.setAttribute('role', 'img');
+        warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector');
+        warning.title = 'Incoming attack detected in UHF sector';
+        return;
+    }
+    warning.classList.remove('is-visible');
+    warning.setAttribute('aria-hidden', 'true');
+    warning.removeAttribute('role');
+    warning.removeAttribute('aria-label');
+    warning.removeAttribute('title');
+}
+
+globalThis.setSpaceIncomingAttackWarning = setSpaceIncomingAttackWarning;
 
 function showSpaceGalaxyTab() {
     spaceGalaxyTabVisible = true;
@@ -269,6 +309,8 @@ function initializeSpaceUI(spaceManager) {
     initializeSpaceTabs();
     hideSpaceRandomTab();
     cacheGalaxyTabElements();
+    cacheSpaceTabWarningElements(document);
+    setSpaceIncomingAttackWarning(false);
     if (typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled) {
         showSpaceGalaxyTab();
     } else {
