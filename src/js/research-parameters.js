@@ -1616,6 +1616,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'mega_particle_accelerator',
+        name: 'Mega Particle Accelerator',
+        description: 'Unlocks a new megastructure that can assist in boosting advanced research gains.',
+        cost: { advancedResearch: 250000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'particleAccelerator',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'mechanical_assistance',
         name: 'Mechanical Assistance',
         description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',
