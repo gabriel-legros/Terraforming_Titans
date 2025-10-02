@@ -295,7 +295,6 @@ class GalaxyManager extends EffectableEntity {
         const sectors = Array.from(this.sectors.values()).map((sector) => sector.toJSON());
         const operations = Array.from(this.operations.values()).map((operation) => this.#serializeOperation(operation));
         return {
-            enabled: this.enabled,
             sectors,
             factions: this.getFactions().map((faction) => faction.toJSON()),
             operations,
@@ -307,9 +306,6 @@ class GalaxyManager extends EffectableEntity {
 
     loadState(state) {
         this.initialize();
-        if (state && typeof state.enabled === 'boolean') {
-            this.enabled = state.enabled;
-        }
         if (state && Array.isArray(state.sectors)) {
             this.#applyFactionStartingControl();
             state.sectors.forEach((sectorData) => {
