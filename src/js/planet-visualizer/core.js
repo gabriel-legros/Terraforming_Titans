@@ -52,6 +52,7 @@
       // Surface caches
       this.lastCraterFactorKey = null;
       this.craterLayer = null;
+      this.craterSeedKey = null;
       this.cloudLayer = null;
       this.waterMask = null;
       this.craterAlphaData = null;
@@ -401,6 +402,13 @@
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
     }
 
+    getCurrentArchetype() {
+      return this.viz?.archetype
+        || currentPlanetParameters?.classification?.archetype
+        || currentPlanetParameters?.rwgMeta?.archetype
+        || null;
+    }
+
     getCurrentPopulation() {
       if (this.debug.mode === 'debug') {
         return this.viz.pop || 0;
@@ -423,8 +431,20 @@
     }
 
     hashSeedFromPlanet() {
-      const name = (currentPlanetParameters && currentPlanetParameters.name) || 'Planet';
-      let h = 2166136261 >>> 0; for (let i = 0; i < name.length; i++) { h ^= name.charCodeAt(i); h = Math.imul(h, 16777619); }
+      const name = currentPlanetParameters?.name || 'Planet';
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < name.length; i++) {
+        h ^= name.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      const generatorSeed = currentPlanetParameters?.rwgMeta?.generatorSeedInt ?? 0;
+      h ^= generatorSeed >>> 0;
+      h = Math.imul(h, 16777619);
+      const type = this.getCurrentArchetype() || '';
+      for (let i = 0; i < type.length; i++) {
+        h ^= type.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
       const x = ((h & 0xffff) / 65535);
       const y = (((h >>> 16) & 0xffff) / 65535);
       return { x, y };
