@@ -985,6 +985,35 @@
   line-height: 1;
 }
 
+.galaxy-operations-form__duration {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #bed4ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.galaxy-operations-form__duration-label {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: #8fb6f9;
+}
+
+.galaxy-operations-form__duration-value {
+  font-weight: 600;
+  color: #f5f9ff;
+}
+
+.galaxy-operations-form__duration--remaining {
+  color: #d5e5ff;
+}
+
+.galaxy-operations-form__duration--remaining .galaxy-operations-form__duration-label {
+  color: #9fc8ff;
+}
+
 .galaxy-operations-summary {
   display: flex;
   flex-wrap: wrap;
