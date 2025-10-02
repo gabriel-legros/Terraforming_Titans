@@ -50,6 +50,48 @@ const R507_SECTOR_COORDINATES = [
 ];
 const R507_SECTOR_BASE_VALUE = 100;
 
+const STRATEGIC_SECTOR_COORDINATES = [
+    { q: 3, r: 2 },
+    { q: -5, r: 3 },
+    { q: -4, r: 0 },
+    { q: 0, r: -4 },
+    { q: 6, r: -4 }
+];
+const STRATEGIC_SECTOR_BASE_VALUE = 10000;
+const STRATEGIC_NEIGHBOR_COORDINATES = [
+    { q: 3, r: 1 },
+    { q: 2, r: 2 },
+    { q: 2, r: 3 },
+    { q: 3, r: 3 },
+    { q: 4, r: 2 },
+    { q: 4, r: 1 },
+    { q: -5, r: 2 },
+    { q: -6, r: 3 },
+    { q: -6, r: 4 },
+    { q: -5, r: 4 },
+    { q: -4, r: 3 },
+    { q: -4, r: 2 },
+    { q: -4, r: -1 },
+    { q: -5, r: 0 },
+    { q: -5, r: 1 },
+    { q: -4, r: 1 },
+    { q: -3, r: 0 },
+    { q: -3, r: -1 },
+    { q: 0, r: -5 },
+    { q: -1, r: -4 },
+    { q: -1, r: -3 },
+    { q: 0, r: -3 },
+    { q: 1, r: -4 },
+    { q: 1, r: -5 },
+    { q: 6, r: -5 },
+    { q: 5, r: -4 },
+    { q: 5, r: -3 },
+    { q: 6, r: -3 },
+    { q: 7, r: -4 },
+    { q: 7, r: -5 }
+];
+const STRATEGIC_NEIGHBOR_BASE_VALUE = 2000;
+
 const overrides = {};
 
 function registerOverrides(coordinates, value) {
@@ -63,6 +105,8 @@ registerOverrides(FIRST_RING_COORDINATES, FIRST_RING_BASE_VALUE);
 registerOverrides(R507_RADIUS_ONE_COORDINATES, R507_RADIUS_ONE_BASE_VALUE);
 registerOverrides(R507_RADIUS_TWO_COORDINATES, R507_RADIUS_TWO_BASE_VALUE);
 registerOverrides(R507_SECTOR_COORDINATES, R507_SECTOR_BASE_VALUE);
+registerOverrides(STRATEGIC_SECTOR_COORDINATES, STRATEGIC_SECTOR_BASE_VALUE);
+registerOverrides(STRATEGIC_NEIGHBOR_COORDINATES, STRATEGIC_NEIGHBOR_BASE_VALUE);
 overrides['R5-07'] = { value: R507_SECTOR_BASE_VALUE };
 
 const galaxySectorParameters = {
