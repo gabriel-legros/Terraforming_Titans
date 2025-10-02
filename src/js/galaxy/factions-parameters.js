@@ -31,13 +31,21 @@ const galaxyFactionParameters = [
         ringSlices: [
             { ring: 1 }
         ],
-        defensiveness: 0.8
+        defensiveness: 0.8,
+        autoOperationRange: {
+            min: 0.05,
+            max: 0.15
+        }
     },
     {
         id: 'helian',
         name: 'Helian',
         color: '#facc15',
         defensiveness: 0.5,
+        autoOperationRange: {
+            min: 0.1,
+            max: 0.3
+        },
         ringSlices: [
             { ring: 2, start: 1, end: 3 },
             { ring: 3, start: 2, end: 5 },
@@ -51,6 +59,10 @@ const galaxyFactionParameters = [
         name: 'Virellan',
         color: '#10b981',
         defensiveness: 0.5,
+        autoOperationRange: {
+            min: 0.1,
+            max: 0.3
+        },
         ringSlices: [
             { ring: 2, start: 4, end: 5 },
             { ring: 3, start: 6, end: 8 },
@@ -64,6 +76,10 @@ const galaxyFactionParameters = [
         name: 'Karthid',
         color: '#8b5cf6',
         defensiveness: 0.5,
+        autoOperationRange: {
+            min: 0.1,
+            max: 0.3
+        },
         ringSlices: [
             { ring: 2, start: 6, end: 8 },
             { ring: 3, start: 9, end: 11 },
@@ -77,6 +93,10 @@ const galaxyFactionParameters = [
         name: 'Neran',
         color: '#ec4899',
         defensiveness: 0.5,
+        autoOperationRange: {
+            min: 0.1,
+            max: 0.3
+        },
         ringSlices: [
             { ring: 2, start: 9, end: 10 },
             { ring: 3, start: 12, end: 15 },
@@ -90,6 +110,10 @@ const galaxyFactionParameters = [
         name: 'Okoth',
         color: 'red',
         defensiveness: 0.5,
+        autoOperationRange: {
+            min: 0.1,
+            max: 0.3
+        },
         ringSlices: [
             { ring: 2, start: 11, end: 12 },
             { ring: 3, start: 1, end: 1 },
