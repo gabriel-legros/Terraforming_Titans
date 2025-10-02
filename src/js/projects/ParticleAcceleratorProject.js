@@ -2,15 +2,28 @@ const EARTH_RADIUS_METERS = 6_371_000;
 const TWO_PI = Math.PI * 2;
 const MATERIAL_COST_PER_METER = 100;
 const HALF_MATERIAL_SPLIT = 0.5;
+const STEP_MULTIPLIER = 10;
+const MINIMUM_STEP_METERS = 1;
 
 class ParticleAcceleratorProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.acceleratorCount = 0;
-    this.minimumRadiusEarth = config?.attributes?.minimumRadiusEarth ?? 1;
-    this.selectedRadiusEarth = this.minimumRadiusEarth;
-    this.bestRadiusEarth = 0;
-    this.lastCompletedRadiusEarth = 0;
+    const attributes = config?.attributes || {};
+    const minimumRadiusMeters = attributes.minimumRadiusMeters ??
+      (attributes.minimumRadiusEarth ? attributes.minimumRadiusEarth * EARTH_RADIUS_METERS : MINIMUM_STEP_METERS);
+    const defaultRadiusMeters = attributes.defaultRadiusMeters ??
+      (attributes.minimumRadiusEarth ? attributes.minimumRadiusEarth * EARTH_RADIUS_METERS : minimumRadiusMeters);
+    const defaultStepMeters = attributes.defaultStepMeters ?? MINIMUM_STEP_METERS;
+
+    this.minimumRadiusMeters = Math.max(MINIMUM_STEP_METERS, minimumRadiusMeters);
+    this.defaultRadiusMeters = Math.max(this.minimumRadiusMeters, defaultRadiusMeters);
+    this.defaultStepMeters = Math.max(MINIMUM_STEP_METERS, defaultStepMeters);
+
+    this.selectedRadiusMeters = this.defaultRadiusMeters;
+    this.bestRadiusMeters = 0;
+    this.radiusStepMeters = this.defaultStepMeters;
+    this.researchBoostDisplay = '—';
     this.uiElements = null;
   }
 
@@ -29,85 +42,80 @@ class ParticleAcceleratorProject extends Project {
     const body = document.createElement('div');
     body.classList.add('card-body');
 
-    const statsGrid = document.createElement('div');
-    statsGrid.classList.add('stats-grid', 'two-col');
+    const summaryGrid = document.createElement('div');
+    summaryGrid.classList.add('stats-grid', 'three-col', 'project-summary-grid');
 
-    const radiusLabel = document.createElement('span');
-    radiusLabel.classList.add('stat-label');
-    radiusLabel.textContent = 'Target Radius:';
-    const radiusValue = document.createElement('span');
-    radiusValue.classList.add('stat-value');
-    statsGrid.append(radiusLabel, radiusValue);
+    const createSummaryBox = (labelText) => {
+      const box = document.createElement('div');
+      box.classList.add('stat-item', 'project-summary-box');
+      const label = document.createElement('span');
+      label.classList.add('stat-label');
+      label.textContent = labelText;
+      const value = document.createElement('span');
+      value.classList.add('stat-value');
+      box.append(label, value);
+      summaryGrid.appendChild(box);
+      return value;
+    };
 
-    const circumferenceLabel = document.createElement('span');
-    circumferenceLabel.classList.add('stat-label');
-    circumferenceLabel.textContent = 'Circumference:';
-    const circumferenceValue = document.createElement('span');
-    circumferenceValue.classList.add('stat-value');
-    statsGrid.append(circumferenceLabel, circumferenceValue);
+    const radiusValue = createSummaryBox('Target Radius');
+    const bestValue = createSummaryBox('Largest Built');
+    const researchBoostValue = createSummaryBox('Research Boost');
 
-    const bestLabel = document.createElement('span');
-    bestLabel.classList.add('stat-label');
-    bestLabel.textContent = 'Largest Built:';
-    const bestValue = document.createElement('span');
-    bestValue.classList.add('stat-value');
-    statsGrid.append(bestLabel, bestValue);
-
-    const lastLabel = document.createElement('span');
-    lastLabel.classList.add('stat-label');
-    lastLabel.textContent = 'Last Completion:';
-    const lastValue = document.createElement('span');
-    lastValue.classList.add('stat-value');
-    statsGrid.append(lastLabel, lastValue);
-
-    const alloyLabel = document.createElement('span');
-    alloyLabel.classList.add('stat-label');
-    alloyLabel.textContent = 'Superalloy Cost:';
-    const alloyValue = document.createElement('span');
-    alloyValue.classList.add('stat-value');
-    statsGrid.append(alloyLabel, alloyValue);
-
-    const superconLabel = document.createElement('span');
-    superconLabel.classList.add('stat-label');
-    superconLabel.textContent = 'Superconductor Cost:';
-    const superconValue = document.createElement('span');
-    superconValue.classList.add('stat-value');
-    statsGrid.append(superconLabel, superconValue);
-
-    body.appendChild(statsGrid);
+    body.appendChild(summaryGrid);
 
     const controls = document.createElement('div');
-    controls.classList.add('thruster-power-controls');
+    controls.classList.add('thruster-power-controls', 'project-control-block');
+
+    const stepRow = document.createElement('div');
+    stepRow.classList.add('project-step-row');
+
+    const stepLabel = document.createElement('span');
+    stepLabel.classList.add('stat-label');
+    stepLabel.textContent = 'Adjustment Step';
+
+    const stepValue = document.createElement('span');
+    stepValue.classList.add('stat-value');
+    const stepInfo = document.createElement('span');
+    stepInfo.classList.add('info-tooltip-icon');
+    stepInfo.innerHTML = '&#9432;';
+    stepInfo.title = 'Adjust how much the radius changes when you use the step buttons.';
+
+    const stepValueWrapper = document.createElement('div');
+    stepValueWrapper.classList.add('project-step-value');
+    stepValueWrapper.append(stepValue, stepInfo);
+
+    stepRow.append(stepLabel, stepValueWrapper);
 
     const buttonRow = document.createElement('div');
     buttonRow.classList.add('main-buttons');
 
-    const zeroButton = document.createElement('button');
-    zeroButton.textContent = '0';
-    buttonRow.appendChild(zeroButton);
+    const createButton = (text, handler, parent = buttonRow) => {
+      const button = document.createElement('button');
+      button.textContent = text;
+      button.addEventListener('click', handler);
+      parent.appendChild(button);
+      return button;
+    };
 
-    const minusButton = document.createElement('button');
-    minusButton.textContent = '-1';
-    buttonRow.appendChild(minusButton);
+    const zeroButton = createButton('0', () => this.setRadiusMeters(this.minimumRadiusMeters));
 
-    const plusButton = document.createElement('button');
-    plusButton.textContent = '+1';
-    buttonRow.appendChild(plusButton);
+    const minusButton = createButton('', () => this.adjustRadiusBySteps(-1));
 
-    controls.appendChild(buttonRow);
+    const plusButton = createButton('', () => this.adjustRadiusBySteps(1));
 
     const multiplierRow = document.createElement('div');
     multiplierRow.classList.add('multiplier-container');
 
-    const divButton = document.createElement('button');
-    divButton.textContent = '/10';
-    multiplierRow.appendChild(divButton);
+    const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
 
-    const mulButton = document.createElement('button');
-    mulButton.textContent = 'x10';
-    multiplierRow.appendChild(mulButton);
+    const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
-    controls.appendChild(multiplierRow);
+    const buttonWrapper = document.createElement('div');
+    buttonWrapper.classList.add('project-step-controls');
+    buttonWrapper.append(buttonRow, multiplierRow);
+
+    controls.append(stepRow, buttonWrapper);
 
     body.appendChild(controls);
 
@@ -118,20 +126,14 @@ class ParticleAcceleratorProject extends Project {
     card.appendChild(body);
     container.appendChild(card);
 
-    zeroButton.addEventListener('click', () => this.setRadiusEarth(this.minimumRadiusEarth));
-    minusButton.addEventListener('click', () => this.adjustRadiusEarth(-1));
-    plusButton.addEventListener('click', () => this.adjustRadiusEarth(1));
-    mulButton.addEventListener('click', () => this.scaleRadiusEarth(10));
-    divButton.addEventListener('click', () => this.scaleRadiusEarth(0.1));
-
     this.uiElements = {
       card,
       radiusValue,
-      circumferenceValue,
       bestValue,
-      lastValue,
-      alloyValue,
-      superconValue,
+      researchBoostValue,
+      stepValue,
+      minusButton,
+      plusButton,
       buttons: [zeroButton, minusButton, plusButton, mulButton, divButton],
       notice
     };
@@ -145,60 +147,62 @@ class ParticleAcceleratorProject extends Project {
       return;
     }
 
-    const formatter = this.getFormatter();
-    const radiusDisplay = formatter.format(this.selectedRadiusEarth);
-    const circumference = this.getSelectedCircumferenceMeters();
-    const circumferenceDisplay = formatter.format(circumference);
-    const bestDisplay = this.bestRadiusEarth > 0 ? formatter.format(this.bestRadiusEarth) : '—';
-    const lastDisplay = this.lastCompletedRadiusEarth > 0 ? formatter.format(this.lastCompletedRadiusEarth) : '—';
-    const materialCost = this.getPerMaterialCost();
-    const materialDisplay = formatter.format(materialCost);
+    const format = typeof formatNumber === 'function' ? formatNumber : (value) => value;
+    const radiusMeters = this.getSelectedRadiusMeters();
+    const bestMeters = this.bestRadiusMeters;
+    const stepMeters = this.radiusStepMeters;
 
-    elements.radiusValue.textContent = `${radiusDisplay} Earth radii`;
-    elements.circumferenceValue.textContent = `${circumferenceDisplay} m`;
-    elements.bestValue.textContent = bestDisplay === '—' ? bestDisplay : `${bestDisplay} Earth radii`;
-    elements.lastValue.textContent = lastDisplay === '—' ? lastDisplay : `${lastDisplay} Earth radii`;
-    elements.alloyValue.textContent = `${materialDisplay} t`;
-    elements.superconValue.textContent = `${materialDisplay} t`;
+    const radiusDisplay = `${format(radiusMeters, false, 2)} m`;
+    const bestText = this.bestRadiusMeters > 0 ? `${format(bestMeters, false, 2)} m` : '—';
+    const stepDisplay = format(stepMeters, true);
+
+    elements.radiusValue.textContent = radiusDisplay;
+    elements.bestValue.textContent = bestText;
+    if (elements.researchBoostValue) {
+      const researchDisplay = typeof this.researchBoostDisplay === 'string' ? this.researchBoostDisplay : '—';
+      elements.researchBoostValue.textContent = researchDisplay;
+    }
+    elements.stepValue.textContent = stepDisplay;
+    elements.minusButton.textContent = `-${stepDisplay}`;
+    elements.plusButton.textContent = `+${stepDisplay}`;
 
     const disabled = this.isActive;
     elements.buttons.forEach(button => {
       button.disabled = disabled;
     });
 
-    const needsIncrease = this.bestRadiusEarth > 0 && this.selectedRadiusEarth <= this.bestRadiusEarth;
+    const needsIncrease = this.bestRadiusMeters > 0 && this.selectedRadiusMeters <= this.bestRadiusMeters;
     elements.notice.textContent = needsIncrease ? 'Increase the radius to beat your previous accelerator.' : '';
     elements.notice.style.display = needsIncrease ? 'block' : 'none';
   }
 
-  getFormatter() {
-    if (!this.numberFormatter) {
-      this.numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
-    }
-    return this.numberFormatter;
-  }
-
-  setRadiusEarth(value) {
+  setRadiusMeters(value) {
     if (this.isActive) {
       return;
     }
-    const minimum = this.minimumRadiusEarth;
+    const minimum = this.minimumRadiusMeters;
     const target = value > minimum ? value : minimum;
-    this.selectedRadiusEarth = target;
+    this.selectedRadiusMeters = target;
     this.updateUI();
     globalThis?.updateProjectUI?.(this.name);
   }
 
-  adjustRadiusEarth(delta) {
-    this.setRadiusEarth(this.selectedRadiusEarth + delta);
+  adjustRadiusBySteps(stepCount) {
+    const adjustment = stepCount * this.radiusStepMeters;
+    this.setRadiusMeters(this.selectedRadiusMeters + adjustment);
   }
 
-  scaleRadiusEarth(multiplier) {
-    this.setRadiusEarth(this.selectedRadiusEarth * multiplier);
+  scaleStepMeters(multiplier) {
+    if (this.isActive) {
+      return;
+    }
+    const nextStep = this.radiusStepMeters * multiplier;
+    this.radiusStepMeters = nextStep >= MINIMUM_STEP_METERS ? nextStep : MINIMUM_STEP_METERS;
+    this.updateUI();
   }
 
   getSelectedRadiusMeters() {
-    return this.selectedRadiusEarth * EARTH_RADIUS_METERS;
+    return this.selectedRadiusMeters;
   }
 
   getSelectedCircumferenceMeters() {
@@ -211,10 +215,10 @@ class ParticleAcceleratorProject extends Project {
 
   getScaledCost() {
     const colony = {};
-    const superalloyMultiplier = this.getEffectiveCostMultiplier('colony', 'superalloy');
+    const superalloyMultiplier = this.getEffectiveCostMultiplier('colony', 'superalloys');
     const superconductorsMultiplier = this.getEffectiveCostMultiplier('colony', 'superconductors');
     const basePerMaterial = this.getPerMaterialCost();
-    colony.superalloy = basePerMaterial * superalloyMultiplier;
+    colony.superalloys = basePerMaterial * superalloyMultiplier;
     colony.superconductors = basePerMaterial * superconductorsMultiplier;
     return { colony };
   }
@@ -223,15 +227,14 @@ class ParticleAcceleratorProject extends Project {
     if (!super.canStart(resources)) {
       return false;
     }
-    return this.selectedRadiusEarth > this.bestRadiusEarth;
+    return this.selectedRadiusMeters > this.bestRadiusMeters;
   }
 
   complete() {
     super.complete();
     this.acceleratorCount = this.repeatCount;
-    this.lastCompletedRadiusEarth = this.selectedRadiusEarth;
-    if (this.lastCompletedRadiusEarth > this.bestRadiusEarth) {
-      this.bestRadiusEarth = this.lastCompletedRadiusEarth;
+    if (this.selectedRadiusMeters > this.bestRadiusMeters) {
+      this.bestRadiusMeters = this.selectedRadiusMeters;
     }
     this.updateUI();
     globalThis?.updateProjectUI?.(this.name);
@@ -245,26 +248,41 @@ class ParticleAcceleratorProject extends Project {
     return {
       ...super.saveState(),
       acceleratorCount: this.acceleratorCount,
-      selectedRadiusEarth: this.selectedRadiusEarth,
-      bestRadiusEarth: this.bestRadiusEarth,
-      lastCompletedRadiusEarth: this.lastCompletedRadiusEarth
+      selectedRadiusMeters: this.selectedRadiusMeters,
+      bestRadiusMeters: this.bestRadiusMeters,
+      radiusStepMeters: this.radiusStepMeters
     };
   }
 
   loadState(state = {}) {
     if (Object.keys(state).length === 0) {
       this.acceleratorCount = 0;
-      this.selectedRadiusEarth = this.minimumRadiusEarth;
-      this.bestRadiusEarth = 0;
-      this.lastCompletedRadiusEarth = 0;
+      this.selectedRadiusMeters = this.defaultRadiusMeters;
+      this.bestRadiusMeters = 0;
+      this.radiusStepMeters = this.defaultStepMeters;
       this.updateUI();
       return;
     }
     super.loadState(state);
     this.acceleratorCount = state.acceleratorCount ?? 0;
-    this.selectedRadiusEarth = state.selectedRadiusEarth ?? this.minimumRadiusEarth;
-    this.bestRadiusEarth = state.bestRadiusEarth ?? 0;
-    this.lastCompletedRadiusEarth = state.lastCompletedRadiusEarth ?? 0;
+    const savedRadiusMeters =
+      state.selectedRadiusMeters ??
+      (typeof state.selectedRadiusEarth === 'number' ? state.selectedRadiusEarth * EARTH_RADIUS_METERS : undefined);
+    this.selectedRadiusMeters = savedRadiusMeters && savedRadiusMeters > 0
+      ? Math.max(this.minimumRadiusMeters, savedRadiusMeters)
+      : this.defaultRadiusMeters;
+
+    const savedBestMeters =
+      state.bestRadiusMeters ??
+      (typeof state.bestRadiusEarth === 'number' ? state.bestRadiusEarth * EARTH_RADIUS_METERS : undefined);
+    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? savedBestMeters : 0;
+
+    const savedStepMeters =
+      state.radiusStepMeters ??
+      (typeof state.radiusStepEarth === 'number' ? state.radiusStepEarth * EARTH_RADIUS_METERS : undefined);
+    this.radiusStepMeters = savedStepMeters && savedStepMeters >= MINIMUM_STEP_METERS
+      ? savedStepMeters
+      : this.defaultStepMeters;
     this.updateUI();
   }
 
@@ -272,9 +290,9 @@ class ParticleAcceleratorProject extends Project {
     const state = {
       acceleratorCount: this.acceleratorCount,
       repeatCount: this.repeatCount,
-      selectedRadiusEarth: this.selectedRadiusEarth,
-      bestRadiusEarth: this.bestRadiusEarth,
-      lastCompletedRadiusEarth: this.lastCompletedRadiusEarth
+      selectedRadiusMeters: this.selectedRadiusMeters,
+      bestRadiusMeters: this.bestRadiusMeters,
+      radiusStepMeters: this.radiusStepMeters
     };
     if (this.isActive) {
       state.isActive = true;
@@ -287,9 +305,24 @@ class ParticleAcceleratorProject extends Project {
   loadTravelState(state = {}) {
     this.acceleratorCount = state.acceleratorCount ?? 0;
     this.repeatCount = state.repeatCount ?? this.acceleratorCount;
-    this.selectedRadiusEarth = state.selectedRadiusEarth ?? this.minimumRadiusEarth;
-    this.bestRadiusEarth = state.bestRadiusEarth ?? 0;
-    this.lastCompletedRadiusEarth = state.lastCompletedRadiusEarth ?? 0;
+    const savedRadiusMeters =
+      state.selectedRadiusMeters ??
+      (typeof state.selectedRadiusEarth === 'number' ? state.selectedRadiusEarth * EARTH_RADIUS_METERS : undefined);
+    this.selectedRadiusMeters = savedRadiusMeters && savedRadiusMeters > 0
+      ? Math.max(this.minimumRadiusMeters, savedRadiusMeters)
+      : this.defaultRadiusMeters;
+
+    const savedBestMeters =
+      state.bestRadiusMeters ??
+      (typeof state.bestRadiusEarth === 'number' ? state.bestRadiusEarth * EARTH_RADIUS_METERS : undefined);
+    this.bestRadiusMeters = savedBestMeters && savedBestMeters > 0 ? savedBestMeters : 0;
+
+    const savedStepMeters =
+      state.radiusStepMeters ??
+      (typeof state.radiusStepEarth === 'number' ? state.radiusStepEarth * EARTH_RADIUS_METERS : undefined);
+    this.radiusStepMeters = savedStepMeters && savedStepMeters >= MINIMUM_STEP_METERS
+      ? savedStepMeters
+      : this.defaultStepMeters;
     this.isActive = false;
     if (state.isActive) {
       this.isActive = true;
@@ -297,6 +330,18 @@ class ParticleAcceleratorProject extends Project {
       this.startingDuration = state.startingDuration ?? this.getEffectiveDuration();
     }
     this.updateUI();
+  }
+
+  setRadiusEarth(value) {
+    this.setRadiusMeters(value * EARTH_RADIUS_METERS);
+  }
+
+  adjustRadiusEarth(delta) {
+    this.setRadiusMeters(this.selectedRadiusMeters + (delta * EARTH_RADIUS_METERS));
+  }
+
+  scaleStepEarth(multiplier) {
+    this.scaleStepMeters(multiplier);
   }
 }
 

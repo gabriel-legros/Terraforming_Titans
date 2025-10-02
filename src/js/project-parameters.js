@@ -473,7 +473,7 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        superalloy: 50,
+        superalloys: 50,
         superconductors: 50
       }
     },
@@ -483,7 +483,9 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
-      minimumRadiusEarth: 1,
+      minimumRadiusMeters: 1,
+      defaultRadiusMeters: 6_371_000,
+      defaultStepMeters: 1,
       canUseSpaceStorage: true
     }
   },
