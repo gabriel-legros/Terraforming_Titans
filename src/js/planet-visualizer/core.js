@@ -15,6 +15,7 @@
 
       // Lighting and atmosphere
       this.sunLight = null;
+      this.ambientLight = null;
       this.sunMesh = null;
       this.atmoMesh = null;
       this.atmoMaterial = null;
@@ -297,7 +298,9 @@
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2);
       this.scene.add(this.sunLight);
-      this.scene.add(new THREE.AmbientLight(0x404040));
+      // Keep nightside visible with subtle ambient fill
+      this.ambientLight = new THREE.AmbientLight(0xffffff, 0.06);
+      this.scene.add(this.ambientLight);
 
       const sunGeom = new THREE.SphereGeometry(0.15, 16, 16);
       const sunMat = new THREE.MeshBasicMaterial({ color: 0xfff5a6 });

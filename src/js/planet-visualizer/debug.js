@@ -34,6 +34,7 @@
 
     makeRow('illum', 'Illumination', 0.0, 3.0, 0.01);
     makeRow('incl', 'Inclination (deg)', -90, 90, 1);
+    makeRow('ambient', 'Ambient light', 0.0, 1.0, 0.01);
     makeRow('pop', 'Population', 0, 1000000, 1);
     makeRow('ships', 'Spaceships', 0, 1000, 1);
     makeRow('co2', 'CO2 (kPa)', 0, 100, 0.1);
@@ -252,6 +253,7 @@
     setVal('pop', Number(r.pop.range.value));
     if (r.incl) setVal('incl', Number(r.incl.range.value));
     setVal('ships', Number(r.ships.range.value));
+    if (r.ambient) setVal('ambient', Number(r.ambient.range.value));
     setVal('co2', Number(r.co2.range.value));
     setVal('o2', Number(r.o2.range.value));
     setVal('inert', Number(r.inert.range.value));
@@ -290,6 +292,7 @@
       this.updateSunFromInclination();
     }
     if (this.sunLight) this.sunLight.intensity = illum;
+    if (this.ambientLight && r.ambient) this.ambientLight.intensity = Math.max(0, Math.min(1, Number(r.ambient.range.value)));
 
     const pop = Math.max(0, Math.floor(clampFrom(r.pop)));
     this.viz.pop = pop;
@@ -513,6 +516,11 @@
       r.incl.range.value = String(inc);
       r.incl.number.value = String(inc);
     }
+    if (r.ambient && this.ambientLight) {
+      const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
+      r.ambient.range.value = String(amb);
+      r.ambient.number.value = String(amb);
+    }
     const popNow = resources.colony.colonists.value || 0;
     r.pop.range.value = String(popNow);
     r.pop.number.value = String(popNow);
@@ -595,6 +603,11 @@
       const cel = currentPlanetParameters.celestialParameters;
       const illum = this.getGameIllumination();
       if (r.illum) { r.illum.range.value = String(illum); r.illum.number.value = String(illum); }
+      if (r.ambient && this.ambientLight) {
+        const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
+        r.ambient.range.value = String(amb);
+        r.ambient.number.value = String(amb);
+      }
       const popNow = resources?.colony?.colonists?.value || 0;
       if (r.pop) { r.pop.range.value = String(popNow); r.pop.number.value = String(popNow); }
       const shipVal = (resources?.special?.spaceships?.value) ?? (this.viz.ships || 0);
