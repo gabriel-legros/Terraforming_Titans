@@ -85,8 +85,10 @@ describe('GalaxyFaction defense calculations', () => {
 
         const baseDefense = 100 * 3 * 1.5;
         expect(alphaDefense).toBeCloseTo(baseDefense + 300);
-        const reservation = Math.min(300, capacity, faction.fleetPower);
-        expect(faction.getOperationalFleetPower(manager)).toBeCloseTo(Math.max(0, faction.fleetPower - reservation));
+        const operationsPool = faction.getOperationalFleetPower(manager);
+        const autoAssignment = faction.autoDefenseAssignments.get(sectorAlpha.key) || 0;
+        expect(operationsPool).toBeCloseTo(autoAssignment);
+        expect(operationsPool).toBeCloseTo(faction.autoDefenseTotal);
     });
 
     it('uses sector base value as defense for non-UHF factions', () => {
