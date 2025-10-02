@@ -61,6 +61,9 @@ class GalaxyFaction {
         this.contestedThreatLevels = new Map();
         this.defenseAssignments = new Map();
         this.defenseAssignmentsTotal = 0;
+        this.manualDefenseTotal = 0;
+        this.autoDefenseAssignments = new Map();
+        this.autoDefenseTotal = 0;
         this.defenseStepSizes = new Map();
     }
 
@@ -363,18 +366,25 @@ class GalaxyFaction {
         if (!sectorKey || this.id !== UHF_FACTION_ID) {
             return 0;
         }
-        const value = this.defenseAssignments.get(sectorKey);
-        if (!Number.isFinite(value) || value <= 0) {
+        const manual = this.defenseAssignments.get(sectorKey);
+        const manualValue = Number.isFinite(manual) && manual > 0 ? manual : 0;
+        const auto = this.autoDefenseAssignments?.get?.(sectorKey);
+        const autoValue = Number.isFinite(auto) && auto > 0 ? auto : 0;
+        const total = manualValue + autoValue;
+        if (!(total > 0)) {
             return 0;
         }
-        return value;
+        return total;
     }
 
     getDefenseAssignmentTotal() {
         if (this.id !== UHF_FACTION_ID) {
             return 0;
         }
-        return Math.max(0, this.defenseAssignmentsTotal);
+        const total = Number.isFinite(this.defenseAssignmentsTotal)
+            ? this.defenseAssignmentsTotal
+            : this.manualDefenseTotal + this.autoDefenseTotal;
+        return Math.max(0, total);
     }
 
     getDefenseStep(sectorKey) {
@@ -446,10 +456,20 @@ class GalaxyFaction {
         }
         const numeric = Number(value);
         const sanitized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : 0;
-        const existing = this.getDefenseAssignment(sectorKey);
         const capacity = this.getDefenseCapacity(manager);
+        let otherManualTotal = 0;
+        this.defenseAssignments.forEach((rawValue, key) => {
+            if (key === sectorKey) {
+                return;
+            }
+            const manualValue = Number(rawValue);
+            if (!Number.isFinite(manualValue) || manualValue <= 0) {
+                return;
+            }
+            otherManualTotal += manualValue;
+        });
         const remainingCapacity = capacity > 0
-            ? Math.max(0, capacity - Math.max(0, this.defenseAssignmentsTotal - existing))
+            ? Math.max(0, capacity - otherManualTotal)
             : 0;
         let applied = sanitized;
         if (!(capacity > 0)) {
@@ -463,11 +483,15 @@ class GalaxyFaction {
             this.defenseAssignments.set(sectorKey, applied);
         }
         this.#syncDefenseAssignments(manager);
-        return this.getDefenseAssignment(sectorKey);
+        const manualAssignment = this.defenseAssignments.get(sectorKey);
+        if (!Number.isFinite(manualAssignment) || manualAssignment <= 0) {
+            return 0;
+        }
+        return manualAssignment;
     }
 
     adjustDefenseAssignment(sectorKey, delta, manager) {
-        const current = this.getDefenseAssignment(sectorKey);
+        const current = Number(this.defenseAssignments.get(sectorKey)) || 0;
         const numericDelta = Number(delta);
         const adjusted = Number.isFinite(numericDelta) ? current + numericDelta : current;
         return this.setDefenseAssignment(sectorKey, adjusted, manager);
@@ -589,16 +613,17 @@ class GalaxyFaction {
             if (this.defenseAssignments.size > 0) {
                 this.defenseAssignments.clear();
             }
+            if (this.autoDefenseAssignments.size > 0) {
+                this.autoDefenseAssignments.clear();
+            }
             this.defenseAssignmentsTotal = 0;
-            return;
-        }
-        if (this.defenseAssignments.size === 0) {
-            this.defenseAssignmentsTotal = 0;
+            this.manualDefenseTotal = 0;
+            this.autoDefenseTotal = 0;
             return;
         }
         const capacity = this.getDefenseCapacity(manager);
         const validEntries = [];
-        let total = 0;
+        let manualTotal = 0;
         this.defenseAssignments.forEach((rawValue, key) => {
             const value = Number(rawValue);
             if (!Number.isFinite(value) || value <= 0) {
@@ -608,23 +633,28 @@ class GalaxyFaction {
             if (manager) {
                 const sector = this.#getDefenseSector(key, manager);
                 const control = sector?.getControlValue?.(this.id) ?? 0;
-                if (!(control > 0)) {
+                if (!(control > BORDER_CONTROL_EPSILON)) {
                     this.defenseAssignments.delete(key);
                     return;
                 }
             }
             validEntries.push([key, value]);
-            total += value;
+            manualTotal += value;
         });
         if (!(capacity > 0)) {
             if (this.defenseAssignments.size > 0) {
                 this.defenseAssignments.clear();
             }
+            if (this.autoDefenseAssignments.size > 0) {
+                this.autoDefenseAssignments.clear();
+            }
             this.defenseAssignmentsTotal = 0;
+            this.manualDefenseTotal = 0;
+            this.autoDefenseTotal = 0;
             return;
         }
-        if (total > capacity && total > 0) {
-            const scale = capacity / total;
+        if (manualTotal > capacity && manualTotal > 0) {
+            const scale = capacity / manualTotal;
             let scaledTotal = 0;
             validEntries.forEach(([key, value]) => {
                 const scaled = value * scale;
@@ -635,10 +665,53 @@ class GalaxyFaction {
                     this.defenseAssignments.delete(key);
                 }
             });
-            this.defenseAssignmentsTotal = scaledTotal;
-            return;
+            manualTotal = scaledTotal;
         }
-        this.defenseAssignmentsTotal = total;
+        this.manualDefenseTotal = manualTotal;
+        this.autoDefenseAssignments.clear();
+        this.autoDefenseTotal = 0;
+        const leftover = capacity - manualTotal;
+        if (leftover > 0) {
+            const borderKeys = this.getBorderSectorKeys(manager);
+            if (Array.isArray(borderKeys) && borderKeys.length > 0) {
+                const eligibleKeys = [];
+                borderKeys.forEach((key) => {
+                    if (!key) {
+                        return;
+                    }
+                    if (!manager) {
+                        eligibleKeys.push(key);
+                        return;
+                    }
+                    const sector = this.#getDefenseSector(key, manager);
+                    const control = sector?.getControlValue?.(this.id) ?? 0;
+                    if (control > BORDER_CONTROL_EPSILON) {
+                        eligibleKeys.push(key);
+                    }
+                });
+                const count = eligibleKeys.length;
+                if (count > 0) {
+                    const baseShare = leftover / count;
+                    let remaining = leftover;
+                    eligibleKeys.forEach((key, index) => {
+                        const isLast = index === count - 1;
+                        let allocation = isLast ? remaining : baseShare;
+                        if (!isLast) {
+                            remaining -= allocation;
+                            if (remaining < 0) {
+                                remaining = 0;
+                            }
+                        }
+                        if (!(allocation > 0)) {
+                            return;
+                        }
+                        this.autoDefenseAssignments.set(key, allocation);
+                        this.autoDefenseTotal += allocation;
+                    });
+                }
+            }
+        }
+        this.defenseAssignmentsTotal = this.manualDefenseTotal + this.autoDefenseTotal;
     }
 
     #rebuildConflictCaches(manager) {
