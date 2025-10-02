@@ -51,7 +51,9 @@ class SolisManager extends EffectableEntity {
       water: { baseCost: 1, purchases: 0 },
       androids: { baseCost: 10, purchases: 0 },
       colonistRocket: { baseCost: 1, purchases: 0 },
+      startingShips: { baseCost: 100, purchases: 0 },
       research: { baseCost: 10, purchases: 0 },
+      terraformingMeasurements: { baseCost: 300, purchases: 0, max: 1 },
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
       researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length }
     };
@@ -167,6 +169,12 @@ class SolisManager extends EffectableEntity {
     }
     const cost = this.getUpgradeCost(key);
     if (this.solisPoints < cost) return false;
+    const shipsResource = key === 'startingShips'
+      ? resources?.special?.spaceships
+      : null;
+    if (key === 'startingShips' && !shipsResource) {
+      return false;
+    }
     this.solisPoints -= cost;
     up.purchases += 1;
     if (key === 'funding' && typeof addEffect === 'function') {
@@ -190,6 +198,8 @@ class SolisManager extends EffectableEntity {
       });
     } else if (key === 'researchUpgrade') {
       this.applyResearchUpgrade();
+    } else if (key === 'terraformingMeasurements') {
+      this.applyTerraformingMeasurementUpgrade();
     } else if (key === 'advancedOversight' && typeof addEffect === 'function') {
       addEffect({
         target: 'project',
@@ -200,6 +210,14 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAdvancedOversight',
         sourceId: 'solisShop'
       });
+    } else if (key === 'startingShips') {
+      if (!shipsResource.unlocked) {
+        if (shipsResource.enable) {
+          shipsResource.enable();
+        } else {
+          shipsResource.unlocked = true;
+        }
+      }
     } else if (resources && resources.colony && resources.colony[key] &&
                typeof resources.colony[key].increase === 'function') {
       const amount = RESOURCE_UPGRADE_AMOUNTS[key] || 0;
@@ -229,6 +247,17 @@ class SolisManager extends EffectableEntity {
     for (let i = 0; i < upgrade.purchases && i < RESEARCH_UPGRADE_ORDER.length; i++) {
       researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i]);
     }
+  }
+
+  applyTerraformingMeasurementUpgrade() {
+    const upgrade = this.shopUpgrades.terraformingMeasurements;
+    if (!upgrade || upgrade.purchases <= 0) {
+      return;
+    }
+    if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') {
+      return;
+    }
+    researchManager.completeResearchInstant('terraforming_sensor');
   }
 
   donateArtifacts(count) {
@@ -284,6 +313,29 @@ class SolisManager extends EffectableEntity {
     }
 
     this.applyResearchUpgrade();
+    this.applyTerraformingMeasurementUpgrade();
+
+    const startingShipsUpgrade = this.shopUpgrades.startingShips;
+    if (startingShipsUpgrade && startingShipsUpgrade.purchases > 0) {
+      const ships = resources?.special?.spaceships;
+      if (ships) {
+        if (!ships.unlocked) {
+          if (ships.enable) {
+            ships.enable();
+          } else {
+            ships.unlocked = true;
+          }
+        }
+        if (!globalGameIsLoadingFromSave) {
+          if (ships.increase) {
+            ships.increase(startingShipsUpgrade.purchases);
+          } else {
+            const currentValue = Number.isFinite(ships.value) ? ships.value : 0;
+            ships.value = currentValue + startingShipsUpgrade.purchases;
+          }
+        }
+      }
+    }
 
     for (const key in RESOURCE_UPGRADE_AMOUNTS) {
       const upgrade = this.shopUpgrades[key];

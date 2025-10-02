@@ -1,3 +1,13 @@
+let produceAntimatterHelper = globalThis.produceAntimatter || null;
+let updateAntimatterStorageCapHelper = globalThis.updateAntimatterStorageCap || null;
+
+if (typeof module !== 'undefined' && module.exports) {
+  ({
+    produceAntimatter: produceAntimatterHelper,
+    updateAntimatterStorageCap: updateAntimatterStorageCapHelper,
+  } = require('./special/antimatter.js'));
+}
+
 // Resource Class and Core Logic
 class Resource extends EffectableEntity {
   constructor(resourceData) {
@@ -7,6 +17,7 @@ class Resource extends EffectableEntity {
     this.category = resourceData.category;
     this.displayName = resourceData.displayName || resourceData.name || '';
     this.unit = resourceData.unit || null;
+    this.initialValue = resourceData.initialValue || 0;
     this.value = resourceData.initialValue || 0;
     this.hasCap = resourceData.hasCap || false;
     this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
@@ -34,6 +45,10 @@ class Resource extends EffectableEntity {
 
   // Method to initialize configurable properties
   initializeFromConfig(name, config) {
+    if (config.initialValue !== undefined) {
+      this.initialValue = config.initialValue;
+    }
+
     if (config.displayName !== undefined) {
       this.displayName = config.displayName || config.name || this.displayName;
     }
@@ -77,7 +92,7 @@ class Resource extends EffectableEntity {
     if (this.name === 'land' && config.initialValue !== undefined) {
       this.value = Math.max(this.value, config.initialValue);
     }
-  } 
+  }
 
   increase(amount) {
     if(amount > 0){
@@ -275,6 +290,88 @@ function createResources(resourcesData) {
   return resources;
 }
 
+function reconcileLandResourceValue() {
+  const landResource = resources?.surface?.land;
+  if (!landResource) {
+    return;
+  }
+
+  const tf = typeof terraforming !== 'undefined' ? terraforming : (typeof globalThis !== 'undefined' ? globalThis.terraforming : null);
+  const params = typeof currentPlanetParameters !== 'undefined'
+    ? currentPlanetParameters
+    : (typeof globalThis !== 'undefined' ? globalThis.currentPlanetParameters : null);
+
+  const baseCandidates = [
+    tf?.initialLand,
+    landResource.initialValue,
+    params?.resources?.surface?.land?.initialValue,
+  ];
+
+  let baseLand = 0;
+  for (const candidate of baseCandidates) {
+    if (typeof candidate === 'number' && isFinite(candidate) && candidate > 0) {
+      baseLand = candidate;
+      break;
+    }
+  }
+
+  if (!(baseLand > 0)) {
+    const reserved = Math.max(0, landResource.reserved || 0);
+    landResource.value = Math.max(landResource.value, reserved);
+    return;
+  }
+
+  let totalLand = baseLand;
+
+  const manager =
+    typeof spaceManager !== 'undefined'
+      ? spaceManager
+      : (typeof globalThis !== 'undefined' ? globalThis.spaceManager : null);
+  const projectMgr =
+    typeof projectManager !== 'undefined'
+      ? projectManager
+      : (typeof globalThis !== 'undefined' ? globalThis.projectManager : null);
+  const ringProject = projectMgr?.projects?.orbitalRing;
+  const hasRingFromManager = typeof manager?.currentWorldHasOrbitalRing === 'function'
+    ? manager.currentWorldHasOrbitalRing()
+    : false;
+  const hasRing = hasRingFromManager || !!(ringProject && ringProject.currentWorldHasRing);
+  if (hasRing) {
+    totalLand += baseLand;
+  }
+
+  const undergroundProject = projectMgr?.projects?.undergroundExpansion;
+  if (undergroundProject) {
+    const perCompletion = baseLand / 10000;
+    if (perCompletion > 0) {
+      const maxRepeats = Number.isFinite(undergroundProject.maxRepeatCount)
+        ? undergroundProject.maxRepeatCount
+        : Infinity;
+      let completions = Math.max(0, undergroundProject.repeatCount || 0);
+      if (undergroundProject.isActive && undergroundProject.startingDuration) {
+        const duration = undergroundProject.startingDuration;
+        if (duration > 0) {
+          const remaining = Math.max(0, undergroundProject.remainingTime ?? duration);
+          const ratio = Math.max(0, Math.min(1, remaining / duration));
+          completions += 1 - ratio;
+        }
+      }
+      if (Number.isFinite(maxRepeats)) {
+        completions = Math.min(completions, maxRepeats);
+      }
+      const extraLand = Math.min(completions * perCompletion, baseLand);
+      totalLand += extraLand;
+    }
+  }
+
+  const reserved = Math.max(0, landResource.reserved || 0);
+  landResource.value = Math.max(totalLand, reserved);
+}
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
+}
+
 function calculateProductionRates(deltaTime, buildings) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
@@ -349,7 +446,13 @@ function calculateProductionRates(deltaTime, buildings) {
 function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
 
+  reconcileLandResourceValue();
+
   calculateProductionRates(deltaTime, buildings);
+
+  if (updateAntimatterStorageCapHelper) {
+    updateAntimatterStorageCapHelper(resources);
+  }
 
   // Update storage cap for all resources except workers
   for (const category in resources) {
@@ -468,6 +571,10 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
+  if (produceAntimatterHelper) {
+    produceAntimatterHelper(deltaTime, resources, accumulatedChanges);
+  }
+
   if (projectManager) {
     const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
     const projectData = {};
@@ -528,38 +635,48 @@ function produceResources(deltaTime, buildings) {
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
         const zones = ['tropical', 'temperate', 'polar'];
-        const warmZones = zones.filter(z => (terraforming.temperature?.zones?.[z]?.value || 0) > 273.15);
+        const zoneTemp = zone => terraforming.temperature?.zones?.[zone]?.value ?? 0;
+        const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
         const targetZones = warmZones.length > 0 ? warmZones : zones;
-        const warmArea = warmZones.reduce((sum, z) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0) || 1;
+        const warmArea = warmZones.reduce((sum, zone) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length), 0) || 1;
+        const seconds = deltaTime / 1000;
+        const rate = seconds > 0 ? overflow / seconds : 0;
+        const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
         let liquidRate = 0;
         let iceRate = 0;
+        let atmosphericRate = 0;
 
-        targetZones.forEach(zone => {
-          const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
-          const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
-          const amount = overflow * proportion;
+        if (allZonesHot && resources.atmospheric?.atmosphericWater) {
+          resources.atmospheric.atmosphericWater.value += overflow;
+          atmosphericRate = rate;
+        } else {
+          targetZones.forEach(zone => {
+            const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+            const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
+            const amount = overflow * proportion;
 
-          if (warmZones.length > 0) {
-            terraforming.zonalWater[zone].liquid += amount;
-            resources.surface.liquidWater.value += amount;
-            liquidRate += amount / (deltaTime / 1000);
-          } else {
-            terraforming.zonalWater[zone].ice += amount;
-            resources.surface.ice.value += amount;
-            iceRate += amount / (deltaTime / 1000);
-          }
-        });
+            if (warmZones.length > 0) {
+              terraforming.zonalWater[zone].liquid += amount;
+              resources.surface.liquidWater.value += amount;
+              liquidRate += seconds > 0 ? amount / seconds : 0;
+            } else {
+              terraforming.zonalWater[zone].ice += amount;
+              resources.surface.ice.value += amount;
+              iceRate += seconds > 0 ? amount / seconds : 0;
+            }
+          });
+        }
 
         // Record overflow separately for tooltip display without affecting totals
-        const rate = overflow / (deltaTime / 1000);
-        if (typeof resource.modifyRate === 'function') {
-          resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+        resource.modifyRate?.(-rate, 'Overflow (not summed)', 'overflow');
+        if (liquidRate > 0) {
+          resources.surface?.liquidWater?.modifyRate?.(liquidRate, 'Overflow', 'overflow');
         }
-        if (liquidRate > 0 && resources.surface?.liquidWater) {
-          resources.surface.liquidWater.modifyRate(liquidRate, 'Overflow', 'overflow');
+        if (iceRate > 0) {
+          resources.surface?.ice?.modifyRate?.(iceRate, 'Overflow', 'overflow');
         }
-        if (iceRate > 0 && resources.surface?.ice) {
-          resources.surface.ice.modifyRate(iceRate, 'Overflow', 'overflow');
+        if (atmosphericRate > 0) {
+          resources.atmospheric?.atmosphericWater?.modifyRate?.(atmosphericRate, 'Overflow', 'overflow');
         }
       }
     }
@@ -658,6 +775,7 @@ if (typeof module !== 'undefined' && module.exports) {
     produceResources,
     calculateProjectProductivities,
     recalculateTotalRates,
+    reconcileLandResourceValue,
   };
 }
 

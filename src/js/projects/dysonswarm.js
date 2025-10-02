@@ -17,7 +17,8 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   }
 
   get collectorDuration() {
-    return this.getDurationWithTerraformBonus(this.baseCollectorDuration);
+    const duration = this.getDurationWithTerraformBonus(this.baseCollectorDuration);
+    return this.applyDurationEffects(duration);
   }
 
   renderUI(container) {

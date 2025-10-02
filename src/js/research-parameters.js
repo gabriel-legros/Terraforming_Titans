@@ -73,7 +73,7 @@ const researchParameters = {
       {
         id: 'fission_plant1_upgrade',
         name: 'Closed loop water cycle',
-        description: 'Reduces the water consumption of nuclear reactors by 80%.',
+        description: 'Eliminates the water consumption of nuclear reactors.',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -83,7 +83,7 @@ const researchParameters = {
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget : 'water',
-            value : 0.2
+            value : 0
           },
           {
             target: 'building',
@@ -91,7 +91,7 @@ const researchParameters = {
             type: 'resourceProductionMultiplier',
             resourceCategory: 'atmospheric',
             resourceTarget : 'atmosphericWater',
-            value : 0.2
+            value : 0
           },
         ],
       },
@@ -685,6 +685,12 @@ const researchParameters = {
             targetId: 't2_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
       },
       {
@@ -731,8 +737,22 @@ const researchParameters = {
             targetId: 't3_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addResourceConsumption',
+            resourceCategory: 'colony',
+            resourceId: 'electronics',
+            amount: 0.01,
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      },     
+      },
       {
         id: 'enhanced_colonist_import_3',
         name: 'Biggest rockets',
@@ -796,8 +816,22 @@ const researchParameters = {
             targetId: 't4_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addResourceConsumption',
+            resourceCategory: 'colony',
+            resourceId: 'androids',
+            amount: 0.0001,
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      }, 
+      },
       {
         id: 'trading',
         name: 'Ship trading',
@@ -837,8 +871,14 @@ const researchParameters = {
             targetId: 't5_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      },   
+      },
       {
         id: 't6_colony',
         name: 'Metropolis',
@@ -851,6 +891,12 @@ const researchParameters = {
             targetId: 't6_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
       },
       {
@@ -861,7 +907,8 @@ const researchParameters = {
         prerequisites: [],
         requiredFlags: ['superalloyResearchUnlocked'],
         effects: [
-          { target: 'colony', targetId: 't7_colony', type: 'enable' }
+          { target: 'colony', targetId: 't7_colony', type: 'enable' },
+          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ],
       },
       {
@@ -1059,6 +1106,12 @@ const researchParameters = {
             resourceType: 'atmospheric',
             targetId : 'sulfuricAcid',
             type: 'enable'
+          },          
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'hydrogen',
+            type: 'enable'
           }
         ],
       },
@@ -1121,10 +1174,10 @@ const researchParameters = {
         ],
       },
       {
-        id: 'bosch_reactor',
-        name: 'Bosch Reactor',
-        description: 'Unlocks reactors that combine carbon dioxide and hydrogen into water via the Bosch reaction.',
-        cost: { research: 150000 },
+        id: 'chemical_reactor',
+        name: 'Chemical Reactor',
+        description: 'Unlocks configurable reactors to perform various reactions.',
+        cost: { research: 500_000 },
         prerequisites: [],
         requiredFlags: ['boschReactorUnlocked'],
         effects: [
@@ -1139,7 +1192,7 @@ const researchParameters = {
         id: 'mass_driver',
         name: 'Mass Driver Foundations',
         description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
-        cost: { research: 5_000_000 },
+        cost: { research: 1_000_000_000 },
         prerequisites: [],
         requiredFlags: ['massDriverUnlocked'],
         effects: [
@@ -1286,7 +1339,7 @@ const researchParameters = {
         id: 'hydrogenImport',
         name: 'Hydrogen Importation',
         description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
-        cost: { research: 10000000000 },
+        cost: { research: 50_000_000 },
         prerequisites: [],
         requiredFlags: ['importHydrogenUnlocked'],
         effects: [

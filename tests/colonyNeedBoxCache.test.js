@@ -22,7 +22,21 @@ describe('colony need box cache', () => {
       happiness: 0.5,
       baseComfort: 0.6,
       filledNeeds: { energy: 0.8 },
-      luxuryResourcesEnabled: { electronics: true }
+      consumption: { colony: { energy: { amount: 1 } } },
+      luxuryResourcesEnabled: { electronics: true },
+      getComfort() {
+        return this.baseComfort;
+      },
+      getConsumption() {
+        const clone = {};
+        for (const category in this.consumption || {}) {
+          clone[category] = { ...this.consumption[category] };
+        }
+        return clone;
+      },
+      getConsumptionResource(category, resource) {
+        return this.consumption?.[category]?.[resource] || { amount: 0 };
+      }
     };
 
     const row = dom.window.document.createElement('div');
@@ -38,8 +52,10 @@ describe('colony need box cache', () => {
     expect(cached.fill.style.width).toBe('40%');
 
     structure.filledNeeds.electronics = 1;
-    ctx.rebuildColonyNeedCache(row, structure);
+    structure.consumption.colony.electronics = { amount: 1 };
+    ctx.updateColonyDetailsDisplay(row, structure);
     expect(structure.needBoxCache.electronics).toBeDefined();
+    expect(structure.needBoxCache.energy.fill.style.width).toBe('40%');
     expect(row.textContent).toContain('Electronics');
   });
 });

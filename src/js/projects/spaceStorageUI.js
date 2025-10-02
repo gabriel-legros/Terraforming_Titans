@@ -431,6 +431,13 @@ function updateSpaceStorageUI(project) {
   if (els.prioritizeMegaCheckbox) {
     els.prioritizeMegaCheckbox.checked = project.prioritizeMegaProjects;
   }
+  if (els.strategicReserveInput) {
+    const activeElement = globalThis.document?.activeElement;
+    if (els.strategicReserveInput !== activeElement) {
+      const reserveValue = project.strategicReserve ?? 0;
+      els.strategicReserveInput.value = reserveValue === 0 ? '0' : reserveValue.toString();
+    }
+  }
   if (els.updateModeButtons) {
     els.updateModeButtons();
   }

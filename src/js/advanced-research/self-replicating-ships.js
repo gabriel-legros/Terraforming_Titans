@@ -18,6 +18,7 @@ function updateShipReplication(deltaTime, resources, globalEffects, accumulatedC
 
   const cap = 1e14;
   const available = shipsResource.value;
+  if(available < 1) return;
   const total = available + assigned;
   if (total >= cap) return;
 

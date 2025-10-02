@@ -71,7 +71,7 @@ const defaultPlanetParameters = {
       atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' }, // Default (Mars) - Adjusted based on review
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true }, // Default (Mars)
       atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      hydrogen: { name: 'Hydrogen', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      hydrogen: { name: 'Hydrogen', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       sulfuricAcid: { name: 'Sulfuric Acid', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       calciteAerosol: { name: 'Calcite Aerosol', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
@@ -79,7 +79,8 @@ const defaultPlanetParameters = {
       albedoUpgrades: {name : 'Black Dust', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false, hideWhenSmall: true}, // Default (Mars)
       whiteDust: { name: 'White Dust', hasCap: true, baseCap: 144800000000000, initialValue: 0, unlocked: false, hideWhenSmall: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
-      alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false }
+      alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
+      antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false }
     }
   },
   zonalCO2: {
@@ -117,6 +118,7 @@ const defaultPlanetParameters = {
     albedo: 0.21, // Default (Mars)
     rotationPeriod: 24.6, // hours, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
+    sector: 'R5-07',
   },
   visualization: {
     baseColor: '#8a2a2a',
@@ -616,7 +618,9 @@ const ganymedeOverrides = {
 // A completely dry, Venus-sized world with a pure inert atmosphere (>0.5 atm)
 const vega2Overrides = {
   name: 'Vega-2',
-  travelWarning: 'This world has no water.  Solis can help.',
+  travelWarning: {
+    message: 'This world has no water.  Solis can help.'
+  },
 
   resources: {
     surface: {
@@ -700,6 +704,13 @@ const vega2Overrides = {
 /* ---------- VENUS OVERRIDES ---------- */
 const venusOverrides = {
   name: 'Venus',
+  travelWarning: {
+    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly it easier.',
+    hint: {
+      title: 'Hint',
+      body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components) \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.'
+    }
+  },
 
   resources: {
     surface: {
@@ -750,10 +761,25 @@ const venusOverrides = {
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
   },
-  zonalTemperatures: {
-    tropical: { initial: 737, value: 737, day: 744, night: 730 },
-    temperate: { initial: 730, value: 730, day: 737, night: 723 },
-    polar: { initial: 715, value: 715, day: 721, night: 709 }
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 737,
+      "value": 737.2438569505996,
+      "day": 738.4830854135885,
+      "night": 736.0046284876107
+    },
+    "temperate": {
+      "initial": 737,
+      "value": 737.2337473365843,
+      "day": 738.2642618159972,
+      "night": 736.2032328571714
+    },
+    "polar": {
+      "initial": 737,
+      "value": 737.23131092994,
+      "day": 737.7853397110447,
+      "night": 736.6772821488354
+    }
   },
   zonalSurface: { tropical: {}, temperate: {}, polar: {} },
   zonalHydrocarbons: {

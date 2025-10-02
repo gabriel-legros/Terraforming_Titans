@@ -18,8 +18,13 @@ describe('Planetary Thrusters energy tracking', () => {
     ctx.console = console;
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
-    ctx.terraforming = { celestialParameters: { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1 } };
+    const celestial = { mass: 1e22, radius: 1000, rotationPeriod: 10, distanceFromSun: 1, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     ctx.resources = { colony: { energy: { value: 1e40, decrease(v){ this.value -= v; }, updateStorageCap(){} } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+    global.resources = ctx.resources;
 
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
@@ -69,6 +74,12 @@ describe('Planetary Thrusters energy tracking', () => {
     project.el.distTarget.value = parseFloat(project.el.distTarget.value) + 1;
     project.calcMotionCost();
     expect(project.energySpentMotion).toBe(0);
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });
 

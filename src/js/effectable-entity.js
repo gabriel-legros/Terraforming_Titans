@@ -126,6 +126,9 @@ class EffectableEntity {
             this.applyAddResourceConsumption(effect);
           }
           break;
+        case 'addComfort':
+          this.applyAddComfort?.(effect);
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
@@ -611,6 +614,7 @@ function addOrRemoveEffect(effect, action) {
     'warpGateCommand' : warpGateCommand,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
+    'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
 

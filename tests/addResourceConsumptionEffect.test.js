@@ -56,9 +56,11 @@ describe('addResourceConsumption effect', () => {
       sourceId: 's1'
     };
     b.addEffect(effect);
-    expect(b.consumption.colony.food).toBe(2);
+    expect(b.getConsumptionResource('colony', 'food').amount).toBe(2);
+    expect(b.getConsumption().colony.food).toBe(2);
     b.removeEffect(effect);
-    expect(b.consumption.colony && b.consumption.colony.food).toBeUndefined();
+    expect(b.getConsumptionResource('colony', 'food').amount).toBe(0);
+    expect(b.getConsumption().colony?.food).toBeUndefined();
   });
 
   test('adds and removes consumption on colony', () => {
@@ -72,10 +74,10 @@ describe('addResourceConsumption effect', () => {
       sourceId: 's2'
     };
     c.addEffect(effect);
-    expect(c.consumption.colony.food).toBe(3);
-    expect(c.consumption.colony.water).toBe(1);
+    expect(c.getConsumptionResource('colony', 'food').amount).toBe(3);
+    expect(c.getConsumptionResource('colony', 'water').amount).toBe(1);
     c.removeEffect(effect);
-    expect(c.consumption.colony.food).toBeUndefined();
-    expect(c.consumption.colony.water).toBe(1);
+    expect(c.getConsumptionResource('colony', 'food').amount).toBe(0);
+    expect(c.getConsumptionResource('colony', 'water').amount).toBe(1);
   });
 });

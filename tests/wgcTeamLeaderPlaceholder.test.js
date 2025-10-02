@@ -46,4 +46,27 @@ describe('WGC team leader placeholder', () => {
     event.trigger();
     expect(ctx.addJournalEntry).toHaveBeenCalledWith('Leader: Eve Doe.', 'e', { type: 'chapter', id: 'e' });
   });
+
+  test('replaces natural scientist placeholder with member name', () => {
+    const ctx = createContext({ teams: [[
+      { firstName: 'Eve', lastName: 'Doe' },
+      { firstName: 'Nina', lastName: 'Khan', classType: 'Natural Scientist' }
+    ]] });
+    const progressData = { chapters: [{ id: 'f', type: 'journal', narrative: 'Scientist: $WGC_TEAM1_NATSCIENTIST$.' }] };
+    const manager = new ctx.StoryManager(progressData);
+    ctx.window.storyManager = manager;
+    const event = manager.findEventById('f');
+    event.trigger();
+    expect(ctx.addJournalEntry).toHaveBeenCalledWith('Scientist: Nina Khan.', 'f', { type: 'chapter', id: 'f' });
+  });
+
+  test('defaults when natural scientist missing', () => {
+    const ctx = createContext({ teams: [[{ firstName: 'Eve', lastName: 'Doe' }]] });
+    const progressData = { chapters: [{ id: 'g', type: 'journal', narrative: '$WGC_TEAM1_NATSCIENTIST$' }] };
+    const manager = new ctx.StoryManager(progressData);
+    ctx.window.storyManager = manager;
+    const event = manager.findEventById('g');
+    event.trigger();
+    expect(ctx.addJournalEntry).toHaveBeenCalledWith('Sam', 'g', { type: 'chapter', id: 'g' });
+  });
 });

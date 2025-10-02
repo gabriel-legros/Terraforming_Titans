@@ -9,7 +9,7 @@ class SpaceStorageProject {
 
 global.SpaceStorageProject = SpaceStorageProject;
 global.projectElements = {};
-require('../src/js/projects/spaceStorageUI.js');
+const { updateSpaceStorageUI } = require('../src/js/projects/spaceStorageUI.js');
 delete global.SpaceStorageProject;
 delete global.projectElements;
 
@@ -48,6 +48,29 @@ describe('space storage strategic reserve input', () => {
     expect(icon.title).toContain('mega project');
     expect(icon.title).toContain('transfers ignore');
     expect(icon.title).toContain('scientific notation');
+    delete global.document;
+    delete global.window;
+    delete global.projectElements;
+  });
+
+  test('does not overwrite strategic reserve while focused', () => {
+    const dom = new JSDOM('<!DOCTYPE html><div id="root"></div>');
+    global.document = dom.window.document;
+    global.window = dom.window;
+    global.projectElements = {};
+    const project = new SpaceStorageProject();
+    project.strategicReserve = 7.5;
+    const container = document.getElementById('root');
+    const inputContainer = project.createStrategicReserveInput();
+    container.appendChild(inputContainer);
+    const input = projectElements[project.name].strategicReserveInput;
+    input.value = '2.';
+    input.focus();
+    updateSpaceStorageUI(project);
+    expect(input.value).toBe('2.');
+    input.blur();
+    updateSpaceStorageUI(project);
+    expect(input.value).toBe('7.5');
     delete global.document;
     delete global.window;
     delete global.projectElements;

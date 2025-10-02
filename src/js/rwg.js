@@ -35,6 +35,131 @@ const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const toTons = (kg) => kg / 1000;
 function isObject(item) { return item && typeof item === "object" && !Array.isArray(item); }
 
+const DEFAULT_SECTOR_LABEL = 'R5-07';
+const RWG_UHF_FACTION_ID = globalThis?.UHF_FACTION_ID || 'uhf';
+const SECTOR_DIRECTIONS = [
+  { q: 0, r: -1 },
+  { q: -1, r: 0 },
+  { q: -1, r: 1 },
+  { q: 0, r: 1 },
+  { q: 1, r: 0 },
+  { q: 1, r: -1 }
+];
+
+function computeSectorRing(q, r) {
+  const s = -q - r;
+  return Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
+}
+
+function computeSectorIndex(q, r, ring) {
+  if (ring === 0) {
+    return 0;
+  }
+  let currentQ = ring;
+  let currentR = 0;
+  let index = 0;
+  if (currentQ === q && currentR === r) {
+    return index;
+  }
+  for (let side = 0; side < SECTOR_DIRECTIONS.length; side += 1) {
+    const dir = SECTOR_DIRECTIONS[side];
+    for (let step = 0; step < ring; step += 1) {
+      currentQ += dir.q;
+      currentR += dir.r;
+      index += 1;
+      if (currentQ === q && currentR === r) {
+        return index;
+      }
+    }
+  }
+  return index % (ring * 6);
+}
+
+function formatSectorLabelFromCoords(q, r) {
+  if (!Number.isFinite(q) || !Number.isFinite(r)) {
+    return null;
+  }
+  const ring = computeSectorRing(q, r);
+  if (ring === 0) {
+    return 'Core';
+  }
+  const index = computeSectorIndex(q, r, ring);
+  const ringSize = ring * 6;
+  const digits = Math.max(2, String(ringSize).length);
+  return `R${ring}-${String(index + 1).padStart(digits, '0')}`;
+}
+
+function getSectorUhfControlValue(sector) {
+  if (!sector) {
+    return 0;
+  }
+  const direct = sector.getControlValue?.(RWG_UHF_FACTION_ID);
+  if (Number.isFinite(direct) && direct > 0) {
+    return direct;
+  }
+  const fallback = sector.control?.[RWG_UHF_FACTION_ID];
+  const numericFallback = Number(fallback);
+  if (Number.isFinite(numericFallback) && numericFallback > 0) {
+    return numericFallback;
+  }
+  return 0;
+}
+
+function pickLabelFromRadius(rng, radius) {
+  const numericRadius = Number.isFinite(radius) && radius >= 0 ? Math.floor(radius) : 6;
+  let total = 0;
+  for (let ring = 0; ring <= numericRadius; ring += 1) {
+    total += ring === 0 ? 1 : ring * 6;
+  }
+  if (total <= 0) {
+    return DEFAULT_SECTOR_LABEL;
+  }
+  const roll = Math.floor(rng() * total);
+  let offset = roll;
+  for (let ring = 0; ring <= numericRadius; ring += 1) {
+    const count = ring === 0 ? 1 : ring * 6;
+    if (offset < count) {
+      if (ring === 0) {
+        return 'Core';
+      }
+      const digits = Math.max(2, String(count).length);
+      return `R${ring}-${String(offset + 1).padStart(digits, '0')}`;
+    }
+    offset -= count;
+  }
+  return DEFAULT_SECTOR_LABEL;
+}
+
+function selectSectorLabel(seed) {
+  const numericSeed = Number.isFinite(seed) ? (seed >>> 0) : hashStringToInt(String(seed ?? ''));
+  const rng = mulberry32(numericSeed ^ 0x5EC7);
+  const spaceManagerInstance = globalThis?.spaceManager;
+  const lockedSector = spaceManagerInstance?.getRwgSectorLock?.();
+  if (lockedSector) {
+    const text = String(lockedSector).trim();
+    if (text) {
+      return text;
+    }
+  }
+  const manager = globalThis?.galaxyManager;
+  const sectors = manager?.getSectors?.();
+  let candidates = Array.isArray(sectors) ? sectors.filter((sector) => getSectorUhfControlValue(sector) > 0) : [];
+  if (!candidates.length && Array.isArray(sectors)) {
+    candidates = sectors;
+  }
+  if (candidates.length > 0) {
+    const index = Math.floor(rng() * candidates.length);
+    const sector = candidates[index];
+    const display = sector?.getDisplayName?.() || formatSectorLabelFromCoords(sector?.q, sector?.r);
+    if (display) {
+      return display;
+    }
+  }
+  return Array.isArray(sectors) && sectors.length > 0
+    ? pickLabelFromRadius(rng, manager?.radius)
+    : DEFAULT_SECTOR_LABEL;
+}
+
 // Deep merge shim
 if (typeof globalThis.deepMerge === "undefined") {
   globalThis.deepMerge = function deepMerge(target, source) {
@@ -75,7 +200,7 @@ try {
 const RWG_WORLD_TYPES = {
   "mars-like": { displayName: "Mars-like" },
   "cold-desert": { displayName: "Desert" },
-  "icy-moon": { displayName: "Icy" },
+  "icy-moon": { displayName: "Water-rich" },
   "titan-like": { displayName: "Titan-like" },
   "carbon-planet": { displayName: "Carbon" },
   "desiccated-desert": { displayName: "Desiccated Desert" },
@@ -92,6 +217,15 @@ const RWG_TYPE_BASE_COLORS = {
   "desiccated-desert": "#caa16a",
   "super-earth": "#4c6f4e",
   "venus-like": "#cdb675",
+};
+
+const ORBIT_PRESET_TO_FLUX_KEY = {
+  "hz-inner": "hzInnerFluxWm2",
+  "hz-mid": "hzMidFluxWm2",
+  "hz-outer": "hzOuterFluxWm2",
+  "hot": "hotFluxWm2",
+  "cold": "coldFluxWm2",
+  "very-cold": "veryColdFluxWm2",
 };
 
 function pickBaseColorForType(type) {
@@ -121,7 +255,13 @@ const DEFAULT_PARAMS = {
       coldFluxWm2: [100, 500],
       veryColdFluxWm2: [10, 100]
     },
-    moonChance: { thresholdAU: 3, chance: 0.35 }
+    moonChance: { thresholdAU: 3, chance: 0.35 },
+    typeOrbitLocks: {
+      "venus-like": {
+        presets: ["hot"],
+        fluxRangeKey: "hotFluxWm2"
+      }
+    }
   },
   classification: {
     typeAlbedo: {
@@ -153,7 +293,16 @@ const DEFAULT_PARAMS = {
   },
   atmosphere: {
     templates: {
-      "venus-like": { pressureBar: 90, mix: { carbonDioxide: 0.965, inertGas: 0.03, oxygen: 0.0003, atmosphericWater: 0.0047 } },
+      "venus-like": {
+        pressureBar: 90,
+        mix: {
+          carbonDioxide: 0.965,
+          inertGas: 0.0348,
+          oxygen: 0.00002,
+          atmosphericWater: 0.00008,
+          sulfuricAcid: 0.0001
+        }
+      },
       "mars-like": { pressureBar: 0.006, mix: { carbonDioxide: 0.95, inertGas: 0.03, oxygen: 0.0016, atmosphericWater: 0.0004 } },
       "cold-desert": { pressureBar: 0.02, mix: { carbonDioxide: 0.85, inertGas: 0.14, oxygen: 0.0005, atmosphericWater: 0.0095 } },
       "icy-moon": { pressureBar: 1e-5, mix: { carbonDioxide: 0.7, inertGas: 0.299, oxygen: 0.001, atmosphericWater: 0.0001 } },
@@ -378,6 +527,72 @@ function sampleOrbitAU(rng, i, params) {
   const base = Math.exp(Math.log(min) + (Math.log(max) - Math.log(min)) * t);
   return base * (1 + outwardIndexScale * i);
 }
+function fluxRangeKeyForPreset(preset) {
+  return ORBIT_PRESET_TO_FLUX_KEY[preset];
+}
+function sampleOrbitAUFromFluxRange({ seed = 0, salt = 0xFEEDC0DE, star, params, fluxKey }) {
+  const ranges = params.orbit?.presets || {};
+  const range = ranges[fluxKey];
+  if (!Array.isArray(range) || range.length === 0) return undefined;
+  const [lowRaw, highRaw] = range;
+  const low = Number.isFinite(lowRaw) ? lowRaw : 1500;
+  const high = Number.isFinite(highRaw) ? highRaw : low;
+  const lum = star.luminositySolar || 1;
+  const baseSeed = ((seed >>> 0) ^ (salt >>> 0)) >>> 0;
+  const rng = mulberry32(baseSeed);
+  const span = Math.max(0, high - low);
+  const flux = low + rng() * span;
+  const SOLAR = 1361;
+  const safeFlux = flux > 0 ? flux : low || 1;
+  return Math.sqrt((lum * SOLAR) / safeFlux);
+}
+function averageOrbitAUFromFluxRange({ star, params, fluxKey }) {
+  const ranges = params.orbit?.presets || {};
+  const range = ranges[fluxKey];
+  if (!Array.isArray(range) || range.length === 0) return undefined;
+  const [lowRaw, highRaw] = range;
+  const low = Number.isFinite(lowRaw) ? lowRaw : 1500;
+  const high = Number.isFinite(highRaw) ? highRaw : low;
+  const lum = star.luminositySolar || 1;
+  const SOLAR = 1361;
+  const avgFlux = Math.max(1, (low + high) * 0.5);
+  return Math.sqrt((lum * SOLAR) / avgFlux);
+}
+function resolveTypeOrbitLock({ forcedType, seedBase, star, params, currentPreset, currentAU, allowMoonRecalc, moonRoll, moonConfig }) {
+  const locksByType = params.orbit?.typeOrbitLocks || {};
+  const rawEntry = locksByType[forcedType];
+  const normalizedEntry = Array.isArray(rawEntry) ? { presets: rawEntry } : rawEntry || {};
+  const presetList = Array.isArray(normalizedEntry.presets) ? normalizedEntry.presets.filter(Boolean) : [];
+  const presetSalt = normalizedEntry.presetSalt ?? 0x07734;
+  const pickSeed = ((seedBase >>> 0) ^ (presetSalt >>> 0)) >>> 0;
+  const rng = mulberry32(pickSeed);
+  const lockedPreset = presetList.length ? presetList[Math.floor(rng() * presetList.length)] : undefined;
+  const presetAfterLock = lockedPreset || currentPreset;
+  const fluxKeyOverride = normalizedEntry.fluxRangeKey;
+  const fluxKey = fluxKeyOverride || fluxRangeKeyForPreset(lockedPreset) || fluxRangeKeyForPreset(presetAfterLock);
+  const orbitSalt = normalizedEntry.seedSalt ?? 0xFEEDC0DE;
+  const forcedAU = fluxKey ? sampleOrbitAUFromFluxRange({ seed: seedBase, salt: orbitSalt, star, params, fluxKey }) : undefined;
+  let finalAU = currentAU;
+  let orbitLocked = false;
+  const lockActive = presetList.length > 0 || fluxKeyOverride;
+  if (Number.isFinite(forcedAU)) {
+    finalAU = forcedAU;
+    orbitLocked = lockActive;
+  } else if (finalAU === undefined && fluxKey) {
+    const avgAU = averageOrbitAUFromFluxRange({ star, params, fluxKey });
+    if (Number.isFinite(avgAU)) {
+      finalAU = avgAU;
+      orbitLocked = lockActive;
+    }
+  }
+  const overrideMoon = orbitLocked && allowMoonRecalc;
+  const moonValue = overrideMoon ? (finalAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance) : false;
+  return {
+    preset: presetAfterLock,
+    aAU: finalAU,
+    moonOverride: { applied: overrideMoon, value: moonValue }
+  };
+}
 // ===================== World building helpers =====================
 function sampleBulk(rng, archetype, params) {
   const Me = 5.972e24, Re_km = 6371;
@@ -440,6 +655,13 @@ function buildVolatiles(archetype, Teq, landHa, rng, params) {
     if (Teq < 95) surface.hydrocarbonIce.initialValue = CH4_total;
     else if (Teq < 110) surface.liquidMethane.initialValue = CH4_total;
     else surface.hydrocarbonIce.initialValue = CH4_total * 0.2;
+  }
+  if (archetype === "venus-like") {
+    surface.liquidWater.initialValue = 0;
+    surface.ice.initialValue = 0;
+    surface.dryIce.initialValue = 0;
+    surface.liquidWater.unlocked = true;
+    surface.ice.unlocked = true;
   }
   return surface;
 }
@@ -506,7 +728,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   }
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
   const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
-  const rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
+  let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
+  if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
   const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
@@ -597,6 +820,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   };
 
   const baseColor = pickBaseColorForType(classification?.type || type);
+  const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -607,7 +831,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere },
+    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
@@ -701,6 +925,10 @@ class RwgManager extends EffectableEntity {
       this.unlockOrbit(effect.targetId);
     } else if (effect.type === 'lockOrbit') {
       this.lockOrbit(effect.targetId);
+    } else if (effect.type === 'unlockType') {
+      this.unlockType(effect.targetId);
+    } else if (effect.type === 'lockType') {
+      this.lockType(effect.targetId);
     } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
       // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
@@ -751,9 +979,18 @@ class RwgManager extends EffectableEntity {
       }
     }
     // Target (planet vs moon) — derived
-    let isMoon = (typeof opts.isMoon === "boolean") ? opts.isMoon : undefined;
     const tgt = opts.target || seedAnn?.target;
-    if (typeof isMoon !== "boolean") { if (tgt === "moon") isMoon = true; else if (tgt === "planet") isMoon = false; else isMoon = (aAU > P.orbit.moonChance.thresholdAU && mulberry32(S ^ 0xBADA55)() < P.orbit.moonChance.chance); }
+    const moonConfig = P.orbit.moonChance;
+    const moonRoll = mulberry32(S ^ 0xBADA55)();
+    const hasExplicitMoonOpt = Object.prototype.hasOwnProperty.call(opts, "isMoon");
+    const moonSpecifiedByTarget = tgt === "moon" || tgt === "planet";
+    const moonSpecified = hasExplicitMoonOpt || moonSpecifiedByTarget;
+    let isMoon = hasExplicitMoonOpt ? opts.isMoon : undefined;
+    if (!moonSpecified) {
+      isMoon = aAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance;
+    } else if (isMoon !== true && isMoon !== false) {
+      isMoon = tgt === "moon";
+    }
 
     // Type — derived
     let forcedType = opts.archetype || opts.type; if ((!forcedType || forcedType === "auto") && seedAnn?.type) { forcedType = seedAnn.type; }
@@ -763,6 +1000,23 @@ class RwgManager extends EffectableEntity {
       if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
       if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
+    }
+
+    const lockResult = resolveTypeOrbitLock({
+      forcedType,
+      seedBase: S,
+      star,
+      params: P,
+      currentPreset: usedPreset,
+      currentAU: aAU,
+      allowMoonRecalc: !moonSpecified,
+      moonRoll,
+      moonConfig
+    });
+    usedPreset = lockResult.preset;
+    aAU = lockResult.aAU;
+    if (lockResult.moonOverride.applied) {
+      isMoon = lockResult.moonOverride.value;
     }
 
     // Generate the rest using S directly
@@ -778,7 +1032,33 @@ class RwgManager extends EffectableEntity {
     const P = resolveParams(this.params, opts.params || {});
     const { seedInt: S } = parseSeedSpec(seed);
     const rng = mulberry32(S); const star = generateStar(S, P); const n = planetCount ?? Math.floor(randRange(rng, 3, 9)); const planets = [];
-    for (let i = 0; i < n; i++) { const aAU = sampleOrbitAU(rng, i, P); const isMoon = aAU > P.orbit.moonChance.thresholdAU && rng() < P.orbit.moonChance.chance; const typePick = mulberry32(S ^ (0xC0FFEE ^ (i + 1)))(); const typeList = this.getAvailableTypes(isMoon); const forcedType = typeList[Math.floor(typePick * typeList.length)] || "mars-like"; const ov = buildPlanetOverride({ seed: S ^ ((i + 1) * 0x9e37), star, aAU, isMoon, forcedType }, P); planets.push({ name: ov.name, classification: ov.classification, orbitAU: aAU, merged: deepMerge(defaultPlanetParameters, ov) }); }
+    const moonConfig = P.orbit.moonChance;
+    for (let i = 0; i < n; i++) {
+      let aAU = sampleOrbitAU(rng, i, P);
+      const moonRoll = rng();
+      let isMoon = aAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance;
+      const typePick = mulberry32(S ^ (0xC0FFEE ^ (i + 1)))();
+      const typeList = this.getAvailableTypes(isMoon);
+      const forcedType = typeList[Math.floor(typePick * typeList.length)] || "mars-like";
+      const planetSeed = S ^ ((i + 1) * 0x9e37);
+      const lockResult = resolveTypeOrbitLock({
+        forcedType,
+        seedBase: planetSeed,
+        star,
+        params: P,
+        currentPreset: undefined,
+        currentAU: aAU,
+        allowMoonRecalc: true,
+        moonRoll,
+        moonConfig
+      });
+      aAU = lockResult.aAU;
+      if (lockResult.moonOverride.applied) {
+        isMoon = lockResult.moonOverride.value;
+      }
+      const ov = buildPlanetOverride({ seed: planetSeed, star, aAU, isMoon, forcedType }, P);
+      planets.push({ name: ov.name, classification: ov.classification, orbitAU: aAU, merged: deepMerge(defaultPlanetParameters, ov) });
+    }
     return { star, planets };
   }
 }
@@ -794,6 +1074,7 @@ if (typeof globalThis !== "undefined") {
   globalThis.generateRandomPlanet = generateRandomPlanet;
   globalThis.generateSystem = generateSystem;
   globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS;
+  globalThis.DEFAULT_SECTOR_LABEL = DEFAULT_SECTOR_LABEL;
   globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
   globalThis.RWG_TYPE_BASE_COLORS = RWG_TYPE_BASE_COLORS;
 }
