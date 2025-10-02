@@ -473,14 +473,12 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        metal: 5_000_000_000,
-        components: 2_000_000_000,
-        electronics: 500_000_000,
-        superconductors: 100_000_000
+        superalloy: 50,
+        superconductors: 50
       }
     },
     duration: 420000,
-    description: 'Channel staggering amounts of power into an enormous accelerator to open new avenues of high energy experimentation.',
+    description: 'Physicists can always use a bigger particle accelerator.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
