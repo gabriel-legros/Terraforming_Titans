@@ -308,7 +308,6 @@ body.journal-collapsed .tab-content {
 .space-tab-warning.is-visible {
     display: inline-flex;
     align-items: center;
-    font-size: 2em;
 }
 
 .journal.collapsed {

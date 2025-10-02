@@ -41,9 +41,9 @@ const galaxyFactionParameters = [
         ringSlices: [
             { ring: 2, start: 1, end: 3 },
             { ring: 3, start: 2, end: 5 },
-            { ring: 4, start: 3, end: 6 },
-            { ring: 5, start: 3, end: 8 },
-            { ring: 6, start: 4, end: 9 }
+            { ring: 4, start: 3, end: 7 },
+            { ring: 5, start: 3, end: 9 },
+            { ring: 6, start: 4, end: 10 }
         ]
     },
     {
@@ -54,9 +54,9 @@ const galaxyFactionParameters = [
         ringSlices: [
             { ring: 2, start: 4, end: 5 },
             { ring: 3, start: 6, end: 8 },
-            { ring: 4, start: 7, end: 10 },
-            { ring: 5, start: 9, end: 13 },
-            { ring: 6, start: 10, end: 15 }
+            { ring: 4, start: 8, end: 10 },
+            { ring: 5, start: 10, end: 13 },
+            { ring: 6, start: 11, end: 15 }
         ]
     },
     {
