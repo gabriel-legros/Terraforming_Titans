@@ -362,12 +362,22 @@ class GalaxyFaction {
         return capacity;
     }
 
-    getDefenseAssignment(sectorKey) {
+    getManualDefenseAssignment(sectorKey) {
         if (!sectorKey || this.id !== UHF_FACTION_ID) {
             return 0;
         }
         const manual = this.defenseAssignments.get(sectorKey);
-        const manualValue = Number.isFinite(manual) && manual > 0 ? manual : 0;
+        if (!Number.isFinite(manual) || manual <= 0) {
+            return 0;
+        }
+        return manual;
+    }
+
+    getDefenseAssignment(sectorKey) {
+        if (!sectorKey || this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        const manualValue = this.getManualDefenseAssignment(sectorKey);
         const auto = this.autoDefenseAssignments?.get?.(sectorKey);
         const autoValue = Number.isFinite(auto) && auto > 0 ? auto : 0;
         const total = manualValue + autoValue;

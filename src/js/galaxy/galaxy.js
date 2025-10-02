@@ -429,6 +429,14 @@ class GalaxyManager extends EffectableEntity {
         return this.#computeDefensePower(sector, attackerId);
     }
 
+    getManualDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
+        const faction = this.getFaction(factionId);
+        if (!faction || typeof faction.getManualDefenseAssignment !== 'function') {
+            return 0;
+        }
+        return faction.getManualDefenseAssignment(sectorKey);
+    }
+
     getDefenseAssignment(sectorKey, factionId = galaxyUhfId) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseAssignment !== 'function') {
