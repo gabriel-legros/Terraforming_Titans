@@ -14,6 +14,14 @@ Object.defineProperty(globalThis, 'resources', {
   set: (v) => { resources = v; },
   configurable: true,
 });
+let debugMode = false;
+Object.defineProperty(globalThis, 'debugMode', {
+  get: () => debugMode,
+  set: (value) => {
+    debugMode = !!value;
+  },
+  configurable: true,
+});
 let maintenanceFraction = currentPlanetParameters.buildingParameters.maintenanceFraction;
 let shipEfficiency = 1;
 let dayNightCycle;
@@ -68,6 +76,13 @@ let globalEffects = new EffectableEntity({description : 'Manages global effects'
 let skillManager;
 let solisManager;
 let warpGateCommand;
+let galaxyManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
 let gameSpeed = 1;
+
+Object.defineProperty(globalThis, 'galaxyManager', {
+  get: () => galaxyManager,
+  set: (value) => { galaxyManager = value; },
+  configurable: true,
+});

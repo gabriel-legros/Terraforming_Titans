@@ -10,6 +10,66 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
+
+function normalizeSectorLabel(value) {
+    const text = value == null ? '' : String(value).trim();
+    return text || SPACE_DEFAULT_SECTOR_LABEL;
+}
+
+function resolveSectorFromSources(...sources) {
+    for (let index = 0; index < sources.length; index += 1) {
+        const source = sources[index];
+        if (!source) {
+            continue;
+        }
+        const candidates = [
+            source.celestialParameters?.sector,
+            source.override?.celestialParameters?.sector,
+            source.merged?.celestialParameters?.sector,
+            source.original?.celestialParameters?.sector,
+            source.sector
+        ];
+        for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+            const candidate = candidates[candidateIndex];
+            if (candidate == null) {
+                continue;
+            }
+            const normalized = normalizeSectorLabel(candidate);
+            if (normalized) {
+                return normalized;
+            }
+        }
+    }
+    return SPACE_DEFAULT_SECTOR_LABEL;
+}
+
+function hasSuperEarthArchetype(...sources) {
+    for (let index = 0; index < sources.length; index += 1) {
+        const source = sources[index];
+        if (!source) {
+            continue;
+        }
+        const candidates = [
+            source.classification?.archetype,
+            source.override?.classification?.archetype,
+            source.merged?.classification?.archetype,
+            source.original?.classification?.archetype,
+            source.archetype
+        ];
+        for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+            const candidate = candidates[candidateIndex];
+            if (!candidate) {
+                continue;
+            }
+            if (String(candidate).trim().toLowerCase() === 'super-earth') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
 if (typeof module !== 'undefined' && module.exports) {
     ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -36,6 +96,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
         this.extraTerraformedWorlds = 0;
+        this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -127,6 +189,75 @@ class SpaceManager extends EffectableEntity {
         return { ...this.planetStatuses, ...this.randomWorldStatuses };
     }
 
+    getRwgSectorLock() {
+        return this.rwgSectorLock;
+    }
+
+    setRwgSectorLock(sectorLabel) {
+        if (sectorLabel == null) {
+            this.clearRwgSectorLock();
+            return;
+        }
+        const text = String(sectorLabel).trim();
+        if (!text) {
+            this.clearRwgSectorLock();
+            return;
+        }
+        this.rwgSectorLock = text;
+        this.rwgSectorLockManual = true;
+    }
+
+    clearRwgSectorLock() {
+        this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
+    }
+
+    getWorldCountPerSector(sectorLabel) {
+        const target = normalizeSectorLabel(sectorLabel);
+        let total = 0;
+        const overridesLookup = globalThis?.planetOverrides || null;
+
+        Object.keys(this.planetStatuses).forEach((key) => {
+            const status = this.planetStatuses[key];
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const planetData = this.allPlanetsData[key] || null;
+            const override = overridesLookup ? overridesLookup[key] : null;
+            const sector = resolveSectorFromSources(override, planetData);
+            if (sector !== target) {
+                return;
+            }
+            total += 1;
+            if (status.orbitalRing) {
+                total += 1;
+            }
+            if (hasSuperEarthArchetype(override, planetData)) {
+                total += 1;
+            }
+        });
+
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const original = status.original || null;
+            const sector = resolveSectorFromSources(original);
+            if (sector !== target) {
+                return;
+            }
+            total += 1;
+            if (status.orbitalRing) {
+                total += 1;
+            }
+            if (hasSuperEarthArchetype(original)) {
+                total += 1;
+            }
+        });
+
+        return total;
+    }
+
     currentWorldHasOrbitalRing() {
         if (this.currentRandomSeed !== null) {
             return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
@@ -137,11 +268,130 @@ class SpaceManager extends EffectableEntity {
     setCurrentWorldHasOrbitalRing(value) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
-            if (!this.randomWorldStatuses[seed]) return;
-            this.randomWorldStatuses[seed].orbitalRing = value;
-        } else if (this.planetStatuses[this.currentPlanetKey]) {
-            this.planetStatuses[this.currentPlanetKey].orbitalRing = value;
+            this.setRandomWorldHasOrbitalRing(seed, value);
+        } else {
+            this.setStoryWorldHasOrbitalRing(this.currentPlanetKey, value);
         }
+    }
+
+    setStoryWorldHasOrbitalRing(planetKey, value) {
+        const status = this.planetStatuses[planetKey];
+        if (!status) {
+            return;
+        }
+        status.orbitalRing = !!value;
+    }
+
+    _ensureRandomWorldStatus(seed) {
+        const key = String(seed);
+        if (!this.randomWorldStatuses[key]) {
+            this.randomWorldStatuses[key] = {
+                name: `Seed ${key}`,
+                terraformed: false,
+                colonists: 0,
+                original: null,
+                visited: false,
+                orbitalRing: false,
+                departedAt: null,
+                ecumenopolisPercent: 0
+            };
+        }
+        return this.randomWorldStatuses[key];
+    }
+
+    setRandomWorldHasOrbitalRing(seed, value) {
+        const status = this._ensureRandomWorldStatus(seed);
+        status.orbitalRing = !!value;
+    }
+
+    isCurrentWorldTerraformed() {
+        if (this.currentRandomSeed !== null) {
+            return this.isSeedTerraformed(String(this.currentRandomSeed));
+        }
+        return this.isPlanetTerraformed(this.currentPlanetKey);
+    }
+
+    countOrbitalRings() {
+        let total = 0;
+        Object.values(this.planetStatuses).forEach(status => {
+            if (status?.orbitalRing) {
+                total += 1;
+            }
+        });
+        Object.values(this.randomWorldStatuses).forEach(status => {
+            if (status?.orbitalRing) {
+                total += 1;
+            }
+        });
+        return total;
+    }
+
+    assignOrbitalRings(totalRings, options = {}) {
+        const { preferCurrentWorld = false } = options;
+        const normalizedTotal = Math.max(0, Number.isFinite(totalRings) ? Math.floor(totalRings) : 0);
+        const ordered = [];
+        const seen = new Set();
+
+        const addCandidate = (type, key, status, force = false) => {
+            if (!status) {
+                return;
+            }
+            const id = `${type}:${key}`;
+            if (seen.has(id)) {
+                return;
+            }
+            if (!status.terraformed) {
+                if (force && status.orbitalRing) {
+                    status.orbitalRing = false;
+                }
+                return;
+            }
+            ordered.push({ type, key, status });
+            seen.add(id);
+        };
+
+        const currentDescriptor = this.currentRandomSeed !== null
+            ? { type: 'random', key: String(this.currentRandomSeed), status: this.randomWorldStatuses[String(this.currentRandomSeed)] }
+            : { type: 'story', key: this.currentPlanetKey, status: this.planetStatuses[this.currentPlanetKey] };
+
+        if (preferCurrentWorld && currentDescriptor.status) {
+            addCandidate(currentDescriptor.type, currentDescriptor.key, currentDescriptor.status, true);
+        }
+
+        Object.keys(this.planetStatuses).forEach(key => {
+            const status = this.planetStatuses[key];
+            if (status?.orbitalRing) {
+                addCandidate('story', key, status, true);
+            }
+        });
+
+        Object.keys(this.randomWorldStatuses).forEach(seed => {
+            const status = this.randomWorldStatuses[seed];
+            if (status?.orbitalRing) {
+                addCandidate('random', seed, status, true);
+            }
+        });
+
+        Object.keys(this.allPlanetsData).forEach(key => {
+            addCandidate('story', key, this.planetStatuses[key]);
+        });
+
+        Object.keys(this.randomWorldStatuses)
+            .sort((a, b) => String(a).localeCompare(String(b)))
+            .forEach(seed => {
+                addCandidate('random', seed, this.randomWorldStatuses[seed]);
+            });
+
+        let assigned = 0;
+        ordered.forEach(entry => {
+            const shouldAssign = assigned < normalizedTotal;
+            entry.status.orbitalRing = shouldAssign;
+            if (shouldAssign) {
+                assigned += 1;
+            }
+        });
+
+        return assigned;
     }
 
     /**
@@ -545,7 +795,9 @@ class SpaceManager extends EffectableEntity {
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
             randomWorldStatuses: this.randomWorldStatuses,
-            randomTabEnabled: this.randomTabEnabled
+            randomTabEnabled: this.randomTabEnabled,
+            rwgSectorLock: this.rwgSectorLock,
+            rwgSectorLockManual: this.rwgSectorLockManual
         };
     }
 
@@ -556,6 +808,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.randomWorldStatuses = {};
         this.randomTabEnabled = false;
+        this.rwgSectorLock = null;
+        this.rwgSectorLockManual = false;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
@@ -630,6 +884,25 @@ class SpaceManager extends EffectableEntity {
                     }
                 });
             }
+        }
+
+        if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
+            const hasManualFlag = Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLockManual');
+            const manual = hasManualFlag ? !!savedData.rwgSectorLockManual : null;
+            if (manual === false) {
+                this.clearRwgSectorLock();
+            } else if (manual === true) {
+                this.setRwgSectorLock(savedData.rwgSectorLock);
+            } else {
+                const text = String(savedData.rwgSectorLock ?? '').trim();
+                if (text && text !== SPACE_DEFAULT_SECTOR_LABEL) {
+                    this.setRwgSectorLock(text);
+                } else {
+                    this.clearRwgSectorLock();
+                }
+            }
+        } else {
+            this.clearRwgSectorLock();
         }
 
         if (typeof savedData.randomTabEnabled === 'boolean') {

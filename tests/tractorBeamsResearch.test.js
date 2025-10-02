@@ -28,8 +28,13 @@ describe('Tractor Beams advanced research', () => {
     ctx.formatNumber = numbers.formatNumber;
     ctx.projectElements = {};
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
-    ctx.terraforming = { celestialParameters: { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1 } };
+    const celestial = { mass: 6e24, radius: 6000, rotationPeriod: 24, distanceFromSun: 1, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     ctx.resources = { colony: { energy: { value: 0, decrease() {}, updateStorageCap() {} } } };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+    global.resources = ctx.resources;
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     vm.runInContext(thrusterCode + '; this.PlanetaryThrustersProject = PlanetaryThrustersProject;', ctx);
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
@@ -55,5 +60,10 @@ describe('Tractor Beams advanced research', () => {
     expect(tractorVE).toBe('N/A');
     expect(tractorEnergy).toBeCloseTo(10);
     expect(tractorEnergy).toBeLessThan(defaultEnergy);
+  });
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });

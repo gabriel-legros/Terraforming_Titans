@@ -8,6 +8,12 @@ const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
 const SULFURIC_ACID_RAIN_THRESHOLD_K = 570;
 const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = 300;
 const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / 300;
+const HYDROGEN_ESCAPE_GRAVITY_THRESHOLD = 20;
+const HYDROGEN_HALF_LIFE_MIN_SECONDS = 300;
+const HYDROGEN_HALF_LIFE_MAX_SECONDS = 3000;
+const HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER = 0.25;
+const HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = 500;
+const HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = 0.6;
 
 function runAtmosphericChemistry(resources, params = {}) {
   const {
@@ -19,6 +25,8 @@ function runAtmosphericChemistry(resources, params = {}) {
     durationSeconds = 0,
     surfaceArea = 1,
     surfaceTemperatureK = SULFURIC_ACID_RAIN_THRESHOLD_K,
+    gravity = 0,
+    solarFlux = 0,
   } = params;
 
   let combustionMethaneAmount = 0;
@@ -70,12 +78,38 @@ function runAtmosphericChemistry(resources, params = {}) {
     }
   }
 
+  let hydrogenDecayAmount = 0;
+  const currentHydrogen = resources?.atmospheric?.hydrogen?.value || 0;
+  if (realSeconds > 0 && currentHydrogen > 0) {
+    if (gravity < HYDROGEN_ESCAPE_GRAVITY_THRESHOLD) {
+      const clampedGravity = Math.max(gravity, 0);
+      const gravityRatio = clampedGravity / HYDROGEN_ESCAPE_GRAVITY_THRESHOLD;
+      const hydrogenHalfLifeSeconds =
+        HYDROGEN_HALF_LIFE_MIN_SECONDS +
+        (HYDROGEN_HALF_LIFE_MAX_SECONDS - HYDROGEN_HALF_LIFE_MIN_SECONDS) * gravityRatio;
+      const molecularDecayConstant = Math.log(2) / hydrogenHalfLifeSeconds;
+      const solarFluxRatio = solarFlux > 0 ? solarFlux / (solarFlux + HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX) : 0;
+      const atomicFraction = Math.min(1, solarFluxRatio * HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION);
+      const molecularFraction = Math.max(0, 1 - atomicFraction);
+      const molecularAmount = currentHydrogen * molecularFraction;
+      const atomicAmount = currentHydrogen - molecularAmount;
+      const molecularLoss =
+        molecularAmount * (1 - Math.exp(-molecularDecayConstant * realSeconds));
+      const atomicHalfLifeSeconds = hydrogenHalfLifeSeconds * HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER;
+      const atomicDecayConstant = Math.log(2) / atomicHalfLifeSeconds;
+      const atomicLoss =
+        atomicAmount * (1 - Math.exp(-atomicDecayConstant * realSeconds));
+      hydrogenDecayAmount = Math.min(currentHydrogen, molecularLoss + atomicLoss);
+    }
+  }
+
   const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
   const oxygenRate = durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0;
   const waterRate = durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0;
   const co2Rate = durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0;
   const calciteRate = realSeconds > 0 ? calciteDecayAmount / realSeconds : 0;
   const acidRainRate = realSeconds > 0 ? sulfuricAcidDecayAmount / realSeconds : 0;
+  const hydrogenRate = realSeconds > 0 ? hydrogenDecayAmount / realSeconds : 0;
 
   const rateType = 'terraforming';
   resources?.atmospheric?.atmosphericWater?.modifyRate?.(
@@ -108,6 +142,11 @@ function runAtmosphericChemistry(resources, params = {}) {
     'Acid rain',
     rateType
   );
+  resources?.atmospheric?.hydrogen?.modifyRate?.(
+    -hydrogenRate,
+    'Hydrogen Escape',
+    rateType
+  );
 
   return {
     changes: {
@@ -117,6 +156,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       carbonDioxide: combustionCO2Amount,
       calciteAerosol: -calciteDecayAmount,
       sulfuricAcid: -sulfuricAcidDecayAmount,
+      hydrogen: -hydrogenDecayAmount,
     },
     rates: {
       methane: methaneRate,
@@ -125,6 +165,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       co2: co2Rate,
       calcite: calciteRate,
       acidRain: acidRainRate,
+      hydrogen: hydrogenRate,
     },
   };
 }
@@ -139,6 +180,12 @@ if (isNodeChem) {
     SULFURIC_ACID_RAIN_THRESHOLD_K,
     SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
     SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
+    HYDROGEN_ESCAPE_GRAVITY_THRESHOLD,
+    HYDROGEN_HALF_LIFE_MIN_SECONDS,
+    HYDROGEN_HALF_LIFE_MAX_SECONDS,
+    HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER,
+    HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX,
+    HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION,
   };
 } else {
   globalThis.runAtmosphericChemistry = runAtmosphericChemistry;
@@ -149,5 +196,11 @@ if (isNodeChem) {
   globalThis.SULFURIC_ACID_RAIN_THRESHOLD_K = SULFURIC_ACID_RAIN_THRESHOLD_K;
   globalThis.SULFURIC_ACID_REFERENCE_TEMPERATURE_K = SULFURIC_ACID_REFERENCE_TEMPERATURE_K;
   globalThis.SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = SULFURIC_ACID_REFERENCE_DECAY_CONSTANT;
+  globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD = HYDROGEN_ESCAPE_GRAVITY_THRESHOLD;
+  globalThis.HYDROGEN_HALF_LIFE_MIN_SECONDS = HYDROGEN_HALF_LIFE_MIN_SECONDS;
+  globalThis.HYDROGEN_HALF_LIFE_MAX_SECONDS = HYDROGEN_HALF_LIFE_MAX_SECONDS;
+  globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER = HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER;
+  globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX;
+  globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION;
 }
 

@@ -26,7 +26,7 @@ describe('Random World Generator effects UI display names', () => {
     vm.runInContext('updateRWGEffectsUI();', ctx);
 
     const header = dom.window.document.querySelector('.rwg-effects-head[data-type="icy-moon"] .col-type strong');
-    expect(header.textContent).toBe('Icy');
+    expect(header.textContent).toBe('Water-rich');
   });
 });
 

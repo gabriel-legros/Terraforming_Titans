@@ -33,7 +33,7 @@ describe('Random World Generator type display names', () => {
 
     const icyOpt = dom.window.document.querySelector('#rwg-type option[value="icy-moon"]');
     const carbonOpt = dom.window.document.querySelector('#rwg-type option[value="carbon-planet"]');
-    expect(icyOpt.textContent).toBe('Type: Icy');
+    expect(icyOpt.textContent).toBe('Type: Water-rich');
     expect(carbonOpt.textContent).toBe('Type: Carbon');
   });
 });

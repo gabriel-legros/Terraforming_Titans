@@ -103,6 +103,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 1,
     unlocked: false
   },
   hydroponicFarm: {
@@ -302,6 +303,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.1,
     unlocked: false
   },
   fusionPowerPlant: {
@@ -317,6 +319,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.002,
     unlocked: false
   },
   dysonReceiver: {
@@ -350,6 +353,22 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  antimatterFarm: {
+    name: 'Antimatter Farm',
+    category: 'energy',
+    description: 'Harvests microscopic antimatter using staggering amounts of power.',
+    cost: { colony: { metal: 10000, components: 1000, superconductors: 1000, electronics: 100 } },
+    consumption: { colony: { energy: 2_000_000_000_000_000 } },
+    production: { special: { antimatter: 1 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   battery: {
     name: 'Battery',
     category: 'storage',
@@ -378,7 +397,6 @@ const buildingsParameters = {
         metal: 5000,
         silicon: 5000,
         glass: 5000,
-        water: 5000,
         food: 5000,
         components: 500,
         electronics: 200,
@@ -392,6 +410,22 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.1,
+    unlocked: false
+  },
+  waterTank: {
+    name: 'Water Tank',
+    category: 'storage',
+    description: 'Dedicated reservoir that preserves large water reserves with minimal upkeep.',
+    cost: { colony: { metal: 100 } },
+    consumption: {},
+    production: {},
+    storage: { colony: { water: 5000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0.05,
     unlocked: false
   },
   hydrogenBattery: {
@@ -408,6 +442,22 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    unlocked: false
+  },
+  antimatterBattery: {
+    name: 'Antimatter Battery',
+    category: 'storage',
+    description: 'Stores staggering amounts of energy by containing antimatter safely.',
+    cost: { colony: { metal: 1000, superconductors: 100 } },
+    consumption: {},
+    production: {},
+    storage: { colony: { energy: 1_000_000_000_000_000 } },
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 2,
     unlocked: false
   },
   androidHousing: {
@@ -501,7 +551,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
-    requiresWorker: 100,
+    requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
     // Reversal feature wiring (disabled by default; can be enabled by effects)
@@ -523,10 +573,10 @@ const buildingsParameters = {
   oxygenFactory: {
     name: 'Oxygen Factory',
     category: 'terraforming',
-    description: 'Extracts oxygen from liquid water via electrolysis.',
+    description: 'Extracts oxygen from liquid water via electrolysis, venting hydrogen as a byproduct.',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
     consumption: { colony: { energy: 24000000, water: 100} },
-    production: { atmospheric: { oxygen: 88.89} },
+    production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
@@ -536,28 +586,55 @@ const buildingsParameters = {
     unlocked: false
   },
   boschReactor: {
-    name: 'Bosch Reactor',
+    name: 'Chemical Reactor',
     category: 'terraforming',
-    description: 'Consumes hydrogen and carbon dioxide in the Bosch reaction to produce water.',
-    cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10 } },
+    description: 'Configurable reactors that combine imported hydrogen with atmospheric feedstocks to synthesize vital compounds.',
+    cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
     consumption: {
-      colony: { energy: 24000000 },
-      atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+      colony: { energy: 100_000 }
     },
-    production: { colony: { water: 81.82 } },
+    production: {},
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    aerostatReduction: 1,
+    unlocked: false,
+    defaultRecipe: 'recipe1',
+    recipes: {
+      recipe1: {
+        shortName: 'Bosch Reaction',
+        consumption: {
+          atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
+        },
+        production: { colony: { water: 81.82 } }
+      },
+      recipe2: {
+        shortName: 'Water Synthesis',
+        consumption: {
+          atmospheric: { oxygen: 72.73, hydrogen: 9.09 }
+        },
+        production: { colony: { water: 81.82 } }
+      },
+      recipe3: {
+        shortName: 'Methane Synthesis',
+        consumption: {
+          atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
+        },
+        production: {
+          atmospheric: { atmosphericMethane: 36.36 },
+          colony: { water: 81.82 }
+        }
+      }
+    }
   },
   massDriver: {
     name: 'Mass Driver',
     category: 'terraforming',
-    description: 'Electromagnetic launcher prototype awaiting future upgrades.',
-    cost: { colony: { metal: 10000, glass : 100, components: 100, electronics: 100 } },
+    description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.',
+    cost: { colony: { metal: 10000, components: 50, superconductors:50 } },
     consumption: {},
     production: {},
     storage: {},

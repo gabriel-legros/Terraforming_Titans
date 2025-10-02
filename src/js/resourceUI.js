@@ -550,6 +550,73 @@ function updateAndroidAssignments(assignmentsDiv) {
   updateAssignmentTable(tableContainer, entries);
 }
 
+function getAerostatLiftAlert() {
+  const colonyCollection =
+    typeof colonies !== 'undefined' ? colonies : globalThis.colonies;
+  const aerostat = colonyCollection?.aerostat_colony;
+  if (!aerostat) {
+    return { severity: null, message: null, lift: null, active: 0 };
+  }
+
+  const active = typeof aerostat.active === 'number' ? aerostat.active : 0;
+  if (active <= 0) {
+    return { severity: null, message: null, lift: null, active };
+  }
+
+  const lift =
+    typeof aerostat.getCurrentLift === 'function'
+      ? aerostat.getCurrentLift()
+      : null;
+  const pressure =
+    typeof aerostat.getCurrentSurfacePressure === 'function'
+      ? aerostat.getCurrentSurfacePressure()
+      : null;
+  const minPressure =
+    typeof aerostat.getMinimumOperationalPressure === 'function'
+      ? aerostat.getMinimumOperationalPressure()
+      : 50;
+  const minLift =
+    typeof aerostat.getMinimumOperationalLift === 'function'
+      ? aerostat.getMinimumOperationalLift()
+      : 0.2;
+  const warningLift = minLift + 0.1;
+
+  if (!Number.isFinite(lift) && !Number.isFinite(pressure)) {
+    return { severity: null, message: null, lift: null, active };
+  }
+
+  let severity = null;
+  let message = null;
+
+  if (Number.isFinite(pressure) && pressure < minPressure) {
+    severity = 'critical';
+    const pressureText = formatNumber(pressure, false, 1);
+    message = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
+      minPressure,
+      false,
+      0
+    )} kPa minimum needed to stay buoyant.`;
+  } else if (Number.isFinite(lift) && lift < minLift) {
+    severity = 'critical';
+    const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
+    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
+      minLift,
+      false,
+      2
+    )} kg/m³ minimum needed to stay aloft.`;
+  } else if (Number.isFinite(lift) && lift < warningLift) {
+    severity = 'warning';
+    const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
+    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
+      warningLift,
+      false,
+      2
+    )} kg/m³ safety margin.`;
+  }
+
+  return { severity, message, lift, active };
+}
+
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
@@ -560,7 +627,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids', 'colonists'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -604,7 +671,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids', 'colonists'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -736,6 +803,7 @@ function updateResourceDisplay(resources) {
           land.reserved / land.value < 0.99;
         const text = warn ? '!' : '';
         if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
+        if (!warn && entry.warningEl.style.color) entry.warningEl.style.color = '';
       }
 
       if (resourceName === 'colonists') {
@@ -748,6 +816,18 @@ function updateResourceDisplay(resources) {
         const capElement = entry ? entry.capEl : null;
         if (capElement) {
           capElement.textContent = formatNumber(Math.floor(resourceObj.cap), true);
+        }
+
+        if (entry?.warningEl) {
+          const { severity } = getAerostatLiftAlert();
+          if (severity) {
+            if (entry.warningEl.textContent !== '!') entry.warningEl.textContent = '!';
+            const desiredColor = severity === 'critical' ? 'red' : 'orange';
+            if (entry.warningEl.style.color !== desiredColor) entry.warningEl.style.color = desiredColor;
+          } else {
+            if (entry.warningEl.textContent !== '') entry.warningEl.textContent = '';
+            if (entry.warningEl.style.color) entry.warningEl.style.color = '';
+          }
         }
 
         updateResourceRateDisplay(resourceObj);
@@ -966,12 +1046,49 @@ function updateResourceRateDisplay(resource){
       }
     }
 
+    if (resource.name === 'hydrogen') {
+      const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
+      const atomicMultiplier = globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER || 1;
+      const atomicSpeedup = Math.round(1 / atomicMultiplier);
+      const photodissociationFraction = Math.round(
+        (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
+      );
+      let hydrogenMessage = `Hydrogen slowly escapes to space on worlds with surface gravity below ${formatNumber(gravityThreshold, false, 2)} m/s².`;
+      hydrogenMessage += ` Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`;
+
+      const gravity = globalThis.terraforming?.celestialParameters?.gravity;
+      if (Number.isFinite(gravity)) {
+        const relationText = gravity < gravityThreshold
+          ? ', so expect ongoing decay.'
+          : ', so the atmosphere can retain hydrogen.';
+        hydrogenMessage += ` Current gravity is ${formatNumber(gravity, false, 2)} m/s²${relationText}`;
+      }
+
+      const solarFlux = globalThis.terraforming?.luminosity?.solarFlux;
+      const referenceFlux = globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX || 0;
+      if (Number.isFinite(solarFlux)) {
+        const fluxText = solarFlux > referenceFlux
+          ? 'accelerating the photodissociation that feeds this loss'
+          : 'keeping most hydrogen molecular and slowing the loss';
+        hydrogenMessage += ` Solar flux is ${formatNumber(solarFlux, false, 0)} W/m², ${fluxText}.`;
+      }
+
+      warningMessages.push(hydrogenMessage);
+    }
+
     if (resource.name === 'biomass' && typeof terraforming !== 'undefined') {
       const zones = terraforming.biomassDyingZones || {};
       const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
       if (dyingZones.length > 0) {
         const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
         warningMessages.push(`Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`);
+      }
+    }
+
+    if (resource.name === 'colonists') {
+      const { severity, message } = getAerostatLiftAlert();
+      if (severity && message) {
+        warningMessages.push(message);
       }
     }
 

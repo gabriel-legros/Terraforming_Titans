@@ -99,6 +99,36 @@ const terraformingUICache = {
   luminosity: {}
 };
 
+const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
+  "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
+  "",
+  "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
+  "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
+  "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
+].join('\n');
+
+function getTemperatureMaintenanceImmuneTooltip() {
+  const buildingMap = globalThis?.buildings ?? {};
+  const immuneNames = [];
+
+  for (const key in buildingMap) {
+    const building = buildingMap[key];
+    if (building?.temperatureMaintenanceImmune) {
+      const displayName = building.displayName || building.name || key;
+      if (displayName && !immuneNames.includes(displayName)) {
+        immuneNames.push(displayName);
+      }
+    }
+  }
+
+  if (immuneNames.length === 0) {
+    return 'No buildings are immune to this penalty.';
+  }
+
+  immuneNames.sort((a, b) => a.localeCompare(b));
+  return `Buildings immune to this effect: ${immuneNames.join(', ')}.`;
+}
+
 function resetTerraformingUI() {
   terraformingSummaryInitialized = false;
   terraformingTabsInitialized = false;
@@ -453,6 +483,17 @@ function createTemperatureBox(row) {
     const maintenancePenaltySpan = document.createElement('p');
     maintenancePenaltySpan.id = 'temperature-maintenance-penalty';
     maintenancePenaltySpan.style.display = 'none';
+    maintenancePenaltySpan.textContent = 'Maintenance cost multiplier from temperature : ';
+    const maintenancePenaltyValue = document.createElement('span');
+    maintenancePenaltyValue.id = 'temperature-maintenance-penalty-value';
+    maintenancePenaltySpan.appendChild(maintenancePenaltyValue);
+    maintenancePenaltySpan.appendChild(document.createTextNode(' '));
+    const maintenancePenaltyInfo = document.createElement('span');
+    maintenancePenaltyInfo.id = 'temperature-maintenance-penalty-info';
+    maintenancePenaltyInfo.classList.add('info-tooltip-icon');
+    maintenancePenaltyInfo.innerHTML = '&#9432;';
+    maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+    maintenancePenaltySpan.appendChild(maintenancePenaltyInfo);
     temperatureBox.appendChild(maintenancePenaltySpan);
 
     const targetSpan = document.createElement('span');
@@ -485,7 +526,9 @@ function createTemperatureBox(row) {
       polarDay: temperatureBox.querySelector('#polar-day'),
       polarNight: temperatureBox.querySelector('#polar-night'),
       energyPenalty: temperatureBox.querySelector('#temperature-energy-penalty'),
-      maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty')
+      maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty'),
+      maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
+      maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info')
     };
   }
 
@@ -533,7 +576,14 @@ function createTemperatureBox(row) {
       const penalty = terraforming.calculateMaintenancePenalty();
       if (penalty > 1) {
         els.maintenancePenalty.style.display = '';
-        els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+        if (els.maintenancePenaltyValue) {
+          els.maintenancePenaltyValue.textContent = penalty.toFixed(2);
+        } else {
+          els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
+        }
+        if (els.maintenancePenaltyInfo) {
+          els.maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+        }
       } else {
         els.maintenancePenalty.style.display = 'none';
       }
@@ -553,10 +603,12 @@ function createTemperatureBox(row) {
       "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
       "- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
       "- Circulation: Column mass and rotation power the zonal wind solver that shuffles heat between climate bands. Heavier, slower-rotating atmospheres smooth temperature differences faster without creating or destroying energy.",
+      "- Cloud Formation: When condensable gases accumulate (water, methane, sulfuric acid), their mixing ratio is compared against a saturation curve. Sufficient vapor builds cloud decks that thicken with pressure up to each species' coverage limit.",
+      "- Cloud Brightness: Each cloud species has a characteristic albedo. Coverage blends together, brightening whatever surface remains darker than the deck. Clouds never darken the planet and plateau once the surface matches the deck brightness.",
+      "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
     atmInfo.innerHTML = '&#9432;';
-
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -1166,7 +1218,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="Sum of albedo increases from haze, calcite aerosols, and clouds.  This value also penalizes solar panel and life growth.">&#9432;</span></td>
+            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="${CLOUD_AND_HAZE_TOOLTIP_TEXT}">&#9432;</span></td>
             <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
             <td></td>
           </tr>
@@ -1627,3 +1679,4 @@ if (typeof window !== 'undefined') {
   window.getTerraformingSubtabManager = getTerraformingSubtabManager;
   window.isTerraformingWorldSubtabActive = isTerraformingWorldSubtabActive;
 }
+

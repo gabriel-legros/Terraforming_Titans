@@ -30,8 +30,11 @@ describe('Planetary Thrusters project', () => {
 
     ctx.resources = { colony: { energy: { value: 1000, decrease(v){ this.value -= v; }, updateStorageCap(){ } } } };
     global.resources = ctx.resources;
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+    const celestial = { mass: 1, radius: 1, rotationPeriod: 10, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
@@ -57,8 +60,11 @@ describe('Planetary Thrusters project', () => {
 
     ctx.resources = { colony: { energy: { value: 0, decrease(v){ this.value -= v; }, updateStorageCap(){ } } } };
     global.resources = ctx.resources;
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+    const celestial = { mass: 1, radius: 1, rotationPeriod: 10, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
@@ -86,8 +92,11 @@ describe('Planetary Thrusters project', () => {
 
     ctx.resources = { colony: { energy: { modifyRate: jest.fn(), value: 100, decrease(){}, updateStorageCap(){} } } };
     global.resources = ctx.resources;
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+    const celestial = { mass: 1, radius: 1, rotationPeriod: 10, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'pt');
@@ -112,8 +121,11 @@ describe('Planetary Thrusters project', () => {
 
     ctx.resources = { colony: { energy: { modifyRate: jest.fn(), value: 100, decrease(){}, updateStorageCap(){} } } };
     global.resources = ctx.resources;
-    ctx.currentPlanetParameters = { celestialParameters: { mass: 1, radius: 1, rotationPeriod: 10 } };
+    const celestial = { mass: 1, radius: 1, rotationPeriod: 10, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
     global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
 
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'pt');
@@ -138,6 +150,12 @@ describe('Planetary Thrusters project', () => {
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
+    const celestial = { mass: 1, radius: 1, rotationPeriod: 10, starMass: 1.989e30 };
+    ctx.currentPlanetParameters = { celestialParameters: celestial, star: { massSolar: 1 } };
+    ctx.terraforming = { celestialParameters: celestial };
+    global.currentPlanetParameters = ctx.currentPlanetParameters;
+    global.terraforming = ctx.terraforming;
+
     const config = ctx.projectParameters.planetaryThruster;
     const project = new ctx.PlanetaryThrustersProject(config, 'planetaryThruster');
     project.power = 75;
@@ -152,5 +170,10 @@ describe('Planetary Thrusters project', () => {
     expect(loaded.step).toBe(5);
     expect(loaded.spinInvest).toBe(true);
     expect(loaded.motionInvest).toBe(false);
+  });
+  afterEach(() => {
+    delete global.resources;
+    delete global.currentPlanetParameters;
+    delete global.terraforming;
   });
 });

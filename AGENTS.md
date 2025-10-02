@@ -7,6 +7,7 @@
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
+- If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -178,8 +179,10 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
+- Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Milestones subtab remains hidden until Terraforming measurements research is completed.
 - Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
@@ -187,4 +190,50 @@ The planet visualiser has been modularised into files covering core setup, light
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
+- Chemical Reactors now support multiple selectable recipes, including Bosch water synthesis, direct hydrogen-oxygen combination, and Sabatier methane production.
 - Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
+- Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
+- Added a fullscreen loading overlay that displays while the game or a save file is loading.
+- Milestones subtab remains hidden until Terraforming measurements research is completed.
+- Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
+- Added a hydrogen import special project mirroring nitrogen harvesting to gather atmospheric hydrogen when unlocked.
+- Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
+- Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
+- Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
+- Chemical Reactors now support multiple selectable recipes, including Bosch water synthesis, direct hydrogen-oxygen combination, and Sabatier methane production.
+- Planet visualizer debug sliders are hidden by default; use the `debug_mode(true)` console command to reveal them, and the setting persists in save files.
+- Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
+- Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
+- Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.
+- Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
+- Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.
+- Introduced an Antimatter Battery structure that stores a quadrillion units of energy for 1000 metal and 100 superconductors.
+- Added an Antimatter Farm energy building that converts 2 quadrillion energy into the new locked Antimatter special resource.
+- Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
+  lly without mutating base data.
+- Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
+- Antimatter is now produced automatically based on terraformed worlds and capped at ten hours of output.
+
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
+  lly without mutating base data.
+- Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Galaxy sector panels now show the selected sector name alongside a descending list of faction control shares.
+- Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
+- Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
+- Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.
+- Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
+- The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
+- Galaxy faction control caches only rebuild when sector ownership changes, and the galaxy map now displays shield badges on UHF sectors plus skull badges on contested or bordering alien sectors with sector power folded into each total.
+- Sector details gained a Sector Management block (shown only when the UHF has control) summarising worlds, fleet defense, and combined strength alongside an Enemy Strength section that breaks out sector and fleet contributions to match the skull badge total.
+- Logistics & Statistics now reports UHF threat coverage and lifetime successful operations with a placeholder tooltip while final copy is pending.
+- Manual spaceship assignments can borrow ships from the active auto-assigned project when available, without disabling automation.
+- Celestial parameters now store a galaxy sector identifier, and random worlds roll a sector assignment that appears when the Galaxy Manager is active.
+- Galaxy sector base power values are configurable via `sector-parameters.js`, including a 1000 power core sector override.
+- Boosted base power to 10000 for sectors R5-29, R5-19, R4-13, R4-09, and R6-05, and set their adjacent sectors to 2000 to reinforce nearby defenses.
+- AI-controlled galaxy factions now stockpile surplus strength above a defensiveness threshold and launch randomized 5–15% capacity operations every minute once the reserve is met, still prioritizing contested or neighboring enemy sectors.
+- UHF fleet defense now divides available border strength evenly instead of weighting distribution by threat levels.
