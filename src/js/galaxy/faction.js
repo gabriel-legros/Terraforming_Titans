@@ -175,9 +175,6 @@ class GalaxyFaction {
             }
         }
         this.fleetCapacity = capacity;
-        if (this.fleetPower > capacity) {
-            this.fleetPower = capacity;
-        }
         if (this.fleetPower < 0) {
             this.fleetPower = 0;
         }
