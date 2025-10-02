@@ -2,6 +2,155 @@
   const PlanetVisualizer = window.PlanetVisualizer;
   if (!PlanetVisualizer) return;
 
+  const TYPE_SURFACE_PRESETS = {
+    default: {
+      highlight: '#ffffff',
+      shadow: '#000000',
+      highlightMix: 0.22,
+      shadowMix: 0.35,
+      highlightJitter: 0.08,
+      shadowJitter: 0.12,
+      tintStrength: 0,
+      tintJitter: 0,
+    },
+    'mars-like': {
+      highlight: '#f2c7a0',
+      shadow: '#3c1410',
+      highlightMix: 0.26,
+      shadowMix: 0.42,
+      highlightJitter: 0.08,
+      shadowJitter: 0.1,
+      tint: '#b65c3a',
+      tintStrength: 0.05,
+      tintJitter: 0.02,
+    },
+    'cold-desert': {
+      highlight: '#f4e4c4',
+      shadow: '#2f1f10',
+      highlightMix: 0.28,
+      shadowMix: 0.38,
+      highlightJitter: 0.08,
+      shadowJitter: 0.08,
+      tint: '#c19a68',
+      tintStrength: 0.06,
+      tintJitter: 0.03,
+    },
+    'desiccated-desert': {
+      highlight: '#f9ebd2',
+      shadow: '#3a2514',
+      highlightMix: 0.3,
+      shadowMix: 0.4,
+      highlightJitter: 0.1,
+      shadowJitter: 0.1,
+      tint: '#d1a86f',
+      tintStrength: 0.07,
+      tintJitter: 0.03,
+    },
+    'icy-moon': {
+      highlight: '#edf4ff',
+      shadow: '#223449',
+      highlightMix: 0.42,
+      shadowMix: 0.48,
+      highlightJitter: 0.12,
+      shadowJitter: 0.12,
+      tint: '#7aa1c4',
+      tintStrength: 0.08,
+      tintJitter: 0.04,
+    },
+    'titan-like': {
+      highlight: '#f7e9c3',
+      shadow: '#2f1e06',
+      highlightMix: 0.32,
+      shadowMix: 0.46,
+      highlightJitter: 0.08,
+      shadowJitter: 0.09,
+      tint: '#b88c3a',
+      tintStrength: 0.08,
+      tintJitter: 0.03,
+    },
+    'carbon-planet': {
+      highlight: '#d0d6de',
+      shadow: '#05080b',
+      highlightMix: 0.22,
+      shadowMix: 0.55,
+      highlightJitter: 0.07,
+      shadowJitter: 0.1,
+      tint: '#2a2c39',
+      tintStrength: 0.12,
+      tintJitter: 0.05,
+    },
+    'super-earth': {
+      highlight: '#e0f3e0',
+      shadow: '#142c18',
+      highlightMix: 0.35,
+      shadowMix: 0.44,
+      highlightJitter: 0.1,
+      shadowJitter: 0.1,
+      tint: '#3a7a40',
+      tintStrength: 0.07,
+      tintJitter: 0.03,
+    },
+    'venus-like': {
+      highlight: '#fff1d2',
+      shadow: '#311c08',
+      highlightMix: 0.34,
+      shadowMix: 0.45,
+      highlightJitter: 0.09,
+      shadowJitter: 0.09,
+      tint: '#c59a4d',
+      tintStrength: 0.07,
+      tintJitter: 0.03,
+    },
+  };
+
+  const clamp01 = (v) => (v < 0 ? 0 : (v > 1 ? 1 : v));
+
+  const hexToRgb = (hex) => {
+    const value = parseInt(hex.slice(1), 16);
+    return {
+      r: (value >> 16) & 255,
+      g: (value >> 8) & 255,
+      b: value & 255,
+    };
+  };
+
+  const hashStringToUint = (str) => {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+
+  const uintToUnit = (value) => (value >>> 0) / 4294967295;
+
+  const createRngFromKey = (key) => {
+    let state = hashStringToUint(key) >>> 0;
+    if (state === 0) state = 0x6d2b79f5;
+    return () => {
+      state = (state + 0x6d2b79f5) >>> 0;
+      let z = state;
+      z = Math.imul(z ^ (z >>> 15), 1 | z);
+      z ^= z + Math.imul(z ^ (z >>> 7), 61 | z);
+      return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  const encodeTypeOffsets = (str) => {
+    let ox = 0;
+    let oy = 0;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      if ((i & 1) === 0) {
+        ox += code * (i + 1);
+      } else {
+        oy += code * (i + 1);
+      }
+    }
+    return { x: ox, y: oy };
+  };
+
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
@@ -15,7 +164,8 @@
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${fKey}`;
+    const typeKey = this.getCurrentArchetype() || 'default';
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${typeKey}|${baseColorKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -29,36 +179,12 @@
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength) {
     const w = 512;
     const h = 256;
+    const typeValue = this.getCurrentArchetype();
+    const typeForNoise = typeValue || 'default';
+    const planetSeed = this.hashSeedFromPlanet();
+    const craterSeedKey = `${planetSeed.x.toFixed(6)}_${planetSeed.y.toFixed(6)}_${typeForNoise}`;
 
-    if (!this.craterLayer) {
-      const craterCanvas = document.createElement('canvas');
-      craterCanvas.width = w; craterCanvas.height = h;
-      const cctx = craterCanvas.getContext('2d');
-      const maxCount = Math.floor(150 * 1 + 50);
-      for (let i = 0; i < maxCount; i++) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        const r = (0.5 + Math.random() * 3) * (0.5 + 1);
-        const g1 = cctx.createRadialGradient(x, y, r * 0.6, x, y, r);
-        g1.addColorStop(0, 'rgba(0,0,0,0)');
-        g1.addColorStop(1, 'rgba(0,0,0,0.25)');
-        cctx.fillStyle = g1;
-        cctx.beginPath();
-        cctx.arc(x, y, r, 0, Math.PI * 2);
-        cctx.fill();
-
-        const g2 = cctx.createRadialGradient(x, y, 0, x, y, r * 0.6);
-        g2.addColorStop(0, 'rgba(255,255,255,0.08)');
-        g2.addColorStop(1, 'rgba(255,255,255,0)');
-        cctx.fillStyle = g2;
-        cctx.beginPath();
-        cctx.arc(x, y, r * 0.7, 0, Math.PI * 2);
-        cctx.fill();
-      }
-      this.craterLayer = craterCanvas;
-      const img = cctx.getImageData(0, 0, w, h);
-      const data = img.data;
-      this.craterAlphaData = new Float32Array(w * h);
+    if (!this._zoneRowIndex || this._zoneRowIndex.length !== h) {
       const zoneForV = (v) => {
         const latRad = (0.5 - v) * Math.PI;
         const absDeg = Math.abs(latRad * (180 / Math.PI));
@@ -70,6 +196,51 @@
       for (let y = 0; y < h; y++) {
         this._zoneRowIndex[y] = zoneForV(y / (h - 1));
       }
+    }
+
+    if (!this.craterLayer || this.craterSeedKey !== craterSeedKey) {
+      const craterCanvas = document.createElement('canvas');
+      craterCanvas.width = w; craterCanvas.height = h;
+      const cctx = craterCanvas.getContext('2d');
+      const craterParamsBase = `${typeForNoise}|crater`;
+      const densityMul = 0.85 + uintToUnit(hashStringToUint(`${craterParamsBase}|density`)) * 0.6;
+      const sizeMul = 0.6 + uintToUnit(hashStringToUint(`${craterParamsBase}|size`)) * 1.0;
+      const highlightBase = 0.05 + uintToUnit(hashStringToUint(`${craterParamsBase}|highlight`)) * 0.08;
+      const shadowBase = 0.18 + uintToUnit(hashStringToUint(`${craterParamsBase}|shadow`)) * 0.14;
+      const latBias = (uintToUnit(hashStringToUint(`${craterParamsBase}|lat`)) - 0.5) * 0.6;
+      const rng = createRngFromKey(`${craterSeedKey}|rng`);
+      const baseCount = 160 * densityMul;
+      const maxCount = Math.floor(baseCount + rng() * 70);
+      for (let i = 0; i < maxCount; i++) {
+        const x = rng() * w;
+        const rawY = rng();
+        const biasedY = rawY + (rawY - 0.5) * latBias;
+        const y = Math.max(0, Math.min(1, biasedY)) * h;
+        const radius = (0.5 + rng() * 3.2) * sizeMul;
+        const craterStrength = 0.7 + rng() * 0.6;
+        const shadowAlpha = Math.min(0.4, shadowBase * craterStrength);
+        const g1 = cctx.createRadialGradient(x, y, radius * 0.6, x, y, radius);
+        g1.addColorStop(0, 'rgba(0,0,0,0)');
+        g1.addColorStop(1, `rgba(0,0,0,${shadowAlpha})`);
+        cctx.fillStyle = g1;
+        cctx.beginPath();
+        cctx.arc(x, y, radius, 0, Math.PI * 2);
+        cctx.fill();
+
+        const highlightRadius = radius * (0.55 + rng() * 0.2);
+        const highlightAlpha = Math.min(0.2, highlightBase * (0.9 + rng() * 0.6));
+        const g2 = cctx.createRadialGradient(x, y, 0, x, y, highlightRadius);
+        g2.addColorStop(0, `rgba(255,255,255,${highlightAlpha})`);
+        g2.addColorStop(1, 'rgba(255,255,255,0)');
+        cctx.fillStyle = g2;
+        cctx.beginPath();
+        cctx.arc(x, y, highlightRadius, 0, Math.PI * 2);
+        cctx.fill();
+      }
+
+      const img = cctx.getImageData(0, 0, w, h);
+      const data = img.data;
+      this.craterAlphaData = new Float32Array(w * h);
       this.craterZoneHists = {
         0: { counts: new Uint32Array(256), total: 0 },
         1: { counts: new Uint32Array(256), total: 0 },
@@ -86,6 +257,8 @@
           this.craterZoneHists[zi].total++;
         }
       }
+      this.craterLayer = craterCanvas;
+      this.craterSeedKey = craterSeedKey;
     }
 
     const canvas = document.createElement('canvas');
@@ -101,10 +274,30 @@
       const b2 = Math.round(ab + (bb - ab) * t);
       return `rgb(${r},${g},${b2})`;
     };
-    const waterT = (this.viz.coverage?.water || 0) / 100;
+    const palette = TYPE_SURFACE_PRESETS[typeValue] || TYPE_SURFACE_PRESETS.default;
+    const offsets = encodeTypeOffsets(typeForNoise);
+    const seededNoise = (sx, sy, salt) => {
+      const x = sx + offsets.x * 0.001 + planetSeed.x * 97.13;
+      const y = sy + offsets.y * 0.001 + planetSeed.y * 131.79;
+      const v = Math.sin(x * 12.9898 + y * 78.233 + salt * 37.719) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const highlightNoise = seededNoise(0.37, 0.91, 11.3);
+    const shadowNoise = seededNoise(0.53, 1.23, 23.5);
+    const tintNoise = seededNoise(2.11, 0.37, 5.71);
     const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
-    const topCol = mix(baseHex, '#ffffff', 0.2);
-    const botCol = mix(baseHex, '#000000', 0.35);
+    const topBlend = clamp01(palette.highlightMix + (highlightNoise - 0.5) * palette.highlightJitter);
+    const bottomBlend = clamp01(palette.shadowMix + (shadowNoise - 0.5) * palette.shadowJitter);
+    const topTarget = palette.highlight || '#ffffff';
+    const bottomTarget = palette.shadow || '#000000';
+    const topCol = mix(baseHex, topTarget, topBlend);
+    const botCol = mix(baseHex, bottomTarget, bottomBlend);
+    const tintStrengthBase = palette.tintStrength ?? 0;
+    const tintStrength = tintStrengthBase > 0
+      ? clamp01(tintStrengthBase + (tintNoise - 0.5) * (palette.tintJitter ?? 0))
+      : 0;
+    const tintColor = palette.tint ? hexToRgb(palette.tint) : null;
+    const hasTint = tintStrength > 0 && !!tintColor;
     const base = ctx.createLinearGradient(0, 0, 0, h);
     base.addColorStop(0, topCol);
     base.addColorStop(1, botCol);
@@ -123,10 +316,36 @@
       const tdata = timg.data;
 
       // Prepare large-scale feature noise (dark regions)
-      const seed = this.hashSeedFromPlanet();
-      let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287)) >>> 0;
+      const seed = planetSeed;
+      const featureKeyBase = `${typeForNoise}|surface-large`;
+      const typeShiftX = (uintToUnit(hashStringToUint(`${featureKeyBase}|shiftX`)) - 0.5) * 1.6;
+      const typeShiftY = (uintToUnit(hashStringToUint(`${featureKeyBase}|shiftY`)) - 0.5) * 1.6;
+      const typeScaleMul = 0.65 + uintToUnit(hashStringToUint(`${featureKeyBase}|scale`)) * 1.35;
+      const typeAnisoMul = 0.75 + uintToUnit(hashStringToUint(`${featureKeyBase}|aniso`)) * 0.7;
+      const typeLacunarity = 1.8 + uintToUnit(hashStringToUint(`${featureKeyBase}|lac`)) * 0.7;
+      const typeGain = 0.45 + uintToUnit(hashStringToUint(`${featureKeyBase}|gain`)) * 0.3;
+      const typeContrastMul = 0.75 + uintToUnit(hashStringToUint(`${featureKeyBase}|contrast`)) * 0.7;
+      let maskLow = 0.08 + uintToUnit(hashStringToUint(`${featureKeyBase}|low`)) * 0.25;
+      let maskHigh = 0.55 + uintToUnit(hashStringToUint(`${featureKeyBase}|high`)) * 0.35;
+      if (maskHigh - maskLow < 0.12) {
+        const mid = (maskLow + maskHigh) * 0.5;
+        maskLow = mid - 0.06;
+        maskHigh = mid + 0.06;
+      }
+      if (maskLow < 0) maskLow = 0;
+      if (maskHigh > 1) maskHigh = 1;
+      const maskRange = Math.max(0.0001, maskHigh - maskLow);
+      let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287) ^ hashStringToUint(`${featureKeyBase}|seed`)) >>> 0;
+      const baseHashShiftX = planetSeed.x * 97.13 + typeShiftX * 17.19;
+      const baseHashShiftY = planetSeed.y * 131.79 + typeShiftY * 19.73;
+      const hashSalt = uintToUnit(hashStringToUint(`${featureKeyBase}|salt`)) * 13.7;
+      const rotation = uintToUnit(hashStringToUint(`${featureKeyBase}|rot`)) * Math.PI * 2;
+      const rotCos = Math.cos(rotation);
+      const rotSin = Math.sin(rotation);
       const hash = (x, y) => {
-        const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.000071) * 43758.5453;
+        const px = x + baseHashShiftX;
+        const py = y + baseHashShiftY;
+        const n = Math.sin(px * 127.1 + py * 311.7 + s * 0.000071 + hashSalt) * 43758.5453;
         return n - Math.floor(n);
       };
       const smooth = (t) => t * t * (3 - 2 * t);
@@ -136,7 +355,7 @@
         const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
         return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
       };
-      const fbm = (x, y, oct = 4, lac = 2.0, gain = 0.5) => {
+      const fbm = (x, y, oct = 4, lac = typeLacunarity, gain = typeGain) => {
         let f = 0, amp = 0.5, freq = 1.0;
         for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
         return f;
@@ -163,23 +382,34 @@
         if (fEnabled && fStrength > 0) {
           const x = i % w;
           const y = (i - x) / w;
-          const nx = (x / w + fOffX) * fScale;
-          const ny = (y / h + fOffY) * (fScale * 0.5);
-          let v = fbm(nx, ny, 4, 2.0, 0.5); // 0..1
+          const cx = x / w - 0.5;
+          const cy = y / h - 0.5;
+          const rx = cx * rotCos - cy * rotSin;
+          const ry = cx * rotSin + cy * rotCos;
+          const nx = (rx + 0.5 + fOffX + typeShiftX) * fScale * typeScaleMul;
+          const ny = (ry + 0.5 + fOffY + typeShiftY) * (fScale * 0.5 * typeAnisoMul);
+          let v = fbm(nx, ny);
           v = Math.max(0, Math.min(1, v));
-          // Stronger, broader mask: shift and scale before contrast
-          let level = (v - 0.1) / 0.5; // maps 0.1->0 and 0.6->1
+          let level = (v - maskLow) / maskRange;
           if (level < 0) level = 0; else if (level > 1) level = 1;
-          const shaped = Math.pow(level, Math.max(0.0001, fContrast));
+          const shaped = Math.pow(level, Math.max(0.0001, fContrast * typeContrastMul));
           featureMul = 1 - fStrength * shaped;
           if (featureMul < 0) featureMul = 0;
         }
 
         const idx = i * 4;
         const mul = heightMul * featureMul;
-        tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
-        tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
-        tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
+        let r = Math.min(255, Math.floor(tdata[idx] * mul));
+        let g = Math.min(255, Math.floor(tdata[idx + 1] * mul));
+        let b = Math.min(255, Math.floor(tdata[idx + 2] * mul));
+        if (hasTint) {
+          r = Math.round(r + (tintColor.r - r) * tintStrength);
+          g = Math.round(g + (tintColor.g - g) * tintStrength);
+          b = Math.round(b + (tintColor.b - b) * tintStrength);
+        }
+        tdata[idx] = r;
+        tdata[idx + 1] = g;
+        tdata[idx + 2] = b;
       }
       ctx.putImageData(timg, 0, 0);
     } catch (e) {}

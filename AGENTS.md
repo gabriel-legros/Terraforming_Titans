@@ -177,6 +177,8 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 # Planet Visualization
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
+- Surface textures seed large-scale feature noise and crater patterns with the current RWG archetype so worlds of the same class develop distinct terrain silhouettes and impact maps between runs.
+
 ## Updates
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
