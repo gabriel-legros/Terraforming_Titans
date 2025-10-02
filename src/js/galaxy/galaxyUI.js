@@ -2849,7 +2849,7 @@ function cacheGalaxyElements() {
     const threatTooltip = doc.createElement('span');
     threatTooltip.className = 'info-tooltip-icon';
     threatTooltip.innerHTML = '&#9432;';
-    threatTooltip.title = 'placeholder threat level description.';
+    threatTooltip.title = 'Threat is a measure of how seriously the rest of the galaxy views your faction.  The duchies also have a threat factor.  When choosing a target, factions will prioritize higher threat enemies.  At 0 threat, a faction is considered to be not worth targeting.  Any faction that fully controls 40 or more sectors becomes a priority threat, and the galaxy will unite against them until they fall below 40 again.';
     threatLabel.appendChild(threatLabelText);
     threatLabel.appendChild(threatTooltip);
     const threatValue = doc.createElement('span');
