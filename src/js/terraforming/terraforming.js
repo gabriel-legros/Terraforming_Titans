@@ -816,7 +816,7 @@ class Terraforming extends EffectableEntity{
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
     const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface);
-    const slabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
+    const baseSlabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -825,11 +825,19 @@ class Terraforming extends EffectableEntity{
         ? calculateZonalSurfaceFractions(this, zone)
         : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
 
+        const pct = getZonePercentage(zone);
+        const zoneArea = (this.celestialParameters.surfaceArea || 0) * pct;
+        const slabOptions = {
+            ...baseSlabOptions,
+            zoneArea,
+            zoneLiquidWater: this.zonalWater[zone]?.liquid || 0
+        };
+
         const zTemps = dayNightTemperaturesModel({
-        ...baseParams,
-        flux: zoneFlux,
-        surfaceFractions: zoneFractions,
-        autoSlabOptions: slabOptions
+            ...baseParams,
+            flux: zoneFlux,
+            surfaceFractions: zoneFractions,
+            autoSlabOptions: slabOptions
         });
 
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
@@ -848,20 +856,19 @@ class Terraforming extends EffectableEntity{
               ? atmosphericHeatCapacity
               : (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6)));
 
-        const pct = getZonePercentage(zone);                       // fraction of surface (0..1)
-        const area = (this.celestialParameters.surfaceArea || 0) * pct; // m²
+        const area = zoneArea; // m²
         const capacityPerArea = Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY);
 
         z[zone] = {
-        mean:  zTemps.mean,
-        day:   zTemps.day,
-        night: zTemps.night,
-        eq:    zTemps.equilibriumTemperature,
-        albedo: zTemps.albedo,
-        frac:  zoneFractions,
-        area,
-        Cslab,
-        capacityPerArea
+            mean:  zTemps.mean,
+            day:   zTemps.day,
+            night: zTemps.night,
+            eq:    zTemps.equilibriumTemperature,
+            albedo: zTemps.albedo,
+            frac:  zoneFractions,
+            area,
+            Cslab,
+            capacityPerArea
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
