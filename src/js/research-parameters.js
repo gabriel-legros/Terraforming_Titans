@@ -1633,7 +1633,7 @@ const researchParameters = {
       {
         id: 'galactic_market',
         name: 'Galactic Market Concordat',
-        description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.',
+        description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
         cost: { advancedResearch: 300000 },
         prerequisites: [],
         effects: [
