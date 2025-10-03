@@ -1631,6 +1631,32 @@ const researchParameters = {
         ]
       },
       {
+        id: 'galactic_market',
+        name: 'Galactic Market Concordat',
+        description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.',
+        cost: { advancedResearch: 300000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'galactic_market',
+            type: 'enable'
+          },
+          {
+            target: 'project',
+            targetId: 'cargo_rocket',
+            type: 'permanentProjectDisable',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'exportResources',
+            type: 'permanentProjectDisable',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'mechanical_assistance',
         name: 'Mechanical Assistance',
         description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',
