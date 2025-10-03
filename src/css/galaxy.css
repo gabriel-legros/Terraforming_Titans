@@ -253,6 +253,7 @@
   align-items: center;
   font-size: 0.95rem;
   color: #63a6ff;
+  text-transform: none;
 }
 
 .galaxy-section__body {
