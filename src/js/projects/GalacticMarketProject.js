@@ -487,12 +487,12 @@ class GalacticMarketProject extends Project {
     if (!this._SELL_MULTIPLIERS) {
       this._SELL_MULTIPLIERS = {
         metal: 1_000_000_000,
-        glass: 100_000_000,
+        glass: 10_000_000,
         water: 0,
         food: 100_000_000,
-        components: 10_000_000,
-        electronics: 10_000_000,
-        androids: 100_000_000,
+        components: 100_000_000,
+        electronics: 100_000_000,
+        androids: 10_000_000,
         spaceships: 100_000,
       };
     }

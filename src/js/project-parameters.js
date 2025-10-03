@@ -14,12 +14,12 @@ const projectParameters = {
       resourceChoiceGainCost: {
         colony: {
           metal : 2,
-          glass: 2,
+          glass: 1,
           water : 1,
           food : 1,
           components: 10,
           electronics: 10,
-          androids: 1000,
+          androids: 100,
         },
         special: {
           spaceships:25000
@@ -42,12 +42,12 @@ const projectParameters = {
       resourceChoiceGainCost: {
         colony: {
           metal: 2,
-          glass: 2,
+          glass: 1,
           water: 1,
           food: 1,
           components: 10,
           electronics: 10,
-          androids: 1000,
+          androids: 100,
         },
         special: {
           spaceships: 25000,
