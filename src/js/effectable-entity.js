@@ -135,6 +135,9 @@ class EffectableEntity {
         case 'enableContent':
           this.enableContent(effect.targetId);
           break;
+        case 'permanentProjectDisable':
+          this.applyPermanentProjectDisable?.(effect);
+          break;
         case 'activateTab':
           this.activateTab(effect.targetId)
           break;
@@ -503,10 +506,13 @@ class EffectableEntity {
         }
       }
 
-      applyLifeGrowthMultiplier(effect) {
+  applyLifeGrowthMultiplier(effect) {
         // multiplier effects are computed on demand in LifeManager
       }
 
+
+    applyPermanentProjectDisable(effect) {
+    }
 
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
