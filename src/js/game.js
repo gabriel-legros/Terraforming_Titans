@@ -146,6 +146,7 @@ function initializeGameState(options = {}) {
   let savedAlienArtifact = null;
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
+  let savedAntimatter = null;
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
   }
@@ -165,6 +166,13 @@ function initializeGameState(options = {}) {
     savedAlienArtifact = {
       value: resources.special.alienArtifact.value,
       unlocked: resources.special.alienArtifact.unlocked,
+    };
+  }
+  if (preserveManagers && resources && resources.special && resources.special.antimatter) {
+    savedAntimatter = {
+      value: resources.special.antimatter.value,
+      unlocked: resources.special.antimatter.unlocked,
+      enabled: resources.special.antimatter.enabled,
     };
   }
   tabManager = new TabManager({
@@ -225,6 +233,13 @@ function initializeGameState(options = {}) {
   if (savedAlienArtifact) {
     resources.special.alienArtifact.value = savedAlienArtifact.value;
     resources.special.alienArtifact.unlocked = savedAlienArtifact.unlocked;
+  }
+  if (savedAntimatter) {
+    resources.special.antimatter.value = savedAntimatter.value;
+    resources.special.antimatter.unlocked = savedAntimatter.unlocked;
+    if (Object.prototype.hasOwnProperty.call(savedAntimatter, 'enabled')) {
+      resources.special.antimatter.enabled = savedAntimatter.enabled;
+    }
   }
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
