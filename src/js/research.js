@@ -145,6 +145,14 @@ class Research {
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
       }
+      if (research.disableFlag) {
+        const flags = Array.isArray(research.disableFlag)
+          ? research.disableFlag
+          : [research.disableFlag];
+        if (flags.some(flag => this.isBooleanFlagSet(flag))) {
+          return false;
+        }
+      }
       if (research.requiresMethane && !this.planetHasMethane()) {
         return false;
       }

@@ -856,6 +856,7 @@ const researchParameters = {
         description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Cargo rockets become continuous, consuming funding and delivering purchases in real time.',
         cost: { research: 50000000 },
         prerequisites: [],
+        disableFlag: 'galacticMarket',
         effects: [
             {
               target: 'resource',
