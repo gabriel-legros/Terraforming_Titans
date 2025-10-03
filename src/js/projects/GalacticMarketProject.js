@@ -492,7 +492,7 @@ class GalacticMarketProject extends Project {
         food: 100_000_000,
         components: 100_000_000,
         electronics: 100_000_000,
-        androids: 10_000_000,
+        androids: 1_000_000,
         spaceships: 100_000,
       };
     }
