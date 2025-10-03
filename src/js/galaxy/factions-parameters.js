@@ -108,7 +108,7 @@ const galaxyFactionParameters = [
     {
         id: 'okoth',
         name: 'Okoth',
-        color: 'red',
+        color: '#ef4444',
         defensiveness: 0.5,
         autoOperationRange: {
             min: 0.1,
