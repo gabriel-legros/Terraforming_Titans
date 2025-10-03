@@ -25,6 +25,20 @@ let cachedToggleButtons = [];
 // Flag to rebuild caches when invalidated
 let researchUICacheInvalidated = true;
 
+function hasActiveDisableFlag(researchItem) {
+    if (!researchItem || !researchItem.disableFlag) {
+        return false;
+    }
+    const manager = researchManager;
+    if (!manager || !manager.isBooleanFlagSet) {
+        return false;
+    }
+    const flags = Array.isArray(researchItem.disableFlag)
+        ? researchItem.disableFlag
+        : [researchItem.disableFlag];
+    return flags.some(flag => manager.isBooleanFlagSet(flag));
+}
+
 function formatResearchCost(cost) {
     const parts = [];
     if (cost.research) {
@@ -56,6 +70,8 @@ function updateAllResearchButtons(researchData) {
             }
 
             const isVisible = visibleIds.has(researchItem.id);
+            const hiddenByDisableFlag = !researchItem.isResearched && hasActiveDisableFlag(researchItem);
+            container.style.display = hiddenByDisableFlag ? 'none' : '';
             updateResearchButtonText(button, researchItem, isVisible);
             if (costEl && descEl) {
                 if (isVisible) {
@@ -267,6 +283,10 @@ function loadResearchCategory(category) {
         const researchCost = document.createElement('p');
         researchCost.classList.add('research-cost');
         researchCost.textContent = isVisible ? `Cost: ${formatResearchCost(research.cost)}` : 'Cost: ???';
+
+        if (!research.isResearched && hasActiveDisableFlag(research)) {
+            researchContainer.style.display = 'none';
+        }
 
         // Append button, cost, and description to the research container
         researchContainer.appendChild(researchButton);
