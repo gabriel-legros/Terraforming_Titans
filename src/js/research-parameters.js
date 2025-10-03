@@ -875,13 +875,6 @@ const researchParameters = {
               type: 'booleanFlag',
               flagId : 'continuousTrading',
               value : true
-            },
-            {
-
-              target: 'researchManager',
-              type: 'booleanFlag',
-              flagId: 'galacticMarket',
-              value: true
             }
         ],
       }, 
@@ -1659,6 +1652,12 @@ const researchParameters = {
             target: 'project',
             targetId: 'exportResources',
             type: 'permanentProjectDisable',
+            value: true
+          },
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'galacticMarket',
             value: true
           }
         ]
