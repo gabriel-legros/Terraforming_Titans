@@ -27,6 +27,34 @@ const projectParameters = {
       }
     }
   },
+  galactic_market: {
+    type: 'GalacticMarketProject',
+    name: "Galactic Market",
+    category :"resources",
+    cost: {
+    },
+    duration: 0,
+    description: "Open trading lanes with the wider galaxy to import resources funded through market exchanges.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      resourceChoiceGainCost: {
+        colony: {
+          metal: 2,
+          glass: 2,
+          water: 1,
+          food: 1,
+          components: 10,
+          electronics: 10,
+          androids: 1000,
+        },
+        special: {
+          spaceships: 25000,
+        },
+      },
+    }
+  },
   import_colonists_1: {
     type: 'Project',
     name: "Import colonists",

@@ -458,6 +458,54 @@ function updateSustainCostDisplay(project) {
 }
 
 function updateTotalCostDisplay(project) {
+  if (globalThis.GalacticMarketProject && project instanceof globalThis.GalacticMarketProject) {
+    const elements = projectElements[project.name] || {};
+    const { rowMeta = [] } = elements;
+
+    if (!elements.buyInputs || elements.buyInputs.some((input) => !input.isConnected)) {
+      elements.buyInputs = Array.from(
+        elements.resourceSelectionContainer?.querySelectorAll(`.buy-selection-${project.name}`) || []
+      );
+    }
+
+    if (!elements.sellInputs || elements.sellInputs.some((input) => !input.isConnected)) {
+      elements.sellInputs = Array.from(
+        elements.resourceSelectionContainer?.querySelectorAll(`.sell-selection-${project.name}`) || []
+      );
+    }
+
+    let totalCost = 0;
+
+    rowMeta.forEach((meta, index) => {
+      const buyInput = elements.buyInputs?.[index];
+      const sellInput = elements.sellInputs?.[index];
+      const buyQuantity = buyInput ? parseSelectionQuantity(buyInput.value) : 0;
+      const sellQuantity = sellInput ? parseSelectionQuantity(sellInput.value) : 0;
+      const buyPrice = project.getBuyPrice(meta.category, meta.resource);
+      const sellPrice = project.getSellPrice(meta.category, meta.resource, sellQuantity);
+      totalCost += buyQuantity * buyPrice;
+      totalCost -= sellQuantity * sellPrice;
+    });
+
+    const totalCostValue = elements.totalCostValue;
+    const totalCostLabel = elements.totalCostLabel;
+    if (totalCostValue && totalCostLabel) {
+      const available = resources.colony?.funding?.value || 0;
+      if (totalCost < 0) {
+        totalCostLabel.textContent = 'Total Gain: ';
+        totalCostValue.textContent = formatNumber(-totalCost, true);
+      } else {
+        totalCostLabel.textContent = 'Total Cost: ';
+        totalCostValue.textContent = formatNumber(totalCost, true);
+      }
+      const highlight = project.isContinuous()
+        ? project.shortfallLastTick
+        : totalCost > 0 && available < totalCost;
+      totalCostValue.style.color = highlight ? 'red' : '';
+    }
+    return;
+  }
+
   let totalCost = 0;
 
   const elements = projectElements[project.name] || {};
@@ -633,10 +681,15 @@ function updateProjectUI(projectName) {
 
       // Update the duration in the progress bar display
       if (elements.progressButton) {
+        const spaceshipCtor = globalThis.SpaceshipProject;
+        const cargoCtor = globalThis.CargoRocketProject;
+        const galacticCtor = globalThis.GalacticMarketProject;
         const isContinuousProject =
-          project.isContinuous() &&
-          ((typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) ||
-            (typeof CargoRocketProject !== 'undefined' && project instanceof CargoRocketProject));
+          project.isContinuous() && (
+            (spaceshipCtor && project instanceof spaceshipCtor) ||
+            (cargoCtor && project instanceof cargoCtor) ||
+            (galacticCtor && project instanceof galacticCtor)
+          );
         if (isContinuousProject) {
           if (project.autoStart && project.isActive && !project.isPaused) {
             elements.progressButton.textContent = 'Continuous';
