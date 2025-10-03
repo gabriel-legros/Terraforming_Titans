@@ -2407,7 +2407,7 @@ function cacheGalaxyElements() {
     overviewSection.header.classList.add('galaxy-section__header--with-icon');
     overviewSection.header.appendChild(createInfoTooltip(
         doc,
-        'Review sector control, contested borders, and active operations across the galaxy.'
+        'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  Conquering certain sectors will be required to advance the story.'
     ));
 
     const mapWrapper = doc.createElement('div');
@@ -2553,7 +2553,7 @@ function cacheGalaxyElements() {
     powerLabel.textContent = 'Fleet Power';
     powerLabel.appendChild(createInfoTooltip(
         doc,
-        'Assign how much fleet power to commit to this operation. Power spent here must be available and consumes antimatter when launched.'
+        'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
     ));
     formHeader.appendChild(powerLabel);
 
@@ -2841,7 +2841,7 @@ function cacheGalaxyElements() {
     logisticsPowerLabel.textContent = 'Fleet Power';
     logisticsPowerLabel.appendChild(createInfoTooltip(
         doc,
-        'Total UHF fleet strength currently ready to deploy in operations or defenses.'
+        'Total UHF fleet strength currently ready to deploy in operations or defenses.  This value grows proportionally to fleet capacity over time, but suffers exponential growth penalty after it reaches 50% of fleet capacity.'
     ));
     const logisticsPowerValue = doc.createElement('span');
     logisticsPowerValue.className = 'galaxy-logistics-stat__value';
@@ -2855,7 +2855,7 @@ function cacheGalaxyElements() {
     logisticsCapacityLabel.textContent = 'Fleet Capacity';
     logisticsCapacityLabel.appendChild(createInfoTooltip(
         doc,
-        'Maximum fleet power supported by logistics, upgrades, and sector control bonuses.'
+        'This is the maximum fleet power the UHF can support.   It is determined by 100 times the number of terraformed worlds, and further multiplied by upgrades.'
     ));
     const logisticsCapacityValue = doc.createElement('span');
     logisticsCapacityValue.className = 'galaxy-logistics-stat__value';
