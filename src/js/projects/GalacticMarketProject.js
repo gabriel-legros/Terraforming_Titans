@@ -109,9 +109,15 @@ class GalacticMarketProject extends Project {
           updateIncrement(Math.max(1, Math.floor(elements.increment / 10)));
         });
 
-        createHeaderButton('x10', () => {
+        const multiplyButton = createHeaderButton('x10', () => {
           updateIncrement(elements.increment * 10);
         });
+
+        const tooltip = document.createElement('span');
+        tooltip.className = 'info-tooltip-icon';
+        tooltip.title = 'Press the - button to shift the increment from buying to selling, increasing the sell amount.';
+        tooltip.innerHTML = '&#9432;';
+        headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
         headerRow.appendChild(headerControls);
       } else {
