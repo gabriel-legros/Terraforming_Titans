@@ -2342,6 +2342,14 @@ function detachDocumentPanListeners() {
     legacyPanAttached = false;
 }
 
+function createInfoTooltip(doc, title) {
+    const tooltip = doc.createElement('span');
+    tooltip.className = 'info-tooltip-icon';
+    tooltip.innerHTML = '&#9432;';
+    tooltip.title = title;
+    return tooltip;
+}
+
 function createGalaxySection(doc, title, description) {
     const section = doc.createElement('section');
     section.className = 'galaxy-section';
@@ -2396,6 +2404,11 @@ function cacheGalaxyElements() {
 
     const overviewSection = createGalaxySection(doc, 'Galactic Overview');
     overviewSection.section.classList.add('galaxy-section--overview');
+    overviewSection.header.classList.add('galaxy-section__header--with-icon');
+    overviewSection.header.appendChild(createInfoTooltip(
+        doc,
+        'Review sector control, contested borders, and active operations across the galaxy.'
+    ));
 
     const mapWrapper = doc.createElement('div');
     mapWrapper.className = 'galaxy-map-wrapper';
@@ -2536,8 +2549,12 @@ function cacheGalaxyElements() {
     operationsForm.appendChild(formHeader);
 
     const powerLabel = doc.createElement('span');
-    powerLabel.className = 'galaxy-operations-form__label';
+    powerLabel.className = 'galaxy-operations-form__label galaxy-operations-form__label--with-icon';
     powerLabel.textContent = 'Fleet Power';
+    powerLabel.appendChild(createInfoTooltip(
+        doc,
+        'Assign how much fleet power to commit to this operation. Power spent here must be available and consumes antimatter when launched.'
+    ));
     formHeader.appendChild(powerLabel);
 
     const powerAvailable = doc.createElement('span');
@@ -2820,8 +2837,12 @@ function cacheGalaxyElements() {
     const logisticsPowerRow = doc.createElement('div');
     logisticsPowerRow.className = 'galaxy-logistics-stat';
     const logisticsPowerLabel = doc.createElement('span');
-    logisticsPowerLabel.className = 'galaxy-logistics-stat__label';
+    logisticsPowerLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     logisticsPowerLabel.textContent = 'Fleet Power';
+    logisticsPowerLabel.appendChild(createInfoTooltip(
+        doc,
+        'Total UHF fleet strength currently ready to deploy in operations or defenses.'
+    ));
     const logisticsPowerValue = doc.createElement('span');
     logisticsPowerValue.className = 'galaxy-logistics-stat__value';
     logisticsPowerValue.textContent = '0';
@@ -2830,8 +2851,12 @@ function cacheGalaxyElements() {
     const logisticsCapacityRow = doc.createElement('div');
     logisticsCapacityRow.className = 'galaxy-logistics-stat';
     const logisticsCapacityLabel = doc.createElement('span');
-    logisticsCapacityLabel.className = 'galaxy-logistics-stat__label';
+    logisticsCapacityLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     logisticsCapacityLabel.textContent = 'Fleet Capacity';
+    logisticsCapacityLabel.appendChild(createInfoTooltip(
+        doc,
+        'Maximum fleet power supported by logistics, upgrades, and sector control bonuses.'
+    ));
     const logisticsCapacityValue = doc.createElement('span');
     logisticsCapacityValue.className = 'galaxy-logistics-stat__value';
     logisticsCapacityValue.textContent = '0';

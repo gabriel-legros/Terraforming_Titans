@@ -242,6 +242,19 @@
   color: #9cd3ff;
 }
 
+.galaxy-section__header--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.galaxy-section__header--with-icon .info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #63a6ff;
+}
+
 .galaxy-section__body {
   display: flex;
   flex-direction: column;
@@ -841,6 +854,19 @@
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.galaxy-operations-form__label--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.galaxy-operations-form__label--with-icon .info-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #63a6ff;
 }
 
 .galaxy-operations-form__available {
