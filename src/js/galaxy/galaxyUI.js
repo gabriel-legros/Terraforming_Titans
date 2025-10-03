@@ -75,6 +75,16 @@ const OPERATION_ARROW_MIN_LENGTH = 18;
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
 
+function getDevicePixelRatioSafe() {
+    const ratio = globalThis?.devicePixelRatio;
+    return Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+}
+
+function snapToDevicePixels(value) {
+    const ratio = getDevicePixelRatioSafe();
+    return Math.round(value * ratio) / ratio;
+}
+
 function getDefaultOperationDurationMs() {
     const provided = globalThis?.GALAXY_OPERATION_DURATION_MS;
     if (Number.isFinite(provided) && provided > 0) {
@@ -2082,9 +2092,11 @@ function updateGalaxyMapTransform(cache) {
         return;
     }
     const { mapContent, mapState } = cache;
-    const offsetX = Number.isFinite(mapState.offsetX) ? mapState.offsetX : 0;
-    const offsetY = Number.isFinite(mapState.offsetY) ? mapState.offsetY : 0;
+    const rawOffsetX = Number.isFinite(mapState.offsetX) ? mapState.offsetX : 0;
+    const rawOffsetY = Number.isFinite(mapState.offsetY) ? mapState.offsetY : 0;
     const scale = Number.isFinite(mapState.scale) && mapState.scale > 0 ? mapState.scale : 1;
+    const offsetX = snapToDevicePixels(rawOffsetX);
+    const offsetY = snapToDevicePixels(rawOffsetY);
     mapContent.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
@@ -2175,8 +2187,10 @@ function adjustGalaxyMapScale(multiplier, { focalX, focalY } = {}) {
     const focalScreenX = Number.isFinite(focalX) ? focalX : wrapperRect.width * 0.5;
     const focalScreenY = Number.isFinite(focalY) ? focalY : wrapperRect.height * 0.5;
 
-    mapState.offsetX = mapState.offsetX + (1 - scaleFactor) * (focalScreenX - mapState.offsetX);
-    mapState.offsetY = mapState.offsetY + (1 - scaleFactor) * (focalScreenY - mapState.offsetY);
+    const nextOffsetX = mapState.offsetX + (1 - scaleFactor) * (focalScreenX - mapState.offsetX);
+    const nextOffsetY = mapState.offsetY + (1 - scaleFactor) * (focalScreenY - mapState.offsetY);
+    mapState.offsetX = nextOffsetX;
+    mapState.offsetY = nextOffsetY;
     mapState.scale = targetScale;
     updateGalaxyMapTransform(cache);
 }
@@ -2407,7 +2421,7 @@ function cacheGalaxyElements() {
     overviewSection.header.classList.add('galaxy-section__header--with-icon');
     overviewSection.header.appendChild(createInfoTooltip(
         doc,
-        'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  Conquering certain sectors will be required to advance the story.'
+        'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.'
     ));
 
     const mapWrapper = doc.createElement('div');
@@ -2553,7 +2567,7 @@ function cacheGalaxyElements() {
     powerLabel.textContent = 'Fleet Power';
     powerLabel.appendChild(createInfoTooltip(
         doc,
-        'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
+        'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
     ));
     formHeader.appendChild(powerLabel);
 
