@@ -449,6 +449,36 @@
     align-items: center;
 }
 
+.galactic-market-grid {
+    gap: 12px;
+}
+
+.galactic-market-row {
+    grid-template-columns: minmax(160px, 1fr) 110px 120px minmax(160px, 1fr) 120px 110px 150px;
+}
+
+.galactic-market-row input[type="number"] {
+    width: 100%;
+}
+
+.galactic-market-controls {
+    justify-content: center;
+}
+
+.galactic-market-row > *:nth-child(1),
+.galactic-market-header > *:nth-child(1) {
+    justify-self: start;
+}
+
+.galactic-market-row > *:nth-child(n+2) {
+    justify-self: center;
+}
+
+.galactic-market-row:not(.galactic-market-header) > *:nth-child(3),
+.galactic-market-row:not(.galactic-market-header) > *:nth-child(5) {
+    justify-self: stretch;
+}
+
 .cargo-resource-label {
     font-weight: 600;
     color: #495057;
