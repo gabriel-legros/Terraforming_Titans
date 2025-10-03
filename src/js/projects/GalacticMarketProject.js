@@ -61,7 +61,10 @@ class GalacticMarketProject extends Project {
       { text: 'Buy Amount' },
       { type: 'controls' },
       { text: 'Sell Amount' },
-      { text: 'Sell Price' },
+      {
+        text: 'Sell Price',
+        tooltip: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
+      },
       { text: 'Saturation Amount' },
     ];
 
@@ -114,6 +117,13 @@ class GalacticMarketProject extends Project {
       } else {
         const span = document.createElement('span');
         span.textContent = config.text;
+        if (config.tooltip) {
+          const tooltip = document.createElement('span');
+          tooltip.className = 'info-tooltip-icon';
+          tooltip.title = config.tooltip;
+          tooltip.innerHTML = '&#9432;';
+          span.appendChild(tooltip);
+        }
         headerRow.appendChild(span);
       }
     });
