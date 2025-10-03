@@ -13,6 +13,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   // Visible either when unlocked or when collectors already exist
   isVisible() {
+    if (this.isPermanentlyDisabled()) {
+      return false;
+    }
     return this.unlocked || this.collectors > 0;
   }
 

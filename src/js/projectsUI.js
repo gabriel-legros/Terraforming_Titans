@@ -348,15 +348,15 @@ function getOrCreateCategoryContainer(category) {
 function moveProject(projectName, direction, shiftKey = false) {
     const project = projectManager.projects[projectName];
     const category = project.category || 'general';
-    const categoryProjects = projectManager
-      .getProjectStatuses()
-      .filter(p => (p.category || 'general') === category);
-    const visibleIndexes = [];
-    categoryProjects.forEach((p, idx) => {
-      if (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) {
-        visibleIndexes.push(idx);
-      }
-    });
+  const categoryProjects = projectManager
+    .getProjectStatuses()
+    .filter(p => (p.category || 'general') === category);
+  const visibleIndexes = [];
+  categoryProjects.forEach((p, idx) => {
+    if (!(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)) {
+      visibleIndexes.push(idx);
+    }
+  });
     const fromIndexFull = categoryProjects.findIndex(p => p.name === projectName);
     const fromVisiblePos = visibleIndexes.indexOf(fromIndexFull);
 
@@ -573,7 +573,7 @@ function updateProjectUI(projectName) {
       (typeof spaceManager !== 'undefined' &&
         spaceManager.getCurrentPlanetKey &&
         spaceManager.getCurrentPlanetKey() === project.attributes.planet);
-    const visible = typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked;
+    const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
     if (visible && planetOk) {
       projectItem.style.display = 'block';
     } else {
@@ -810,7 +810,7 @@ function updateProjectUI(projectName) {
     .getProjectStatuses()
     .filter(p => (p.category || 'general') === category);
   const categoryProjects = categoryProjectsAll.filter(p =>
-    typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked
+    !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
   );
   const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
@@ -914,6 +914,7 @@ function updateStoryProjectsVisibility() {
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === 'story' &&
+        !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) &&
         planetOk
       );
@@ -949,6 +950,7 @@ function updateMegaProjectsVisibility() {
       return (
         p.category === 'mega' &&
         planetOk &&
+        !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
       );
     });
