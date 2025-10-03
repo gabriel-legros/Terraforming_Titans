@@ -215,6 +215,7 @@ The planet visualiser has been modularised into files covering core setup, light
   lly without mutating base data.
 - Introduced a Water Tank storage structure that specializes in water capacity, includes an Empty action to dump reserves onto the surface, and moved water capacity off the general Storage Depot.
 - Antimatter is now produced automatically based on terraformed worlds and capped at ten hours of output.
+- Antimatter stockpiles now persist when travelling between planets, matching alien artifact preservation.
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
