@@ -77,7 +77,7 @@ describe('GalaxyFaction fleet power and capacity', () => {
         expect(faction.fleetPower).toBeCloseTo(expected);
     });
 
-    it('clamps fleet power when capacity drops', () => {
+    it('retains fleet power when capacity drops', () => {
         const contestedSector = new GalaxySector({ q: 2, r: -1 });
         contestedSector.setControl('ally', 100);
 
@@ -85,13 +85,14 @@ describe('GalaxyFaction fleet power and capacity', () => {
         const manager = createManager({ sectors: [contestedSector] });
 
         faction.initializeFleetPower(manager);
-        expect(faction.fleetPower).toBeGreaterThan(0);
+        const startingPower = faction.fleetPower;
+        expect(startingPower).toBeGreaterThan(0);
 
         contestedSector.clearControl('ally');
 
         faction.update(1000, manager);
 
         expect(faction.fleetCapacity).toBe(0);
-        expect(faction.fleetPower).toBe(0);
+        expect(faction.fleetPower).toBe(startingPower);
     });
 });

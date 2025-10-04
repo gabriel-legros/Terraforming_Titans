@@ -132,8 +132,8 @@ class GalaxyFaction {
         if (!Number.isFinite(numericValue)) {
             return;
         }
-        const clamped = Math.max(0, Math.min(this.fleetCapacity, numericValue));
-        this.fleetPower = clamped;
+        const sanitizedValue = Math.max(0, numericValue);
+        this.fleetPower = sanitizedValue;
     }
 
     updateFleetCapacity(manager) {
@@ -198,12 +198,14 @@ class GalaxyFaction {
         }
         const capacity = this.fleetCapacity;
         if (capacity <= 0) {
-            this.fleetPower = 0;
+            if (this.fleetPower < 0) {
+                this.fleetPower = 0;
+            }
             return;
         }
-        const currentPower = Math.max(0, Math.min(capacity, this.fleetPower));
-        if (currentPower === capacity) {
-            this.fleetPower = capacity;
+        const currentPower = Math.max(0, this.fleetPower);
+        if (currentPower >= capacity) {
+            this.fleetPower = currentPower;
             return;
         }
         const seconds = deltaTime / 1000;
@@ -224,7 +226,12 @@ class GalaxyFaction {
         const multiplier = 1 - penalty;
         const delta = baseChange * multiplier;
         const nextPower = currentPower + delta;
-        this.fleetPower = Math.max(0, Math.min(capacity, nextPower));
+        const increasedPower = Math.max(0, nextPower);
+        if (increasedPower >= capacity) {
+            this.fleetPower = capacity;
+            return;
+        }
+        this.fleetPower = increasedPower;
     }
 
     markControlDirty() {
