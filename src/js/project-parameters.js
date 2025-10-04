@@ -523,13 +523,12 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        superalloys: 5_000_000,
-        superconductors: 500_000,
-        energy: 2_000_000_000_000
+        superalloys: 1_000_000_000,
+        components: 10_000_000
       }
     },
-    duration: 900000,
-    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales.',
+    duration: 600000,
+    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 TW.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
