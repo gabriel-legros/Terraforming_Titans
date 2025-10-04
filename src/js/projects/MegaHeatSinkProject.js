@@ -101,7 +101,7 @@
     }
 
     calculateCoolingPerSecond() {
-      const effectiveCount = Math.max(1, this.repeatCount || 0);
+      const effectiveCount = Math.max(0.1, this.repeatCount || 0);
       const terra = terraforming;
       const area = terra?.celestialParameters?.surfaceArea;
       if (!terra || !Number.isFinite(area) || area <= 0) {
