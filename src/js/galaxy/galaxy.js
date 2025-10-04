@@ -832,6 +832,40 @@ class GalaxyManager extends EffectableEntity {
         return count;
     }
 
+    getControlledSectorWorldCount(factionId = galaxyUhfId) {
+        const targetFaction = factionId || galaxyUhfId;
+        let total = 0;
+        this.sectors.forEach((sector) => {
+            if (!this.#isFactionFullControlSector(sector, targetFaction)) {
+                return;
+            }
+            const rewards = sector?.getSectorReward?.();
+            if (!Array.isArray(rewards) || rewards.length === 0) {
+                return;
+            }
+            rewards.forEach((entry) => {
+                if (!entry) {
+                    return;
+                }
+                const amount = Number(entry.amount);
+                if (!Number.isFinite(amount) || amount <= 0) {
+                    return;
+                }
+                const typeText = entry.type ? String(entry.type).toLowerCase() : '';
+                const resourceText = entry.resourceId ? String(entry.resourceId).toLowerCase() : '';
+                const labelText = entry.label ? String(entry.label).toLowerCase() : '';
+                if (
+                    typeText.includes('world') ||
+                    resourceText.includes('world') ||
+                    (!typeText && !resourceText && labelText.includes('world'))
+                ) {
+                    total += amount;
+                }
+            });
+        });
+        return total;
+    }
+
     getFleetUpgradeCount(key) {
         const count = this.fleetUpgradePurchases[key];
         if (!Number.isFinite(count) || count <= 0) {
