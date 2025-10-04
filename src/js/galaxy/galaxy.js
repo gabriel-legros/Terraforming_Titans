@@ -377,6 +377,7 @@ class GalaxyManager extends EffectableEntity {
                     return;
                 }
                 this.#applyControlMapToSector(sector, sectorData.control);
+                sector.setRewardAcquired?.(sectorData.rewardAcquired === true);
             });
         }
         const factionStateMap = new Map();
@@ -444,6 +445,17 @@ class GalaxyManager extends EffectableEntity {
 
     getSectors() {
         return Array.from(this.sectors.values());
+    }
+
+    hasAcquiredSectorReward(sectorReference) {
+        const sector = this.#resolveSectorReference(sectorReference);
+        return sector?.hasRewardAcquired?.() === true;
+    }
+
+    setSectorRewardAcquired({ sectorKey, acquired = true } = {}) {
+        const sector = this.#resolveSectorReference(sectorKey);
+        sector?.setRewardAcquired?.(acquired === true);
+        return sector?.hasRewardAcquired?.() === true;
     }
 
     getSectorsReward(sectorReferences) {

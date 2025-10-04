@@ -591,8 +591,13 @@ class GalaxyFaction {
             }
             return sanitizedValue * share;
         }
-        const worldCount = manager?.getTerraformedWorldCountForSector?.(sector) ?? 0;
-        const baseDefense = worldCount > 0 ? 100 * worldCount : 0;
+        const providedWorldCount = Number(manager?.getTerraformedWorldCountForSector?.(sector));
+        const terraformedWorlds = Number.isFinite(providedWorldCount) && providedWorldCount > 0
+            ? providedWorldCount
+            : 0;
+        const rewardBonusWorlds = manager?.hasAcquiredSectorReward?.(sector) === true ? 1 : 0;
+        const combinedWorlds = terraformedWorlds + rewardBonusWorlds;
+        const baseDefense = combinedWorlds > 0 ? 100 * combinedWorlds : 0;
         const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
         const sanitizedMultiplier = capacityMultiplier > 0 ? capacityMultiplier : 1;
         const upgradedDefense = baseDefense * sanitizedMultiplier;
