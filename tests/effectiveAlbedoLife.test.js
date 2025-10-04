@@ -34,6 +34,15 @@ describe('effective albedo with biomass', () => {
     const terra = new Terraforming(global.resources, celestial);
     terra.calculateInitialValues(params);
 
+    for (const zone of ['tropical', 'temperate', 'polar']) {
+      if (terra.zonalWater[zone]) {
+        terra.zonalWater[zone].liquid = 0;
+        terra.zonalWater[zone].ice = 0;
+      }
+    }
+
+    terra._updateZonalCoverageCache();
+
     const baseAlbedo = terra.calculateEffectiveAlbedo();
 
     terra.zonalSurface.tropical.biomass = 10;
@@ -43,6 +52,6 @@ describe('effective albedo with biomass', () => {
     terra._updateZonalCoverageCache();
 
     const withBiomass = terra.calculateEffectiveAlbedo();
-    expect(withBiomass).not.toBeCloseTo(baseAlbedo);
+    expect(withBiomass).toBeLessThan(baseAlbedo);
   });
 });
