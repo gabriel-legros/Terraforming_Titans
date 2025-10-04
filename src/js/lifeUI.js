@@ -38,7 +38,7 @@ function getLifeManagerSafe() {
 
 function isBioworkforceUnlocked() {
   const manager = getLifeManagerSafe();
-  return Boolean(manager && manager.bioworkforce);
+  return manager.isBooleanFlagSet('bioworkforce');
 }
 
 function getConvertedDisplay(attributeName, attribute) {
