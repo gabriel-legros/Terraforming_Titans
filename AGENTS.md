@@ -244,6 +244,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy operations now feature an Auto launch toggle beside the Launch button that automatically deploys eligible missions, and operations last five minutes by default.
 - Galaxy operations panel now displays total mission duration and real-time remaining launch time to clarify commitments.
 - Mega Heat Sink completions now provide additional cooling power whenever zonal temperatures exceed their trend targets.
+- Added a Mega Heat Sink project summary card that reports completed heat sinks and their current cooling rate.
 
 - Particle Accelerator mega project now lets players set a custom radius with controls, scales material costs by circumference,
   and records the largest completed accelerator.

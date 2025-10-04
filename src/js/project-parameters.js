@@ -518,7 +518,7 @@ const projectParameters = {
     }
   },
   megaHeatSink: {
-    type: 'Project',
+    type: 'MegaHeatSinkProject',
     name: 'Mega Heat Sink',
     category: 'mega',
     cost: {
