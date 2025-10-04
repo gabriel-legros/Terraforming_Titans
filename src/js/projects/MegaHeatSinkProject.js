@@ -1,5 +1,5 @@
 (function () {
-  const MEGA_HEAT_SINK_POWER_W = 100_000_000_000_000;
+  const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
   const MEGA_HEAT_SINK_MIN_CAPACITY = 100;
   const SECONDS_PER_DAY = 86_400;
   const ORDERED_ZONES = ['tropical', 'temperate', 'polar'];
