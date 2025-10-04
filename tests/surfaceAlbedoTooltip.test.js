@@ -47,7 +47,7 @@ describe('surface albedo tooltip', () => {
     ctx.updateLuminosityBox();
 
     const tooltip = dom.window.document.getElementById('surface-albedo-tooltip').textContent;
-    expect(tooltip).toContain('Biomass claims its share first');
-    expect(tooltip).toContain('Ice and liquid water then split the remaining area');
+    expect(tooltip).toContain('Liquids and ices split the available surface together');
+    expect(tooltip).toContain('Biomass can then occupy up to 75% of the remaining area');
   });
 });
