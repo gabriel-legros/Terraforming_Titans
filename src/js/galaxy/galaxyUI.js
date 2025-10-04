@@ -1114,7 +1114,7 @@ function renderSelectedSectorDetails() {
         const rewardTooltip = doc.createElement('span');
         rewardTooltip.className = 'info-tooltip-icon';
         rewardTooltip.innerHTML = '&#9432;';
-        rewardTooltip.title = 'Fully controlled sectors add these bonus habitable worlds to UHF defenses.';
+        rewardTooltip.title = 'Fully controlled sectors grant already habitable worlds.  Each count as a normal terraformed world, but unlike regular terraformed worlds, will be lost if the sector is lost.';
         details.reward.label.appendChild(rewardTooltip);
     }
 
