@@ -62,6 +62,8 @@ class LifeAttribute {
         // Calculate rate: starts at 0, adds 0.0001 per point, max 0.001 at 10 points
         const burialRate = this.value * 0.0001;
         return burialRate.toFixed(4); // Display rate with 4 decimal places
+      case 'bioworkforce':
+        return `${(this.value * 0.00001).toFixed(5)} workers per ton biomass`;
       default:
         return null;
     }
@@ -77,7 +79,8 @@ class LifeDesign {
     invasiveness,
     spaceEfficiency, // Added new attribute
     geologicalBurial, // Added Geological Burial
-    growthTemperatureTolerance = 0
+    growthTemperatureTolerance = 0,
+    bioworkforce = 0
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 60);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
@@ -94,7 +97,8 @@ class LifeDesign {
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', 100);
     this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', 50);
-   }
+    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', 100);
+  }
 
   getDesignCost() {
     return Object.values(this).reduce((sum, attribute) => {
@@ -148,7 +152,8 @@ class LifeDesign {
       radiationTolerance: this.radiationTolerance.value,
       invasiveness: this.invasiveness.value,
       spaceEfficiency: this.spaceEfficiency.value, // Added for saving
-      geologicalBurial: this.geologicalBurial.value // Added Geological Burial
+      geologicalBurial: this.geologicalBurial.value, // Added Geological Burial
+      bioworkforce: this.bioworkforce.value
     };
     return data;
   }
@@ -162,7 +167,8 @@ class LifeDesign {
       data.invasiveness,
       data.spaceEfficiency ?? 0, // Added for loading, default to 0 if missing in save
       data.geologicalBurial ?? 0, // Added Geological Burial, default 0
-      data.growthTemperatureTolerance ?? 0
+      data.growthTemperatureTolerance ?? 0,
+      data.bioworkforce ?? 0
     );
 
     design.optimalGrowthTemperature.value = data.optimalGrowthTemperature ?? 0;
@@ -398,7 +404,7 @@ class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
     this.baseApplyDuration = 30000;
-    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
+    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency, geologicalBurial, and bioworkforce defaults
     this.tentativeDesign = null;
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
@@ -459,7 +465,8 @@ class LifeDesigner extends EffectableEntity {
     invasiveness,
     spaceEfficiency,
     geologicalBurial,
-    growthTemperatureTolerance = 0
+    growthTemperatureTolerance = 0,
+    bioworkforce = 0
   ) {
     this.tentativeDesign = new LifeDesign(
       minTemperatureTolerance,
@@ -469,7 +476,8 @@ class LifeDesigner extends EffectableEntity {
       invasiveness,
       spaceEfficiency,
       geologicalBurial, // Pass geologicalBurial
-      growthTemperatureTolerance
+      growthTemperatureTolerance,
+      bioworkforce
     );
   }
 

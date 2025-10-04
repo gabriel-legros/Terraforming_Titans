@@ -156,7 +156,21 @@ class PopulationModule extends EffectableEntity {
     }
 
     const availableAndroids = Math.max(0, effectiveAndroids - assignedAndroids);
-    const workerCap = Math.floor(ratio * this.populationResource.value) + availableAndroids;
+
+    let bioworkforceWorkers = 0;
+    try {
+      if (lifeDesigner && lifeDesigner.currentDesign && lifeDesigner.currentDesign.bioworkforce) {
+        const bioworkforcePoints = lifeDesigner.currentDesign.bioworkforce.value;
+        if (bioworkforcePoints > 0 && resources.surface && resources.surface.biomass) {
+          const biomassValue = resources.surface.biomass.value;
+          bioworkforceWorkers = Math.floor(biomassValue * bioworkforcePoints * 0.00001);
+        }
+      }
+    } catch (error) {
+      bioworkforceWorkers = 0;
+    }
+
+    const workerCap = Math.floor(ratio * this.populationResource.value) + availableAndroids + bioworkforceWorkers;
     this.workerResource.cap = workerCap;
 
     // Adjust the worker value if it exceeds the cap
