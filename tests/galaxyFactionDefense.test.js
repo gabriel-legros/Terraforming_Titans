@@ -108,6 +108,21 @@ describe('GalaxyFaction defense calculations', () => {
         expect(faction.getSectorDefense(contested, manager)).toBe(baseValue);
     });
 
+    it('grants additional defense from acquired sector rewards', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const sector = new GalaxySector({ q: 3, r: 1 });
+        sector.setControl('uhf', 100);
+
+        const manager = {
+            getTerraformedWorldCountForSector: () => 0,
+            getFleetCapacityMultiplier: () => 2,
+            hasAcquiredSectorReward: () => true
+        };
+
+        const defense = faction.getSectorDefense(sector, manager);
+        expect(defense).toBe(200);
+    });
+
     it('scales assigned defenses when fleet power is insufficient', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
         faction.fleetPower = 120;

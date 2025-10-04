@@ -1,5 +1,5 @@
 class GalaxySector {
-    constructor({ q, r, control, value, defaultValue, reward } = {}) {
+    constructor({ q, r, control, value, defaultValue, reward, rewardAcquired } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
@@ -8,6 +8,7 @@ class GalaxySector {
         this.value = this.#sanitizeValue(value, this.defaultValue);
         this.control = {};
         this.reward = this.#sanitizeReward(reward);
+        this.rewardAcquired = rewardAcquired === true;
         if (control) {
             this.replaceControl(control);
         }
@@ -103,6 +104,14 @@ class GalaxySector {
             return [];
         }
         return GalaxySector.#cloneRewardEntries(this.reward);
+    }
+
+    setRewardAcquired(acquired) {
+        this.rewardAcquired = acquired === true;
+    }
+
+    hasRewardAcquired() {
+        return this.rewardAcquired === true;
     }
 
     setControl(factionId, rawValue) {
@@ -284,7 +293,8 @@ class GalaxySector {
             q: this.q,
             r: this.r,
             control: { ...this.control },
-            value: this.value
+            value: this.value,
+            rewardAcquired: this.rewardAcquired === true
         };
     }
 }
