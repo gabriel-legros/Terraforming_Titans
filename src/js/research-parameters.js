@@ -1631,6 +1631,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'mega_heat_sink',
+        name: 'Mega Heat Sink',
+        description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling.',
+        cost: { advancedResearch: 400000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'megaHeatSink',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'galactic_market',
         name: 'Galactic Market Concordat',
         description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',

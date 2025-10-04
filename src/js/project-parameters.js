@@ -517,6 +517,27 @@ const projectParameters = {
       canUseSpaceStorage: true
     }
   },
+  megaHeatSink: {
+    type: 'Project',
+    name: 'Mega Heat Sink',
+    category: 'mega',
+    cost: {
+      colony: {
+        superalloys: 5_000_000,
+        superconductors: 500_000,
+        energy: 2_000_000_000_000
+      }
+    },
+    duration: 900000,
+    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      megaHeatSink: true
+    }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",
