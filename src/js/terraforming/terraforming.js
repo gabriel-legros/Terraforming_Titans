@@ -27,6 +27,7 @@ function createNoGravityPenalty() {
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
+const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.000015;
@@ -811,6 +812,8 @@ class Terraforming extends EffectableEntity{
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const greenhouseFactor = 1 + 0.75 * tau;
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
+    const megaHeatSinkCount =
+        globalThis?.projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
 
     let weightedTemp = 0;
     let weightedEqTemp = 0;
@@ -971,7 +974,16 @@ class Terraforming extends EffectableEntity{
                 ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
                 : 0;
             const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-            const combinedFlux = netFlux - windFlux;
+            let combinedFlux = netFlux - windFlux;
+
+            if (desiredDelta < 0 && megaHeatSinkCount > 0) {
+              const zoneArea = z[zone].area || 0;
+              if (zoneArea > 0) {
+                const zoneCoolingPower = megaHeatSinkCount * MEGA_HEAT_SINK_POWER_W * pct;
+                const coolingFlux = zoneCoolingPower / zoneArea;
+                combinedFlux -= coolingFlux;
+              }
+            }
 
             newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
 
