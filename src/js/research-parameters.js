@@ -1647,7 +1647,7 @@ const researchParameters = {
       {
         id: 'bioworkforce',
         name: 'Bioworkforce',
-        description: 'Deploys engineered organisms as a dedicated bioworkforce, unlocking new life management initiatives.',
+        description: 'Scientists were too busy wondering whether or not they could, they did not stop to ask themselves whether or not they should.  Extends the life designer with an extra ability.',
         cost: { advancedResearch: 500000 },
         prerequisites: [],
         effects: [
