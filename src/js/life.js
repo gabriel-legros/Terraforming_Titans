@@ -689,6 +689,19 @@ class LifeManager extends EffectableEntity {
                 const baseMaxDensity = BASE_MAX_BIOMASS_DENSITY;
                 const densityMultiplier = 1 + spaceEfficiencyValue;
                 const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
+
+                if (maxBiomassForZone <= 0 || zonalBiomass > maxBiomassForZone) {
+                    const targetOverflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
+                    if (targetOverflowDecay > 0) {
+                        decayBiomass -= targetOverflowDecay;
+
+                        if (secondsMultiplier > 0 && targetOverflowDecay > 1e-9) {
+                            const decayRateMultiplier = 1 / secondsMultiplier;
+                            if (resources.surface.biomass) resources.surface.biomass.modifyRate(-targetOverflowDecay * decayRateMultiplier, 'Life Density Decay', 'life');
+                        }
+                    }
+                }
+
                 const logisticFactor = maxBiomassForZone > 0 ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone) : 0;
                 const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
                 const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
