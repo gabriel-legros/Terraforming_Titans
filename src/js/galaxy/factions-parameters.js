@@ -33,7 +33,7 @@ const galaxyFactionParameters = [
         ],
         defensiveness: 0.8,
         autoOperationRange: {
-            min: 0.05,
+            min: 0.1,
             max: 0.15
         }
     },
