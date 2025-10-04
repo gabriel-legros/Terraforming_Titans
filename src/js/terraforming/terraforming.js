@@ -27,7 +27,7 @@ function createNoGravityPenalty() {
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
-const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000;
+const MEGA_HEAT_SINK_POWER_W = 100_000_000_000_000;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.000015;
@@ -813,7 +813,7 @@ class Terraforming extends EffectableEntity{
     const greenhouseFactor = 1 + 0.75 * tau;
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const megaHeatSinkCount =
-        globalThis?.projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
+        projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
 
     let weightedTemp = 0;
     let weightedEqTemp = 0;

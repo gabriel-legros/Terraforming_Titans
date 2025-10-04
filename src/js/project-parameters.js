@@ -527,8 +527,8 @@ const projectParameters = {
         components: 10_000_000
       }
     },
-    duration: 600000,
-    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 TW.',
+    duration: 60000,
+    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 100 TW.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
