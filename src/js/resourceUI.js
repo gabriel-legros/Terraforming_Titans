@@ -473,6 +473,22 @@ function updateWorkerAssignments(assignmentsDiv) {
     const workers = Math.max(effective - assigned, 0);
     const androidText = `${formatNumber(workers, true)} from androids`;
     if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
+
+    const bioworkers = populationModule.getBioworkerContribution?.() || 0;
+    let bioworkerDiv = assignmentsDiv._bioworkerDiv;
+    if (bioworkers > 0) {
+      if (!bioworkerDiv) {
+        bioworkerDiv = document.createElement('div');
+        assignmentsDiv._bioworkerDiv = bioworkerDiv;
+      }
+      if (bioworkerDiv.parentNode !== assignmentsDiv || bioworkerDiv.nextSibling !== androidDiv) {
+        assignmentsDiv.insertBefore(bioworkerDiv, androidDiv);
+      }
+      const bioworkerText = `${formatNumber(bioworkers, true)} from bioworkers`;
+      if (bioworkerDiv.textContent !== bioworkerText) bioworkerDiv.textContent = bioworkerText;
+    } else if (bioworkerDiv && bioworkerDiv.parentNode === assignmentsDiv) {
+      assignmentsDiv.removeChild(bioworkerDiv);
+    }
   }
 
   const assignments = [];
