@@ -55,6 +55,7 @@ describe('Galaxy operation defender losses', () => {
         });
         expect(operation).not.toBeNull();
 
+        manager.enable();
         manager.update(1000);
 
         expect(operation.result).toBe('success');
@@ -91,6 +92,7 @@ describe('Galaxy operation defender losses', () => {
         });
         expect(operation).not.toBeNull();
 
+        manager.enable();
         manager.update(1000);
 
         expect(operation.result).toBe('success');

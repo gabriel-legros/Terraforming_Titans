@@ -21,7 +21,7 @@ describe('Galaxy operation persistence', () => {
         delete global.spaceManager;
     });
 
-    test('restores assigned power without clamping on load', () => {
+    test('clamps assigned power to available fleet on load', () => {
         const manager = new GalaxyManager();
         manager.factions.clear();
         manager.sectors.clear();
@@ -60,8 +60,8 @@ describe('Galaxy operation persistence', () => {
 
         const restored = reloaded.operations.get(sector.key);
         expect(restored).toBeDefined();
-        expect(restored.assignedPower).toBe(assignedPower);
-        expect(restored.offensePower).toBe(assignedPower);
-        expect(restored.reservedPower).toBe(assignedPower);
+        expect(restored.assignedPower).toBe(0);
+        expect(restored.offensePower).toBe(0);
+        expect(restored.reservedPower).toBe(0);
     });
 });
