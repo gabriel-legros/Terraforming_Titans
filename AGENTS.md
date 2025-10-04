@@ -250,3 +250,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Particle Accelerator mega project now lets players set a custom radius with controls, scales material costs by circumference,
   and records the largest completed accelerator.
 - Added a Mega Heat Sink advanced research that unlocks a repeatable mega project for accelerated planetary cooling.
+- Introduced a Bioworkforce advanced research that unlocks a lifeManager flag for future bioworkforce integration.

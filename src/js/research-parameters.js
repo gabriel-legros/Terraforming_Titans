@@ -1645,6 +1645,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'bioworkforce',
+        name: 'Bioworkforce',
+        description: 'Deploys engineered organisms as a dedicated bioworkforce, unlocking new life management initiatives.',
+        cost: { advancedResearch: 500000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'bioworkforce',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'galactic_market',
         name: 'Galactic Market Concordat',
         description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
