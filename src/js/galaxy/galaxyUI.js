@@ -998,6 +998,10 @@ function renderSelectedSectorDetails() {
         empty.textContent = 'No factions currently control this sector.';
         container.appendChild(empty);
 
+        const rewardRow = createStatRow('Reward');
+        rewardRow.statValue.textContent = '—';
+        container.appendChild(rewardRow.stat);
+
         const managementSection = doc.createElement('div');
         managementSection.className = 'galaxy-sector-panel__management';
 
@@ -1079,7 +1083,11 @@ function renderSelectedSectorDetails() {
             lockInput,
             subtitle,
             list,
-            empty
+            empty,
+            reward: {
+                row: rewardRow.stat,
+                value: rewardRow.statValue
+            }
         };
         galaxyUICache.sectorDetails = details;
     } else if (!panel.contains(details.container)) {
@@ -1123,6 +1131,30 @@ function renderSelectedSectorDetails() {
         : 0;
     const fleetDefense = Math.max(0, uhfDefense - baseWorldDefense);
     const totalDefense = baseWorldDefense + fleetDefense;
+
+    const rewardEntries = typeof manager.getSectorsReward === 'function'
+        ? manager.getSectorsReward([sector])
+        : typeof sector.getSectorReward === 'function'
+            ? sector.getSectorReward()
+            : [];
+
+    if (details.reward) {
+        const hasRewards = Array.isArray(rewardEntries) && rewardEntries.length > 0;
+        const formatter = getNumberFormatter();
+        if (hasRewards) {
+            const rewardText = rewardEntries.map((entry) => {
+                const amount = formatter(entry.amount, false, 2);
+                const label = entry.label || entry.type || 'Reward';
+                const unit = typeof entry.unit === 'string' && entry.unit ? ` ${entry.unit}` : '';
+                return `${amount} ${label}${unit}`.trim();
+            }).join(', ');
+            details.reward.value.textContent = rewardText;
+            details.reward.row.classList.remove('is-hidden');
+        } else {
+            details.reward.value.textContent = '—';
+            details.reward.row.classList.add('is-hidden');
+        }
+    }
 
     const managementVisible = uhfControl > GALAXY_CONTROL_EPSILON;
     if (details.managementSection) {
