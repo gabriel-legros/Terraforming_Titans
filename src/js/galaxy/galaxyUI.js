@@ -998,10 +998,6 @@ function renderSelectedSectorDetails() {
         empty.textContent = 'No factions currently control this sector.';
         container.appendChild(empty);
 
-        const rewardRow = createStatRow('Reward');
-        rewardRow.statValue.textContent = '—';
-        container.appendChild(rewardRow.stat);
-
         const managementSection = doc.createElement('div');
         managementSection.className = 'galaxy-sector-panel__management';
 
@@ -1021,6 +1017,10 @@ function renderSelectedSectorDetails() {
             stat.append(statLabel, statValue);
             return { stat, statValue };
         };
+
+        const rewardRow = createStatRow('Reward');
+        rewardRow.statValue.textContent = '—';
+        container.appendChild(rewardRow.stat);
 
         const worldRow = createStatRow('Worlds');
         const fleetDefenseRow = createStatRow('Fleet Defense');

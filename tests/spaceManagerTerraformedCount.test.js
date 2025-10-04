@@ -66,6 +66,24 @@ describe('SpaceManager terraformed planet counting', () => {
     delete global.spaceManager;
     delete global.addEffect;
   });
+
+  test('includes worlds from fully controlled UHF sectors', () => {
+    const sm = new SpaceManager({ mars: {} });
+    sm.planetStatuses.mars.terraformed = true;
+
+    const previousGalaxyManager = global.galaxyManager;
+    const mockManager = { getControlledSectorWorldCount: jest.fn().mockReturnValue(2) };
+    global.galaxyManager = mockManager;
+
+    expect(sm.getTerraformedPlanetCount()).toBe(3);
+    expect(mockManager.getControlledSectorWorldCount).toHaveBeenCalled();
+
+    if (previousGalaxyManager) {
+      global.galaxyManager = previousGalaxyManager;
+    } else {
+      delete global.galaxyManager;
+    }
+  });
 });
 
 delete global.EffectableEntity;

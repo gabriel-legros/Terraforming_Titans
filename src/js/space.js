@@ -413,7 +413,11 @@ class SpaceManager extends EffectableEntity {
             ? projectManager.projects.orbitalRing.ringCount
             : 0;
         const extra = typeof this.extraTerraformedWorlds === 'number' ? this.extraTerraformedWorlds : 0;
-        return base + rings + extra;
+        const sectorWorlds = (typeof galaxyManager !== 'undefined' && galaxyManager?.getControlledSectorWorldCount)
+            ? galaxyManager.getControlledSectorWorldCount()
+            : 0;
+        const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
+        return base + rings + extra + sectorBonus;
     }
 
     /**
