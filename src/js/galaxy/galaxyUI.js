@@ -180,6 +180,16 @@ function getSectorUhfControl(sector) {
     return 0;
 }
 
+function isUhfOperation(operation) {
+    if (!operation) {
+        return false;
+    }
+    const factionId = typeof operation.factionId === 'string' && operation.factionId
+        ? operation.factionId
+        : UHF_FACTION_KEY;
+    return factionId === UHF_FACTION_KEY;
+}
+
 function calculateEnemySectorDefense(manager, sector, breakdown) {
     if (!manager || !sector) {
         return { base: 0, fleet: 0, total: 0 };
@@ -1429,7 +1439,8 @@ function updateOperationsPanel() {
     const defensePower = manager.getSectorDefensePower(selection.key, UHF_FACTION_KEY);
     const hasStronghold = hasNeighboringUhfStronghold(manager, selection.q, selection.r);
     const hasUhfPresence = uhfControl > 0;
-    const operation = manager.getOperationForSector(selection.key);
+    const storedOperation = manager.getOperationForSector(selection.key);
+    const operation = isUhfOperation(storedOperation) ? storedOperation : null;
     const operationRunning = operation && operation.status === 'running';
     const assignment = operationRunning
         ? Math.max(0, Number(operation.reservedPower) || 0)
