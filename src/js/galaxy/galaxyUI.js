@@ -141,7 +141,7 @@ function formatFleetUpgradeCost(value) {
     }
     const formatter = globalThis?.formatNumber;
     if (formatter) {
-        return formatter(value, true, value < 1000 ? 2 : 0);
+        return formatter(value, true, 2);
     }
     return value.toLocaleString('en-US');
 }
