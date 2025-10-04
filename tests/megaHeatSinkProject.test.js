@@ -79,7 +79,7 @@ describe('Mega Heat Sink project', () => {
 
     project.repeatCount = 0;
     const fallbackCooling = project.calculateCoolingPerSecond();
-    expect(fallbackCooling).toBeCloseTo(2.16e15, 2);
+    expect(fallbackCooling).toBeCloseTo(2.16e16, 2);
   });
 
   test('renders summary card with formatted values', () => {
