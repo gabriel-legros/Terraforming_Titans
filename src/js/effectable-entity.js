@@ -126,11 +126,17 @@ class EffectableEntity {
             this.applyAddResourceConsumption(effect);
           }
           break;
+        case 'addComfort':
+          this.applyAddComfort?.(effect);
+          break;
         case 'enable':
           this.enable(effect.targetId);
           break;
         case 'enableContent':
           this.enableContent(effect.targetId);
+          break;
+        case 'permanentProjectDisable':
+          this.applyPermanentProjectDisable?.(effect);
           break;
         case 'activateTab':
           this.activateTab(effect.targetId)
@@ -500,10 +506,13 @@ class EffectableEntity {
         }
       }
 
-      applyLifeGrowthMultiplier(effect) {
+  applyLifeGrowthMultiplier(effect) {
         // multiplier effects are computed on demand in LifeManager
       }
 
+
+    applyPermanentProjectDisable(effect) {
+    }
 
     // Method to apply a boolean flag effect
     applyBooleanFlag(effect) {
@@ -611,6 +620,7 @@ function addOrRemoveEffect(effect, action) {
     'warpGateCommand' : warpGateCommand,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
+    'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
 

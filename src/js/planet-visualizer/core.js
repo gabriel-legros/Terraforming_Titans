@@ -15,6 +15,7 @@
 
       // Lighting and atmosphere
       this.sunLight = null;
+      this.ambientLight = null;
       this.sunMesh = null;
       this.atmoMesh = null;
       this.atmoMaterial = null;
@@ -159,6 +160,10 @@
       const changed = opts.force || prev !== normalized;
       this.viz.baseColor = normalized;
       if (changed) {
+        // When base color is sourced from the game, also reseed surface feature params
+        if (opts.fromGame) {
+          this.resetSurfaceFeaturesFromSeed();
+        }
         this.lastCraterFactorKey = null;
         if (!opts.skipSurfaceUpdate) {
           this.updateSurfaceTextureFromPressure(true);
@@ -174,6 +179,23 @@
       return normalized;
     }
 
+    resetSurfaceFeaturesFromSeed() {
+      const seed = this.hashSeedFromPlanet();
+      const rand01 = (ax, ay) => {
+        const v = Math.sin(ax * 127.1 + ay * 311.7) * 43758.5453;
+        return v - Math.floor(v);
+      };
+      const r1 = rand01(seed.x + 0.13, seed.y + 0.57);
+      const r2 = rand01(seed.x + 0.61, seed.y + 0.19);
+      const r3 = rand01(seed.x + 0.27, seed.y + 0.83);
+      const r4 = rand01(seed.x + 0.91, seed.y + 0.41);
+      const target = this.viz.surfaceFeatures || (this.viz.surfaceFeatures = {});
+      if (target.scale == null) target.scale = 8 + r1 * 10;
+      if (target.contrast == null) target.contrast = 0.9 + r2 * 1.6;
+      target.offsetX = (r3 * 2 - 1) * 0.5;
+      target.offsetY = (r4 * 2 - 1) * 0.3;
+    }
+
     updateDebugControlState() {
       const isDebug = this.debug.mode === 'debug';
       const colorRow = this.debug?.rows?.baseColor;
@@ -183,6 +205,9 @@
       }
       if (this.debug?.presetSelect) {
         this.debug.presetSelect.disabled = !isDebug;
+      }
+      if (this.debug?.archetypeSelect) {
+        this.debug.archetypeSelect.disabled = !isDebug;
       }
     }
 
@@ -273,7 +298,9 @@
       this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
       this.sunLight.position.set(5, 3, 2);
       this.scene.add(this.sunLight);
-      this.scene.add(new THREE.AmbientLight(0x404040));
+      // Keep nightside visible with subtle ambient fill
+      this.ambientLight = new THREE.AmbientLight(0xffffff, 0.06);
+      this.scene.add(this.ambientLight);
 
       const sunGeom = new THREE.SphereGeometry(0.15, 16, 16);
       const sunMat = new THREE.MeshBasicMaterial({ color: 0xfff5a6 });

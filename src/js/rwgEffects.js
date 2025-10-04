@@ -76,6 +76,17 @@ const RWG_EFFECTS = {
         return 1 + f * count;
       }
     }],
+  "venus-like": [
+    {
+      effectId: "rwg-venus-workers",
+      target: "global",
+      type: "globalWorkerReduction",
+      computeValue(count) {
+        const divisor = 1 + 0.01 * count;
+        return 1 - 1 / divisor;
+      },
+    },
+  ],
   "mars-like": [
     {
       effectId: "rwg-mars-pop",

@@ -96,11 +96,9 @@ function isBoundToParent(p){
 
 // Resolve host star mass (kg) from currentPlanetParameters
 function getStarMassKgFromCurrent(){
-  const cp = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters : null;
-  if (!cp) return SOLAR_MASS;
-  const cel = cp.celestialParameters || {};
+  const cel = terraforming.celestialParameters || {};
   if (typeof cel.starMass === 'number' && isFinite(cel.starMass) && cel.starMass > 0) return cel.starMass;
-  const star = cp.star || {};
+  const star = currentPlanetParameters.star;
   if (typeof star.massSolar === 'number' && isFinite(star.massSolar) && star.massSolar > 0) return star.massSolar * SOLAR_MASS;
   return SOLAR_MASS;
 }
@@ -269,7 +267,7 @@ class PlanetaryThrustersProject extends Project{
 
 /* ---------- cost calculations ---------------------------------------- */
   calcSpinCost(){
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p) return;
     let tgt=1;
     try{
@@ -290,7 +288,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   calcMotionCost(){
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p) return;
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
@@ -339,7 +337,7 @@ class PlanetaryThrustersProject extends Project{
 
 /* ---------- job preparation ------------------------------------------ */
   prepareJob(resetDV=false, resetEnergy=false){
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p) return;
     if(resetDV) this.dVdone=0;
 
@@ -380,7 +378,7 @@ class PlanetaryThrustersProject extends Project{
     }
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
-    const p = (typeof currentPlanetParameters !== 'undefined') ? (currentPlanetParameters.celestialParameters || {}) : {};
+    const p = terraforming.celestialParameters;
 
     // If the project state says we escaped, mirror that onto the planet on load
     if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
@@ -480,7 +478,7 @@ class PlanetaryThrustersProject extends Project{
       this.lastActiveTime = 0;
       return;
     }
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
     if(this.escapeComplete && !p.hasEscapedParent){ p.hasEscapedParent = true; }
     this.lastActiveTime = dtMs;
@@ -497,31 +495,46 @@ class PlanetaryThrustersProject extends Project{
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
-    const activeTime = this.lastActiveTime || 0;
-    if(!this.isCompleted || activeTime<=0 || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
-      this.lastActiveTime = 0;
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
       return;
     }
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
-    const fraction = Math.min(1, activeTime / deltaTime);
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
-      resources.colony.energy.modifyRate(-this.power * fraction * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
-    const dt = activeTime / 1000;
-    const energyUsed = this.power * dt * productivity;
+    const dt = deltaTime / 1000;
+    const colonyEnergy = resources?.colony?.energy;
+    const requestedEnergy = this.power * dt * productivity;
+    let energyUsed = 0;
+
     if(accumulatedChanges){
       if(!accumulatedChanges.colony) accumulatedChanges.colony = {};
-      accumulatedChanges.colony.energy = (accumulatedChanges.colony.energy || 0) - energyUsed;
-    }else if(resources.colony?.energy){
-      resources.colony.energy.decrease(energyUsed);
+      const pendingEnergy = accumulatedChanges.colony.energy ?? 0;
+      const availableEnergy = (colonyEnergy?.value ?? 0) + pendingEnergy;
+      energyUsed = Math.min(requestedEnergy, Math.max(availableEnergy, 0));
+      accumulatedChanges.colony.energy = pendingEnergy - energyUsed;
+    }else if(colonyEnergy){
+      energyUsed = Math.min(requestedEnergy, Math.max(colonyEnergy.value ?? 0, 0));
+      if(colonyEnergy.decrease){
+        colonyEnergy.decrease(energyUsed);
+      }else{
+        colonyEnergy.value = (colonyEnergy.value ?? 0) - energyUsed;
+      }
+    }
+
+    if(energyUsed <= 0){
+      this.lastActiveTime = 0;
+      return;
     }
     const energySpent = energyUsed * 86400;
     if(this.spinInvest){ this.energySpentSpin += energySpent; }
     else if(this.motionInvest){ this.energySpentMotion += energySpent; }
 
-    const a = this.power * this.getThrustPowerRatio() / p.mass * 86400 * productivity;
-    const dvTick = a * dt;
+    const impulse = energySpent * this.getThrustPowerRatio() * productivity;
+    const inertiaCoeff = this.spinInvest ? (p.kInertia || 0.4) : 1;
+    const divisor = (p.mass || 1) * inertiaCoeff;
+    const dvTick = divisor > 0 ? impulse / divisor : 0;
     this.dVdone += dvTick;
 
     if(this.spinInvest){
@@ -567,7 +580,7 @@ class PlanetaryThrustersProject extends Project{
         const starM = getStarMassKgFromCurrent();
         let r = parent.orbitRadius * 1e3;
         const v = Math.sqrt(mu / r);
-        let E = -mu / (2 * r) + v * a * dt;
+        let E = -mu / (2 * r) + v * dvTick;
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
         const a_new = -mu / (2 * E);
         parent.orbitRadius = a_new / 1e3;
@@ -592,7 +605,7 @@ class PlanetaryThrustersProject extends Project{
         let a_sma = p.distanceFromSun * AU_IN_METERS;
         const v = Math.sqrt(mu / a_sma);
         const orientation = this.tgtAU > p.distanceFromSun ? 1 : -1;
-        let E = -mu / (2 * a_sma) + v * a * dt * orientation;
+        let E = -mu / (2 * a_sma) + v * dvTick * orientation;
         a_sma = -mu / (2 * E);
         p.distanceFromSun = a_sma / AU_IN_METERS;
         if((this.tgtAU>this.startAU&&p.distanceFromSun>=this.tgtAU)||
@@ -644,7 +657,7 @@ class PlanetaryThrustersProject extends Project{
     this.escapeComplete = !!state.escapeComplete;
 
     // If the planet exists already and we previously escaped, mirror the flag onto it
-    const p = (typeof currentPlanetParameters !== 'undefined') ? currentPlanetParameters.celestialParameters : null;
+    const p = terraforming.celestialParameters;
     if(p && this.escapeComplete){ p.hasEscapedParent = true; }
 
     if(this.el && Object.keys(this.el).length){

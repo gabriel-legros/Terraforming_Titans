@@ -144,3 +144,23 @@ describe('rwgEffects mars-like population bonus', () => {
     );
   });
 });
+
+describe('rwgEffects venus-like worker reduction', () => {
+  let context;
+  beforeEach(() => {
+    context = initContext('nitrogenSpaceMining', 'venus-like');
+    context.globalEffects = new context.EffectableEntity({ description: 'global' });
+    context.buildings = {
+      factory: new context.EffectableEntity({ description: 'factory' }),
+    };
+  });
+
+  test('applies global worker reduction based on venus-like count', () => {
+    const building = context.buildings.factory;
+    expect(building.activeEffects.filter((e) => e.type === 'workerMultiplier')).toHaveLength(0);
+    context.applyRWGEffects();
+    const workerEffect = building.activeEffects.find((e) => e.type === 'workerMultiplier');
+    expect(workerEffect).toBeDefined();
+    expect(workerEffect.value).toBeCloseTo(1 / (1 + 0.01 * 2));
+  });
+});

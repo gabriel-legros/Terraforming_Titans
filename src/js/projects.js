@@ -17,6 +17,7 @@ class Project extends EffectableEntity {
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
+    this.permanentlyDisabled = false;
   }
 
   initializeFromConfig(config, name) {
@@ -117,8 +118,23 @@ class Project extends EffectableEntity {
   }
 
   applyActiveEffects(firstTime = true) {
+    const wasDisabled = this.permanentlyDisabled === true;
+    this.permanentlyDisabled = false;
     super.applyActiveEffects(firstTime);
     this.updateDurationFromEffects();
+    if (wasDisabled !== (this.permanentlyDisabled === true)) {
+      globalThis?.updateProjectUI?.(this.name);
+    }
+  }
+
+  applyPermanentProjectDisable(effect) {
+    const shouldDisable = effect?.value !== false;
+    this.permanentlyDisabled = shouldDisable;
+    if (shouldDisable) {
+      this.isActive = false;
+      this.isPaused = false;
+    }
+    globalThis?.updateProjectUI?.(this.name);
   }
 
   isContinuous() {
@@ -156,6 +172,9 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
+    if (this.isPermanentlyDisabled()) {
+      return false;
+    }
     if (!this.unlocked){
       return false;
     }
@@ -312,6 +331,9 @@ class Project extends EffectableEntity {
   }
 
   resume() {
+    if (this.isPermanentlyDisabled()) {
+      return false;
+    }
     if (this.isPaused && !this.isCompleted && this.hasSustainResources()) {
       this.isActive = true;
       this.isPaused = false;
@@ -321,6 +343,11 @@ class Project extends EffectableEntity {
   }
 
   update(deltaTime) {
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      this.isPaused = false;
+      return;
+    }
     if (!this.isActive || this.isCompleted || this.isPaused) return;
 
     if (
@@ -441,7 +468,11 @@ class Project extends EffectableEntity {
   // By default projects are visible when unlocked, but subclasses
   // can override this to remain visible in other states.
   isVisible() {
-    return this.unlocked;
+    return this.unlocked && !this.isPermanentlyDisabled();
+  }
+
+  isPermanentlyDisabled() {
+    return this.permanentlyDisabled === true;
   }
 
   enable() {
@@ -669,6 +700,10 @@ class ProjectManager extends EffectableEntity {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
 
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
+
       if (!this.isProjectRelevantToCurrentPlanet(project)) {
         continue;
       }
@@ -710,6 +745,9 @@ class ProjectManager extends EffectableEntity {
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
       if (!this.isProjectRelevantToCurrentPlanet(project)) {
         continue;
       }
@@ -748,6 +786,9 @@ class ProjectManager extends EffectableEntity {
     const totals = { cost: {}, gain: {} };
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
       if (typeof project.estimateCostAndGain === 'function') {
         const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime) || {};
         for (const category in cost) {
@@ -774,6 +815,9 @@ class ProjectManager extends EffectableEntity {
     for (const name in this.projects) {
       const project = this.projects[name];
       if (project === exclude) continue;
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
       if (typeof project.assignedSpaceships === 'number') {
         total += project.assignedSpaceships;
       }
@@ -786,6 +830,9 @@ class ProjectManager extends EffectableEntity {
     for (const name in this.projects) {
       const project = this.projects[name];
       if (project === exclude) continue;
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
       if (typeof project.assignedAndroids === 'number') {
         total += project.assignedAndroids;
       }
@@ -797,6 +844,9 @@ class ProjectManager extends EffectableEntity {
     const assignments = [];
     for (const name in this.projects) {
       const project = this.projects[name];
+      if (project?.isPermanentlyDisabled?.()) {
+        continue;
+      }
       if (project && project.assignedAndroids > 0) {
         assignments.push([project.displayName || name, project.assignedAndroids]);
       }
@@ -867,6 +917,21 @@ class ProjectManager extends EffectableEntity {
 
       if (project && typeof project.loadState === 'function') {
         project.loadState(savedProject);
+      }
+    }
+
+    const manager = typeof globalThis !== 'undefined' ? globalThis.spaceManager : (typeof spaceManager !== 'undefined' ? spaceManager : null);
+    const ringProject = this.projects?.orbitalRing;
+    if (ringProject && manager) {
+      const expected = ringProject.ringCount || 0;
+      if (typeof manager.countOrbitalRings === 'function' && typeof manager.assignOrbitalRings === 'function') {
+        const existing = manager.countOrbitalRings();
+        if (existing !== expected) {
+          manager.assignOrbitalRings(expected);
+        }
+      }
+      if (typeof manager.currentWorldHasOrbitalRing === 'function') {
+        ringProject.currentWorldHasRing = manager.currentWorldHasOrbitalRing();
       }
     }
 

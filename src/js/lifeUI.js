@@ -20,6 +20,27 @@ const tempAttributes = [
   'optimalGrowthTemperature'
 ];
 
+const baseLifeAttributeOrder = [
+  'minTemperatureTolerance', 'maxTemperatureTolerance',
+  'optimalGrowthTemperature', 'growthTemperatureTolerance',
+  'photosynthesisEfficiency',
+  'radiationTolerance',
+  'invasiveness', 'spaceEfficiency', 'geologicalBurial', 'bioworkforce'
+];
+
+function getLifeManagerSafe() {
+  try {
+    return lifeManager;
+  } catch (error) {
+    return null;
+  }
+}
+
+function isBioworkforceUnlocked() {
+  const manager = getLifeManagerSafe();
+  return manager?.isBooleanFlagSet?.('bioworkforce') ?? false;
+}
+
 function getConvertedDisplay(attributeName, attribute) {
   if (tempAttributes.includes(attributeName)) {
     let kelvin = 0;
@@ -55,7 +76,6 @@ const lifeUICache = {
     tempMultiplier: {},
     moisture: {},
     radiation: {},
-    toxicity: {},
     maxDensity: {},
     biomassAmount: {},
     biomassDensity: {},
@@ -86,7 +106,6 @@ function cacheLifeStatusTableElements() {
     lifeUICache.cells.tempMultiplier[zone] = document.getElementById(`temp-multiplier-${zone}-status`);
     lifeUICache.cells.moisture[zone] = document.getElementById(`moisture-${zone}-status`);
     lifeUICache.cells.radiation[zone] = document.getElementById(`radiation-${zone}-status`);
-    lifeUICache.cells.toxicity[zone] = document.getElementById(`toxicity-${zone}-status`);
     lifeUICache.cells.maxDensity[zone] = document.getElementById(`max-density-${zone}-status`);
     lifeUICache.cells.biomassAmount[zone] = document.getElementById(`biomass-amount-${zone}-status`);
     lifeUICache.cells.biomassDensity[zone] = document.getElementById(`biomass-density-${zone}-status`);
@@ -126,15 +145,8 @@ function cacheLifeTentativeCells() {
 }
 
 function cacheLifeAttributeCells() {
-  const attributeOrder = [
-    'minTemperatureTolerance', 'maxTemperatureTolerance',
-    'optimalGrowthTemperature', 'growthTemperatureTolerance',
-    'photosynthesisEfficiency',
-    'radiationTolerance', 'toxicityTolerance',
-    'invasiveness', 'spaceEfficiency', 'geologicalBurial'
-  ];
   lifeUICache.attributeCells = {};
-  attributeOrder.forEach(attributeName => {
+  baseLifeAttributeOrder.forEach(attributeName => {
     const currentDiv = document.getElementById(`${attributeName}-current-value`);
     const tentativeDiv = document.getElementById(`${attributeName}-tentative-value`);
     const tentativeDisplay = tentativeDiv ? tentativeDiv.querySelector('.life-tentative-display') : null;
@@ -258,13 +270,6 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="radiation-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="radiation-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
-                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Toxicity</td>
-                        <td id="toxicity-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="toxicity-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                    </tr>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Biomass Amount (tons)</td>
                         <td id="biomass-amount-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -321,24 +326,20 @@ function initializeLifeTerraformingDesignerUI() {
 
     function generateAttributeRows() {
       let rows = '';
-      const attributeOrder = [
-          'minTemperatureTolerance', 'maxTemperatureTolerance',
-          'optimalGrowthTemperature', 'growthTemperatureTolerance',
-          'photosynthesisEfficiency',
-          'radiationTolerance', 'toxicityTolerance',
-          'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
-      ];
+      const attributeOrder = baseLifeAttributeOrder;
 
       for (const attributeName of attributeOrder) {
         if (!lifeDesigner.currentDesign[attributeName]) continue;
 
         const attribute = lifeDesigner.currentDesign[attributeName];
         const convertedValue = getConvertedDisplay(attributeName, attribute);
+        const isBioworkforceRow = attributeName === 'bioworkforce';
+        const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
         rows += `
-          <tr>
+          <tr id="life-attribute-row-${attributeName}"${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${attribute.displayName} (Max ${attribute.maxUpgrades})
-              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}</div>
+              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ' <span class="info-tooltip-icon" title="Each point assigns 0.00001 of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>' : ''}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -620,13 +621,8 @@ function updateLifeUI() {
   
     function updateDesignValues() {
       // Use the same attribute order as in generateAttributeRows
-      const attributeOrder = [
-           'minTemperatureTolerance', 'maxTemperatureTolerance',
-           'optimalGrowthTemperature', 'growthTemperatureTolerance',
-           'photosynthesisEfficiency',
-           'radiationTolerance', 'toxicityTolerance',
-           'invasiveness', 'spaceEfficiency', 'geologicalBurial' // Added geologicalBurial
-        ];
+      const attributeOrder = baseLifeAttributeOrder;
+      const bioworkforceUnlocked = isBioworkforceUnlocked();
 
       attributeOrder.forEach(attributeName => {
         // Update Current Design Value (cached)
@@ -652,6 +648,19 @@ function updateLifeUI() {
             tentativeCell.style.display = 'table-cell';
           } else {
             tentativeCell.style.display = 'none';
+          }
+        }
+
+        if (attributeName === 'bioworkforce') {
+          const row = document.getElementById('life-attribute-row-bioworkforce');
+          if (row) {
+            row.style.display = bioworkforceUnlocked ? '' : 'none';
+            if (!bioworkforceUnlocked) {
+              const modifyCell = row.querySelector('.modify-buttons-cell');
+              if (modifyCell) {
+                modifyCell.style.display = 'none';
+              }
+            }
           }
         }
 
@@ -721,7 +730,6 @@ function updateLifeStatusTable() {
     const survivalTempResults = designToCheck.temperatureSurvivalCheck();
     const moistureResults = designToCheck.moistureCheckAllZones(); // Use the aggregate function
     const radiationResult = designToCheck.radiationCheck(); // Global check
-    const toxicityResult = designToCheck.toxicityCheck();   // Global check
     // Calculate max density based on space efficiency
     const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
     const densityMultiplier = 1 + (spaceEfficiencyAttr?.value || 0);
@@ -839,7 +847,6 @@ function updateLifeStatusTable() {
 
         updateStatusCell(lifeUICache.cells.moisture[zone], moistureResults[zone]);
         updateStatusCell(lifeUICache.cells.radiation[zone], radiationResult, zone === 'global');
-        updateStatusCell(lifeUICache.cells.toxicity[zone], toxicityResult);
 
         const maxDensityCell = lifeUICache.cells.maxDensity[zone];
         if (maxDensityCell) {

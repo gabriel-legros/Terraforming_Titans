@@ -51,8 +51,6 @@ class LifeAttribute {
         return (0.00008*this.value).toFixed(5); // Adjust as needed
       case 'radiationTolerance':
         return this.value * 4 + '%';
-      case 'toxicityTolerance':
-        return this.value * 10 + '%';
       case 'invasiveness':
         return this.value;
       case 'spaceEfficiency':
@@ -64,6 +62,8 @@ class LifeAttribute {
         // Calculate rate: starts at 0, adds 0.0001 per point, max 0.001 at 10 points
         const burialRate = this.value * 0.0001;
         return burialRate.toFixed(4); // Display rate with 4 decimal places
+      case 'bioworkforce':
+        return `${(this.value * 0.00001).toFixed(5)} workers per ton biomass`;
       default:
         return null;
     }
@@ -71,15 +71,16 @@ class LifeAttribute {
 }
 
 class LifeDesign {
-  constructor(minTemperatureTolerance,
+  constructor(
+    minTemperatureTolerance,
     maxTemperatureTolerance,
     photosynthesisEfficiency,
     radiationTolerance,
-    toxicityTolerance,
     invasiveness,
     spaceEfficiency, // Added new attribute
     geologicalBurial, // Added Geological Burial
-    growthTemperatureTolerance = 0
+    growthTemperatureTolerance = 0,
+    bioworkforce = 0
   ) {
     this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 60);
     this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
@@ -93,11 +94,11 @@ class LifeDesign {
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
     this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
-    this.toxicityTolerance = new LifeAttribute('toxicityTolerance', toxicityTolerance, 'Toxicity Tolerance', 'Resistance to environmental toxins.', 10);
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', 100);
     this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', 50);
-   }
+    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', 100);
+  }
 
   getDesignCost() {
     return Object.values(this).reduce((sum, attribute) => {
@@ -149,10 +150,10 @@ class LifeDesign {
       growthTemperatureTolerance: this.growthTemperatureTolerance.value,
       photosynthesisEfficiency: this.photosynthesisEfficiency.value,
       radiationTolerance: this.radiationTolerance.value,
-      toxicityTolerance: this.toxicityTolerance.value,
       invasiveness: this.invasiveness.value,
       spaceEfficiency: this.spaceEfficiency.value, // Added for saving
-      geologicalBurial: this.geologicalBurial.value // Added Geological Burial
+      geologicalBurial: this.geologicalBurial.value, // Added Geological Burial
+      bioworkforce: this.bioworkforce.value
     };
     return data;
   }
@@ -163,11 +164,11 @@ class LifeDesign {
       data.maxTemperatureTolerance,
       data.photosynthesisEfficiency,
       data.radiationTolerance,
-      data.toxicityTolerance,
       data.invasiveness,
       data.spaceEfficiency ?? 0, // Added for loading, default to 0 if missing in save
       data.geologicalBurial ?? 0, // Added Geological Burial, default 0
-      data.growthTemperatureTolerance ?? 0
+      data.growthTemperatureTolerance ?? 0,
+      data.bioworkforce ?? 0
     );
 
     design.optimalGrowthTemperature.value = data.optimalGrowthTemperature ?? 0;
@@ -294,14 +295,6 @@ class LifeDesign {
       return Math.max(dayPen, nightPen);
   }
 
-  // Checks toxicity tolerance (currently a simple global check)
-  toxicityCheck() {
-      // Placeholder - Add actual toxicity check logic if/when implemented
-      const isToxic = false; // Assume not toxic for now
-      const pass = !isToxic || this.toxicityTolerance.value >= 5; // Example threshold
-      return { pass: pass, reason: pass ? null : "High toxicity" };
-  }
-
     // Checks radiation tolerance against magnetosphere status
     radiationCheck() {
         const hasShield = terraforming.getMagnetosphereStatus();
@@ -322,7 +315,7 @@ class LifeDesign {
     }
 
   // Checks if the lifeform can survive in at least one zone based on temperature
-  // TODO: Incorporate global radiation/toxicity checks?
+  // TODO: Incorporate global radiation checks?
   canSurviveAnywhere() {
       const tempResults = this.temperatureSurvivalCheck();
       // Check if any zone passed the temperature check
@@ -411,7 +404,7 @@ class LifeDesigner extends EffectableEntity {
   constructor() {
     super({ description: 'Life Designer' });
     this.baseApplyDuration = 30000;
-    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency and geologicalBurial default
+    this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0); // Added spaceEfficiency, geologicalBurial, and bioworkforce defaults
     this.tentativeDesign = null;
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
@@ -469,21 +462,22 @@ class LifeDesigner extends EffectableEntity {
     maxTemperatureTolerance,
     photosynthesisEfficiency,
     radiationTolerance,
-    toxicityTolerance,
     invasiveness,
+    spaceEfficiency,
     geologicalBurial,
-    growthTemperatureTolerance = 0
+    growthTemperatureTolerance = 0,
+    bioworkforce = 0
   ) {
     this.tentativeDesign = new LifeDesign(
       minTemperatureTolerance,
       maxTemperatureTolerance,
       photosynthesisEfficiency,
       radiationTolerance,
-      toxicityTolerance,
       invasiveness,
-      0, // Default spaceEfficiency for new design
+      spaceEfficiency,
       geologicalBurial, // Pass geologicalBurial
-      growthTemperatureTolerance
+      growthTemperatureTolerance,
+      bioworkforce
     );
   }
 
@@ -649,6 +643,25 @@ class LifeManager extends EffectableEntity {
           const secondsMultiplier = deltaTime / 1000;
           terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
 
+          const zonePercentages = {};
+          let totalZonePercentage = 0;
+          for (const zone of ['tropical', 'temperate', 'polar']) {
+              const percentage = getZonePercentage(zone) || 0;
+              zonePercentages[zone] = percentage;
+              totalZonePercentage += percentage;
+          }
+          if (totalZonePercentage <= 0) totalZonePercentage = 1;
+
+          const totalCO2ForGrowth = resources.atmospheric['carbonDioxide']?.value || 0;
+          const totalOxygenForDecay = resources.atmospheric['oxygen']?.value || 0;
+          const co2AvailableByZone = {};
+          const oxygenAvailableByZone = {};
+          for (const zone of ['tropical', 'temperate', 'polar']) {
+              const share = zonePercentages[zone] / totalZonePercentage;
+              co2AvailableByZone[zone] = totalCO2ForGrowth * share;
+              oxygenAvailableByZone[zone] = totalOxygenForDecay * share;
+          }
+
           for (const zoneName of ['tropical', 'temperate', 'polar']) {
             let usedLiquidWater = false;
             terraforming.biomassDyingZones[zoneName] = false;
@@ -684,21 +697,37 @@ class LifeManager extends EffectableEntity {
                 const baseMaxDensity = BASE_MAX_BIOMASS_DENSITY;
                 const densityMultiplier = 1 + spaceEfficiencyValue;
                 const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
+
+                if (maxBiomassForZone <= 0 || zonalBiomass > maxBiomassForZone) {
+                    const targetOverflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
+                    if (targetOverflowDecay > 0) {
+                        decayBiomass -= targetOverflowDecay;
+
+                        if (secondsMultiplier > 0 && targetOverflowDecay > 1e-9) {
+                            const decayRateMultiplier = 1 / secondsMultiplier;
+                            if (resources.surface.biomass) resources.surface.biomass.modifyRate(-targetOverflowDecay * decayRateMultiplier, 'Life Density Decay', 'life');
+                        }
+                    }
+                }
+
                 const logisticFactor = maxBiomassForZone > 0 ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone) : 0;
                 const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
                 const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
                 const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
 
-                const globalCO2 = resources.atmospheric['carbonDioxide']?.value || 0;
                 const availableLiquidWater = terraforming.zonalWater[zoneName]?.liquid || 0;
                 if (availableLiquidWater > 1e-9) {
                     usedLiquidWater = true;
                     const maxGrowthByLiquidWater = (availableLiquidWater / waterRatio) * biomassRatio;
-                    const maxGrowthByCO2 = (globalCO2 / co2Ratio) * biomassRatio;
+                    const zoneCO2Available = co2AvailableByZone[zoneName] || 0;
+                    const maxGrowthByCO2 = (zoneCO2Available / co2Ratio) * biomassRatio;
                     growthBiomass = Math.min(potentialBiomassIncrease, maxGrowthByCO2, maxGrowthByLiquidWater);
                     growthWater = -(growthBiomass / biomassRatio) * waterRatio;
                     growthCO2 = -(growthBiomass / biomassRatio) * co2Ratio;
                     growthOxygen = (growthBiomass / biomassRatio) * oxygenRatio;
+
+                    const co2Consumed = -growthCO2;
+                    co2AvailableByZone[zoneName] = Math.max(0, zoneCO2Available - co2Consumed);
 
                     if (secondsMultiplier > 0 && growthBiomass > 1e-9) {
                         const growthRateMultiplier = 1 / secondsMultiplier;
@@ -716,8 +745,8 @@ class LifeManager extends EffectableEntity {
                 const minDecayAmount = MINIMUM_BIOMASS_DECAY_RATE * secondsMultiplier * penaltyFraction;
                 const targetDecayAmount = Math.max(percentDecayAmount, minDecayAmount);
 
-                const globalOxygen = resources.atmospheric['oxygen']?.value || 0;
-                const maxDecayByOxygen = (globalOxygen / oxygenRatio) * biomassRatio;
+                const zoneOxygenAvailable = oxygenAvailableByZone[zoneName] || 0;
+                const maxDecayByOxygen = (zoneOxygenAvailable / oxygenRatio) * biomassRatio;
 
                 const totalDecay = Math.min(targetDecayAmount, zonalBiomass);
                 const oxygenDecay = Math.min(maxDecayByOxygen, totalDecay);
@@ -727,6 +756,9 @@ class LifeManager extends EffectableEntity {
                 decayWater = (oxygenDecay / biomassRatio) * waterRatio;
                 decayCO2 = (oxygenDecay / biomassRatio) * co2Ratio;
                 decayOxygen = -(oxygenDecay / biomassRatio) * oxygenRatio;
+
+                const oxygenConsumed = -decayOxygen;
+                oxygenAvailableByZone[zoneName] = Math.max(0, zoneOxygenAvailable - oxygenConsumed);
 
                 if (secondsMultiplier > 0 && totalDecay > 1e-9) {
                     const decayRateMultiplier = 1 / secondsMultiplier;

@@ -27,6 +27,7 @@ function createNoGravityPenalty() {
 const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
+const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
 const EQUILIBRIUM_METHANE_PARAMETER = 0.000015;
@@ -35,6 +36,7 @@ const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
+var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
 var calculateEffectiveAtmosphericHeatCapacityHelper;
 if (typeof module !== 'undefined' && module.exports) {
@@ -98,7 +100,8 @@ if (typeof module !== 'undefined' && module.exports) {
 
     ({
       getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper,
-      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper
+      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper,
+      getAerostatMaintenanceMitigation: getAerostatMaintenanceMitigationHelper
     } = require('../buildings/aerostat.js'));
 } else {
     getZonePercentage = globalThis.getZonePercentage;
@@ -114,6 +117,8 @@ if (typeof module !== 'undefined' && module.exports) {
       globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
     isBuildingEligibleForFactoryMitigationHelper =
       globalThis.isBuildingEligibleForFactoryMitigation;
+    getAerostatMaintenanceMitigationHelper =
+      globalThis.getAerostatMaintenanceMitigation;
 }
 
 var getEcumenopolisLandFraction;
@@ -619,6 +624,8 @@ class Terraforming extends EffectableEntity{
             durationSeconds,
             surfaceArea: this.celestialParameters.surfaceArea,
             surfaceTemperatureK: this.temperature.value,
+            gravity,
+            solarFlux: this.luminosity.modifiedSolarFlux,
         });
 
         for (const [key, delta] of Object.entries(chemTotals.changes)) {
@@ -805,12 +812,14 @@ class Terraforming extends EffectableEntity{
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const greenhouseFactor = 1 + 0.75 * tau;
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
+    const megaHeatSinkCount =
+        projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
 
     let weightedTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
     const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface);
-    const slabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
+    const baseSlabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -819,11 +828,19 @@ class Terraforming extends EffectableEntity{
         ? calculateZonalSurfaceFractions(this, zone)
         : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
 
+        const pct = getZonePercentage(zone);
+        const zoneArea = (this.celestialParameters.surfaceArea || 0) * pct;
+        const slabOptions = {
+            ...baseSlabOptions,
+            zoneArea,
+            zoneLiquidWater: this.zonalWater[zone]?.liquid || 0
+        };
+
         const zTemps = dayNightTemperaturesModel({
-        ...baseParams,
-        flux: zoneFlux,
-        surfaceFractions: zoneFractions,
-        autoSlabOptions: slabOptions
+            ...baseParams,
+            flux: zoneFlux,
+            surfaceFractions: zoneFractions,
+            autoSlabOptions: slabOptions
         });
 
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
@@ -842,20 +859,19 @@ class Terraforming extends EffectableEntity{
               ? atmosphericHeatCapacity
               : (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6)));
 
-        const pct = getZonePercentage(zone);                       // fraction of surface (0..1)
-        const area = (this.celestialParameters.surfaceArea || 0) * pct; // m²
+        const area = zoneArea; // m²
         const capacityPerArea = Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY);
 
         z[zone] = {
-        mean:  zTemps.mean,
-        day:   zTemps.day,
-        night: zTemps.night,
-        eq:    zTemps.equilibriumTemperature,
-        albedo: zTemps.albedo,
-        frac:  zoneFractions,
-        area,
-        Cslab,
-        capacityPerArea
+            mean:  zTemps.mean,
+            day:   zTemps.day,
+            night: zTemps.night,
+            eq:    zTemps.equilibriumTemperature,
+            albedo: zTemps.albedo,
+            frac:  zoneFractions,
+            area,
+            Cslab,
+            capacityPerArea
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
@@ -951,11 +967,23 @@ class Terraforming extends EffectableEntity{
         else{
             // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
             const targetTemp = T[zone];
+            const emittedFluxPreTarget = greenhouseFactor > 0
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
+                : 0;
             const emittedFluxTarget = greenhouseFactor > 0
                 ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
                 : 0;
-            const windFlux = mixingDelta !== 0 ? emittedFlux - emittedFluxTarget : 0;
-            const combinedFlux = netFlux - windFlux;
+            const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
+            let combinedFlux = netFlux - windFlux;
+
+            if (desiredDelta < 0 && megaHeatSinkCount > 0) {
+              const zoneArea = z[zone].area || 0;
+              if (zoneArea > 0) {
+                const zoneCoolingPower = megaHeatSinkCount * MEGA_HEAT_SINK_POWER_W * pct;
+                const coolingFlux = zoneCoolingPower / zoneArea;
+                combinedFlux -= coolingFlux;
+              }
+            }
 
             newTemp = previousMean + (combinedFlux * dtSeconds) / capacity;
 
@@ -971,7 +999,9 @@ class Terraforming extends EffectableEntity{
 
         this.temperature.zones[zone].value = newTemp;
         this.temperature.zones[zone].day = newTemp + dMean;
-        this.temperature.zones[zone].night = newTemp - dMean;
+        const nightTemperature = newTemp - dMean;
+        const minimumNightTemperature = newTemp / 4;
+        this.temperature.zones[zone].night = Math.max(nightTemperature, minimumNightTemperature);
 
         weightedTemp += newTemp*pct;
     }
@@ -1475,7 +1505,17 @@ class Terraforming extends EffectableEntity{
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
       const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
-      const factoryPenaltyReduction = this.getFactoryTemperatureMaintenancePenaltyReduction();
+      const aerostatMitigationDetails =
+        typeof getAerostatMaintenanceMitigationHelper === 'function'
+          ? getAerostatMaintenanceMitigationHelper()
+          : null;
+      const factoryPenaltyReduction =
+        aerostatMitigationDetails &&
+        Number.isFinite(aerostatMitigationDetails.workerShare)
+          ? aerostatMitigationDetails.workerShare
+          : this.getFactoryTemperatureMaintenancePenaltyReduction();
+      const buildingMitigationById =
+        aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
 
       for (let i = 1; i <= 7; i++) {
         const energyPenaltyEffect = {
@@ -1569,13 +1609,29 @@ class Terraforming extends EffectableEntity{
               : b.requiresWorker || 0;
 
           let penaltyValue = maintenancePenalty;
-          if (
-            maintenancePenalty > 1 &&
-            factoryPenaltyReduction > 0 &&
-            workerNeed > 0 &&
-            countsTowardFactoryMitigation
-          ) {
-            penaltyValue = 1 + (maintenancePenalty - 1) * (1 - factoryPenaltyReduction);
+
+          if (maintenancePenalty > 1) {
+            const baseIncrease = maintenancePenalty - 1;
+            let remainingFactor = 1;
+
+            if (
+              factoryPenaltyReduction > 0 &&
+              workerNeed > 0 &&
+              countsTowardFactoryMitigation
+            ) {
+              const clampedFactoryReduction = Math.max(
+                0,
+                Math.min(1, factoryPenaltyReduction)
+              );
+              remainingFactor *= 1 - clampedFactoryReduction;
+            }
+
+            const buildingMitigation = buildingMitigationById[id];
+            if (buildingMitigation) {
+              remainingFactor *= buildingMitigation.remainingFraction;
+            }
+
+            penaltyValue = 1 + baseIncrease * remainingFactor;
           }
 
           addEffect({

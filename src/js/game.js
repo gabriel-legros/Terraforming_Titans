@@ -118,18 +118,24 @@ function create() {
   createMilestonesUI();
 
   spaceManager = new SpaceManager(planetParameters);
+  globalThis.spaceManager = spaceManager;
+  galaxyManager = new GalaxyManager();
   initializeHopeUI();
   initializeSpaceUI(spaceManager);
+  if (typeof galaxyManager.initialize === 'function') {
+    galaxyManager.initialize();
+  }
 
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
-    initializeGameState();
-    if (typeof openTerraformingWorldTab === 'function') {
-      openTerraformingWorldTab();
+      initializeGameState();
+      if (typeof openTerraformingWorldTab === 'function') {
+        openTerraformingWorldTab();
+      }
+      if (typeof hideLoadingOverlay === 'function') {
+        hideLoadingOverlay();
+      }
     }
-  }
-  if (typeof hideLoadingOverlay === 'function') {
-    hideLoadingOverlay();
-  }
+    return;
 }
 
 function initializeGameState(options = {}) {
@@ -140,6 +146,7 @@ function initializeGameState(options = {}) {
   let savedAlienArtifact = null;
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
+  let savedAntimatter = null;
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
   }
@@ -159,6 +166,13 @@ function initializeGameState(options = {}) {
     savedAlienArtifact = {
       value: resources.special.alienArtifact.value,
       unlocked: resources.special.alienArtifact.unlocked,
+    };
+  }
+  if (preserveManagers && resources && resources.special && resources.special.antimatter) {
+    savedAntimatter = {
+      value: resources.special.antimatter.value,
+      unlocked: resources.special.antimatter.unlocked,
+      enabled: resources.special.antimatter.enabled,
     };
   }
   tabManager = new TabManager({
@@ -219,6 +233,13 @@ function initializeGameState(options = {}) {
   if (savedAlienArtifact) {
     resources.special.alienArtifact.value = savedAlienArtifact.value;
     resources.special.alienArtifact.unlocked = savedAlienArtifact.unlocked;
+  }
+  if (savedAntimatter) {
+    resources.special.antimatter.value = savedAntimatter.value;
+    resources.special.antimatter.unlocked = savedAntimatter.unlocked;
+    if (Object.prototype.hasOwnProperty.call(savedAntimatter, 'enabled')) {
+      resources.special.antimatter.enabled = savedAntimatter.enabled;
+    }
   }
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
@@ -315,11 +336,18 @@ function initializeGameState(options = {}) {
   lifeManager = new LifeManager();
 
   milestonesManager = new MilestonesManager();
+  if (!preserveManagers || !galaxyManager) {
+    galaxyManager = new GalaxyManager();
+  }
+  if (typeof galaxyManager.initialize === 'function') {
+    galaxyManager.initialize();
+  }
   if (!preserveManagers) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
       spaceManager = new SpaceManager(planetParameters);
+      globalThis.spaceManager = spaceManager;
     }
   }
 
@@ -349,6 +377,11 @@ function initializeGameState(options = {}) {
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
     initializeSpaceUI(spaceManager);
   }
+  if (typeof galaxyManager?.refreshUIVisibility === 'function') {
+    galaxyManager.refreshUIVisibility();
+  } else if (typeof updateGalaxyUI === 'function') {
+    updateGalaxyUI();
+  }
 
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.
@@ -377,6 +410,10 @@ function updateLogic(delta) {
   dayNightCycle.update(delta);
 
   colonySliderSettings.updateColonySlidersEffect();
+
+  if (galaxyManager && typeof galaxyManager.update === 'function') {
+    galaxyManager.update(delta);
+  }
 
   const allStructures = {...buildings, ...colonies};
 
@@ -512,6 +549,7 @@ function updateRender(force = false) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
+      if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
       if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
@@ -534,6 +572,7 @@ function updateRender(force = false) {
     updateStatisticsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
+    if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
   }
 
   // Milestones often affect multiple views; keep updated

@@ -34,6 +34,7 @@
 
     makeRow('illum', 'Illumination', 0.0, 3.0, 0.01);
     makeRow('incl', 'Inclination (deg)', -90, 90, 1);
+    makeRow('ambient', 'Ambient light', 0.0, 1.0, 0.01);
     makeRow('pop', 'Population', 0, 1000000, 1);
     makeRow('ships', 'Spaceships', 0, 1000, 1);
     makeRow('co2', 'CO2 (kPa)', 0, 100, 0.1);
@@ -143,6 +144,12 @@
       }
       if (this.debug.mode === 'game') {
         this.setBaseColor(this.getGameBaseColor(), { fromGame: true });
+        // Clear any archetype override when returning to game mode
+        if (this.viz && this.viz.classification) {
+          delete this.viz.classification.archetype;
+        }
+        if (this.debug.archetypeSelect) this.debug.archetypeSelect.value = '';
+        this.updateSurfaceTextureFromPressure(true);
       } else {
         syncBaseColorInputs(this.viz.baseColor);
       }
@@ -186,9 +193,52 @@
     });
 
     controls.appendChild(presetSelect);
+
+    // Texture archetype override (debug-only)
+    const archetypeLabel = document.createElement('label');
+    archetypeLabel.textContent = 'Texture archetype:';
+    archetypeLabel.style.marginLeft = '12px';
+    archetypeLabel.style.marginRight = '6px';
+    archetypeLabel.htmlFor = 'pv-archetype';
+    controls.appendChild(archetypeLabel);
+
+    const archetypeSelect = document.createElement('select');
+    archetypeSelect.id = 'pv-archetype';
+    const archetypes = [
+      { value: '', name: 'From game' },
+      { value: 'default', name: 'Default' },
+      { value: 'mars-like', name: 'Mars-like' },
+      { value: 'cold-desert', name: 'Cold desert' },
+      { value: 'icy-moon', name: 'Icy moon' },
+      { value: 'titan-like', name: 'Titan-like' },
+      { value: 'carbon-planet', name: 'Carbon planet' },
+      { value: 'desiccated-desert', name: 'Desiccated desert' },
+      { value: 'super-earth', name: 'Super-Earth' },
+      { value: 'venus-like', name: 'Venus-like' },
+    ];
+    for (const a of archetypes) {
+      const opt = document.createElement('option');
+      opt.value = a.value;
+      opt.textContent = a.name;
+      archetypeSelect.appendChild(opt);
+    }
+    archetypeSelect.addEventListener('change', () => {
+      if (this.debug.mode !== 'debug') return;
+      const v = archetypeSelect.value;
+      if (!this.viz.classification) this.viz.classification = {};
+      if (v) {
+        this.viz.classification.archetype = v;
+      } else {
+        delete this.viz.classification.archetype;
+      }
+      this.lastCraterFactorKey = null;
+      this.updateSurfaceTextureFromPressure(true);
+    });
+    controls.appendChild(archetypeSelect);
     host.appendChild(controls);
     this.debug.modeSelect = select;
     this.debug.presetSelect = presetSelect;
+    this.debug.archetypeSelect = archetypeSelect;
 
     this.updateDebugControlState();
     this.elements.container.insertAdjacentElement('afterend', host);
@@ -203,6 +253,7 @@
     setVal('pop', Number(r.pop.range.value));
     if (r.incl) setVal('incl', Number(r.incl.range.value));
     setVal('ships', Number(r.ships.range.value));
+    if (r.ambient) setVal('ambient', Number(r.ambient.range.value));
     setVal('co2', Number(r.co2.range.value));
     setVal('o2', Number(r.o2.range.value));
     setVal('inert', Number(r.inert.range.value));
@@ -241,6 +292,7 @@
       this.updateSunFromInclination();
     }
     if (this.sunLight) this.sunLight.intensity = illum;
+    if (this.ambientLight && r.ambient) this.ambientLight.intensity = Math.max(0, Math.min(1, Number(r.ambient.range.value)));
 
     const pop = Math.max(0, Math.floor(clampFrom(r.pop)));
     this.viz.pop = pop;
@@ -421,6 +473,34 @@
       }
     }
 
+    // Derive feature scale/contrast/offset from planet identity so presets vary
+    const seedFromName = (name) => {
+      const str = (name && name.toString) ? name.toString() : String(planetKey || '');
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      const x = (h & 0xffff) / 65535;
+      const y = ((h >>> 16) & 0xffff) / 65535;
+      return { x, y };
+    };
+    const s = seedFromName(planet.name || planetKey);
+    const rand01 = (ax, ay) => {
+      const v = Math.sin(ax * 127.1 + ay * 311.7) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const r1 = rand01(s.x + 0.13, s.y + 0.57);
+    const r2 = rand01(s.x + 0.61, s.y + 0.19);
+    const r3 = rand01(s.x + 0.27, s.y + 0.83);
+    const r4 = rand01(s.x + 0.91, s.y + 0.41);
+    const defScale = 8 + r1 * 10;         // 8..18
+    const defContrast = 0.9 + r2 * 1.6;   // ~0.9..2.5
+    const defOffX = (r3 * 2 - 1) * 0.5;   // -0.5..0.5
+    const defOffY = (r4 * 2 - 1) * 0.3;   // -0.3..0.3
+    if (rows.featEnabled && rows.featEnabled.checkbox) rows.featEnabled.checkbox.checked = true;
+    if (rows.featScale) setPairValue(rows.featScale, defScale, { precision: 2 });
+    if (rows.featContrast) setPairValue(rows.featContrast, defContrast, { precision: 2 });
+    if (rows.featOffsetX) setPairValue(rows.featOffsetX, defOffX, { precision: 2 });
+    if (rows.featOffsetY) setPairValue(rows.featOffsetY, defOffY, { precision: 2 });
+
     this.applySlidersToGame();
   };
 
@@ -435,6 +515,11 @@
       const inc = (this.viz?.inclinationDeg ?? 15);
       r.incl.range.value = String(inc);
       r.incl.number.value = String(inc);
+    }
+    if (r.ambient && this.ambientLight) {
+      const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
+      r.ambient.range.value = String(amb);
+      r.ambient.number.value = String(amb);
     }
     const popNow = resources.colony.colonists.value || 0;
     r.pop.range.value = String(popNow);
@@ -518,6 +603,11 @@
       const cel = currentPlanetParameters.celestialParameters;
       const illum = this.getGameIllumination();
       if (r.illum) { r.illum.range.value = String(illum); r.illum.number.value = String(illum); }
+      if (r.ambient && this.ambientLight) {
+        const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
+        r.ambient.range.value = String(amb);
+        r.ambient.number.value = String(amb);
+      }
       const popNow = resources?.colony?.colonists?.value || 0;
       if (r.pop) { r.pop.range.value = String(popNow); r.pop.number.value = String(popNow); }
       const shipVal = (resources?.special?.spaceships?.value) ?? (this.viz.ships || 0);

@@ -43,37 +43,43 @@ function calculateAverageCoverage(terraforming, resourceType) {
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));
 }
 
-// Derive surface fractions for albedo calculations. Biomass always claims its
-// full portion of the surface. Water and ice then divide whatever area remains
-// between them. If their combined coverage exceeds the leftover area, each is
-// scaled proportionally so the total does not surpass 100% of the zone.
+// Derive surface fractions for albedo calculations. All liquids and ice types
+// split the available surface together, scaling proportionally if their total
+// would exceed the planet. Biomass then claims up to 75% of whatever area
+// remains after those surface coverings.
 function calculateSurfaceFractions(waterCoverage, iceCoverage, biomassCoverage,
                                    hydrocarbonCoverage = 0,
                                    methaneIceCoverage = 0,
                                    dryIceCoverage = 0) {
-  const biomass = Math.min(biomassCoverage, 1);
-  const remaining = 1 - biomass;
+  let ocean = Math.max(0, waterCoverage);
+  let ice = Math.max(0, iceCoverage);
+  let hydrocarbon = Math.max(0, hydrocarbonCoverage);
+  let hydrocarbonIce = Math.max(0, methaneIceCoverage);
+  let co2_ice = Math.max(0, dryIceCoverage);
 
-  const surfaces = {
-    ocean: Math.max(0, waterCoverage),
-    ice: Math.max(0, iceCoverage),
-    hydrocarbon: Math.max(0, hydrocarbonCoverage),
-    hydrocarbonIce: Math.max(0, methaneIceCoverage),
-    co2_ice: Math.max(0, dryIceCoverage)
+  let combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice;
+  if (combinedSurface > 1 && combinedSurface > 0) {
+    const scale = 1 / combinedSurface;
+    ocean *= scale;
+    ice *= scale;
+    hydrocarbon *= scale;
+    hydrocarbonIce *= scale;
+    co2_ice *= scale;
+    combinedSurface = ocean + ice + hydrocarbon + hydrocarbonIce + co2_ice;
+  }
+
+  const remaining = Math.max(0, 1 - combinedSurface);
+  const biomassMax = Math.max(0, Math.min(biomassCoverage, 1));
+  const biomass = Math.min(biomassMax, remaining * 0.75);
+
+  return {
+    ocean,
+    ice,
+    hydrocarbon,
+    hydrocarbonIce,
+    co2_ice,
+    biomass
   };
-
-  const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
-
-  let scale = 1;
-  if (totalOther > remaining && totalOther > 0) {
-    scale = remaining / totalOther;
-  }
-
-  for (const key in surfaces) {
-    surfaces[key] *= scale;
-  }
-
-  return { ...surfaces, biomass };
 }
 
 function calculateZonalSurfaceFractions(terraforming, zone) {

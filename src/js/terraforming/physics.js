@@ -6,6 +6,10 @@
 */
 
 const R_AIR = 287;
+const KG_PER_TON = 1000;
+const WATER_DENSITY = 1000; // kg/m³
+const WATER_VOLUMETRIC_HEAT_CAPACITY = 4.2e6; // J/m³/K
+const DEFAULT_OCEAN_MIX_DEPTH = 50.0; // m
 
 // ===== Tunables (safe defaults) ======================================
 // Cap Bond albedo at a realistic maximum (prevents A -> 1)
@@ -196,6 +200,30 @@ function cloudPropsOnly(pBar, comp = {}) {
   return { cfCloud, aCloud };
 }
 
+function oceanHeatCapacity(fOcean, options) {
+  const coverage = Math.max(0, Math.min(1, fOcean));
+  if (!(coverage > 0)) return 0;
+
+  const zoneArea = Math.max(0, options?.zoneArea ?? 0);
+  const liquidWaterTon = Math.max(0, options?.zoneLiquidWater ?? options?.liquidWater ?? 0);
+  const fallbackDepth = options?.fallbackOceanDepth ?? DEFAULT_OCEAN_MIX_DEPTH;
+
+  if (zoneArea > 0 && liquidWaterTon > 0) {
+    const oceanArea = zoneArea * coverage;
+    if (oceanArea > 0) {
+      const volume_m3 = (liquidWaterTon * KG_PER_TON) / WATER_DENSITY;
+      const depth = volume_m3 / oceanArea;
+      if (depth > 0) {
+        return WATER_VOLUMETRIC_HEAT_CAPACITY * depth;
+      }
+      return 0;
+    }
+  }
+
+  if (liquidWaterTon <= 0) return 0;
+  return WATER_VOLUMETRIC_HEAT_CAPACITY * fallbackDepth;
+}
+
 function autoSlabHeatCapacity(
   rotationPeriodH,
   surfacePressureBar,
@@ -212,7 +240,7 @@ function autoSlabHeatCapacity(
 
   const hSoil = Math.sqrt(kappaSoil * rotationPeriodH * 3600 / Math.PI);
   const CSoil = rhoCSoil * hSoil;
-  const COcean = 4.2e6 * 50.0;
+  const COcean = oceanHeatCapacity(fOcean, options);
   const CIce = 1.9e6 * 0.05;
 
   const cpOverride = options?.airSpecificHeat;

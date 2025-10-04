@@ -4,13 +4,13 @@ const { WGCTeamMember } = require('../src/js/team-member.js');
 const { WarpGateCommand } = require('../src/js/wgc.js');
 
 describe('WGC team health regeneration', () => {
-  test('members heal 5 HP per step when not active', () => {
+  test('members heal 50 HP per step when not active', () => {
     const wgc = new WarpGateCommand();
     const m = WGCTeamMember.create('Bob', '', 'Soldier', {});
-    m.health = 90;
+    m.health = 40;
     wgc.recruitMember(0, 0, m);
     wgc.update(60000); // one minute
-    expect(m.health).toBeCloseTo(95);
+    expect(m.health).toBeCloseTo(90);
   });
 
   test('members heal 1 HP per step during operations', () => {

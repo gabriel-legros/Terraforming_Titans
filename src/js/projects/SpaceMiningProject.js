@@ -1,3 +1,5 @@
+const ATMOSPHERIC_MONITORING_TOLERANCE = 0.00001;
+
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -324,7 +326,7 @@ class SpaceMiningProject extends SpaceshipProject {
         const radius = terraforming.celestialParameters.radius;
         const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
         const limitPa = this.disablePressureThreshold * 1000;
-        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
+        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface)*(1 + ATMOSPHERIC_MONITORING_TOLERANCE);
         const remaining = Math.max(0, maxMass - currentAmount);
         const desired = entry[gas] * fraction * productivity;
         const applied = Math.min(desired, remaining);

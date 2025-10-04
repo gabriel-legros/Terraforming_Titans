@@ -9,23 +9,38 @@ function joinLines(text) {
     return Array.isArray(text) ? text.join('\n') : text;
 }
 
+function formatWGCTeamMemberName(member, fallback) {
+    const parts = [member?.firstName, member?.lastName].filter(Boolean);
+    const name = parts.join(' ');
+    return name || fallback;
+}
+
 function getWGCTeamLeaderName(index) {
     try {
         const leader = warpGateCommand.teams[index][0];
-        const first = leader.firstName;
-        const last = leader.lastName ? ` ${leader.lastName}` : '';
-        const name = first ? first + last : '';
-        return name || `Team Leader ${index + 1}`;
+        return formatWGCTeamMemberName(leader, `Team Leader ${index + 1}`);
     } catch {
         return `Team Leader ${index + 1}`;
     }
 }
 
+function getWGCTeamNaturalScientistName(index) {
+    try {
+        const team = warpGateCommand.teams[index] || [];
+        const scientist = team.find(member => member?.classType === 'Natural Scientist');
+        return formatWGCTeamMemberName(scientist, 'Sam');
+    } catch {
+        return 'Sam';
+    }
+}
+
 function resolveStoryPlaceholders(text) {
     const leaderName = getWGCTeamLeaderName(0);
+    const scientistName = getWGCTeamNaturalScientistName(0);
     return text
         .replace(/\$WGC_TEAM1_LEADER\$/g, leaderName)
-        .replace(/\$WGC_TEAM_LEADER\$/g, leaderName);
+        .replace(/\$WGC_TEAM_LEADER\$/g, leaderName)
+        .replace(/\$WGC_TEAM1_NATSCIENTIST\$/g, scientistName);
 }
 
 function compareValues(current, target, comparison = 'gte') {
@@ -90,6 +105,12 @@ class StoryManager {
 
     initializeStory(){ // Keep this as is
         clearJournal();
+
+        if (debugMode) {
+            this.completeAllJournalEventsForDebug({ applyRewards: true });
+            this.updateCurrentObjectiveUI();
+            return;
+        }
 
         const initialEvent = this.findEventById("chapter0.1");
         if(initialEvent && !this.completedEventIds.has(initialEvent.id) && !this.activeEventIds.has(initialEvent.id)){
@@ -640,6 +661,48 @@ class StoryManager {
         return state;
     }
 
+    completeAllJournalEventsForDebug(options = {}) {
+        const { applyRewards = false } = options;
+        console.warn('Debug mode active: completing all journal events on load.');
+        this.activeEventIds = new Set();
+        this.completedEventIds = new Set();
+        this.appliedEffects = [];
+        this.waitingForJournalEventId = null;
+
+        const collectedEffects = [];
+
+        this.allEvents.forEach(event => {
+            if (event.type !== 'journal') {
+                return;
+            }
+            this.completedEventIds.add(event.id);
+            if (!Array.isArray(event.reward)) {
+                return;
+            }
+            event.reward.forEach(effect => {
+                if (!effect || !effect.type) {
+                    return;
+                }
+                if (!effect.oneTimeFlag) {
+                    collectedEffects.push(effect);
+                }
+                if (applyRewards) {
+                    addEffect(effect);
+                }
+            });
+        });
+
+        this.appliedEffects = collectedEffects;
+
+        this.currentChapter = this.progressData.chapters.reduce((max, config) => {
+            if (config.type !== 'journal') {
+                return max;
+            }
+            return config.chapter > max ? config.chapter : max;
+        }, 0);
+
+    }
+
     loadState(savedState) { // Add loading for waiting state
         console.log("StoryManager.loadState received:", savedState);
         if (!savedState) {
@@ -652,6 +715,10 @@ class StoryManager {
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
 
+        if (globalThis.debugMode) {
+            this.completeAllJournalEventsForDebug();
+        }
+
         const activePlanets = savedState.activeEventPlanets || {};
         Object.keys(activePlanets).forEach(id => {
             const ev = this.findEventById(id);
@@ -659,13 +726,9 @@ class StoryManager {
         });
 
         // ... (rest of loadState for effects) ...
-         this.appliedEffects = savedState.appliedEffects || [];
+         this.appliedEffects = [];
          // Re-applying effects logic remains...
          const uniqueEffectsToApply = new Map();
-         this.appliedEffects.forEach(effect => {
-             const effectKey = JSON.stringify(effect);
-             if (!effect.oneTimeFlag) { uniqueEffectsToApply.set(effectKey, effect); }
-         });
 
          // Ensure completed chapter rewards are applied even if not saved
          this.completedEventIds.forEach(eventId => {
@@ -744,6 +807,12 @@ class StoryEvent {
     trigger() { // Modified to skip journal entries for outdated chapters
         switch (this.type) {
             case "pop-up":
+                if (globalThis.debugMode) {
+                    if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
+                        window.storyManager.processEventCompletion(this.id);
+                    }
+                    break;
+                }
                 createPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),
@@ -751,6 +820,12 @@ class StoryEvent {
                 );
                 break;
             case "system-pop-up":
+                if (globalThis.debugMode) {
+                    if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
+                        window.storyManager.processEventCompletion(this.id);
+                    }
+                    break;
+                }
                 createSystemPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),

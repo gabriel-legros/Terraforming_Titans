@@ -2,6 +2,8 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 
 global.EffectableEntity = EffectableEntity;
 
+const originalFormatNumber = global.formatNumber;
+
 global.Colony = class {
   constructor(config) {
     this.consumption = config.consumption || {};
@@ -40,9 +42,18 @@ describe('Aerostat lift safeguards', () => {
       atmospheric: {},
       colony: {}
     };
+    global.terraforming = {
+      calculateTotalPressure: jest.fn(() => 101)
+    };
     global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT = 0.2;
     global.calculateMolecularWeight = jest.fn(() => 44);
     global.calculateSpecificLift = jest.fn(() => currentLift);
+    global.formatNumber = (value, _useSuffix = false, decimals = 0) => {
+      if (!Number.isFinite(value)) {
+        return `${value}`;
+      }
+      return Number(value).toFixed(decimals);
+    };
 
     const config = {
       name: 'Aerostat Colony',
@@ -79,10 +90,27 @@ describe('Aerostat lift safeguards', () => {
     delete global.calculateMolecularWeight;
     delete global.calculateSpecificLift;
     delete global.AEROSTAT_MINIMUM_OPERATIONAL_LIFT;
+    if (typeof originalFormatNumber === 'undefined') {
+      delete global.formatNumber;
+    } else {
+      global.formatNumber = originalFormatNumber;
+    }
   });
 
   test('automatically disables aerostats when lift falls below the threshold', () => {
     currentLift = 0.05;
+    aerostat.count = 200;
+    aerostat.active = 200;
+
+    aerostat.update(1000);
+
+    expect(aerostat.active).toBe(198);
+    expect(aerostat.updateResourceStorage).toHaveBeenCalled();
+  });
+
+  test('automatically disables aerostats when pressure falls below the buoyancy threshold', () => {
+    currentLift = 0.5;
+    global.terraforming.calculateTotalPressure.mockReturnValue(40);
     aerostat.count = 200;
     aerostat.active = 200;
 

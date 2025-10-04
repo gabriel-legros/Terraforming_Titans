@@ -20,13 +20,73 @@ class SpaceshipProject extends Project {
     return this.getActiveShipCount() > 100;
   }
 
- assignSpaceships(count) {
-    const wasContinuous = this.isContinuous();
-    const availableSpaceships = Math.floor(resources.special.spaceships.value);
+  getExportRateLabel(baseLabel) {
+    return baseLabel;
+  }
+
+  getCostRateLabel() {
+    return 'Spaceship Cost';
+  }
+
+  assignSpaceships(count) {
+    if (!count) return;
+
     this.assignedSpaceships = this.assignedSpaceships || 0;
-    const adjustedCount = Math.max(-this.assignedSpaceships, Math.min(count, availableSpaceships));
-    this.assignedSpaceships += adjustedCount;
-    resources.special.spaceships.value -= adjustedCount;
+    const wasContinuous = this.isContinuous();
+
+    if (count > 0) {
+      let applied = this.applySpaceshipDelta(count);
+      let remaining = count - applied;
+
+      if (remaining > 0) {
+        const autoProject = SpaceshipProject.getAutoAssignProject(this.name);
+        if (autoProject && autoProject !== this) {
+          const autoWasContinuous = autoProject.isContinuous();
+          const freed = -autoProject.applySpaceshipDelta(-remaining);
+          if (freed > 0) {
+            autoProject.finalizeAssignmentChange(autoWasContinuous);
+            const assignedFromFreed = this.applySpaceshipDelta(freed);
+            remaining -= assignedFromFreed;
+            applied += assignedFromFreed;
+          }
+        }
+      }
+    } else {
+      this.applySpaceshipDelta(count);
+    }
+
+    this.finalizeAssignmentChange(wasContinuous);
+  }
+
+  applySpaceshipDelta(delta) {
+    if (!delta) return 0;
+
+    this.assignedSpaceships = this.assignedSpaceships || 0;
+    let applied = delta;
+
+    if (delta > 0) {
+      const availableSpaceships = Math.floor(resources.special.spaceships.value);
+      if (availableSpaceships <= 0) {
+        return 0;
+      }
+      applied = Math.min(delta, availableSpaceships);
+    } else if (delta < 0) {
+      if (this.assignedSpaceships <= 0) {
+        return 0;
+      }
+      applied = -Math.min(-delta, this.assignedSpaceships);
+    }
+
+    if (!applied) {
+      return 0;
+    }
+
+    this.assignedSpaceships += applied;
+    resources.special.spaceships.value -= applied;
+    return applied;
+  }
+
+  finalizeAssignmentChange(wasContinuous) {
     const nowContinuous = this.isContinuous();
     if (this.isActive && wasContinuous !== nowContinuous) {
       if (nowContinuous) {
@@ -207,7 +267,7 @@ class SpaceshipProject extends Project {
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, autoAssignContainer);
     sectionContainer.appendChild(assignmentContainer);
     container.appendChild(sectionContainer);
-  
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       assignedSpaceshipsDisplay: assignedDisplay,
@@ -277,21 +337,22 @@ class SpaceshipProject extends Project {
       } else {
         this.autoAssignSpaceships = false;
       }
+      SpaceshipProject.refreshAutoAssignDisplays();
     });
   
     const autoAssignLabel = document.createElement('label');
     autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
     autoAssignLabel.textContent = 'Auto assign';
-  
+
     autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
     autoAssignCheckboxContainer.appendChild(autoAssignLabel);
-  
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       autoAssignCheckbox,
       autoAssignCheckboxContainer,
     };
-  
+
     return autoAssignCheckboxContainer;
   }
 
@@ -310,9 +371,6 @@ class SpaceshipProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
-    if (elements.autoAssignCheckbox) {
-      elements.autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
-    }
     if (elements.assignedSpaceshipsDisplay) {
         const maxShips = typeof this.getMaxAssignableShips === 'function'
           ? this.getMaxAssignableShips()
@@ -327,6 +385,7 @@ class SpaceshipProject extends Project {
         elements.availableSpaceshipsDisplay.textContent = formatBigInteger(Math.floor(resources.special.spaceships.value));
     }
     this.updateCostAndGains(elements);
+    this.updateAutoAssignUI(elements);
   }
 
   autoAssign() {
@@ -334,6 +393,70 @@ class SpaceshipProject extends Project {
     const availableSpaceships = Math.floor(resources.special.spaceships.value);
     if (availableSpaceships > 0) {
       this.assignSpaceships(availableSpaceships);
+    }
+  }
+
+  updateAutoAssignUI(elements) {
+    const cachedElements = globalThis.projectElements;
+    const targetElements = elements || (cachedElements ? cachedElements[this.name] : undefined);
+
+    if (!targetElements) {
+      return;
+    }
+
+    if (targetElements.autoAssignCheckbox) {
+      targetElements.autoAssignCheckbox.checked = this.autoAssignSpaceships || false;
+    }
+  }
+
+  static resolveProjectManager() {
+    let manager = globalThis.projectManager || null;
+    if (!manager) {
+      try {
+        if (projectManager) {
+          manager = projectManager;
+        }
+      } catch (error) {
+        manager = null;
+      }
+    }
+    return manager;
+  }
+
+  static getAutoAssignProject(excludeName = null) {
+    const manager = SpaceshipProject.resolveProjectManager();
+    if (!manager || !manager.projects) {
+      return null;
+    }
+
+    const projects = Object.values(manager.projects);
+    for (let index = 0; index < projects.length; index += 1) {
+      const project = projects[index];
+      if (
+        project instanceof SpaceshipProject &&
+        project.autoAssignSpaceships &&
+        project.name !== excludeName
+      ) {
+        return project;
+      }
+    }
+
+    return null;
+  }
+
+  static refreshAutoAssignDisplays() {
+    const manager = SpaceshipProject.resolveProjectManager();
+    if (!manager || !manager.projects) {
+      return;
+    }
+
+    const elements = globalThis.projectElements || {};
+    const projects = Object.values(manager.projects);
+    for (let index = 0; index < projects.length; index += 1) {
+      const project = projects[index];
+      if (project instanceof SpaceshipProject) {
+        project.updateAutoAssignUI(elements[project.name]);
+      }
     }
   }
 
@@ -648,7 +771,7 @@ class SpaceshipProject extends Project {
               if (applyRates) {
                 resources[category][resource].modifyRate(
                   -rateValue,
-                  'Spaceship Cost',
+                  this.getCostRateLabel(),
                   'project'
                 );
               }
@@ -661,10 +784,11 @@ class SpaceshipProject extends Project {
           if (capacity && this.selectedDisposalResource) {
             const { category, resource } = this.selectedDisposalResource;
             const rateValue = capacity * activeShips * factor * (applyRates ? productivity : 1);
+            const exportLabel = this.getExportRateLabel('Spaceship Export');
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Export',
+                exportLabel,
                 'project'
               );
             }
@@ -676,7 +800,7 @@ class SpaceshipProject extends Project {
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
-                  'Spaceship Export',
+                  exportLabel,
                   'project'
                 );
               }
@@ -695,7 +819,8 @@ class SpaceshipProject extends Project {
               gainPerShip.colony.metal = Math.max(0, gainPerShip.colony.metal - metalCost);
             }
           }
-          const label = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+          const baseLabel = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+          const label = this.getExportRateLabel(baseLabel);
           for (const category in gainPerShip) {
             if (!totals.gain[category]) totals.gain[category] = {};
             for (const resource in gainPerShip[category]) {
@@ -727,7 +852,7 @@ class SpaceshipProject extends Project {
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Cost',
+                this.getCostRateLabel(),
                 'project'
               );
             }
@@ -737,6 +862,7 @@ class SpaceshipProject extends Project {
         }
 
         const totalDisposal = this.calculateSpaceshipTotalDisposal();
+        const exportLabel = this.getExportRateLabel('Spaceship Export');
         for (const category in totalDisposal) {
           if (!totals.cost[category]) totals.cost[category] = {};
           for (const resource in totalDisposal[category]) {
@@ -744,7 +870,7 @@ class SpaceshipProject extends Project {
             if (applyRates) {
               resources[category][resource].modifyRate(
                 -rateValue,
-                'Spaceship Export',
+                exportLabel,
                 'project'
               );
             }
@@ -757,7 +883,7 @@ class SpaceshipProject extends Project {
         if (this.applyMetalCostPenalty) {
           this.applyMetalCostPenalty(totalGain);
         }
-        const label = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
+        const label = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
         for (const category in totalGain) {
           if (!totals.gain[category]) totals.gain[category] = {};
           for (const resource in totalGain[category]) {
@@ -896,6 +1022,7 @@ class SpaceshipProject extends Project {
     if (state.assignmentMultiplier !== undefined) {
       this.assignmentMultiplier = state.assignmentMultiplier;
     }
+    SpaceshipProject.refreshAutoAssignDisplays();
   }
 }
 

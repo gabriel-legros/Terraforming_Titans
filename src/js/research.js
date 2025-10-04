@@ -52,9 +52,26 @@ class Research {
       const count = spaceManager.getTerraformedPlanetCount();
       if (count <= 0) return;
 
-      const rate = count; // 1 per second per terraformed planet
+      const multiplier = this.calculateAdvancedResearchMultiplier();
+      const rate = count * multiplier; // 1 per second per terraformed planet scaled by effects
       resources.colony.advancedResearch.increase((rate * deltaTime) / 1000);
       resources.colony.advancedResearch.modifyRate(rate, 'Research Manager', 'research');
+    }
+
+    calculateAdvancedResearchMultiplier() {
+      return this.activeEffects.reduce((multiplier, effect) => {
+        if (effect.type === 'advancedResearchBoost') {
+          return multiplier * effect.value;
+        }
+        return multiplier;
+      }, 1);
+    }
+
+    applyEffect(effect) {
+      if (effect.type === 'advancedResearchBoost') {
+        return;
+      }
+      super.applyEffect(effect);
     }
 
     saveState() {
@@ -127,6 +144,14 @@ class Research {
     isResearchDisplayable(research) {
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
+      }
+      if (research.disableFlag) {
+        const flags = Array.isArray(research.disableFlag)
+          ? research.disableFlag
+          : [research.disableFlag];
+        if (flags.some(flag => this.isBooleanFlagSet(flag))) {
+          return false;
+        }
       }
       if (research.requiresMethane && !this.planetHasMethane()) {
         return false;

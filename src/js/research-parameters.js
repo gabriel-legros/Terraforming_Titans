@@ -73,7 +73,7 @@ const researchParameters = {
       {
         id: 'fission_plant1_upgrade',
         name: 'Closed loop water cycle',
-        description: 'Reduces the water consumption of nuclear reactors by 80%.',
+        description: 'Eliminates the water consumption of nuclear reactors.',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -83,7 +83,7 @@ const researchParameters = {
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget : 'water',
-            value : 0.2
+            value : 0
           },
           {
             target: 'building',
@@ -91,7 +91,7 @@ const researchParameters = {
             type: 'resourceProductionMultiplier',
             resourceCategory: 'atmospheric',
             resourceTarget : 'atmosphericWater',
-            value : 0.2
+            value : 0
           },
         ],
       },
@@ -241,6 +241,24 @@ const researchParameters = {
             effectId: 'next_generation_fusion_research',
             type: 'productionMultiplier',
             value: 2
+          }
+        ]
+      },
+      {
+        id: 'antimatter_containment',
+        name: 'Antimatter Containment',
+        description: 'Unlocks antimatter farms and antimatter batteries.',
+        cost: { research: 100000000000 },
+        prerequisites: [],
+        requiredFlags: ['antimatterUnlocked'],
+        effects: [
+          { target: 'building', targetId: 'antimatterFarm', type: 'enable' },
+          { target: 'building', targetId: 'antimatterBattery', type: 'enable' },
+          {
+            target: 'resource',
+            resourceType: 'special',
+            targetId: 'antimatter',
+            type: 'enable'
           }
         ]
       },
@@ -685,6 +703,12 @@ const researchParameters = {
             targetId: 't2_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
       },
       {
@@ -731,8 +755,22 @@ const researchParameters = {
             targetId: 't3_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addResourceConsumption',
+            resourceCategory: 'colony',
+            resourceId: 'electronics',
+            amount: 0.01,
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      },     
+      },
       {
         id: 'enhanced_colonist_import_3',
         name: 'Biggest rockets',
@@ -796,14 +834,29 @@ const researchParameters = {
             targetId: 't4_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addResourceConsumption',
+            resourceCategory: 'colony',
+            resourceId: 'androids',
+            amount: 0.0001,
+          },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      }, 
+      },
       {
         id: 'trading',
         name: 'Ship trading',
         description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Cargo rockets become continuous, consuming funding and delivering purchases in real time.',
         cost: { research: 50000000 },
         prerequisites: [],
+        disableFlag: 'galacticMarket',
         effects: [
             {
               target: 'resource',
@@ -837,8 +890,14 @@ const researchParameters = {
             targetId: 't5_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
-      },   
+      },
       {
         id: 't6_colony',
         name: 'Metropolis',
@@ -851,6 +910,12 @@ const researchParameters = {
             targetId: 't6_colony',
             type: 'enable',
           },
+          {
+            target: 'colony',
+            targetId: 'aerostat_colony',
+            type: 'addComfort',
+            value: 0.1,
+          },
         ],
       },
       {
@@ -861,7 +926,8 @@ const researchParameters = {
         prerequisites: [],
         requiredFlags: ['superalloyResearchUnlocked'],
         effects: [
-          { target: 'colony', targetId: 't7_colony', type: 'enable' }
+          { target: 'colony', targetId: 't7_colony', type: 'enable' },
+          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ],
       },
       {
@@ -1059,6 +1125,12 @@ const researchParameters = {
             resourceType: 'atmospheric',
             targetId : 'sulfuricAcid',
             type: 'enable'
+          },          
+          {
+            target: 'resource',
+            resourceType: 'atmospheric',
+            targetId : 'hydrogen',
+            type: 'enable'
           }
         ],
       },
@@ -1121,10 +1193,10 @@ const researchParameters = {
         ],
       },
       {
-        id: 'bosch_reactor',
-        name: 'Bosch Reactor',
-        description: 'Unlocks reactors that combine carbon dioxide and hydrogen into water via the Bosch reaction.',
-        cost: { research: 150000 },
+        id: 'chemical_reactor',
+        name: 'Chemical Reactor',
+        description: 'Unlocks configurable reactors to perform various reactions.',
+        cost: { research: 500_000 },
         prerequisites: [],
         requiredFlags: ['boschReactorUnlocked'],
         effects: [
@@ -1139,7 +1211,7 @@ const researchParameters = {
         id: 'mass_driver',
         name: 'Mass Driver Foundations',
         description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
-        cost: { research: 5_000_000 },
+        cost: { research: 1_000_000_000 },
         prerequisites: [],
         requiredFlags: ['massDriverUnlocked'],
         effects: [
@@ -1286,7 +1358,7 @@ const researchParameters = {
         id: 'hydrogenImport',
         name: 'Hydrogen Importation',
         description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
-        cost: { research: 10000000000 },
+        cost: { research: 50_000_000 },
         prerequisites: [],
         requiredFlags: ['importHydrogenUnlocked'],
         effects: [
@@ -1541,6 +1613,81 @@ const researchParameters = {
             target: 'project',
             targetId: 'orbitalRing',
             type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'mega_particle_accelerator',
+        name: 'Mega Particle Accelerator',
+        description: 'Unlocks a new megastructure that can assist in boosting advanced research gains.',
+        cost: { advancedResearch: 250000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'particleAccelerator',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'mega_heat_sink',
+        name: 'Mega Heat Sink',
+        description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling.',
+        cost: { advancedResearch: 400000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'megaHeatSink',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'bioworkforce',
+        name: 'Bioworkforce',
+        description: 'Scientists were too busy wondering whether or not they could, they did not stop to ask themselves whether or not they should.  Extends the life designer with an extra ability.',
+        cost: { advancedResearch: 500000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'bioworkforce',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'galactic_market',
+        name: 'Galactic Market Concordat',
+        description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
+        cost: { advancedResearch: 300000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'galactic_market',
+            type: 'enable'
+          },
+          {
+            target: 'project',
+            targetId: 'cargo_rocket',
+            type: 'permanentProjectDisable',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'exportResources',
+            type: 'permanentProjectDisable',
+            value: true
+          },
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'galacticMarket',
+            value: true
           }
         ]
       },

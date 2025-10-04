@@ -14,17 +14,45 @@ const projectParameters = {
       resourceChoiceGainCost: {
         colony: {
           metal : 2,
-          glass: 2,
+          glass: 1,
           water : 1,
           food : 1,
           components: 10,
           electronics: 10,
-          androids: 1000,
+          androids: 200,
         },
         special: {
           spaceships:25000
         }
       }
+    }
+  },
+  galactic_market: {
+    type: 'GalacticMarketProject',
+    name: "Galactic Market",
+    category :"resources",
+    cost: {
+    },
+    duration: 0,
+    description: "Open trading lanes with the wider galaxy to import resources funded through market exchanges.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      resourceChoiceGainCost: {
+        colony: {
+          metal: 2,
+          glass: 1,
+          water: 1,
+          food: 1,
+          components: 10,
+          electronics: 10,
+          androids: 200,
+        },
+        special: {
+          spaceships: 25000,
+        },
+      },
     }
   },
   import_colonists_1: {
@@ -464,7 +492,49 @@ const projectParameters = {
       spaceStorage: true,
       costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
       transportPerShip: 1_000_000,
-      canUseSpaceStorage: true 
+      canUseSpaceStorage: true
+    }
+  },
+  particleAccelerator: {
+    type: 'ParticleAcceleratorProject',
+    name: 'Particle Accelerator',
+    category: 'mega',
+    cost: {
+      colony: {
+        superalloys: 50,
+        superconductors: 50
+      }
+    },
+    duration: 600000,
+    description: 'Physicists can always use a bigger particle accelerator.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      minimumRadiusMeters: 1,
+      defaultRadiusMeters: 6_371_000,
+      defaultStepMeters: 1,
+      canUseSpaceStorage: true
+    }
+  },
+  megaHeatSink: {
+    type: 'MegaHeatSinkProject',
+    name: 'Mega Heat Sink',
+    category: 'mega',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000,
+        components: 10_000_000
+      }
+    },
+    duration: 60000,
+    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      megaHeatSink: true
     }
   },
   disposeResources : {

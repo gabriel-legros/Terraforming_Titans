@@ -13,11 +13,15 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   // Visible either when unlocked or when collectors already exist
   isVisible() {
+    if (this.isPermanentlyDisabled()) {
+      return false;
+    }
     return this.unlocked || this.collectors > 0;
   }
 
   get collectorDuration() {
-    return this.getDurationWithTerraformBonus(this.baseCollectorDuration);
+    const duration = this.getDurationWithTerraformBonus(this.baseCollectorDuration);
+    return this.applyDurationEffects(duration);
   }
 
   renderUI(container) {

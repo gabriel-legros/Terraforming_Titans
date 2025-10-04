@@ -348,15 +348,15 @@ function getOrCreateCategoryContainer(category) {
 function moveProject(projectName, direction, shiftKey = false) {
     const project = projectManager.projects[projectName];
     const category = project.category || 'general';
-    const categoryProjects = projectManager
-      .getProjectStatuses()
-      .filter(p => (p.category || 'general') === category);
-    const visibleIndexes = [];
-    categoryProjects.forEach((p, idx) => {
-      if (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) {
-        visibleIndexes.push(idx);
-      }
-    });
+  const categoryProjects = projectManager
+    .getProjectStatuses()
+    .filter(p => (p.category || 'general') === category);
+  const visibleIndexes = [];
+  categoryProjects.forEach((p, idx) => {
+    if (!(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)) {
+      visibleIndexes.push(idx);
+    }
+  });
     const fromIndexFull = categoryProjects.findIndex(p => p.name === projectName);
     const fromVisiblePos = visibleIndexes.indexOf(fromIndexFull);
 
@@ -458,6 +458,54 @@ function updateSustainCostDisplay(project) {
 }
 
 function updateTotalCostDisplay(project) {
+  if (globalThis.GalacticMarketProject && project instanceof globalThis.GalacticMarketProject) {
+    const elements = projectElements[project.name] || {};
+    const { rowMeta = [] } = elements;
+
+    if (!elements.buyInputs || elements.buyInputs.some((input) => !input.isConnected)) {
+      elements.buyInputs = Array.from(
+        elements.resourceSelectionContainer?.querySelectorAll(`.buy-selection-${project.name}`) || []
+      );
+    }
+
+    if (!elements.sellInputs || elements.sellInputs.some((input) => !input.isConnected)) {
+      elements.sellInputs = Array.from(
+        elements.resourceSelectionContainer?.querySelectorAll(`.sell-selection-${project.name}`) || []
+      );
+    }
+
+    let totalCost = 0;
+
+    rowMeta.forEach((meta, index) => {
+      const buyInput = elements.buyInputs?.[index];
+      const sellInput = elements.sellInputs?.[index];
+      const buyQuantity = buyInput ? parseSelectionQuantity(buyInput.value) : 0;
+      const sellQuantity = sellInput ? parseSelectionQuantity(sellInput.value) : 0;
+      const buyPrice = project.getBuyPrice(meta.category, meta.resource);
+      const sellPrice = project.getSellPrice(meta.category, meta.resource, sellQuantity);
+      totalCost += buyQuantity * buyPrice;
+      totalCost -= sellQuantity * sellPrice;
+    });
+
+    const totalCostValue = elements.totalCostValue;
+    const totalCostLabel = elements.totalCostLabel;
+    if (totalCostValue && totalCostLabel) {
+      const available = resources.colony?.funding?.value || 0;
+      if (totalCost < 0) {
+        totalCostLabel.textContent = 'Total Gain: ';
+        totalCostValue.textContent = formatNumber(-totalCost, true);
+      } else {
+        totalCostLabel.textContent = 'Total Cost: ';
+        totalCostValue.textContent = formatNumber(totalCost, true);
+      }
+      const highlight = project.isContinuous()
+        ? project.shortfallLastTick
+        : totalCost > 0 && available < totalCost;
+      totalCostValue.style.color = highlight ? 'red' : '';
+    }
+    return;
+  }
+
   let totalCost = 0;
 
   const elements = projectElements[project.name] || {};
@@ -525,7 +573,7 @@ function updateProjectUI(projectName) {
       (typeof spaceManager !== 'undefined' &&
         spaceManager.getCurrentPlanetKey &&
         spaceManager.getCurrentPlanetKey() === project.attributes.planet);
-    const visible = typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked;
+    const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
     if (visible && planetOk) {
       projectItem.style.display = 'block';
     } else {
@@ -633,10 +681,15 @@ function updateProjectUI(projectName) {
 
       // Update the duration in the progress bar display
       if (elements.progressButton) {
+        const spaceshipCtor = globalThis.SpaceshipProject;
+        const cargoCtor = globalThis.CargoRocketProject;
+        const galacticCtor = globalThis.GalacticMarketProject;
         const isContinuousProject =
-          project.isContinuous() &&
-          ((typeof SpaceshipProject !== 'undefined' && project instanceof SpaceshipProject) ||
-            (typeof CargoRocketProject !== 'undefined' && project instanceof CargoRocketProject));
+          project.isContinuous() && (
+            (spaceshipCtor && project instanceof spaceshipCtor) ||
+            (cargoCtor && project instanceof cargoCtor) ||
+            (galacticCtor && project instanceof galacticCtor)
+          );
         if (isContinuousProject) {
           if (project.autoStart && project.isActive && !project.isPaused) {
             elements.progressButton.textContent = 'Continuous';
@@ -757,7 +810,7 @@ function updateProjectUI(projectName) {
     .getProjectStatuses()
     .filter(p => (p.category || 'general') === category);
   const categoryProjects = categoryProjectsAll.filter(p =>
-    typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked
+    !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
   );
   const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
@@ -861,6 +914,7 @@ function updateStoryProjectsVisibility() {
          spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === 'story' &&
+        !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) &&
         planetOk
       );
@@ -896,6 +950,7 @@ function updateMegaProjectsVisibility() {
       return (
         p.category === 'mega' &&
         planetOk &&
+        !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
       );
     });
@@ -946,7 +1001,7 @@ function registerProjectUnlockAlert(subtabId) {
   updateProjectAlert();
   const activeTab = document.getElementById('special-projects-tab');
   const activeId = projectsSubtabManager
-    ? projectsSubtabManager.activeId
+    ? projectsSubtabManager.getActiveId()
     : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
   if (activeTab && activeTab.classList.contains('active') && activeId === subtabId) {
     markProjectSubtabViewed(subtabId);
@@ -970,7 +1025,7 @@ function updateProjectAlert() {
 
 function markProjectsViewed() {
   const activeId = projectsSubtabManager
-    ? projectsSubtabManager.activeId
+    ? projectsSubtabManager.getActiveId()
     : (document.querySelector('.projects-subtab.active') || {}).dataset?.subtab;
   if (activeId && typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(activeId);

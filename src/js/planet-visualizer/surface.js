@@ -2,6 +2,167 @@
   const PlanetVisualizer = window.PlanetVisualizer;
   if (!PlanetVisualizer) return;
 
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+  const PLANET_TYPE_TEXTURES = {
+    default: {
+      top: { color: '#ffffff', t: 0.2 },
+      bottom: { color: '#000000', t: 0.35 },
+      topJitter: 0.04,
+      bottomJitter: 0.04,
+      heightScale: 1,
+      heightJitter: 0.05,
+      featureMask: 1,
+      shade: 1,
+    },
+    'mars-like': {
+      top: { color: '#f4c9a3', t: 0.32 },
+      bottom: { color: '#2d110f', t: 0.55 },
+      tint: { color: '#c86a42', min: 0.05, max: 0.12 },
+      topJitter: 0.06,
+      bottomJitter: 0.05,
+      heightScale: 1.08,
+      heightJitter: 0.04,
+      featureMask: 1,
+      shade: 1,
+    },
+    'cold-desert': {
+      top: { color: '#f7e6c5', t: 0.38 },
+      bottom: { color: '#3a2717', t: 0.45 },
+      tint: { color: '#d3a86b', min: 0.04, max: 0.1 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.98,
+      heightJitter: 0.05,
+      featureMask: 0.9,
+      shade: 1,
+    },
+    'icy-moon': {
+      top: { color: '#eef6ff', t: 0.62 },
+      bottom: { color: '#1a2e45', t: 0.35 },
+      tint: { color: '#d4e8ff', min: 0.18, max: 0.28 },
+      topJitter: 0.04,
+      bottomJitter: 0.04,
+      heightScale: 0.85,
+      heightJitter: 0.04,
+      featureMask: 0.7,
+      shade: 1.05,
+    },
+    'titan-like': {
+      top: { color: '#f4d79f', t: 0.34 },
+      bottom: { color: '#24160a', t: 0.48 },
+      tint: { color: '#d4a45c', min: 0.06, max: 0.12 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.9,
+      heightJitter: 0.05,
+      featureMask: 1.1,
+      shade: 1,
+    },
+    'carbon-planet': {
+      top: { color: '#bfc1c5', t: 0.2 },
+      bottom: { color: '#050608', t: 0.7 },
+      tint: { color: '#2e2c34', min: 0.12, max: 0.22 },
+      topJitter: 0.03,
+      bottomJitter: 0.06,
+      heightScale: 1.05,
+      heightJitter: 0.04,
+      featureMask: 1.35,
+      shade: 0.92,
+    },
+    'desiccated-desert': {
+      top: { color: '#f5d6a8', t: 0.36 },
+      bottom: { color: '#382413', t: 0.5 },
+      tint: { color: '#d7aa68', min: 0.05, max: 0.11 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 1,
+      heightJitter: 0.05,
+      featureMask: 0.95,
+      shade: 1,
+    },
+    'super-earth': {
+      top: { color: '#d3f0d4', t: 0.26 },
+      bottom: { color: '#18341d', t: 0.56 },
+      tint: { color: '#6fae70', min: 0.08, max: 0.16 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 1.12,
+      heightJitter: 0.06,
+      featureMask: 0.8,
+      shade: 1,
+    },
+    'venus-like': {
+      top: { color: '#f7e6b2', t: 0.38 },
+      bottom: { color: '#3f2c12', t: 0.5 },
+      tint: { color: '#d1b063', min: 0.05, max: 0.1 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 0.92,
+      heightJitter: 0.05,
+      featureMask: 0.85,
+      shade: 0.98,
+    },
+  };
+
+  function resolvePlanetArchetype(context, baseHex) {
+    let type = null;
+    if (context?.viz?.classification?.archetype) {
+      type = context.viz.classification.archetype;
+    }
+    if (!type && typeof currentPlanetParameters !== 'undefined') {
+      type = currentPlanetParameters?.classification?.archetype || null;
+    }
+    if (!type && typeof window !== 'undefined') {
+      const sm = window.spaceManager;
+      if (sm?.currentWorld?.classification?.archetype) {
+        type = sm.currentWorld.classification.archetype;
+      }
+    }
+    if (!type && typeof RWG_TYPE_BASE_COLORS !== 'undefined' && baseHex) {
+      const match = baseHex.toLowerCase();
+      for (const [key, color] of Object.entries(RWG_TYPE_BASE_COLORS)) {
+        if (typeof color === 'string' && color.toLowerCase() === match) {
+          type = key;
+          break;
+        }
+      }
+    }
+    return type || 'default';
+  }
+
+  function createJitterRandom(seedX, seedY) {
+    const sx = Number.isFinite(seedX) ? seedX : 0.37;
+    const sy = Number.isFinite(seedY) ? seedY : 0.73;
+    let state = Math.floor((sx * 104729)) ^ Math.floor((sy * 130363)) ^ 0x9e3779b9;
+    state >>>= 0;
+    if (state === 0) state = 0x6d2b79f5;
+    return function () {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      return state / 0x100000000;
+    };
+  }
+
+  function mixHexColors(hexA, hexB, t) {
+    const parse = (hex) => {
+      const value = parseInt(hex.slice(1), 16);
+      return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255,
+      };
+    };
+    const a = parse(hexA);
+    const b = parse(hexB);
+    const lerp = (x, y, amt) => Math.round(x + (y - x) * amt);
+    const toHex = (v) => v.toString(16).padStart(2, '0');
+    const amt = clamp01(t);
+    const r = lerp(a.r, b.r, amt);
+    const g = lerp(a.g, b.g, amt);
+    const bl = lerp(a.b, b.b, amt);
+    return `#${toHex(r)}${toHex(g)}${toHex(bl)}`;
+  }
+
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
@@ -13,9 +174,12 @@
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+    // Include planet type in cache key so palette changes (archetype) update texture
+    let typeKey = 'default';
+    try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${fKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${typeKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -101,15 +265,49 @@
       const b2 = Math.round(ab + (bb - ab) * t);
       return `rgb(${r},${g},${b2})`;
     };
+    const smoothstep = (e0, e1, x) => {
+      const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
+      return t * t * (3 - 2 * t);
+    };
     const waterT = (this.viz.coverage?.water || 0) / 100;
     const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
-    const topCol = mix(baseHex, '#ffffff', 0.2);
-    const botCol = mix(baseHex, '#000000', 0.35);
+    const seed = this.hashSeedFromPlanet ? this.hashSeedFromPlanet() : { x: 0.137, y: 0.733 };
+    const planetType = resolvePlanetArchetype(this, baseHex);
+    const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
+    const rand = createJitterRandom(seed.x, seed.y);
+
+    let gradientBase = baseHex;
+    if (palette.tint) {
+      const min = clamp01(palette.tint.min ?? 0);
+      const max = clamp01(palette.tint.max ?? min);
+      const tintAmt = clamp01(min + (max - min) * rand());
+      if (tintAmt > 0) {
+        gradientBase = mixHexColors(baseHex, palette.tint.color, tintAmt);
+      }
+    }
+
+    const topTarget = palette.top?.color || '#ffffff';
+    const bottomTarget = palette.bottom?.color || '#000000';
+    const topBase = palette.top?.t ?? 0.2;
+    const bottomBase = palette.bottom?.t ?? 0.35;
+    const topJitter = palette.topJitter || 0;
+    const bottomJitter = palette.bottomJitter || 0;
+    const topMix = clamp01(topBase + (topJitter ? (rand() - 0.5) * 2 * topJitter : 0));
+    const bottomMix = clamp01(bottomBase + (bottomJitter ? (rand() - 0.5) * 2 * bottomJitter : 0));
+    const topCol = mixHexColors(gradientBase, topTarget, topMix);
+    const botCol = mixHexColors(gradientBase, bottomTarget, bottomMix);
+
     const base = ctx.createLinearGradient(0, 0, 0, h);
     base.addColorStop(0, topCol);
     base.addColorStop(1, botCol);
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, w, h);
+
+    const baseHeightScale = palette.heightScale ?? 1;
+    const heightJitter = palette.heightJitter || 0;
+    const heightScale = Math.max(0.3, baseHeightScale * (1 + (heightJitter ? (rand() - 0.5) * 2 * heightJitter : 0)));
+    const featureMask = Math.max(0, palette.featureMask ?? 1);
+    const shadeBias = palette.shade ?? 1;
 
     if (strength > 0) {
       ctx.globalAlpha = Math.max(0, Math.min(1, strength));
@@ -123,7 +321,6 @@
       const tdata = timg.data;
 
       // Prepare large-scale feature noise (dark regions)
-      const seed = this.hashSeedFromPlanet();
       let s = Math.floor((seed.x * 65535) ^ (seed.y * 524287)) >>> 0;
       const hash = (x, y) => {
         const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.000071) * 43758.5453;
@@ -149,14 +346,9 @@
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
 
-      const smoothstep = (e0, e1, x) => {
-        const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
-        return t * t * (3 - 2 * t);
-      };
-
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
-        const heightMul = 0.85 + 0.3 * Math.pow(hgt, 1.2);
+        const heightMul = (0.85 + 0.3 * Math.pow(hgt, 1.2)) * heightScale;
 
         // Large-scale dark regions multiplier
         let featureMul = 1.0;
@@ -171,12 +363,13 @@
           let level = (v - 0.1) / 0.5; // maps 0.1->0 and 0.6->1
           if (level < 0) level = 0; else if (level > 1) level = 1;
           const shaped = Math.pow(level, Math.max(0.0001, fContrast));
-          featureMul = 1 - fStrength * shaped;
+          const maskStrength = Math.max(0, Math.min(1, fStrength * featureMask));
+          featureMul = 1 - maskStrength * shaped;
           if (featureMul < 0) featureMul = 0;
         }
 
         const idx = i * 4;
-        const mul = heightMul * featureMul;
+        const mul = Math.max(0, heightMul * featureMul * shadeBias);
         tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
         tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
         tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
@@ -249,26 +442,105 @@
     const ictx = iceCanvas.getContext('2d');
     const iimg = ictx.createImageData(w, h);
     const idata = iimg.data;
+    const zonalCoverage = this.viz.zonalCoverage || {};
+    const zonalSets = [
+      zonalCoverage.tropical || {},
+      zonalCoverage.temperate || {},
+      zonalCoverage.polar || {},
+    ];
+    const zoneIceFracs = zonalSets.map(set => {
+      const v = Number(set.ice || 0);
+      if (v <= 0) return 0;
+      if (v >= 1) return 1;
+      return v;
+    });
+    const startFromPoles = zoneIceFracs[2] > zoneIceFracs[0];
+    const iceNoise = this.getIceNoiseField(w, h);
+    if (!this._iceScore || this._iceScore.length !== w * h) this._iceScore = new Float32Array(w * h);
+    const iceScore = this._iceScore;
+    const iceZoneHists = [
+      { counts: new Uint32Array(256), total: 0 },
+      { counts: new Uint32Array(256), total: 0 },
+      { counts: new Uint32Array(256), total: 0 },
+    ];
+    const zoneRowIndex = this._zoneRowIndex;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
-      const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
-      const iceFrac = [
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.ice || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.ice || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.ice || 0))),
-      ][zi];
-      const waterFrac = [
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.water || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.water || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.water || 0))),
-      ][zi];
-      const land = Math.max(0, 1 - waterFrac);
+      const zi = zoneRowIndex ? zoneRowIndex[y] : 0;
+      const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+      const latTerm = startFromPoles ? (1 - latAbs) : latAbs;
+      const latBias = Math.max(0, Math.min(1, Math.pow(latTerm, 0.85)));
       const idx = i * 4;
-      const r = 200, g = 220, b = 255;
-      idata[idx] = r;
-      idata[idx + 1] = g;
-      idata[idx + 2] = b;
-      idata[idx + 3] = Math.floor(Math.max(0, Math.min(1, iceFrac * land)) * 255);
+      const waterPresence = odata[idx + 3] / 255;
+      const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+      let score = latBias * 0.58 + iceNoise[i] * 0.3 + (1 - hgt) * 0.14 - waterPresence * 0.05;
+      if (score < 0) score = 0; else if (score > 1) score = 1;
+      iceScore[i] = score;
+      const hist = iceZoneHists[zi];
+      const bin = Math.max(0, Math.min(255, Math.floor(score * 255)));
+      hist.counts[bin]++;
+      hist.total++;
+    }
+    const zoneThresholds = [0, 0, 0];
+    for (let zi = 0; zi < 3; zi++) {
+      const hist = iceZoneHists[zi];
+      const target = Math.max(0, Math.min(1, zoneIceFracs[zi])) * hist.total;
+      if (target <= 0 || hist.total === 0) {
+        zoneThresholds[zi] = -1;
+        continue;
+      }
+      let acc = 0;
+      let thrVal = 1;
+      for (let k = 0; k < 256; k++) {
+        acc += hist.counts[k];
+        if (acc >= target) {
+          const prev = acc - hist.counts[k];
+          const remain = target - prev;
+          const ratio = hist.counts[k] ? Math.max(0, Math.min(1, remain / hist.counts[k])) : 0;
+          thrVal = (k + ratio) / 255;
+          break;
+        }
+      }
+      zoneThresholds[zi] = Math.max(0, Math.min(1, thrVal));
+    }
+    const tropicalEdge = 23.5 / 90;
+    const polarEdge = 66.5 / 90;
+    const zoneBlend = 0.06;
+    const softness = 0.08;
+    for (let i = 0; i < w * h; i++) {
+      const y = Math.floor(i / w);
+      const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+      let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs);
+      let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, latAbs);
+      let w1 = 1 - w0 - w2;
+      if (w1 < 0) w1 = 0;
+      const sum = w0 + w1 + w2;
+      if (sum > 0) {
+        const inv = 1 / sum;
+        w0 *= inv; w1 *= inv; w2 *= inv;
+      }
+      let alphaSum = 0;
+      let weightSum = 0;
+      const weights = [w0, w1, w2];
+      for (let zi = 0; zi < 3; zi++) {
+        const thr = zoneThresholds[zi];
+        const weight = weights[zi];
+        if (thr < 0 || weight <= 0) continue;
+        weightSum += weight;
+        const lower = Math.max(0, thr - softness);
+        const upper = Math.min(1, thr + softness);
+        const zoneAlpha = 1 - smoothstep(lower, upper, iceScore[i]);
+        alphaSum += zoneAlpha * weight;
+      }
+      let alpha = 0;
+      if (weightSum > 0) alpha = alphaSum / weightSum;
+      if (alpha < 0.02) alpha = 0;
+      if (alpha > 1) alpha = 1;
+      const idx = i * 4;
+      idata[idx] = 200;
+      idata[idx + 1] = 220;
+      idata[idx + 2] = 255;
+      idata[idx + 3] = Math.floor(alpha * 255);
     }
     ictx.putImageData(iimg, 0, 0);
     ctx.drawImage(iceCanvas, 0, 0);
@@ -350,6 +622,50 @@
         arr[y * w + x] = v;
       }
     }
+    return arr;
+  };
+
+  PlanetVisualizer.prototype.getIceNoiseField = function getIceNoiseField(w, h) {
+    const cached = this._iceNoise;
+    if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
+    const seed = this.hashSeedFromPlanet();
+    let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 157.3 + y * 289.1 + s * 0.00017) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const smooth = (t) => t * t * (3 - 2 * t);
+    const value2 = (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = smooth(xf), v = smooth(yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const fbm = (x, y, oct = 4, lac = 2.15, gain = 0.45) => {
+      let f = 0, amp = 0.5, freq = 1.0;
+      for (let o = 0; o < oct; o++) {
+        f += amp * value2(x * freq, y * freq);
+        freq *= lac;
+        amp *= gain;
+      }
+      return f;
+    };
+    const arr = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) {
+      const lat = Math.abs((y / (h - 1)) - 0.5) * 0.6;
+      for (let x = 0; x < w; x++) {
+        const nx = (x / w) * (2.6 + lat * 0.8);
+        const ny = (y / h) * (1.3 + lat * 1.6);
+        let v = fbm(nx + lat * 0.5, ny, 4, 2.1, 0.45);
+        if (v < 0) v = 0; else if (v > 1) v = 1;
+        arr[y * w + x] = v;
+      }
+    }
+    this._iceNoise = { w, h, data: arr };
     return arr;
   };
 
