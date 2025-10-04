@@ -1360,8 +1360,9 @@ function updateLifeBox() {
       }
 
       // Guidance text
-      lines.push('Biomass claims its share first based on zonal biomass.');
-      lines.push('Ice and liquid water then split the remaining area; if they exceed it, each is scaled proportionally.');
+      lines.push('Ice coverage claims its share first; if combined ice exceeds the surface, each ice type scales proportionally.');
+      lines.push('Biomass then fills up to 75% of the remaining area based on zonal biomass.');
+      lines.push('Liquid water and hydrocarbons divide whatever is left, scaling together if they would overflow.');
 
       // Append resulting surface albedo per zone
       const zoneAlbLines = [];
