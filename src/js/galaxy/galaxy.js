@@ -5,6 +5,7 @@ let galaxyFactionParametersConfig;
 let galaxySectorControlOverridesConfig;
 let galaxySectorParametersConfig;
 let defaultSectorValue = 100;
+let defaultSectorReward = [];
 const defaultUpdateFactions = () => {};
 let updateFactionsFunction = defaultUpdateFactions;
 const DEFAULT_UHF_FACTION_ID = 'uhf';
@@ -42,6 +43,11 @@ if (typeof module !== 'undefined' && module.exports) {
     } else {
         defaultSectorValue = window.galaxySectorDefaultValue;
     }
+    if (window.getGalaxySectorDefaultReward) {
+        defaultSectorReward = window.getGalaxySectorDefaultReward();
+    } else if (Array.isArray(window.galaxySectorDefaultReward)) {
+        defaultSectorReward = window.galaxySectorDefaultReward;
+    }
     if (typeof window.updateFactions === 'function') {
         updateFactionsFunction = window.updateFactions;
     }
@@ -77,6 +83,11 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
             defaultSectorValue = globalDefaultSectorValue;
         }
     }
+    if (globalThis.getGalaxySectorDefaultReward) {
+        defaultSectorReward = globalThis.getGalaxySectorDefaultReward();
+    } else if (Array.isArray(globalThis.galaxySectorDefaultReward)) {
+        defaultSectorReward = globalThis.galaxySectorDefaultReward;
+    }
     if (typeof updateFactionsFunction !== 'function' && typeof globalThis.updateFactions === 'function') {
         updateFactionsFunction = globalThis.updateFactions;
     }
@@ -109,6 +120,11 @@ if ((!GalaxySectorClass || !GalaxyFactionClass || !Array.isArray(galaxyFactionPa
             if (sectorParametersModule.getDefaultSectorValue) {
                 defaultSectorValue = sectorParametersModule.getDefaultSectorValue();
             }
+            if (sectorParametersModule.getDefaultSectorReward) {
+                defaultSectorReward = sectorParametersModule.getDefaultSectorReward();
+            } else if (Array.isArray(sectorParametersModule.DEFAULT_SECTOR_REWARD)) {
+                defaultSectorReward = sectorParametersModule.DEFAULT_SECTOR_REWARD;
+            }
         }
     } catch (error) {
         // Ignore resolution errors in browser contexts.
@@ -132,6 +148,9 @@ if (!galaxySectorParametersConfig) {
 }
 if (!Number.isFinite(defaultSectorValue) || defaultSectorValue <= 0) {
     defaultSectorValue = 100;
+}
+if (!Array.isArray(defaultSectorReward)) {
+    defaultSectorReward = [];
 }
 
 const R507_PROTECTED_COORDINATES = { q: 4, r: -5 };
@@ -163,6 +182,50 @@ function resolveSectorOverrideValue(sectorKey) {
         return null;
     }
     return overrideValue;
+}
+
+function cloneRewardDefinition(rewardDefinition) {
+    if (!rewardDefinition) {
+        return [];
+    }
+    const source = Array.isArray(rewardDefinition)
+        ? rewardDefinition
+        : [rewardDefinition];
+    const cloned = [];
+    source.forEach((entry) => {
+        if (!entry) {
+            return;
+        }
+        if (typeof entry === 'object') {
+            cloned.push({ ...entry });
+            return;
+        }
+        if (typeof entry === 'string') {
+            cloned.push(entry);
+        }
+    });
+    return cloned;
+}
+
+function resolveDefaultSectorReward() {
+    const definition = galaxySectorParametersConfig.defaultReward ?? defaultSectorReward;
+    if (!definition) {
+        return [];
+    }
+    return cloneRewardDefinition(definition);
+}
+
+function resolveSectorReward(sectorKey) {
+    if (sectorKey) {
+        const overrides = galaxySectorParametersConfig.overrides;
+        if (overrides) {
+            const override = overrides[sectorKey];
+            if (override && Object.prototype.hasOwnProperty.call(override, 'reward')) {
+                return cloneRewardDefinition(override.reward);
+            }
+        }
+    }
+    return resolveDefaultSectorReward();
 }
 
 
@@ -381,6 +444,56 @@ class GalaxyManager extends EffectableEntity {
 
     getSectors() {
         return Array.from(this.sectors.values());
+    }
+
+    getSectorsReward(sectorReferences) {
+        const references = Array.isArray(sectorReferences) ? sectorReferences : [sectorReferences];
+        const aggregates = new Map();
+        references.forEach((reference) => {
+            const sector = this.#resolveSectorReference(reference);
+            if (!sector || typeof sector.getSectorReward !== 'function') {
+                return;
+            }
+            const rewardEntries = sector.getSectorReward();
+            if (!Array.isArray(rewardEntries) || rewardEntries.length === 0) {
+                return;
+            }
+            rewardEntries.forEach((entry) => {
+                if (!entry) {
+                    return;
+                }
+                const amount = Number(entry.amount);
+                if (!Number.isFinite(amount) || amount <= 0) {
+                    return;
+                }
+                const label = typeof entry.label === 'string' && entry.label ? entry.label : null;
+                const key = entry.type || entry.resourceId || label;
+                if (!key) {
+                    return;
+                }
+                const unit = typeof entry.unit === 'string' && entry.unit ? entry.unit : null;
+                const resourceId = typeof entry.resourceId === 'string' && entry.resourceId ? entry.resourceId : null;
+                if (aggregates.has(key)) {
+                    const aggregate = aggregates.get(key);
+                    aggregate.amount += amount;
+                } else {
+                    aggregates.set(key, {
+                        amount,
+                        label: label || key,
+                        type: entry.type || null,
+                        resourceId,
+                        unit
+                    });
+                }
+            });
+        });
+        return Array.from(aggregates.values()).map((entry) => ({
+            amount: entry.amount,
+            label: entry.label,
+            type: entry.type,
+            resourceId: entry.resourceId,
+            unit: entry.unit
+        }));
     }
 
     getSectorController(q, r) {
@@ -863,11 +976,13 @@ class GalaxyManager extends EffectableEntity {
             const sectorKey = GalaxySectorClass.createKey(q, r);
             const overrideValue = resolveSectorOverrideValue(sectorKey);
             const sectorDefaultValue = overrideValue ?? defaultValue;
+            const sectorReward = resolveSectorReward(sectorKey);
             const sector = new GalaxySectorClass({
                 q,
                 r,
                 value: sectorDefaultValue,
-                defaultValue: sectorDefaultValue
+                defaultValue: sectorDefaultValue,
+                reward: sectorReward
             });
             this.sectors.set(sector.key, sector);
         });

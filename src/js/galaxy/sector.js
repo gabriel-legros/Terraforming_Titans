@@ -1,5 +1,5 @@
 class GalaxySector {
-    constructor({ q, r, control, value, defaultValue } = {}) {
+    constructor({ q, r, control, value, defaultValue, reward } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
@@ -7,6 +7,7 @@ class GalaxySector {
         this.defaultValue = this.#sanitizeValue(defaultValue);
         this.value = this.#sanitizeValue(value, this.defaultValue);
         this.control = {};
+        this.reward = this.#sanitizeReward(reward);
         if (control) {
             this.replaceControl(control);
         }
@@ -91,6 +92,17 @@ class GalaxySector {
 
     getValue() {
         return this.value;
+    }
+
+    setReward(rawReward) {
+        this.reward = this.#sanitizeReward(rawReward);
+    }
+
+    getSectorReward() {
+        if (!Array.isArray(this.reward) || this.reward.length === 0) {
+            return [];
+        }
+        return GalaxySector.#cloneRewardEntries(this.reward);
     }
 
     setControl(factionId, rawValue) {
@@ -201,6 +213,70 @@ class GalaxySector {
             return fallback;
         }
         return numericValue;
+    }
+
+    static #cloneRewardEntries(rewardEntries) {
+        return rewardEntries.map((entry) => ({
+            amount: entry.amount,
+            label: entry.label,
+            type: entry.type || null,
+            resourceId: entry.resourceId || null,
+            unit: entry.unit || null
+        }));
+    }
+
+    static #normalizeRewardEntry(entry) {
+        if (!entry) {
+            return null;
+        }
+        if (typeof entry === 'string') {
+            const label = entry.trim();
+            if (!label) {
+                return null;
+            }
+            return {
+                amount: 1,
+                label,
+                type: label
+            };
+        }
+        if (typeof entry !== 'object') {
+            return null;
+        }
+        const providedLabel = typeof entry.label === 'string' ? entry.label.trim() : '';
+        const type = typeof entry.type === 'string' && entry.type ? entry.type : null;
+        const resourceId = typeof entry.resourceId === 'string' && entry.resourceId ? entry.resourceId : null;
+        const unit = typeof entry.unit === 'string' && entry.unit ? entry.unit : null;
+        const amount = Number(entry.amount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return null;
+        }
+        const label = providedLabel || resourceId || type;
+        if (!label) {
+            return null;
+        }
+        return {
+            amount,
+            label,
+            type,
+            resourceId,
+            unit
+        };
+    }
+
+    #sanitizeReward(rawReward) {
+        if (!rawReward) {
+            return [];
+        }
+        const entries = Array.isArray(rawReward) ? rawReward : [rawReward];
+        const sanitized = [];
+        entries.forEach((entry) => {
+            const normalized = GalaxySector.#normalizeRewardEntry(entry);
+            if (normalized) {
+                sanitized.push(normalized);
+            }
+        });
+        return sanitized;
     }
 
     toJSON() {
