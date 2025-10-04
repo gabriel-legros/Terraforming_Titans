@@ -383,17 +383,6 @@ function drawSingle(seed, options) {
     availableTypes: typeOptions
   });
   let archetype = res.archetype;
-  // Enforce high flux rule: if flux >= 2000 W/m², force Venus-like
-  try {
-    const fluxNow = estimateFlux(res);
-    const venusLocked = document.getElementById('rwg-type')
-      ?.querySelector('option[value="venus-like"]')?.disabled;
-    if (fluxNow >= 2000 && res.archetype !== 'venus-like' && !venusLocked) {
-      const fixedAU = res.orbitAU;
-      res = generateRandomPlanet(sStr, { star: res.star, aAU: fixedAU, isMoon: res.isMoon, archetype: 'venus-like' });
-      archetype = res.archetype;
-    }
-  } catch (e) {}
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, seedKey, archetype);
