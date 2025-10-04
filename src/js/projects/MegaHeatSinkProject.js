@@ -94,7 +94,7 @@
 
       const coolingPerSecond = this.calculateCoolingPerSecond();
       if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
-        elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 3)} K/s`;
+        elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 2)} K/s`;
       } else {
         elements.coolingValue.textContent = '—';
       }

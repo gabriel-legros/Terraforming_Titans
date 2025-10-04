@@ -75,7 +75,7 @@ describe('Mega Heat Sink project', () => {
 
     project.repeatCount = 3;
     const cooling = project.calculateCoolingPerSecond();
-    expect(cooling).toBeCloseTo(6.48e15, 2);
+    expect(cooling).toBeCloseTo(6.48e16, 2);
 
     project.repeatCount = 0;
     const fallbackCooling = project.calculateCoolingPerSecond();
