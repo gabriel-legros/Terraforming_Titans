@@ -310,6 +310,9 @@ class GalaxyManager extends EffectableEntity {
     }
 
     update(deltaMs) {
+        if(!this.enabled){
+            return;
+        }
         updateFactionsFunction.call(this, deltaMs);
         this.#updateOperations(deltaMs);
     }
@@ -1691,7 +1694,6 @@ class GalaxyManager extends EffectableEntity {
             assignedPower: operation.assignedPower,
             reservedPower: operation.reservedPower,
             offensePower: operation.offensePower,
-            defensePower: operation.defensePower
         });
         const fallbackReserved = Number(operation.reservedPower);
         const baseReserved = Number.isFinite(fallbackReserved) && fallbackReserved > 0 ? fallbackReserved : 0;

@@ -112,6 +112,12 @@ describe('GalaxyFaction defense calculations', () => {
         const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
         const sector = new GalaxySector({ q: 3, r: 1 });
         sector.setControl('uhf', 100);
+        sector.setReward([
+            {
+                type: 'habitableWorld',
+                amount: 1
+            }
+        ]);
 
         const manager = {
             getTerraformedWorldCountForSector: () => 0,
@@ -121,6 +127,70 @@ describe('GalaxyFaction defense calculations', () => {
 
         const defense = faction.getSectorDefense(sector, manager);
         expect(defense).toBe(200);
+    });
+
+    it('counts reward worlds even if the reward has not been claimed', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const sector = new GalaxySector({ q: -2, r: 4 });
+        sector.setControl('uhf', 100);
+        sector.setReward([
+            {
+                type: 'habitableWorld',
+                amount: 1
+            }
+        ]);
+
+        const manager = {
+            getTerraformedWorldCountForSector: () => 0,
+            getFleetCapacityMultiplier: () => 1,
+            hasAcquiredSectorReward: () => false
+        };
+
+        const defense = faction.getSectorDefense(sector, manager);
+        expect(defense).toBe(100);
+    });
+
+    it('ignores reward worlds when UHF lacks full control', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const sector = new GalaxySector({ q: 2, r: -1 });
+        sector.setControl('uhf', 40);
+        sector.setControl('ally', 60);
+        sector.setReward([
+            {
+                type: 'habitableWorld',
+                amount: 1
+            }
+        ]);
+
+        const manager = {
+            getTerraformedWorldCountForSector: () => 0,
+            getFleetCapacityMultiplier: () => 1,
+            hasAcquiredSectorReward: () => true
+        };
+
+        const defense = faction.getSectorDefense(sector, manager);
+        expect(defense).toBe(0);
+    });
+
+    it('counts every rewarded world when calculating defense', () => {
+        const faction = new GalaxyFaction({ id: 'uhf', name: 'UHF' });
+        const sector = new GalaxySector({ q: 4, r: -2 });
+        sector.setControl('uhf', 100);
+        sector.setReward([
+            {
+                type: 'habitableWorld',
+                amount: 2
+            }
+        ]);
+
+        const manager = {
+            getTerraformedWorldCountForSector: () => 1,
+            getFleetCapacityMultiplier: () => 1,
+            hasAcquiredSectorReward: () => true
+        };
+
+        const defense = faction.getSectorDefense(sector, manager);
+        expect(defense).toBe(300);
     });
 
     it('scales assigned defenses when fleet power is insufficient', () => {

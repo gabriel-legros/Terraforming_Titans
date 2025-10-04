@@ -31,6 +31,29 @@ function getDefaultSectorValue() {
     return factionDefaultSectorValue;
 }
 
+function getRewardWorldCount(sector) {
+    const rewards = sector?.getSectorReward?.();
+    if (!Array.isArray(rewards) || rewards.length === 0) {
+        return 0;
+    }
+    let total = 0;
+    rewards.forEach((entry) => {
+        if (!entry) {
+            return;
+        }
+        const amount = Number(entry.amount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return;
+        }
+        const descriptors = [entry.type ?? '', entry.resourceId ?? '', entry.label ?? ''];
+        const hasWorldDescriptor = descriptors.some((descriptor) => String(descriptor).toLowerCase().includes('world'));
+        if (hasWorldDescriptor) {
+            total += amount;
+        }
+    });
+    return total;
+}
+
 class GalaxyFaction {
     constructor({ id, name, color, startingSectors } = {}) {
         this.id = id || '';
@@ -573,8 +596,8 @@ class GalaxyFaction {
         if (!(controlValue > 0)) {
             return 0;
         }
+        const totalControl = sector?.getTotalControlValue?.() ?? 0;
         if (this.id !== UHF_FACTION_ID) {
-            const totalControl = sector?.getTotalControlValue?.() ?? 0;
             if (!(totalControl > 0)) {
                 return 0;
             }
@@ -591,11 +614,14 @@ class GalaxyFaction {
             }
             return sanitizedValue * share;
         }
+        const epsilon = 1e-6;
+        const uhfFullControl = totalControl > 0 && Math.abs(controlValue - totalControl) <= epsilon;
+
         const providedWorldCount = Number(manager?.getTerraformedWorldCountForSector?.(sector));
         const terraformedWorlds = Number.isFinite(providedWorldCount) && providedWorldCount > 0
             ? providedWorldCount
             : 0;
-        const rewardBonusWorlds = manager?.hasAcquiredSectorReward?.(sector) === true ? 1 : 0;
+        const rewardBonusWorlds = uhfFullControl ? getRewardWorldCount(sector) : 0;
         const combinedWorlds = terraformedWorlds + rewardBonusWorlds;
         const baseDefense = combinedWorlds > 0 ? 100 * combinedWorlds : 0;
         const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;

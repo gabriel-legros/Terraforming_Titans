@@ -107,6 +107,27 @@ function registerOverrides(coordinates, value) {
     });
 }
 
+function registerRewards(coordinates, amount) {
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+        return;
+    }
+    const rewardLabel = numericAmount === 1 ? 'Habitable World' : 'Habitable Worlds';
+    coordinates.forEach((coordinate) => {
+        const key = createSectorKey(coordinate.q, coordinate.r);
+        if (!overrides[key]) {
+            overrides[key] = {};
+        }
+        overrides[key].reward = [
+            {
+                type: 'habitableWorld',
+                label: rewardLabel,
+                amount: numericAmount
+            }
+        ];
+    });
+}
+
 function cloneRewardDefinition(definition) {
     if (!definition) {
         return [];
@@ -136,6 +157,11 @@ registerOverrides(R507_SECTOR_COORDINATES, R507_SECTOR_BASE_VALUE);
 registerOverrides(STRATEGIC_SECTOR_COORDINATES, STRATEGIC_SECTOR_BASE_VALUE);
 registerOverrides(STRATEGIC_NEIGHBOR_COORDINATES, STRATEGIC_NEIGHBOR_BASE_VALUE);
 overrides['R5-07'] = { value: R507_SECTOR_BASE_VALUE };
+
+registerRewards(CORE_COORDINATES, 10);
+registerRewards(FIRST_RING_COORDINATES, 5);
+registerRewards(STRATEGIC_SECTOR_COORDINATES, 5);
+registerRewards(STRATEGIC_NEIGHBOR_COORDINATES, 2);
 
 const galaxySectorParameters = {
     defaultValue: DEFAULT_SECTOR_VALUE,

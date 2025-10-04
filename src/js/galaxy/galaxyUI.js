@@ -1015,7 +1015,7 @@ function renderSelectedSectorDetails() {
             const statValue = doc.createElement('span');
             statValue.className = 'galaxy-sector-panel__stat-value';
             stat.append(statLabel, statValue);
-            return { stat, statValue };
+            return { stat, statLabel, statValue };
         };
 
         const rewardRow = createStatRow('Reward');
@@ -1061,8 +1061,6 @@ function renderSelectedSectorDetails() {
 
         enemySection.append(enemySectorRow.stat, enemyFleetRow.stat, enemyTotalRow.stat);
 
-        container.appendChild(enemySection);
-
         panel.replaceChildren(container);
 
         details = {
@@ -1074,6 +1072,7 @@ function renderSelectedSectorDetails() {
                 fleetDefenseValue: fleetDefenseRow.statValue,
                 totalDefenseValue: totalDefenseRow.statValue
             },
+            enemySection,
             enemy: {
                 sectorValue: enemySectorRow.statValue,
                 fleetValue: enemyFleetRow.statValue,
@@ -1086,6 +1085,7 @@ function renderSelectedSectorDetails() {
             empty,
             reward: {
                 row: rewardRow.stat,
+                label: rewardRow.statLabel,
                 value: rewardRow.statValue
             }
         };
@@ -1110,6 +1110,54 @@ function renderSelectedSectorDetails() {
     const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
 
+    if (details.reward?.label && !details.reward.label.querySelector('.info-tooltip-icon')) {
+        const rewardTooltip = doc.createElement('span');
+        rewardTooltip.className = 'info-tooltip-icon';
+        rewardTooltip.innerHTML = '&#9432;';
+        rewardTooltip.title = 'Fully controlled sectors add these bonus habitable worlds to UHF defenses.';
+        details.reward.label.appendChild(rewardTooltip);
+    }
+
+    const rewardEntries = typeof manager.getSectorsReward === 'function'
+        ? manager.getSectorsReward([sector])
+        : typeof sector.getSectorReward === 'function'
+            ? sector.getSectorReward()
+            : [];
+    const rewardWorlds = Array.isArray(rewardEntries)
+        ? rewardEntries.reduce((total, entry) => total + (entry?.type === 'habitableWorld' ? Number(entry?.amount) || 0 : 0), 0)
+        : 0;
+    const rewardWorldsForDefense = isUhfFullControlSector(sector) ? rewardWorlds : 0;
+
+    let baseDefense = 0;
+    let fleetDefense = 0;
+    let totalDefense = 0;
+    let resolvedDefenseFromSummary = false;
+
+    if (typeof manager.getSectorDefenseSummary === 'function') {
+        const summary = manager.getSectorDefenseSummary(sector);
+        if (summary && Array.isArray(summary.contributions)) {
+            const uhfContribution = summary.contributions.find((entry) => entry?.factionId === UHF_FACTION_KEY);
+            if (uhfContribution) {
+                baseDefense = uhfContribution.basePower > 0 ? uhfContribution.basePower : 0;
+                fleetDefense = uhfContribution.fleetPower > 0 ? uhfContribution.fleetPower : 0;
+                totalDefense = uhfContribution.totalPower > 0 ? uhfContribution.totalPower : 0;
+                resolvedDefenseFromSummary = true;
+            }
+        }
+    }
+
+    if (!resolvedDefenseFromSummary) {
+        const multiplier = manager.getFleetCapacityMultiplier?.() ?? 1;
+        const combinedWorlds = Math.max(0, worldCount + rewardWorldsForDefense);
+        const baseWorldDefense = combinedWorlds > 0 ? combinedWorlds * 100 * multiplier : 0;
+        const uhfDefense = isFinite(Number(uhfFaction?.getSectorDefense?.(sector, manager)))
+            ? Number(uhfFaction.getSectorDefense(sector, manager))
+            : 0;
+        fleetDefense = Math.max(0, uhfDefense - baseWorldDefense);
+        baseDefense = Math.max(0, uhfDefense - fleetDefense);
+        totalDefense = baseDefense + fleetDefense;
+    }
+
     const hasEnemyControl = (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON || uhfControl === 0;
     const enemyDefense = hasEnemyControl
         ? calculateEnemySectorDefense(manager, sector, breakdown)
@@ -1120,35 +1168,28 @@ function renderSelectedSectorDetails() {
         enemyTotalDefense = Math.max(0, enemyDefense.base + enemyDefense.fleet);
     }
 
-    details.enemy.sectorValue.textContent = formatDefenseInteger(enemyDefense.base);
-    details.enemy.fleetValue.textContent = formatDefenseInteger(enemyDefense.fleet);
-    details.enemy.totalValue.textContent = enemyTotalDefense > 0 ? formatDefenseInteger(enemyTotalDefense) : '0';
-
-    const multiplier = manager.getFleetCapacityMultiplier?.() ?? 1;
-    const baseWorldDefense = worldCount > 0 ? worldCount * 100 * multiplier : 0;
-    const uhfDefense = isFinite(Number(uhfFaction?.getSectorDefense?.(sector, manager)))
-        ? Number(uhfFaction.getSectorDefense(sector, manager))
-        : 0;
-    const fleetDefense = Math.max(0, uhfDefense - baseWorldDefense);
-    const totalDefense = baseWorldDefense + fleetDefense;
-
-    const rewardEntries = typeof manager.getSectorsReward === 'function'
-        ? manager.getSectorsReward([sector])
-        : typeof sector.getSectorReward === 'function'
-            ? sector.getSectorReward()
-            : [];
+    const shouldShowEnemySection = hasEnemyControl && details.enemySection;
+    if (shouldShowEnemySection) {
+        if (!details.enemySection.isConnected && details.container) {
+            const referenceNode = details.managementSection?.nextSibling || null;
+            if (referenceNode) {
+                details.container.insertBefore(details.enemySection, referenceNode);
+            } else {
+                details.container.appendChild(details.enemySection);
+            }
+        }
+        details.enemy.sectorValue.textContent = formatDefenseInteger(enemyDefense.base);
+        details.enemy.fleetValue.textContent = formatDefenseInteger(enemyDefense.fleet);
+        details.enemy.totalValue.textContent = enemyTotalDefense > 0 ? formatDefenseInteger(enemyTotalDefense) : '0';
+    } else if (details.enemySection?.isConnected) {
+        details.enemySection.remove();
+    }
 
     if (details.reward) {
-        const hasRewards = Array.isArray(rewardEntries) && rewardEntries.length > 0;
-        const formatter = getNumberFormatter();
-        if (hasRewards) {
-            const rewardText = rewardEntries.map((entry) => {
-                const amount = formatter(entry.amount, false, 2);
-                const label = entry.label || entry.type || 'Reward';
-                const unit = typeof entry.unit === 'string' && entry.unit ? ` ${entry.unit}` : '';
-                return `${amount} ${label}${unit}`.trim();
-            }).join(', ');
-            details.reward.value.textContent = rewardText;
+        if (rewardWorlds > 0) {
+            const roundedWorlds = Math.max(0, Math.round(rewardWorlds));
+            const worldLabel = roundedWorlds === 1 ? 'World' : 'Worlds';
+            details.reward.value.textContent = `${roundedWorlds} ${worldLabel}`;
             details.reward.row.classList.remove('is-hidden');
         } else {
             details.reward.value.textContent = '—';
@@ -1161,7 +1202,11 @@ function renderSelectedSectorDetails() {
         details.managementSection.classList.toggle('is-hidden', !managementVisible);
     }
     if (managementVisible) {
-        details.management.worldsValue.textContent = String(Math.max(0, Math.round(worldCount)));
+        const baseWorlds = Math.max(0, Math.round(worldCount));
+        const rewardDisplay = Math.max(0, Math.round(rewardWorldsForDefense));
+        details.management.worldsValue.textContent = rewardDisplay > 0
+            ? `${baseWorlds}+${rewardDisplay}`
+            : String(baseWorlds);
         details.management.fleetDefenseValue.textContent = formatDefenseInteger(fleetDefense);
         details.management.totalDefenseValue.textContent = formatDefenseInteger(totalDefense);
     } else {

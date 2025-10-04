@@ -27,7 +27,9 @@ describe('GalaxyManager controlled sector world rewards', () => {
         core.replaceControl({ [UHF_FACTION_ID]: 100 });
         neighbor.replaceControl({ [UHF_FACTION_ID]: 50 });
 
-        expect(manager.getControlledSectorWorldCount()).toBe(2);
+        const rewards = manager.getSectorsReward([core, neighbor]);
+        const expectedWorlds = rewards.reduce((total, entry) => total + (entry?.type === 'habitableWorld' ? Number(entry?.amount) || 0 : 0), 0);
+        expect(manager.getControlledSectorWorldCount()).toBe(expectedWorlds);
     });
 
     test('ignores sectors without full UHF control', () => {
