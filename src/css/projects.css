@@ -266,12 +266,27 @@
     border-bottom: none;
 }
 
-.import-top-controls {
+
+.import-top-row {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr 1fr 1.4fr;
+    align-items: flex-end;
+    column-gap: 10px;
+    margin: 8px 0 6px 0;
+}
+
+.import-top-cell {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 8px 0 10px 0;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.import-top-available .import-available-display {
+    font-weight: bold;
+}
+
+.import-top-multiplier {
+    justify-content: flex-start;
 }
 
 .import-available-display {
@@ -749,6 +764,10 @@
 }
 
 .pressure-control .pressure-input {
+    width: 60px;
+}
+
+.oxygenPressure-control .oxygenPressure-input {
     width: 60px;
 }
 

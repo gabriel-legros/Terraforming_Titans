@@ -139,7 +139,7 @@ function ensureImportResourcesCard(project) {
 
   const description = document.createElement('p');
   description.classList.add('project-description');
-  description.textContent = 'Coordinate orbital shipments for various space resources.';
+  description.textContent = 'Coordinate orbital shipments for hydrogen, nitrogen, CO₂, metals, and water.';
   cardBody.appendChild(description);
 
   const costDisplay = document.createElement('div');
@@ -147,14 +147,15 @@ function ensureImportResourcesCard(project) {
   cardBody.appendChild(costDisplay);
 
   const topControls = document.createElement('div');
-  topControls.classList.add('import-top-controls');
+  topControls.classList.add('import-top-row');
 
   const availableDisplay = document.createElement('span');
   availableDisplay.classList.add('import-available-display');
   availableDisplay.textContent = 'Available: 0';
 
-  const controls = document.createElement('div');
-  controls.classList.add('import-multiplier-controls');
+  const availableCell = document.createElement('div');
+  availableCell.classList.add('import-top-cell', 'import-top-available');
+  availableCell.appendChild(availableDisplay);
 
   const decreaseButton = document.createElement('button');
   decreaseButton.textContent = '/10';
@@ -164,11 +165,20 @@ function ensureImportResourcesCard(project) {
   increaseButton.textContent = 'x10';
   increaseButton.addEventListener('click', () => adjustImportResourceMultiplier('increase'));
 
-  controls.appendChild(decreaseButton);
-  controls.appendChild(increaseButton);
+  const multiplierCell = document.createElement('div');
+  multiplierCell.classList.add('import-top-cell', 'import-top-multiplier');
+  const multiplierControls = document.createElement('div');
+  multiplierControls.classList.add('import-multiplier-controls');
+  multiplierControls.appendChild(decreaseButton);
+  multiplierControls.appendChild(increaseButton);
+  multiplierCell.appendChild(multiplierControls);
 
-  topControls.appendChild(availableDisplay);
-  topControls.appendChild(controls);
+  const spacerCellOne = document.createElement('div');
+  spacerCellOne.classList.add('import-top-cell');
+  const spacerCellTwo = document.createElement('div');
+  spacerCellTwo.classList.add('import-top-cell');
+
+  topControls.append(availableCell, multiplierCell, spacerCellOne, spacerCellTwo);
   cardBody.appendChild(topControls);
 
   const table = document.createElement('div');
@@ -177,7 +187,8 @@ function ensureImportResourcesCard(project) {
   const headerRow = document.createElement('div');
   headerRow.classList.add('import-resources-row', 'import-resources-header');
 
-  ['Resource', 'Assignment', 'Auto Assign', 'Total Gain'].forEach((labelText) => {
+  const headers = ['Resource', 'Assignment', 'Auto Assign', 'Total Gain'];
+  headers.forEach((labelText) => {
     const cell = document.createElement('div');
     cell.classList.add('import-resources-cell');
     cell.innerHTML = `<strong>${labelText}</strong>`;
