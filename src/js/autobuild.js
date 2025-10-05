@@ -495,7 +495,7 @@ function autoBuild(buildings, delta = 0) {
     const prioritizedReserve = {};
     buildableBuildings.forEach(entry => {
         if (!entry.building.autoBuildPriority) return;
-        const totalCost = entry.building.getEffectiveCost?.(entry.requiredAmount);
+        const totalCost = entry.building.getEffectiveCost?.(1);
         addCostToPrioritizedReserve(prioritizedReserve, totalCost);
     });
 
