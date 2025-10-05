@@ -44,6 +44,19 @@ const importResourcesUI = {
   costPerShipmentDisplay: null,
 };
 
+function setImportProjectProgressLabel(elements, project, statusText) {
+  if (!elements || !elements.progressButton) return;
+  const projectLabel = project.displayName || project.name;
+  if (elements.importProgressName) {
+    elements.importProgressName.textContent = projectLabel;
+  }
+  if (elements.importProgressStatus) {
+    elements.importProgressStatus.textContent = statusText;
+  } else {
+    elements.progressButton.textContent = `${projectLabel}\n${statusText}`;
+  }
+}
+
 function getProjectSubtabContents() {
   if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
     cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
@@ -347,8 +360,28 @@ function createImportResourceRow(project) {
   mainRow.dataset.projectName = project.name;
 
   const nameCell = document.createElement('div');
-  nameCell.classList.add('import-resources-cell');
-  nameCell.textContent = project.displayName || project.name;
+  nameCell.classList.add('import-resources-cell', 'import-name-cell');
+
+  const progressButtonContainer = document.createElement('div');
+  progressButtonContainer.classList.add('progress-button-container', 'import-progress-button-container');
+
+  const progressButton = document.createElement('button');
+  progressButton.classList.add('progress-button', 'import-progress-button');
+
+  const progressNameLine = document.createElement('strong');
+  progressNameLine.classList.add('import-progress-name');
+  progressNameLine.textContent = project.displayName || project.name;
+
+  const progressStatusLine = document.createElement('span');
+  progressStatusLine.classList.add('import-progress-status');
+
+  progressButton.appendChild(progressNameLine);
+  progressButton.appendChild(progressStatusLine);
+
+  progressButton.addEventListener('click', () => startProjectWithSelectedResources(project));
+  progressButtonContainer.appendChild(progressButton);
+
+  nameCell.appendChild(progressButtonContainer);
 
   const assignmentCell = document.createElement('div');
   assignmentCell.classList.add('import-resources-cell', 'import-assignment-cell');
@@ -447,15 +480,7 @@ function createImportResourceRow(project) {
     project.renderAutomationUI(automationContainer);
   }
 
-  const progressButtonContainer = document.createElement('div');
-  progressButtonContainer.classList.add('progress-button-container');
-  const progressButton = document.createElement('button');
-  progressButton.classList.add('progress-button');
-  progressButton.addEventListener('click', () => startProjectWithSelectedResources(project));
-  progressButtonContainer.appendChild(progressButton);
-
   detailRow.appendChild(automationContainer);
-  detailRow.appendChild(progressButtonContainer);
 
   insertImportResourceRow(mainRow, detailRow, project.name);
 
@@ -471,6 +496,8 @@ function createImportResourceRow(project) {
   elements.autoStartCheckbox = autoStartCheckbox;
   elements.autoStartLabel = autoStartLabel;
   elements.progressButton = progressButton;
+  elements.importProgressName = progressNameLine;
+  elements.importProgressStatus = progressStatusLine;
   elements.assignedSpaceshipsDisplay = assignedDisplay;
   elements.autoAssignCheckboxContainer = autoAssignContainer;
   elements.totalGainElement = totalGain;
@@ -1141,62 +1168,104 @@ function updateProjectUI(projectName) {
     if (elements.progressButton) {
       elements.progressButton.style.display = 'block';
 
+      const isImportProject = isImportResourceProject(project.name);
+
       // Update the duration in the progress bar display
-      if (elements.progressButton) {
-        const spaceshipCtor = globalThis.SpaceshipProject;
-        const cargoCtor = globalThis.CargoRocketProject;
-        const galacticCtor = globalThis.GalacticMarketProject;
-        const isContinuousProject =
-          project.isContinuous() && (
-            (spaceshipCtor && project instanceof spaceshipCtor) ||
-            (cargoCtor && project instanceof cargoCtor) ||
-            (galacticCtor && project instanceof galacticCtor)
-          );
-        if (isContinuousProject) {
-          if (project.autoStart && project.isActive && !project.isPaused) {
+      const spaceshipCtor = globalThis.SpaceshipProject;
+      const cargoCtor = globalThis.CargoRocketProject;
+      const galacticCtor = globalThis.GalacticMarketProject;
+      const isContinuousProject =
+        project.isContinuous() && (
+          (spaceshipCtor && project instanceof spaceshipCtor) ||
+          (cargoCtor && project instanceof cargoCtor) ||
+          (galacticCtor && project instanceof galacticCtor)
+        );
+      if (isContinuousProject) {
+        if (project.autoStart && project.isActive && !project.isPaused) {
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, 'Continuous');
+          } else {
             elements.progressButton.textContent = 'Continuous';
-            elements.progressButton.style.background = '#4caf50';
+          }
+          elements.progressButton.style.background = '#4caf50';
+        } else {
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, 'Stopped');
           } else {
             elements.progressButton.textContent = 'Stopped';
-            elements.progressButton.style.background = '#f44336';
           }
-        } else if (project.isActive) {
-          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-          const progressPercent = project.getProgress();
-          if (project.startingDuration < 1000) {
-            elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining`;
-            // Avoid flashy gradients for instant projects
-            elements.progressButton.style.background = '#4caf50';
+          elements.progressButton.style.background = '#f44336';
+        }
+      } else if (project.isActive) {
+        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+        const progressPercent = project.getProgress();
+        if (project.startingDuration < 1000) {
+          const statusText = `In Progress: ${timeRemaining} seconds remaining`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
-            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+            elements.progressButton.textContent = statusText;
           }
-        } else if (project.isCompleted) {
-          elements.progressButton.textContent = `Completed: ${project.displayName}`;
+          // Avoid flashy gradients for instant projects
           elements.progressButton.style.background = '#4caf50';
-        } else if (project.isPaused) {
-          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            elements.progressButton.textContent = `Resume storage expansion (${timeRemaining}s left)`;
-          } else {
-            elements.progressButton.textContent = `Resume ${project.displayName} (${timeRemaining}s left)`;
-          }
-          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
-          // Update dynamic duration for spaceMining projects
-          let duration = project.getEffectiveDuration();
-          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            elements.progressButton.textContent = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+            elements.progressButton.textContent = statusText;
           }
+          elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+        }
+      } else if (project.isCompleted) {
+        if (isImportProject) {
+          setImportProjectProgressLabel(elements, project, 'Completed');
+        } else {
+          elements.progressButton.textContent = `Completed: ${project.displayName}`;
+        }
+        elements.progressButton.style.background = '#4caf50';
+      } else if (project.isPaused) {
+        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+          const statusText = `Resume storage expansion (${timeRemaining}s left)`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, statusText);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        } else {
+          const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        }
+        elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
+      } else {
+        // Update dynamic duration for spaceMining projects
+        let duration = project.getEffectiveDuration();
+        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+          const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, statusText);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        } else {
+          const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (isImportProject) {
+            setImportProjectProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        }
 
-          // Set background color based on whether the project can start
-          if (project.canStart()) {
-            elements.progressButton.style.background = '#4caf50'; // Green if it can be started
-          } else {
-            elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
-          }
+        // Set background color based on whether the project can start
+        if (project.canStart()) {
+          elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+        } else {
+          elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
         }
       }
     }

@@ -223,6 +223,31 @@
     gap: 4px;
 }
 
+.import-name-cell {
+    align-items: flex-start;
+}
+
+.import-progress-button-container {
+    width: 100%;
+}
+
+.import-progress-button {
+    font-size: 0.75em;
+    padding: 4px 6px;
+    line-height: 1.2;
+}
+
+.import-progress-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.import-progress-status {
+    display: block;
+    font-weight: 400;
+}
+
 .import-assignment-cell {
     gap: 6px;
 }
