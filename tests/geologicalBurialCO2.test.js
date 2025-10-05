@@ -36,7 +36,11 @@ describe('geological burial slows when CO2 depleted', () => {
         polar: { liquid: 1 }
       },
       getMagnetosphereStatus: () => true,
-      celestialParameters: { surfaceArea: 1, gravity: 1, radius: 1 },
+      // Give the planet enough surface area so biomass is below the
+      // overflow threshold. Otherwise the generic density decay logic
+      // removes biomass even when burial is disabled, which obscures
+      // the behaviour we want to test.
+      celestialParameters: { surfaceArea: 6000, gravity: 1, radius: 1 },
       calculateZonalSolarPanelMultiplier: () => 1,
       getEcumenopolisLandFraction: () => 0,
       getEffectiveLifeFraction: () => 0.5
