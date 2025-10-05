@@ -139,7 +139,7 @@ function ensureImportResourcesCard(project) {
 
   const description = document.createElement('p');
   description.classList.add('project-description');
-  description.textContent = 'Coordinate orbital shipments for hydrogen, nitrogen, CO₂, metals, and water.';
+  description.textContent = 'Coordinate orbital shipments for various space resources.';
   cardBody.appendChild(description);
 
   const costDisplay = document.createElement('div');
