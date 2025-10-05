@@ -558,7 +558,7 @@
 }
 
 .galactic-market-row {
-    grid-template-columns: 160px 120px 110px 130px 140px 120px 110px;
+    grid-template-columns: 160px 120px 110px minmax(140px, auto) minmax(170px, auto) minmax(130px, auto) 110px 1fr;
 }
 
 .galactic-market-row input[type="number"] {
