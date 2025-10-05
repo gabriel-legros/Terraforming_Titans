@@ -569,8 +569,7 @@ class Terraforming extends EffectableEntity{
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
     updateResources(deltaTime, options = {}) {
-        const skipTemperature = options.skipTemperature === true;
-        this.update(deltaTime, { skipTemperature, skipRadiation: skipTemperature });
+        this.update(deltaTime);
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;

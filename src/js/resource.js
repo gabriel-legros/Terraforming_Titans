@@ -548,7 +548,7 @@ function produceResources(deltaTime, buildings) {
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
-    terraforming.updateResources(deltaTime, { skipTemperature: true });
+    terraforming.updateResources(deltaTime);
     terraforming.distributeGlobalChangesToZones(deltaTime);
   }
 

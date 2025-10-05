@@ -303,8 +303,7 @@
             terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
-            if (typeof terra.updateSurfaceTemperature === 'function') terra.updateSurfaceTemperature(noisyStepMs);
-            terra.updateResources(noisyStepMs, { skipTemperature: true });
+            terra.updateResources(noisyStepMs);
             totalSimulatedMs += noisyStepMs;
             if ((stepIdx + 1) % checkEvery === 0) {
               const snap = snapshotMetrics(terra);
