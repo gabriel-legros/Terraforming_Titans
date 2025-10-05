@@ -17,6 +17,33 @@ const projectsUICache = {
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
 
+const importResourceProjectNames = [
+  'oreSpaceMining',
+  'carbonSpaceMining',
+  'waterSpaceMining',
+  'nitrogenSpaceMining',
+  'hydrogenSpaceMining',
+];
+const importResourceProjectSet = new Set(importResourceProjectNames);
+const importResourcesUI = {
+  card: null,
+  cardBody: null,
+  table: null,
+  multiplier: 1,
+  headerProjectName: importResourceProjectNames[0],
+  rows: {},
+  upButton: null,
+  downButton: null,
+  collapseArrow: null,
+  nameElement: null,
+  multiplierButtons: {
+    decrease: null,
+    increase: null,
+  },
+  availableDisplay: null,
+  costPerShipmentDisplay: null,
+};
+
 function getProjectSubtabContents() {
   if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
     cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
@@ -47,6 +74,407 @@ function invalidateAutomationSettingsCache(projectName) {
   }
 }
 
+function isImportResourceProject(name) {
+  return importResourceProjectSet.has(name);
+}
+
+function ensureImportResourcesCard(project) {
+  const existingCard = importResourcesUI.card;
+  if (existingCard && existingCard.isConnected) {
+    return existingCard;
+  }
+
+  importResourcesUI.headerProjectName = project.name;
+  importResourcesUI.rows = {};
+  importResourcesUI.multiplier = 1;
+  importResourceProjectNames.forEach((projectName) => {
+    const target = projectManager.projects?.[projectName];
+    if (target) {
+      target.assignmentMultiplier = 1;
+    }
+  });
+
+  const card = document.createElement('div');
+  card.classList.add('project-card');
+  card.dataset.projectName = importResourcesUI.headerProjectName;
+
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add('card-header');
+
+  const arrow = document.createElement('span');
+  arrow.classList.add('collapse-arrow');
+  arrow.innerHTML = '&#9660;';
+
+  const nameElement = document.createElement('span');
+  nameElement.classList.add('card-title');
+  nameElement.textContent = 'Import Resources';
+
+  arrow.addEventListener('click', () => toggleProjectCollapse(card));
+  nameElement.addEventListener('click', () => toggleProjectCollapse(card));
+
+  const reorderButtons = document.createElement('div');
+  reorderButtons.classList.add('reorder-buttons');
+
+  const upButton = document.createElement('button');
+  upButton.innerHTML = '&#9650;';
+  upButton.addEventListener('click', (event) => {
+    moveProject(importResourcesUI.headerProjectName, 'up', event.shiftKey);
+  });
+
+  const downButton = document.createElement('button');
+  downButton.innerHTML = '&#9660;';
+  downButton.addEventListener('click', (event) => {
+    moveProject(importResourcesUI.headerProjectName, 'down', event.shiftKey);
+  });
+
+  reorderButtons.appendChild(upButton);
+  reorderButtons.appendChild(downButton);
+
+  cardHeader.appendChild(arrow);
+  cardHeader.appendChild(nameElement);
+  cardHeader.appendChild(reorderButtons);
+
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body');
+
+  const description = document.createElement('p');
+  description.classList.add('project-description');
+  description.textContent = 'Coordinate orbital shipments for hydrogen, nitrogen, CO₂, metals, and water.';
+  cardBody.appendChild(description);
+
+  const costDisplay = document.createElement('div');
+  costDisplay.classList.add('import-cost-per-shipment');
+  cardBody.appendChild(costDisplay);
+
+  const topControls = document.createElement('div');
+  topControls.classList.add('import-top-controls');
+
+  const availableDisplay = document.createElement('span');
+  availableDisplay.classList.add('import-available-display');
+  availableDisplay.textContent = 'Available: 0';
+
+  const controls = document.createElement('div');
+  controls.classList.add('import-multiplier-controls');
+
+  const decreaseButton = document.createElement('button');
+  decreaseButton.textContent = '/10';
+  decreaseButton.addEventListener('click', () => adjustImportResourceMultiplier('decrease'));
+
+  const increaseButton = document.createElement('button');
+  increaseButton.textContent = 'x10';
+  increaseButton.addEventListener('click', () => adjustImportResourceMultiplier('increase'));
+
+  controls.appendChild(decreaseButton);
+  controls.appendChild(increaseButton);
+
+  topControls.appendChild(availableDisplay);
+  topControls.appendChild(controls);
+  cardBody.appendChild(topControls);
+
+  const table = document.createElement('div');
+  table.classList.add('import-resources-grid');
+
+  const headerRow = document.createElement('div');
+  headerRow.classList.add('import-resources-row', 'import-resources-header');
+
+  ['Resource', 'Assignment', 'Auto Assign', 'Total Gain'].forEach((labelText) => {
+    const cell = document.createElement('div');
+    cell.classList.add('import-resources-cell');
+    cell.innerHTML = `<strong>${labelText}</strong>`;
+    headerRow.appendChild(cell);
+  });
+
+  table.appendChild(headerRow);
+  cardBody.appendChild(table);
+
+  card.appendChild(cardHeader);
+  card.appendChild(cardBody);
+
+  const categoryContainer = getOrCreateCategoryContainer(project.category || 'resources');
+  categoryContainer.appendChild(card);
+
+  importResourcesUI.card = card;
+  importResourcesUI.cardBody = cardBody;
+  importResourcesUI.table = table;
+  importResourcesUI.multiplierButtons.decrease = decreaseButton;
+  importResourcesUI.multiplierButtons.increase = increaseButton;
+  importResourcesUI.collapseArrow = arrow;
+  importResourcesUI.nameElement = nameElement;
+  importResourcesUI.upButton = upButton;
+  importResourcesUI.downButton = downButton;
+  importResourcesUI.availableDisplay = availableDisplay;
+  importResourcesUI.costPerShipmentDisplay = costDisplay;
+
+  const headerElements = projectElements[importResourcesUI.headerProjectName] || {};
+  headerElements.projectItem = card;
+  headerElements.cardBody = cardBody;
+  headerElements.collapseArrow = arrow;
+  headerElements.upButton = upButton;
+  headerElements.downButton = downButton;
+  projectElements[importResourcesUI.headerProjectName] = headerElements;
+
+  updateImportSharedDisplays(project);
+
+  return card;
+}
+
+function adjustImportResourceMultiplier(direction) {
+  if (direction === 'decrease') {
+    const reduced = importResourcesUI.multiplier / 10;
+    importResourcesUI.multiplier = reduced >= 1 ? reduced : 1;
+  } else if (direction === 'increase') {
+    importResourcesUI.multiplier *= 10;
+  }
+
+  importResourceProjectNames.forEach((projectName) => {
+    const project = projectManager.projects?.[projectName];
+    if (!project) {
+      return;
+    }
+    project.assignmentMultiplier = importResourcesUI.multiplier;
+  });
+
+  updateImportAssignmentButtons();
+}
+
+function updateImportAssignmentButtons() {
+  Object.keys(importResourcesUI.rows).forEach((projectName) => {
+    const row = importResourcesUI.rows[projectName];
+    const project = projectManager.projects?.[projectName];
+    if (!row || !project) {
+      return;
+    }
+    const formatted = formatNumber(project.assignmentMultiplier, true);
+    if (row.minusButton) {
+      row.minusButton.textContent = `-${formatted}`;
+    }
+    if (row.plusButton) {
+      row.plusButton.textContent = `+${formatted}`;
+    }
+  });
+}
+
+function formatImportCostPerShipment(project) {
+  if (!project || typeof project.calculateSpaceshipCost !== 'function') {
+    return 'Cost per Shipment: -';
+  }
+  const costPerShip = project.calculateSpaceshipCost();
+  const segments = [];
+  for (const category in costPerShip) {
+    if (!Object.prototype.hasOwnProperty.call(costPerShip, category)) continue;
+    const resourcesForCategory = costPerShip[category];
+    for (const resourceId in resourcesForCategory) {
+      if (!Object.prototype.hasOwnProperty.call(resourcesForCategory, resourceId)) continue;
+      const amount = resourcesForCategory[resourceId];
+      if (!(amount > 0)) continue;
+      const resourceConfig = resources?.[category]?.[resourceId];
+      const resourceDisplayName = resourceConfig?.displayName ||
+        resourceId.charAt(0).toUpperCase() + resourceId.slice(1);
+      segments.push(`${resourceDisplayName}: ${formatNumber(amount, true)}`);
+    }
+  }
+  if (!segments.length) {
+    return 'Cost per Shipment: -';
+  }
+  return `Cost per Shipment: ${segments.join(', ')}`;
+}
+
+function updateImportSharedDisplays(project) {
+  if (!importResourcesUI.card || !importResourcesUI.card.isConnected) {
+    return;
+  }
+
+  if (importResourcesUI.availableDisplay) {
+    const availableShips = formatBigInteger(Math.floor(resources?.special?.spaceships?.value || 0));
+    importResourcesUI.availableDisplay.textContent = `Available: ${availableShips}`;
+  }
+
+  if (importResourcesUI.costPerShipmentDisplay && project && typeof project.calculateSpaceshipCost === 'function') {
+    importResourcesUI.costPerShipmentDisplay.textContent = formatImportCostPerShipment(project);
+  }
+}
+
+function insertImportResourceRow(mainRow, detailRow, projectName) {
+  const table = importResourcesUI.table;
+  if (!table) {
+    return;
+  }
+
+  const orderIndex = importResourceProjectNames.indexOf(projectName);
+  let referenceRow = null;
+  for (let index = orderIndex + 1; index < importResourceProjectNames.length; index += 1) {
+    const targetName = importResourceProjectNames[index];
+    const targetRow = importResourcesUI.rows[targetName]?.mainRow;
+    if (targetRow && targetRow.isConnected) {
+      referenceRow = targetRow;
+      break;
+    }
+  }
+
+  if (referenceRow) {
+    table.insertBefore(mainRow, referenceRow);
+    table.insertBefore(detailRow, referenceRow);
+  } else {
+    table.appendChild(mainRow);
+    table.appendChild(detailRow);
+  }
+}
+
+function createImportResourceRow(project) {
+  ensureImportResourcesCard(project);
+
+  if (importResourcesUI.rows[project.name]) {
+    return;
+  }
+
+  if (!projectElements[project.name]) {
+    projectElements[project.name] = {};
+  }
+
+  const mainRow = document.createElement('div');
+  mainRow.classList.add('import-resources-row');
+  mainRow.dataset.projectName = project.name;
+
+  const nameCell = document.createElement('div');
+  nameCell.classList.add('import-resources-cell');
+  nameCell.textContent = project.displayName || project.name;
+
+  const assignmentCell = document.createElement('div');
+  assignmentCell.classList.add('import-resources-cell', 'import-assignment-cell');
+
+  const assignmentInfo = document.createElement('div');
+  assignmentInfo.classList.add('import-assignment-info');
+
+  const assignedLabel = document.createElement('span');
+  assignedLabel.textContent = 'Assigned:';
+  const assignedDisplay = document.createElement('span');
+  assignedDisplay.classList.add('import-assigned-value');
+  assignmentInfo.appendChild(assignedLabel);
+  assignmentInfo.appendChild(assignedDisplay);
+
+  const buttonRow = document.createElement('div');
+  buttonRow.classList.add('import-assignment-buttons');
+
+  const zeroButton = document.createElement('button');
+  zeroButton.textContent = '0';
+  zeroButton.addEventListener('click', () => {
+    project.assignSpaceships(-project.getActiveShipCount());
+    importResourceProjectNames.forEach((name) => updateProjectUI(name));
+  });
+
+  const minusButton = document.createElement('button');
+  minusButton.addEventListener('click', () => {
+    project.assignSpaceships(-project.assignmentMultiplier);
+    importResourceProjectNames.forEach((name) => updateProjectUI(name));
+  });
+
+  const plusButton = document.createElement('button');
+  plusButton.addEventListener('click', () => {
+    project.assignSpaceships(project.assignmentMultiplier);
+    importResourceProjectNames.forEach((name) => updateProjectUI(name));
+  });
+
+  const maxButton = document.createElement('button');
+  maxButton.textContent = 'Max';
+  maxButton.addEventListener('click', () => {
+    const ships = Math.floor(resources.special?.spaceships?.value || 0);
+    if (ships > 0) {
+      project.assignSpaceships(ships);
+      importResourceProjectNames.forEach((name) => updateProjectUI(name));
+    }
+  });
+
+  buttonRow.appendChild(zeroButton);
+  buttonRow.appendChild(minusButton);
+  buttonRow.appendChild(plusButton);
+  buttonRow.appendChild(maxButton);
+
+  assignmentCell.appendChild(assignmentInfo);
+  assignmentCell.appendChild(buttonRow);
+
+  const autoAssignCell = document.createElement('div');
+  autoAssignCell.classList.add('import-resources-cell', 'import-auto-assign-cell');
+  const autoAssignContainer = project.createAutoAssignSpaceshipsCheckbox();
+  autoAssignCell.appendChild(autoAssignContainer);
+
+  const totalGainCell = document.createElement('div');
+  totalGainCell.classList.add('import-resources-cell', 'import-total-gain-cell');
+
+  const totalGain = document.createElement('div');
+  totalGainCell.appendChild(totalGain);
+
+  mainRow.appendChild(nameCell);
+  mainRow.appendChild(assignmentCell);
+  mainRow.appendChild(autoAssignCell);
+  mainRow.appendChild(totalGainCell);
+
+  const detailRow = document.createElement('div');
+  detailRow.classList.add('import-resources-detail');
+
+  const automationContainer = document.createElement('div');
+  automationContainer.classList.add('automation-settings-container');
+  automationContainer.style.borderTop = 'none';
+  automationContainer.style.paddingTop = '0';
+  automationContainer.style.marginTop = '0';
+
+  const autoStartContainer = document.createElement('div');
+  autoStartContainer.classList.add('checkbox-container');
+  const autoStartCheckbox = document.createElement('input');
+  autoStartCheckbox.type = 'checkbox';
+  autoStartCheckbox.id = `${project.name}-auto-start`;
+  autoStartCheckbox.addEventListener('change', (event) => {
+    project.autoStart = event.target.checked;
+  });
+  const autoStartLabel = document.createElement('label');
+  autoStartLabel.htmlFor = `${project.name}-auto-start`;
+  autoStartLabel.textContent = 'Auto start';
+  autoStartContainer.appendChild(autoStartCheckbox);
+  autoStartContainer.appendChild(autoStartLabel);
+  automationContainer.appendChild(autoStartContainer);
+
+  if (project.renderAutomationUI) {
+    project.renderAutomationUI(automationContainer);
+  }
+
+  const progressButtonContainer = document.createElement('div');
+  progressButtonContainer.classList.add('progress-button-container');
+  const progressButton = document.createElement('button');
+  progressButton.classList.add('progress-button');
+  progressButton.addEventListener('click', () => startProjectWithSelectedResources(project));
+  progressButtonContainer.appendChild(progressButton);
+
+  detailRow.appendChild(automationContainer);
+  detailRow.appendChild(progressButtonContainer);
+
+  insertImportResourceRow(mainRow, detailRow, project.name);
+
+  const elements = projectElements[project.name];
+  elements.projectItem = importResourcesUI.card;
+  elements.cardBody = importResourcesUI.cardBody;
+  elements.collapseArrow = importResourcesUI.collapseArrow;
+  elements.upButton = importResourcesUI.upButton;
+  elements.downButton = importResourcesUI.downButton;
+  elements.cardFooter = detailRow;
+  elements.automationSettingsContainer = automationContainer;
+  elements.autoStartCheckboxContainer = autoStartContainer;
+  elements.autoStartCheckbox = autoStartCheckbox;
+  elements.autoStartLabel = autoStartLabel;
+  elements.progressButton = progressButton;
+  elements.assignedSpaceshipsDisplay = assignedDisplay;
+  elements.autoAssignCheckboxContainer = autoAssignContainer;
+  elements.totalGainElement = totalGain;
+
+  importResourcesUI.rows[project.name] = {
+    mainRow,
+    detailRow,
+    minusButton,
+    plusButton,
+    autoAssignContainer,
+  };
+
+  updateImportAssignmentButtons();
+  invalidateAutomationSettingsCache(project.name);
+}
 
 function initializeProjectTabs() {
   if (typeof SubtabManager !== 'function') return;
@@ -102,6 +530,11 @@ function initializeProjectsUI() {
 }
 
 function createProjectItem(project) {
+  if (isImportResourceProject(project.name)) {
+    createImportResourceRow(project);
+    return;
+  }
+
   const projectCard = document.createElement('div');
   projectCard.classList.add('project-card');
   projectCard.dataset.projectName = project.name;
@@ -574,10 +1007,28 @@ function updateProjectUI(projectName) {
         spaceManager.getCurrentPlanetKey &&
         spaceManager.getCurrentPlanetKey() === project.attributes.planet);
     const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
-    if (visible && planetOk) {
+
+    if (isImportResourceProject(projectName)) {
+      const rowEntry = importResourcesUI.rows[projectName];
+      const rowVisible = visible && planetOk;
+      updateImportSharedDisplays(project);
+      if (rowEntry) {
+        rowEntry.mainRow.style.display = rowVisible ? 'grid' : 'none';
+        rowEntry.detailRow.style.display = rowVisible ? 'flex' : 'none';
+      }
+      const anyVisibleRow = Object.keys(importResourcesUI.rows).some((key) => {
+        const entry = importResourcesUI.rows[key];
+        return entry && entry.mainRow && entry.mainRow.style.display !== 'none';
+      });
+      projectItem.style.display = anyVisibleRow ? 'block' : 'none';
+      if (!rowVisible) {
+        return;
+      }
+    } else if (visible && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
+      return;
     }
   }
 
@@ -589,18 +1040,18 @@ function updateProjectUI(projectName) {
       ? project.getMaxAssignableShips()
       : null;
     const assignedText = formatBigInteger(project.assignedSpaceships);
-    elements.assignedSpaceshipsDisplay.textContent =
-      maxShips != null
-        ? `Spaceships Assigned: ${assignedText}/${formatBigInteger(maxShips)}`
-        : `Spaceships Assigned: ${assignedText}`;
+    if (isImportResourceProject(projectName)) {
+      elements.assignedSpaceshipsDisplay.textContent =
+        maxShips != null
+          ? `${assignedText}/${formatBigInteger(maxShips)}`
+          : assignedText;
+    } else {
+      elements.assignedSpaceshipsDisplay.textContent =
+        maxShips != null
+          ? `Spaceships Assigned: ${assignedText}/${formatBigInteger(maxShips)}`
+          : `Spaceships Assigned: ${assignedText}`;
+    }
   }
-
-  // Update Available Spaceships display if applicable
-  if (elements?.availableSpaceshipsDisplay) {
-    elements.availableSpaceshipsDisplay.textContent = `Available: ${formatBigInteger(Math.floor(resources.special.spaceships.value))}`;
-  }
-
-
 
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
@@ -805,20 +1256,23 @@ function updateProjectUI(projectName) {
   }
 
   // Disable/enable reorder buttons
-  const category = project.category || 'general';
-  const categoryProjectsAll = projectManager
-    .getProjectStatuses()
-    .filter(p => (p.category || 'general') === category);
-  const categoryProjects = categoryProjectsAll.filter(p =>
-    !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
-  );
-  const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
+  const shouldUpdateOrderButtons = !isImportResourceProject(projectName) || projectName === importResourcesUI.headerProjectName;
+  if (shouldUpdateOrderButtons) {
+    const category = project.category || 'general';
+    const categoryProjectsAll = projectManager
+      .getProjectStatuses()
+      .filter(p => (p.category || 'general') === category);
+    const categoryProjects = categoryProjectsAll.filter(p =>
+      !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
+    );
+    const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
-  if (elements.upButton) {
-    elements.upButton.classList.toggle('disabled', currentIndex <= 0);
-  }
-  if (elements.downButton) {
-    elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
+    if (elements.upButton) {
+      elements.upButton.classList.toggle('disabled', currentIndex <= 0);
+    }
+    if (elements.downButton) {
+      elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
+    }
   }
 
   if (!project.unlocked && project.name === 'dysonSwarmReceiver' && project.collectors > 0) {

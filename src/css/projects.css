@@ -199,6 +199,95 @@
     flex-wrap: wrap;
 }
 
+/* --- Import Resources Card --- */
+.import-resources-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.import-resources-row {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr 1fr 1.4fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.import-resources-header {
+    font-size: 0.9em;
+}
+
+.import-resources-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.import-assignment-cell {
+    gap: 6px;
+}
+
+.import-assignment-info {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.9em;
+}
+
+.import-assigned-value {
+    font-weight: bold;
+}
+
+.import-assignment-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.import-auto-assign-cell {
+    align-items: flex-start;
+}
+
+.import-total-gain-cell {
+    font-size: 0.9em;
+    gap: 2px;
+}
+
+.import-resources-detail {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.import-resources-detail:last-child {
+    border-bottom: none;
+}
+
+.import-top-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 10px 0;
+    flex-wrap: wrap;
+}
+
+.import-available-display {
+    font-weight: bold;
+}
+
+.import-multiplier-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.import-cost-per-shipment {
+    font-size: 0.9em;
+    margin-bottom: 6px;
+}
+
 .project-summary-content .stat-value {
     margin-right: 0;
 }
