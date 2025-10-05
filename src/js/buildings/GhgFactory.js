@@ -31,6 +31,17 @@ class GhgFactory extends Building {
         terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
       }
     };
+    const readTrendTemperature = () => {
+      const tempState = terraforming?.temperature;
+      if (!tempState) {
+        return NaN;
+      }
+      if (Number.isFinite(tempState.trendValue)) {
+        return tempState.trendValue;
+      }
+      const actual = tempState.value;
+      return Number.isFinite(actual) ? actual : NaN;
+    };
     const evaluateTemperature = (applyChange, evaluate, revertChange) => {
       const snapshot = saveTempState ? saveTempState() : null;
       applyChange();
@@ -66,7 +77,7 @@ class GhgFactory extends Building {
         settings.reverseTempThreshold = B;
       }
       const M = (A + B) / 2; // Midpoint target when correcting
-      const currentTemp = terraforming.temperature.value;
+      const currentTemp = readTrendTemperature();
       let recipeKey = this.currentRecipeKey || 'ghg';
       let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
 
@@ -99,7 +110,7 @@ class GhgFactory extends Building {
                 const required = solveRequired((added) => (
                   evaluateTemperature(
                     () => { res.value = originalAmount + added; },
-                    () => terraforming.temperature.value - M,
+                    () => readTrendTemperature() - M,
                     () => { res.value = originalAmount; }
                   )
                 ), maxProduction);
@@ -122,7 +133,7 @@ class GhgFactory extends Building {
                 const origMass = res.value;
                 return evaluateTemperature(
                   () => { res.value = Math.max(0, mass); },
-                  () => Math.abs(terraforming.temperature.value - M),
+                  () => Math.abs(readTrendTemperature() - M),
                   () => { res.value = origMass; }
                 );
               };
@@ -130,7 +141,7 @@ class GhgFactory extends Building {
               const addReq = solveRequired((amt) => (
                 evaluateTemperature(
                   () => { res.value = originalAmount + amt; },
-                  () => terraforming.temperature.value - M,
+                  () => readTrendTemperature() - M,
                   () => { res.value = originalAmount; }
                 )
               ), searchWindow);
@@ -143,7 +154,7 @@ class GhgFactory extends Building {
               const remReq = solveRequired((amt) => (
                 evaluateTemperature(
                   () => { res.value = Math.max(0, originalAmount - amt); },
-                  () => terraforming.temperature.value - M,
+                  () => readTrendTemperature() - M,
                   () => { res.value = originalAmount; }
                 )
               ), searchWindow);
@@ -164,7 +175,7 @@ class GhgFactory extends Building {
               const required = solveRequired((added) => (
                 evaluateTemperature(
                   () => { res.value = originalAmount + added; },
-                  () => terraforming.temperature.value - targetTemp,
+                  () => readTrendTemperature() - targetTemp,
                   () => { res.value = originalAmount; }
                 )
               ), maxProduction);
@@ -196,7 +207,7 @@ class GhgFactory extends Building {
                 const origMass = res.value;
                 return evaluateTemperature(
                   () => { res.value = Math.max(0, mass); },
-                  () => Math.abs(terraforming.temperature.value - M),
+                () => Math.abs(readTrendTemperature() - M),
                   () => { res.value = origMass; }
                 );
               };
@@ -204,7 +215,7 @@ class GhgFactory extends Building {
               const addReq = solveRequired((amt) => (
                 evaluateTemperature(
                   () => { res.value = originalAmount + amt; },
-                  () => terraforming.temperature.value - M,
+                  () => readTrendTemperature() - M,
                   () => { res.value = originalAmount; }
                 )
               ), searchWindow);
@@ -217,7 +228,7 @@ class GhgFactory extends Building {
               const remReq = solveRequired((amt) => (
                 evaluateTemperature(
                   () => { res.value = Math.max(0, originalAmount - amt); },
-                  () => terraforming.temperature.value - M,
+                  () => readTrendTemperature() - M,
                   () => { res.value = originalAmount; }
                 )
               ), searchWindow);
@@ -267,7 +278,7 @@ class GhgFactory extends Building {
             const required = solveRequired((amt) => (
               evaluateTemperature(
                 () => { res.value = originalAmount + (reverse ? -amt : amt); },
-                () => terraforming.temperature.value - targetTemp,
+                () => readTrendTemperature() - targetTemp,
                 () => { res.value = originalAmount; }
               )
             ), maxProduction);
