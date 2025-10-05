@@ -57,15 +57,15 @@ class GalacticMarketProject extends Project {
 
     const headerConfig = [
       { text: 'Resource' },
-      { text: 'Buy Price' },
-      { text: 'Buy Amount' },
-      { type: 'controls' },
-      { text: 'Sell Amount' },
+      { text: 'Saturation' },
       {
         text: 'Sell Price',
         tooltip: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
       },
-      { text: 'Saturation Amount' },
+      { text: 'Sell Amount' },
+      { type: 'controls' },
+      { text: 'Buy Amount' },
+      { text: 'Buy Price' },
     ];
 
     const elements = projectElements[this.name] = {
@@ -157,12 +157,10 @@ class GalacticMarketProject extends Project {
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         }
-        resourceRow.appendChild(label);
 
         const buyPriceSpan = document.createElement('span');
         buyPriceSpan.classList.add('resource-price-display');
         buyPriceSpan.textContent = `${formatNumber(this.getBuyPrice(category, resourceId), true)}`;
-        resourceRow.appendChild(buyPriceSpan);
 
         const buyInput = document.createElement('input');
         buyInput.type = 'number';
@@ -172,7 +170,23 @@ class GalacticMarketProject extends Project {
         buyInput.dataset.category = category;
         buyInput.dataset.resource = resourceId;
         buyInput.dataset.rowIndex = rowIndex;
-        resourceRow.appendChild(buyInput);
+
+        const sellInput = document.createElement('input');
+        sellInput.type = 'number';
+        sellInput.min = 0;
+        sellInput.value = this.getSelectionQuantity(this.sellSelections, category, resourceId);
+        sellInput.classList.add('resource-selection-input', `sell-selection-${this.name}`);
+        sellInput.dataset.category = category;
+        sellInput.dataset.resource = resourceId;
+        sellInput.dataset.rowIndex = rowIndex;
+
+        const sellPriceSpan = document.createElement('span');
+        sellPriceSpan.classList.add('resource-price-display');
+        sellPriceSpan.textContent = `${formatNumber(this.getSellPrice(category, resourceId, parseSelectionQuantity(sellInput.value)), true)}`;
+
+        const saturationSpan = document.createElement('span');
+        saturationSpan.classList.add('resource-price-display');
+        saturationSpan.textContent = `${formatNumber(this.getSaturationSellAmount(category, resourceId), true)}`;
 
         const controlsContainer = document.createElement('div');
         controlsContainer.classList.add('cargo-buttons-container', 'galactic-market-controls');
@@ -196,14 +210,6 @@ class GalacticMarketProject extends Project {
           return button;
         };
 
-        const sellInput = document.createElement('input');
-        sellInput.type = 'number';
-        sellInput.min = 0;
-        sellInput.value = this.getSelectionQuantity(this.sellSelections, category, resourceId);
-        sellInput.classList.add('resource-selection-input', `sell-selection-${this.name}`);
-        sellInput.dataset.category = category;
-        sellInput.dataset.resource = resourceId;
-        sellInput.dataset.rowIndex = rowIndex;
         sellInput.addEventListener('input', refreshRow);
         buyInput.addEventListener('input', refreshRow);
 
@@ -265,19 +271,13 @@ class GalacticMarketProject extends Project {
           refreshRow();
         });
 
-        resourceRow.appendChild(controlsContainer);
-
-        resourceRow.appendChild(sellInput);
-
-        const sellPriceSpan = document.createElement('span');
-        sellPriceSpan.classList.add('resource-price-display');
-        sellPriceSpan.textContent = `${formatNumber(this.getSellPrice(category, resourceId, parseSelectionQuantity(sellInput.value)), true)}`;
-        resourceRow.appendChild(sellPriceSpan);
-
-        const saturationSpan = document.createElement('span');
-        saturationSpan.classList.add('resource-price-display');
-        saturationSpan.textContent = `${formatNumber(this.getSaturationSellAmount(category, resourceId), true)}`;
+        resourceRow.appendChild(label);
         resourceRow.appendChild(saturationSpan);
+        resourceRow.appendChild(sellPriceSpan);
+        resourceRow.appendChild(sellInput);
+        resourceRow.appendChild(controlsContainer);
+        resourceRow.appendChild(buyInput);
+        resourceRow.appendChild(buyPriceSpan);
 
         elements.selectionInputs.push(buyInput);
         elements.priceSpans.push(buyPriceSpan);
