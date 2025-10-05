@@ -18,7 +18,7 @@ describe('SpaceDisposalProject temperature disable', () => {
     vm.runInContext(disposalSubclass + '; this.SpaceDisposalProject = SpaceDisposalProject;', ctx);
 
     ctx.resources = { colony:{}, atmospheric:{}, surface:{}, underground:{}, special: { spaceships: { value: 1 } } };
-    ctx.terraforming = { temperature: { value: 300 } };
+    ctx.terraforming = { temperature: { value: 300, trendValue: 300 } };
     global.resources = ctx.resources;
     global.terraforming = ctx.terraforming;
     global.projectManager = { isBooleanFlagSet: () => false };
@@ -26,6 +26,8 @@ describe('SpaceDisposalProject temperature disable', () => {
 
   test('cannot start when below threshold', () => {
     const config = { name:'Dispose', category:'resources', cost:{}, duration:1, description:'', repeatable:true, maxRepeatCount:Infinity, unlocked:true, attributes:{ spaceExport:true, disposalAmount:1 } };
+    ctx.terraforming.temperature.value = 305;
+    ctx.terraforming.temperature.trendValue = 300;
     const project = new ctx.SpaceDisposalProject(config, 'dispose');
     project.assignedSpaceships = 1;
     project.disableBelowTemperature = true;
@@ -35,6 +37,8 @@ describe('SpaceDisposalProject temperature disable', () => {
 
   test('can start when above threshold', () => {
     const config = { name:'Dispose', category:'resources', cost:{}, duration:1, description:'', repeatable:true, maxRepeatCount:Infinity, unlocked:true, attributes:{ spaceExport:true, disposalAmount:1 } };
+    ctx.terraforming.temperature.value = 295;
+    ctx.terraforming.temperature.trendValue = 305;
     const project = new ctx.SpaceDisposalProject(config, 'dispose');
     project.assignedSpaceships = 1;
     project.disableBelowTemperature = true;

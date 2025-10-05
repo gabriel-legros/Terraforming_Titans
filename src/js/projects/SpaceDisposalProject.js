@@ -5,6 +5,16 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.massDriverShipEquivalency = this.attributes.massDriverShipEquivalency ?? 10;
   }
 
+  getAutomationTemperatureReading() {
+    if (typeof terraforming !== 'undefined' && terraforming.temperature) {
+      const trend = terraforming.temperature.trendValue;
+      if (Number.isFinite(trend)) {
+        return trend;
+      }
+    }
+    return super.getAutomationTemperatureReading();
+  }
+
   getExportRateLabel(baseLabel) {
     return 'Resource Disposal';
   }
