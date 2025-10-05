@@ -190,8 +190,10 @@ function ensureImportResourcesCard(project) {
   spacerCellOne.classList.add('import-top-cell');
   const spacerCellTwo = document.createElement('div');
   spacerCellTwo.classList.add('import-top-cell');
+  const spacerCellThree = document.createElement('div');
+  spacerCellThree.classList.add('import-top-cell', 'import-top-spacer');
 
-  topControls.append(availableCell, multiplierCell, spacerCellOne, spacerCellTwo);
+  topControls.append(availableCell, multiplierCell, spacerCellOne, spacerCellTwo, spacerCellThree);
   cardBody.appendChild(topControls);
 
   const table = document.createElement('div');
@@ -200,11 +202,15 @@ function ensureImportResourcesCard(project) {
   const headerRow = document.createElement('div');
   headerRow.classList.add('import-resources-row', 'import-resources-header');
 
-  const headers = ['Resource', 'Assignment', 'Auto Assign', 'Total Gain'];
+  const headers = ['Resource', 'Assignment', 'Auto Assign', 'Total Cost & Gain', ''];
   headers.forEach((labelText) => {
     const cell = document.createElement('div');
     cell.classList.add('import-resources-cell');
-    cell.innerHTML = `<strong>${labelText}</strong>`;
+    if (labelText) {
+      cell.innerHTML = `<strong>${labelText}</strong>`;
+    } else {
+      cell.classList.add('import-spacer-cell');
+    }
     headerRow.appendChild(cell);
   });
 
@@ -444,7 +450,11 @@ function createImportResourceRow(project) {
   const totalGainCell = document.createElement('div');
   totalGainCell.classList.add('import-resources-cell', 'import-total-gain-cell');
 
+  const totalCost = document.createElement('div');
+  totalCost.classList.add('import-total-cost');
   const totalGain = document.createElement('div');
+  totalGain.classList.add('import-total-gain');
+  totalGainCell.appendChild(totalCost);
   totalGainCell.appendChild(totalGain);
 
   mainRow.appendChild(nameCell);
@@ -500,6 +510,7 @@ function createImportResourceRow(project) {
   elements.importProgressStatus = progressStatusLine;
   elements.assignedSpaceshipsDisplay = assignedDisplay;
   elements.autoAssignCheckboxContainer = autoAssignContainer;
+  elements.totalCostElement = totalCost;
   elements.totalGainElement = totalGain;
 
   importResourcesUI.rows[project.name] = {
