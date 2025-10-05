@@ -79,7 +79,7 @@
     padding: 8px;
     border: none;
     border-radius: 4px;
-    color: white;
+    color: #000000;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -208,7 +208,7 @@
 
 .import-resources-row {
     display: grid;
-    grid-template-columns: 1.2fr 2fr 1fr 1.4fr;
+    grid-template-columns: minmax(250px, auto) minmax(220px, auto) minmax(140px, auto) minmax(0, 1fr);
     gap: 10px;
     align-items: center;
 }
