@@ -212,6 +212,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
 - Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.
 - Introduced an Antimatter Battery structure that stores a quadrillion units of energy for 1000 metal and 100 superconductors.
+- Antimatter Battery now offers a Fill action that converts antimatter into stored energy at the same rate produced by antimatter farms.
 - Added an Antimatter Farm energy building that converts 2 quadrillion energy into the new locked Antimatter special resource.
 - Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
   lly without mutating base data.

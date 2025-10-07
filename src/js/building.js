@@ -905,7 +905,8 @@ const constructors = {
   solarPanel: 'solarPanel',
   windTurbine: 'windTurbine',
   boschReactor: 'MultiRecipesBuilding',
-  waterTank: 'WaterTank'
+  waterTank: 'WaterTank',
+  antimatterBattery: 'AntimatterBattery'
 };
 
 function loadConstructor(name) {
