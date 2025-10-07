@@ -44,6 +44,9 @@ describe('Mega Heat Sink project', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
 
+    const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
+
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'MegaHeatSinkProject.js'), 'utf8');
     vm.runInContext(projectCode + '; this.MegaHeatSinkProject = MegaHeatSinkProject;', ctx);
 
@@ -111,6 +114,9 @@ describe('Mega Heat Sink project', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
 
+    const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
+
     const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'MegaHeatSinkProject.js'), 'utf8');
     vm.runInContext(projectCode + '; this.MegaHeatSinkProject = MegaHeatSinkProject;', ctx);
 
@@ -144,8 +150,56 @@ describe('Mega Heat Sink project', () => {
     const container = document.createElement('div');
     project.renderUI(container);
 
-    const { countValue, coolingValue } = project.uiElements;
+    const { countValue, coolingValue } = project.summaryElements;
     expect(countValue.textContent).toBe('0');
     expect(coolingValue.textContent.endsWith('K/s') || coolingValue.textContent === '—').toBe(true);
+
+    const controls = project.workerCapacityUI;
+    expect(controls).toBeDefined();
+    expect(controls.info.title).toContain('1,000,000,000');
+  });
+
+  test('caps build count by 1 billion worker capacity chunks', () => {
+    const ctx = {
+      console,
+      EffectableEntity,
+      addEffect: () => {},
+      removeEffect: () => {},
+      globalGameIsLoadingFromSave: false,
+      projectElements: {},
+      resources: {
+        colony: {
+          workers: { cap: 3_600_000_000 }
+        }
+      },
+      formatNumber: formatNumberHelper,
+      getZonePercentage: () => 1 / 3,
+      calculateZonalSurfaceFractions: () => ({})
+    };
+    ctx.globalThis = ctx;
+
+    vm.createContext(ctx);
+    vm.runInContext(numbersCode + '; this.formatNumber = formatNumber;', ctx);
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+
+    const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
+
+    const projectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'MegaHeatSinkProject.js'), 'utf8');
+    vm.runInContext(projectCode + '; this.MegaHeatSinkProject = MegaHeatSinkProject;', ctx);
+
+    const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
+    vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
+
+    const config = ctx.projectParameters.megaHeatSink;
+    const project = new ctx.MegaHeatSinkProject(config, 'megaHeatSink');
+
+    expect(project.getWorkersPerCompletion()).toBe(1_000_000_000);
+    expect(project.getWorkerCapLimit()).toBe(4);
+
+    project.setBuildCount(10);
+    expect(project.buildCount).toBe(4);
   });
 });
