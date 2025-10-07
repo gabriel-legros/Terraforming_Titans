@@ -9,6 +9,8 @@ describe('ScannerProject auto-start cost rate', () => {
     vm.createContext(ctx);
     const projCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projCode + '; this.Project = Project;', ctx);
+    const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
     const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
     const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');

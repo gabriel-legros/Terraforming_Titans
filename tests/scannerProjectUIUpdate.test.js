@@ -7,6 +7,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 
 const effectCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'effectable-entity.js'), 'utf8');
 const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
 const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
 const paramsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'project-parameters.js'), 'utf8');
 
@@ -32,6 +33,7 @@ describe('ScannerProject UI update', () => {
     vm.createContext(ctx);
     vm.runInContext(effectCode + '; this.EffectableEntity = EffectableEntity;', ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
     vm.runInContext(paramsCode + '; this.projectParameters = projectParameters;', ctx);
 
@@ -42,7 +44,7 @@ describe('ScannerProject UI update', () => {
     project.updateUI();
 
     expect(project.el.val.textContent).toBe('1');
-    expect(project.el.max.textContent).toBe('3');
+    expect(project.el.max.textContent).toBe('2');
     expect(project.el.dVal.textContent).toBe('0');
     expect(project.el.dMax.textContent).toBe('10');
     expect(project.el.bPlus.textContent).toBe('+1');

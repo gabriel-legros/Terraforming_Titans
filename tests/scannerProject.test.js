@@ -15,12 +15,14 @@ describe('ScannerProject scanning effect', () => {
 
   test('update sets scanning strength from repeat count', () => {
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
     const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
     const ctx = { console, EffectableEntity };
     ctx.oreScanner = { adjustScanningStrength: jest.fn(), startScan: jest.fn() };
     ctx.resources = { colony: { workers: { cap: 20000 } } };
     vm.createContext(ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
 
 

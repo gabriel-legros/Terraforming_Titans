@@ -5,6 +5,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('ScannerProject build count', () => {
   const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+  const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
   const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
 
   function createContext() {
@@ -19,6 +20,7 @@ describe('ScannerProject build count', () => {
     };
     vm.createContext(ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
     global.resources = ctx.resources;
     global.oreScanner = ctx.oreScanner;

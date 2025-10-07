@@ -1,11 +1,16 @@
 
-class ScannerProject extends Project {
+let WorkerCapacityBatchProjectBase;
+
+if (typeof module !== 'undefined' && module.exports) {
+  WorkerCapacityBatchProjectBase = require('./WorkerCapacityBatchProject.js');
+} else {
+  WorkerCapacityBatchProjectBase = WorkerCapacityBatchProject;
+}
+
+class ScannerProject extends WorkerCapacityBatchProjectBase {
   constructor(config, name) {
     super(config, name);
-    this.buildCount = 1;
     this.step = 1;
-    this.activeBuildCount = 1;
-    this.autoMax = true;
     this.el = {};
   }
 
@@ -53,14 +58,10 @@ class ScannerProject extends Project {
       }
     }
 
-    return {
-      ...super.saveState(),
-      buildCount: this.buildCount,
-      activeBuildCount: this.activeBuildCount,
-      step: this.step,
-      autoMax: this.autoMax,
-      scanData: savedState
-    };
+    const state = super.saveState();
+    state.step = this.step;
+    state.scanData = savedState;
+    return state;
   }
 
   loadState(state) {
@@ -74,18 +75,7 @@ class ScannerProject extends Project {
     }
 
     super.loadState(state);
-    if (state.buildCount !== undefined) {
-      this.buildCount = state.buildCount;
-    }
-    if (state.activeBuildCount !== undefined) {
-      this.activeBuildCount = state.activeBuildCount;
-    }
-    if (state.step !== undefined) {
-      this.step = state.step;
-    }
-    if (state.autoMax !== undefined) {
-      this.autoMax = state.autoMax;
-    }
+    this.step = state.step ?? this.step;
   }
 
   loadScannerConfig(planetParameters) {
@@ -233,63 +223,8 @@ class ScannerProject extends Project {
     return scanData ? scanData.D_current : null;
   }
 
-  getWorkerCapLimit() {
-    const workerCap = Math.ceil((resources?.colony?.workers?.cap || 0) / 5000);
-    if (this.maxRepeatCount === Infinity) {
-      return workerCap;
-    }
-    return Math.max(Math.min(workerCap, this.maxRepeatCount), 1);
-  }
-
-  getEffectiveBuildCount(count = this.buildCount) {
-    const remaining = this.maxRepeatCount === Infinity ? Infinity : this.maxRepeatCount - this.repeatCount;
-    return Math.max(0, Math.min(count, remaining));
-  }
-
-  getScaledCost() {
-    const base = super.getScaledCost();
-    const count =
-      this.isActive
-        ? (this.activeBuildCount || 1)
-        : this.getEffectiveBuildCount(
-            Math.min(this.buildCount, this.getWorkerCapLimit())
-          );
-    const scaled = {};
-    for (const cat in base) {
-      scaled[cat] = {};
-      for (const res in base[cat]) {
-        scaled[cat][res] = base[cat][res] * count;
-      }
-    }
-    return scaled;
-  }
-
-  adjustBuildCount(delta) {
-    const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(this.buildCount + delta, limit));
-  }
-
-  setBuildCount(val) {
-    const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(val, limit));
-  }
-
-  setMaxBuildCount() {
-    this.setBuildCount(this.getWorkerCapLimit());
-  }
-
-  start(resources) {
-    this.activeBuildCount = this.getEffectiveBuildCount(
-      Math.min(this.buildCount, this.getWorkerCapLimit())
-    );
-    return super.start(resources);
-  }
-
   complete() {
-    const n = this.activeBuildCount || 1;
-    for (let i = 0; i < n; i++) {
-      super.complete();
-    }
+    super.complete();
     if (
       this.attributes &&
       this.attributes.scanner &&
@@ -297,7 +232,6 @@ class ScannerProject extends Project {
     ) {
       this.applyScannerEffect();
     }
-    this.activeBuildCount = 1;
   }
 
   applyScannerEffect() {
@@ -352,7 +286,7 @@ class ScannerProject extends Project {
     max.id = `${this.name}-max`;
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
-    info.title = 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 5,000 worker cap.';
+    info.title = 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.';
     info.innerHTML = '&#9432;';
     amountDisplay.append(val, slash, max, info);
 
