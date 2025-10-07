@@ -117,16 +117,14 @@ class AntimatterBattery extends Building {
       return;
     }
 
-    const fillRate = this.getFillRate();
-    const potentialEnergyFromRate = fillRate * energyPerAntimatter;
     const potentialEnergyFromStock = availableAntimatter * energyPerAntimatter;
-    const energyGain = Math.min(missingEnergy, potentialEnergyFromRate, potentialEnergyFromStock);
+    const energyGain = Math.min(missingEnergy, potentialEnergyFromStock);
 
     if (energyGain <= 0) {
       return;
     }
 
-    const antimatterConsumed = energyGain / energyPerAntimatter;
+    const antimatterConsumed = missingEnergy / energyPerAntimatter;
     antimatter.decrease(antimatterConsumed);
     energy.increase(energyGain);
     energy.enable?.();
