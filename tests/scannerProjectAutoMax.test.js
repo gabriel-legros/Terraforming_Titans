@@ -5,6 +5,7 @@ const EffectableEntity = require('../src/js/effectable-entity.js');
 
 describe('ScannerProject auto max', () => {
   const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+  const workerBatchCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'WorkerCapacityBatchProject.js'), 'utf8');
   const scannerCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects', 'ScannerProject.js'), 'utf8');
 
   function createContext() {
@@ -19,6 +20,7 @@ describe('ScannerProject auto max', () => {
     };
     vm.createContext(ctx);
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    vm.runInContext(workerBatchCode + '; this.WorkerCapacityBatchProject = WorkerCapacityBatchProject;', ctx);
     vm.runInContext(scannerCode + '; this.ScannerProject = ScannerProject;', ctx);
     global.resources = ctx.resources;
     return ctx;
@@ -39,14 +41,14 @@ describe('ScannerProject auto max', () => {
     };
     const project = new ctx.ScannerProject(config, 'scan');
     project.update(0);
-    expect(project.buildCount).toBe(2);
+    expect(project.buildCount).toBe(1);
     ctx.resources.colony.workers.cap = 20000;
     project.update(0);
-    expect(project.buildCount).toBe(4);
+    expect(project.buildCount).toBe(2);
     project.autoMax = false;
     ctx.resources.colony.workers.cap = 30000;
     project.update(0);
-    expect(project.buildCount).toBe(4);
+    expect(project.buildCount).toBe(2);
   });
 });
 
