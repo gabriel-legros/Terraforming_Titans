@@ -53,7 +53,6 @@ class AntimatterBattery extends Building {
     const antimatter = resources?.special?.antimatter || null;
     const energy = resources?.colony?.energy || null;
     const missingEnergy = energy ? Math.max(0, energy.cap - energy.value) : 0;
-    const fillRate = this.getFillRate();
     const energyPerAntimatter = this.getEnergyPerAntimatter();
     const hasResources = antimatter && energy;
     const hasActiveBattery = this.active > 0;
@@ -63,7 +62,6 @@ class AntimatterBattery extends Building {
       !hasActiveBattery ||
       antimatter.value <= 0 ||
       missingEnergy <= 0 ||
-      fillRate <= 0 ||
       energyPerAntimatter <= 0;
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
   }
@@ -91,13 +89,12 @@ class AntimatterBattery extends Building {
   fillFromAntimatter() {
     const antimatter = resources?.special?.antimatter || null;
     const energy = resources?.colony?.energy || null;
-    if (!antimatter || !energy || this.active <= 0) {
+    if (this.active <= 0) {
       return;
     }
 
-    const fillRate = this.getFillRate();
     const energyPerAntimatter = this.getEnergyPerAntimatter();
-    if (fillRate <= 0 || energyPerAntimatter <= 0) {
+    if (energyPerAntimatter <= 0) {
       return;
     }
 
