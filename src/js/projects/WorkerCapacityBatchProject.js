@@ -5,6 +5,8 @@ class WorkerCapacityBatchProject extends Project {
     this.activeBuildCount = 1;
     this.autoMax = true;
     this.workersPerCompletion = this.attributes?.workersPerCompletion ?? null;
+    this.workerCapacityUI = null;
+    this.workerCapacityStep = 1;
   }
 
   getWorkersPerCompletion() {
@@ -63,6 +65,15 @@ class WorkerCapacityBatchProject extends Project {
     this.setBuildCount(this.getWorkerCapLimit());
   }
 
+  getWorkerCapacityStep() {
+    return this.workerCapacityStep ?? 1;
+  }
+
+  setWorkerCapacityStep(step) {
+    const normalized = Math.max(1, Math.round(step));
+    this.workerCapacityStep = normalized;
+  }
+
   start(resources) {
     const limit = this.getWorkerCapLimit();
     const cappedCount = Math.min(this.buildCount, limit);
@@ -85,6 +96,7 @@ class WorkerCapacityBatchProject extends Project {
       activeBuildCount: this.activeBuildCount,
       autoMax: this.autoMax,
       workersPerCompletion: this.workersPerCompletion,
+      workerCapacityStep: this.workerCapacityStep,
     };
   }
 
@@ -94,6 +106,196 @@ class WorkerCapacityBatchProject extends Project {
     this.activeBuildCount = state.activeBuildCount ?? this.activeBuildCount;
     this.autoMax = state.autoMax ?? this.autoMax;
     this.workersPerCompletion = state.workersPerCompletion ?? this.workersPerCompletion;
+    this.workerCapacityStep = state.workerCapacityStep ?? this.workerCapacityStep;
+  }
+
+  renderWorkerCapacityControls(container, {
+    amountTitle = 'Amount',
+    tooltip,
+    autoMaxLabel = 'Auto Max',
+    layoutClass = 'worker-capacity-layout',
+  } = {}) {
+    if (this.workerCapacityUI && this.workerCapacityUI.container?.isConnected) {
+      return this.workerCapacityUI;
+    }
+
+    const costElement = container.querySelector('.project-cost');
+
+    const topSection = document.createElement('div');
+    topSection.className = `project-top-section ${layoutClass}`.trim();
+
+    const costSection = document.createElement('div');
+    costSection.className = 'project-section-container';
+    const costTitle = document.createElement('h4');
+    costTitle.className = 'section-title';
+    costTitle.textContent = 'Cost';
+    costSection.appendChild(costTitle);
+    if (costElement) {
+      const label = costElement.querySelector('strong');
+      if (label) {
+        label.remove();
+      }
+      costSection.appendChild(costElement);
+    }
+    topSection.appendChild(costSection);
+
+    const amountSection = document.createElement('div');
+    amountSection.className = 'project-section-container';
+    const amountHeader = document.createElement('h4');
+    amountHeader.className = 'section-title';
+    amountHeader.textContent = amountTitle;
+    const amountDisplay = document.createElement('div');
+    amountDisplay.className = 'amount-display';
+    const val = document.createElement('span');
+    val.id = `${this.name}-count`;
+    const slash = document.createElement('span');
+    slash.textContent = ' / ';
+    const max = document.createElement('span');
+    max.id = `${this.name}-max`;
+    const info = document.createElement('span');
+    info.className = 'info-tooltip-icon';
+    if (tooltip) {
+      info.title = tooltip;
+    }
+    info.innerHTML = '&#9432;';
+    amountDisplay.append(val, slash, max, info);
+
+    const controls = document.createElement('div');
+    controls.className = 'amount-controls';
+    const mainControls = document.createElement('div');
+    mainControls.className = 'scanner-main-controls';
+    const b0 = document.createElement('button');
+    b0.textContent = '0';
+    const bMinus = document.createElement('button');
+    bMinus.textContent = '-';
+    const bPlus = document.createElement('button');
+    bPlus.textContent = '+';
+    const bMax = document.createElement('button');
+    bMax.textContent = 'Max';
+    mainControls.append(b0, bMinus, bPlus, bMax);
+
+    const multControls = document.createElement('div');
+    multControls.className = 'scanner-mult-controls';
+    const bDiv = document.createElement('button');
+    bDiv.textContent = '/10';
+    const bMul = document.createElement('button');
+    bMul.textContent = 'x10';
+    multControls.append(bDiv, bMul);
+
+    controls.append(mainControls, multControls);
+
+    const autoContainer = document.createElement('div');
+    autoContainer.className = 'checkbox-container';
+    const autoMaxCheckbox = document.createElement('input');
+    autoMaxCheckbox.type = 'checkbox';
+    autoMaxCheckbox.id = `${this.name}-auto-max`;
+    autoMaxCheckbox.checked = this.autoMax;
+    autoMaxCheckbox.addEventListener('change', (event) => {
+      this.autoMax = event.target.checked;
+    });
+    const autoLabel = document.createElement('label');
+    autoLabel.htmlFor = autoMaxCheckbox.id;
+    autoLabel.textContent = autoMaxLabel;
+    autoContainer.append(autoMaxCheckbox, autoLabel);
+
+    amountSection.append(amountHeader, amountDisplay, controls, autoContainer);
+    topSection.appendChild(amountSection);
+
+    container.appendChild(topSection);
+
+    const refresh = () => {
+      if (typeof updateProjectUI === 'function') {
+        updateProjectUI(this.name);
+      }
+    };
+
+    bPlus.addEventListener('click', () => {
+      this.adjustBuildCount(this.getWorkerCapacityStep());
+      refresh();
+    });
+    bMinus.addEventListener('click', () => {
+      this.adjustBuildCount(-this.getWorkerCapacityStep());
+      refresh();
+    });
+    bMul.addEventListener('click', () => {
+      this.setWorkerCapacityStep(this.getWorkerCapacityStep() * 10);
+      refresh();
+    });
+    bDiv.addEventListener('click', () => {
+      this.setWorkerCapacityStep(this.getWorkerCapacityStep() / 10);
+      refresh();
+    });
+    b0.addEventListener('click', () => {
+      this.setBuildCount(0);
+      refresh();
+    });
+    bMax.addEventListener('click', () => {
+      this.setMaxBuildCount();
+      refresh();
+    });
+
+    this.workerCapacityUI = {
+      container: topSection,
+      costSection,
+      amountSection,
+      val,
+      max,
+      info,
+      bPlus,
+      bMinus,
+      bMul,
+      bDiv,
+      b0,
+      bMax,
+      autoMaxCheckbox,
+    };
+
+    return this.workerCapacityUI;
+  }
+
+  updateWorkerCapacityControls() {
+    const ui = this.workerCapacityUI;
+    if (!ui) {
+      return;
+    }
+
+    const formatter = typeof formatNumber === 'function'
+      ? formatNumber
+      : (value, short) => {
+        if (!Number.isFinite(value)) {
+          return '0';
+        }
+        if (short) {
+          return Math.round(value).toString();
+        }
+        return value.toString();
+      };
+
+    if (ui.val) {
+      ui.val.textContent = formatter(this.buildCount, true);
+    }
+    if (ui.max) {
+      ui.max.textContent = formatter(this.getWorkerCapLimit(), true);
+    }
+    const step = this.getWorkerCapacityStep();
+    if (ui.bPlus) {
+      ui.bPlus.textContent = `+${formatter(step, true)}`;
+    }
+    if (ui.bMinus) {
+      ui.bMinus.textContent = `-${formatter(step, true)}`;
+    }
+    if (ui.autoMaxCheckbox) {
+      ui.autoMaxCheckbox.checked = this.autoMax;
+    }
+    if (ui.costSection && ui.amountSection) {
+      const isMaxed = this.repeatCount >= this.maxRepeatCount;
+      ui.costSection.style.display = isMaxed ? 'none' : '';
+      ui.amountSection.style.display = isMaxed ? 'none' : '';
+    }
+  }
+
+  updateUI() {
+    this.updateWorkerCapacityControls();
   }
 }
 

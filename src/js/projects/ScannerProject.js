@@ -14,6 +14,14 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
     this.el = {};
   }
 
+  getWorkerCapacityStep() {
+    return this.step;
+  }
+
+  setWorkerCapacityStep(step) {
+    this.step = Math.max(1, Math.round(step));
+  }
+
   initializeScanner(planetParameters) {
     this.underground = planetParameters.resources.underground;
     this.scanData = {};
@@ -249,86 +257,12 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
   }
 
   renderUI(container) {
-    const costElement = container.querySelector('.project-cost');
-
-    const topSection = document.createElement('div');
-    topSection.className = 'project-top-section scanner-layout';
-
-    // Cost Section
-    const costSection = document.createElement('div');
-    costSection.className = 'project-section-container';
-    const costTitle = document.createElement('h4');
-    costTitle.className = 'section-title';
-    costTitle.textContent = 'Cost';
-    costSection.appendChild(costTitle);
-    if (costElement) {
-        const label = costElement.querySelector('strong');
-        if (label) {
-            label.remove();
-        }
-        costSection.appendChild(costElement);
-    }
-    topSection.appendChild(costSection);
-
-    // Amount Section
-    const amountSection = document.createElement('div');
-    amountSection.className = 'project-section-container';
-    const amountTitle = document.createElement('h4');
-    amountTitle.className = 'section-title';
-    amountTitle.textContent = 'Amount';
-    const amountDisplay = document.createElement('div');
-    amountDisplay.className = 'amount-display';
-    const val = document.createElement('span');
-    val.id = `${this.name}-count`;
-    const slash = document.createElement('span');
-    slash.textContent = ' / ';
-    const max = document.createElement('span');
-    max.id = `${this.name}-max`;
-    const info = document.createElement('span');
-    info.className = 'info-tooltip-icon';
-    info.title = 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.';
-    info.innerHTML = '&#9432;';
-    amountDisplay.append(val, slash, max, info);
-
-    const controls = document.createElement('div');
-    controls.className = 'amount-controls';
-    const main = document.createElement('div');
-    main.className = 'scanner-main-controls';
-    const b0 = document.createElement('button');
-    b0.textContent = '0';
-    const bMinus = document.createElement('button');
-    bMinus.textContent = '-';
-    const bPlus = document.createElement('button');
-    bPlus.textContent = '+';
-    const bMax = document.createElement('button');
-    bMax.textContent = 'Max';
-    main.append(b0, bMinus, bPlus, bMax);
-
-    const mult = document.createElement('div');
-    mult.className = 'scanner-mult-controls';
-    const bDiv = document.createElement('button');
-    bDiv.textContent = '/10';
-    const bMul = document.createElement('button');
-    bMul.textContent = 'x10';
-    mult.append(bDiv, bMul);
-
-    const autoContainer = document.createElement('div');
-    autoContainer.className = 'checkbox-container';
-    const autoMaxCheckbox = document.createElement('input');
-    autoMaxCheckbox.type = 'checkbox';
-    autoMaxCheckbox.id = `${this.name}-auto-max`;
-    autoMaxCheckbox.checked = this.autoMax;
-    autoMaxCheckbox.addEventListener('change', (e) => {
-      this.autoMax = e.target.checked;
+    const controls = this.renderWorkerCapacityControls(container, {
+      tooltip: 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.',
+      layoutClass: 'scanner-layout',
     });
-    const autoLabel = document.createElement('label');
-    autoLabel.htmlFor = autoMaxCheckbox.id;
-    autoLabel.textContent = 'Auto Max';
-    autoContainer.append(autoMaxCheckbox, autoLabel);
 
-    controls.append(main, mult);
-    amountSection.append(amountTitle, amountDisplay, controls, autoContainer);
-    topSection.appendChild(amountSection);
+    const topSection = controls.container;
 
     // Deposits Section
     let dVal, dMax;
@@ -355,28 +289,27 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       topSection.appendChild(depositSection);
     }
 
-    container.appendChild(topSection);
-
-    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0, bMax, costSection, amountSection, autoMaxCheckbox };
+    this.el = {
+      val: controls.val,
+      max: controls.max,
+      bPlus: controls.bPlus,
+      bMinus: controls.bMinus,
+      bMul: controls.bMul,
+      bDiv: controls.bDiv,
+      b0: controls.b0,
+      bMax: controls.bMax,
+      costSection: controls.costSection,
+      amountSection: controls.amountSection,
+      autoMaxCheckbox: controls.autoMaxCheckbox,
+    };
     if (dVal && dMax) {
       this.el.dVal = dVal;
       this.el.dMax = dMax;
     }
-
-    const refresh = () => {
-      if (typeof updateProjectUI === 'function') {
-        updateProjectUI(this.name);
-      }
-    };
-    bPlus.onclick = () => { this.adjustBuildCount(this.step); refresh(); };
-    bMinus.onclick = () => { this.adjustBuildCount(-this.step); refresh(); };
-    bMul.onclick = () => { this.step *= 10; refresh(); };
-    bDiv.onclick = () => { this.step = Math.max(1, this.step / 10); refresh(); };
-    b0.onclick = () => { this.setBuildCount(0); refresh(); };
-    bMax.onclick = () => { this.setMaxBuildCount(); refresh(); };
   }
 
   updateUI() {
+    super.updateUI();
     if (this.el.val) {
       this.el.val.textContent = formatNumber(this.buildCount, true);
     }
@@ -399,12 +332,6 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       const max = data ? data.D_max : 0;
       this.el.dVal.textContent = formatNumber(current, true);
       this.el.dMax.textContent = formatNumber(max, true);
-    }
-
-    if (this.el.costSection && this.el.amountSection) {
-        const isMaxed = this.repeatCount >= this.maxRepeatCount;
-        this.el.costSection.style.display = isMaxed ? 'none' : '';
-        this.el.amountSection.style.display = isMaxed ? 'none' : '';
     }
   }
 

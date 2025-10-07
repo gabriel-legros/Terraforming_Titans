@@ -1,8 +1,17 @@
 (function () {
   const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
   const MEGA_HEAT_SINK_MIN_CAPACITY = 100;
+  const WORKERS_PER_HEAT_SINK = 1_000_000_000;
   const SECONDS_PER_DAY = 86_400;
   const ORDERED_ZONES = ['tropical', 'temperate', 'polar'];
+
+  let WorkerCapacityBatchProjectBase;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    WorkerCapacityBatchProjectBase = require('./WorkerCapacityBatchProject.js');
+  } else {
+    WorkerCapacityBatchProjectBase = WorkerCapacityBatchProject;
+  }
 
   function resolveMinimumHeatCapacity() {
     const globalMinimum = globalThis?.MIN_SURFACE_HEAT_CAPACITY;
@@ -12,13 +21,19 @@
     return MEGA_HEAT_SINK_MIN_CAPACITY;
   }
 
-  class MegaHeatSinkProject extends Project {
+  class MegaHeatSinkProject extends WorkerCapacityBatchProjectBase {
     constructor(config, name) {
       super(config, name);
-      this.uiElements = null;
+      this.summaryElements = null;
+      this.workersPerCompletion = WORKERS_PER_HEAT_SINK;
     }
 
     renderUI(container) {
+      this.renderWorkerCapacityControls(container, {
+        tooltip: 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.',
+        layoutClass: 'scanner-layout worker-capacity-layout',
+      });
+
       const card = document.createElement('div');
       card.classList.add('info-card');
 
@@ -59,7 +74,7 @@
       card.appendChild(body);
       container.appendChild(card);
 
-      this.uiElements = {
+      this.summaryElements = {
         card,
         countValue,
         coolingValue
@@ -69,7 +84,9 @@
     }
 
     updateUI() {
-      const elements = this.uiElements;
+      super.updateUI();
+
+      const elements = this.summaryElements;
       if (!elements) {
         return;
       }
