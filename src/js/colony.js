@@ -48,6 +48,7 @@ class Colony extends Building {
       }
     }
     this.happiness = 0.5;
+    this.autoUpgradeEnabled = false;
   }
 
   rebuildFilledNeeds() {
@@ -107,7 +108,8 @@ class Colony extends Building {
       filledNeeds: { ...this.filledNeeds },
       luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
       obsolete: this.obsolete,
-      happiness: this.happiness
+      happiness: this.happiness,
+      autoUpgradeEnabled: this.autoUpgradeEnabled
     };
   }
 
@@ -133,6 +135,11 @@ class Colony extends Building {
     }
     if ('happiness' in state) {
       this.happiness = state.happiness;
+    }
+    if ('autoUpgradeEnabled' in state) {
+      this.autoUpgradeEnabled = state.autoUpgradeEnabled;
+    } else {
+      this.autoUpgradeEnabled = false;
     }
 
     this.rebuildFilledNeeds();

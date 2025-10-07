@@ -464,6 +464,26 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildTargetContainer.appendChild(autoBuildTarget);
   cached.autoBuildTarget = autoBuildTarget;
 
+  let autoUpgradeContainer = null;
+  if (isColony) {
+    autoUpgradeContainer = document.createElement('label');
+    autoUpgradeContainer.classList.add('auto-upgrade-container');
+    autoUpgradeContainer.style.display = 'none';
+
+    const autoUpgradeCheckbox = document.createElement('input');
+    autoUpgradeCheckbox.type = 'checkbox';
+    autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
+    autoUpgradeCheckbox.addEventListener('change', () => {
+      structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
+    });
+
+    autoUpgradeContainer.appendChild(autoUpgradeCheckbox);
+    autoUpgradeContainer.appendChild(document.createTextNode('Auto-upgrade'));
+
+    structureUIElements[structure.name].autoUpgradeCheckbox = autoUpgradeCheckbox;
+    structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
+  }
+
   const autoBuildPriorityLabel = document.createElement('label');
   autoBuildPriorityLabel.textContent = 'Prioritize';
   const autoBuildPriority = document.createElement('input');
@@ -479,6 +499,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
 
   autoBuildContainer.appendChild(autoBuildTargetContainer);
+
+  if (autoUpgradeContainer) {
+    autoBuildContainer.appendChild(autoUpgradeContainer);
+  }
 
   const setActiveContainer = document.createElement('div');
   setActiveContainer.classList.add('auto-build-setactive-container');
@@ -1020,6 +1044,18 @@ function updateDecreaseButtonText(button, buildCount) {
         }
         if (els.autoActiveCheckbox) {
           els.autoActiveCheckbox.checked = structure.autoActiveEnabled;
+        }
+
+        const autoUpgradeContainer = els.autoUpgradeContainer;
+        if (autoUpgradeContainer) {
+          const nextName = structure.getNextTierName?.();
+          const next = nextName ? colonies[nextName] : null;
+          const showAutoUpgrade = !!(next && next.unlocked);
+          autoUpgradeContainer.style.display = showAutoUpgrade ? 'flex' : 'none';
+          const checkbox = els.autoUpgradeCheckbox;
+          if (checkbox) {
+            checkbox.checked = showAutoUpgrade && structure.autoUpgradeEnabled;
+          }
         }
 
         structure.updateUI?.(els);
