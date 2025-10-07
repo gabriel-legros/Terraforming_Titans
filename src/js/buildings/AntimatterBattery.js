@@ -13,6 +13,10 @@ class AntimatterBattery extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this._cachedUI = null;
+    this._handleFillClick = event => {
+      event.stopPropagation();
+      this.fillFromAntimatter();
+    };
   }
 
   initializeCustomUI(context = {}) {
@@ -27,12 +31,14 @@ class AntimatterBattery extends Building {
       fillButton = globalThis.document.createElement('button');
       fillButton.textContent = 'Fill';
       fillButton.classList.add('fill-button');
-      fillButton.addEventListener('click', event => {
-        event.stopPropagation();
-        this.fillFromAntimatter();
-      });
       cache.fillButton = fillButton;
     }
+
+    if (fillButton._antimatterBatteryHandler) {
+      fillButton.removeEventListener('click', fillButton._antimatterBatteryHandler);
+    }
+    fillButton._antimatterBatteryHandler = this._handleFillClick;
+    fillButton.addEventListener('click', this._handleFillClick);
 
     hideButton.insertAdjacentElement('afterend', fillButton);
 
@@ -89,6 +95,9 @@ class AntimatterBattery extends Building {
   fillFromAntimatter() {
     const antimatter = resources?.special?.antimatter || null;
     const energy = resources?.colony?.energy || null;
+    if (!antimatter || !energy) {
+      return;
+    }
     if (this.active <= 0) {
       return;
     }
@@ -108,6 +117,7 @@ class AntimatterBattery extends Building {
       return;
     }
 
+    const fillRate = this.getFillRate();
     const potentialEnergyFromRate = fillRate * energyPerAntimatter;
     const potentialEnergyFromStock = availableAntimatter * energyPerAntimatter;
     const energyGain = Math.min(missingEnergy, potentialEnergyFromRate, potentialEnergyFromStock);
