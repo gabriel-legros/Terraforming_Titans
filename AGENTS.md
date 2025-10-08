@@ -255,3 +255,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Mega Heat Sink advanced research that unlocks a repeatable mega project for accelerated planetary cooling.
 - Introduced a Bioworkforce advanced research that unlocks a lifeManager flag for future bioworkforce integration.
 - Galaxy sectors now advertise conquest rewards, with default Habitable World payouts configured in sector parameters.
+- Encapsulated the Import Resources project UI in a dedicated ImportResourcesProjectUI class and delegated specialized rendering logic from projectsUI.
