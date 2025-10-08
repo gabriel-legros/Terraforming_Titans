@@ -5,7 +5,6 @@ if (typeof SubtabManager === 'undefined') {
     SubtabManager = window.SubtabManager;
   }
 }
-let ImportResourcesProjectUI;
 let projectElements = {};
 
 // Centralized, browser-friendly caches for Projects UI
