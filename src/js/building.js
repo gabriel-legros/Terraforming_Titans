@@ -28,6 +28,8 @@ class Building extends EffectableEntity {
     this.currentConsumption = {};
     this.currentMaintenance = {};
 
+    this._automationActivityMultiplier = 1;
+
     // Reversal system
     this.reversalAvailable = !!config.reversalAvailable;
     this.reverseEnabled = false;
@@ -504,6 +506,14 @@ class Building extends EffectableEntity {
     return this.canAffordDeposit(buildCount) && this.canAffordLand(buildCount);
   }
 
+  setAutomationActivityMultiplier(value) {
+    this._automationActivityMultiplier = value <= 0 ? 0 : 1;
+  }
+
+  getAutomationActivityMultiplier() {
+    return this._automationActivityMultiplier <= 0 ? 0 : 1;
+  }
+
   canAffordDeposit(amount = 1){
     if (this.requiresDeposit) {
       for (const deposit in this.requiresDeposit.underground) {
@@ -701,12 +711,15 @@ class Building extends EffectableEntity {
   }
 
   updateProductivity(resources, deltaTime) {
+    this.setAutomationActivityMultiplier(1);
+
     const { targetProductivity: baseTarget } = this.computeBaseProductivity(
       resources,
       deltaTime
     );
 
     if (this.active === 0) {
+      this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;
     }
