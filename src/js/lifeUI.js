@@ -69,7 +69,8 @@ const lifeUICache = {
   tempUnits: [],
   pointShopButtons: [],
   tentativeCells: [],
-  attributeCells: {}, // { [attributeName]: { currentDiv, tentativeDiv, tentativeDisplay, tentativeCell } }
+  bioworkforceElements: [],
+  attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
   cells: {
     dayTemp: {},
     nightTemp: {},
@@ -147,17 +148,27 @@ function cacheLifeTentativeCells() {
 function cacheLifeAttributeCells() {
   lifeUICache.attributeCells = {};
   baseLifeAttributeOrder.forEach(attributeName => {
+    const row = document.getElementById(`life-attribute-row-${attributeName}`);
     const currentDiv = document.getElementById(`${attributeName}-current-value`);
     const tentativeDiv = document.getElementById(`${attributeName}-tentative-value`);
     const tentativeDisplay = tentativeDiv ? tentativeDiv.querySelector('.life-tentative-display') : null;
     const tentativeCell = tentativeDiv ? tentativeDiv.closest('.tentative-design-cell') : null;
+    const modifyCell = row ? row.querySelector('.modify-buttons-cell') : null;
     lifeUICache.attributeCells[attributeName] = {
+      row,
       currentDiv,
       tentativeDiv,
       tentativeDisplay,
       tentativeCell,
+      modifyCell,
     };
   });
+}
+
+function cacheBioworkforceElements() {
+  lifeUICache.bioworkforceElements = Array.from(
+    document.querySelectorAll('[data-bioworkforce-ui]')
+  );
 }
 
 function invalidateLifeUICache() {
@@ -165,6 +176,7 @@ function invalidateLifeUICache() {
   lifeUICache.tempUnits = [];
   lifeUICache.pointShopButtons = [];
   lifeUICache.tentativeCells = [];
+  lifeUICache.bioworkforceElements = [];
   lifeUICache.attributeCells = {};
 }
 
@@ -336,7 +348,7 @@ function initializeLifeTerraformingDesignerUI() {
         const isBioworkforceRow = attributeName === 'bioworkforce';
         const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
         rows += `
-          <tr id="life-attribute-row-${attributeName}"${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
+          <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${attribute.displayName} (Max ${attribute.maxUpgrades})
               <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ' <span class="info-tooltip-icon" title="Each point assigns 0.00001 of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>' : ''}</div>
@@ -504,6 +516,7 @@ function initializeLifeTerraformingDesignerUI() {
   cacheLifeModifyButtons();
   cacheLifeTentativeCells();
   cacheLifeAttributeCells();
+  cacheBioworkforceElements();
   cacheLifePointShopButtons();
   document.dispatchEvent(new Event('lifeStatusTableRebuilt'));
 }
@@ -520,6 +533,9 @@ function updateLifeUI() {
     lifeTerraformingDiv.style.display = 'none';
     if (lockedMessage) lockedMessage.style.display = 'block';
   }
+
+    const bioworkforceUnlocked = isBioworkforceUnlocked();
+    toggleBioworkforceElements(bioworkforceUnlocked);
 
     updateDesignValues();
     updatePointsDisplay();
@@ -619,10 +635,31 @@ function updateLifeUI() {
         });
     }
   
+    function toggleBioworkforceElements(bioworkforceUnlocked) {
+      if (!lifeUICache.bioworkforceElements.length) {
+        cacheBioworkforceElements();
+      }
+
+      lifeUICache.bioworkforceElements.forEach(element => {
+        element.style.display = bioworkforceUnlocked ? '' : 'none';
+      });
+
+      if (!bioworkforceUnlocked) {
+        const bioworkforceCells = lifeUICache.attributeCells.bioworkforce || {};
+        const modifyCell = bioworkforceCells.modifyCell;
+        const tentativeCell = bioworkforceCells.tentativeCell;
+        if (modifyCell) {
+          modifyCell.style.display = 'none';
+        }
+        if (tentativeCell) {
+          tentativeCell.style.display = 'none';
+        }
+      }
+    }
+
     function updateDesignValues() {
       // Use the same attribute order as in generateAttributeRows
       const attributeOrder = baseLifeAttributeOrder;
-      const bioworkforceUnlocked = isBioworkforceUnlocked();
 
       attributeOrder.forEach(attributeName => {
         // Update Current Design Value (cached)
@@ -648,19 +685,6 @@ function updateLifeUI() {
             tentativeCell.style.display = 'table-cell';
           } else {
             tentativeCell.style.display = 'none';
-          }
-        }
-
-        if (attributeName === 'bioworkforce') {
-          const row = document.getElementById('life-attribute-row-bioworkforce');
-          if (row) {
-            row.style.display = bioworkforceUnlocked ? '' : 'none';
-            if (!bioworkforceUnlocked) {
-              const modifyCell = row.querySelector('.modify-buttons-cell');
-              if (modifyCell) {
-                modifyCell.style.display = 'none';
-              }
-            }
           }
         }
 
