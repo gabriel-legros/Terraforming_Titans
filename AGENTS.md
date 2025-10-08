@@ -9,6 +9,7 @@
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
 - Do not use globalThis.  It never ever ends up working out because the objects you are looking for are never actually attached to it.  Use the global variable directly instead, or adapt your test accordingly.
 - Keep code short, concise and easily readable.  Avoid any unnecessary checks for objects that should obviously exist.
+- When taking screenshots, if you want it to succeed, you must modify DEBUG_MODE from src/js/debug_constants.js to true, otherwise you will not be able to skip the intro cutscene.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
