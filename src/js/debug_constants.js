@@ -1,4 +1,4 @@
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 try {
     module.exports = { DEBUG_MODE };
