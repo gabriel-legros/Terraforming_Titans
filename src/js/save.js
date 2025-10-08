@@ -1,62 +1,3 @@
-var GhgFactoryClassRef = GhgFactoryClassRef ||
-  (typeof require !== 'undefined'
-    ? (() => {
-        try { return require('./buildings/GhgFactory.js').GhgFactory; }
-        catch (e) { return globalThis.GhgFactory; }
-      })()
-    : globalThis.GhgFactory);
-var ghgFactorySettingsRef = ghgFactorySettingsRef ||
-  (GhgFactoryClassRef && GhgFactoryClassRef.getAutomationSettings
-    ? GhgFactoryClassRef.getAutomationSettings()
-    : globalThis.ghgFactorySettings);
-var OxygenFactoryClassRef = OxygenFactoryClassRef ||
-  (typeof require !== 'undefined'
-    ? (() => {
-        try { return require('./buildings/OxygenFactory.js').OxygenFactory; }
-        catch (e) { return globalThis.OxygenFactory; }
-      })()
-    : globalThis.OxygenFactory);
-var oxygenFactorySettingsRef = oxygenFactorySettingsRef ||
-  (OxygenFactoryClassRef && OxygenFactoryClassRef.getAutomationSettings
-    ? OxygenFactoryClassRef.getAutomationSettings()
-    : globalThis.oxygenFactorySettings);
-
-function refreshFactoryAutomationRefs() {
-  if (!GhgFactoryClassRef) {
-    if (typeof require !== 'undefined') {
-      try {
-        GhgFactoryClassRef = require('./buildings/GhgFactory.js').GhgFactory;
-      } catch (e) {}
-    }
-    if (!GhgFactoryClassRef && globalThis && globalThis.GhgFactory) {
-      GhgFactoryClassRef = globalThis.GhgFactory;
-    }
-  }
-  const ghgSettings = GhgFactoryClassRef && GhgFactoryClassRef.getAutomationSettings
-    ? GhgFactoryClassRef.getAutomationSettings()
-    : (globalThis && globalThis.ghgFactorySettings);
-  if (ghgSettings) {
-    ghgFactorySettingsRef = ghgSettings;
-  }
-
-  if (!OxygenFactoryClassRef) {
-    if (typeof require !== 'undefined') {
-      try {
-        OxygenFactoryClassRef = require('./buildings/OxygenFactory.js').OxygenFactory;
-      } catch (e) {}
-    }
-    if (!OxygenFactoryClassRef && globalThis && globalThis.OxygenFactory) {
-      OxygenFactoryClassRef = globalThis.OxygenFactory;
-    }
-  }
-  const oxygenSettings = OxygenFactoryClassRef && OxygenFactoryClassRef.getAutomationSettings
-    ? OxygenFactoryClassRef.getAutomationSettings()
-    : (globalThis && globalThis.oxygenFactorySettings);
-  if (oxygenSettings) {
-    oxygenFactorySettingsRef = oxygenSettings;
-  }
-}
-
 globalGameIsLoadingFromSave = false;
 
 let loadingOverlayElement = null;
@@ -120,7 +61,6 @@ function recalculateLandUsage() {
 }
 
 function getGameState() {
-  refreshFactoryAutomationRefs();
   return {
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined' ? resources : undefined,
@@ -159,12 +99,6 @@ function getGameState() {
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
-    ghgFactorySettings: GhgFactoryClassRef && typeof GhgFactoryClassRef.saveAutomationSettings === 'function'
-      ? GhgFactoryClassRef.saveAutomationSettings()
-      : (typeof ghgFactorySettingsRef !== 'undefined' ? ghgFactorySettingsRef : undefined),
-    oxygenFactorySettings: OxygenFactoryClassRef && typeof OxygenFactoryClassRef.saveAutomationSettings === 'function'
-      ? OxygenFactoryClassRef.saveAutomationSettings()
-      : (typeof oxygenFactorySettingsRef !== 'undefined' ? oxygenFactorySettingsRef : undefined),
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
     totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined
@@ -194,7 +128,6 @@ function loadGame(slotOrCustomString) {
 
   showLoadingOverlay();
   globalGameIsLoadingFromSave = true;
-  refreshFactoryAutomationRefs();
 
   try {
     const gameState = JSON.parse(savedState);
@@ -561,25 +494,6 @@ function loadGame(slotOrCustomString) {
         colonySliderSettings.loadState(gameState.colonySliderSettings);
       } else {
         Object.assign(colonySliderSettings, gameState.colonySliderSettings);
-      }
-    }
-
-    if(gameState.ghgFactorySettings){
-      if (GhgFactoryClassRef && typeof GhgFactoryClassRef.loadAutomationSettings === 'function') {
-        GhgFactoryClassRef.loadAutomationSettings(gameState.ghgFactorySettings);
-      } else if (ghgFactorySettingsRef) {
-        Object.assign(ghgFactorySettingsRef, gameState.ghgFactorySettings);
-        if (typeof enforceGhgFactoryTempGap === 'function') {
-          enforceGhgFactoryTempGap();
-        }
-      }
-    }
-
-    if(gameState.oxygenFactorySettings){
-      if (OxygenFactoryClassRef && typeof OxygenFactoryClassRef.loadAutomationSettings === 'function') {
-        OxygenFactoryClassRef.loadAutomationSettings(gameState.oxygenFactorySettings);
-      } else if (oxygenFactorySettingsRef) {
-        Object.assign(oxygenFactorySettingsRef, gameState.oxygenFactorySettings);
       }
     }
 
