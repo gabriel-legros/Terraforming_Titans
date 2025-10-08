@@ -15,6 +15,8 @@ class GhgFactory extends Building {
   }
 
   updateProductivity(resources, deltaTime) {
+    this.setAutomationActivityMultiplier(1);
+
     const {
       targetProductivity,
       hasAtmosphericOversight,
@@ -61,6 +63,7 @@ class GhgFactory extends Building {
     };
 
     if (this.active === 0) {
+      this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;
     }
@@ -85,10 +88,12 @@ class GhgFactory extends Building {
         // No reversal available: only push in the forward direction.
         // Early disable checks that do not require resource access.
         if (recipeKey === 'ghg' && currentTemp >= A) {
+          this.setAutomationActivityMultiplier(0);
           this.productivity = 0;
           return;
         }
         if (recipeKey === 'calcite' && currentTemp <= A) {
+          this.setAutomationActivityMultiplier(0);
           this.productivity = 0;
           return;
         }
@@ -116,10 +121,10 @@ class GhgFactory extends Building {
                 ), maxProduction);
                 this.reverseEnabled = false;
                 // Fallback: if solver cannot find a step but we are still above M, run at max allowed
-                const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
-                this.productivity = Math.min(targetProductivity, prod);
-                return;
-              }
+              const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
+              this.productivity = Math.min(targetProductivity, prod);
+              return;
+            }
 
               // Inside the range: maintain enough to offset decay at the midpoint mass
               const halfLife = (typeof CALCITE_HALF_LIFE_SECONDS !== 'undefined') ? CALCITE_HALF_LIFE_SECONDS : 240;
@@ -245,6 +250,7 @@ class GhgFactory extends Building {
               return;
             }
           }
+          this.setAutomationActivityMultiplier(0);
           this.productivity = 0;
           return;
         }
