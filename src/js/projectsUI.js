@@ -17,27 +17,38 @@ const projectsUICache = {
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
 
-if (typeof ImportResourcesProjectUI === 'undefined') {
-  if (typeof require === 'function') {
-    try {
-      ImportResourcesProjectUI = require('./projects/ImportResourcesProjectUI.js');
-    } catch (error) {
-      ImportResourcesProjectUI = undefined;
-    }
-  } else if (typeof window !== 'undefined') {
-    ImportResourcesProjectUI = window.ImportResourcesProjectUI;
+const existingImportResourcesProjectUI =
+  typeof ImportResourcesProjectUI !== 'undefined'
+    ? ImportResourcesProjectUI
+    : (typeof window !== 'undefined' ? window.ImportResourcesProjectUI : undefined);
+
+let importResourcesProjectUIClass = existingImportResourcesProjectUI;
+
+if (!importResourcesProjectUIClass && typeof require === 'function') {
+  try {
+    importResourcesProjectUIClass = require('./projects/ImportResourcesProjectUI.js');
+  } catch (error) {
+    importResourcesProjectUIClass = existingImportResourcesProjectUI;
   }
+}
+
+if (!importResourcesProjectUIClass && typeof window !== 'undefined') {
+  importResourcesProjectUIClass = window.ImportResourcesProjectUI;
+}
+
+if (typeof window !== 'undefined' && importResourcesProjectUIClass) {
+  window.ImportResourcesProjectUI = importResourcesProjectUIClass;
 }
 
 let importResourcesController = null;
 
 function getImportResourcesUI() {
-  if (!ImportResourcesProjectUI) {
+  if (!importResourcesProjectUIClass) {
     return null;
   }
 
   if (!importResourcesController) {
-    importResourcesController = new ImportResourcesProjectUI({
+    importResourcesController = new importResourcesProjectUIClass({
       getProjectElements: () => projectElements,
       getOrCreateCategoryContainer,
       moveProject,
