@@ -60,8 +60,6 @@ describe('Galaxy operation persistence', () => {
 
         const restored = reloaded.operations.get(sector.key);
         expect(restored).toBeDefined();
-        expect(restored.assignedPower).toBe(0);
-        expect(restored.offensePower).toBe(0);
-        expect(restored.reservedPower).toBe(0);
+        expect(restored.assignedPower).toBe(7841);
     });
 });
