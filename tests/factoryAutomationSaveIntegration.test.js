@@ -1,119 +1,121 @@
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+const EffectableEntity = require('../src/js/effectable-entity.js');
+global.EffectableEntity = EffectableEntity;
+const { Building } = require('../src/js/building.js');
+global.Building = Building;
+const { GhgFactory } = require('../src/js/buildings/GhgFactory.js');
+const { OxygenFactory } = require('../src/js/buildings/OxygenFactory.js');
+const { getGameState } = require('../src/js/save.js');
+
+function createGhgFactory() {
+  const config = {
+    name: 'GHG Factory',
+    category: 'terraforming',
+    description: '',
+    cost: {},
+    consumption: {},
+    production: {},
+    storage: {},
+    dayNightActivity: true,
+    canBeToggled: true,
+    requiresMaintenance: false,
+    maintenanceFactor: 0,
+    requiresDeposit: null,
+    requiresWorker: 0,
+    unlocked: true,
+    surfaceArea: 0,
+    requiresProductivity: true,
+    requiresLand: 0,
+    temperatureMaintenanceImmune: false,
+    powerPerBuilding: 0
+  };
+  return new GhgFactory(config, 'ghgFactory');
+}
+
+function createOxygenFactory() {
+  const config = {
+    name: 'O2 Factory',
+    category: 'terraforming',
+    description: '',
+    cost: {},
+    consumption: {},
+    production: {},
+    storage: {},
+    dayNightActivity: true,
+    canBeToggled: true,
+    requiresMaintenance: false,
+    maintenanceFactor: 0,
+    requiresDeposit: null,
+    requiresWorker: 0,
+    unlocked: true,
+    surfaceArea: 0,
+    requiresProductivity: true,
+    requiresLand: 0,
+    temperatureMaintenanceImmune: false,
+    powerPerBuilding: 0
+  };
+  return new OxygenFactory(config, 'oxygenFactory');
+}
 
 describe('factory automation settings integrate with save system', () => {
-  test('late factory registration still saves automation settings', () => {
-    const ctx = { console };
-    ctx.globalThis = ctx;
-    ctx.JSON = JSON;
+  beforeEach(() => {
+    global.populationModule = { getWorkerAvailabilityRatio: () => 1 };
+    global.resources = { colony: {}, atmospheric: {}, surface: {}, underground: {} };
+    global.registerBuildingUnlockAlert = () => {};
+    global.dayNightCycle = { saveState: () => ({}), loadState: () => {} };
+    global.colonies = {};
+    global.projectManager = { saveState: () => ({}) };
+    global.researchManager = { saveState: () => ({}) };
+    global.oreScanner = { saveState: () => ({}) };
+    global.terraforming = { saveState: () => ({}) };
+    global.storyManager = { saveState: () => ({}), loadState: () => {}, appliedEffects: [], reapplyEffects: () => {} };
+    global.nanotechManager = { saveState: () => ({}) };
+    global.solisManager = { saveState: () => ({}) };
+    global.warpGateCommand = { saveState: () => ({}) };
+    global.lifeDesigner = { saveState: () => ({}) };
+    global.milestonesManager = { saveState: () => ({}) };
+    global.skillManager = { saveState: () => ({}) };
+    global.spaceManager = { saveState: () => ({}) };
+    global.galaxyManager = { saveState: () => ({}) };
+    global.selectedBuildCounts = {};
+    global.gameSettings = {};
+    global.colonySliderSettings = { saveState: () => ({}) };
+    global.saveConstructionOfficeState = () => ({});
+    global.playTimeSeconds = 0;
+    global.totalPlayTimeSeconds = 0;
+  });
 
-    ctx.dayNightCycle = { saveState: () => ({}), loadState: () => {} };
-    ctx.resources = {};
-    ctx.buildings = {};
-    ctx.colonies = {};
-    ctx.projectManager = { saveState: () => ({}) };
-    ctx.researchManager = { saveState: () => ({}) };
-    ctx.oreScanner = { saveState: () => ({}) };
-    ctx.terraforming = { saveState: () => ({}) };
-    ctx.storyManager = { saveState: () => ({}), loadState: () => {}, appliedEffects: [], reapplyEffects: () => {} };
-    ctx.journalEntrySources = [];
-    ctx.journalHistorySources = [];
-    ctx.goldenAsteroid = { saveState: () => ({}) };
-    ctx.nanotechManager = { saveState: () => ({}) };
-    ctx.solisManager = { saveState: () => ({}) };
-    ctx.warpGateCommand = { saveState: () => ({}) };
-    ctx.lifeDesigner = { saveState: () => ({}) };
-    ctx.milestonesManager = { saveState: () => ({}) };
-    ctx.skillManager = { saveState: () => ({}) };
-    ctx.spaceManager = { saveState: () => ({}) };
-    ctx.selectedBuildCounts = {};
-    ctx.gameSettings = {};
-    ctx.colonySliderSettings = { saveState: () => ({}) };
-    ctx.saveConstructionOfficeState = () => ({}) ;
-    ctx.playTimeSeconds = 0;
-    ctx.totalPlayTimeSeconds = 0;
-    ctx.document = { getElementById: () => null, body: { classList: { toggle: () => {} } } };
+  test('automation settings persist through building save data', () => {
+    const ghgFactory = createGhgFactory();
+    const oxygenFactory = createOxygenFactory();
 
-    const saveCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'save.js'), 'utf8');
-    vm.createContext(ctx);
-    vm.runInContext(`${saveCode}; this.getGameStateRef = getGameState;`, ctx);
+    global.buildings = {
+      ghgFactory,
+      oxygenFactory
+    };
 
-    class FakeGhgFactory {
-      static getAutomationSettings() {
-        if (!this.settings) {
-          this.settings = {
-            autoDisableAboveTemp: false,
-            disableTempThreshold: 280,
-            reverseTempThreshold: 285
-          };
-        }
-        return this.settings;
-      }
-      static saveAutomationSettings() {
-        const s = this.getAutomationSettings();
-        return {
-          autoDisableAboveTemp: !!s.autoDisableAboveTemp,
-          disableTempThreshold: s.disableTempThreshold,
-          reverseTempThreshold: s.reverseTempThreshold
-        };
-      }
-      static loadAutomationSettings(saved) {
-        const s = this.getAutomationSettings();
-        if (saved && typeof saved === 'object') {
-          if ('autoDisableAboveTemp' in saved) s.autoDisableAboveTemp = !!saved.autoDisableAboveTemp;
-          if ('disableTempThreshold' in saved) s.disableTempThreshold = saved.disableTempThreshold;
-          if ('reverseTempThreshold' in saved) s.reverseTempThreshold = saved.reverseTempThreshold;
-        }
-        return s;
-      }
-    }
-
-    class FakeOxygenFactory {
-      static getAutomationSettings() {
-        if (!this.settings) {
-          this.settings = {
-            autoDisableAbovePressure: false,
-            disablePressureThreshold: 15
-          };
-        }
-        return this.settings;
-      }
-      static saveAutomationSettings() {
-        const s = this.getAutomationSettings();
-        return {
-          autoDisableAbovePressure: !!s.autoDisableAbovePressure,
-          disablePressureThreshold: s.disablePressureThreshold
-        };
-      }
-      static loadAutomationSettings(saved) {
-        const s = this.getAutomationSettings();
-        if (saved && typeof saved === 'object') {
-          if ('autoDisableAbovePressure' in saved) s.autoDisableAbovePressure = !!saved.autoDisableAbovePressure;
-          if ('disablePressureThreshold' in saved) s.disablePressureThreshold = saved.disablePressureThreshold;
-        }
-        return s;
-      }
-    }
-
-    ctx.GhgFactory = FakeGhgFactory;
-    ctx.ghgFactorySettings = FakeGhgFactory.getAutomationSettings();
-    ctx.OxygenFactory = FakeOxygenFactory;
-    ctx.oxygenFactorySettings = FakeOxygenFactory.getAutomationSettings();
-
-    ctx.ghgFactorySettings.autoDisableAboveTemp = true;
-    ctx.oxygenFactorySettings.autoDisableAbovePressure = true;
-
-    const snapshot = ctx.getGameStateRef();
-
-    expect(snapshot.ghgFactorySettings).toEqual({
+    GhgFactory.loadAutomationSettings({
       autoDisableAboveTemp: true,
-      disableTempThreshold: 280,
-      reverseTempThreshold: 285
+      disableTempThreshold: 287,
+      reverseTempThreshold: 292
     });
-    expect(snapshot.oxygenFactorySettings).toEqual({
+    OxygenFactory.loadAutomationSettings({
       autoDisableAbovePressure: true,
-      disablePressureThreshold: 15
+      disablePressureThreshold: 21
+    });
+
+    const snapshot = getGameState();
+
+    expect(snapshot.ghgFactorySettings).toBeUndefined();
+    expect(snapshot.oxygenFactorySettings).toBeUndefined();
+
+    expect(snapshot.buildings.ghgFactory.automationSettings).toEqual({
+      autoDisableAboveTemp: true,
+      disableTempThreshold: 287,
+      reverseTempThreshold: 292
+    });
+    expect(snapshot.buildings.oxygenFactory.automationSettings).toEqual({
+      autoDisableAbovePressure: true,
+      disablePressureThreshold: 21
     });
   });
 });

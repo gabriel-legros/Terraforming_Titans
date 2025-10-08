@@ -156,6 +156,17 @@ class OxygenFactory extends Building {
     }
   }
 
+  saveState() {
+    const state = super.saveState();
+    state.automationSettings = OxygenFactory.saveAutomationSettings();
+    return state;
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    OxygenFactory.loadAutomationSettings(state?.automationSettings);
+  }
+
   static getAutomationSettings() {
     if (!this.automationSettings) {
       this.automationSettings = {

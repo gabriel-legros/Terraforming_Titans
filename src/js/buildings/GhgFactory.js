@@ -441,6 +441,17 @@ class GhgFactory extends Building {
     }
   }
 
+  saveState() {
+    const state = super.saveState();
+    state.automationSettings = GhgFactory.saveAutomationSettings();
+    return state;
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    GhgFactory.loadAutomationSettings(state?.automationSettings);
+  }
+
   static getAutomationSettings() {
     if (!this.automationSettings) {
       this.automationSettings = {
