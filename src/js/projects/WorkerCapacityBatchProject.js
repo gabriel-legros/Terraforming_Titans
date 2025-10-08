@@ -53,12 +53,12 @@ class WorkerCapacityBatchProject extends Project {
 
   adjustBuildCount(delta) {
     const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(this.buildCount + delta, limit));
+    this.buildCount = Math.max(1, Math.min(this.buildCount + delta, limit));
   }
 
   setBuildCount(value) {
     const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(value, limit));
+    this.buildCount = Math.max(1, Math.min(value, limit));
   }
 
   setMaxBuildCount() {
@@ -102,7 +102,9 @@ class WorkerCapacityBatchProject extends Project {
 
   loadState(state) {
     super.loadState(state);
-    this.buildCount = state.buildCount ?? this.buildCount;
+    if (state.buildCount !== undefined) {
+      this.setBuildCount(state.buildCount);
+    }
     this.activeBuildCount = state.activeBuildCount ?? this.activeBuildCount;
     this.autoMax = state.autoMax ?? this.autoMax;
     this.workersPerCompletion = state.workersPerCompletion ?? this.workersPerCompletion;
@@ -164,15 +166,15 @@ class WorkerCapacityBatchProject extends Project {
     controls.className = 'amount-controls';
     const mainControls = document.createElement('div');
     mainControls.className = 'scanner-main-controls';
-    const b0 = document.createElement('button');
-    b0.textContent = '0';
+    const bMin = document.createElement('button');
+    bMin.textContent = '1';
     const bMinus = document.createElement('button');
     bMinus.textContent = '-';
     const bPlus = document.createElement('button');
     bPlus.textContent = '+';
     const bMax = document.createElement('button');
     bMax.textContent = 'Max';
-    mainControls.append(b0, bMinus, bPlus, bMax);
+    mainControls.append(bMin, bMinus, bPlus, bMax);
 
     const multControls = document.createElement('div');
     multControls.className = 'scanner-mult-controls';
@@ -225,8 +227,8 @@ class WorkerCapacityBatchProject extends Project {
       this.setWorkerCapacityStep(this.getWorkerCapacityStep() / 10);
       refresh();
     });
-    b0.addEventListener('click', () => {
-      this.setBuildCount(0);
+    bMin.addEventListener('click', () => {
+      this.setBuildCount(1);
       refresh();
     });
     bMax.addEventListener('click', () => {
@@ -245,7 +247,7 @@ class WorkerCapacityBatchProject extends Project {
       bMinus,
       bMul,
       bDiv,
-      b0,
+      bMin,
       bMax,
       autoMaxCheckbox,
     };
@@ -292,6 +294,19 @@ class WorkerCapacityBatchProject extends Project {
       ui.costSection.style.display = isMaxed ? 'none' : '';
       ui.amountSection.style.display = isMaxed ? 'none' : '';
     }
+  }
+
+  update(deltaTime) {
+    if (this.autoMax) {
+      const limit = this.getWorkerCapLimit();
+      if (this.buildCount !== limit) {
+        this.setBuildCount(limit);
+        if (typeof updateProjectUI === 'function') {
+          updateProjectUI(this.name);
+        }
+      }
+    }
+    super.update(deltaTime);
   }
 
   updateUI() {

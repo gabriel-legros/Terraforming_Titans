@@ -296,7 +296,7 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       bMinus: controls.bMinus,
       bMul: controls.bMul,
       bDiv: controls.bDiv,
-      b0: controls.b0,
+      bMin: controls.bMin,
       bMax: controls.bMax,
       costSection: controls.costSection,
       amountSection: controls.amountSection,
