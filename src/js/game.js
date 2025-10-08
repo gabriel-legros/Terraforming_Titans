@@ -255,16 +255,6 @@ function initializeGameState(options = {}) {
   if (savedConstructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
     restoreConstructionOfficeSettings(savedConstructionOffice);
   }
-  if (!preserveManagers || !researchManager) {
-    researchManager = new ResearchManager(researchParameters);
-  } else {
-    if (!globalGameIsLoadingFromSave && typeof researchManager.resetRegularResearch === 'function') {
-      researchManager.resetRegularResearch();
-    }
-    if (typeof researchManager.reapplyEffects === 'function') {
-      researchManager.reapplyEffects();
-    }
-  }
   if (
     projectManager?.projects?.satellite &&
     researchManager.getResearchById('companion_satellite')?.isResearched &&
@@ -388,6 +378,16 @@ function initializeGameState(options = {}) {
   if (preserveManagers && storyManager && typeof storyManager.reapplyEffects === 'function') {
     storyManager.reapplyEffects();
   }
+  if (!preserveManagers || !researchManager) {
+    researchManager = new ResearchManager(researchParameters);
+  } else {
+    if (!globalGameIsLoadingFromSave && typeof researchManager.resetRegularResearch === 'function') {
+      researchManager.resetRegularResearch();
+    }
+    if (typeof researchManager.reapplyEffects === 'function') {
+      researchManager.reapplyEffects();
+    }
+  }
   if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
   }
@@ -401,6 +401,7 @@ function initializeGameState(options = {}) {
     nanotechManager.reapplyEffects();
     nanotechManager.updateUI();
   }
+  
 }
 
 function updateLogic(delta) {
