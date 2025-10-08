@@ -736,6 +736,38 @@
     justify-self: start;
 }
 
+.worker-capacity-amount-section .worker-capacity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.worker-capacity-amount-section .amount-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.worker-capacity-amount-section .amount-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.worker-capacity-amount-section .scanner-main-controls,
+.worker-capacity-amount-section .scanner-mult-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.worker-capacity-amount-section .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .scanner-assignment-container {
     display: grid;
     grid-template-columns: auto 1fr;

@@ -143,6 +143,7 @@ class WorkerCapacityBatchProject extends Project {
 
     const amountSection = document.createElement('div');
     amountSection.className = 'project-section-container';
+    amountSection.classList.add('worker-capacity-amount-section');
     const amountHeader = document.createElement('h4');
     amountHeader.className = 'section-title';
     amountHeader.textContent = amountTitle;
@@ -200,7 +201,11 @@ class WorkerCapacityBatchProject extends Project {
     autoLabel.textContent = autoMaxLabel;
     autoContainer.append(autoMaxCheckbox, autoLabel);
 
-    amountSection.append(amountHeader, amountDisplay, controls, autoContainer);
+    const amountRow = document.createElement('div');
+    amountRow.className = 'worker-capacity-row';
+    amountRow.append(amountDisplay, controls, autoContainer);
+
+    amountSection.append(amountHeader, amountRow);
     topSection.appendChild(amountSection);
 
     container.appendChild(topSection);
@@ -250,6 +255,7 @@ class WorkerCapacityBatchProject extends Project {
       bMin,
       bMax,
       autoMaxCheckbox,
+      amountRow,
     };
 
     return this.workerCapacityUI;
