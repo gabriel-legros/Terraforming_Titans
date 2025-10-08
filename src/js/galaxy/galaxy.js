@@ -399,14 +399,14 @@ class GalaxyManager extends EffectableEntity {
                 faction.loadState(factionState, this);
             }
         });
+        if (state && Array.isArray(state.fleetUpgrades)) {
+            this.#loadFleetUpgrades(state.fleetUpgrades);
+        }
         this.operations.clear();
         if (state && Array.isArray(state.operations)) {
             state.operations.forEach((operationState) => {
                 this.#restoreOperation(operationState);
             });
-        }
-        if (state && Array.isArray(state.fleetUpgrades)) {
-            this.#loadFleetUpgrades(state.fleetUpgrades);
         }
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
@@ -1635,25 +1635,6 @@ class GalaxyManager extends EffectableEntity {
         };
 
         this.operations.set(operation.sectorKey, operation);
-
-        if (operation.status === 'running') {
-            const faction = this.getFaction(operation.factionId);
-            if (faction) {
-                const currentFleetPower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
-                    ? faction.fleetPower
-                    : 0;
-                const operationalPower = typeof faction.getOperationalFleetPower === 'function'
-                    ? faction.getOperationalFleetPower(this)
-                    : currentFleetPower;
-                const reserved = Math.min(operation.reservedPower, operationalPower, currentFleetPower);
-                faction.setFleetPower(currentFleetPower - reserved);
-                operation.reservedPower = reserved;
-                operation.assignedPower = Math.min(operation.assignedPower, reserved);
-                operation.offensePower = Math.min(operation.offensePower, reserved);
-            }
-        } else {
-            this.#completeOperation(operation);
-        }
     }
 
     #updateOperations(deltaMs) {
