@@ -1583,6 +1583,7 @@ class Terraforming extends EffectableEntity{
             if (!categoryCosts) continue;
 
             for (const resource in categoryCosts) {
+              if (resource === 'electronics' || resource === 'water') continue;
               addEffect({
                 effectId: `gravityCostPenalty-${category}-${resource}`,
                 target,
