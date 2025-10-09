@@ -1568,19 +1568,14 @@ class Terraforming extends EffectableEntity{
       if (this.gravityPenaltyEnabled) {
         this.gravityCostPenalty = this.calculateGravityCostPenalty();
         const gravityCostMultiplier = this.gravityCostPenalty.multiplier;
-        const combinedStructures = globalThis.structures
-          ? globalThis.structures
-          : {
-              ...(globalThis.buildings || {}),
-              ...(globalThis.colonies || {})
-            };
+        const combinedStructures = structures;
 
         for (const id in combinedStructures) {
           const structure = combinedStructures[id];
           if (!structure || !structure.cost) continue;
 
           const isColony =
-            !!globalThis.colonies && Object.prototype.hasOwnProperty.call(globalThis.colonies, id);
+            colonies && Object.prototype.hasOwnProperty.call(colonies, id);
           const target = isColony ? 'colony' : 'building';
 
           for (const category in structure.cost) {
