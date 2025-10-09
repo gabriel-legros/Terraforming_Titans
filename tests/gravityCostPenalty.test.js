@@ -141,6 +141,103 @@ describe('gravity cost penalty', () => {
     }
   });
 
+  test('applyTerraformingEffects skips gravity multiplier for immune buildings', () => {
+    global.resources = {
+      atmospheric: {},
+      special: { albedoUpgrades: { value: 0 } },
+      surface: {},
+      colony: {}
+    };
+    const originalCurrentPlanetParameters = global.currentPlanetParameters;
+    global.currentPlanetParameters = {
+      resources: {
+        atmospheric: {},
+        surface: {},
+        underground: {},
+        colony: {}
+      },
+      gravityPenaltyEnabled: true,
+      celestialParameters: {
+        gravity: 25,
+        radius: 1,
+        distanceFromSun: 1,
+        albedo: 0.1
+      }
+    };
+    const originalBuildings = global.buildings;
+    const originalColonies = global.colonies;
+    global.buildings = {
+      immuneBuilding: {
+        temperatureMaintenanceImmune: true,
+        cost: {
+          colony: { metal: 10 }
+        }
+      },
+      affectedBuilding: {
+        cost: {
+          colony: { metal: 5 }
+        }
+      }
+    };
+    global.colonies = {};
+    global.structures = { ...global.buildings };
+    global.projectManager = { projects: {}, isBooleanFlagSet: () => false };
+    global.populationModule = {};
+    global.tabManager = {};
+    global.fundingModule = {};
+    global.lifeDesigner = {};
+    global.lifeManager = new EffectableEntity({ description: 'life' });
+    global.oreScanner = {};
+
+    const tf = new Terraforming(global.resources, {
+      distanceFromSun: 1,
+      radius: 1,
+      gravity: 25,
+      albedo: 0.1
+    });
+    tf.calculateSolarPanelMultiplier = () => 1;
+    tf.calculateWindTurbineMultiplier = () => 1;
+    tf.calculateColonyEnergyPenalty = () => 1;
+    tf.calculateColonyPressureCostPenalty = () => 1;
+    tf.calculateMaintenancePenalty = () => 1;
+    tf.getFactoryTemperatureMaintenancePenaltyReduction = () => 0;
+
+    const originalAdd = global.addEffect;
+    const mockAdd = jest.fn();
+    global.addEffect = mockAdd;
+
+    tf.applyTerraformingEffects();
+
+    const calls = mockAdd.mock.calls.map(call => call[0]);
+    const gravityEffects = calls.filter(effect => effect && effect.effectId && effect.effectId.startsWith('gravityCostPenalty'));
+    const expectedMultiplier = 1 + (15 * 0.1) + (Math.pow(2, 0.5) - 1);
+
+    const affected = gravityEffects.find(effect =>
+      effect.target === 'building' &&
+      effect.targetId === 'affectedBuilding' &&
+      effect.resourceCategory === 'colony' &&
+      effect.resourceId === 'metal'
+    );
+    expect(affected).toBeDefined();
+    expect(affected.value).toBeCloseTo(expectedMultiplier);
+
+    const immune = gravityEffects.find(effect =>
+      effect.target === 'building' &&
+      effect.targetId === 'immuneBuilding'
+    );
+    expect(immune).toBeUndefined();
+
+    global.addEffect = originalAdd;
+    global.buildings = originalBuildings;
+    global.colonies = originalColonies;
+    delete global.structures;
+    if (originalCurrentPlanetParameters === undefined) {
+      delete global.currentPlanetParameters;
+    } else {
+      global.currentPlanetParameters = originalCurrentPlanetParameters;
+    }
+  });
+
   test('applyTerraformingEffects skips gravity multiplier when penalty disabled', () => {
     global.resources = {
       atmospheric: {},
