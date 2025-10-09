@@ -758,6 +758,25 @@ class GalaxyManager extends EffectableEntity {
         };
     }
 
+    getReservedOperationPower(factionId) {
+        let total = 0;
+        this.operations.forEach((operation) => {
+            if (operation.status !== 'running') {
+                return;
+            }
+            const ownerId = operation.factionId || galaxyUhfId;
+            if (ownerId !== factionId) {
+                return;
+            }
+            const reservedPower = Number(operation.reservedPower);
+            if (!Number.isFinite(reservedPower) || reservedPower <= 0) {
+                return;
+            }
+            total += reservedPower;
+        });
+        return total;
+    }
+
     startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance }) {
         if (!sectorKey || !Number.isFinite(assignedPower) || assignedPower <= 0) {
             return null;
