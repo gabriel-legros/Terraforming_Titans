@@ -1581,6 +1581,7 @@ class Terraforming extends EffectableEntity{
 
           const isColony =
             !!globalThis.colonies && Object.prototype.hasOwnProperty.call(globalThis.colonies, id);
+          if (!isColony && structure.temperatureMaintenanceImmune) continue;
           const target = isColony ? 'colony' : 'building';
 
           for (const category in structure.cost) {
