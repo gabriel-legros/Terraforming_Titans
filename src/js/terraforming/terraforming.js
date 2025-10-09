@@ -1572,7 +1572,7 @@ class Terraforming extends EffectableEntity{
 
         for (const id in combinedStructures) {
           const structure = combinedStructures[id];
-          if (!structure || !structure.cost) continue;
+          if (!structure || !structure.cost || structure.temperatureMaintenanceImmune) continue;
 
           const isColony =
             colonies && Object.prototype.hasOwnProperty.call(colonies, id);
