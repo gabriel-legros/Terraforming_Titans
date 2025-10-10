@@ -22,7 +22,10 @@ global.lifeParameters = lifeParameters;
  global.effectiveTemp = effectiveTemp;
  global.calculateZonalSurfaceFractions = () => ({ ocean:0, ice:0, hydrocarbon:0, hydrocarbonIce:0, co2_ice:0, biomass:0 });
 
-global.calculateActualAlbedoPhysics = () => ({ albedo:0.3, components:{ dA_ch4:0.05, dA_calcite:0.02, dA_cloud:0.03 } });
+global.calculateActualAlbedoPhysics = () => ({
+  albedo: 0.3,
+  components: { A_surf: 0.2, dA_ch4: 0.05, dA_calcite: 0.02, dA_cloud: 0.03 }
+});
 
 const Terraforming = require('../src/js/terraforming.js');
 
@@ -30,9 +33,9 @@ describe('cloud and haze penalty', () => {
   test('reduces modified solar flux and displays in UI', () => {
     global.resources = { atmospheric:{}, special:{ albedoUpgrades:{ value:0 } } };
     global.buildings = { spaceMirror:{ surfaceArea:500, active:1 }, hyperionLantern:{ active:0 } };
-    const tf = new Terraforming(global.resources, { radius:1, distanceFromSun:1, albedo:0, gravity:1 });
+    const tf = new Terraforming(global.resources, { radius:1, distanceFromSun:1, albedo:0.2, gravity:1 });
     tf.updateLuminosity();
-    const penalty = 0.05 + 0.02 + 0.03;
+    const penalty = tf.luminosity.actualAlbedo - tf.luminosity.surfaceAlbedo;
     expect(tf.luminosity.cloudHazePenalty).toBeCloseTo(penalty, 5);
     const weighted = ['tropical','temperate','polar'].reduce((s,z)=> s + (tf.luminosity.zonalFluxes[z] || 0) * getZonePercentage(z),0);
     const expectedFlux = weighted * (1 - penalty);
