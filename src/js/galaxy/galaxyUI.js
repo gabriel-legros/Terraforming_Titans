@@ -1731,10 +1731,10 @@ function updateOperationsPanel() {
     const launchBlocked = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
     operationsLaunchButton.disabled = launchBlocked;
     if (operationsAutoCheckbox) {
-        const autoDisabled = !enabled || !selection || operationRunning;
+        const autoDisabled = !enabled || !selection;
         operationsAutoCheckbox.disabled = autoDisabled;
         operationsAutoCheckbox.checked = !!(selection && storedAutoEnabled);
-        if (!autoDisabled && storedAutoEnabled && meetsAutoThreshold && hasAntimatter && !launchBlocked) {
+        if (!autoDisabled && !operationRunning && storedAutoEnabled && meetsAutoThreshold && hasAntimatter && !launchBlocked) {
             handleOperationsLaunch();
         }
     }

@@ -266,6 +266,7 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
     }
 };
 const GALAXY_FLEET_UPGRADE_KEYS = Object.keys(GALAXY_FLEET_UPGRADE_DEFINITIONS);
+const DEFAULT_OPERATION_AUTO_THRESHOLD = 2.1;
 
 function generateSectorCoordinates(radius) {
     const coordinates = [];
@@ -294,6 +295,8 @@ class GalaxyManager extends EffectableEntity {
         });
         this.successfulOperations = 0;
         this.operationStepSizes = new Map();
+        this.operationAutoSectors = new Set();
+        this.operationAutoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     }
 
     initialize() {
@@ -366,7 +369,9 @@ class GalaxyManager extends EffectableEntity {
             operations,
             fleetUpgrades: this.#serializeFleetUpgrades(),
             successfulOperations: this.successfulOperations,
-            operationSteps: Array.from(this.operationStepSizes.entries())
+            operationSteps: Array.from(this.operationStepSizes.entries()),
+            operationAutoSectors: Array.from(this.operationAutoSectors),
+            operationAutoThreshold: this.getOperationAutoThreshold()
         };
     }
 
@@ -425,6 +430,23 @@ class GalaxyManager extends EffectableEntity {
                 this.operationStepSizes.set(String(key), Math.max(1, Math.floor(numericValue)));
             });
         }
+        this.operationAutoSectors.clear();
+        if (state && Array.isArray(state.operationAutoSectors)) {
+            state.operationAutoSectors.forEach((value) => {
+                if (value === null || value === undefined) {
+                    return;
+                }
+                const key = String(value).trim();
+                if (key !== '') {
+                    this.operationAutoSectors.add(key);
+                }
+            });
+        }
+        if (state && Number.isFinite(state.operationAutoThreshold) && state.operationAutoThreshold > 0) {
+            this.operationAutoThreshold = state.operationAutoThreshold;
+        } else {
+            this.operationAutoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+        }
         this.factions.forEach((faction) => {
             faction.updateFleetCapacity(this);
         });
@@ -438,6 +460,8 @@ class GalaxyManager extends EffectableEntity {
         this.sectors.clear();
         this.operations.clear();
         this.operationStepSizes.clear();
+        this.operationAutoSectors.clear();
+        this.operationAutoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         this.initialize();
         this.enable();
     }
@@ -686,6 +710,52 @@ class GalaxyManager extends EffectableEntity {
         const step = Math.max(1, Math.floor(numeric));
         this.operationStepSizes.set(sectorKey, step);
         return step;
+    }
+
+    getOperationAutoEnabled(sectorKey) {
+        if (!sectorKey) {
+            return false;
+        }
+        const key = String(sectorKey).trim();
+        if (key === '') {
+            return false;
+        }
+        return this.operationAutoSectors.has(key);
+    }
+
+    setOperationAutoEnabled({ sectorKey, value }) {
+        if (!sectorKey) {
+            return false;
+        }
+        const key = String(sectorKey).trim();
+        if (key === '') {
+            return false;
+        }
+        if (value === true) {
+            this.operationAutoSectors.add(key);
+            return true;
+        }
+        this.operationAutoSectors.delete(key);
+        return false;
+    }
+
+    getOperationAutoThreshold() {
+        const numeric = Number(this.operationAutoThreshold);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+            this.operationAutoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+            return this.operationAutoThreshold;
+        }
+        return numeric;
+    }
+
+    setOperationAutoThreshold(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric <= 0) {
+            this.operationAutoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+            return this.operationAutoThreshold;
+        }
+        this.operationAutoThreshold = numeric;
+        return this.operationAutoThreshold;
     }
 
     getOperationSuccessChance({ sectorKey, factionId, assignedPower }) {
