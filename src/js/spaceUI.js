@@ -499,6 +499,9 @@ function selectPlanet(planetKey, force){
     const destinationTerraformed = _spaceManagerInstance.isPlanetTerraformed(planetKey);
     if(firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager){
         skillManager.skillPoints += 1;
+        if (typeof notifySkillPointGained === 'function') {
+            notifySkillPointGained(1);
+        }
     }
 
     if(planetParameters[planetKey]){

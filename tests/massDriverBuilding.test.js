@@ -10,6 +10,10 @@ const { MassDriver } = require('../src/js/buildings/MassDriver.js');
 global.initializeBuildingTabs = () => {};
 
 describe('Mass Driver building', () => {
+  afterEach(() => {
+    delete global.projectManager;
+  });
+
   test('Mass Driver requires superconductors and is locked by default', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'buildings-parameters.js'), 'utf8');
     const ctx = {};
@@ -51,5 +55,79 @@ describe('Mass Driver building', () => {
 
     const buildings = initializeBuildings(params);
     expect(buildings.massDriver).toBeInstanceOf(MassDriver);
+  });
+
+  test('Mass Driver productivity stops when Resource Disposal is inactive', () => {
+    const config = {
+      name: 'Mass Driver',
+      category: 'terraforming',
+      description: '',
+      cost: {},
+      consumption: {},
+      production: {},
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: true,
+      maintenanceFactor: 1,
+      requiresDeposit: null,
+      requiresWorker: 0,
+      unlocked: false
+    };
+
+    const massDriver = new MassDriver(config, 'massDriver');
+    massDriver.active = 1;
+    massDriver.productivity = 1;
+
+    global.projectManager = {
+      projects: {
+        disposeResources: { isActive: false }
+      },
+      isProjectRelevantToCurrentPlanet: () => true
+    };
+
+    const resourcesStub = { colony: {}, atmospheric: {}, surface: {}, underground: {} };
+
+    massDriver.updateProductivity(resourcesStub, 1000);
+
+    expect(massDriver.productivity).toBe(0);
+    expect(massDriver.getAutomationActivityMultiplier()).toBe(0);
+  });
+
+  test('Mass Driver productivity resumes when Resource Disposal is active', () => {
+    const config = {
+      name: 'Mass Driver',
+      category: 'terraforming',
+      description: '',
+      cost: {},
+      consumption: {},
+      production: {},
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: true,
+      maintenanceFactor: 1,
+      requiresDeposit: null,
+      requiresWorker: 0,
+      unlocked: false
+    };
+
+    const massDriver = new MassDriver(config, 'massDriver');
+    massDriver.active = 1;
+    massDriver.productivity = 0.5;
+
+    global.projectManager = {
+      projects: {
+        disposeResources: { isActive: true }
+      },
+      isProjectRelevantToCurrentPlanet: () => true
+    };
+
+    const resourcesStub = { colony: {}, atmospheric: {}, surface: {}, underground: {} };
+
+    massDriver.updateProductivity(resourcesStub, 1000);
+
+    expect(massDriver.productivity).toBeGreaterThan(0.5);
+    expect(massDriver.getAutomationActivityMultiplier()).toBe(1);
   });
 });
