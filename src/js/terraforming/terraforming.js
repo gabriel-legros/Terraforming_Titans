@@ -1131,10 +1131,12 @@ class Terraforming extends EffectableEntity{
 
         const result = calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW) || {};
         const comps = result.components || {};
-        const penalty = (comps.dA_ch4 || 0) + (comps.dA_calcite || 0) + (comps.dA_cloud || 0);
+        const base = Number.isFinite(comps.A_surf) ? comps.A_surf : surf;
+        const actual = Number.isFinite(result.albedo) ? result.albedo : base;
+        const penalty = actual - base;
         const cloudFraction = Number.isFinite(result.cfCloud) ? result.cfCloud : 0;
         const hazeFraction = Number.isFinite(result.cfHaze) ? result.cfHaze : 0;
-        return { albedo: result.albedo, penalty, cloudFraction, hazeFraction };
+        return { albedo: actual, penalty, cloudFraction, hazeFraction };
     }
 
     _updateZonalCoverageCache() {
