@@ -6,15 +6,38 @@ if (typeof SubtabManager === 'undefined') {
     }
 }
 let hopeSubtabManager = null;
+let awakeningSubtabAlert = false;
+
+function setAwakeningSubtabAlert(show) {
+    const shouldShow = !!show;
+    if (awakeningSubtabAlert === shouldShow) return;
+    awakeningSubtabAlert = shouldShow;
+    updateHopeAlert();
+}
+
+function clearAwakeningSubtabAlert() {
+    setAwakeningSubtabAlert(false);
+}
 
 function initializeHopeTabs() {
     if (typeof SubtabManager !== 'function') return;
     hopeSubtabManager = new SubtabManager('.hope-subtab', '.hope-subtab-content', true);
     hopeSubtabManager.onActivate(id => {
-        if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
+        if (id === 'awakening-hope') {
+            clearAwakeningSubtabAlert();
+        } else if (id === 'solis-hope' && typeof solisManager !== 'undefined' && typeof solisManager.setSolisTabAlert === 'function') {
             solisManager.setSolisTabAlert(false);
         }
     });
+    if (typeof consumePendingAwakeningAlert === 'function' && consumePendingAwakeningAlert()) {
+        const awakeningContent = document.getElementById ? document.getElementById('awakening-hope') : null;
+        const awakeningActive = !!(awakeningContent && awakeningContent.classList && awakeningContent.classList.contains('active'));
+        if (awakeningActive) {
+            clearAwakeningSubtabAlert();
+        } else {
+            setAwakeningSubtabAlert(true);
+        }
+    }
 }
 
 function activateHopeSubtab(subtabId) {
@@ -38,9 +61,12 @@ function initializeHopeUI() {
 
 function updateHopeAlert() {
     const alertEl = document.getElementById('hope-alert');
+    const awakeningEl = document.getElementById('awakening-subtab-alert');
     const solisEl = document.getElementById('solis-subtab-alert');
     const wgcEl = document.getElementById('wgc-subtab-alert');
-    if (!alertEl && !solisEl && !wgcEl) return;
+    if (!alertEl && !awakeningEl && !solisEl && !wgcEl) return;
+    const awakeningShow = awakeningSubtabAlert;
+    if (awakeningEl) awakeningEl.style.display = awakeningShow ? 'inline' : 'none';
     let solisShow = false;
     if (typeof solisManager !== 'undefined' && solisManager && solisTabVisible) {
         if (solisManager.solisTabAlert) {
@@ -52,7 +78,7 @@ function updateHopeAlert() {
     const wgcShow = typeof warpGateCommand !== 'undefined' && warpGateCommand && wgcTabVisible && warpGateCommand.facilityCooldown <= 0;
     if (solisEl) solisEl.style.display = solisShow ? 'inline' : 'none';
     if (wgcEl) wgcEl.style.display = wgcShow ? 'inline' : 'none';
-    if (alertEl) alertEl.style.display = (solisShow || wgcShow) ? 'inline' : 'none';
+    if (alertEl) alertEl.style.display = (awakeningShow || solisShow || wgcShow) ? 'inline' : 'none';
 }
 
 function updateHopeUI() {

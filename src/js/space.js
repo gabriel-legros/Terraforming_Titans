@@ -767,6 +767,9 @@ class SpaceManager extends EffectableEntity {
 
         if (firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager) {
             skillManager.skillPoints += 1;
+            if (typeof notifySkillPointGained === 'function') {
+                notifySkillPointGained(1);
+            }
         }
         globalThis.currentPlanetParameters = res?.merged;
         if (typeof initializeGameState === 'function') {
