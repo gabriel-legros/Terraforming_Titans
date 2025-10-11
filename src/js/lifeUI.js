@@ -68,6 +68,9 @@ const lifeUICache = {
   modifyButtons: [],
   tempUnits: [],
   pointShopButtons: [],
+  pointShopQuantityDisplay: null,
+  pointShopDecreaseButton: null,
+  pointShopIncreaseButton: null,
   tentativeCells: [],
   bioworkforceElements: [],
   attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
@@ -85,6 +88,8 @@ const lifeUICache = {
     growthRateTooltip: {}
   }
 };
+
+let lifePointPurchaseQuantity = 1;
 
 function cacheLifeModifyButtons() {
   lifeUICache.modifyButtons = Array.from(document.querySelectorAll('.life-tentative-btn'));
@@ -175,6 +180,9 @@ function invalidateLifeUICache() {
   lifeUICache.modifyButtons = [];
   lifeUICache.tempUnits = [];
   lifeUICache.pointShopButtons = [];
+  lifeUICache.pointShopQuantityDisplay = null;
+  lifeUICache.pointShopDecreaseButton = null;
+  lifeUICache.pointShopIncreaseButton = null;
   lifeUICache.tentativeCells = [];
   lifeUICache.bioworkforceElements = [];
   lifeUICache.attributeCells = {};
@@ -230,6 +238,11 @@ function initializeLifeTerraformingDesignerUI() {
               </div>
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
+               <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+                 <button id="life-point-quantity-divide" title="Buy fewer points each purchase">/10</button>
+                 <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
+                 <button id="life-point-quantity-multiply" title="Buy more points each purchase">x10</button>
+               </div>
             </div>
         </div>
 
@@ -456,14 +469,40 @@ function initializeLifeTerraformingDesignerUI() {
   // Generate the point shop buttons (Target the moved div)
   const lifePointShopDiv = document.getElementById('life-point-shop');
   if (lifePointShopDiv) { // Check if element exists before adding content
+      lifeUICache.pointShopQuantityDisplay = document.getElementById('life-point-quantity-display');
+      lifeUICache.pointShopDecreaseButton = document.getElementById('life-point-quantity-divide');
+      lifeUICache.pointShopIncreaseButton = document.getElementById('life-point-quantity-multiply');
+
+      const decreaseButton = lifeUICache.pointShopDecreaseButton;
+      if (decreaseButton) {
+        decreaseButton.addEventListener('click', () => {
+          if (lifePointPurchaseQuantity > 1) {
+            lifePointPurchaseQuantity = Math.max(1, Math.floor(lifePointPurchaseQuantity / 10));
+            updateLifeUI();
+          }
+        });
+      }
+
+      const increaseButton = lifeUICache.pointShopIncreaseButton;
+      if (increaseButton) {
+        increaseButton.addEventListener('click', () => {
+          if (lifePointPurchaseQuantity < 100) {
+            lifePointPurchaseQuantity = Math.min(100, lifePointPurchaseQuantity * 10);
+            updateLifeUI();
+          }
+        });
+      }
+
       lifeShopCategories.forEach((category, index) => {
         const categoryContainer = document.createElement('div');
         categoryContainer.classList.add('shop-category-container');
-      
+
         // Add button
         const button = document.createElement('button');
-        const initialCost = lifeDesigner.getPointCost(category.name);
-        button.textContent = `Buy with ${category.name} (${formatNumber(initialCost, true)})`;
+        const quantity = lifePointPurchaseQuantity;
+        const totalCost = lifeDesigner.getTotalPointCost(category.name, quantity);
+        const pointLabel = quantity === 1 ? 'life point' : 'life points';
+        button.textContent = `Buy ${quantity} with ${category.name} (+${quantity} ${pointLabel}, Cost ${formatNumber(totalCost, true)})`;
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);
@@ -488,8 +527,9 @@ function initializeLifeTerraformingDesignerUI() {
           // Actual listener logic moved inside here
           if (event.target.classList.contains('life-point-shop-btn')) {
               const category = event.target.dataset.category;
-              if (lifeDesigner.canAfford(category)) {
-                  lifeDesigner.buyPoint(category);
+              const quantity = lifePointPurchaseQuantity;
+              if (lifeDesigner.canAfford(category, quantity)) {
+                  lifeDesigner.buyPoint(category, quantity);
                   updateLifeUI();
               }
           }
@@ -558,6 +598,20 @@ function updateLifeUI() {
     const applyProgressContainer = document.getElementById('life-apply-progress-container');
     const applyProgressBar = document.getElementById('life-apply-progress');
     const modifyButtons = lifeUICache.modifyButtons;
+    const quantityDisplay = lifeUICache.pointShopQuantityDisplay;
+    if (quantityDisplay) {
+      quantityDisplay.textContent = lifePointPurchaseQuantity;
+    }
+
+    const decreaseButton = lifeUICache.pointShopDecreaseButton;
+    if (decreaseButton) {
+      decreaseButton.disabled = lifePointPurchaseQuantity === 1;
+    }
+
+    const increaseButton = lifeUICache.pointShopIncreaseButton;
+    if (increaseButton) {
+      increaseButton.disabled = lifePointPurchaseQuantity === 100;
+    }
 
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
@@ -613,10 +667,13 @@ function updateLifeUI() {
     const pointShopButtons = lifeUICache.pointShopButtons;
     pointShopButtons.forEach(button => {
       const category = button.dataset.category;
-      const cost = lifeDesigner.getPointCost(category);
-      button.textContent = `Buy with ${category} (${formatNumber(cost, true)})`;
-      button.disabled = !lifeDesigner.canAfford(category);
-      button.style.backgroundColor = lifeDesigner.canAfford(category) ? '' : 'red';
+      const quantity = lifePointPurchaseQuantity;
+      const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
+      const pointLabel = quantity === 1 ? 'life point' : 'life points';
+      button.textContent = `Buy ${quantity} with ${category} (+${quantity} ${pointLabel}, Cost ${formatNumber(totalCost, true)})`;
+      const affordable = lifeDesigner.canAfford(category, quantity);
+      button.disabled = !affordable;
+      button.style.backgroundColor = affordable ? '' : 'red';
     });
 
   }
