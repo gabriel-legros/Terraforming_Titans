@@ -569,7 +569,7 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchThresholdPrefix = doc.createElement('span');
         autoLaunchThresholdPrefix.className = 'galaxy-operations-launch__auto-prefix';
-        autoLaunchThresholdPrefix.textContent = ' when assigning ';
+        autoLaunchThresholdPrefix.textContent = ' with ';
         autoLaunchLabel.appendChild(autoLaunchThresholdPrefix);
 
         const autoLaunchThresholdInput = doc.createElement('input');
