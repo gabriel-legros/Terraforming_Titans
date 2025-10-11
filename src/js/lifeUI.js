@@ -239,9 +239,9 @@ function initializeLifeTerraformingDesignerUI() {
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
                <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
-                 <button id="life-point-quantity-divide" title="Buy fewer points each purchase">/10</button>
-                 <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
-                 <button id="life-point-quantity-multiply" title="Buy more points each purchase">x10</button>
+                <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
+                <button id="life-point-quantity-divide" title="Buy fewer points each purchase">/10</button>
+                <button id="life-point-quantity-multiply" title="Buy more points each purchase">x10</button>
                </div>
             </div>
         </div>
@@ -500,9 +500,7 @@ function initializeLifeTerraformingDesignerUI() {
         // Add button
         const button = document.createElement('button');
         const quantity = lifePointPurchaseQuantity;
-        const totalCost = lifeDesigner.getTotalPointCost(category.name, quantity);
-        const pointLabel = quantity === 1 ? 'life point' : 'life points';
-        button.textContent = `Buy ${quantity} with ${category.name} (+${quantity} ${pointLabel}, Cost ${formatNumber(totalCost, true)})`;
+        button.textContent = `Buy ${quantity} with ${category.name}`;
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);
