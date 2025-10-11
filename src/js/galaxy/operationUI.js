@@ -14,11 +14,33 @@ const GalaxyOperationUI = (() => {
     }
 
     function setContext({ manager, cache }) {
-        if (manager) {
+        let managerChanged = false;
+        let cacheChanged = false;
+        if (manager && context.manager !== manager) {
             context.manager = manager;
+            managerChanged = true;
         }
-        if (cache) {
+        if (cache && context.cache !== cache) {
             context.cache = cache;
+            cacheChanged = true;
+        }
+        const activeManager = context.manager;
+        const activeCache = context.cache;
+        if (!managerChanged && !cacheChanged) {
+            return;
+        }
+        syncCacheFromManager(activeManager);
+        if (activeManager && activeCache) {
+            updateOperationsPanel(activeManager, activeCache);
+            updateOperationArrows(activeManager, activeCache);
+            return;
+        }
+        if (activeManager) {
+            updateOperationsPanel(activeManager);
+            return;
+        }
+        if (activeCache) {
+            updateOperationArrows(null, activeCache);
         }
     }
 
@@ -147,6 +169,30 @@ const GalaxyOperationUI = (() => {
         if (manager?.setOperationStep) {
             manager.setOperationStep({ sectorKey: key, value: sanitized });
         }
+    }
+
+    function syncCacheFromManager(managerOverride) {
+        operationsAllocations.clear();
+        operationsStepSizes.clear();
+        operationsAutoStates.clear();
+        cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
+        const manager = managerOverride || getManager();
+        if (!manager) {
+            return;
+        }
+        const operations = manager.operationManager?.operations || manager.operations;
+        operations?.forEach?.((operation, key) => {
+            if (!operation || operation.status !== 'running') {
+                return;
+            }
+            const power = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0
+                ? operation.assignedPower
+                : operation.reservedPower;
+            const normalized = normalizeAssignment(power);
+            if (normalized > 0) {
+                operationsAllocations.set(key, normalized);
+            }
+        });
     }
 
     function getOperationAutoState(key) {
@@ -1040,7 +1086,8 @@ const GalaxyOperationUI = (() => {
         setContext,
         updateOperationsPanel,
         updateOperationArrows,
-        applyExternalAllocation
+        applyExternalAllocation,
+        syncCacheFromManager
     };
 })();
 

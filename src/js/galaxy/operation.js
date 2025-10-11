@@ -11,6 +11,24 @@ const GALAXY_OPERATION_HEX_DIRECTIONS = Array.isArray(globalThis?.HEX_NEIGHBOR_D
         { q: 0, r: 1 }
     ];
 
+function getOperationUI() {
+    try {
+        if (window && window.GalaxyOperationUI) {
+            return window.GalaxyOperationUI;
+        }
+    } catch (error) {
+        // Window unavailable in this environment.
+    }
+    try {
+        if (global && global.GalaxyOperationUI) {
+            return global.GalaxyOperationUI;
+        }
+    } catch (error) {
+        // Global unavailable in this environment.
+    }
+    return null;
+}
+
 function resolveOperationDuration() {
     const duration = globalThis?.GALAXY_OPERATION_DURATION_MS;
     if (Number.isFinite(duration) && duration > 0) {
@@ -126,6 +144,14 @@ class GalaxyOperationManager {
         } else {
             this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         }
+        const operationUI = getOperationUI();
+        operationUI?.syncCacheFromManager?.(this.manager);
+        operationUI?.updateOperationsPanel?.(this.manager);
+        if (this.refreshUI) {
+            this.refreshUI();
+            return;
+        }
+        operationUI?.updateOperationArrows?.(this.manager);
     }
 
     reset() {

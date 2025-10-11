@@ -339,6 +339,12 @@ function initializeGameState(options = {}) {
   milestonesManager = new MilestonesManager();
   if (!preserveManagers || !galaxyManager) {
     galaxyManager = new GalaxyManager();
+    const operationUI = (typeof window !== 'undefined' && window.GalaxyOperationUI)
+      ? window.GalaxyOperationUI
+      : (typeof global !== 'undefined' && global.GalaxyOperationUI ? global.GalaxyOperationUI : null);
+    if (operationUI && typeof operationUI.setContext === 'function') {
+      operationUI.setContext({ manager: galaxyManager });
+    }
   }
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
