@@ -522,7 +522,7 @@ var progressMars = {
         id: "chapter1.24",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'A thousand colonists! You're a regular pioneer. The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! Keep it up.'",
+        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
         prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
@@ -533,11 +533,25 @@ var progressMars = {
         reward: []
       },
       {
+        id: "chapter1.24b",
+        type: "journal",
+        chapter: 1,
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—think of it as Mars wearing a fancy white tuxedo that bounces all the sunlight back to the party.  0 absorbs all the light, like a black hole in formal wear.  In our case, we want to warm Mars, so lowering the albedo can help—get that tuxedo a little dusty, if you catch my drift.  Just a warning though : life, water, ice might end up covering up your dust later on, turning our little black dress number back into a winter wonderland.'",
+        prerequisites: ["chapter1.24"],
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 10000
+      }],
+        reward: []
+      },
+      {
         id: "chapter1.25",
         type: "journal",
         chapter: 1,
         narrative: "Analysis: Greenhouse Gas (GHG) production is the primary viable method for atmospheric warming at this stage. Objective: Construct a GHG Factory.",
-        prerequisites: ["chapter1.24"],
+        prerequisites: ["chapter1.24b"],
         objectives: [{
           type: 'building',
           buildingName: 'ghgFactory',
@@ -558,7 +572,7 @@ var progressMars = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend. Let's get this planet cooking. We'll save the giant space mirrors for phase two.'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows in the dark, radiating visible light like a cosmic spotlight.  Mars... not so much.  It can only radiate in the infrared, like a shy performer who only whispers in the dark.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6 are transparent to visible light, they are not transparent to infrared.  That means the radiated heat can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
@@ -572,7 +586,7 @@ var progressMars = {
         id: "chapter2.2",
         type: "journal",
         chapter: 2,
-        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. Supplemental heating methods are required.",
+        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. Supplemental heating methods are recommended.",
         prerequisites: ["chapter2.1"],
         objectives: [{
           type: 'collection',
@@ -608,7 +622,7 @@ var progressMars = {
         id: "chapter2.5",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change.  You should start growing some lichen now.  It cannot grow on its own, but it can survive out there for now.  I know, it's not exactly a field of daisies, but it's a start. Keep it up.'",
+        narrative: "Receiving transmission...\n  'That's what I'm talking about! A real temperature change.  You should start growing some lichen now.  It cannot grow on its own, but it can survive out there for now.  I know, it's not exactly a field of daisies, but it's a start. Keep it up.  Just like any other plant, lichen can breathe in CO2, sip some water, and spit out O2.  We like oxygen.  At least, I like oxygen.  Makes it easier to breathe.'",
         prerequisites: ["chapter2.4"],
         objectives: [],
         reward: []
@@ -640,7 +654,7 @@ var progressMars = {
         id: "chapter3.1",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way. Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2.'",
+        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way—like nature's questionable fashion choice, but hey, it's working! Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'",
         prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',
@@ -666,7 +680,7 @@ var progressMars = {
         id: "chapter3.3",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Now we need more air. And a quick tip: your ice harvesters are about to become obsolete. Switch to pumps when you get a chance.'",
+        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Now we need more air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.  And a quick tip: your ice harvesters are about to become obsolete. Switch to pumps when you get a chance.'",
         prerequisites: ["chapter3.2"],
         objectives: [{
           type: 'terraforming',
@@ -679,7 +693,7 @@ var progressMars = {
         id: "chapter3.4",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'You're almost there, H.O.P.E. Get all the numbers in the green, and you can send us your final report. Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon. It's not rocket science... well, it is, but you get the idea.'",
+        narrative: "Receiving transmission...\n  'You're almost there, H.O.P.E. Get all the numbers in the green, and you can send us your final report. Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water. It's not rocket science... well, it is, but you get the idea.'",
         prerequisites: ["chapter3.3"],
         objectives: [{
           type: 'terraforming',
