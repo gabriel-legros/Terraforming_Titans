@@ -99,6 +99,63 @@ const terraformingUICache = {
   luminosity: {}
 };
 
+const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
+
+let temperatureInfographicOverlay = null;
+let temperatureInfographicCloseButton = null;
+
+function ensureTemperatureInfographicOverlay() {
+  if (temperatureInfographicOverlay) {
+    return {
+      overlay: temperatureInfographicOverlay,
+      closeButton: temperatureInfographicCloseButton
+    };
+  }
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('terraforming-infographic-overlay');
+
+  const windowElement = document.createElement('div');
+  windowElement.classList.add('terraforming-infographic-window');
+
+  const image = document.createElement('img');
+  image.classList.add('terraforming-infographic-image');
+  image.src = TEMPERATURE_INFOGRAPHIC_PATH;
+  image.alt = 'Terraforming temperature infographic';
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.classList.add('terraforming-infographic-close');
+  closeButton.textContent = 'Close';
+
+  windowElement.appendChild(image);
+  windowElement.appendChild(closeButton);
+  overlay.appendChild(windowElement);
+  document.body.appendChild(overlay);
+
+  temperatureInfographicOverlay = overlay;
+  temperatureInfographicCloseButton = closeButton;
+
+  closeButton.addEventListener('click', hideTemperatureInfographicOverlay);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      hideTemperatureInfographicOverlay();
+    }
+  });
+
+  return { overlay, closeButton };
+}
+
+function showTemperatureInfographicOverlay() {
+  const elements = ensureTemperatureInfographicOverlay();
+  elements.overlay.classList.add('is-visible');
+}
+
+function hideTemperatureInfographicOverlay() {
+  const elements = ensureTemperatureInfographicOverlay();
+  elements.overlay.classList.remove('is-visible');
+}
+
 const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
   "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
   "",
@@ -130,6 +187,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
 }
 
 function resetTerraformingUI() {
+  temperatureInfographicOverlay?.classList.remove('is-visible');
   terraformingSummaryInitialized = false;
   terraformingTabsInitialized = false;
   terraformingTabElements.subtabs = [];
@@ -427,6 +485,15 @@ function createTemperatureBox(row) {
       "- Colonist Comfort: Extreme temperatures increase energy consumption for life support."
     ].join('\n');
     tempInfo.innerHTML = '&#9432;';
+    const tempInfographicButton = document.createElement('button');
+    tempInfographicButton.type = 'button';
+    tempInfographicButton.classList.add('terraforming-infographic-button');
+    tempInfographicButton.title = 'Open temperature infographic';
+    tempInfographicButton.setAttribute('aria-label', 'Open temperature infographic');
+    const tempInfographicIcon = document.createElement('span');
+    tempInfographicIcon.classList.add('terraforming-infographic-icon');
+    tempInfographicIcon.innerHTML = '?';
+    tempInfographicButton.appendChild(tempInfographicIcon);
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
@@ -473,7 +540,10 @@ function createTemperatureBox(row) {
     const temperatureHeading = temperatureBox.querySelector('h3');
     if (temperatureHeading) {
       temperatureHeading.appendChild(tempInfo);
+      temperatureHeading.appendChild(tempInfographicButton);
     }
+    const infographicElements = ensureTemperatureInfographicOverlay();
+    tempInfographicButton.addEventListener('click', showTemperatureInfographicOverlay);
 
     const energyPenaltySpan = document.createElement('p');
     energyPenaltySpan.id = 'temperature-energy-penalty';
@@ -528,7 +598,9 @@ function createTemperatureBox(row) {
       energyPenalty: temperatureBox.querySelector('#temperature-energy-penalty'),
       maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty'),
       maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
-      maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info')
+      maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info'),
+      infographicButton: tempInfographicButton,
+      infographicOverlay: infographicElements.overlay
     };
   }
 

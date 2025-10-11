@@ -68,3 +68,86 @@
 
   /* Tooltip rules moved to src/css/tooltips.css */
 
+.terraforming-infographic-button {
+    margin-left: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: #333;
+    font-size: 16px;
+  }
+
+  .terraforming-infographic-button:hover,
+  .terraforming-infographic-button:focus {
+    color: #1b6ac9;
+  }
+
+  .terraforming-infographic-button:focus {
+    outline: 2px solid #1b6ac9;
+    outline-offset: 2px;
+  }
+
+  .terraforming-infographic-icon {
+    line-height: 1;
+  }
+
+  .terraforming-infographic-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 1200;
+    padding: 16px;
+  }
+
+  .terraforming-infographic-overlay.is-visible {
+    display: flex;
+  }
+
+  .terraforming-infographic-window {
+    background-color: #0d0d0d;
+    border-radius: 6px;
+    padding: 16px;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .terraforming-infographic-image {
+    max-width: 100%;
+    max-height: calc(100vh - 160px);
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  .terraforming-infographic-close {
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .terraforming-infographic-close:hover,
+  .terraforming-infographic-close:focus {
+    background-color: #45a049;
+  }
+
+  .terraforming-infographic-close:focus {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
