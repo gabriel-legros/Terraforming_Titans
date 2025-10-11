@@ -52,28 +52,31 @@ class GalaxyOperationManager {
     }
 
     update(deltaMs) {
-        if (!Number.isFinite(deltaMs) || deltaMs <= 0 || !this.operations.size) {
+        if (!Number.isFinite(deltaMs) || deltaMs <= 0) {
             return;
         }
-        const completed = [];
-        this.operations.forEach((operation, key) => {
-            if (!operation || operation.status !== 'running') {
-                return;
-            }
-            operation.elapsedMs += deltaMs;
-            if (operation.elapsedMs >= operation.durationMs) {
-                operation.elapsedMs = operation.durationMs;
-                completed.push(key);
-            }
-        });
-        completed.forEach((key) => {
-            const operation = this.operations.get(key);
-            if (!operation) {
-                return;
-            }
-            this.#completeOperation(operation);
-            this.operations.delete(key);
-        });
+        if (this.operations.size) {
+            const completed = [];
+            this.operations.forEach((operation, key) => {
+                if (!operation || operation.status !== 'running') {
+                    return;
+                }
+                operation.elapsedMs += deltaMs;
+                if (operation.elapsedMs >= operation.durationMs) {
+                    operation.elapsedMs = operation.durationMs;
+                    completed.push(key);
+                }
+            });
+            completed.forEach((key) => {
+                const operation = this.operations.get(key);
+                if (!operation) {
+                    return;
+                }
+                this.#completeOperation(operation);
+                this.operations.delete(key);
+            });
+        }
+        this.#processAutoLaunch();
     }
 
     saveState() {
@@ -802,6 +805,94 @@ class GalaxyOperationManager {
         }
         return { q, r };
     }
+
+    #processAutoLaunch() {
+        if (!this.autoSectors.size || !this.manager || !this.manager.enabled) {
+            return;
+        }
+        const faction = this.manager.getFaction?.(this.uhfFactionId);
+        if (!faction) {
+            return;
+        }
+        const threshold = this.getOperationAutoThreshold();
+        if (!Number.isFinite(threshold) || threshold <= 0) {
+            return;
+        }
+        const antimatterResource = typeof resources === 'object' && resources !== null
+            ? resources?.special?.antimatter
+            : null;
+        let availableAntimatter = antimatterResource ? Number(antimatterResource.value) : 0;
+        if (!Number.isFinite(availableAntimatter) || availableAntimatter < 0) {
+            availableAntimatter = 0;
+        }
+        let launched = false;
+        const uiAllocationUpdater = (typeof globalThis !== 'undefined'
+            && globalThis.GalaxyOperationUI
+            && typeof globalThis.GalaxyOperationUI.applyExternalAllocation === 'function')
+            ? globalThis.GalaxyOperationUI.applyExternalAllocation
+            : null;
+        this.autoSectors.forEach((rawKey) => {
+            if (!rawKey) {
+                return;
+            }
+            const sectorKey = String(rawKey);
+            const currentOperation = this.operations.get(sectorKey);
+            if (currentOperation && currentOperation.status === 'running') {
+                return;
+            }
+            const availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
+                ? faction.fleetPower
+                : 0;
+            if (!(availablePower > 0)) {
+                return;
+            }
+            const sector = this.manager.sectors.get(sectorKey);
+            if (!sector) {
+                return;
+            }
+            const sectorDefense = this.manager.getSectorDefensePower
+                ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId)
+                : 0;
+            const requiredPower = sectorDefense > 0 ? sectorDefense * threshold : 0;
+            const normalizedPower = Math.round(requiredPower * 100) / 100;
+            if (!(normalizedPower > 0) || normalizedPower > availablePower) {
+                return;
+            }
+            const antimatterCost = normalizedPower * 1000;
+            if (antimatterCost > 0 && antimatterCost > availableAntimatter) {
+                return;
+            }
+            const successChance = this.getOperationSuccessChance({
+                sectorKey,
+                factionId: this.uhfFactionId,
+                assignedPower: normalizedPower
+            });
+            if (!(successChance > 0)) {
+                return;
+            }
+            const operation = this.startOperation({
+                sectorKey,
+                factionId: this.uhfFactionId,
+                assignedPower: normalizedPower,
+                successChance
+            });
+            if (!operation) {
+                return;
+            }
+            if (antimatterCost > 0 && antimatterResource) {
+                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
+                antimatterResource.value = availableAntimatter;
+            }
+            operation.launchCost = antimatterCost;
+            if (uiAllocationUpdater) {
+                uiAllocationUpdater(sectorKey, normalizedPower);
+            }
+            launched = true;
+        });
+        if (launched && typeof this.refreshUI === 'function') {
+            this.refreshUI();
+        }
+    }
 }
 
 if (typeof window !== 'undefined') {
@@ -818,4 +909,3 @@ if (typeof module !== 'undefined' && module.exports) {
         DEFAULT_OPERATION_AUTO_THRESHOLD
     };
 }
-
