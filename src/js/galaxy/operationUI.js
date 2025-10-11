@@ -5,6 +5,26 @@ const GalaxyOperationUI = (() => {
     let cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     let context = { manager: null, cache: null };
 
+    function isSectorFullyControlled(manager, sector, faction) {
+        if (!manager || !sector) {
+            return false;
+        }
+        const operationManager = manager.operationManager;
+        const factionId = faction?.id || operationManager?.uhfFactionId || 'uhf';
+        if (operationManager?.isFactionFullControlSector?.(sector, factionId)) {
+            return true;
+        }
+        const totalControl = sector.getTotalControlValue?.();
+        if (!Number.isFinite(totalControl) || totalControl <= 0) {
+            return false;
+        }
+        const controlValue = sector.getControlValue?.(factionId);
+        if (!Number.isFinite(controlValue)) {
+            return false;
+        }
+        return Math.abs(controlValue - totalControl) <= 1e-6;
+    }
+
     function getManager() {
         return galaxyManager;
     }
@@ -445,6 +465,9 @@ const GalaxyOperationUI = (() => {
         if (!faction) {
             return;
         }
+        if (isSectorFullyControlled(manager, sector, faction)) {
+            return;
+        }
         const availablePower = Math.max(0, faction.fleetPower);
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
@@ -830,6 +853,18 @@ const GalaxyOperationUI = (() => {
         const faction = manager.getFaction((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
             ? globalThis.UHF_FACTION_ID
             : 'uhf');
+        if (isSectorFullyControlled(manager, sector, faction)) {
+            operationsEmpty.classList.remove('is-hidden');
+            operationsEmpty.textContent = 'Sector already fully controlled by the UHF.';
+            operationsForm.classList.add('is-hidden');
+            operationsCostValue.textContent = '0';
+            operationsStatusMessage.textContent = '';
+            if (operationsDurationValue) {
+                operationsDurationValue.textContent = '—';
+            }
+            disableAllControls();
+            return;
+        }
         const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);

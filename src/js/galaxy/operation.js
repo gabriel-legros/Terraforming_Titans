@@ -337,6 +337,9 @@ class GalaxyOperationManager {
             return null;
         }
         const attackerId = factionId || this.uhfFactionId;
+        if (this.isFactionFullControlSector?.(sector, attackerId)) {
+            return null;
+        }
         const existing = this.operations.get(sectorKey);
         if (existing && existing.status === 'running') {
             if (!existing.originHex) {
@@ -877,6 +880,9 @@ class GalaxyOperationManager {
             }
             const sector = this.manager.sectors.get(sectorKey);
             if (!sector) {
+                return;
+            }
+            if (this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
                 return;
             }
             const sectorDefense = this.manager.getSectorDefensePower
