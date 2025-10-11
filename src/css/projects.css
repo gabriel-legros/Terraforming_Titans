@@ -79,7 +79,7 @@
     padding: 8px;
     border: none;
     border-radius: 4px;
-    color: white;
+    color: #000000;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -197,6 +197,153 @@
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+/* --- Import Resources Card --- */
+.import-resources-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.import-resources-row {
+    display: grid;
+    grid-template-columns: minmax(250px, auto) minmax(220px, auto) minmax(120px, auto) minmax(220px, auto) minmax(0, 1fr);
+    column-gap: 8px;
+    row-gap: 6px;
+    align-items: center;
+}
+
+.import-resources-header {
+    font-size: 0.9em;
+}
+
+.import-resources-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.import-name-cell {
+    align-items: flex-start;
+}
+
+.import-progress-button-container {
+    width: 100%;
+}
+
+.import-progress-button {
+    font-size: 0.75em;
+    padding: 4px 6px;
+    line-height: 1.2;
+}
+
+.import-progress-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.import-progress-status {
+    display: block;
+    font-weight: 400;
+}
+
+.import-assignment-cell {
+    gap: 6px;
+}
+
+.import-assignment-info {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.9em;
+}
+
+.import-assigned-value {
+    font-weight: bold;
+}
+
+.import-assignment-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.import-auto-assign-cell {
+    align-items: flex-start;
+}
+
+.import-total-gain-cell {
+    font-size: 0.9em;
+    gap: 2px;
+}
+
+.import-total-cost {
+    font-size: 0.85em;
+}
+
+.import-total-gain {
+    font-size: 0.85em;
+}
+
+.import-resources-detail {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.import-resources-detail:last-child {
+    border-bottom: none;
+}
+
+
+.import-top-row {
+    display: grid;
+    grid-template-columns: minmax(250px, auto) minmax(220px, auto) minmax(120px, auto) minmax(220px, auto) minmax(0, 1fr);
+    align-items: flex-end;
+    column-gap: 8px;
+    margin: 8px 0 6px 0;
+}
+
+.import-top-spacer {
+    justify-content: flex-end;
+}
+
+.import-spacer-cell {
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.import-top-cell {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.import-top-available .import-available-display {
+    font-weight: bold;
+}
+
+.import-top-multiplier {
+    justify-content: flex-start;
+}
+
+.import-available-display {
+    font-weight: bold;
+}
+
+.import-multiplier-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.import-cost-per-shipment {
+    font-size: 0.9em;
+    margin-bottom: 6px;
 }
 
 .project-summary-content .stat-value {
@@ -454,11 +601,12 @@
 }
 
 .galactic-market-row {
-    grid-template-columns: minmax(100px, 1fr) 110px 100px minmax(150px, 1fr) 100px 110px 150px;
+    grid-template-columns: 120px 120px 110px minmax(130px, auto) minmax(190px, auto) minmax(130px, auto) 110px 1fr;
 }
 
 .galactic-market-row input[type="number"] {
     width: 100%;
+    max-width: 110px;
 }
 
 .galactic-market-controls {
@@ -474,8 +622,8 @@
     justify-self: center;
 }
 
-.galactic-market-row:not(.galactic-market-header) > *:nth-child(3),
-.galactic-market-row:not(.galactic-market-header) > *:nth-child(5) {
+.galactic-market-row:not(.galactic-market-header) > *:nth-child(4),
+.galactic-market-row:not(.galactic-market-header) > *:nth-child(6) {
     justify-self: stretch;
 }
 
@@ -588,6 +736,38 @@
     justify-self: start;
 }
 
+.worker-capacity-amount-section .worker-capacity-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.worker-capacity-amount-section .amount-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.worker-capacity-amount-section .amount-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.worker-capacity-amount-section .scanner-main-controls,
+.worker-capacity-amount-section .scanner-mult-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.worker-capacity-amount-section .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .scanner-assignment-container {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -660,6 +840,10 @@
 }
 
 .pressure-control .pressure-input {
+    width: 60px;
+}
+
+.oxygenPressure-control .oxygenPressure-input {
     width: 60px;
 }
 

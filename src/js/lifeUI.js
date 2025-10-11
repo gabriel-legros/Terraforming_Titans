@@ -68,8 +68,12 @@ const lifeUICache = {
   modifyButtons: [],
   tempUnits: [],
   pointShopButtons: [],
+  pointShopQuantityDisplay: null,
+  pointShopDecreaseButton: null,
+  pointShopIncreaseButton: null,
   tentativeCells: [],
-  attributeCells: {}, // { [attributeName]: { currentDiv, tentativeDiv, tentativeDisplay, tentativeCell } }
+  bioworkforceElements: [],
+  attributeCells: {}, // { [attributeName]: { row, currentDiv, tentativeDiv, tentativeDisplay, tentativeCell, modifyCell } }
   cells: {
     dayTemp: {},
     nightTemp: {},
@@ -84,6 +88,8 @@ const lifeUICache = {
     growthRateTooltip: {}
   }
 };
+
+let lifePointPurchaseQuantity = 1;
 
 function cacheLifeModifyButtons() {
   lifeUICache.modifyButtons = Array.from(document.querySelectorAll('.life-tentative-btn'));
@@ -147,24 +153,38 @@ function cacheLifeTentativeCells() {
 function cacheLifeAttributeCells() {
   lifeUICache.attributeCells = {};
   baseLifeAttributeOrder.forEach(attributeName => {
+    const row = document.getElementById(`life-attribute-row-${attributeName}`);
     const currentDiv = document.getElementById(`${attributeName}-current-value`);
     const tentativeDiv = document.getElementById(`${attributeName}-tentative-value`);
     const tentativeDisplay = tentativeDiv ? tentativeDiv.querySelector('.life-tentative-display') : null;
     const tentativeCell = tentativeDiv ? tentativeDiv.closest('.tentative-design-cell') : null;
+    const modifyCell = row ? row.querySelector('.modify-buttons-cell') : null;
     lifeUICache.attributeCells[attributeName] = {
+      row,
       currentDiv,
       tentativeDiv,
       tentativeDisplay,
       tentativeCell,
+      modifyCell,
     };
   });
+}
+
+function cacheBioworkforceElements() {
+  lifeUICache.bioworkforceElements = Array.from(
+    document.querySelectorAll('[data-bioworkforce-ui]')
+  );
 }
 
 function invalidateLifeUICache() {
   lifeUICache.modifyButtons = [];
   lifeUICache.tempUnits = [];
   lifeUICache.pointShopButtons = [];
+  lifeUICache.pointShopQuantityDisplay = null;
+  lifeUICache.pointShopDecreaseButton = null;
+  lifeUICache.pointShopIncreaseButton = null;
   lifeUICache.tentativeCells = [];
+  lifeUICache.bioworkforceElements = [];
   lifeUICache.attributeCells = {};
 }
 
@@ -218,6 +238,11 @@ function initializeLifeTerraformingDesignerUI() {
               </div>
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
+               <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+                <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
+                <button id="life-point-quantity-divide" title="Buy fewer points each purchase">/10</button>
+                <button id="life-point-quantity-multiply" title="Buy more points each purchase">x10</button>
+               </div>
             </div>
         </div>
 
@@ -336,7 +361,7 @@ function initializeLifeTerraformingDesignerUI() {
         const isBioworkforceRow = attributeName === 'bioworkforce';
         const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
         rows += `
-          <tr id="life-attribute-row-${attributeName}"${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
+          <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${attribute.displayName} (Max ${attribute.maxUpgrades})
               <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ' <span class="info-tooltip-icon" title="Each point assigns 0.00001 of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>' : ''}</div>
@@ -444,14 +469,38 @@ function initializeLifeTerraformingDesignerUI() {
   // Generate the point shop buttons (Target the moved div)
   const lifePointShopDiv = document.getElementById('life-point-shop');
   if (lifePointShopDiv) { // Check if element exists before adding content
+      lifeUICache.pointShopQuantityDisplay = document.getElementById('life-point-quantity-display');
+      lifeUICache.pointShopDecreaseButton = document.getElementById('life-point-quantity-divide');
+      lifeUICache.pointShopIncreaseButton = document.getElementById('life-point-quantity-multiply');
+
+      const decreaseButton = lifeUICache.pointShopDecreaseButton;
+      if (decreaseButton) {
+        decreaseButton.addEventListener('click', () => {
+          if (lifePointPurchaseQuantity > 1) {
+            lifePointPurchaseQuantity = Math.max(1, Math.floor(lifePointPurchaseQuantity / 10));
+            updateLifeUI();
+          }
+        });
+      }
+
+      const increaseButton = lifeUICache.pointShopIncreaseButton;
+      if (increaseButton) {
+        increaseButton.addEventListener('click', () => {
+          if (lifePointPurchaseQuantity < 100) {
+            lifePointPurchaseQuantity = Math.min(100, lifePointPurchaseQuantity * 10);
+            updateLifeUI();
+          }
+        });
+      }
+
       lifeShopCategories.forEach((category, index) => {
         const categoryContainer = document.createElement('div');
         categoryContainer.classList.add('shop-category-container');
-      
+
         // Add button
         const button = document.createElement('button');
-        const initialCost = lifeDesigner.getPointCost(category.name);
-        button.textContent = `Buy with ${category.name} (${formatNumber(initialCost, true)})`;
+        const quantity = lifePointPurchaseQuantity;
+        button.textContent = `Buy ${quantity} with ${category.name}`;
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);
@@ -476,8 +525,9 @@ function initializeLifeTerraformingDesignerUI() {
           // Actual listener logic moved inside here
           if (event.target.classList.contains('life-point-shop-btn')) {
               const category = event.target.dataset.category;
-              if (lifeDesigner.canAfford(category)) {
-                  lifeDesigner.buyPoint(category);
+              const quantity = lifePointPurchaseQuantity;
+              if (lifeDesigner.canAfford(category, quantity)) {
+                  lifeDesigner.buyPoint(category, quantity);
                   updateLifeUI();
               }
           }
@@ -504,6 +554,7 @@ function initializeLifeTerraformingDesignerUI() {
   cacheLifeModifyButtons();
   cacheLifeTentativeCells();
   cacheLifeAttributeCells();
+  cacheBioworkforceElements();
   cacheLifePointShopButtons();
   document.dispatchEvent(new Event('lifeStatusTableRebuilt'));
 }
@@ -520,6 +571,9 @@ function updateLifeUI() {
     lifeTerraformingDiv.style.display = 'none';
     if (lockedMessage) lockedMessage.style.display = 'block';
   }
+
+    const bioworkforceUnlocked = isBioworkforceUnlocked();
+    toggleBioworkforceElements(bioworkforceUnlocked);
 
     updateDesignValues();
     updatePointsDisplay();
@@ -542,6 +596,20 @@ function updateLifeUI() {
     const applyProgressContainer = document.getElementById('life-apply-progress-container');
     const applyProgressBar = document.getElementById('life-apply-progress');
     const modifyButtons = lifeUICache.modifyButtons;
+    const quantityDisplay = lifeUICache.pointShopQuantityDisplay;
+    if (quantityDisplay) {
+      quantityDisplay.textContent = lifePointPurchaseQuantity;
+    }
+
+    const decreaseButton = lifeUICache.pointShopDecreaseButton;
+    if (decreaseButton) {
+      decreaseButton.disabled = lifePointPurchaseQuantity === 1;
+    }
+
+    const increaseButton = lifeUICache.pointShopIncreaseButton;
+    if (increaseButton) {
+      increaseButton.disabled = lifePointPurchaseQuantity === 100;
+    }
 
     if (lifeDesigner.tentativeDesign) {
         tentativeDesignHeader.style.display = 'table-cell';
@@ -597,10 +665,12 @@ function updateLifeUI() {
     const pointShopButtons = lifeUICache.pointShopButtons;
     pointShopButtons.forEach(button => {
       const category = button.dataset.category;
-      const cost = lifeDesigner.getPointCost(category);
-      button.textContent = `Buy with ${category} (${formatNumber(cost, true)})`;
-      button.disabled = !lifeDesigner.canAfford(category);
-      button.style.backgroundColor = lifeDesigner.canAfford(category) ? '' : 'red';
+      const quantity = lifePointPurchaseQuantity;
+      const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
+      button.textContent = `Buy ${quantity} with ${formatNumber(totalCost, true)} ${category}`;
+      const affordable = lifeDesigner.canAfford(category, quantity);
+      button.disabled = !affordable;
+      button.style.backgroundColor = affordable ? '' : 'red';
     });
 
   }
@@ -619,10 +689,31 @@ function updateLifeUI() {
         });
     }
   
+    function toggleBioworkforceElements(bioworkforceUnlocked) {
+      if (!lifeUICache.bioworkforceElements.length) {
+        cacheBioworkforceElements();
+      }
+
+      lifeUICache.bioworkforceElements.forEach(element => {
+        element.style.display = bioworkforceUnlocked ? '' : 'none';
+      });
+
+      if (!bioworkforceUnlocked) {
+        const bioworkforceCells = lifeUICache.attributeCells.bioworkforce || {};
+        const modifyCell = bioworkforceCells.modifyCell;
+        const tentativeCell = bioworkforceCells.tentativeCell;
+        if (modifyCell) {
+          modifyCell.style.display = 'none';
+        }
+        if (tentativeCell) {
+          tentativeCell.style.display = 'none';
+        }
+      }
+    }
+
     function updateDesignValues() {
       // Use the same attribute order as in generateAttributeRows
       const attributeOrder = baseLifeAttributeOrder;
-      const bioworkforceUnlocked = isBioworkforceUnlocked();
 
       attributeOrder.forEach(attributeName => {
         // Update Current Design Value (cached)
@@ -648,19 +739,6 @@ function updateLifeUI() {
             tentativeCell.style.display = 'table-cell';
           } else {
             tentativeCell.style.display = 'none';
-          }
-        }
-
-        if (attributeName === 'bioworkforce') {
-          const row = document.getElementById('life-attribute-row-bioworkforce');
-          if (row) {
-            row.style.display = bioworkforceUnlocked ? '' : 'none';
-            if (!bioworkforceUnlocked) {
-              const modifyCell = row.querySelector('.modify-buttons-cell');
-              if (modifyCell) {
-                modifyCell.style.display = 'none';
-              }
-            }
           }
         }
 

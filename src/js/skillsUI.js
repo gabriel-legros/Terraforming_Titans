@@ -7,6 +7,7 @@ let skillSVGEl = null;
 const skillButtonEls = {};
 let skillResizeObserver = null;
 let skillRedrawQueued = false;
+let awakeningAlertPending = false;
 
 function queueSkillRedraw() {
     if (skillRedrawQueued) return;
@@ -54,6 +55,43 @@ const skillLayout = {
 function updateSkillPointDisplay() {
     const span = document.getElementById('skill-points-value');
     if (span) span.textContent = skillManager.skillPoints;
+}
+
+function notifySkillPointGained(amount = 1) {
+    updateSkillTreeUI();
+    if (!amount || amount <= 0) return;
+
+    awakeningAlertPending = true;
+    const awakeningContent = document.getElementById ? document.getElementById('awakening-hope') : null;
+    const awakeningActive = !!(awakeningContent && awakeningContent.classList && awakeningContent.classList.contains('active'));
+
+    if (awakeningActive) {
+        awakeningAlertPending = false;
+        if (typeof clearAwakeningSubtabAlert === 'function') {
+            clearAwakeningSubtabAlert();
+        }
+        if (typeof updateHopeAlert === 'function') {
+            updateHopeAlert();
+        }
+        return;
+    }
+
+    if (typeof setAwakeningSubtabAlert === 'function') {
+        awakeningAlertPending = false;
+        setAwakeningSubtabAlert(true);
+        return;
+    }
+
+    const awakeningAlert = document.getElementById ? document.getElementById('awakening-subtab-alert') : null;
+    if (awakeningAlert) awakeningAlert.style.display = 'inline';
+    const hopeAlert = document.getElementById ? document.getElementById('hope-alert') : null;
+    if (hopeAlert) hopeAlert.style.display = 'inline';
+}
+
+function consumePendingAwakeningAlert() {
+    const pending = awakeningAlertPending;
+    awakeningAlertPending = false;
+    return pending;
 }
 
 function updateSkillButton(skill) {
@@ -260,5 +298,5 @@ function initializeSkillsUI() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { canUnlockSkill };
+    module.exports = { canUnlockSkill, notifySkillPointGained, consumePendingAwakeningAlert };
 }

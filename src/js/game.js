@@ -255,6 +255,10 @@ function initializeGameState(options = {}) {
   if (savedConstructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
     restoreConstructionOfficeSettings(savedConstructionOffice);
   }
+
+  lifeDesigner = new LifeDesigner();
+  lifeManager = new LifeManager();
+
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);
   } else {
@@ -331,9 +335,6 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !warpGateCommand) {
     warpGateCommand = new WarpGateCommand();
   }
-
-  lifeDesigner = new LifeDesigner();
-  lifeManager = new LifeManager();
 
   milestonesManager = new MilestonesManager();
   if (!preserveManagers || !galaxyManager) {

@@ -534,7 +534,8 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      megaHeatSink: true
+      megaHeatSink: true,
+      workersPerCompletion: 1_000_000_000,
     }
   },
   disposeResources : {

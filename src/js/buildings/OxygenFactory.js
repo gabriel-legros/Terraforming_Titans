@@ -14,6 +14,8 @@ class OxygenFactory extends Building {
   }
 
   updateProductivity(resources, deltaTime) {
+    this.setAutomationActivityMultiplier(1);
+
     const {
       targetProductivity: baseTarget,
       hasAtmosphericOversight,
@@ -22,6 +24,7 @@ class OxygenFactory extends Building {
     } = this.computeBaseProductivity(resources, deltaTime);
 
     if (this.active === 0) {
+      this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;
     }
@@ -44,6 +47,7 @@ class OxygenFactory extends Building {
         terraforming.celestialParameters.radius
       );
       if (currentPa >= targetPa) {
+        this.setAutomationActivityMultiplier(0);
         this.productivity = 0;
         return;
       }
@@ -150,6 +154,17 @@ class OxygenFactory extends Building {
     if (o2Els.unitSpan) {
       o2Els.unitSpan.textContent = 'kPa';
     }
+  }
+
+  saveState() {
+    const state = super.saveState();
+    state.automationSettings = OxygenFactory.saveAutomationSettings();
+    return state;
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    OxygenFactory.loadAutomationSettings(state?.automationSettings);
   }
 
   static getAutomationSettings() {

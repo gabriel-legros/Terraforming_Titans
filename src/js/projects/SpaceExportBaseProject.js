@@ -7,6 +7,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disablePressureThreshold = 0;
     this.pressureUnit = 'kPa';
   }
+
+  getAutomationTemperatureReading() {
+    if (typeof terraforming !== 'undefined' && terraforming.temperature) {
+      const reading = terraforming.temperature.value;
+      return Number.isFinite(reading) ? reading : 0;
+    }
+    return 0;
+  }
   renderUI(container) {
     super.renderUI(container);
     if (this.attributes.disposable) {
@@ -340,11 +348,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
   shouldAutomationDisable() {
     if (this.disableBelowTemperature) {
-      if (typeof terraforming !== 'undefined' && terraforming.temperature) {
-        const temp = terraforming.temperature.value || 0;
-        if (temp <= this.disableTemperatureThreshold) {
-          return true;
-        }
+      const temp = this.getAutomationTemperatureReading();
+      if (temp <= this.disableTemperatureThreshold) {
+        return true;
       }
     }
     if (this.disableBelowPressure && this.selectedDisposalResource?.category === 'atmospheric' &&
@@ -369,11 +375,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (!super.canStart()) return false;
 
     if (this.disableBelowTemperature) {
-      if (typeof terraforming !== 'undefined' && terraforming.temperature) {
-        const temp = terraforming.temperature.value || 0;
-        if (temp <= this.disableTemperatureThreshold) {
-          return false;
-        }
+      const temp = this.getAutomationTemperatureReading();
+      if (temp <= this.disableTemperatureThreshold) {
+        return false;
       }
     }
 

@@ -13,6 +13,7 @@ function loadGalaxyConstants() {
     global.UHF_FLEET_PER_WORLD = 100;
     global.factionDefaultSectorValue = 100;
     global.REPLACEMENT_SECONDS = 3600;
+    global.DEFAULT_OPERATION_AUTO_THRESHOLD = 2.1;
     global.BORDER_CONTROL_EPSILON = 1e-6;
     global.BORDER_HEX_NEIGHBOR_DIRECTIONS = [
         { q: 1, r: 0 },

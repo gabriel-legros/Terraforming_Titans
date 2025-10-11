@@ -227,34 +227,43 @@ class GalaxyFaction {
             return;
         }
         const currentPower = Math.max(0, this.fleetPower);
-        if (currentPower >= capacity) {
-            this.fleetPower = currentPower;
+        const reserved = manager?.getReservedOperationPower?.(this.id) ?? 0;
+        const activeReserve = Number.isFinite(reserved) && reserved > 0 ? reserved : 0;
+        const effectivePower = currentPower + activeReserve;
+        const capacityGap = capacity - effectivePower;
+        if (!(capacityGap > 0)) {
+            const allowance = capacity - activeReserve;
+            if (allowance >= 0 && currentPower > allowance) {
+                this.fleetPower = allowance;
+            } else {
+                this.fleetPower = currentPower;
+            }
             return;
         }
         const seconds = deltaTime / 1000;
         if (!Number.isFinite(seconds) || seconds <= 0) {
             return;
         }
-        const deficit = capacity - currentPower;
-        const baseChange = (deficit * seconds) / REPLACEMENT_SECONDS;
-        if (baseChange === 0) {
-            this.fleetPower = currentPower;
+        const baseChange = (capacityGap * seconds) / REPLACEMENT_SECONDS;
+        if (!(baseChange > 0)) {
             return;
         }
         const halfCapacity = capacity * 0.5;
         let penalty = 0;
-        if (currentPower > halfCapacity && halfCapacity > 0) {
-            penalty = Math.min(1, (currentPower - halfCapacity) / halfCapacity);
+        if (effectivePower > halfCapacity && halfCapacity > 0) {
+            penalty = Math.min(1, (effectivePower - halfCapacity) / halfCapacity);
         }
-        const multiplier = 1 - penalty;
-        const delta = baseChange * multiplier;
-        const nextPower = currentPower + delta;
-        const increasedPower = Math.max(0, nextPower);
-        if (increasedPower >= capacity) {
-            this.fleetPower = capacity;
+        const delta = baseChange * (1 - penalty);
+        if (!(delta > 0)) {
             return;
         }
-        this.fleetPower = increasedPower;
+        const appliedDelta = Math.min(delta, capacityGap);
+        if (!(appliedDelta > 0)) {
+            return;
+        }
+        const allowance = capacity - activeReserve;
+        const nextPower = currentPower + appliedDelta;
+        this.fleetPower = allowance >= 0 ? Math.min(nextPower, allowance) : Math.max(0, nextPower);
     }
 
     markControlDirty() {

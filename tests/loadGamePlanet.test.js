@@ -29,7 +29,8 @@ describe('load game planet initialization', () => {
     }
     const nullElement = createNullElement();
     const doc = dom.window.document;
-    doc.createElement = () => nullElement;
+    const realCreateElement = doc.createElement.bind(doc);
+    doc.createElement = (tagName, ...args) => realCreateElement(tagName, ...args);
     doc.getElementById = () => nullElement;
     doc.querySelector = () => nullElement;
     doc.querySelectorAll = () => [];

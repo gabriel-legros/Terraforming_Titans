@@ -384,11 +384,12 @@ function calculateProductionRates(deltaTime, buildings) {
 
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
+    const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
 
     // Calculate scaled production rates
     for (const category in building.production) {
       for (const resource in building.production[category]) {
-        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource);
+        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
       }
@@ -399,7 +400,7 @@ function calculateProductionRates(deltaTime, buildings) {
       for (const resource in building.consumption[category]) {
         const entry = building.getConsumptionResource ? building.getConsumptionResource(category, resource) : { amount: building.consumption[category][resource] };
         const amount = entry.amount || 0;
-        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
       }
@@ -410,7 +411,7 @@ function calculateProductionRates(deltaTime, buildings) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active * building.productivity;
+      const base = maintenanceCost[resource] * building.active * building.productivity * automationMultiplier;
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
@@ -548,7 +549,7 @@ function produceResources(deltaTime, buildings) {
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
   if(terraforming) {
-    terraforming.updateResources(deltaTime, { skipTemperature: true });
+    terraforming.updateResources(deltaTime);
     terraforming.distributeGlobalChangesToZones(deltaTime);
   }
 

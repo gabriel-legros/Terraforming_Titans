@@ -17,6 +17,49 @@ const projectsUICache = {
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
 
+const existingImportResourcesProjectUI =
+  typeof ImportResourcesProjectUI !== 'undefined'
+    ? ImportResourcesProjectUI
+    : (typeof window !== 'undefined' ? window.ImportResourcesProjectUI : undefined);
+
+let importResourcesProjectUIClass = existingImportResourcesProjectUI;
+
+if (!importResourcesProjectUIClass && typeof require === 'function') {
+  try {
+    importResourcesProjectUIClass = require('./projects/ImportResourcesProjectUI.js');
+  } catch (error) {
+    importResourcesProjectUIClass = existingImportResourcesProjectUI;
+  }
+}
+
+if (!importResourcesProjectUIClass && typeof window !== 'undefined') {
+  importResourcesProjectUIClass = window.ImportResourcesProjectUI;
+}
+
+if (typeof window !== 'undefined' && importResourcesProjectUIClass) {
+  window.ImportResourcesProjectUI = importResourcesProjectUIClass;
+}
+
+let importResourcesController = null;
+
+function getImportResourcesUI() {
+  if (!importResourcesProjectUIClass) {
+    return null;
+  }
+
+  if (!importResourcesController) {
+    importResourcesController = new importResourcesProjectUIClass({
+      getProjectElements: () => projectElements,
+      getOrCreateCategoryContainer,
+      moveProject,
+      toggleProjectCollapse,
+      updateProjectUI: (name) => updateProjectUI(name),
+    });
+  }
+
+  return importResourcesController;
+}
+
 function getProjectSubtabContents() {
   if (!cachedProjectSubtabContents || !Array.isArray(cachedProjectSubtabContents)) {
     cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
@@ -46,7 +89,6 @@ function invalidateAutomationSettingsCache(projectName) {
     els.cachedAutomationItems = Array.from(els.automationSettingsContainer.children);
   }
 }
-
 
 function initializeProjectTabs() {
   if (typeof SubtabManager !== 'function') return;
@@ -93,6 +135,9 @@ function initializeProjectsUI() {
     }
   });
   projectElements = {};
+  if (importResourcesController) {
+    importResourcesController.reset();
+  }
   // Reset list cache; wrapper and content caches persist
   projectsUICache.listByCategory = {};
   // Refresh cached list of content containers
@@ -102,6 +147,12 @@ function initializeProjectsUI() {
 }
 
 function createProjectItem(project) {
+  const importUI = getImportResourcesUI();
+  if (importUI && importUI.isImportProject(project.name)) {
+    importUI.createRow(project);
+    return;
+  }
+
   const projectCard = document.createElement('div');
   projectCard.classList.add('project-card');
   projectCard.dataset.projectName = project.name;
@@ -559,6 +610,8 @@ function updateTotalCostDisplay(project) {
 function updateProjectUI(projectName) {
   const project = projectManager.projects[projectName]; // Use projectManager to get project
   const elements = projectElements[projectName];
+  const importUI = getImportResourcesUI();
+  const isImportProject = !!(importUI && importUI.isImportProject(projectName));
 
   if (!elements) {
     console.error(`UI elements for project "${projectName}" are undefined.`);
@@ -574,10 +627,17 @@ function updateProjectUI(projectName) {
         spaceManager.getCurrentPlanetKey &&
         spaceManager.getCurrentPlanetKey() === project.attributes.planet);
     const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
-    if (visible && planetOk) {
+
+    if (isImportProject && importUI) {
+      const rowVisible = visible && planetOk;
+      if (!importUI.updateVisibility(project, elements, rowVisible)) {
+        return;
+      }
+    } else if (visible && planetOk) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
+      return;
     }
   }
 
@@ -589,18 +649,15 @@ function updateProjectUI(projectName) {
       ? project.getMaxAssignableShips()
       : null;
     const assignedText = formatBigInteger(project.assignedSpaceships);
-    elements.assignedSpaceshipsDisplay.textContent =
-      maxShips != null
-        ? `Spaceships Assigned: ${assignedText}/${formatBigInteger(maxShips)}`
-        : `Spaceships Assigned: ${assignedText}`;
+    if (isImportProject && importUI) {
+      importUI.updateAssignedDisplay(elements, assignedText, maxShips);
+    } else {
+      elements.assignedSpaceshipsDisplay.textContent =
+        maxShips != null
+          ? `Spaceships Assigned: ${assignedText}/${formatBigInteger(maxShips)}`
+          : `Spaceships Assigned: ${assignedText}`;
+    }
   }
-
-  // Update Available Spaceships display if applicable
-  if (elements?.availableSpaceshipsDisplay) {
-    elements.availableSpaceshipsDisplay.textContent = `Available: ${formatBigInteger(Math.floor(resources.special.spaceships.value))}`;
-  }
-
-
 
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
@@ -680,61 +737,101 @@ function updateProjectUI(projectName) {
       elements.progressButton.style.display = 'block';
 
       // Update the duration in the progress bar display
-      if (elements.progressButton) {
-        const spaceshipCtor = globalThis.SpaceshipProject;
-        const cargoCtor = globalThis.CargoRocketProject;
-        const galacticCtor = globalThis.GalacticMarketProject;
-        const isContinuousProject =
-          project.isContinuous() && (
-            (spaceshipCtor && project instanceof spaceshipCtor) ||
-            (cargoCtor && project instanceof cargoCtor) ||
-            (galacticCtor && project instanceof galacticCtor)
-          );
-        if (isContinuousProject) {
-          if (project.autoStart && project.isActive && !project.isPaused) {
+      const spaceshipCtor = globalThis.SpaceshipProject;
+      const cargoCtor = globalThis.CargoRocketProject;
+      const galacticCtor = globalThis.GalacticMarketProject;
+      const isContinuousProject =
+        project.isContinuous() && (
+          (spaceshipCtor && project instanceof spaceshipCtor) ||
+          (cargoCtor && project instanceof cargoCtor) ||
+          (galacticCtor && project instanceof galacticCtor)
+        );
+      if (isContinuousProject) {
+        if (project.autoStart && project.isActive && !project.isPaused) {
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, 'Continuous');
+          } else {
             elements.progressButton.textContent = 'Continuous';
-            elements.progressButton.style.background = '#4caf50';
+          }
+          elements.progressButton.style.background = '#4caf50';
+        } else {
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, 'Stopped');
           } else {
             elements.progressButton.textContent = 'Stopped';
-            elements.progressButton.style.background = '#f44336';
           }
-        } else if (project.isActive) {
-          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-          const progressPercent = project.getProgress();
-          if (project.startingDuration < 1000) {
-            elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining`;
-            // Avoid flashy gradients for instant projects
-            elements.progressButton.style.background = '#4caf50';
+          elements.progressButton.style.background = '#f44336';
+        }
+      } else if (project.isActive) {
+        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+        const progressPercent = project.getProgress();
+        if (project.startingDuration < 1000) {
+          const statusText = `In Progress: ${timeRemaining} seconds remaining`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
-            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+            elements.progressButton.textContent = statusText;
           }
-        } else if (project.isCompleted) {
-          elements.progressButton.textContent = `Completed: ${project.displayName}`;
+          // Avoid flashy gradients for instant projects
           elements.progressButton.style.background = '#4caf50';
-        } else if (project.isPaused) {
-          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            elements.progressButton.textContent = `Resume storage expansion (${timeRemaining}s left)`;
-          } else {
-            elements.progressButton.textContent = `Resume ${project.displayName} (${timeRemaining}s left)`;
-          }
-          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
-          // Update dynamic duration for spaceMining projects
-          let duration = project.getEffectiveDuration();
-          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            elements.progressButton.textContent = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+            elements.progressButton.textContent = statusText;
           }
+          elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+        }
+      } else if (project.isCompleted) {
+        if (isImportProject && importUI) {
+          importUI.setProgressLabel(elements, project, 'Completed');
+        } else {
+          elements.progressButton.textContent = `Completed: ${project.displayName}`;
+        }
+        elements.progressButton.style.background = '#4caf50';
+      } else if (project.isPaused) {
+        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+          const statusText = `Resume storage expansion (${timeRemaining}s left)`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, statusText);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        } else {
+          const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        }
+        elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
+      } else {
+        // Update dynamic duration for spaceMining projects
+        let duration = project.getEffectiveDuration();
+        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+          const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, statusText);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        } else {
+          const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+          } else {
+            elements.progressButton.textContent = statusText;
+          }
+        }
 
-          // Set background color based on whether the project can start
-          if (project.canStart()) {
-            elements.progressButton.style.background = '#4caf50'; // Green if it can be started
-          } else {
-            elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
-          }
+        // Set background color based on whether the project can start
+        if (project.canStart()) {
+          elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+        } else {
+          elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
         }
       }
     }
@@ -805,20 +902,23 @@ function updateProjectUI(projectName) {
   }
 
   // Disable/enable reorder buttons
-  const category = project.category || 'general';
-  const categoryProjectsAll = projectManager
-    .getProjectStatuses()
-    .filter(p => (p.category || 'general') === category);
-  const categoryProjects = categoryProjectsAll.filter(p =>
-    !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
-  );
-  const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
+  const shouldUpdateOrderButtons = !isImportProject || (importUI && projectName === importUI.getHeaderProjectName());
+  if (shouldUpdateOrderButtons) {
+    const category = project.category || 'general';
+    const categoryProjectsAll = projectManager
+      .getProjectStatuses()
+      .filter(p => (p.category || 'general') === category);
+    const categoryProjects = categoryProjectsAll.filter(p =>
+      !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
+    );
+    const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
 
-  if (elements.upButton) {
-    elements.upButton.classList.toggle('disabled', currentIndex <= 0);
-  }
-  if (elements.downButton) {
-    elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
+    if (elements.upButton) {
+      elements.upButton.classList.toggle('disabled', currentIndex <= 0);
+    }
+    if (elements.downButton) {
+      elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
+    }
   }
 
   if (!project.unlocked && project.name === 'dysonSwarmReceiver' && project.collectors > 0) {

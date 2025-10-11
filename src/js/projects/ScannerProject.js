@@ -1,12 +1,25 @@
 
-class ScannerProject extends Project {
+let WorkerCapacityBatchProjectBase;
+
+if (typeof module !== 'undefined' && module.exports) {
+  WorkerCapacityBatchProjectBase = require('./WorkerCapacityBatchProject.js');
+} else {
+  WorkerCapacityBatchProjectBase = WorkerCapacityBatchProject;
+}
+
+class ScannerProject extends WorkerCapacityBatchProjectBase {
   constructor(config, name) {
     super(config, name);
-    this.buildCount = 1;
     this.step = 1;
-    this.activeBuildCount = 1;
-    this.autoMax = true;
     this.el = {};
+  }
+
+  getWorkerCapacityStep() {
+    return this.step;
+  }
+
+  setWorkerCapacityStep(step) {
+    this.step = Math.max(1, Math.round(step));
   }
 
   initializeScanner(planetParameters) {
@@ -53,14 +66,10 @@ class ScannerProject extends Project {
       }
     }
 
-    return {
-      ...super.saveState(),
-      buildCount: this.buildCount,
-      activeBuildCount: this.activeBuildCount,
-      step: this.step,
-      autoMax: this.autoMax,
-      scanData: savedState
-    };
+    const state = super.saveState();
+    state.step = this.step;
+    state.scanData = savedState;
+    return state;
   }
 
   loadState(state) {
@@ -74,18 +83,7 @@ class ScannerProject extends Project {
     }
 
     super.loadState(state);
-    if (state.buildCount !== undefined) {
-      this.buildCount = state.buildCount;
-    }
-    if (state.activeBuildCount !== undefined) {
-      this.activeBuildCount = state.activeBuildCount;
-    }
-    if (state.step !== undefined) {
-      this.step = state.step;
-    }
-    if (state.autoMax !== undefined) {
-      this.autoMax = state.autoMax;
-    }
+    this.step = state.step ?? this.step;
   }
 
   loadScannerConfig(planetParameters) {
@@ -233,63 +231,8 @@ class ScannerProject extends Project {
     return scanData ? scanData.D_current : null;
   }
 
-  getWorkerCapLimit() {
-    const workerCap = Math.ceil((resources?.colony?.workers?.cap || 0) / 5000);
-    if (this.maxRepeatCount === Infinity) {
-      return workerCap;
-    }
-    return Math.max(Math.min(workerCap, this.maxRepeatCount), 1);
-  }
-
-  getEffectiveBuildCount(count = this.buildCount) {
-    const remaining = this.maxRepeatCount === Infinity ? Infinity : this.maxRepeatCount - this.repeatCount;
-    return Math.max(0, Math.min(count, remaining));
-  }
-
-  getScaledCost() {
-    const base = super.getScaledCost();
-    const count =
-      this.isActive
-        ? (this.activeBuildCount || 1)
-        : this.getEffectiveBuildCount(
-            Math.min(this.buildCount, this.getWorkerCapLimit())
-          );
-    const scaled = {};
-    for (const cat in base) {
-      scaled[cat] = {};
-      for (const res in base[cat]) {
-        scaled[cat][res] = base[cat][res] * count;
-      }
-    }
-    return scaled;
-  }
-
-  adjustBuildCount(delta) {
-    const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(this.buildCount + delta, limit));
-  }
-
-  setBuildCount(val) {
-    const limit = this.getWorkerCapLimit();
-    this.buildCount = Math.max(0, Math.min(val, limit));
-  }
-
-  setMaxBuildCount() {
-    this.setBuildCount(this.getWorkerCapLimit());
-  }
-
-  start(resources) {
-    this.activeBuildCount = this.getEffectiveBuildCount(
-      Math.min(this.buildCount, this.getWorkerCapLimit())
-    );
-    return super.start(resources);
-  }
-
   complete() {
-    const n = this.activeBuildCount || 1;
-    for (let i = 0; i < n; i++) {
-      super.complete();
-    }
+    super.complete();
     if (
       this.attributes &&
       this.attributes.scanner &&
@@ -297,7 +240,6 @@ class ScannerProject extends Project {
     ) {
       this.applyScannerEffect();
     }
-    this.activeBuildCount = 1;
   }
 
   applyScannerEffect() {
@@ -315,86 +257,12 @@ class ScannerProject extends Project {
   }
 
   renderUI(container) {
-    const costElement = container.querySelector('.project-cost');
-
-    const topSection = document.createElement('div');
-    topSection.className = 'project-top-section scanner-layout';
-
-    // Cost Section
-    const costSection = document.createElement('div');
-    costSection.className = 'project-section-container';
-    const costTitle = document.createElement('h4');
-    costTitle.className = 'section-title';
-    costTitle.textContent = 'Cost';
-    costSection.appendChild(costTitle);
-    if (costElement) {
-        const label = costElement.querySelector('strong');
-        if (label) {
-            label.remove();
-        }
-        costSection.appendChild(costElement);
-    }
-    topSection.appendChild(costSection);
-
-    // Amount Section
-    const amountSection = document.createElement('div');
-    amountSection.className = 'project-section-container';
-    const amountTitle = document.createElement('h4');
-    amountTitle.className = 'section-title';
-    amountTitle.textContent = 'Amount';
-    const amountDisplay = document.createElement('div');
-    amountDisplay.className = 'amount-display';
-    const val = document.createElement('span');
-    val.id = `${this.name}-count`;
-    const slash = document.createElement('span');
-    slash.textContent = ' / ';
-    const max = document.createElement('span');
-    max.id = `${this.name}-max`;
-    const info = document.createElement('span');
-    info.className = 'info-tooltip-icon';
-    info.title = 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 5,000 worker cap.';
-    info.innerHTML = '&#9432;';
-    amountDisplay.append(val, slash, max, info);
-
-    const controls = document.createElement('div');
-    controls.className = 'amount-controls';
-    const main = document.createElement('div');
-    main.className = 'scanner-main-controls';
-    const b0 = document.createElement('button');
-    b0.textContent = '0';
-    const bMinus = document.createElement('button');
-    bMinus.textContent = '-';
-    const bPlus = document.createElement('button');
-    bPlus.textContent = '+';
-    const bMax = document.createElement('button');
-    bMax.textContent = 'Max';
-    main.append(b0, bMinus, bPlus, bMax);
-
-    const mult = document.createElement('div');
-    mult.className = 'scanner-mult-controls';
-    const bDiv = document.createElement('button');
-    bDiv.textContent = '/10';
-    const bMul = document.createElement('button');
-    bMul.textContent = 'x10';
-    mult.append(bDiv, bMul);
-
-    const autoContainer = document.createElement('div');
-    autoContainer.className = 'checkbox-container';
-    const autoMaxCheckbox = document.createElement('input');
-    autoMaxCheckbox.type = 'checkbox';
-    autoMaxCheckbox.id = `${this.name}-auto-max`;
-    autoMaxCheckbox.checked = this.autoMax;
-    autoMaxCheckbox.addEventListener('change', (e) => {
-      this.autoMax = e.target.checked;
+    const controls = this.renderWorkerCapacityControls(container, {
+      tooltip: 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.',
+      layoutClass: 'scanner-layout',
     });
-    const autoLabel = document.createElement('label');
-    autoLabel.htmlFor = autoMaxCheckbox.id;
-    autoLabel.textContent = 'Auto Max';
-    autoContainer.append(autoMaxCheckbox, autoLabel);
 
-    controls.append(main, mult);
-    amountSection.append(amountTitle, amountDisplay, controls, autoContainer);
-    topSection.appendChild(amountSection);
+    const topSection = controls.container;
 
     // Deposits Section
     let dVal, dMax;
@@ -421,28 +289,27 @@ class ScannerProject extends Project {
       topSection.appendChild(depositSection);
     }
 
-    container.appendChild(topSection);
-
-    this.el = { val, max, bPlus, bMinus, bMul, bDiv, b0, bMax, costSection, amountSection, autoMaxCheckbox };
+    this.el = {
+      val: controls.val,
+      max: controls.max,
+      bPlus: controls.bPlus,
+      bMinus: controls.bMinus,
+      bMul: controls.bMul,
+      bDiv: controls.bDiv,
+      bMin: controls.bMin,
+      bMax: controls.bMax,
+      costSection: controls.costSection,
+      amountSection: controls.amountSection,
+      autoMaxCheckbox: controls.autoMaxCheckbox,
+    };
     if (dVal && dMax) {
       this.el.dVal = dVal;
       this.el.dMax = dMax;
     }
-
-    const refresh = () => {
-      if (typeof updateProjectUI === 'function') {
-        updateProjectUI(this.name);
-      }
-    };
-    bPlus.onclick = () => { this.adjustBuildCount(this.step); refresh(); };
-    bMinus.onclick = () => { this.adjustBuildCount(-this.step); refresh(); };
-    bMul.onclick = () => { this.step *= 10; refresh(); };
-    bDiv.onclick = () => { this.step = Math.max(1, this.step / 10); refresh(); };
-    b0.onclick = () => { this.setBuildCount(0); refresh(); };
-    bMax.onclick = () => { this.setMaxBuildCount(); refresh(); };
   }
 
   updateUI() {
+    super.updateUI();
     if (this.el.val) {
       this.el.val.textContent = formatNumber(this.buildCount, true);
     }
@@ -465,12 +332,6 @@ class ScannerProject extends Project {
       const max = data ? data.D_max : 0;
       this.el.dVal.textContent = formatNumber(current, true);
       this.el.dMax.textContent = formatNumber(max, true);
-    }
-
-    if (this.el.costSection && this.el.amountSection) {
-        const isMaxed = this.repeatCount >= this.maxRepeatCount;
-        this.el.costSection.style.display = isMaxed ? 'none' : '';
-        this.el.amountSection.style.display = isMaxed ? 'none' : '';
     }
   }
 

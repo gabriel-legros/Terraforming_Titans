@@ -4,6 +4,11 @@ const { JSDOM } = require(path.join(process.execPath, '..', '..', 'lib', 'node_m
 const vm = require('vm');
 const EffectableEntity = require('../src/js/effectable-entity.js');
 
+function initializeSelectedBuildCounts(ctx) {
+  ctx.selectedBuildCounts = {};
+  vm.runInContext('var selectedBuildCounts = this.selectedBuildCounts;', ctx);
+}
+
 describe('SpaceDisposalProject temperature reduction display', () => {
   test('shows reduction when disposing greenhouse gas', () => {
     const dom = new JSDOM('<!DOCTYPE html><div id="container"></div>', { runScripts: 'outside-only' });
@@ -11,6 +16,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.projectElements = {};
+    initializeSelectedBuildCounts(ctx);
 
     const numbersCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'numbers.js'), 'utf8');
     vm.runInContext(numbersCode + '; this.formatNumber = formatNumber; this.toDisplayTemperature = toDisplayTemperature; this.toDisplayTemperatureDelta = toDisplayTemperatureDelta; this.getTemperatureUnit = getTemperatureUnit;', ctx);
@@ -25,6 +31,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       resources: global.resources,
       terraforming: global.terraforming,
       projectElements: global.projectElements,
+      selectedBuildCounts: global.selectedBuildCounts,
       formatNumber: global.formatNumber,
       toDisplayTemperature: global.toDisplayTemperature,
       toDisplayTemperatureDelta: global.toDisplayTemperatureDelta,
@@ -67,6 +74,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     global.resources = ctx.resources;
     global.terraforming = ctx.terraforming;
     global.projectElements = ctx.projectElements;
+    global.selectedBuildCounts = ctx.selectedBuildCounts;
     global.formatNumber = ctx.formatNumber;
     global.toDisplayTemperature = ctx.toDisplayTemperature;
     global.toDisplayTemperatureDelta = ctx.toDisplayTemperatureDelta;
@@ -118,6 +126,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       global.formatTotalCostDisplay = originalGlobals.formatTotalCostDisplay;
       global.formatTotalResourceGainDisplay = originalGlobals.formatTotalResourceGainDisplay;
       global.projectManager = originalGlobals.projectManager;
+      global.selectedBuildCounts = originalGlobals.selectedBuildCounts;
       global.gameSettings = originalGlobals.gameSettings;
     }
   });
@@ -128,6 +137,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.projectElements = {};
+    initializeSelectedBuildCounts(ctx);
 
     const numbersCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'numbers.js'), 'utf8');
     vm.runInContext(
@@ -146,6 +156,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       resources: global.resources,
       terraforming: global.terraforming,
       projectElements: global.projectElements,
+      selectedBuildCounts: global.selectedBuildCounts,
       formatNumber: global.formatNumber,
       toDisplayTemperature: global.toDisplayTemperature,
       toDisplayTemperatureDelta: global.toDisplayTemperatureDelta,
@@ -201,6 +212,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     global.resources = ctx.resources;
     global.terraforming = ctx.terraforming;
     global.projectElements = ctx.projectElements;
+    global.selectedBuildCounts = ctx.selectedBuildCounts;
     global.formatNumber = ctx.formatNumber;
     global.toDisplayTemperature = ctx.toDisplayTemperature;
     global.toDisplayTemperatureDelta = ctx.toDisplayTemperatureDelta;
@@ -269,6 +281,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       global.formatTotalCostDisplay = originalGlobals.formatTotalCostDisplay;
       global.formatTotalResourceGainDisplay = originalGlobals.formatTotalResourceGainDisplay;
       global.projectManager = originalGlobals.projectManager;
+      global.selectedBuildCounts = originalGlobals.selectedBuildCounts;
       global.gameSettings = originalGlobals.gameSettings;
     }
   });
@@ -279,6 +292,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.projectElements = {};
+    initializeSelectedBuildCounts(ctx);
 
     const numbersCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'numbers.js'), 'utf8');
     vm.runInContext(
@@ -296,6 +310,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       resources: global.resources,
       terraforming: global.terraforming,
       projectElements: global.projectElements,
+      selectedBuildCounts: global.selectedBuildCounts,
       formatNumber: global.formatNumber,
       toDisplayTemperature: global.toDisplayTemperature,
       toDisplayTemperatureDelta: global.toDisplayTemperatureDelta,
@@ -338,6 +353,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     global.resources = ctx.resources;
     global.terraforming = ctx.terraforming;
     global.projectElements = ctx.projectElements;
+    global.selectedBuildCounts = ctx.selectedBuildCounts;
     global.formatNumber = ctx.formatNumber;
     global.toDisplayTemperature = ctx.toDisplayTemperature;
     global.toDisplayTemperatureDelta = ctx.toDisplayTemperatureDelta;
@@ -388,6 +404,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       global.formatTotalCostDisplay = originalGlobals.formatTotalCostDisplay;
       global.formatTotalResourceGainDisplay = originalGlobals.formatTotalResourceGainDisplay;
       global.projectManager = originalGlobals.projectManager;
+      global.selectedBuildCounts = originalGlobals.selectedBuildCounts;
       global.gameSettings = originalGlobals.gameSettings;
     }
   });
@@ -398,6 +415,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     ctx.document = dom.window.document;
     ctx.console = console;
     ctx.projectElements = {};
+    initializeSelectedBuildCounts(ctx);
 
     const numbersCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'numbers.js'), 'utf8');
     vm.runInContext(
@@ -415,6 +433,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       resources: global.resources,
       terraforming: global.terraforming,
       projectElements: global.projectElements,
+      selectedBuildCounts: global.selectedBuildCounts,
       formatNumber: global.formatNumber,
       toDisplayTemperature: global.toDisplayTemperature,
       toDisplayTemperatureDelta: global.toDisplayTemperatureDelta,
@@ -457,6 +476,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
     global.resources = ctx.resources;
     global.terraforming = ctx.terraforming;
     global.projectElements = ctx.projectElements;
+    global.selectedBuildCounts = ctx.selectedBuildCounts;
     global.formatNumber = ctx.formatNumber;
     global.toDisplayTemperature = ctx.toDisplayTemperature;
     global.toDisplayTemperatureDelta = ctx.toDisplayTemperatureDelta;
@@ -516,6 +536,7 @@ describe('SpaceDisposalProject temperature reduction display', () => {
       global.formatTotalCostDisplay = originalGlobals.formatTotalCostDisplay;
       global.formatTotalResourceGainDisplay = originalGlobals.formatTotalResourceGainDisplay;
       global.projectManager = originalGlobals.projectManager;
+      global.selectedBuildCounts = originalGlobals.selectedBuildCounts;
       global.gameSettings = originalGlobals.gameSettings;
     }
   });

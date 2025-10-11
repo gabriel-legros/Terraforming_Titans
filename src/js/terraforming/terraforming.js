@@ -278,6 +278,7 @@ class Terraforming extends EffectableEntity{
     this.temperature = {
       name: 'Temperature',
       value: 0,
+      trendValue: 0,
       targetMin: 278.15, // 15°C in Kelvin,
       targetMax: 298.15,
       effectiveTempNoAtmosphere: 0,
@@ -569,8 +570,7 @@ class Terraforming extends EffectableEntity{
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
     updateResources(deltaTime, options = {}) {
-        const skipTemperature = options.skipTemperature === true;
-        this.update(deltaTime, { skipTemperature, skipRadiation: skipTemperature });
+        this.update(deltaTime);
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
@@ -661,6 +661,7 @@ class Terraforming extends EffectableEntity{
           value: zone.value,
           day: zone.day,
           night: zone.night,
+          trendValue: zone.trendValue,
           equilibriumTemperature: zone.equilibriumTemperature,
         };
       }
@@ -680,6 +681,7 @@ class Terraforming extends EffectableEntity{
       return {
         temperature: {
           value: this.temperature?.value,
+          trendValue: this.temperature?.trendValue,
           equilibriumTemperature: this.temperature?.equilibriumTemperature,
           effectiveTempNoAtmosphere: this.temperature?.effectiveTempNoAtmosphere,
           emissivity: this.temperature?.emissivity,
@@ -706,6 +708,9 @@ class Terraforming extends EffectableEntity{
       if (this.temperature) {
         if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'value')) {
           this.temperature.value = tempSnapshot.value;
+        }
+        if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'trendValue')) {
+          this.temperature.trendValue = tempSnapshot.trendValue;
         }
         if (Object.prototype.hasOwnProperty.call(tempSnapshot, 'equilibriumTemperature')) {
           this.temperature.equilibriumTemperature = tempSnapshot.equilibriumTemperature;
@@ -745,6 +750,9 @@ class Terraforming extends EffectableEntity{
           }
           if (Object.prototype.hasOwnProperty.call(snap, 'night')) {
             zone.night = snap.night;
+          }
+          if (Object.prototype.hasOwnProperty.call(snap, 'trendValue')) {
+            zone.trendValue = snap.trendValue;
           }
           if (Object.prototype.hasOwnProperty.call(snap, 'equilibriumTemperature')) {
             zone.equilibriumTemperature = snap.equilibriumTemperature;
@@ -816,6 +824,7 @@ class Terraforming extends EffectableEntity{
         projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
 
     let weightedTemp = 0;
+    let weightedTrendTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
     const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface);
@@ -944,6 +953,7 @@ class Terraforming extends EffectableEntity{
         const dMean = z[zone].day - z[zone].mean;
 
         this.temperature.zones[zone].trendValue = T[zone];
+        weightedTrendTemp += T[zone] * pct;
         // Keep the radiative equilibrium diagnostic (pre‑mix) visible
         this.temperature.zones[zone].equilibriumTemperature = z[zone].eq;
 
@@ -1008,6 +1018,7 @@ class Terraforming extends EffectableEntity{
 
 
         this.temperature.value = weightedTemp;
+        this.temperature.trendValue = weightedTrendTemp;
         this.temperature.equilibriumTemperature = weightedEqTemp;
 
         this.luminosity.modifiedSolarFluxUnpenalized = weightedFluxUnpenalized;
@@ -1120,10 +1131,12 @@ class Terraforming extends EffectableEntity{
 
         const result = calculateActualAlbedoPhysics(surf, pressureBar, composition, gSurface, aerosolsSW) || {};
         const comps = result.components || {};
-        const penalty = (comps.dA_ch4 || 0) + (comps.dA_calcite || 0) + (comps.dA_cloud || 0);
+        const base = Number.isFinite(comps.A_surf) ? comps.A_surf : surf;
+        const actual = Number.isFinite(result.albedo) ? result.albedo : base;
+        const penalty = actual - base;
         const cloudFraction = Number.isFinite(result.cfCloud) ? result.cfCloud : 0;
         const hazeFraction = Number.isFinite(result.cfHaze) ? result.cfHaze : 0;
-        return { albedo: result.albedo, penalty, cloudFraction, hazeFraction };
+        return { albedo: actual, penalty, cloudFraction, hazeFraction };
     }
 
     _updateZonalCoverageCache() {
@@ -1557,19 +1570,14 @@ class Terraforming extends EffectableEntity{
       if (this.gravityPenaltyEnabled) {
         this.gravityCostPenalty = this.calculateGravityCostPenalty();
         const gravityCostMultiplier = this.gravityCostPenalty.multiplier;
-        const combinedStructures = globalThis.structures
-          ? globalThis.structures
-          : {
-              ...(globalThis.buildings || {}),
-              ...(globalThis.colonies || {})
-            };
+        const combinedStructures = structures;
 
         for (const id in combinedStructures) {
           const structure = combinedStructures[id];
-          if (!structure || !structure.cost) continue;
+          if (!structure || !structure.cost || structure.temperatureMaintenanceImmune) continue;
 
           const isColony =
-            !!globalThis.colonies && Object.prototype.hasOwnProperty.call(globalThis.colonies, id);
+            colonies && Object.prototype.hasOwnProperty.call(colonies, id);
           const target = isColony ? 'colony' : 'building';
 
           for (const category in structure.cost) {
@@ -1577,6 +1585,7 @@ class Terraforming extends EffectableEntity{
             if (!categoryCosts) continue;
 
             for (const resource in categoryCosts) {
+              if (resource === 'electronics' || resource === 'water') continue;
               addEffect({
                 effectId: `gravityCostPenalty-${category}-${resource}`,
                 target,

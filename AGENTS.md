@@ -7,8 +7,9 @@
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.
 - Building-specific logic resides in dedicated subclasses under `src/js/buildings/`. To add a new building type, create a subclass and register it in `initializeBuildings`.
-- If trying to take a screenshot, you should set debugMode to true first, to skip the intro cutscenes, but never commit debugMode to true.
 - Do not use globalThis.  It never ever ends up working out because the objects you are looking for are never actually attached to it.  Use the global variable directly instead, or adapt your test accordingly.
+- Keep code short, concise and easily readable.  Avoid any unnecessary checks for objects that should obviously exist.
+- When taking screenshots, if you want it to succeed, you must modify DEBUG_MODE from src/js/debug_constants.js to true, otherwise you will not be able to skip the intro cutscene.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -212,6 +213,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
 - Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.
 - Introduced an Antimatter Battery structure that stores a quadrillion units of energy for 1000 metal and 100 superconductors.
+- Antimatter Battery now offers a Fill action that converts antimatter into stored energy at the same rate produced by antimatter farms.
 - Added an Antimatter Farm energy building that converts 2 quadrillion energy into the new locked Antimatter special resource.
 - Building and colony consumption now derive from a shared `getConsumption` helper so effect-driven upkeep is computed dynamica
   lly without mutating base data.
@@ -246,9 +248,11 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy operations panel now displays total mission duration and real-time remaining launch time to clarify commitments.
 - Mega Heat Sink completions now provide additional cooling power whenever zonal temperatures exceed their trend targets.
 - Added a Mega Heat Sink project summary card that reports completed heat sinks and their current cooling rate.
+- Mega Heat Sink projects now use worker batch capacity controls matching satellites and require 1 billion worker cap per heat sink.
 
 - Particle Accelerator mega project now lets players set a custom radius with controls, scales material costs by circumference,
   and records the largest completed accelerator.
 - Added a Mega Heat Sink advanced research that unlocks a repeatable mega project for accelerated planetary cooling.
 - Introduced a Bioworkforce advanced research that unlocks a lifeManager flag for future bioworkforce integration.
 - Galaxy sectors now advertise conquest rewards, with default Habitable World payouts configured in sector parameters.
+- Encapsulated the Import Resources project UI in a dedicated ImportResourcesProjectUI class and delegated specialized rendering logic from projectsUI.

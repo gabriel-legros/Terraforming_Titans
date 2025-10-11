@@ -52,7 +52,7 @@ describe('continuous spaceship project automation', () => {
       surface: { liquidWater: stubResource(0) }
     };
     ctx.terraforming = {
-      temperature: { value: 400 },
+      temperature: { value: 400, trendValue: 400 },
       celestialParameters: { gravity: 1, radius: 1 }
     };
     ctx.calculateAtmosphericPressure = (amount) => amount * 1000;
@@ -152,14 +152,15 @@ describe('continuous spaceship project automation', () => {
     project.applyCostAndGain(1000, changes);
     applyChanges(ctx.resources, changes);
     expect(ctx.resources.atmospheric.greenhouseGas.value).toBeLessThan(10000);
-    ctx.terraforming.temperature.value = 300; // below threshold
+    ctx.terraforming.temperature.trendValue = 300; // below threshold despite actual value
     project.update(1000);
     changes = createChanges(ctx.resources);
     project.applyCostAndGain(1000, changes);
     applyChanges(ctx.resources, changes);
     expect(project.isActive).toBe(false);
     const ghgAfterStop = ctx.resources.atmospheric.greenhouseGas.value;
-    ctx.terraforming.temperature.value = 400; // above threshold
+    ctx.terraforming.temperature.value = 320; // actual temperature remains below threshold
+    ctx.terraforming.temperature.trendValue = 400; // trend recovers above threshold
     if (project.autoStart && !project.isActive && project.canStart()) {
       project.start(ctx.resources);
     }

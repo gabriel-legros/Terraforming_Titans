@@ -48,4 +48,15 @@ describe('LifeDesigner purchase updates cost', () => {
     designer.buyPoint('research');
     expect(designer.getPointCost('research')).toBe(400);
   });
+
+  test('bulk purchase uses geometric cost progression', () => {
+    const designer = ctx.lifeDesigner;
+    const totalCost = designer.getTotalPointCost('research', 10);
+    expect(totalCost).toBe(102300);
+    ctx.resources.colony.research.value = totalCost + 1000;
+    designer.buyPoint('research', 10);
+    expect(designer.purchaseCounts.research).toBe(10);
+    expect(designer.getPointCost('research')).toBe(102400);
+    expect(ctx.resources.colony.research.value).toBe(1000);
+  });
 });

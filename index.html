@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="src/css/planet-visualizer.css">
 
     <!-- Parameter Scripts -->
+    <script src="src/js/debug_constants.js"></script>
     <script src="src/js/planet-parameters.js"></script>
     <script src="src/js/life-parameters.js"></script>
     <script src="src/js/buildings-parameters.js"></script>
@@ -80,9 +81,11 @@
     <script src="src/js/buildings/OxygenFactory.js"></script>
     <script src="src/js/buildings/Biodome.js"></script>
     <script src="src/js/buildings/solarPanel.js"></script>
+    <script src="src/js/buildings/windTurbine.js"></script>
     <script src="src/js/buildings/dysonReceiver.js"></script>
     <script src="src/js/buildings/MultiRecipesBuilding.js"></script>
     <script src="src/js/buildings/WaterTank.js"></script>
+    <script src="src/js/buildings/AntimatterBattery.js"></script>
     <script src="src/js/colony.js"></script>
     <script src="src/js/buildings/aerostat.js"></script>
     <script src="src/js/buildingUI.js"></script>
@@ -93,6 +96,7 @@
     <script src="src/js/projects.js"></script>
     <script src="src/js/projects/SpaceshipProject.js"></script>
     <script src="src/js/projects/TerraformingDurationProject.js"></script>
+    <script src="src/js/projects/WorkerCapacityBatchProject.js"></script>
     <script src="src/js/projects/ScannerProject.js"></script>
     <script src="src/js/projects/SpaceMiningProject.js"></script>
     <script src="src/js/projects/SpaceMirrorAdvancedOversight.js"></script>
@@ -114,6 +118,7 @@
     <script src="src/js/projects/dysonswarmUI.js"></script>
     <script src="src/js/projects/ParticleAcceleratorProject.js"></script>
     <script src="src/js/projects/MegaHeatSinkProject.js"></script>
+    <script src="src/js/projects/ImportResourcesProjectUI.js"></script>
     <script src="src/js/projectsUI.js"></script>
     <script src="src/js/research.js"></script>
     <script src="src/js/skills.js"></script>
@@ -164,7 +169,9 @@
     <script src="src/js/galaxy/factionAI.js"></script>
     <script src="src/js/galaxy/factionUI.js"></script>
     <script src="src/js/galaxy/factions-parameters.js"></script>
+    <script src="src/js/galaxy/operation.js"></script>
     <script src="src/js/galaxy/galaxy.js"></script>
+    <script src="src/js/galaxy/operationUI.js"></script>
     <script src="src/js/galaxy/galaxyUI.js"></script>
     <script src="src/js/rwgUI.js"></script>
     <script src="src/js/warning.js"></script>
@@ -460,7 +467,7 @@
     <div id="hope" class="tab-content">
         <div class="container hope-container">
             <div class="hope-subtabs">
-                <div class="hope-subtab active" data-subtab="awakening-hope">Awakening</div>
+                <div class="hope-subtab active" data-subtab="awakening-hope">Awakening<span id="awakening-subtab-alert" class="hope-alert">!</span></div>
                 <div class="hope-subtab hidden" data-subtab="solis-hope">Solis<span id="solis-subtab-alert" class="hope-alert">!</span></div>
                 <div class="hope-subtab hidden" data-subtab="wgc-hope">WGC<span id="wgc-subtab-alert" class="hope-alert">!</span></div>
             </div>

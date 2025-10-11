@@ -1,5 +1,17 @@
 // progress.js (contains StoryManager)
 
+let storyDebugMode = false;
+
+try {
+    storyDebugMode = require('./debug_constants.js').DEBUG_MODE;
+} catch (error) {
+    try {
+        storyDebugMode = DEBUG_MODE;
+    } catch (innerError) {
+        storyDebugMode = false;
+    }
+}
+
 function getChapterNumber(id) {
     const m = /^chapter(\d+)/.exec(id);
     return m ? parseInt(m[1], 10) : null;
@@ -106,7 +118,7 @@ class StoryManager {
     initializeStory(){ // Keep this as is
         clearJournal();
 
-        if (debugMode) {
+        if (storyDebugMode) {
             this.completeAllJournalEventsForDebug({ applyRewards: true });
             this.updateCurrentObjectiveUI();
             return;
@@ -715,7 +727,7 @@ class StoryManager {
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
 
-        if (globalThis.debugMode) {
+        if (storyDebugMode) {
             this.completeAllJournalEventsForDebug();
         }
 
@@ -807,7 +819,7 @@ class StoryEvent {
     trigger() { // Modified to skip journal entries for outdated chapters
         switch (this.type) {
             case "pop-up":
-                if (globalThis.debugMode) {
+                if (storyDebugMode) {
                     if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
                         window.storyManager.processEventCompletion(this.id);
                     }
@@ -820,7 +832,7 @@ class StoryEvent {
                 );
                 break;
             case "system-pop-up":
-                if (globalThis.debugMode) {
+                if (storyDebugMode) {
                     if (window.storyManager && window.storyManager.activeEventIds.has(this.id)) {
                         window.storyManager.processEventCompletion(this.id);
                     }

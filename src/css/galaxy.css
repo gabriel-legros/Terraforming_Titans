@@ -934,6 +934,11 @@
   gap: 16px;
 }
 
+.galaxy-operations-launch__auto-threshold {
+  width: 60px;
+  min-width: 60px;
+}
+
 .galaxy-operations-launch__button {
   align-self: center;
   padding: 12px 24px;

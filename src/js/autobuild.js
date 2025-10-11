@@ -432,6 +432,7 @@ function captureAutoBuildSettings(structures) {
             basis: s.autoBuildBasis,
             priority: s.autoBuildPriority,
             autoActive: s.autoActiveEnabled,
+            autoUpgrade: s.autoUpgradeEnabled,
         };
     }
 }
@@ -446,6 +447,7 @@ function restoreAutoBuildSettings(structures) {
             s.autoActiveEnabled = savedAutoBuildSettings[name].autoActive !== undefined
                 ? savedAutoBuildSettings[name].autoActive
                 : true;
+            s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
         } else {
             s.autoBuildBasis = 'population';
             s.autoBuildPriority = false;
@@ -453,6 +455,43 @@ function restoreAutoBuildSettings(structures) {
         }
         s.autoBuildEnabled = false;
         s.autoActiveEnabled = false;
+        s.autoUpgradeEnabled = false;
+    }
+}
+
+function getAffordableUpgradeCount(colony, maxCount) {
+    let best = 0;
+    let low = 1;
+    let high = maxCount;
+    while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        if (colony.canAffordUpgrade(mid)) {
+            best = mid;
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return best;
+}
+
+function autoUpgradeColonies(buildings) {
+    for (const key in buildings) {
+        const structure = buildings[key];
+        if (!structure || !structure.autoUpgradeEnabled) continue;
+        if (!structure.getNextTierName || !structure.canAffordUpgrade || !structure.upgrade) continue;
+        const nextName = structure.getNextTierName();
+        if (!nextName) continue;
+        const next = colonies[nextName];
+        if (!next || !next.unlocked) continue;
+
+        while (structure.count >= 10) {
+            const maxByCount = Math.floor(structure.count / 10);
+            if (maxByCount <= 0) break;
+            const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
+            if (!upgradeCount) break;
+            if (!structure.upgrade(upgradeCount)) break;
+        }
     }
 }
 
@@ -463,6 +502,7 @@ function autoBuild(buildings, delta = 0) {
         return;
     }
     autobuildCostTracker.update(delta);
+    autoUpgradeColonies(buildings);
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const buildableBuildings = [];
@@ -495,7 +535,7 @@ function autoBuild(buildings, delta = 0) {
     const prioritizedReserve = {};
     buildableBuildings.forEach(entry => {
         if (!entry.building.autoBuildPriority) return;
-        const totalCost = entry.building.getEffectiveCost?.(entry.requiredAmount);
+        const totalCost = entry.building.getEffectiveCost?.(1);
         addCostToPrioritizedReserve(prioritizedReserve, totalCost);
     });
 
