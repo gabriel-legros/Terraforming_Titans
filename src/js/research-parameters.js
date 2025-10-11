@@ -662,17 +662,15 @@ const researchParameters = {
       {
         id: 'enhanced_colonist_import_1',
         name: 'Enhanced Colonist Importation',
-        description: 'Increase the capacity of each colonist import by 10 using optimized spacecraft and improved logistics.',
+        description: 'Halve the duration of each colonist import using optimized spacecraft and improved logistics.',
         cost: { research: 100 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
           {
             target: 'project',
             targetId: 'import_colonists_1',
-            type: 'increaseResourceGain',
-            resourceCategory: 'colony',
-            resourceId: 'colonists',
-            value: 10  // Increase the number of colonists imported by 30
+            type: 'projectDurationMultiplier',
+            value: 0.5  // Halve the duration of the colonist import project
           },
         ],
       },
@@ -729,7 +727,7 @@ const researchParameters = {
       {
         id: 'enhanced_colonist_import_2',
         name: 'Bigger rockets',
-        description: 'Further increase the capacity of each colonist import by 30 using bigger rockets.',
+        description: 'Further increase the capacity of each colonist import by 5 using bigger rockets.',
         cost: { research: 5000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -739,7 +737,7 @@ const researchParameters = {
             type: 'increaseResourceGain',
             resourceCategory: 'colony',
             resourceId: 'colonists',
-            value: 30  // Increase the number of colonists imported by 20
+            value: 5  // Increase the number of colonists imported by 5
           },
         ],
       },
@@ -774,7 +772,7 @@ const researchParameters = {
       {
         id: 'enhanced_colonist_import_3',
         name: 'Biggest rockets',
-        description: 'Further increase the capacity of each colonist import by 150 using the biggest rockets available.',
+        description: 'Further increase the capacity of each colonist import by 30 using the biggest rockets available.',
         cost: { research: 50000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -784,7 +782,7 @@ const researchParameters = {
             type: 'increaseResourceGain',
             resourceCategory: 'colony',
             resourceId: 'colonists',
-            value: 150  // Increase the number of colonists imported by 20
+            value: 30  // Increase the number of colonists imported by 30
           },
         ],
       },
