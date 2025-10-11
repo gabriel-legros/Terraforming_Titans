@@ -6,7 +6,7 @@ const GalaxyOperationUI = (() => {
     let context = { manager: null, cache: null };
 
     function getManager() {
-        return context.manager || globalThis.galaxyManager || null;
+        return galaxyManager;
     }
 
     function getCache() {
