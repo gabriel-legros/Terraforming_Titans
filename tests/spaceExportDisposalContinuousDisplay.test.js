@@ -15,12 +15,14 @@ describe('Space export and disposal continuous total export UI', () => {
     ctx.formatNumber = n => n.toString();
     ctx.formatBigInteger = n => n.toString();
     ctx.projectElements = {};
+    ctx.selectedBuildCounts = {};
     ctx.shipEfficiency = 1;
     ctx.EffectableEntity = EffectableEntity;
     ctx.toDisplayTemperature = x => x;
     ctx.getTemperatureUnit = () => 'K';
     ctx.gameSettings = { useCelsius: false };
     vm.createContext(ctx);
+    vm.runInContext('var selectedBuildCounts = this.selectedBuildCounts;', ctx);
     const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
     vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
     const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
