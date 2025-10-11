@@ -446,15 +446,13 @@ class GalaxyOperationManager {
             faction.setFleetPower(nextPower);
         }
 
-        let defenderLosses = [];
-        if (isSuccessful) {
-            defenderLosses = this.#applyDefenderLosses({
-                sector,
-                attackerId,
-                offensePower,
-                defensePower
-            });
-        }
+        const defenderLosses = this.#applyDefenderLosses({
+            sector,
+            attackerId,
+            offensePower,
+            defensePower,
+            attackSucceeded: isSuccessful
+        });
 
         if (isSuccessful) {
             if (operation.factionId === this.uhfFactionId && typeof this.onOperationSuccess === 'function') {
@@ -665,7 +663,7 @@ class GalaxyOperationManager {
         }));
     }
 
-    #applyDefenderLosses({ sector, attackerId, offensePower, defensePower }) {
+    #applyDefenderLosses({ sector, attackerId, offensePower, defensePower, attackSucceeded }) {
         if (!sector) {
             return [];
         }
@@ -681,11 +679,16 @@ class GalaxyOperationManager {
         if (!contributions.length) {
             return [];
         }
-        const totalContribution = contributions.reduce((sum, entry) => sum + entry.power, 0);
+        const totalContribution = contributions.reduce((sum, entry) => {
+            const value = Number(entry.power);
+            return Number.isFinite(value) && value > 0 ? sum + value : sum;
+        }, 0);
         if (!(totalContribution > 0)) {
             return contributions.map(({ factionId }) => ({ factionId, loss: 0 }));
         }
-        const rawLoss = (offense * offense) / (offense + defense);
+        const baseLoss = (offense * offense) / (offense + defense);
+        const modifier = attackSucceeded ? 1 : Math.min(1, offense / defense);
+        const rawLoss = baseLoss * (Number.isFinite(modifier) && modifier > 0 ? modifier : 0);
         if (!(rawLoss > 0)) {
             return contributions.map(({ factionId }) => ({ factionId, loss: 0 }));
         }

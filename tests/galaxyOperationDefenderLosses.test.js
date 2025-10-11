@@ -105,4 +105,31 @@ describe('Galaxy operation defender losses', () => {
         expect(enemyA.fleetPower).toBeCloseTo(20);
         expect(enemyB.fleetPower).toBeCloseTo(0);
     });
+
+    test('applies defender losses when attack fails', () => {
+        const enemy = new GalaxyFaction({ id: 'enemy', name: 'Enemy Faction' });
+        enemy.fleetCapacity = 300;
+        enemy.setFleetPower(200);
+        enemy.getSectorDefense = () => 120;
+        enemy.update = () => {};
+        manager.factions.set('enemy', enemy);
+
+        const operation = manager.startOperation({
+            sectorKey: sector.key,
+            factionId: 'uhf',
+            assignedPower: 60,
+            durationMs: 1000
+        });
+        expect(operation).not.toBeNull();
+
+        manager.enable();
+        manager.update(1000);
+
+        expect(operation.result).toBe('failure');
+        const defenderLoss = operation.defenderLosses.find((entry) => entry.factionId === 'enemy');
+        expect(defenderLoss).toBeDefined();
+        expect(defenderLoss.loss).toBeGreaterThan(0);
+        expect(defenderLoss.loss).toBeCloseTo(10, 5);
+        expect(enemy.fleetPower).toBeCloseTo(190, 5);
+    });
 });
