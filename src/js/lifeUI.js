@@ -667,8 +667,7 @@ function updateLifeUI() {
       const category = button.dataset.category;
       const quantity = lifePointPurchaseQuantity;
       const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
-      const pointLabel = quantity === 1 ? 'life point' : 'life points';
-      button.textContent = `Buy ${quantity} with ${category} (+${quantity} ${pointLabel}, Cost ${formatNumber(totalCost, true)})`;
+      button.textContent = `Buy ${quantity} with ${formatNumber(totalCost, true)} ${category}`;
       const affordable = lifeDesigner.canAfford(category, quantity);
       button.disabled = !affordable;
       button.style.backgroundColor = affordable ? '' : 'red';
