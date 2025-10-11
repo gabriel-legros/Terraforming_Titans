@@ -552,20 +552,29 @@ class LifeDesigner extends EffectableEntity {
     return this.basePointCost * Math.pow(this.pointCostMultiplier, this.purchaseCounts[category]);
   }
 
-  canAfford(category) {
-    const numPurchases = this.purchaseCounts[category];
-    const cost = this.basePointCost * Math.pow(this.pointCostMultiplier, numPurchases);
-
-    return resources.colony[category].value >= cost;
+  getTotalPointCost(category, quantity = 1) {
+    const firstCost = this.getPointCost(category);
+    if (quantity === 1) {
+      return firstCost;
+    }
+    const multiplier = this.pointCostMultiplier;
+    if (multiplier === 1) {
+      return firstCost * quantity;
+    }
+    const ratioIncrease = Math.pow(multiplier, quantity) - 1;
+    return firstCost * (ratioIncrease / (multiplier - 1));
   }
 
-  buyPoint(category) {
-    if (this.canAfford(category)) {
-      const numPurchases = this.purchaseCounts[category];
-      const cost = this.basePointCost * Math.pow(this.pointCostMultiplier, numPurchases);
+  canAfford(category, quantity = 1) {
+    const totalCost = this.getTotalPointCost(category, quantity);
+    return resources.colony[category].value >= totalCost;
+  }
 
-      resources.colony[category].decrease(cost);
-      this.purchaseCounts[category]++;
+  buyPoint(category, quantity = 1) {
+    if (this.canAfford(category, quantity)) {
+      const totalCost = this.getTotalPointCost(category, quantity);
+      resources.colony[category].decrease(totalCost);
+      this.purchaseCounts[category] += quantity;
     }
   }
 
